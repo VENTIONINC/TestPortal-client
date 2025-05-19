@@ -1,0 +1,132 @@
+.col-small {
+  width: 6rem;
+}
+
+/* Add any other styles from spec-section.svelte here */
+/* Styles from spec-section.svelte were minimal, mostly inline or covered by global styles */
+
+.spec-section-container {
+  /* Container for the whole section, if needed for specific layout */
+}
+
+.date-toggles-row {
+  display: flex; /* Already in inline style, but good to have in CSS */
+  margin-bottom: 1rem; /* Already in inline style */
+  flex-wrap: wrap; /* Allow toggles to wrap on smaller screens */
+}
+
+.day-toggle-placeholder {
+  /* Styles from inline styles in SpecSection.tsx - can be centralized here */
+  /* cursor: pointer; padding: 0.5rem; border: 1px solid #ccc; margin-right: 0.5rem; border-radius: 4px; */
+  /* Basic styles from svelte, .col.button.dark/outline might be global */
+  padding: 0.5rem 1rem; /* Adjusted padding */
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem; /* For wrapping */
+  text-align: center;
+}
+
+/* Assuming .button, .dark, .outline styles are globally defined or will be added to global.css */
+/* Replicating basic idea if not globally available */
+.day-toggle-placeholder.button {
+  border: 1px solid #ccc;
+}
+.day-toggle-placeholder.dark {
+  background-color: #333;
+  color: white;
+  border-color: #333;
+}
+.day-toggle-placeholder.outline {
+  background-color: transparent;
+  color: #333;
+  border: 1px solid #333;
+}
+
+.spec-details-card {
+  /* padding: 1rem; border: 1px solid #ddd; margin-bottom: 1rem; */ /* From inline */
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  background-color: #f9f9f9;
+}
+
+.spec-details-card .row {
+  display: flex;
+  margin-bottom: 0.5rem;
+}
+
+.spec-details-card .row:last-child {
+  margin-bottom: 0;
+}
+
+.spec-details-card .col-small {
+  font-weight: bold;
+  /* width: 6rem; */ /* Already defined globally for col-small */
+}
+
+.spec-details-card .flex-grow-1 {
+  flex: 1;
+  margin-left: 1rem;
+}
+
+.spec-tags {
+  display: flex;
+  align-items: center;
+}
+
+.tag-item {
+  margin-left: 0.5rem;
+  font-size: 0.9em;
+  padding: 0.2rem 0.4rem;
+  background-color: #eee;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  margin-right: 0.2rem; /* From inline */
+  /* Default size if not overridden by specific icon library classes */
+  width: 12px;
+  height: 12px;
+}
+
+.issue-links {
+  display: flex;
+  align-items: center;
+}
+
+.issue-link {
+  margin-right: 0.75rem; /* From inline + a bit more */
+  font-size: 0.9em;
+  color: var(--color-primary, #007bff); /* Assuming a primary color variable */
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+.issue-link:hover {
+  text-decoration: underline;
+}
+
+.spec-title {
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  margin-left: auto; /* Push to the right if space allows */
+}
+
+.execution-card-placeholder {
+  /* margin-top: 1rem; padding: 1rem; border: 1px solid #eee; */ /* From inline */
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #eaeaea;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.execution-card-placeholder h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}

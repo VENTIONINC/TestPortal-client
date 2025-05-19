@@ -1,0 +1,48 @@
+/* BulkActions.css */
+.bulk-section {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center; /* Align items vertically */
+  border: 1px solid #6e049f; /* As per Svelte */
+  border-radius: 4px;
+  /* background: var(--bg-color); */ /* Svelte used var, ensure this is defined globally or replace */
+  background-color: #f8f0ff; /* A light purple-ish background as a fallback */
+  padding: 0.5rem; /* Add some padding */
+  margin-left: auto; /* Push to the right of its container if possible */
+}
+
+.bulk-title {
+  padding-inline: 1rem;
+  margin: 0; /* Reset margin */
+  font-size: 0.9em;
+  color: #6e049f;
+}
+
+.bulk-action-button {
+  padding: 0.5rem; /* Remove inline padding from icon by only having icon */
+  width: 30px; /* Explicit size for button */
+  height: 30px; /* Explicit size for button */
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  margin-left: 0.5rem; /* Space between buttons */
+  background-size: 20px 20px; /* Control icon size */
+  background-position: center center;
+}
+
+.auto-review {
+  background-image: url('https://icongr.am/clarity/wand.svg?size=20&color=6e049f');
+  background-repeat: no-repeat;
+}
+
+.confirm-issue {
+  background-image: url('https://icongr.am/clarity/check.svg?size=20&color=03a50e'); /* Adjusted size to match others */
+  background-repeat: no-repeat;
+}
+
+.reject-issue {
+  background-image: url('https://icongr.am/clarity/trash.svg?size=20&color=ce1212'); /* Adjusted size to match others */
+  background-repeat: no-repeat;
+}
+
+/* Tippy.js styles are imported in the component, but you can override here if needed */
