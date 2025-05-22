@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { Text } from "@chakra-ui/react";
+
 import type { Execution, Result, ResultError } from "../utils/models";
 import type { ModelledResultRecord } from "../utils/toModels";
 import { toDuration, toStartTime } from "../utils/date-time.converter";
 import BulkActions from "./BulkActions";
+import { ResultsErrorDialog } from "./dialogs";
+
 import "../styles/ExecutionCard.css";
 
 // Will need to create these components
 // import InlineIssue from './InlineIssue';
-// import Modal from './Modal';
 
 interface ExecutionCardProps {
   execution: Execution;
@@ -19,7 +22,7 @@ const ExecutionCard = ({ execution, resultModels }: ExecutionCardProps) => {
     []
   );
   const [selectAllExecutions, setSelectAllExecutions] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const [selectedResultError, setSelectedResultError] =
     useState<ResultError | null>(null);
 
@@ -40,9 +43,9 @@ const ExecutionCard = ({ execution, resultModels }: ExecutionCardProps) => {
     (model) => model.result.isSelected
   );
 
-  const toggleModal = (resultError: ResultError | null = null) => {
+  const toggleDialog = (resultError: ResultError | null = null) => {
     setSelectedResultError(resultError);
-    setShowModal(!showModal);
+    setShowDialog(!showDialog);
   };
 
   const toggleSelectAll = () => {
@@ -156,43 +159,28 @@ const ExecutionCard = ({ execution, resultModels }: ExecutionCardProps) => {
           {model.errors &&
             model.errors.length > 0 &&
             model.errors.map((resultError) => (
-              <React.Fragment key={resultError.id}>
-                <p className="col" onClick={() => toggleModal(resultError)}>
-                  {resultError.message}
-                </p>
-
+              <Text
+                key={resultError.id}
+                onClick={() => toggleDialog(resultError)}
+                cursor="pointer"
+              >
+                {resultError.message}
                 {/* InlineIssue component will need to be created */}
                 {/* <InlineIssue 
                 resultError={resultError} 
                 assumptions={model.assumptions.filter(a => a.resultErrorId === resultError.id)} 
               /> */}
-              </React.Fragment>
+              </Text>
             ))}
         </div>
       ))}
 
-      {/* Modal component will need to be created */}
-      {showModal && selectedResultError && (
-        <div className="modal-overlay" onClick={() => toggleModal()}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Result Error</h2>
-              <button onClick={() => toggleModal()}>×</button>
-            </div>
-            <div className="modal-body">
-              <pre>{selectedResultError.message}</pre>
-
-              {selectedResultError.callLog?.length > 0 && (
-                <pre>{selectedResultError.callLog.join("\n")}</pre>
-              )}
-
-              {selectedResultError.callStack?.length > 0 && (
-                <pre>{selectedResultError.callStack.join("\n")}</pre>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <ResultsErrorDialog
+        open={showDialog}
+        onClose={toggleDialog}
+        title="Results Error"
+        resultError={selectedResultError}
+      />
     </div>
   );
 };
