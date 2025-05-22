@@ -44,51 +44,38 @@
 }
 
 .spec-details-card {
-  /* padding: 1rem; border: 1px solid #ddd; margin-bottom: 1rem; */ /* From inline */
   padding: 1rem;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
-  margin-bottom: 1rem;
   background-color: #f9f9f9;
 }
 
-.spec-details-card .row {
+.spec-details-card-header {
   display: flex;
-  margin-bottom: 0.5rem;
+  gap: 16px;
 }
 
-.spec-details-card .row:last-child {
-  margin-bottom: 0;
-}
-
-.spec-details-card .col-small {
-  font-weight: bold;
-  /* width: 6rem; */ /* Already defined globally for col-small */
-}
-
-.spec-details-card .flex-grow-1 {
-  flex: 1;
-  margin-left: 1rem;
+.spec-details-card-header p {
+  margin: 0;
 }
 
 .spec-tags {
   display: flex;
-  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .tag-item {
-  margin-left: 0.5rem;
-  font-size: 0.9em;
-  padding: 0.2rem 0.4rem;
-  background-color: #eee;
-  border-radius: 3px;
   display: flex;
   align-items: center;
+  gap: 4px;
+  font-size: 0.9em;
+  padding: 0 4px;
+  background-color: #eee;
+  border-radius: 3px;
 }
 
 .icon {
-  margin-right: 0.2rem; /* From inline */
-  /* Default size if not overridden by specific icon library classes */
   width: 12px;
   height: 12px;
 }
@@ -111,14 +98,13 @@
 }
 
 .spec-title {
-  font-style: italic;
   display: flex;
   align-items: center;
-  margin-left: auto; /* Push to the right if space allows */
+  gap: 4px;
+  margin-bottom: 0;
 }
 
 .execution-card-placeholder {
-  /* margin-top: 1rem; padding: 1rem; border: 1px solid #eee; */ /* From inline */
   margin-top: 1rem;
   padding: 1rem;
   border: 1px solid #eaeaea;

@@ -1,19 +1,17 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import type { ModelledResultRecord } from '../utils/toModels';
-import type { FilterParamsState } from '../hooks/useFilterParams';
-import { getDateRangeMap } from '../utils/dateRange';
-import type { DateConfig } from '../utils/dateRange'; // Type-only import
-import { filterResults as applyAllFilters } from '../utils/filterResults';
-import { Spec, Result as ResultModel } from '../utils/models'; // For types. Renamed Result to ResultModel to avoid conflict.
+import React, { useState, useMemo, useEffect, useCallback } from "react";
+import type { ModelledResultRecord } from "../utils/toModels";
+import type { FilterParamsState } from "../hooks/useFilterParams";
+import { getDateRangeMap } from "../utils/dateRange";
+import type { DateConfig } from "../utils/dateRange"; // Type-only import
+import { filterResults as applyAllFilters } from "../utils/filterResults";
+import { Spec, Result as ResultModel } from "../utils/models"; // For types. Renamed Result to ResultModel to avoid conflict.
 
 // Import actual child components
-import SpecSection from './SpecSection';
-import StatSection from './StatSection';
-import BulkActions from './BulkActions';
+import SpecSection from "./SpecSection";
+import StatSection from "./StatSection";
+import BulkActions from "./BulkActions";
 
-import '../styles/Results.css'; // Import styles
-
-const ITEMS_PER_PAGE = 10; // Define items per page for pagination
+import "../styles/Results.css"; // Import styles
 
 interface ResultsProps {
   results: ModelledResultRecord[];
@@ -30,7 +28,6 @@ const Results: React.FC<ResultsProps> = ({
   const [sidebarWidth, setSidebarWidth] = useState(250); // For CSS transition, actual width set by inline style
   const [selectAll, setSelectAll] = useState(false);
   const [dateConfigs, setDateConfigs] = useState<DateConfig[]>([]);
-  const [totalPages, setTotalPages] = useState(1); // Now set by useEffect
 
   // Make a mutable copy of results for local state changes (selection, active status)
   // This is one way to handle direct manipulations; could be refactored to manage IDs separately.
@@ -65,12 +62,6 @@ const Results: React.FC<ResultsProps> = ({
   const filteredResultsFromActive = useMemo(() => {
     return applyAllFilters(activeDaysResults, filterParams);
   }, [activeDaysResults, filterParams]);
-
-  // Calculate totalPages based on filteredResultsFromActive
-  useEffect(() => {
-    const totalResults = filteredResultsFromActive.length;
-    setTotalPages(Math.ceil(totalResults / ITEMS_PER_PAGE) || 1); // Ensure at least 1 page
-  }, [filteredResultsFromActive]);
 
   const groups = useMemo(() => {
     const relevantSpecs = new Set<Spec>();
@@ -110,19 +101,6 @@ const Results: React.FC<ResultsProps> = ({
     () => selectedResults.length, // Count based on the derived selectedResults
     [selectedResults]
   );
-
-  // Event Handlers ( كثير منها سيتطلب تعديل `internalResults` )
-  const nextPage = useCallback(() => {
-    if (filterParams.page < totalPages) {
-      setFilterParams((prev) => ({ ...prev, page: prev.page + 1 }));
-    }
-  }, [filterParams.page, totalPages, setFilterParams]);
-
-  const prevPage = useCallback(() => {
-    if (filterParams.page > 1) {
-      setFilterParams((prev) => ({ ...prev, page: prev.page - 1 }));
-    }
-  }, [filterParams.page, totalPages, setFilterParams]);
 
   const toggleSidebar = useCallback(() => {
     setSidebarExpanded((prev) => !prev);
@@ -390,7 +368,7 @@ const Results: React.FC<ResultsProps> = ({
               <div
                 key={day.date}
                 className={`day-toggle col button ${
-                  day.isActive ? 'dark' : 'outline'
+                  day.isActive ? "dark" : "outline"
                 }`}
                 onClick={() => toggleDayActive(day)}
               >
@@ -409,7 +387,7 @@ const Results: React.FC<ResultsProps> = ({
               type="checkbox"
               checked={selectAll}
               onChange={handleSelectAll}
-            />{' '}
+            />
             Select all
           </label>
           <pre>
@@ -437,28 +415,10 @@ const Results: React.FC<ResultsProps> = ({
             <p>No results found matching your filters.</p>
           )}
         </div>
-
-        <div className="pagination">
-          <button
-            onClick={prevPage}
-            disabled={filterParams.page === 1 || totalPages === 0}
-          >
-            Previous
-          </button>
-          <span>
-            Page {totalPages === 0 ? 0 : filterParams.page} of {totalPages}
-          </span>
-          <button
-            onClick={nextPage}
-            disabled={filterParams.page === totalPages || totalPages === 0}
-          >
-            Next
-          </button>
-        </div>
       </section>
 
       <button className="toggle-btn" onClick={toggleSidebar}>
-        {sidebarExpanded ? '\u00AB Hide Filters' : '\u00BB Show Filters'}
+        {sidebarExpanded ? "\u00AB Hide Filters" : "\u00BB Show Filters"}
       </button>
     </div>
   );

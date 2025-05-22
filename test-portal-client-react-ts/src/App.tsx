@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import './App.css';
-import { useFilterParams } from './hooks/useFilterParams';
-import { useResultsQuery } from './hooks/useResultsQuery';
-import Results from './components/Results';
-import Issues from './components/Issues';
-import { toModels } from './utils/toModels';
-import type { ModelledResultRecord } from './utils/toModels';
+import { useState } from "react";
+import "./App.css";
+import { useFilterParams } from "./hooks/useFilterParams";
+import { useResultsQuery } from "./hooks/useResultsQuery";
+import Results from "./components/Results";
+import Issues from "./components/Issues";
+import { toModels } from "./utils/toModels";
+import type { ModelledResultRecord } from "./utils/toModels";
 
-type ActiveTab = 'results' | 'issues';
+type ActiveTab = "results" | "issues";
 
 function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('results');
+  const [activeTab, setActiveTab] = useState<ActiveTab>("results");
   const { filterParams, setFilterParams } = useFilterParams();
   const {
     data: apiResults,
@@ -31,21 +31,21 @@ function App() {
     <>
       <div className="tabs">
         <div
-          className={`tab ${activeTab === 'results' ? 'active' : ''}`}
-          onClick={() => switchTab('results')}
+          className={`tab ${activeTab === "results" ? "active" : ""}`}
+          onClick={() => switchTab("results")}
         >
           Results
         </div>
         <div
-          className={`tab ${activeTab === 'issues' ? 'active' : ''}`}
-          onClick={() => switchTab('issues')}
+          className={`tab ${activeTab === "issues" ? "active" : ""}`}
+          onClick={() => switchTab("issues")}
         >
           Issues
         </div>
       </div>
 
       <div className="content">
-        {activeTab === 'results' && (
+        {activeTab === "results" && (
           <>
             {isLoading && <p>....loading</p>}
             {isError && <p>Error loading results: {error?.message}</p>}
@@ -66,7 +66,7 @@ function App() {
               )}
           </>
         )}
-        {activeTab === 'issues' && <Issues />}
+        {activeTab === "issues" && <Issues />}
       </div>
     </>
   );
