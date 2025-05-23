@@ -3,27 +3,25 @@ import "./App.css";
 import { useFilterParams } from "./hooks/useFilterParams";
 import { useResultsQuery } from "./hooks/useResultsQuery";
 import Results from "./components/Results";
-import Issues from "./components/Issues";
+import { Issues } from "@/components/Issues";
 import { toModels } from "./utils/toModels";
 import type { ModelledResultRecord } from "./utils/toModels";
 
-type ActiveTab = "results" | "issues";
+enum ACTIVE_TAB {
+  Results = "results",
+  Issues = "issues",
+}
 
 function App() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("results");
+  const [activeTab, setActiveTab] = useState<ACTIVE_TAB>(ACTIVE_TAB.Results);
   const { filterParams, setFilterParams } = useFilterParams();
-  const {
-    data: apiResults,
-    isLoading,
-    isError,
-    error,
-  } = useResultsQuery(filterParams);
+  const { data: apiResults } = useResultsQuery(filterParams);
 
   const modelledResults: ModelledResultRecord[] | undefined = apiResults
     ? toModels(apiResults)
-    : undefined;
+    : [];
 
-  const switchTab = (tab: ActiveTab) => {
+  const switchTab = (tab: ACTIVE_TAB) => {
     setActiveTab(tab);
   };
 
@@ -31,42 +29,28 @@ function App() {
     <>
       <div className="tabs">
         <div
-          className={`tab ${activeTab === "results" ? "active" : ""}`}
-          onClick={() => switchTab("results")}
+          className={`tab ${activeTab === ACTIVE_TAB.Results ? "active" : ""}`}
+          onClick={() => switchTab(ACTIVE_TAB.Results)}
         >
           Results
         </div>
         <div
-          className={`tab ${activeTab === "issues" ? "active" : ""}`}
-          onClick={() => switchTab("issues")}
+          className={`tab ${activeTab === ACTIVE_TAB.Issues ? "active" : ""}`}
+          onClick={() => switchTab(ACTIVE_TAB.Issues)}
         >
           Issues
         </div>
       </div>
 
       <div className="content">
-        {activeTab === "results" && (
-          <>
-            {isLoading && <p>....loading</p>}
-            {isError && <p>Error loading results: {error?.message}</p>}
-            {!isLoading &&
-              !isError &&
-              modelledResults &&
-              modelledResults.length > 0 && (
-                <Results
-                  results={modelledResults}
-                  filterParams={filterParams}
-                  setFilterParams={setFilterParams}
-                />
-              )}
-            {!isLoading &&
-              !isError &&
-              (!modelledResults || modelledResults.length === 0) && (
-                <p>No results found.</p>
-              )}
-          </>
+        {activeTab === ACTIVE_TAB.Results && (
+          <Results
+            results={modelledResults}
+            filterParams={filterParams}
+            setFilterParams={setFilterParams}
+          />
         )}
-        {activeTab === "issues" && <Issues />}
+        {activeTab === ACTIVE_TAB.Issues && <Issues />}
       </div>
     </>
   );

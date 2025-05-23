@@ -1,9 +1,10 @@
-import React, { useMemo, useCallback } from 'react';
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
-import type { ModelledResultRecord } from '../utils/toModels';
-import { Assumption } from '../utils/models';
-import '../styles/BulkActions.css';
+import React, { useMemo, useCallback } from "react";
+import Tippy from "@tippyjs/react";
+import "tippy.js/dist/tippy.css";
+import type { ModelledResultRecord } from "../utils/toModels";
+import { Assumption } from "../utils/models";
+import "../styles/BulkActions.css";
+import { HStack, Text } from "@chakra-ui/react";
 
 // --- API Response Type Definitions ---
 interface ApiAssumptionData {
@@ -81,18 +82,18 @@ const BulkActions: React.FC<BulkActionsProps> = ({
 
     try {
       const response = await fetch(
-        'http://localhost:3001/api/result-errors/bulk-review',
+        "http://localhost:3001/api/result-errors/bulk-review",
         {
-          method: 'PATCH',
-          headers: { 'Content-type': 'application/json' },
+          method: "PATCH",
+          headers: { "Content-type": "application/json" },
           body: JSON.stringify({ errorIds }),
         }
       );
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Auto review failed:', errorData);
-        alert(`Auto review failed: ${errorData.message || 'Unknown error'}`);
+        console.error("Auto review failed:", errorData);
+        alert(`Auto review failed: ${errorData.message || "Unknown error"}`);
         return;
       }
 
@@ -132,7 +133,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
         );
       }
     } catch (error) {
-      console.error('Error during auto review process:', error);
+      console.error("Error during auto review process:", error);
       alert(
         `An error occurred during auto review: ${(error as Error).message}`
       );
@@ -152,9 +153,9 @@ const BulkActions: React.FC<BulkActionsProps> = ({
               const response = await fetch(
                 `http://localhost:3001/api/assumptions/${asm.id}`,
                 {
-                  method: 'PATCH',
-                  headers: { 'Content-type': 'application/json' },
-                  body: JSON.stringify({ madeBy: 'user', isConfirmed: true }),
+                  method: "PATCH",
+                  headers: { "Content-type": "application/json" },
+                  body: JSON.stringify({ madeBy: "user", isConfirmed: true }),
                 }
               );
               if (response.ok) {
@@ -162,7 +163,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
                 const constructorData: Partial<ApiAssumptionData> = {
                   id: asm.id,
                   isConfirmed: true,
-                  madeBy: 'user',
+                  madeBy: "user",
                 };
                 if (asm.issue) constructorData.issue = asm.issue;
                 return new Assumption(constructorData as ApiAssumptionData);
@@ -199,9 +200,9 @@ const BulkActions: React.FC<BulkActionsProps> = ({
             const response = await fetch(
               `http://localhost:3001/api/assumptions/${(asm as any).id}`,
               {
-                method: 'PATCH',
-                headers: { 'Content-type': 'application/json' },
-                body: JSON.stringify({ madeBy: 'user', isConfirmed: false }),
+                method: "PATCH",
+                headers: { "Content-type": "application/json" },
+                body: JSON.stringify({ madeBy: "user", isConfirmed: false }),
               }
             );
             if (response.ok) {
@@ -238,8 +239,16 @@ const BulkActions: React.FC<BulkActionsProps> = ({
   }
 
   return (
-    <div className="bulk-section">
-      <p className="bulk-title">Bulk actions</p>
+    <HStack
+      border="1px solid"
+      borderColor="purple.700"
+      borderRadius="md"
+      p={1}
+      bg="white"
+    >
+      <Text textStyle="sm" color="purple.700">
+        Bulk actions
+      </Text>
 
       {unreviewedCount > 0 && (
         <Tippy
@@ -278,7 +287,7 @@ const BulkActions: React.FC<BulkActionsProps> = ({
           </Tippy>
         </>
       )}
-    </div>
+    </HStack>
   );
 };
 

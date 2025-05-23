@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Text } from "@chakra-ui/react";
+import { useState, useEffect, Fragment } from "react";
+import { HStack, Text } from "@chakra-ui/react";
 
 import type { Execution, Result, ResultError } from "../utils/models";
 import type { ModelledResultRecord } from "../utils/toModels";
@@ -8,6 +8,7 @@ import BulkActions from "./BulkActions";
 import { ResultsErrorDialog } from "./dialogs";
 
 import "../styles/ExecutionCard.css";
+import { InlineIssue } from "./InlineIssue";
 
 // Will need to create these components
 // import InlineIssue from './InlineIssue';
@@ -104,22 +105,24 @@ const ExecutionCard = ({ execution, resultModels }: ExecutionCardProps) => {
 
   return (
     <div className="execution-card">
-      <div className="execution-info">
+      <HStack gap={6} px={2} bg="gray.200">
         <input
           type="checkbox"
           onChange={toggleSelectAll}
           checked={selectAllExecutions}
         />
-        <p>{execution.environment}</p>
-        <p>{execution.type}</p>
-        <p>{execution.name}</p>
-        <p>Playwright v.{execution.version}</p>
+        <Text>{execution.environment}</Text>
+        <Text>{execution.type}</Text>
+        <Text>{execution.name}</Text>
+        <Text ms="auto" my={1}>
+          Playwright v.{execution.version}
+        </Text>
 
         <BulkActions
           selectedResults={selectedResults}
           onResultsUpdate={handleResultUpdate}
         />
-      </div>
+      </HStack>
 
       {sortedResults.map((model) => (
         <div className="execution-result" key={model.result.id}>
@@ -159,18 +162,20 @@ const ExecutionCard = ({ execution, resultModels }: ExecutionCardProps) => {
           {model.errors &&
             model.errors.length > 0 &&
             model.errors.map((resultError) => (
-              <Text
-                key={resultError.id}
-                onClick={() => toggleDialog(resultError)}
-                cursor="pointer"
-              >
-                {resultError.message}
-                {/* InlineIssue component will need to be created */}
-                {/* <InlineIssue 
-                resultError={resultError} 
-                assumptions={model.assumptions.filter(a => a.resultErrorId === resultError.id)} 
-              /> */}
-              </Text>
+              <Fragment key={resultError.id}>
+                <Text
+                  onClick={() => toggleDialog(resultError)}
+                  cursor="pointer"
+                >
+                  {resultError.message}
+                </Text>
+                <InlineIssue
+                  resultError={resultError}
+                  assumptions={model.assumptions.filter(
+                    (a) => a.resultErrorId === resultError.id
+                  )}
+                />
+              </Fragment>
             ))}
         </div>
       ))}

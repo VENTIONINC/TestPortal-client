@@ -1,21 +1,54 @@
-import type { FilterParamsState } from '../hooks/useFilterParams';
+import type { FilterParamsState } from "../hooks/useFilterParams";
 // We'll also need the actual Result type from models.ts later
 // For now, let's assume the API returns an array of 'any'
 // import { Result } from '../utils/models'; // Placeholder for actual Result type
 
-// Updated ApiResult based on toMaps.svelte.js structure
 export interface ApiResult {
-  spec: { id: string | number; [key: string]: any };
-  execution: { id: string | number; [key: string]: any };
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  allureLink: string;
+  retry: number;
+  status: string;
+  duration: number;
+  startTime: string;
+  specId: number;
+  executionId: number;
+  spec: {
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+    key: string;
+    file: string;
+    title: string;
+    tags: string[];
+    annotations: unknown[];
+  };
+  execution: {
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+    type: string;
+    name: string;
+    environment: string;
+    version: string;
+    startedAt: string;
+  };
   errors?: Array<{
-    assumptions?: Array<{
-      issue: { id: string | number; [key: string]: any };
-      [key: string]: any; // Other assumption properties
-    }>;
-    [key: string]: any; // Other error properties
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+    type: string;
+    message: string;
+    callLog: unknown[];
+    callStack: string[];
+    testAssertion: string;
+    expectedPattern: string;
+    receivedString: string;
+    location: string;
+    resultId: number;
+    assumptions: unknown[];
   }>;
-  // ... plus other properties that form the main Result object (e.g., startTime)
-  [key: string]: any; // For remaining properties that go into ResultData
 }
 
 export const fetchResults = async (
@@ -26,13 +59,13 @@ export const fetchResults = async (
   const queryParams = new URLSearchParams();
 
   // Example: only 'from' and 'to' were used in Svelte version, plus potentially others from FilterParamsState
-  if (filters.from) queryParams.append('from', filters.from);
-  if (filters.to) queryParams.append('to', filters.to);
-  if (filters.status) queryParams.append('status', filters.status);
-  if (filters.tag) queryParams.append('tag', filters.tag);
-  if (filters.specId) queryParams.append('specId', filters.specId);
+  if (filters.from) queryParams.append("from", filters.from);
+  if (filters.to) queryParams.append("to", filters.to);
+  if (filters.status) queryParams.append("status", filters.status);
+  if (filters.tag) queryParams.append("tag", filters.tag);
+  if (filters.specId) queryParams.append("specId", filters.specId);
   // Add other filters as needed by your API
-  if (filters.page) queryParams.append('page', filters.page.toString());
+  if (filters.page) queryParams.append("page", filters.page.toString());
 
   const response = await fetch(
     `http://localhost:3001/api/results?${queryParams.toString()}`
@@ -43,9 +76,9 @@ export const fetchResults = async (
     try {
       errorData = await response.json();
     } catch (parseError) {
-      console.error('Failed to parse error response json:', parseError);
+      console.error("Failed to parse error response json:", parseError);
       errorData = {
-        message: 'Failed to parse error response json from server.',
+        message: "Failed to parse error response json from server.",
       };
     }
     throw new Error(
@@ -58,7 +91,6 @@ export const fetchResults = async (
   }
 
   const data = await response.json();
-  // Assuming the API returns an object like { results: [...] } as in Svelte version
-  // If API returns the array directly, use: return data;
-  return data.results || []; // Ensure it returns an array
+
+  return data.results || [];
 };

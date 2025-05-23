@@ -9,18 +9,6 @@
   background-color: #fff;
 }
 
-.execution-info {
-  display: flex;
-  justify-content: space-between;
-  background: var(--bg-secondary-color);
-  padding: 0 8px;
-}
-
-.execution-info p {
-  margin-block-start: 0;
-  margin-block-end: 0;
-}
-
 .execution-result {
   display: flex;
   align-items: center;

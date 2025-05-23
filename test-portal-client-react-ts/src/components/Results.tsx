@@ -82,12 +82,6 @@ const Results: React.FC<ResultsProps> = ({
   }, [filteredResultsFromActive, internalResults]);
 
   const selectedResults = useMemo(() => {
-    // Selected results should be based on the items currently displayed and their selection state
-    // If groups now contain all items for a spec (active or not), this needs care.
-    // The Svelte version's selectedResults was $derived.by(() => Array.from(groups.values()).flat().filter(model => model.result.isSelected));
-    // This implies selection is on the items within the groups.
-    // And SpecSection toggles selection on *its* received results.
-    // For now, this seems okay, assuming Result instances within internalResults (and thus groups) handle their own selection state.
     return Array.from(groups.values())
       .flat()
       .filter((model) => model.result.isSelected);
@@ -133,10 +127,6 @@ const Results: React.FC<ResultsProps> = ({
   const handleSelectAll = useCallback(() => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
-    // This should affect items in filteredResultsFromActive as per Svelte logic of selectAll
-    // Svelte: for (const group of groups.values()) { for (const model of group) { if (model.result.isActive) { model.result.isSelected = selectAll; } } }
-    // The key part is model.result.isActive. Result objects in internalResults manage their own isActive state via dateConfigs.
-    // This needs to ensure only results that *would be* active (based on current dateConfigs) are selected.
 
     const activeDayKeys = new Set(
       dateConfigs.filter((dc) => dc.isActive).map((dc) => dc.date)
@@ -147,13 +137,14 @@ const Results: React.FC<ResultsProps> = ({
         // Only modify selection if the result's dateKey corresponds to an active day
         if (activeDayKeys.has(model.result.dateKey)) {
           const newResult = new ResultModel(model.result);
+          // newResult.isActive = true;
           newResult.isSelected = newSelectAll;
           return { ...model, result: newResult };
         }
         return model;
       })
     );
-  }, [selectAll, dateConfigs, setInternalResults]); // Added dateConfigs and setInternalResults dependency
+  }, [dateConfigs, selectAll]);
 
   const handleResultsUpdate = useCallback(
     (updatedRecords: ModelledResultRecord[]) => {
