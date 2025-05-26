@@ -12,11 +12,13 @@
   "dependencies": {
     "@chakra-ui/react": "^3.19.1",
     "@emotion/react": "^11.14.0",
+    "@reduxjs/toolkit": "^2.8.2",
     "@tanstack/react-query": "^5.76.1",
     "@tippyjs/react": "^4.2.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "react-redux": "^9.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

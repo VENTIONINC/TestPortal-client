@@ -1,30 +1,25 @@
-import { Code } from "@chakra-ui/react";
+import { Code } from '@chakra-ui/react';
 
-import { Dialog, DialogBody, DialogFooter, DialogProps } from "@/components/ui";
-import { ResultError } from "@/utils/models";
+import { Dialog, DialogBody, DialogFooter } from '@/components/ui';
+import { DefaultDialogProps, ResultError } from '@/types';
 
-interface ResultsErrorDialogProps extends Omit<DialogProps, "children"> {
+interface ResultsErrorDialogProps extends DefaultDialogProps {
   resultError: ResultError | null;
 }
 
-export const ResultsErrorDialog = ({
-  resultError,
-  ...props
-}: ResultsErrorDialogProps) => {
+export const ResultsErrorDialog = ({ resultError, closeDialog }: ResultsErrorDialogProps) => {
   return (
-    <Dialog size="lg" {...props}>
+    <Dialog title="Results Error" onClose={closeDialog} size="lg">
       <DialogBody display="flex" flexDir="column" gap={5}>
         <Code size="lg">{resultError?.message}</Code>
 
         {resultError?.callLog?.length > 0 && (
           <Code size="lg" whiteSpace="pre">
-            {resultError?.callLog.join("\n")}
+            {resultError?.callLog.join('\n')}
           </Code>
         )}
 
-        {resultError?.callStack?.length > 0 && (
-          <Code size="lg">{resultError?.callStack.join("\n")}</Code>
-        )}
+        {resultError?.callStack?.length > 0 && <Code size="lg">{resultError?.callStack.join('\n')}</Code>}
       </DialogBody>
 
       <DialogFooter></DialogFooter>

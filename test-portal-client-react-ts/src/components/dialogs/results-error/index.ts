@@ -1,1 +1,1 @@
-export { ResultsErrorDialog } from "./results-error-dialog";
+export { useResultsErrorDialog } from './hooks';

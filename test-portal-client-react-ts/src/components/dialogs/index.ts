@@ -1,1 +1,1 @@
-export { ResultsErrorDialog } from "./results-error";
+export { useResultsErrorDialog } from './results-error';
