@@ -4,21 +4,10 @@
   border-radius: 4px;
   margin-block: 0.5rem;
 }
-.day-toggle {
-  padding: 1rem;
-  /* Add other styles for .button, .dark, .outline as needed or ensure they are global */
-}
-.day-stats {
-  background-color: #f7f7f7;
-  margin-bottom: 2rem;
-  top: 0;
-  position: sticky;
-  z-index: 7;
-}
 
 .main-container {
   display: flex;
-  height: 100vh; /* Consider if this is appropriate for a component or should be on App level */
+  height: 100vh;
   position: relative;
 }
 
@@ -28,13 +17,12 @@
   overflow-y: auto; /* If content can exceed viewport height */
 }
 
-.card {
-  /* General card style, day-stats also uses this */
-  padding: 1em; /* Svelte had 2em for .card, but this is used differently now */
-  border: 1px solid #eee; /* Example border */
+/* .card {
+  padding: 1em; 
+  border: 1px solid #eee;
   border-radius: 4px;
   background-color: #fff;
-}
+} */
 
 .row {
   display: flex;
@@ -57,23 +45,4 @@
   align-items: center;
   padding: 1rem;
   gap: 10px;
-}
-
-/* Add styles for .button, .dark, .outline if not globally defined */
-.button {
-  /* basic button styles */
-  cursor: pointer;
-  padding: 10px 15px;
-  border-radius: 4px;
-  text-align: center;
-}
-.button.dark {
-  background-color: #333;
-  color: white;
-  border: 1px solid #333;
-}
-.button.outline {
-  background-color: transparent;
-  color: #333;
-  border: 1px solid #ccc;
 }

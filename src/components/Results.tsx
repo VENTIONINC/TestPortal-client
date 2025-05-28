@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { VStack } from '@chakra-ui/react';
+import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { ResultsFilters } from '@/components/results/filters';
 import { useGetResultsQuery } from '@/redux/apis/resultsApi';
@@ -133,20 +133,28 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
       <ResultsFilters filterParams={filterParams} setFilterParams={setFilterParams} as="aside" zIndex={10} />
 
       <VStack as="section" align="stretch" px={4} w="100%">
-        <div className="card day-stats">
-          <div className="row">
+        <VStack align="stretch" gap={0} p={2} bg="gray.100" borderRadius="md">
+          <HStack>
             {dateConfigs.map((day) => (
-              <div
+              <Flex
                 key={day.date}
-                className={`day-toggle col button ${day.isActive ? 'dark' : 'outline'}`}
                 onClick={() => toggleDayActive(day)}
+                flex={1}
+                justify="center"
+                py={2}
+                bg={day.isActive ? 'gray.800' : 'white'}
+                color={day.isActive ? 'white' : 'black'}
+                border="1px solid"
+                borderColor="gray.300"
+                borderRadius="sm"
+                cursor="pointer"
               >
-                <div>{day.name}</div>
-              </div>
+                <Text>{day.name}</Text>
+              </Flex>
             ))}
-          </div>
+          </HStack>
           <StatSection results={data?.results.filter((result) => activeDaysResultsIds.includes(result.id)) || []} />
-        </div>
+        </VStack>
 
         <h2>Results</h2>
 

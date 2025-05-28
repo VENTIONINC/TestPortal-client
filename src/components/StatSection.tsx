@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
+import { Box, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { Result, ResultSpec, ResultExecution, ResultErrorAssumption, ResultError, Issue } from '@/types';
-
-import '../styles/StatSection.css';
 
 const MAX_MESSAGE_LENGTH = 100;
 
@@ -120,67 +119,67 @@ export const StatSection = ({ results }: StatSectionProps) => {
   }, [stats.byStatus]);
 
   if (!results || results.length === 0) {
-    return <div className="stat-section-empty">No active results to display stats for.</div>;
+    return (
+      <Text alignSelf="center" textStyle="md" color="gray.500" mt={2}>
+        No active results to display stats for.
+      </Text>
+    );
   }
 
   return (
-    <details className="stat-section-details">
-      <summary>{summaryText}</summary>
+    <Box as="details" className="stat-section-details">
+      <Box as="summary" mt={2} cursor="pointer" _hover={{ bg: 'gray.200' }}>
+        {summaryText}
+      </Box>
 
-      <div className="by-models">
-        <p>
+      <HStack gap={4} textStyle="md" mt={2} ms={2}>
+        <Text>
           Specs: <span>{stats.byModels.specs}</span>
-        </p>
-        <p>
+        </Text>
+        <Text>
           Results: <span>{stats.byModels.results}</span>
-        </p>
-        <p>
+        </Text>
+        <Text>
           Executions: <span>{stats.byModels.executions}</span>
-        </p>
-        <p>
+        </Text>
+        <Text>
           Issues: <span>{stats.byModels.issues}</span>
-        </p>
-        <p>
+        </Text>
+        <Text>
           Errors: <span>{stats.byModels.errors}</span>
-        </p>
-        <p>
+        </Text>
+        <Text>
           Assumptions: <span>{stats.byModels.assumptions}</span>
-        </p>
-      </div>
+        </Text>
+      </HStack>
 
-      <div className="top-stats-container">
-        {topErrors.length > 0 && (
-          <div className="top-errors">
-            <p>
-              <b>Top {topErrors.length} errors</b>
-            </p>
-            {topErrors.map(([errorMsg, count]) => (
-              <div key={errorMsg} className="top-stat-item">
-                <p className="count">{count}x</p>
-                <p className="message">
-                  {errorMsg.length > MAX_MESSAGE_LENGTH ? `${errorMsg.slice(0, MAX_MESSAGE_LENGTH)}...` : errorMsg}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+      <HStack align="flex-start" mt={2}>
+        {topErrors.length > 0 && <TopSection results={topErrors} label="errors" />}
+        {topIssues.length > 0 && <TopSection results={topIssues} label="issues" />}
+      </HStack>
+    </Box>
+  );
+};
 
-        {topIssues.length > 0 && (
-          <div className="top-issues">
-            <p>
-              <b>Top {topIssues.length} issues</b>
-            </p>
-            {topIssues.map(([issueName, count]) => (
-              <div key={issueName} className="top-stat-item">
-                <p className="count">{count}x</p>
-                <p className="message">
-                  {issueName.length > MAX_MESSAGE_LENGTH ? `${issueName.slice(0, MAX_MESSAGE_LENGTH)}...` : issueName}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </details>
+const TopSection = ({ results, label }: { results: [string, number][]; label: string }) => {
+  return (
+    <VStack align="stretch" bg="white" p={2} borderRadius="md" flex={1}>
+      <Text fontWeight={700}>
+        Top {results.length} {label}
+      </Text>
+      {results.map(([errorMsg, count], index) => (
+        <HStack
+          key={errorMsg}
+          textStyle="md"
+          borderBottom={index === results.length - 1 ? 'none' : '1px solid'}
+          borderColor="gray.200"
+        >
+          <Text fontWeight={700} color="gray.700">
+            {count}x
+          </Text>
+          <Text>{errorMsg.length > MAX_MESSAGE_LENGTH ? `${errorMsg.slice(0, MAX_MESSAGE_LENGTH)}...` : errorMsg}</Text>
+        </HStack>
+      ))}
+    </VStack>
   );
 };
