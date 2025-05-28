@@ -1,6 +1,5 @@
-import React from 'react';
+import { Text, VStack } from '@chakra-ui/react';
 
-// --- Placeholder: DateToggle --- (Will be moved to its own file later)
 interface DateToggleProps {
   day: {
     yyyy_mm_dd: string;
@@ -11,32 +10,28 @@ interface DateToggleProps {
   toggleHandler: (day: { yyyy_mm_dd: string }) => void;
 }
 
-const DateToggle: React.FC<DateToggleProps> = ({ day, toggleHandler }) => {
+export const DateToggle = ({ day, toggleHandler }: DateToggleProps) => {
   return (
-    <div
-      className={`day-toggle-placeholder col button ${
-        day.isActive ? 'dark' : 'outline'
-      }`}
+    <VStack
       onClick={() => toggleHandler(day)}
-      style={{
-        cursor: 'pointer',
-        padding: '0.5rem',
-        border: '1px solid #ccc',
-        marginRight: '0.5rem',
-        borderRadius: '4px',
-      }}
+      flex={1}
+      gap={1}
+      p={1}
+      bg={day.isActive ? 'gray.800' : 'white'}
+      color={day.isActive ? 'white' : 'black'}
+      border="1px solid"
+      borderColor="gray.300"
+      borderRadius="sm"
+      cursor="pointer"
     >
-      <div>{day.display}</div>
+      <Text>{day.display}</Text>
       {day.stats && (
-        <div style={{ fontSize: '0.8em' }}>
+        <Text textStyle="md">
           P: {day.stats.filter((s: string) => s === 'passed').length}, F:{' '}
           {day.stats.filter((s: string) => s === 'failed').length}, S:{' '}
           {day.stats.filter((s: string) => s === 'skipped').length}
-        </div>
+        </Text>
       )}
-    </div>
+    </VStack>
   );
 };
-// --- End Placeholder: DateToggle ---
-
-export default DateToggle;

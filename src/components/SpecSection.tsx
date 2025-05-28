@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
+import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
+import { LuSquareUserRound, LuTag } from 'react-icons/lu';
 
 import type { DateConfig } from '@/utils/dateRange';
 import { toCleanTitle } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
-import DateToggle from './DateToggle';
+import { DateToggle } from './DateToggle';
 import { ExecutionCard } from './ExecutionCard';
 import '../styles/SpecSection.css';
 
@@ -57,31 +59,27 @@ export const SpecSection = ({
   }
 
   return (
-    <div className="spec-section-container">
-      <div className="row date-toggles-row" style={{ marginBottom: '1rem', display: 'flex' }}>
+    <VStack align="stretch" p={2} border="2px solid" borderColor="gray.300" borderRadius="md">
+      <HStack>
         {dateFilters.map((day) => (
           <DateToggle key={day.yyyy_mm_dd} day={day} toggleHandler={handleDateToggle} />
         ))}
-      </div>
+      </HStack>
 
-      <div className="spec-details-card">
-        <div className="spec-details-card-header">
-          <p>{spec.key}</p>
-          <p>{spec.file}</p>
+      <VStack align="stretch" bg="gray.50" py={2} px={4} border="1px solid" borderColor="gray.300" borderRadius="md">
+        <Flex gap={4}>
+          <Text>{spec.key}</Text>
+          <Text>{spec.file}</Text>
 
-          <div className="spec-tags">
-            {spec.tags?.map((tag: string) => (
-              <p key={tag} className="tag-item">
-                <img
-                  src="https://icongr.am/clarity/tag.svg?size=10&color=currentColor"
-                  alt="tag icon"
-                  className="icon"
-                />
+          <Flex ms="auto" gap={2}>
+            {spec.tags?.map((tag) => (
+              <HStack key={tag} px={2} bg="gray.200" borderRadius="sm" textStyle="lg">
+                <LuTag size={16} />
                 {tag}
-              </p>
+              </HStack>
             ))}
-          </div>
-        </div>
+          </Flex>
+        </Flex>
 
         <div className="row spec-meta" style={{ display: 'flex', justifyContent: 'space-between' }}>
           {/* {issueAnnotations.length > 0 && (
@@ -107,16 +105,12 @@ export const SpecSection = ({
             </div>
           )} */}
 
-          <p className="spec-title">
-            <img
-              src="https://icongr.am/clarity/avatar.svg?size=10&color=currentColor"
-              alt="avatar icon"
-              className="icon"
-            />
+          <HStack align="center">
+            <LuSquareUserRound size={20} />
             {toCleanTitle(spec.title)}
-          </p>
+          </HStack>
         </div>
-      </div>
+      </VStack>
 
       {filteredExecutions.map(({ execution, results }) => (
         <ExecutionCard
@@ -127,6 +121,6 @@ export const SpecSection = ({
           onSelectResult={onSelectResult}
         />
       ))}
-    </div>
+    </VStack>
   );
 };

@@ -52,7 +52,7 @@ export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelect
   };
 
   return (
-    <VStack align="stretch" mt={2} p={2} border="1px solid" borderColor="gray.200" borderRadius="md">
+    <VStack align="stretch" p={2} border="1px solid" borderColor="gray.200" borderRadius="md">
       <HStack gap={6} px={2} bg="gray.200" borderRadius="sm">
         <input
           type="checkbox"
