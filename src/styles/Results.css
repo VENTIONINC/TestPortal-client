@@ -22,45 +22,6 @@
   position: relative;
 }
 
-.sidebar {
-  background-color: #f7f7f7;
-  border-right: 1px solid #ddd;
-  overflow: hidden; /* Or auto/scroll if content exceeds height */
-  transition: width 0.3s ease-in-out;
-  /* Default width will be set by inline style from component state */
-}
-
-.filter-group {
-  margin-bottom: 20px;
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: #fff;
-}
-
-.filter-group h3 {
-  margin-top: 0; /* Added for consistency */
-  margin-bottom: 10px;
-  color: #333;
-}
-
-.sidebar label {
-  /* Specific to sidebar labels */
-  display: block;
-  margin-bottom: 10px;
-}
-
-.sidebar input,
-.sidebar select {
-  /* Specific to sidebar inputs/selects */
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box; /* Added for better width handling */
-}
-
 .content {
   flex-grow: 1;
   padding: 20px;
@@ -96,19 +57,6 @@
   align-items: center;
   padding: 1rem;
   gap: 10px;
-}
-
-.toggle-btn {
-  position: absolute; /* Or fixed, depending on desired behavior */
-  top: 10px;
-  left: 10px; /* Initial position when sidebar is expanded, adjust as needed */
-  z-index: 10; /* Ensure it's above sidebar */
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
 /* Add styles for .button, .dark, .outline if not globally defined */
