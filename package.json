@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "eslint": "eslint .",
     "tslint": "tsc --noEmit",
-    "lint": "eslint . && npm run tslint",
+    "lint": "yarn eslint && yarn tslint",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -35,5 +35,6 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
     "vite": "^6.3.5"
-  }
+  },
+  "packageManager": "yarn@3.6.4"
 }
