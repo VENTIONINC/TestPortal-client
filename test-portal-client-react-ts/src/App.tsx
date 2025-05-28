@@ -1,8 +1,9 @@
 import { useState } from 'react';
 
 import { Issues } from '@/components/Issues';
-import { useFilterParams } from './hooks/useFilterParams';
-import Results from './components/Results';
+import { Results } from '@/components/Results';
+import { useFilterParams } from '@/hooks/useFilterParams';
+
 import './App.css';
 
 enum ACTIVE_TAB {

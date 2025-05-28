@@ -16,7 +16,7 @@ interface SpecSectionProps {
   onSelectResult: (resultId: number) => void;
 }
 
-const SpecSection = ({
+export const SpecSection = ({
   spec,
   executions,
   dateConfigs,
@@ -129,5 +129,3 @@ const SpecSection = ({
     </div>
   );
 };
-
-export default SpecSection;

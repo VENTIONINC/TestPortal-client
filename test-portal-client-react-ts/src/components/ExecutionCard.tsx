@@ -2,10 +2,10 @@ import { useState, Fragment } from 'react';
 import { HStack, Text } from '@chakra-ui/react';
 
 import { useResultsErrorDialog } from '@/components/dialogs';
+import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution } from '@/types';
-import { toDuration, toStartTime } from '../utils/date-time.converter';
-import BulkActions from './BulkActions';
 
+import { BulkActions } from './BulkActions';
 import '../styles/ExecutionCard.css';
 import { InlineIssue } from './InlineIssue';
 

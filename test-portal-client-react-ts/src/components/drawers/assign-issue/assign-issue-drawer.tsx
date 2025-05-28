@@ -1,21 +1,21 @@
-import { useState, useEffect, useCallback } from "react";
-import { VStack } from "@chakra-ui/react";
+import { useState, useEffect, useCallback } from 'react';
+import { VStack } from '@chakra-ui/react';
 
-import { Drawer, DrawerBody, DrawerProps } from "@/components/ui";
-import { Issue } from "@/utils/models";
+import { Drawer, DrawerBody, DrawerProps } from '@/components/ui';
+import { Issue } from '@/types';
 
-interface IssueDrawerProps extends Omit<DrawerProps, "children"> {
+interface IssueDrawerProps extends Omit<DrawerProps, 'children'> {
   onSubmit: (issue: Issue) => void;
 }
 
 export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
   const [issue, setIssue] = useState<Issue>({
-    name: "",
-    category: "",
-    description: "",
-    portal: "",
-    service: "",
-    ticket: "",
+    name: '',
+    category: '',
+    description: '',
+    portal: '',
+    service: '',
+    ticket: '',
   } as Issue);
   const [existingIssues, setExistingIssues] = useState<Issue[]>([]);
 
@@ -29,26 +29,17 @@ export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
       portal: issue.portal,
       service: issue.service,
       ticket: issue.ticket,
-      limit: "10",
+      limit: '10',
     });
 
     try {
-      const res = await fetch(
-        `http://localhost:3001/api/issues?${queryParams}`
-      );
+      const res = await fetch(`http://localhost:3001/api/issues?${queryParams}`);
       const data = await res.json();
       setExistingIssues(data.issues);
     } catch (error) {
-      console.error("Failed to load issues:", error);
+      console.error('Failed to load issues:', error);
     }
-  }, [
-    issue.category,
-    issue.description,
-    issue.name,
-    issue.portal,
-    issue.service,
-    issue.ticket,
-  ]);
+  }, [issue.category, issue.description, issue.name, issue.portal, issue.service, issue.ticket]);
 
   const handleIssueNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIssue({ ...issue, name: e.target.value });
@@ -68,19 +59,11 @@ export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
       <DrawerBody>
         <VStack align="flex-start" gap={0}>
           <label>Issue Name</label>
-          <input
-            type="text"
-            value={issue.name}
-            onChange={handleIssueNameChange}
-            placeholder="Search for issues..."
-          />
+          <input type="text" value={issue.name} onChange={handleIssueNameChange} placeholder="Search for issues..." />
           {issue.name && existingIssues.length > 0 && (
             <ul className="suggestions">
               {existingIssues.map((suggestion, index) => (
-                <li
-                  key={suggestion.id || index}
-                  onClick={() => handleIssueSelected(suggestion)}
-                >
+                <li key={suggestion.id || index} onClick={() => handleIssueSelected(suggestion)}>
                   <strong>{suggestion.name}</strong>
                 </li>
               ))}
@@ -110,9 +93,7 @@ export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
           <input
             type="text"
             value={issue.description}
-            onChange={(e) =>
-              setIssue({ ...issue, description: e.target.value })
-            }
+            onChange={(e) => setIssue({ ...issue, description: e.target.value })}
             placeholder="Issue description"
             className="input"
           />

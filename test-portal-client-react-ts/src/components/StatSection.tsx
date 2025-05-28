@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { Result, ResultSpec, ResultExecution, ResultErrorAssumption, ResultError, Issue } from '@/types';
 
@@ -31,7 +31,7 @@ interface StatSectionProps {
   results: Result[];
 }
 
-const StatSection: React.FC<StatSectionProps> = ({ results }) => {
+export const StatSection = ({ results }: StatSectionProps) => {
   const stats: StatsData = useMemo(() => {
     const specMap = new Map<string | number, ResultSpec>();
     const executionMap = new Map<string | number, ResultExecution>();
@@ -184,5 +184,3 @@ const StatSection: React.FC<StatSectionProps> = ({ results }) => {
     </details>
   );
 };
-
-export default StatSection;

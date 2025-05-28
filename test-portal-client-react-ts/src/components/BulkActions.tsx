@@ -14,7 +14,7 @@ interface BulkActionsProps {
   selectedResults: BaseResult[];
 }
 
-const BulkActions = ({ selectedResults }: BulkActionsProps) => {
+export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
   const unreviewedResults = useMemo(
     () =>
       selectedResults.filter(({ errors }) =>
@@ -120,5 +120,3 @@ const BulkActions = ({ selectedResults }: BulkActionsProps) => {
     </HStack>
   );
 };
-
-export default BulkActions;

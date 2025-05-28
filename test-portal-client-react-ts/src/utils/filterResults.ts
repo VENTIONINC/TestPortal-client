@@ -1,7 +1,7 @@
 import { Result } from '@/types';
 import type { FilterParamsState } from '../hooks/useFilterParams';
 
-export const filterResults = (resultModels: Result[], filterParams: FilterParamsState): Result[] => {
+export const filterResults = (results: Result[], filterParams: FilterParamsState): Result[] => {
   // const matchTag = (spec: Result['spec']) => {
   //   if (filterParams.tag && spec.tags && Array.isArray(spec.tags)) {
   //     return spec.tags.some((t: string) => String(t).toLowerCase().includes(filterParams.tag.toLowerCase()));
@@ -77,7 +77,7 @@ export const filterResults = (resultModels: Result[], filterParams: FilterParams
     return !filterParams.errorMessage;
   };
 
-  return resultModels.filter(({ result, spec, execution, errors, assumptions }) => {
+  return results.filter(({ result, spec, execution, errors, assumptions }) => {
     return (
       // matchReviewStatus(result, assumptions) &&
       // matchStatus(result) &&

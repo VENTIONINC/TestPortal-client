@@ -2,15 +2,14 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { VStack } from '@chakra-ui/react';
 
 import { useGetResultsQuery } from '@/redux/apis/resultsApi';
+import type { FilterParamsState } from '@/hooks/useFilterParams';
+import { getDateRangeMap, DateConfig } from '@/utils/dateRange';
+import { filterResults } from '@/utils/filterResults';
 import { BaseResult, ResultExecution, ResultGroup, ResultSpec } from '@/types';
-import type { FilterParamsState } from '../hooks/useFilterParams';
-import { getDateRangeMap } from '../utils/dateRange';
-import type { DateConfig } from '../utils/dateRange';
-import { filterResults } from '../utils/filterResults';
 
-import SpecSection from './SpecSection';
-import StatSection from './StatSection';
-import BulkActions from './BulkActions';
+import { SpecSection } from './SpecSection';
+import { StatSection } from './StatSection';
+import { BulkActions } from './BulkActions';
 
 import '../styles/Results.css';
 
@@ -19,7 +18,7 @@ interface ResultsProps {
   setFilterParams: React.Dispatch<React.SetStateAction<FilterParamsState>>;
 }
 
-const Results: React.FC<ResultsProps> = ({ filterParams, setFilterParams }) => {
+export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
   const { data } = useGetResultsQuery({
     from: filterParams.from,
     to: filterParams.to,
@@ -365,5 +364,3 @@ const Results: React.FC<ResultsProps> = ({ filterParams, setFilterParams }) => {
     </div>
   );
 };
-
-export default Results;
