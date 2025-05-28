@@ -38,8 +38,7 @@ const fetchIssues = async (filters: IssueFilters): Promise<ApiIssuesResponse> =>
     let errorData;
     try {
       errorData = await response.json();
-    } catch (parseError) {
-      console.error('Failed to parse error response json:', parseError);
+    } catch {
       errorData = {
         message: 'Failed to parse error response json from server.',
       };

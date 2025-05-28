@@ -37,6 +37,7 @@ export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
       const data = await res.json();
       setExistingIssues(data.issues);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to load issues:', error);
     }
   }, [issue.category, issue.description, issue.name, issue.portal, issue.service, issue.ticket]);

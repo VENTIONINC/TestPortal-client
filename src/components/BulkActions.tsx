@@ -50,7 +50,6 @@ export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
         return alert(`Auto review failed: ${response.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error during auto review process:', error);
       alert(`An error occurred during auto review: ${(error as Error).message}`);
     }
   }, [unreviewedResults, bulkReview]);

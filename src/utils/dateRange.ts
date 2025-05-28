@@ -1,5 +1,4 @@
-import { getDaysDiff } from './date-time.converter'; // Path relative to src/utils/
-// import type { FilterParamsState } from '../hooks/useFilterParams'; // Not needed directly, pass strings
+import { getDaysDiff } from './date-time.converter';
 
 export interface DateConfig {
   name: string;
@@ -15,15 +14,13 @@ const formatDateEnCA = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-export const getDateRangeMap = (
-  filterFrom: string,
-  filterTo: string
-): DateConfig[] => {
+export const getDateRangeMap = (filterFrom: string, filterTo: string): DateConfig[] => {
   const today = new Date();
   const fromDate = new Date(filterFrom); // Renamed to avoid conflict with 'from' keyword if it were a module
   const toDate = new Date(filterTo); // Renamed
 
   if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    // eslint-disable-next-line no-console
     console.error('Invalid date string provided to getDateRangeMap', {
       filterFrom,
       filterTo,
@@ -36,10 +33,11 @@ export const getDateRangeMap = (
   toDate.setHours(0, 0, 0, 0);
 
   if (toDate < fromDate) {
-    console.warn(
-      "'To' date is before 'From' date in getDateRangeMap. Returning empty array.",
-      { from: fromDate, to: toDate }
-    );
+    // eslint-disable-next-line no-console
+    console.warn("'To' date is before 'From' date in getDateRangeMap. Returning empty array.", {
+      from: fromDate,
+      to: toDate,
+    });
     return [];
   }
 

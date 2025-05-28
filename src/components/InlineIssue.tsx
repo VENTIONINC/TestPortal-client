@@ -60,6 +60,7 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
     if (assumptionResponse.data) {
       toggleSidebar();
     } else {
+      // eslint-disable-next-line no-console
       console.error('Failed to assign issue');
     }
   };

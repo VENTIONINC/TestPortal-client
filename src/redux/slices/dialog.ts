@@ -1,8 +1,8 @@
-import React, { useCallback } from "react";
-import { createSlice } from "@reduxjs/toolkit";
+import React, { useCallback } from 'react';
+import { createSlice } from '@reduxjs/toolkit';
 
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { DefaultDialogProps } from "@/types";
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { DefaultDialogProps } from '@/types';
 
 type DialogComponent<T> = React.ComponentType<T & DefaultDialogProps>;
 
@@ -20,25 +20,18 @@ const initialState: DialogState<object> = {
 };
 
 export const dialogSlice = createSlice({
-  name: "dialog",
+  name: 'dialog',
   initialState: initialState,
   reducers: {
     reset: () => initialState,
     openDialog: (state, action) => {
       // eslint-disable-next-line no-console
-      if (!action.payload)
-        return console.error("Dialog does not have an argument dispatched");
+      if (!action.payload) return console.error('Dialog does not have an argument dispatched');
 
-      const {
-        Component,
-        closeDialog,
-        closeAllDialogs,
-        props = {},
-      } = action.payload;
+      const { Component, closeDialog, closeAllDialogs, props = {} } = action.payload;
 
       // eslint-disable-next-line no-console
-      if (!Component)
-        return console.error("Dialog does not have a Component. Aborting");
+      if (!Component) return console.error('Dialog does not have a Component. Aborting');
 
       state.dialogs.push({ Component, props, closeDialog, closeAllDialogs });
     },
@@ -62,12 +55,11 @@ export const useDialogActions = () => {
             Component,
             props,
             closeDialog: () => dispatch(dialogSlice.actions.closeDialog()),
-            closeAllDialogs: () =>
-              dispatch(dialogSlice.actions.closeAllDialogs()),
-          })
+            closeAllDialogs: () => dispatch(dialogSlice.actions.closeAllDialogs()),
+          }),
         );
       },
-      [dispatch]
+      [dispatch],
     ),
     closeDialog: () => {
       dispatch(dialogSlice.actions.closeDialog());
