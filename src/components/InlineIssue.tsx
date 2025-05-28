@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { HStack, Text } from '@chakra-ui/react';
 import { LuCheck, LuCirclePlus, LuTrash } from 'react-icons/lu';
 
-import { useConfirmAssumptionMutation, useCreateAssumptionMutation } from '@/redux/apis/assumptionsApi';
+import { usePostApiAssumptionsMutation, usePatchApiAssumptionsByAssumptionIdMutation } from '@/redux/apis/generatedApi';
 import { Issue, ResultError, ResultErrorAssumption } from '@/types';
 
 import { AssignIssueDrawer } from './drawers';
@@ -14,15 +14,18 @@ interface InlineIssueProps {
 export const InlineIssue = ({ resultError }: InlineIssueProps) => {
   const [showSidebar, setShowSidebar] = useState(false);
 
-  const [confirmAssumption] = useConfirmAssumptionMutation();
-  const [createAssumption] = useCreateAssumptionMutation();
+  const [confirmAssumption] = usePatchApiAssumptionsByAssumptionIdMutation();
+  const [createAssumption] = usePostApiAssumptionsMutation();
 
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
   };
 
   const confirm = async (assumption: ResultErrorAssumption, isConfirmed: boolean) => {
-    await confirmAssumption({ id: assumption.id, isConfirmed, madeBy: 'user' });
+    await confirmAssumption({
+      assumptionId: assumption.id.toString(),
+      updateAssumptionRequest: { isConfirmed, madeBy: 'user' },
+    });
   };
 
   const handleCreateAssumption = async (issue: Issue) => {
@@ -45,11 +48,13 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
     }
 
     const assumptionResponse = await createAssumption({
-      madeBy: 'user',
-      score: 1,
-      isConfirmed: true,
-      issueId: issue.id,
-      resultErrorId: resultError.id,
+      createAssumptionRequest: {
+        madeBy: 'user',
+        score: 1,
+        isConfirmed: true,
+        issueId: issue.id,
+        resultErrorId: resultError.id,
+      },
     });
 
     if (assumptionResponse.error) {
