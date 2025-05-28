@@ -5,7 +5,7 @@ import { toCleanTitle } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
 import DateToggle from './DateToggle';
-import ExecutionCard from './ExecutionCard';
+import { ExecutionCard } from './ExecutionCard';
 import '../styles/SpecSection.css';
 
 interface SpecSectionProps {
@@ -14,7 +14,7 @@ interface SpecSectionProps {
   dateConfigs: DateConfig[];
   onDateToggle: (dateKey: string) => void;
   selectedResultsIds: number[];
-  onSelectResult: (resultId: number) => void;
+  onSelectResult: (resultId: number | number[]) => void;
 }
 
 export const SpecSection = ({

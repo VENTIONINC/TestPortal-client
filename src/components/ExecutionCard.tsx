@@ -1,29 +1,25 @@
-import { useState, Fragment } from 'react';
-import { HStack, Text } from '@chakra-ui/react';
+import { Fragment } from 'react';
+import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { useResultsErrorDialog } from '@/components/dialogs';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution } from '@/types';
 
 import { BulkActions } from './BulkActions';
-import '../styles/ExecutionCard.css';
 import { InlineIssue } from './InlineIssue';
 
 interface ExecutionCardProps {
   execution: ResultExecution;
   results: BaseResult[];
   selectedResultsIds: number[];
-  onSelectResult: (resultId: number) => void;
+  onSelectResult: (resultId: number | number[]) => void;
 }
 
-const ExecutionCard = ({ execution, results, selectedResultsIds, onSelectResult }: ExecutionCardProps) => {
-  const [selectAllExecutions, setSelectAllExecutions] = useState(false);
-
+export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelectResult }: ExecutionCardProps) => {
   const openResultsErrorDialog = useResultsErrorDialog();
 
   const toggleSelectAll = () => {
-    const newSelectAll = !selectAllExecutions;
-    setSelectAllExecutions(newSelectAll);
+    onSelectResult(results.map(({ id }) => id));
   };
 
   const toDataDogLink = (execution: ResultExecution, result: BaseResult) => {
@@ -56,9 +52,13 @@ const ExecutionCard = ({ execution, results, selectedResultsIds, onSelectResult 
   };
 
   return (
-    <div className="execution-card">
-      <HStack gap={6} px={2} bg="gray.200">
-        <input type="checkbox" onChange={toggleSelectAll} checked={selectAllExecutions} />
+    <VStack align="stretch" mt={2} p={2} border="1px solid" borderColor="gray.200" borderRadius="md">
+      <HStack gap={6} px={2} bg="gray.200" borderRadius="sm">
+        <input
+          type="checkbox"
+          checked={results.every(({ id }) => selectedResultsIds.includes(id))}
+          onChange={toggleSelectAll}
+        />
         <Text>{execution.environment}</Text>
         <Text>{execution.type}</Text>
         <Text>{execution.name}</Text>
@@ -70,7 +70,7 @@ const ExecutionCard = ({ execution, results, selectedResultsIds, onSelectResult 
       </HStack>
 
       {results.map((result) => (
-        <div className="execution-result" key={result.id}>
+        <HStack key={result.id} align="center" gap={4} px={2}>
           <input
             type="checkbox"
             checked={selectedResultsIds.includes(result.id)}
@@ -78,7 +78,7 @@ const ExecutionCard = ({ execution, results, selectedResultsIds, onSelectResult 
               onSelectResult(result.id);
             }}
           />
-          <p className={`status-box ${result.status}`}></p>
+          <Flex alignSelf="stretch" w={2} borderRadius="xs" className={result.status} />
           <p># {result.retry}</p>
 
           {result.allureLink.startsWith('http') ? (
@@ -105,10 +105,8 @@ const ExecutionCard = ({ execution, results, selectedResultsIds, onSelectResult 
                 <InlineIssue resultError={resultError} />
               </Fragment>
             ))}
-        </div>
+        </HStack>
       ))}
-    </div>
+    </VStack>
   );
 };
-
-export default ExecutionCard;

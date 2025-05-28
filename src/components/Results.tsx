@@ -92,10 +92,23 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
     setSelectedResultsIds((prev) => (prev.length === activeDaysResultsIds.length ? [] : activeDaysResultsIds));
   };
 
-  const handleSelectResult = (resultId: number) => {
-    setSelectedResultsIds((prev) =>
-      prev.includes(resultId) ? prev.filter((id) => id !== resultId) : [...prev, resultId],
-    );
+  const handleSelectResult = (resultId: number | number[]) => {
+    if (Array.isArray(resultId)) {
+      setSelectedResultsIds((prev) => {
+        const allSelected = resultId.every((id) => prev.includes(id));
+
+        if (allSelected) {
+          return prev.filter((id) => !resultId.includes(id));
+        } else {
+          const newIds = resultId.filter((id) => !prev.includes(id));
+          return [...prev, ...newIds];
+        }
+      });
+    } else {
+      setSelectedResultsIds((prev) =>
+        prev.includes(resultId) ? prev.filter((id) => id !== resultId) : [...prev, resultId],
+      );
+    }
   };
 
   const toggleSidebar = useCallback(() => {
