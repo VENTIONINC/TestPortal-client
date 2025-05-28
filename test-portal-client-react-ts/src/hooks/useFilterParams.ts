@@ -43,13 +43,7 @@ const initialFilterParams: FilterParamsState = {
 };
 
 export const useFilterParams = () => {
-  const [filterParams, setFilterParams] =
-    useState<FilterParamsState>(initialFilterParams);
-
-  // Example of a specific updater function you might add:
-  // const updateStatus = (newStatus: string) => {
-  //   setFilterParams(prev => ({ ...prev, status: newStatus, page: 1 })); // Reset page on filter change
-  // };
+  const [filterParams, setFilterParams] = useState<FilterParamsState>(initialFilterParams);
 
   return { filterParams, setFilterParams, initialFilterParams };
 };
