@@ -79,7 +79,7 @@ const FiltersGroup = ({ title, open, children }: PropsWithChildren<{ title: stri
       borderColor="gray.400"
       borderRadius="md"
       p={open ? 4 : 0}
-      overflow="hidden"
+      overflowX="clip"
       transition="padding 0.3s ease-in-out"
     >
       <Text fontWeight={700}>{title}</Text>

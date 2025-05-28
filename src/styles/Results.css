@@ -17,13 +17,6 @@
   overflow-y: auto; /* If content can exceed viewport height */
 }
 
-/* .card {
-  padding: 1em; 
-  border: 1px solid #eee;
-  border-radius: 4px;
-  background-color: #fff;
-} */
-
 .row {
   display: flex;
   gap: 10px; /* Example gap */
@@ -32,17 +25,4 @@
 .col {
   /* Basic column for flex items */
   flex: 1;
-}
-
-.results-list .result-card {
-  margin-bottom: 1rem;
-  /* Styles for result-card to be added */
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  gap: 10px;
 }

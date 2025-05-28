@@ -141,13 +141,15 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
                 onClick={() => toggleDayActive(day)}
                 flex={1}
                 justify="center"
-                py={2}
+                p={2}
                 bg={day.isActive ? 'gray.800' : 'white'}
                 color={day.isActive ? 'white' : 'black'}
                 border="1px solid"
                 borderColor="gray.300"
                 borderRadius="sm"
                 cursor="pointer"
+                textAlign="center"
+                textStyle="md"
               >
                 <Text>{day.name}</Text>
               </Flex>
