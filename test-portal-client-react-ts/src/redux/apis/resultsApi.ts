@@ -1,6 +1,7 @@
-import { GetResultsRequest, GetResultsResponse } from '@/types/apis';
+import { BulkReviewRequest, BulkReviewResponse, GetResultsRequest, GetResultsResponse } from '@/types/apis';
 
 import { baseApi } from './baseApi';
+import { TAGS } from './tags';
 
 export const resultsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -18,9 +19,18 @@ export const resultsApi = baseApi.injectEndpoints({
           method: 'GET',
         };
       },
+      providesTags: [TAGS.Result],
+    }),
+    bulkReview: build.mutation<BulkReviewResponse, BulkReviewRequest>({
+      query: ({ errorIds }) => ({
+        url: '/result-errors/bulk-review',
+        method: 'PATCH',
+        body: { errorIds },
+      }),
+      invalidatesTags: [TAGS.Result],
     }),
   }),
   overrideExisting: true,
 });
 
-export const { useGetResultsQuery } = resultsApi;
+export const { useGetResultsQuery, useBulkReviewMutation } = resultsApi;

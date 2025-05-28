@@ -1,100 +1,103 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import type { ModelledResultRecord } from "../utils/toModels";
-import type { FilterParamsState } from "../hooks/useFilterParams";
-import { getDateRangeMap } from "../utils/dateRange";
-import type { DateConfig } from "../utils/dateRange"; // Type-only import
-import { filterResults as applyAllFilters } from "../utils/filterResults";
-import { Spec, Result as ResultModel } from "../utils/models"; // For types. Renamed Result to ResultModel to avoid conflict.
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { VStack } from '@chakra-ui/react';
 
-// Import actual child components
-import SpecSection from "./SpecSection";
-import StatSection from "./StatSection";
-import BulkActions from "./BulkActions";
+import { useGetResultsQuery } from '@/redux/apis/resultsApi';
+import { BaseResult, ResultExecution, ResultGroup, ResultSpec } from '@/types';
+import type { FilterParamsState } from '../hooks/useFilterParams';
+import { getDateRangeMap } from '../utils/dateRange';
+import type { DateConfig } from '../utils/dateRange';
+import { filterResults } from '../utils/filterResults';
 
-import "../styles/Results.css"; // Import styles
+import SpecSection from './SpecSection';
+import StatSection from './StatSection';
+import BulkActions from './BulkActions';
+
+import '../styles/Results.css';
 
 interface ResultsProps {
-  results: ModelledResultRecord[];
   filterParams: FilterParamsState;
   setFilterParams: React.Dispatch<React.SetStateAction<FilterParamsState>>;
 }
 
-const Results: React.FC<ResultsProps> = ({
-  results: modelledResultsFromProps,
-  filterParams,
-  setFilterParams,
-}) => {
+const Results: React.FC<ResultsProps> = ({ filterParams, setFilterParams }) => {
+  const { data } = useGetResultsQuery({
+    from: filterParams.from,
+    to: filterParams.to,
+    status: filterParams.status,
+    page: filterParams.page,
+  });
+
+  const results: ResultGroup = useMemo(() => {
+    const resultsMap = new Map<
+      string,
+      { spec: ResultSpec; executions: { execution: ResultExecution; results: BaseResult[] }[] }
+    >();
+
+    filterResults(data?.results || [], filterParams).forEach((result) => {
+      const baseResult = {
+        id: result.id,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+        allureLink: result.allureLink,
+        retry: result.retry,
+        status: result.status,
+        duration: result.duration,
+        startTime: result.startTime,
+        specId: result.specId,
+        executionId: result.executionId,
+        errors: result.errors,
+      };
+
+      if (resultsMap.has(result.spec.key)) {
+        const savedResult = resultsMap.get(result.spec.key);
+
+        const savedExecution = savedResult?.executions.find((e) => e.execution.id === result.execution.id);
+
+        if (savedExecution) {
+          savedExecution.results.push(baseResult);
+        } else {
+          savedResult?.executions.push({ execution: result.execution, results: [baseResult] });
+        }
+      } else {
+        resultsMap.set(result.spec.key, {
+          spec: result.spec,
+          executions: [{ execution: result.execution, results: [baseResult] }],
+        });
+      }
+    });
+
+    return resultsMap;
+  }, [data?.results, filterParams]);
+
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
-  const [sidebarWidth, setSidebarWidth] = useState(250); // For CSS transition, actual width set by inline style
-  const [selectAll, setSelectAll] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(250);
   const [dateConfigs, setDateConfigs] = useState<DateConfig[]>([]);
-
-  // Make a mutable copy of results for local state changes (selection, active status)
-  // This is one way to handle direct manipulations; could be refactored to manage IDs separately.
-  const [internalResults, setInternalResults] = useState<
-    ModelledResultRecord[]
-  >([]);
-
-  useEffect(() => {
-    // Sync internalResults when props.results changes (e.g. new data from API)
-    // This basic sync might need to be smarter if local changes (selections) should be preserved across prop updates.
-    setInternalResults(
-      modelledResultsFromProps.map((r) => ({
-        ...r,
-        result: new ResultModel(r.result),
-      }))
-    ); // Ensure result is an instance with methods
-  }, [modelledResultsFromProps]);
 
   useEffect(() => {
     setDateConfigs(getDateRangeMap(filterParams.from, filterParams.to));
   }, [filterParams.from, filterParams.to]);
 
-  const activeDaysResults = useMemo(() => {
-    return internalResults.filter(({ result }) => {
-      const dayConfig = dateConfigs.find(
-        (config) => config.date === result.dateKey
-      );
-      return dayConfig?.isActive;
+  const activeDaysResultsIds = useMemo(() => {
+    const activeDates = dateConfigs.filter((day) => day.isActive).map(({ date }) => date);
+
+    return Array.from(results.values()).flatMap(({ executions }) => {
+      return executions
+        .filter(({ results }) => results.some((result) => activeDates.includes(result.startTime.split('T')[0])))
+        .flatMap(({ results }) => results.map((result) => result.id));
     });
-  }, [internalResults, dateConfigs]);
+  }, [results, dateConfigs]);
 
-  const filteredResultsFromActive = useMemo(() => {
-    return applyAllFilters(activeDaysResults, filterParams);
-  }, [activeDaysResults, filterParams]);
+  const [selectedResultsIds, setSelectedResultsIds] = useState<number[]>([]);
 
-  const groups = useMemo(() => {
-    const relevantSpecs = new Set<Spec>();
-    filteredResultsFromActive.forEach((model) => {
-      relevantSpecs.add(model.spec);
-    });
+  const handleSelectAll = () => {
+    setSelectedResultsIds((prev) => (prev.length === activeDaysResultsIds.length ? [] : activeDaysResultsIds));
+  };
 
-    const specMap = new Map<Spec, ModelledResultRecord[]>();
-    relevantSpecs.forEach((spec) => {
-      const allResultsForThisSpec = internalResults.filter(
-        (internalModel) => internalModel.spec.id === spec.id
-      );
-      if (allResultsForThisSpec.length > 0) {
-        specMap.set(spec, allResultsForThisSpec);
-      }
-    });
-    return specMap;
-  }, [filteredResultsFromActive, internalResults]);
-
-  const selectedResults = useMemo(() => {
-    return Array.from(groups.values())
-      .flat()
-      .filter((model) => model.result.isSelected);
-  }, [groups]);
-
-  const shownTotal = useMemo(
-    () => filteredResultsFromActive.length, // Total items matching all filters including active days
-    [filteredResultsFromActive]
-  );
-  const selectedTotal = useMemo(
-    () => selectedResults.length, // Count based on the derived selectedResults
-    [selectedResults]
-  );
+  const handleSelectResult = (resultId: number) => {
+    setSelectedResultsIds((prev) =>
+      prev.includes(resultId) ? prev.filter((id) => id !== resultId) : [...prev, resultId],
+    );
+  };
 
   const toggleSidebar = useCallback(() => {
     setSidebarExpanded((prev) => !prev);
@@ -104,68 +107,20 @@ const Results: React.FC<ResultsProps> = ({
   const toggleDayActive = useCallback(
     (dayToToggle: DateConfig) => {
       setDateConfigs((prevConfigs) =>
-        prevConfigs.map((d) =>
-          d.date === dayToToggle.date ? { ...d, isActive: !d.isActive } : d
-        )
+        prevConfigs.map((d) => (d.date === dayToToggle.date ? { ...d, isActive: !d.isActive } : d)),
       );
     },
-    [setDateConfigs]
+    [setDateConfigs],
   );
 
-  // New handler for SpecSection date toggles
   const handleSpecDateToggle = useCallback(
     (dateKeyToToggle: string) => {
       setDateConfigs((prevConfigs) =>
-        prevConfigs.map((d) =>
-          d.date === dateKeyToToggle ? { ...d, isActive: !d.isActive } : d
-        )
+        prevConfigs.map((d) => (d.date === dateKeyToToggle ? { ...d, isActive: !d.isActive } : d)),
       );
     },
-    [setDateConfigs]
+    [setDateConfigs],
   );
-
-  const handleSelectAll = useCallback(() => {
-    const newSelectAll = !selectAll;
-    setSelectAll(newSelectAll);
-
-    const activeDayKeys = new Set(
-      dateConfigs.filter((dc) => dc.isActive).map((dc) => dc.date)
-    );
-
-    setInternalResults((prevResults) =>
-      prevResults.map((model) => {
-        // Only modify selection if the result's dateKey corresponds to an active day
-        if (activeDayKeys.has(model.result.dateKey)) {
-          const newResult = new ResultModel(model.result);
-          // newResult.isActive = true;
-          newResult.isSelected = newSelectAll;
-          return { ...model, result: newResult };
-        }
-        return model;
-      })
-    );
-  }, [dateConfigs, selectAll]);
-
-  const handleResultsUpdate = useCallback(
-    (updatedRecords: ModelledResultRecord[]) => {
-      setInternalResults((prevInternalResults) => {
-        const updatedMap = new Map(
-          updatedRecords.map((record) => [record.result.id, record])
-        );
-        return prevInternalResults.map(
-          (record) => updatedMap.get(record.result.id) || record
-        );
-      });
-    },
-    [setInternalResults]
-  );
-
-  // TODO: Handlers for individual item selection if needed.
-  // TODO: useEffect for totalPages calculation based on filteredResultsFromActive.length / itemsPerPage.
-
-  if (!modelledResultsFromProps) {
-    return <p>Loading results data or no data passed...</p>; // Should be handled by App.tsx typically
-  }
 
   return (
     <div className="main-container">
@@ -358,16 +313,14 @@ const Results: React.FC<ResultsProps> = ({
             {dateConfigs.map((day) => (
               <div
                 key={day.date}
-                className={`day-toggle col button ${
-                  day.isActive ? "dark" : "outline"
-                }`}
+                className={`day-toggle col button ${day.isActive ? 'dark' : 'outline'}`}
                 onClick={() => toggleDayActive(day)}
               >
                 <div>{day.name}</div>
               </div>
             ))}
           </div>
-          <StatSection specGroups={activeDaysResults} />
+          <StatSection results={data?.results.filter((result) => activeDaysResultsIds.includes(result.id)) || []} />
         </div>
 
         <h2>Results</h2>
@@ -376,40 +329,38 @@ const Results: React.FC<ResultsProps> = ({
           <label>
             <input
               type="checkbox"
-              checked={selectAll}
+              checked={activeDaysResultsIds.length !== 0 && selectedResultsIds.length === activeDaysResultsIds.length}
               onChange={handleSelectAll}
             />
             Select all
           </label>
           <pre>
-            Shown {shownTotal}. Selected {selectedTotal}
+            Shown {activeDaysResultsIds.length}.Selected {selectedResultsIds.length}
           </pre>
-          <BulkActions
-            selectedResults={selectedResults}
-            onResultsUpdate={handleResultsUpdate}
-          />
+          <BulkActions selectedResults={data?.results.filter(({ id }) => selectedResultsIds.includes(id)) || []} />
         </div>
 
-        <div className="results-list">
-          {groups.size > 0 ? (
-            Array.from(groups.entries()).map(([spec, allResultsForSpec]) => (
-              <div key={spec.id} className="result-card">
-                <SpecSection
-                  spec={spec}
-                  results={allResultsForSpec}
-                  dateConfigs={dateConfigs}
-                  onDateToggle={handleSpecDateToggle}
-                />
-              </div>
+        <VStack align="stretch">
+          {results.size > 0 ? (
+            Array.from(results.entries()).map(([specKey, { spec, executions }]) => (
+              <SpecSection
+                key={specKey}
+                spec={spec}
+                executions={executions}
+                dateConfigs={dateConfigs}
+                onDateToggle={handleSpecDateToggle}
+                selectedResultsIds={selectedResultsIds}
+                onSelectResult={handleSelectResult}
+              />
             ))
           ) : (
             <p>No results found matching your filters.</p>
           )}
-        </div>
+        </VStack>
       </section>
 
       <button className="toggle-btn" onClick={toggleSidebar}>
-        {sidebarExpanded ? "\u00AB Hide Filters" : "\u00BB Show Filters"}
+        {sidebarExpanded ? '\u00AB Hide Filters' : '\u00BB Show Filters'}
       </button>
     </div>
   );

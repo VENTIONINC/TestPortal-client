@@ -1,9 +1,8 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, Fragment } from 'react';
 import { HStack, Text } from '@chakra-ui/react';
 
 import { useResultsErrorDialog } from '@/components/dialogs';
-import type { Execution, Result } from '../utils/models';
-import type { ModelledResultRecord } from '../utils/toModels';
+import { BaseResult, ResultExecution } from '@/types';
 import { toDuration, toStartTime } from '../utils/date-time.converter';
 import BulkActions from './BulkActions';
 
@@ -11,40 +10,23 @@ import '../styles/ExecutionCard.css';
 import { InlineIssue } from './InlineIssue';
 
 interface ExecutionCardProps {
-  execution: Execution;
-  resultModels: ModelledResultRecord[];
+  execution: ResultExecution;
+  results: BaseResult[];
+  selectedResultsIds: number[];
+  onSelectResult: (resultId: number) => void;
 }
 
-const ExecutionCard = ({ execution, resultModels }: ExecutionCardProps) => {
-  const [sortedResults, setSortedResults] = useState<ModelledResultRecord[]>([]);
+const ExecutionCard = ({ execution, results, selectedResultsIds, onSelectResult }: ExecutionCardProps) => {
   const [selectAllExecutions, setSelectAllExecutions] = useState(false);
 
-  // Sort results by retry
-  useEffect(() => {
-    setSortedResults([...resultModels].sort((a, b) => a.result.retry - b.result.retry));
-  }, [resultModels]);
-
-  useEffect(() => {
-    for (const model of sortedResults) {
-      model.result.isActive = true;
-    }
-  }, [sortedResults]);
-
   const openResultsErrorDialog = useResultsErrorDialog();
-
-  const selectedResults = sortedResults.filter((model) => model.result.isSelected);
 
   const toggleSelectAll = () => {
     const newSelectAll = !selectAllExecutions;
     setSelectAllExecutions(newSelectAll);
-
-    // Update all result models
-    sortedResults.forEach((model) => {
-      model.result.isSelected = newSelectAll;
-    });
   };
 
-  const toDataDogLink = (execution: Execution, result: Result) => {
+  const toDataDogLink = (execution: ResultExecution, result: BaseResult) => {
     const env = execution.environment;
     const start = new Date(result.startTime).getTime();
     const end = start + result.duration;
@@ -73,19 +55,6 @@ const ExecutionCard = ({ execution, resultModels }: ExecutionCardProps) => {
     return `https://app.datadoghq.com/apm/traces?${searchParams.toString()}`;
   };
 
-  const handleResultUpdate = (updatedRecords: ModelledResultRecord[]) => {
-    // Update the sorted results with the updated records
-    updatedRecords.forEach((updatedRecord) => {
-      const index = sortedResults.findIndex((r) => r.result.id === updatedRecord.result.id);
-      if (index !== -1) {
-        sortedResults[index] = updatedRecord;
-      }
-    });
-
-    // Force a re-render
-    setSortedResults([...sortedResults]);
-  };
-
   return (
     <div className="execution-card">
       <HStack gap={6} px={2} bg="gray.200">
@@ -97,47 +66,43 @@ const ExecutionCard = ({ execution, resultModels }: ExecutionCardProps) => {
           Playwright v.{execution.version}
         </Text>
 
-        <BulkActions selectedResults={selectedResults} onResultsUpdate={handleResultUpdate} />
+        <BulkActions selectedResults={results.filter(({ id }) => selectedResultsIds.includes(id))} />
       </HStack>
 
-      {sortedResults.map((model) => (
-        <div className="execution-result" key={model.result.id}>
+      {results.map((result) => (
+        <div className="execution-result" key={result.id}>
           <input
             type="checkbox"
-            checked={model.result.isSelected}
+            checked={selectedResultsIds.includes(result.id)}
             onChange={() => {
-              model.result.isSelected = !model.result.isSelected;
-              setSortedResults([...sortedResults]); // Force re-render
+              onSelectResult(result.id);
             }}
           />
-          <p className={`status-box ${model.result.status}`}></p>
-          <p># {model.result.retry}</p>
+          <p className={`status-box ${result.status}`}></p>
+          <p># {result.retry}</p>
 
-          {model.result.allureLink.startsWith('http') ? (
-            <a href={model.result.allureLink} target="_blank" rel="noopener noreferrer">
+          {result.allureLink.startsWith('http') ? (
+            <a href={result.allureLink} target="_blank" rel="noopener noreferrer">
               Allure
             </a>
           ) : (
             <p>No allure</p>
           )}
 
-          <a href={toDataDogLink(execution, model.result)} target="_blank" rel="noopener noreferrer">
+          <a href={toDataDogLink(execution, result)} target="_blank" rel="noopener noreferrer">
             DataDog
           </a>
-          <p>{toStartTime(model.result.startTime)}</p>
-          <p>{toDuration(model.result.duration)}</p>
+          <p>{toStartTime(result.startTime)}</p>
+          <p>{toDuration(result.duration)}</p>
 
-          {model.errors &&
-            model.errors.length > 0 &&
-            model.errors.map((resultError) => (
+          {result.errors &&
+            result.errors.length > 0 &&
+            result.errors.map((resultError) => (
               <Fragment key={resultError.id}>
                 <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
                   {resultError.message}
                 </Text>
-                <InlineIssue
-                  resultError={resultError}
-                  assumptions={model.assumptions.filter((a) => a.resultErrorId === resultError.id)}
-                />
+                <InlineIssue resultError={resultError} />
               </Fragment>
             ))}
         </div>

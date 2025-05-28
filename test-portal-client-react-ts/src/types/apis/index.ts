@@ -1,1 +1,2 @@
-export * from "./resultsApi";
+export * from './assumptionsApi';
+export * from './resultsApi';

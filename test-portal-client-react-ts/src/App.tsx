@@ -1,25 +1,18 @@
-import { useState } from "react";
-import "./App.css";
-import { useFilterParams } from "./hooks/useFilterParams";
-import { useResultsQuery } from "./hooks/useResultsQuery";
-import Results from "./components/Results";
-import { Issues } from "@/components/Issues";
-import { toModels } from "./utils/toModels";
-import type { ModelledResultRecord } from "./utils/toModels";
+import { useState } from 'react';
+
+import { Issues } from '@/components/Issues';
+import { useFilterParams } from './hooks/useFilterParams';
+import Results from './components/Results';
+import './App.css';
 
 enum ACTIVE_TAB {
-  Results = "results",
-  Issues = "issues",
+  Results = 'results',
+  Issues = 'issues',
 }
 
 function App() {
   const [activeTab, setActiveTab] = useState<ACTIVE_TAB>(ACTIVE_TAB.Results);
   const { filterParams, setFilterParams } = useFilterParams();
-  const { data: apiResults } = useResultsQuery(filterParams);
-
-  const modelledResults: ModelledResultRecord[] | undefined = apiResults
-    ? toModels(apiResults)
-    : [];
 
   const switchTab = (tab: ACTIVE_TAB) => {
     setActiveTab(tab);
@@ -29,13 +22,13 @@ function App() {
     <>
       <div className="tabs">
         <div
-          className={`tab ${activeTab === ACTIVE_TAB.Results ? "active" : ""}`}
+          className={`tab ${activeTab === ACTIVE_TAB.Results ? 'active' : ''}`}
           onClick={() => switchTab(ACTIVE_TAB.Results)}
         >
           Results
         </div>
         <div
-          className={`tab ${activeTab === ACTIVE_TAB.Issues ? "active" : ""}`}
+          className={`tab ${activeTab === ACTIVE_TAB.Issues ? 'active' : ''}`}
           onClick={() => switchTab(ACTIVE_TAB.Issues)}
         >
           Issues
@@ -43,13 +36,7 @@ function App() {
       </div>
 
       <div className="content">
-        {activeTab === ACTIVE_TAB.Results && (
-          <Results
-            results={modelledResults}
-            filterParams={filterParams}
-            setFilterParams={setFilterParams}
-          />
-        )}
+        {activeTab === ACTIVE_TAB.Results && <Results filterParams={filterParams} setFilterParams={setFilterParams} />}
         {activeTab === ACTIVE_TAB.Issues && <Issues />}
       </div>
     </>

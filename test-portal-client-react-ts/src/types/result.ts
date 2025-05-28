@@ -1,4 +1,4 @@
-export interface Result {
+export interface BaseResult {
   id: number;
   createdAt: string;
   updatedAt: string;
@@ -9,9 +9,12 @@ export interface Result {
   startTime: string;
   specId: number;
   executionId: number;
+  errors: ResultError[];
+}
+
+export interface Result extends BaseResult {
   spec: ResultSpec;
   execution: ResultExecution;
-  errors: ResultError[];
 }
 
 export interface ResultSpec {
@@ -49,5 +52,40 @@ export interface ResultError {
   receivedString: string;
   location: string;
   resultId: number;
-  assumptions: unknown[];
+  assumptions: ResultErrorAssumption[];
 }
+
+export interface ResultErrorAssumption {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  isConfirmed: boolean;
+  score: number;
+  madeBy: string;
+  issueId: number;
+  resultErrorId: number;
+  issue: Issue;
+}
+
+export interface Issue {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  category: string;
+  description: string;
+  portal: string;
+  service: string;
+  ticket: string;
+}
+
+export type ResultGroup = Map<
+  string,
+  {
+    spec: ResultSpec;
+    executions: {
+      execution: ResultExecution;
+      results: BaseResult[];
+    }[];
+  }
+>;
