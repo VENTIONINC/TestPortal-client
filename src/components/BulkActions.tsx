@@ -1,20 +1,21 @@
-import React, { useMemo, useCallback } from 'react';
-import { HStack, Text } from '@chakra-ui/react';
+import { useMemo, useCallback } from 'react';
+import { HStack, Text, useToken } from '@chakra-ui/react';
 import Tippy from '@tippyjs/react';
-import { LuCheck, LuTrash } from 'react-icons/lu';
+import { LuCheck, LuTrash, LuWandSparkles } from 'react-icons/lu';
 
 import { useBulkReviewMutation } from '@/redux/apis/resultsApi';
 import { useConfirmAssumptionMutation } from '@/redux/apis/assumptionsApi';
 import { BaseResult } from '@/types';
 
 import 'tippy.js/dist/tippy.css';
-import '../styles/BulkActions.css';
 
 interface BulkActionsProps {
   selectedResults: BaseResult[];
 }
 
 export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
+  const purple700 = useToken('colors', 'purple.700')[0];
+
   const unreviewedResults = useMemo(
     () =>
       selectedResults.filter(({ errors }) =>
@@ -98,11 +99,7 @@ export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
 
       {unreviewedResults.length > 0 && (
         <Tippy content={`Run auto review for ${unreviewedResults.length} results`} arrow={true}>
-          <button
-            aria-label="Run auto review"
-            className="auto-review bulk-action-button"
-            onClick={runAutoReview}
-          ></button>
+          <LuWandSparkles color={purple700} size={16} onClick={runAutoReview} style={{ cursor: 'pointer' }} />
         </Tippy>
       )}
 
