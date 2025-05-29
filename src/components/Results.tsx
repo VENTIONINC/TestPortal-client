@@ -159,8 +159,7 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
         </VStack>
 
         <h2>Results</h2>
-
-        <div className="bulk-panel row">
+        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" textStyle="sm">
           <label>
             <input
               type="checkbox"
@@ -173,9 +172,9 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
             Shown {activeDaysResultsIds.length}.Selected {selectedResultsIds.length}
           </pre>
           <BulkActions selectedResults={data?.results.filter(({ id }) => selectedResultsIds.includes(id)) || []} />
-        </div>
+        </HStack>
 
-        <VStack align="stretch">
+        <VStack align="stretch" gap={4}>
           {results.size > 0 ? (
             Array.from(results.entries()).map(([specKey, { spec, executions }]) => (
               <SpecSection

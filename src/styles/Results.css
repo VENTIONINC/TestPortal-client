@@ -1,10 +1,3 @@
-/* Styles from results.svelte */
-.bulk-panel {
-  border: 1px solid var(--color-lightGrey); /* Assuming --color-lightGrey is defined globally or replace */
-  border-radius: 4px;
-  margin-block: 0.5rem;
-}
-
 .main-container {
   display: flex;
   height: 100vh;

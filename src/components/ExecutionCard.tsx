@@ -52,8 +52,8 @@ export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelect
   };
 
   return (
-    <VStack align="stretch" p={2} border="1px solid" borderColor="gray.200" borderRadius="md">
-      <HStack gap={6} px={2} bg="gray.200" borderRadius="sm">
+    <VStack align="stretch" p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md">
+      <HStack gap={6} px={2} bg="gray.200" borderRadius="sm" textStyle="sm">
         <input
           type="checkbox"
           checked={results.every(({ id }) => selectedResultsIds.includes(id))}
@@ -70,7 +70,7 @@ export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelect
       </HStack>
 
       {results.map((result) => (
-        <HStack key={result.id} align="center" gap={4} px={2}>
+        <HStack key={result.id} align="center" gap={4} px={2} textStyle="sm">
           <input
             type="checkbox"
             checked={selectedResultsIds.includes(result.id)}
@@ -79,7 +79,7 @@ export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelect
             }}
           />
           <Flex alignSelf="stretch" w={2} borderRadius="xs" className={result.status} />
-          <p># {result.retry}</p>
+          <Text whiteSpace="nowrap"># {result.retry}</Text>
 
           {result.allureLink.startsWith('http') ? (
             <a href={result.allureLink} target="_blank" rel="noopener noreferrer">
