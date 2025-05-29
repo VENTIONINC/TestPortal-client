@@ -27,6 +27,9 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
     page: filterParams.page,
   });
 
+  const [dateConfigs, setDateConfigs] = useState<DateConfig[]>([]);
+  const [selectedResultsIds, setSelectedResultsIds] = useState<number[]>([]);
+
   const results: ResultGroup = useMemo(() => {
     const resultsMap = new Map<
       string,
@@ -69,8 +72,6 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
     return resultsMap;
   }, [data?.results, filterParams]);
 
-  const [dateConfigs, setDateConfigs] = useState<DateConfig[]>([]);
-
   useEffect(() => {
     setDateConfigs(getDateRangeMap(filterParams.from, filterParams.to));
   }, [filterParams.from, filterParams.to]);
@@ -85,7 +86,11 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
     });
   }, [results, dateConfigs]);
 
-  const [selectedResultsIds, setSelectedResultsIds] = useState<number[]>([]);
+  const activeDaysResultsWithoutFilters = useMemo(() => {
+    const activeDates = dateConfigs.filter((day) => day.isActive).map(({ date }) => date);
+
+    return data?.results.filter((result) => activeDates.includes(result.startTime.split('T')[0])) || [];
+  }, [data?.results, dateConfigs]);
 
   const handleSelectAll = () => {
     setSelectedResultsIds((prev) => (prev.length === activeDaysResultsIds.length ? [] : activeDaysResultsIds));
@@ -146,7 +151,7 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
               </Flex>
             ))}
           </HStack>
-          <StatSection results={data?.results.filter((result) => activeDaysResultsIds.includes(result.id)) || []} />
+          <StatSection results={activeDaysResultsWithoutFilters} />
         </VStack>
 
         <h2>Results</h2>
