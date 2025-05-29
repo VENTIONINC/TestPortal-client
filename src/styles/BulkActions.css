@@ -1,0 +1,28 @@
+/* BulkActions.css */
+
+.bulk-action-button {
+  width: 30px; /* Explicit size for button */
+  height: 30px; /* Explicit size for button */
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  background-size: 20px 20px; /* Control icon size */
+  background-position: center center;
+}
+
+.auto-review {
+  background-image: url("https://icongr.am/clarity/wand.svg?size=20&color=6e049f");
+  background-repeat: no-repeat;
+}
+
+.confirm-issue {
+  background-image: url("https://icongr.am/clarity/check.svg?size=20&color=03a50e"); /* Adjusted size to match others */
+  background-repeat: no-repeat;
+}
+
+.reject-issue {
+  background-image: url("https://icongr.am/clarity/trash.svg?size=20&color=ce1212"); /* Adjusted size to match others */
+  background-repeat: no-repeat;
+}
+
+/* Tippy.js styles are imported in the component, but you can override here if needed */
