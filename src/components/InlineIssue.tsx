@@ -3,6 +3,7 @@ import { HStack, Text } from '@chakra-ui/react';
 import { LuCheck, LuCirclePlus, LuTrash } from 'react-icons/lu';
 
 import { useConfirmAssumptionMutation, useCreateAssumptionMutation } from '@/redux/apis/assumptionsApi';
+import { useCreateIssueMutation } from '@/redux/apis/issuesApi';
 import { Issue, ResultError, ResultErrorAssumption } from '@/types';
 
 import { AssignIssueDrawer } from './drawers';
@@ -15,6 +16,7 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
   const [showSidebar, setShowSidebar] = useState(false);
 
   const [confirmAssumption] = useConfirmAssumptionMutation();
+  const [createIssue] = useCreateIssueMutation();
   const [createAssumption] = useCreateAssumptionMutation();
 
   const toggleSidebar = () => {
@@ -31,17 +33,7 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
     }
 
     if (!issue.id) {
-      const issueResponse = await fetch(`http://localhost:3001/api/issues`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(issue),
-      });
-
-      if (!issueResponse.ok) {
-        throw new Error(`Cant post new issue ${issueResponse.status}`);
-      }
-
-      issue = await issueResponse.json();
+      issue = await createIssue(issue).unwrap();
     }
 
     const assumptionResponse = await createAssumption({

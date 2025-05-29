@@ -12,6 +12,7 @@ export const assumptionsApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
+      invalidatesTags: [TAGS.Result],
     }),
     confirmAssumption: build.mutation<ResultErrorAssumption, ConfirmAssumptionRequest>({
       query: ({ id, ...body }) => ({
