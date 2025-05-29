@@ -119,15 +119,6 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
     [setDateConfigs],
   );
 
-  const handleSpecDateToggle = useCallback(
-    (dateKeyToToggle: string) => {
-      setDateConfigs((prevConfigs) =>
-        prevConfigs.map((d) => (d.date === dateKeyToToggle ? { ...d, isActive: !d.isActive } : d)),
-      );
-    },
-    [setDateConfigs],
-  );
-
   return (
     <div className="main-container">
       <ResultsFilters filterParams={filterParams} setFilterParams={setFilterParams} as="aside" zIndex={10} />
@@ -182,7 +173,6 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
                 spec={spec}
                 executions={executions}
                 dateConfigs={dateConfigs}
-                onDateToggle={handleSpecDateToggle}
                 selectedResultsIds={selectedResultsIds}
                 onSelectResult={handleSelectResult}
               />

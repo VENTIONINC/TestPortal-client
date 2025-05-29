@@ -69,13 +69,13 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
                 <Text>{Math.round(assumption.score * 100)}%</Text>
                 <LuCheck
                   color="green"
-                  size={24}
+                  size={16}
                   onClick={() => confirm(assumption, true)}
                   style={{ cursor: 'pointer' }}
                 />
                 <LuTrash
                   color="red"
-                  size={24}
+                  size={16}
                   onClick={() => confirm(assumption, false)}
                   style={{ cursor: 'pointer' }}
                 />

@@ -106,10 +106,10 @@ export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
       {unconfirmedResults.length > 0 && (
         <>
           <Tippy content={`Confirm ${unconfirmedResults.length} assumptions`} arrow={true}>
-            <LuCheck color="green" size={24} onClick={confirmAll} style={{ cursor: 'pointer' }} />
+            <LuCheck color="green" size={16} onClick={confirmAll} style={{ cursor: 'pointer' }} />
           </Tippy>
           <Tippy content={`Reject ${unconfirmedResults.length} assumptions`} arrow={true}>
-            <LuTrash color="red" size={24} onClick={rejectAll} style={{ cursor: 'pointer' }} />
+            <LuTrash color="red" size={16} onClick={rejectAll} style={{ cursor: 'pointer' }} />
           </Tippy>
         </>
       )}

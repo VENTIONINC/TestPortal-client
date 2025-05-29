@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuSquareUserRound, LuTag } from 'react-icons/lu';
 
@@ -14,7 +14,6 @@ interface SpecSectionProps {
   spec: ResultSpec;
   executions: { execution: ResultExecution; results: BaseResult[] }[];
   dateConfigs: DateConfig[];
-  onDateToggle: (dateKey: string) => void;
   selectedResultsIds: number[];
   onSelectResult: (resultId: number | number[]) => void;
 }
@@ -22,11 +21,12 @@ interface SpecSectionProps {
 export const SpecSection = ({
   spec,
   executions,
-  dateConfigs,
-  onDateToggle,
+  dateConfigs: globalDateConfigs,
   selectedResultsIds,
   onSelectResult,
 }: SpecSectionProps) => {
+  const [dateConfigs, setDateConfigs] = useState(globalDateConfigs);
+
   const dateFilters = useMemo(() => {
     return dateConfigs.map((focus) => {
       const statuses = executions
@@ -45,14 +45,20 @@ export const SpecSection = ({
   const filteredExecutions = useMemo(() => {
     const activeDates = dateConfigs.filter((day) => day.isActive).map(({ date }) => date);
 
-    return executions.filter(({ results }) =>
-      results.some((result) => activeDates.includes(result.startTime.split('T')[0])),
-    );
+    return executions
+      .filter(({ results }) => results.some((result) => activeDates.includes(result.startTime.split('T')[0])))
+      .sort((a, b) => new Date(b.execution.createdAt).getTime() - new Date(a.execution.createdAt).getTime());
   }, [executions, dateConfigs]);
 
   const handleDateToggle = (dayFilter: { yyyy_mm_dd: string }) => {
-    onDateToggle(dayFilter.yyyy_mm_dd);
+    setDateConfigs((prevConfigs) =>
+      prevConfigs.map((d) => (d.date === dayFilter.yyyy_mm_dd ? { ...d, isActive: !d.isActive } : d)),
+    );
   };
+
+  useEffect(() => {
+    setDateConfigs(globalDateConfigs);
+  }, [globalDateConfigs]);
 
   if (!dateFilters.some((day) => day.stats.length !== 0 && day.isActive)) {
     return null;
