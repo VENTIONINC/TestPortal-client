@@ -4,7 +4,7 @@ export interface BaseResult {
   updatedAt: string;
   allureLink: string;
   retry: number;
-  status: string;
+  status: 'passed' | 'failed' | 'skipped';
   duration: number;
   startTime: string;
   specId: number;

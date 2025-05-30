@@ -3,7 +3,7 @@ import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { ResultsFilters } from '@/components/results/filters';
 import { useGetResultsQuery } from '@/redux/apis/resultsApi';
-import type { FilterParamsState } from '@/hooks/useFilterParams';
+import { useFilterParams } from '@/hooks/useFilterParams';
 import { getDateRangeMap, DateConfig } from '@/utils/dateRange';
 import { filterResults } from '@/utils/filterResults';
 import { BaseResult, ResultExecution, ResultGroup, ResultSpec } from '@/types';
@@ -12,14 +12,9 @@ import { SpecSection } from './SpecSection';
 import { StatSection } from './StatSection';
 import { BulkActions } from './BulkActions';
 
-import '../styles/Results.css';
+export const Results = () => {
+  const { filterParams, setFilterParams } = useFilterParams();
 
-interface ResultsProps {
-  filterParams: FilterParamsState;
-  setFilterParams: React.Dispatch<React.SetStateAction<FilterParamsState>>;
-}
-
-export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
   const { data } = useGetResultsQuery({
     from: filterParams.from,
     to: filterParams.to,
@@ -125,10 +120,10 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
   );
 
   return (
-    <div className="main-container">
+    <HStack gap={4} align="flex-start" w="100%">
       <ResultsFilters filterParams={filterParams} setFilterParams={setFilterParams} as="aside" zIndex={10} />
 
-      <VStack as="section" align="stretch" px={4} w="100%">
+      <VStack as="section" align="stretch" w="100%">
         <VStack align="stretch" gap={0} p={2} bg="gray.100" borderRadius="md">
           <HStack>
             {dateConfigs.map((day) => (
@@ -187,6 +182,6 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
           )}
         </VStack>
       </VStack>
-    </div>
+    </HStack>
   );
 };
