@@ -127,7 +127,7 @@ export const StatSection = ({ results }: StatSectionProps) => {
   }
 
   return (
-    <Box as="details" className="stat-section-details">
+    <Box as="details">
       <Box as="summary" mt={2} cursor="pointer" _hover={{ bg: 'gray.200' }}>
         {summaryText}
       </Box>

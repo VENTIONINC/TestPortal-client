@@ -1,10 +1,8 @@
 import { useState } from 'react';
+import { Flex, HStack } from '@chakra-ui/react';
 
 import { Issues } from '@/components/Issues';
 import { Results } from '@/components/Results';
-import { useFilterParams } from '@/hooks/useFilterParams';
-
-import './App.css';
 
 enum ACTIVE_TAB {
   Results = 'results',
@@ -13,7 +11,6 @@ enum ACTIVE_TAB {
 
 function App() {
   const [activeTab, setActiveTab] = useState<ACTIVE_TAB>(ACTIVE_TAB.Results);
-  const { filterParams, setFilterParams } = useFilterParams();
 
   const switchTab = (tab: ACTIVE_TAB) => {
     setActiveTab(tab);
@@ -21,25 +18,32 @@ function App() {
 
   return (
     <>
-      <div className="tabs">
-        <div
-          className={`tab ${activeTab === ACTIVE_TAB.Results ? 'active' : ''}`}
-          onClick={() => switchTab(ACTIVE_TAB.Results)}
-        >
-          Results
-        </div>
-        <div
-          className={`tab ${activeTab === ACTIVE_TAB.Issues ? 'active' : ''}`}
-          onClick={() => switchTab(ACTIVE_TAB.Issues)}
-        >
-          Issues
-        </div>
-      </div>
+      <HStack>
+        {Object.values(ACTIVE_TAB).map((tab) => (
+          <Flex
+            key={tab}
+            onClick={() => switchTab(tab)}
+            flex={1}
+            justify="center"
+            textTransform="capitalize"
+            p={2.5}
+            fontWeight={700}
+            cursor="pointer"
+            borderBottom="2px solid transparent"
+            {...(activeTab === tab && {
+              color: 'blue.500',
+              borderColor: 'blue.500',
+            })}
+          >
+            {tab}
+          </Flex>
+        ))}
+      </HStack>
 
-      <div className="content">
-        {activeTab === ACTIVE_TAB.Results && <Results filterParams={filterParams} setFilterParams={setFilterParams} />}
+      <Flex p={4}>
+        {activeTab === ACTIVE_TAB.Results && <Results />}
         {activeTab === ACTIVE_TAB.Issues && <Issues />}
-      </div>
+      </Flex>
     </>
   );
 }

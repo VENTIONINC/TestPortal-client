@@ -8,7 +8,6 @@ import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
 import { DateToggle } from './DateToggle';
 import { ExecutionCard } from './ExecutionCard';
-import '../styles/SpecSection.css';
 
 interface SpecSectionProps {
   spec: ResultSpec;

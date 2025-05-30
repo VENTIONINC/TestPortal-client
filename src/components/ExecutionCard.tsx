@@ -78,7 +78,7 @@ export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelect
               onSelectResult(result.id);
             }}
           />
-          <Flex alignSelf="stretch" w={2} borderRadius="xs" className={result.status} />
+          <Flex alignSelf="stretch" w={2} borderRadius="xs" bg={getStatusColor(result.status)} />
           <Text whiteSpace="nowrap"># {result.retry}</Text>
 
           {result.allureLink.startsWith('http') ? (
@@ -109,4 +109,17 @@ export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelect
       ))}
     </VStack>
   );
+};
+
+const getStatusColor = (status: BaseResult['status']) => {
+  switch (status) {
+    case 'passed':
+      return 'green.600';
+    case 'failed':
+      return 'red.500';
+    case 'skipped':
+      return 'gray.500';
+    default:
+      return 'yellow.500';
+  }
 };
