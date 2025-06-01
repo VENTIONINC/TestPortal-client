@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button, Text, VStack } from '@chakra-ui/react';
 
 import { Drawer, DrawerBody, DrawerProps, Input, NativeSelect } from '@/components/ui';
+import { useLazyGetIssuesQuery } from '@/redux/apis/issuesApi';
 import { Issue } from '@/types';
 
 interface IssueDrawerProps extends Omit<DrawerProps, 'children'> {
@@ -19,28 +20,19 @@ export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
   } as Issue);
   const [existingIssues, setExistingIssues] = useState<Issue[]>([]);
 
+  const [getIssues] = useLazyGetIssuesQuery();
+
   const loadIssues = useCallback(async () => {
     if (!issue.name.trim()) return;
 
-    const queryParams = new URLSearchParams({
-      name: issue.name,
-      category: issue.category,
-      description: issue.description,
-      portal: issue.portal,
-      service: issue.service,
-      ticket: issue.ticket,
-      limit: '10',
-    });
-
     try {
-      const res = await fetch(`http://localhost:3001/api/issues?${queryParams}`);
-      const data = await res.json();
-      setExistingIssues(data.issues);
+      const res = await getIssues({ name: issue.name, category: issue.category }).unwrap();
+      setExistingIssues(res.issues);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to load issues:', error);
     }
-  }, [issue.category, issue.description, issue.name, issue.portal, issue.service, issue.ticket]);
+  }, [getIssues, issue.category, issue.name]);
 
   const handleIssueNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIssue({ ...issue, name: e.target.value });

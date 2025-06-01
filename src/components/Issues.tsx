@@ -1,13 +1,13 @@
 import { Button, Heading, HStack, Mark, Text, VStack } from '@chakra-ui/react';
 
 import { IssuesFilters } from '@/components/issues/filters';
+import { useGetIssuesQuery } from '@/redux/apis/issuesApi';
 import { useIssueFilters } from '@/hooks/useIssueFilters';
-import { useIssuesQuery } from '@/hooks/useIssuesQuery';
 
 export const Issues = () => {
   const { filters, updateFilters } = useIssueFilters();
 
-  const { data } = useIssuesQuery(filters);
+  const { data } = useGetIssuesQuery(filters);
 
   const nextPage = () => {
     if (data && filters.page < data.totalPages) {
@@ -28,7 +28,7 @@ export const Issues = () => {
       <VStack flex={1} align="flex-start">
         <Heading textStyle="3xl">Issues</Heading>
         <VStack flex={1} align="flex-start" w="100%">
-          {data && data?.issues?.length > 0 ? (
+          {data && data.issues?.length > 0 ? (
             data.issues.map((issue, index) => (
               <VStack
                 key={index}

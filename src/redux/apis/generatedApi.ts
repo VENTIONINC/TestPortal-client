@@ -194,12 +194,12 @@ export type PostApiIssuesApiArg = {
 export type GetApiIssuesByIssueIdApiResponse =
   /** status 200 Issue details */ Issue;
 export type GetApiIssuesByIssueIdApiArg = {
-  issueId: string;
+  issueId: number;
 };
 export type PatchApiIssuesByIssueIdApiResponse =
   /** status 200 Issue updated successfully */ Issue;
 export type PatchApiIssuesByIssueIdApiArg = {
-  issueId: string;
+  issueId: number;
   updateIssueRequest: UpdateIssueRequest;
 };
 export type GetApiResultsApiResponse =
@@ -268,7 +268,7 @@ export type GetApiStatusApiResponse =
   /** status 200 Server status */ StatusResponse;
 export type GetApiStatusApiArg = void;
 export type Issue = {
-  id: string;
+  id: number;
   name: string;
   category?: string;
   description?: string;

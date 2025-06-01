@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuSquareUserRound, LuTag } from 'react-icons/lu';
 
@@ -8,13 +8,11 @@ import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
 import { DateToggle } from './DateToggle';
 import { ExecutionCard } from './ExecutionCard';
-import '../styles/SpecSection.css';
 
 interface SpecSectionProps {
   spec: ResultSpec;
   executions: { execution: ResultExecution; results: BaseResult[] }[];
   dateConfigs: DateConfig[];
-  onDateToggle: (dateKey: string) => void;
   selectedResultsIds: number[];
   onSelectResult: (resultId: number | number[]) => void;
 }
@@ -22,11 +20,12 @@ interface SpecSectionProps {
 export const SpecSection = ({
   spec,
   executions,
-  dateConfigs,
-  onDateToggle,
+  dateConfigs: globalDateConfigs,
   selectedResultsIds,
   onSelectResult,
 }: SpecSectionProps) => {
+  const [dateConfigs, setDateConfigs] = useState(globalDateConfigs);
+
   const dateFilters = useMemo(() => {
     return dateConfigs.map((focus) => {
       const statuses = executions
@@ -45,21 +44,27 @@ export const SpecSection = ({
   const filteredExecutions = useMemo(() => {
     const activeDates = dateConfigs.filter((day) => day.isActive).map(({ date }) => date);
 
-    return executions.filter(({ results }) =>
-      results.some((result) => activeDates.includes(result.startTime.split('T')[0])),
-    );
+    return executions
+      .filter(({ results }) => results.some((result) => activeDates.includes(result.startTime.split('T')[0])))
+      .sort((a, b) => new Date(b.execution.createdAt).getTime() - new Date(a.execution.createdAt).getTime());
   }, [executions, dateConfigs]);
 
   const handleDateToggle = (dayFilter: { yyyy_mm_dd: string }) => {
-    onDateToggle(dayFilter.yyyy_mm_dd);
+    setDateConfigs((prevConfigs) =>
+      prevConfigs.map((d) => (d.date === dayFilter.yyyy_mm_dd ? { ...d, isActive: !d.isActive } : d)),
+    );
   };
+
+  useEffect(() => {
+    setDateConfigs(globalDateConfigs);
+  }, [globalDateConfigs]);
 
   if (!dateFilters.some((day) => day.stats.length !== 0 && day.isActive)) {
     return null;
   }
 
   return (
-    <VStack align="stretch" p={2} border="2px solid" borderColor="gray.300" borderRadius="md">
+    <VStack align="stretch" p={2} bg="gray.100" border="2px solid" borderColor="gray.300" borderRadius="md">
       <HStack>
         {dateFilters.map((day) => (
           <DateToggle key={day.yyyy_mm_dd} day={day} toggleHandler={handleDateToggle} />
@@ -68,13 +73,13 @@ export const SpecSection = ({
 
       <VStack align="stretch" bg="gray.50" py={2} px={4} border="1px solid" borderColor="gray.300" borderRadius="md">
         <Flex gap={4}>
-          <Text>{spec.key}</Text>
-          <Text>{spec.file}</Text>
+          <Text textStyle="md">{spec.key}</Text>
+          <Text textStyle="md">{spec.file}</Text>
 
           <Flex ms="auto" gap={2}>
             {spec.tags?.map((tag) => (
-              <HStack key={tag} px={2} bg="gray.200" borderRadius="sm" textStyle="lg">
-                <LuTag size={16} />
+              <HStack key={tag} px={2} border="1px solid" borderColor="gray.300" borderRadius="sm" textStyle="sm">
+                <LuTag size={12} />
                 {tag}
               </HStack>
             ))}
@@ -105,8 +110,8 @@ export const SpecSection = ({
             </div>
           )} */}
 
-          <HStack align="center">
-            <LuSquareUserRound size={20} />
+          <HStack align="center" textStyle="sm">
+            <LuSquareUserRound size={16} />
             {toCleanTitle(spec.title)}
           </HStack>
         </div>

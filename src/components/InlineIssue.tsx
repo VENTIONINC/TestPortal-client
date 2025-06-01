@@ -2,8 +2,13 @@ import { useState } from 'react';
 import { HStack, Text } from '@chakra-ui/react';
 import { LuCheck, LuCirclePlus, LuTrash } from 'react-icons/lu';
 
-import { usePostApiAssumptionsMutation, usePatchApiAssumptionsByAssumptionIdMutation } from '@/redux/apis/generatedApi';
-import { Issue, ResultError, ResultErrorAssumption } from '@/types';
+import {
+  useConfirmAssumptionMutation,
+  useCreateAssumptionMutation,
+  useCreateIssueMutation,
+} from '@/redux/apis/extendedApi';
+import { Issue  } from '@/redux/apis/generatedApi';
+import { ResultError, ResultErrorAssumption } from '@/types';
 
 import { AssignIssueDrawer } from './drawers';
 
@@ -14,8 +19,9 @@ interface InlineIssueProps {
 export const InlineIssue = ({ resultError }: InlineIssueProps) => {
   const [showSidebar, setShowSidebar] = useState(false);
 
-  const [confirmAssumption] = usePatchApiAssumptionsByAssumptionIdMutation();
-  const [createAssumption] = usePostApiAssumptionsMutation();
+  const [confirmAssumption] = useConfirmAssumptionMutation();
+  const [createAssumption] = useCreateAssumptionMutation();
+  const [createIssue] = useCreateIssueMutation();
 
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
@@ -34,17 +40,7 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
     }
 
     if (!issue.id) {
-      const issueResponse = await fetch(`http://localhost:3001/api/issues`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(issue),
-      });
-
-      if (!issueResponse.ok) {
-        throw new Error(`Cant post new issue ${issueResponse.status}`);
-      }
-
-      issue = await issueResponse.json();
+      issue = await createIssue({ createIssueRequest: issue }).unwrap();
     }
 
     const assumptionResponse = await createAssumption({
@@ -82,13 +78,13 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
                 <Text>{Math.round(assumption.score * 100)}%</Text>
                 <LuCheck
                   color="green"
-                  size={24}
+                  size={16}
                   onClick={() => confirm(assumption, true)}
                   style={{ cursor: 'pointer' }}
                 />
                 <LuTrash
                   color="red"
-                  size={24}
+                  size={16}
                   onClick={() => confirm(assumption, false)}
                   style={{ cursor: 'pointer' }}
                 />

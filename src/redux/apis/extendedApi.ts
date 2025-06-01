@@ -34,8 +34,9 @@ export const extendedApi = generatedApi.injectEndpoints({
 });
 
 export const {
-  usePostApiAssumptionsMutation,
-  usePatchApiAssumptionsByAssumptionIdMutation,
+  usePostApiAssumptionsMutation: useCreateAssumptionMutation,
+  usePatchApiAssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
+  usePostApiIssuesMutation: useCreateIssueMutation,
 
   // Custom hooks (from extendedApi)
   useGetResultsQuery,

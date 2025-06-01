@@ -3,7 +3,7 @@ import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { ResultsFilters } from '@/components/results/filters';
 import { useGetResultsQuery } from '@/redux/apis/resultsApi';
-import type { FilterParamsState } from '@/hooks/useFilterParams';
+import { useFilterParams } from '@/hooks/useFilterParams';
 import { getDateRangeMap, DateConfig } from '@/utils/dateRange';
 import { filterResults } from '@/utils/filterResults';
 import { BaseResult, ResultExecution, ResultGroup, ResultSpec } from '@/types';
@@ -12,20 +12,18 @@ import { SpecSection } from './SpecSection';
 import { StatSection } from './StatSection';
 import { BulkActions } from './BulkActions';
 
-import '../styles/Results.css';
+export const Results = () => {
+  const { filterParams, setFilterParams } = useFilterParams();
 
-interface ResultsProps {
-  filterParams: FilterParamsState;
-  setFilterParams: React.Dispatch<React.SetStateAction<FilterParamsState>>;
-}
-
-export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
   const { data } = useGetResultsQuery({
     from: filterParams.from,
     to: filterParams.to,
     status: filterParams.status,
     page: filterParams.page,
   });
+
+  const [dateConfigs, setDateConfigs] = useState<DateConfig[]>([]);
+  const [selectedResultsIds, setSelectedResultsIds] = useState<number[]>([]);
 
   const results: ResultGroup = useMemo(() => {
     const resultsMap = new Map<
@@ -69,8 +67,6 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
     return resultsMap;
   }, [data?.results, filterParams]);
 
-  const [dateConfigs, setDateConfigs] = useState<DateConfig[]>([]);
-
   useEffect(() => {
     setDateConfigs(getDateRangeMap(filterParams.from, filterParams.to));
   }, [filterParams.from, filterParams.to]);
@@ -85,7 +81,11 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
     });
   }, [results, dateConfigs]);
 
-  const [selectedResultsIds, setSelectedResultsIds] = useState<number[]>([]);
+  const activeDaysResultsWithoutFilters = useMemo(() => {
+    const activeDates = dateConfigs.filter((day) => day.isActive).map(({ date }) => date);
+
+    return data?.results.filter((result) => activeDates.includes(result.startTime.split('T')[0])) || [];
+  }, [data?.results, dateConfigs]);
 
   const handleSelectAll = () => {
     setSelectedResultsIds((prev) => (prev.length === activeDaysResultsIds.length ? [] : activeDaysResultsIds));
@@ -119,20 +119,11 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
     [setDateConfigs],
   );
 
-  const handleSpecDateToggle = useCallback(
-    (dateKeyToToggle: string) => {
-      setDateConfigs((prevConfigs) =>
-        prevConfigs.map((d) => (d.date === dateKeyToToggle ? { ...d, isActive: !d.isActive } : d)),
-      );
-    },
-    [setDateConfigs],
-  );
-
   return (
-    <div className="main-container">
+    <HStack gap={4} align="flex-start" w="100%">
       <ResultsFilters filterParams={filterParams} setFilterParams={setFilterParams} as="aside" zIndex={10} />
 
-      <VStack as="section" align="stretch" px={4} w="100%">
+      <VStack as="section" align="stretch" w="100%">
         <VStack align="stretch" gap={0} p={2} bg="gray.100" borderRadius="md">
           <HStack>
             {dateConfigs.map((day) => (
@@ -155,12 +146,11 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
               </Flex>
             ))}
           </HStack>
-          <StatSection results={data?.results.filter((result) => activeDaysResultsIds.includes(result.id)) || []} />
+          <StatSection results={activeDaysResultsWithoutFilters} />
         </VStack>
 
         <h2>Results</h2>
-
-        <div className="bulk-panel row">
+        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" textStyle="sm">
           <label>
             <input
               type="checkbox"
@@ -173,9 +163,9 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
             Shown {activeDaysResultsIds.length}.Selected {selectedResultsIds.length}
           </pre>
           <BulkActions selectedResults={data?.results.filter(({ id }) => selectedResultsIds.includes(id)) || []} />
-        </div>
+        </HStack>
 
-        <VStack align="stretch">
+        <VStack align="stretch" gap={4}>
           {results.size > 0 ? (
             Array.from(results.entries()).map(([specKey, { spec, executions }]) => (
               <SpecSection
@@ -183,7 +173,6 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
                 spec={spec}
                 executions={executions}
                 dateConfigs={dateConfigs}
-                onDateToggle={handleSpecDateToggle}
                 selectedResultsIds={selectedResultsIds}
                 onSelectResult={handleSelectResult}
               />
@@ -193,6 +182,6 @@ export const Results = ({ filterParams, setFilterParams }: ResultsProps) => {
           )}
         </VStack>
       </VStack>
-    </div>
+    </HStack>
   );
 };

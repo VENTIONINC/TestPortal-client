@@ -17,7 +17,6 @@
     "@chakra-ui/react": "^3.19.1",
     "@emotion/react": "^11.14.0",
     "@reduxjs/toolkit": "^2.8.2",
-    "@tanstack/react-query": "^5.76.1",
     "@tippyjs/react": "^4.2.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

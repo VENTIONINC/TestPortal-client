@@ -1375,24 +1375,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/query-core@npm:5.77.2":
-  version: 5.77.2
-  resolution: "@tanstack/query-core@npm:5.77.2"
-  checksum: 7baeefb357e52f89b984fe7a15e7211ea3b1f1b570e23b451dda24e1e1a1998cc528e084b222580c189a5a0f4520154676bfcc1e92483c38e440cfa490b0b95a
-  languageName: node
-  linkType: hard
-
-"@tanstack/react-query@npm:^5.76.1":
-  version: 5.77.2
-  resolution: "@tanstack/react-query@npm:5.77.2"
-  dependencies:
-    "@tanstack/query-core": 5.77.2
-  peerDependencies:
-    react: ^18 || ^19
-  checksum: 39409107462fa230fd1bfe1d58ef343d1c201762a8439b1bb777c62ab9f71c4ed8c79f0a1c5bc98a96244278e2d507ca291a60daa75127e5d071ec8e3213751e
-  languageName: node
-  linkType: hard
-
 "@tippyjs/react@npm:^4.2.6":
   version: 4.2.6
   resolution: "@tippyjs/react@npm:4.2.6"
@@ -6087,7 +6069,6 @@ __metadata:
     "@eslint/js": ^9.25.0
     "@reduxjs/toolkit": ^2.8.2
     "@rtk-query/codegen-openapi": ^2.0.0
-    "@tanstack/react-query": ^5.76.1
     "@tippyjs/react": ^4.2.6
     "@types/react": ^19.1.2
     "@types/react-dom": ^19.1.2
