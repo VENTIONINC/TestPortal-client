@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { ResultsFilters } from '@/components/results/filters';
-import { useGetResultsQuery } from '@/redux/apis/resultsApi';
+import { useGetResultsQuery } from '@/redux/apis/extendedApi';
 import { useFilterParams } from '@/hooks/useFilterParams';
 import { getDateRangeMap, DateConfig } from '@/utils/dateRange';
 import { filterResults } from '@/utils/filterResults';

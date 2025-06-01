@@ -3,7 +3,7 @@ import { HStack, Text, useToken } from '@chakra-ui/react';
 import Tippy from '@tippyjs/react';
 import { LuCheck, LuTrash, LuWandSparkles } from 'react-icons/lu';
 
-import { useBulkReviewMutation } from '@/redux/apis/resultsApi';
+import { useBulkReviewMutation } from '@/redux/apis/extendedApi';
 import { useConfirmAssumptionMutation } from '@/redux/apis/assumptionsApi';
 import { BaseResult } from '@/types';
 
