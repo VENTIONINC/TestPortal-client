@@ -15,7 +15,7 @@ export const extendedApi = generatedApi.injectEndpoints({
         if (page) queryParams.append('page', page.toString());
 
         return {
-          url: `/results?${queryParams.toString()}`,
+          url: `/api/results?${queryParams.toString()}`,
           method: 'GET',
         };
       },
@@ -23,7 +23,7 @@ export const extendedApi = generatedApi.injectEndpoints({
     }),
     bulkReview: build.mutation<BulkReviewResponse, BulkReviewRequest>({
       query: ({ errorIds }) => ({
-        url: '/result-errors/bulk-review',
+        url: '/api/result-errors/bulk-review',
         method: 'PATCH',
         body: { errorIds },
       }),

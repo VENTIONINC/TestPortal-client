@@ -8,6 +8,8 @@ export const addTagTypes = [
   "Result Errors",
   "Executions",
   "Reports",
+  "Authentication",
+  "Users",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -173,6 +175,65 @@ const injectedRtkApi = api
         query: () => ({ url: `/api/status` }),
         providesTags: ["System"],
       }),
+      postApiUsersSignup: build.mutation<
+        PostApiUsersSignupApiResponse,
+        PostApiUsersSignupApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/users/signup`,
+          method: "POST",
+          body: queryArg.userSignupRequest,
+        }),
+        invalidatesTags: ["Authentication"],
+      }),
+      postApiUsersLogin: build.mutation<
+        PostApiUsersLoginApiResponse,
+        PostApiUsersLoginApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/users/login`,
+          method: "POST",
+          body: queryArg.userLoginRequest,
+        }),
+        invalidatesTags: ["Authentication"],
+      }),
+      postApiUsersRefreshToken: build.mutation<
+        PostApiUsersRefreshTokenApiResponse,
+        PostApiUsersRefreshTokenApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/users/refresh-token`,
+          method: "POST",
+          body: queryArg.refreshTokenRequest,
+        }),
+        invalidatesTags: ["Authentication"],
+      }),
+      getApiUsersByUserId: build.query<
+        GetApiUsersByUserIdApiResponse,
+        GetApiUsersByUserIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/users/${queryArg.userId}`,
+          headers: {
+            authorization: queryArg.authorization,
+          },
+        }),
+        providesTags: ["Users"],
+      }),
+      patchApiUsersByUserId: build.mutation<
+        PatchApiUsersByUserIdApiResponse,
+        PatchApiUsersByUserIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/users/${queryArg.userId}`,
+          method: "PATCH",
+          body: queryArg.userUpdateRequest,
+          headers: {
+            authorization: queryArg.authorization,
+          },
+        }),
+        invalidatesTags: ["Users"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -267,6 +328,36 @@ export type PostApiJsonReportApiArg = {
 export type GetApiStatusApiResponse =
   /** status 200 Server status */ StatusResponse;
 export type GetApiStatusApiArg = void;
+export type PostApiUsersSignupApiResponse =
+  /** status 201 User created successfully */ User;
+export type PostApiUsersSignupApiArg = {
+  userSignupRequest: UserSignupRequest;
+};
+export type PostApiUsersLoginApiResponse =
+  /** status 200 Login successful - returns user data, access token, and refresh token */ UserLoginResponse;
+export type PostApiUsersLoginApiArg = {
+  userLoginRequest: UserLoginRequest;
+};
+export type PostApiUsersRefreshTokenApiResponse =
+  /** status 200 Token refresh successful - returns new access and refresh tokens */ UserLoginResponse;
+export type PostApiUsersRefreshTokenApiArg = {
+  refreshTokenRequest: RefreshTokenRequest;
+};
+export type GetApiUsersByUserIdApiResponse =
+  /** status 200 User details */ User;
+export type GetApiUsersByUserIdApiArg = {
+  userId: number;
+  /** Bearer JWT token */
+  authorization: string;
+};
+export type PatchApiUsersByUserIdApiResponse =
+  /** status 200 User updated successfully */ User;
+export type PatchApiUsersByUserIdApiArg = {
+  userId: number;
+  /** Bearer JWT token */
+  authorization: string;
+  userUpdateRequest: UserUpdateRequest;
+};
 export type Issue = {
   id: number;
   name: string;
@@ -414,6 +505,35 @@ export type StatusResponse = {
   version: string;
   timestamp?: string;
 };
+export type User = {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+};
+export type UserSignupRequest = {
+  name: string;
+  email: string;
+  password: string;
+};
+export type UserLoginResponse = {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+};
+export type UserLoginRequest = {
+  email: string;
+  password: string;
+};
+export type RefreshTokenRequest = {
+  refreshToken: string;
+};
+export type UserUpdateRequest = {
+  name?: string;
+  email?: string;
+  password?: string;
+};
 export const {
   useGetApiQuery,
   useGetApiIssuesQuery,
@@ -431,4 +551,9 @@ export const {
   useGetApiExecutionsByExecutionIdQuery,
   usePostApiJsonReportMutation,
   useGetApiStatusQuery,
+  usePostApiUsersSignupMutation,
+  usePostApiUsersLoginMutation,
+  usePostApiUsersRefreshTokenMutation,
+  useGetApiUsersByUserIdQuery,
+  usePatchApiUsersByUserIdMutation,
 } = injectedRtkApi;

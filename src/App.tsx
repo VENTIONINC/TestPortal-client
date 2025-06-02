@@ -3,6 +3,7 @@ import { Flex, HStack } from '@chakra-ui/react';
 
 import { Issues } from '@/components/Issues';
 import { Results } from '@/components/Results';
+import { AppHeader } from '@/components/AppHeader';
 
 enum ACTIVE_TAB {
   Results = 'results',
@@ -18,6 +19,8 @@ function App() {
 
   return (
     <>
+      <AppHeader />
+
       <HStack>
         {Object.values(ACTIVE_TAB).map((tab) => (
           <Flex

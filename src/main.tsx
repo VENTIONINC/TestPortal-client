@@ -2,9 +2,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider as ReduxProvider } from 'react-redux';
 import { RouterProvider } from 'react-router';
+import { PersistGate } from 'redux-persist/integration/react';
 
 import { ChakraProvider, DialogPortal } from '@/components/ui';
-import { store } from '@/redux/store';
+import { LoadingFallback } from '@/components/LoadingFallback';
+import { store, persistor } from '@/redux/store';
 import { router } from '@/router';
 
 import './index.css';
@@ -12,11 +14,13 @@ import './index.css';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ReduxProvider store={store}>
-      <ChakraProvider>
-        <RouterProvider router={router} />
+      <PersistGate loading={<LoadingFallback />} persistor={persistor}>
+        <ChakraProvider>
+          <RouterProvider router={router} />
 
-        <DialogPortal />
-      </ChakraProvider>
+          <DialogPortal />
+        </ChakraProvider>
+      </PersistGate>
     </ReduxProvider>
   </StrictMode>,
 );

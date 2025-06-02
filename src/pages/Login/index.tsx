@@ -1,19 +1,12 @@
-import { useState } from 'react';
 import { Link } from 'react-router';
-import { Box, Button, Input, Heading, Text, Container } from '@chakra-ui/react';
+import { Box, Button, Heading, Text, Container } from '@chakra-ui/react';
 
 import { PATHS } from '@/types/paths';
+import { FormField } from '@/components/forms';
+import { useLogin } from '@/hooks';
 
 export function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement login logic
-    // eslint-disable-next-line no-console
-    console.log('Login:', { email, password });
-  };
+  const { register, handleSubmit, errors, loading, successMessage, errorMessage } = useLogin();
 
   return (
     <Box minH="100vh" bg="gray.50" py={12} px={4}>
@@ -23,35 +16,49 @@ export function LoginPage() {
             Sign in to your account
           </Heading>
 
+          {successMessage && (
+            <Box
+              bg="green.50"
+              color="green.700"
+              p={3}
+              mb={4}
+              borderRadius="md"
+              border="1px solid"
+              borderColor="green.200"
+            >
+              {successMessage}
+            </Box>
+          )}
+
+          {errorMessage && (
+            <Box bg="red.50" color="red.700" p={3} mb={4} borderRadius="md" border="1px solid" borderColor="red.200">
+              {errorMessage}
+            </Box>
+          )}
+
           <Box as="form" onSubmit={handleSubmit}>
-            <Box mb={4}>
-              <Text mb={2} fontWeight="medium">
-                Email address
-              </Text>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-              />
-            </Box>
+            <FormField
+              {...register('email')}
+              label="Email address"
+              type="email"
+              placeholder="Enter your email"
+              disabled={loading}
+              error={errors.email?.message}
+              required
+            />
 
-            <Box mb={6}>
-              <Text mb={2} fontWeight="medium">
-                Password
-              </Text>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-              />
-            </Box>
+            <FormField
+              {...register('password')}
+              label="Password"
+              type="password"
+              placeholder="Enter your password"
+              disabled={loading}
+              error={errors.password?.message}
+              required
+            />
 
-            <Button type="submit" colorScheme="blue" width="100%" size="lg" mb={4}>
-              Sign in
+            <Button type="submit" colorScheme="blue" width="100%" size="lg" mb={4} loading={loading} disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign in'}
             </Button>
           </Box>
 
