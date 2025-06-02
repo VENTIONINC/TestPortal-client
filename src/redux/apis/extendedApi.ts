@@ -1,9 +1,9 @@
 import { BulkReviewRequest, BulkReviewResponse, GetResultsRequest, GetResultsResponse } from '@/types/apis';
 
-import { baseApi } from './baseApi';
+import { generatedApi } from './generatedApi';
 import { TAGS } from './tags';
 
-export const resultsApi = baseApi.injectEndpoints({
+export const extendedApi = generatedApi.injectEndpoints({
   endpoints: (build) => ({
     getResults: build.query<GetResultsResponse, GetResultsRequest>({
       query: ({ from, to, status, page }) => {
@@ -30,7 +30,15 @@ export const resultsApi = baseApi.injectEndpoints({
       invalidatesTags: [TAGS.Result],
     }),
   }),
-  overrideExisting: true,
+  overrideExisting: false,
 });
 
-export const { useGetResultsQuery, useBulkReviewMutation } = resultsApi;
+export const {
+  usePostApiAssumptionsMutation: useCreateAssumptionMutation,
+  usePatchApiAssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
+  usePostApiIssuesMutation: useCreateIssueMutation,
+
+  // Custom hooks (from extendedApi)
+  useGetResultsQuery,
+  useBulkReviewMutation,
+} = extendedApi;

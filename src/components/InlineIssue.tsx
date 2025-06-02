@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { HStack, Text } from '@chakra-ui/react';
 import { LuCheck, LuCirclePlus, LuTrash } from 'react-icons/lu';
 
-import { useConfirmAssumptionMutation, useCreateAssumptionMutation } from '@/redux/apis/assumptionsApi';
-import { useCreateIssueMutation } from '@/redux/apis/issuesApi';
-import { Issue, ResultError, ResultErrorAssumption } from '@/types';
+import {
+  useConfirmAssumptionMutation,
+  useCreateAssumptionMutation,
+  useCreateIssueMutation,
+} from '@/redux/apis/extendedApi';
+import { Issue  } from '@/redux/apis/generatedApi';
+import { ResultError, ResultErrorAssumption } from '@/types';
 
 import { AssignIssueDrawer } from './drawers';
 
@@ -16,15 +20,18 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
   const [showSidebar, setShowSidebar] = useState(false);
 
   const [confirmAssumption] = useConfirmAssumptionMutation();
-  const [createIssue] = useCreateIssueMutation();
   const [createAssumption] = useCreateAssumptionMutation();
+  const [createIssue] = useCreateIssueMutation();
 
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
   };
 
   const confirm = async (assumption: ResultErrorAssumption, isConfirmed: boolean) => {
-    await confirmAssumption({ id: assumption.id, isConfirmed, madeBy: 'user' });
+    await confirmAssumption({
+      assumptionId: assumption.id.toString(),
+      updateAssumptionRequest: { isConfirmed, madeBy: 'user' },
+    });
   };
 
   const handleCreateAssumption = async (issue: Issue) => {
@@ -33,15 +40,17 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
     }
 
     if (!issue.id) {
-      issue = await createIssue(issue).unwrap();
+      issue = await createIssue({ createIssueRequest: issue }).unwrap();
     }
 
     const assumptionResponse = await createAssumption({
-      madeBy: 'user',
-      score: 1,
-      isConfirmed: true,
-      issueId: issue.id,
-      resultErrorId: resultError.id,
+      createAssumptionRequest: {
+        madeBy: 'user',
+        score: 1,
+        isConfirmed: true,
+        issueId: issue.id,
+        resultErrorId: resultError.id,
+      },
     });
 
     if (assumptionResponse.error) {

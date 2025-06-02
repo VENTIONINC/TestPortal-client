@@ -1,6 +1,6 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import { TAGS } from "./tags";
+import { TAGS } from './tags';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
@@ -9,7 +9,7 @@ const baseQuery = fetchBaseQuery({
 export const baseApi = createApi({
   baseQuery: baseQuery,
   endpoints: () => ({}),
-  reducerPath: "baseApi",
+  reducerPath: 'baseApi',
   tagTypes: Object.values(TAGS),
   keepUnusedDataFor: 60 * 5,
 });
