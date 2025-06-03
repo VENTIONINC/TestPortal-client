@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, memo } from 'react';
 import { HStack, Text, useToken } from '@chakra-ui/react';
 import Tippy from '@tippyjs/react';
 import { LuCheck, LuTrash, LuWandSparkles } from 'react-icons/lu';
@@ -13,7 +13,7 @@ interface BulkActionsProps {
   selectedResults: BaseResult[];
 }
 
-export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
+export const BulkActions = memo(({ selectedResults }: BulkActionsProps) => {
   const purple700 = useToken('colors', 'purple.700')[0];
 
   const unreviewedResults = useMemo(
@@ -115,4 +115,4 @@ export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
       )}
     </HStack>
   );
-};
+});

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuSquareUserRound, LuTag } from 'react-icons/lu';
 
@@ -13,17 +13,9 @@ interface SpecSectionProps {
   spec: ResultSpec;
   executions: { execution: ResultExecution; results: BaseResult[] }[];
   dateConfigs: DateConfig[];
-  selectedResultsIds: number[];
-  onSelectResult: (resultId: number | number[]) => void;
 }
 
-export const SpecSection = ({
-  spec,
-  executions,
-  dateConfigs: globalDateConfigs,
-  selectedResultsIds,
-  onSelectResult,
-}: SpecSectionProps) => {
+export const SpecSection = memo(({ spec, executions, dateConfigs: globalDateConfigs }: SpecSectionProps) => {
   const [dateConfigs, setDateConfigs] = useState(globalDateConfigs);
 
   const dateFilters = useMemo(() => {
@@ -118,14 +110,8 @@ export const SpecSection = ({
       </VStack>
 
       {filteredExecutions.map(({ execution, results }) => (
-        <ExecutionCard
-          key={execution.id}
-          execution={execution}
-          results={results}
-          selectedResultsIds={selectedResultsIds}
-          onSelectResult={onSelectResult}
-        />
+        <ExecutionCard key={execution.id} execution={execution} results={results} />
       ))}
     </VStack>
   );
-};
+});

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Box, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { Result, ResultSpec, ResultExecution, ResultErrorAssumption, ResultError, Issue } from '@/types';
@@ -30,7 +30,7 @@ interface StatSectionProps {
   results: Result[];
 }
 
-export const StatSection = ({ results }: StatSectionProps) => {
+export const StatSection = memo(({ results }: StatSectionProps) => {
   const stats: StatsData = useMemo(() => {
     const specMap = new Map<string | number, ResultSpec>();
     const executionMap = new Map<string | number, ResultExecution>();
@@ -159,7 +159,7 @@ export const StatSection = ({ results }: StatSectionProps) => {
       </HStack>
     </Box>
   );
-};
+});
 
 const TopSection = ({ results, label }: { results: [string, number][]; label: string }) => {
   return (

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Text, HStack, Box } from '@chakra-ui/react';
 
 interface DateToggleProps {
@@ -10,7 +11,7 @@ interface DateToggleProps {
   toggleHandler: (day: { yyyy_mm_dd: string }) => void;
 }
 
-export const DateToggle = ({ day, toggleHandler }: DateToggleProps) => {
+export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
   return (
     <HStack
       onClick={() => toggleHandler(day)}
@@ -43,4 +44,4 @@ export const DateToggle = ({ day, toggleHandler }: DateToggleProps) => {
       )}
     </HStack>
   );
-};
+});

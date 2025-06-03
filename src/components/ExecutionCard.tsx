@@ -1,7 +1,8 @@
-import { Fragment } from 'react';
+import { Fragment, memo } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { useResultsErrorDialog } from '@/components/dialogs';
+import { useResultsSelection } from '@/contexts/results-selection';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution } from '@/types';
 
@@ -11,16 +12,18 @@ import { InlineIssue } from './InlineIssue';
 interface ExecutionCardProps {
   execution: ResultExecution;
   results: BaseResult[];
-  selectedResultsIds: number[];
-  onSelectResult: (resultId: number | number[]) => void;
 }
 
-export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelectResult }: ExecutionCardProps) => {
+export const ExecutionCard = memo(({ execution, results }: ExecutionCardProps) => {
+  const { isSelected, toggleSelection, toggleMultiple, getSelectedIds } = useResultsSelection();
+
   const openResultsErrorDialog = useResultsErrorDialog();
 
   const toggleSelectAll = () => {
-    onSelectResult(results.map(({ id }) => id));
+    toggleMultiple(results.map(({ id }) => id));
   };
+
+  const selectedResults = results.filter(({ id }) => getSelectedIds().includes(id));
 
   const toDataDogLink = (execution: ResultExecution, result: BaseResult) => {
     const env = execution.environment;
@@ -54,11 +57,7 @@ export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelect
   return (
     <VStack align="stretch" p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md">
       <HStack gap={6} px={2} bg="gray.200" borderRadius="sm" textStyle="sm">
-        <input
-          type="checkbox"
-          checked={results.every(({ id }) => selectedResultsIds.includes(id))}
-          onChange={toggleSelectAll}
-        />
+        <input type="checkbox" checked={results.every(({ id }) => isSelected(id))} onChange={toggleSelectAll} />
         <Text>{execution.environment}</Text>
         <Text>{execution.type}</Text>
         <Text>{execution.name}</Text>
@@ -66,16 +65,16 @@ export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelect
           Playwright v.{execution.version}
         </Text>
 
-        <BulkActions selectedResults={results.filter(({ id }) => selectedResultsIds.includes(id))} />
+        <BulkActions selectedResults={selectedResults} />
       </HStack>
 
       {results.map((result) => (
         <HStack key={result.id} align="center" gap={4} px={2} textStyle="sm">
           <input
             type="checkbox"
-            checked={selectedResultsIds.includes(result.id)}
+            checked={isSelected(result.id)}
             onChange={() => {
-              onSelectResult(result.id);
+              toggleSelection(result.id);
             }}
           />
           <Flex alignSelf="stretch" w={2} borderRadius="xs" bg={getStatusColor(result.status)} />
@@ -109,7 +108,7 @@ export const ExecutionCard = ({ execution, results, selectedResultsIds, onSelect
       ))}
     </VStack>
   );
-};
+});
 
 const getStatusColor = (status: BaseResult['status']) => {
   switch (status) {
