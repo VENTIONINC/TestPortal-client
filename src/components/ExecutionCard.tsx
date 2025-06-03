@@ -56,7 +56,7 @@ export const ExecutionCard = memo(({ execution, results }: ExecutionCardProps) =
 
   return (
     <VStack align="stretch" p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md">
-      <HStack gap={6} px={2} bg="gray.200" borderRadius="sm" textStyle="sm">
+      <HStack gap={6} px={2} bg="gray.200" borderRadius="sm" textStyle="sm" minH={8}>
         <input type="checkbox" checked={results.every(({ id }) => isSelected(id))} onChange={toggleSelectAll} />
         <Text>{execution.environment}</Text>
         <Text>{execution.type}</Text>

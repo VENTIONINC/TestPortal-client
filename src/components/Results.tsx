@@ -148,7 +148,7 @@ const ResultsContent = () => {
         </VStack>
 
         <h2>Results</h2>
-        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" textStyle="sm">
+        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" textStyle="sm" minH={12}>
           <label>
             <input
               type="checkbox"
