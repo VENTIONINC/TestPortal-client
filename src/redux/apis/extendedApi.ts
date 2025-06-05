@@ -6,16 +6,14 @@ import { TAGS } from './tags';
 export const extendedApi = generatedApi.injectEndpoints({
   endpoints: (build) => ({
     getResults: build.query<GetResultsResponse, GetResultsRequest>({
-      query: ({ from, to, status, page }) => {
-        const queryParams = new URLSearchParams();
-
-        if (from) queryParams.append('from', from);
-        if (to) queryParams.append('to', to);
-        if (status) queryParams.append('status', status);
-        if (page) queryParams.append('page', page.toString());
+      query: (params) => {
+        const filteredParams = Object.fromEntries(
+          Object.entries(params).filter(([, value]) => value !== '' && value !== null && value !== undefined),
+        );
 
         return {
-          url: `/results?${queryParams.toString()}`,
+          url: '/api/results',
+          params: filteredParams,
           method: 'GET',
         };
       },
@@ -23,7 +21,7 @@ export const extendedApi = generatedApi.injectEndpoints({
     }),
     bulkReview: build.mutation<BulkReviewResponse, BulkReviewRequest>({
       query: ({ errorIds }) => ({
-        url: '/result-errors/bulk-review',
+        url: '/api/result-errors/bulk-review',
         method: 'PATCH',
         body: { errorIds },
       }),

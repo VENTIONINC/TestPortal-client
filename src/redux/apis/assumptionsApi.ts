@@ -8,7 +8,7 @@ export const assumptionsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     createAssumption: build.mutation<ResultErrorAssumption, CreateAssumptionRequest>({
       query: (body) => ({
-        url: 'assumptions',
+        url: '/api/assumptions',
         method: 'POST',
         body,
       }),
@@ -16,7 +16,7 @@ export const assumptionsApi = baseApi.injectEndpoints({
     }),
     confirmAssumption: build.mutation<ResultErrorAssumption, ConfirmAssumptionRequest>({
       query: ({ id, ...body }) => ({
-        url: `assumptions/${id}`,
+        url: `/api/assumptions/${id}`,
         method: 'PATCH',
         body,
       }),
