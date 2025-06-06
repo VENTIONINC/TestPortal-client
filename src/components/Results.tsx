@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Flex, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
+import { useDebounce } from 'use-debounce';
 
 import { ResultsFilters } from '@/components/results/filters';
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
 import { useFilterParams } from '@/hooks/useFilterParams';
 import { getDateRangeMap, DateConfig } from '@/utils/dateRange';
-import { filterResults } from '@/utils/filterResults';
-import { BaseResult, ResultExecution, ResultSpec, Result } from '@/types';
+import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
 import { SpecSection } from './SpecSection';
 import { StatSection } from './StatSection';
@@ -17,17 +17,13 @@ const ResultsContent = () => {
   const { filterParams, setFilterParams } = useFilterParams();
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
-  const { data } = useGetResultsQuery({
-    from: filterParams.from,
-    to: filterParams.to,
-    status: filterParams.status,
-    page: filterParams.page,
-  });
+  const [debouncedFilterParams] = useDebounce(filterParams, 500);
+  const { data, isFetching } = useGetResultsQuery(debouncedFilterParams);
 
   const [dateConfigs, setDateConfigs] = useState<DateConfig[]>([]);
 
-  const { results, activeDaysResultsIds, activeDaysResultsWithoutFilters } = useMemo(() => {
-    const filteredResults = filterResults(data?.results || [], filterParams);
+  const { results, activeDaysResultsIds } = useMemo(() => {
+    const filteredResults = data?.results || [];
     const activeDates = new Set(dateConfigs.filter((day) => day.isActive).map(({ date }) => date));
 
     const resultsMap = new Map<
@@ -36,7 +32,6 @@ const ResultsContent = () => {
     >();
 
     const activeIds: number[] = [];
-    const activeResultsWithoutFilters: Result[] = [];
 
     filteredResults.forEach((result) => {
       const resultDate = result.startTime.split('T')[0];
@@ -78,21 +73,11 @@ const ResultsContent = () => {
       }
     });
 
-    if (data?.results) {
-      data.results.forEach((result) => {
-        const resultDate = result.startTime.split('T')[0];
-        if (activeDates.has(resultDate)) {
-          activeResultsWithoutFilters.push(result);
-        }
-      });
-    }
-
     return {
       results: resultsMap,
       activeDaysResultsIds: activeIds,
-      activeDaysResultsWithoutFilters: activeResultsWithoutFilters,
     };
-  }, [data?.results, filterParams, dateConfigs]);
+  }, [data?.results, dateConfigs]);
 
   useEffect(() => {
     setDateConfigs(getDateRangeMap(filterParams.from, filterParams.to));
@@ -144,7 +129,7 @@ const ResultsContent = () => {
               </Flex>
             ))}
           </HStack>
-          <StatSection results={activeDaysResultsWithoutFilters} />
+          <StatSection filterParams={filterParams} dateConfigs={dateConfigs} />
         </VStack>
 
         <h2>Results</h2>
@@ -161,15 +146,19 @@ const ResultsContent = () => {
             Shown {activeDaysResultsIds.length}.Selected {selectedCount}
           </pre>
           <BulkActions selectedResults={selectedResults} />
+          {isFetching && <Spinner />}
         </HStack>
 
         <VStack align="stretch" gap={4}>
           {results.size > 0 ? (
-            Array.from(results.entries()).map(([specKey, { spec, executions }]) => (
-              <SpecSection key={specKey} spec={spec} executions={executions} dateConfigs={dateConfigs} />
-            ))
+            <>
+              {Array.from(results.entries()).map(([specKey, { spec, executions }]) => (
+                <SpecSection key={specKey} spec={spec} executions={executions} dateConfigs={dateConfigs} />
+              ))}
+              {activeDaysResultsIds.length === 0 && <Text>No results found matching date config.</Text>}
+            </>
           ) : (
-            <p>No results found matching your filters.</p>
+            <Text>No results found matching your filters.</Text>
           )}
         </VStack>
       </VStack>
