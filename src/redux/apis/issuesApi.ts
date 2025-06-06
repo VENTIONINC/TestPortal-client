@@ -23,14 +23,14 @@ export const issuesApi = baseApi.injectEndpoints({
         queryParams.append('limit', '10');
 
         return {
-          url: `/api/issues?${queryParams.toString()}`,
+          url: `/api/v1/issues?${queryParams.toString()}`,
           method: 'GET',
         };
       },
     }),
     createIssue: build.mutation<Issue, Issue>({
       query: (body) => ({
-        url: '/api/issues',
+        url: '/api/v1/issues',
         method: 'POST',
         body,
       }),
