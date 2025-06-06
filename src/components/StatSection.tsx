@@ -1,6 +1,9 @@
 import { memo, useMemo } from 'react';
 import { Box, HStack, Text, VStack } from '@chakra-ui/react';
 
+import { useGetResultsQuery } from '@/redux/apis/extendedApi';
+import { FilterParamsState } from '@/hooks/useFilterParams';
+import { DateConfig } from '@/utils/dateRange';
 import { Result, ResultSpec, ResultExecution, ResultErrorAssumption, ResultError, Issue } from '@/types';
 
 const MAX_MESSAGE_LENGTH = 100;
@@ -27,11 +30,22 @@ interface StatsData {
 }
 
 interface StatSectionProps {
-  results: Result[];
+  filterParams: FilterParamsState;
+  dateConfigs: DateConfig[];
 }
 
-export const StatSection = memo(({ results }: StatSectionProps) => {
+export const StatSection = memo(({ filterParams, dateConfigs }: StatSectionProps) => {
+  const { data } = useGetResultsQuery({
+    status: filterParams.status,
+    from: filterParams.from,
+    to: filterParams.to,
+    page: filterParams.page,
+  });
+
   const stats: StatsData = useMemo(() => {
+    const activeDates = new Set(dateConfigs.filter((day) => day.isActive).map(({ date }) => date));
+    const results = (data?.results || []).filter((result) => activeDates.has(result.startTime.split('T')[0]));
+
     const specMap = new Map<string | number, ResultSpec>();
     const executionMap = new Map<string | number, ResultExecution>();
     const errorMap = new Map<string | number, ResultError>();
@@ -98,7 +112,7 @@ export const StatSection = memo(({ results }: StatSectionProps) => {
     newStats.byModels.assumptions = assumptionMap.size;
 
     return newStats;
-  }, [results]);
+  }, [data?.results, dateConfigs]);
 
   const topErrors = useMemo(() => {
     return Object.entries(stats.byErrors)
@@ -118,7 +132,7 @@ export const StatSection = memo(({ results }: StatSectionProps) => {
       .join(' | ');
   }, [stats.byStatus]);
 
-  if (!results || results.length === 0) {
+  if (!data?.results || data?.results.length === 0) {
     return (
       <Text alignSelf="center" textStyle="md" color="gray.500" mt={2}>
         No active results to display stats for.
