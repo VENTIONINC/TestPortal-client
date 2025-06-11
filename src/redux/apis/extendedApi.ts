@@ -8,7 +8,9 @@ export const extendedApi = generatedApi.injectEndpoints({
     getResults: build.query<GetResultsResponse, GetResultsRequest>({
       query: (params) => {
         const filteredParams = Object.fromEntries(
-          Object.entries(params).filter(([, value]) => value !== '' && value !== null && value !== undefined),
+          Object.entries(params)
+            .map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
+            .filter(([, value]) => value !== '' && value !== null && value !== undefined),
         );
 
         return {

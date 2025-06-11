@@ -22,6 +22,7 @@ export interface FilterParamsState {
   status: string;
   reviewStatus: string;
   errorMessage: string;
+  issueName: string;
   from: string; // YYYY-MM-DD
   to: string; // YYYY-MM-DD
   page: number;
@@ -37,6 +38,7 @@ const initialFilterParams: FilterParamsState = {
   status: 'failed',
   reviewStatus: '',
   errorMessage: '',
+  issueName: '',
   from: formatDate(weekAgo),
   to: formatDate(today),
   page: 1,

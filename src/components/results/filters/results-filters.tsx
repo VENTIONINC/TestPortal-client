@@ -78,6 +78,10 @@ export const ResultsFilters = ({ filterParams, setFilterParams, ...props }: Resu
         <Input label="Type:" name="type" value={filterParams.type} onChange={handleFilterChange} />
       </FiltersGroup>
 
+      <FiltersGroup title="Issue Filters" open={open}>
+        <Input label="Issue Name:" name="issueName" value={filterParams.issueName} onChange={handleFilterChange} />
+      </FiltersGroup>
+
       <Circle onClick={onToggle} pos="absolute" top={0} right={-5} bg="blue.600" color="white" p={2} cursor="pointer">
         <LuArrowBigLeft
           size={24}
