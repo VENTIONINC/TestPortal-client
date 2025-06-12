@@ -1,1 +1,1 @@
-export { AssignIssueDrawer } from "./assign-issue";
+export { useAssignIssueDrawer } from './assign-issue';

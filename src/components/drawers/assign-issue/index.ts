@@ -1,1 +1,1 @@
-export { AssignIssueDrawer } from "./assign-issue-drawer";
+export { useAssignIssueDrawer } from './hooks';

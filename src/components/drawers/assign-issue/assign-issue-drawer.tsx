@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button, Text, VStack } from '@chakra-ui/react';
 
-import { Drawer, DrawerBody, DrawerProps, Input, NativeSelect } from '@/components/ui';
+import { Drawer, DrawerBody, Input, NativeSelect } from '@/components/ui';
+import { useCreateAssumptionMutation, useCreateIssueMutation } from '@/redux/apis/extendedApi';
 import { useLazyGetIssuesQuery } from '@/redux/apis/issuesApi';
-import { Issue, IssueCategory } from '@/types';
+import { DefaultDrawerProps, Issue, IssueCategory, ResultError } from '@/types';
 
-interface IssueDrawerProps extends Omit<DrawerProps, 'children'> {
-  onSubmit: (issue: Issue) => void;
+interface IssueDrawerProps extends DefaultDrawerProps {
+  resultError: ResultError;
 }
 
-export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
+export const AssignIssueDrawer = ({ resultError, closeDrawer }: IssueDrawerProps) => {
   const [issue, setIssue] = useState<Issue>({
     name: '',
     category: '' as IssueCategory,
@@ -21,6 +22,8 @@ export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
   const [existingIssues, setExistingIssues] = useState<Issue[]>([]);
 
   const [getIssues] = useLazyGetIssuesQuery();
+  const [createAssumption] = useCreateAssumptionMutation();
+  const [createIssue] = useCreateIssueMutation();
 
   const loadIssues = useCallback(async () => {
     if (!issue.name.trim()) return;
@@ -42,13 +45,42 @@ export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
     setIssue(selectedIssue);
   };
 
+  const handleCreateAssumption = async () => {
+    const issueId = issue.id || (await createIssue({ createIssueRequest: issue }).unwrap()).id;
+    if (!issueId) {
+      throw new Error('Unable to create assumption with no linked issue');
+    }
+
+    const assumptionResponse = await createAssumption({
+      createAssumptionRequest: {
+        madeBy: 'user',
+        score: 1,
+        isConfirmed: true,
+        issueId,
+        resultErrorId: resultError.id,
+      },
+    });
+
+    if (assumptionResponse.error) {
+      throw new Error(`Cant post new assumption ${assumptionResponse.error}`);
+    }
+
+    // TODO: handle assumptionResponse.data
+    if (assumptionResponse.data) {
+      closeDrawer();
+    } else {
+      // eslint-disable-next-line no-console
+      console.error('Failed to assign issue');
+    }
+  };
+
   useEffect(() => {
     const timeoutId = setTimeout(loadIssues, 300);
     return () => clearTimeout(timeoutId);
   }, [loadIssues]);
 
   return (
-    <Drawer {...props}>
+    <Drawer title={`Assign Issue to Result ${resultError.id}`} onClose={closeDrawer}>
       <DrawerBody display="flex" flexDir="column" gap={4}>
         <VStack align="flex-start" gap={0}>
           <Input
@@ -96,7 +128,7 @@ export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
           onChange={(e) => setIssue({ ...issue, description: e.target.value })}
         />
 
-        <Button onClick={() => onSubmit(issue)} variant="ghost">
+        <Button onClick={handleCreateAssumption} variant="ghost">
           Submit
         </Button>
       </DrawerBody>
