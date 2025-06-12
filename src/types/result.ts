@@ -67,12 +67,19 @@ export interface ResultErrorAssumption {
   issue: Issue;
 }
 
+export enum IssueCategory {
+  Bug = 'Bug',
+  Script = 'Script',
+  Infra = 'Infra',
+  Performance = 'Performance',
+}
+
 export interface Issue {
   id: number;
   createdAt: string;
   updatedAt: string;
   name: string;
-  category: string;
+  category: IssueCategory;
   description: string;
   portal: string;
   service: string;

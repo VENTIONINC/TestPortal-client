@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { HStack, Text } from '@chakra-ui/react';
-import { LuCheck, LuCirclePlus, LuTrash } from 'react-icons/lu';
+import { LuCheck, LuTrash, LuCirclePlus } from 'react-icons/lu';
 
 import {
   useConfirmAssumptionMutation,
   useCreateAssumptionMutation,
   useCreateIssueMutation,
 } from '@/redux/apis/extendedApi';
-import { Issue  } from '@/redux/apis/generatedApi';
+import { Issue } from '@/redux/apis/generatedApi';
+import { getIssueCategoryStyle } from '@/utils';
 import { ResultError, ResultErrorAssumption } from '@/types';
 
 import { AssignIssueDrawer } from './drawers';
@@ -69,32 +70,51 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
   return (
     <>
       {resultError.assumptions && resultError.assumptions.length ? (
-        resultError.assumptions.map((assumption, index) => (
-          <HStack key={index} border="1px dashed" borderColor="green.500" borderRadius="md" ml="auto" px={2}>
-            {assumption && assumption.issue && <Text textStyle="sm">{assumption.issue.name}</Text>}
+        resultError.assumptions.map((assumption, index) => {
+          if (!assumption) return null;
 
-            {assumption && !assumption.isConfirmed ? (
-              <>
-                <Text>{Math.round(assumption.score * 100)}%</Text>
-                <LuCheck
-                  color="green"
-                  size={16}
-                  onClick={() => confirm(assumption, true)}
-                  style={{ cursor: 'pointer' }}
-                />
-                <LuTrash
-                  color="red"
-                  size={16}
-                  onClick={() => confirm(assumption, false)}
-                  style={{ cursor: 'pointer' }}
-                />
-              </>
-            ) : (
-              <></>
-              //   <button className="edit-issue" onClick={toggleSidebar} />
-            )}
-          </HStack>
-        ))
+          const { Icon, color } = getIssueCategoryStyle(assumption.issue.category);
+
+          return (
+            <HStack
+              key={index}
+              border="1px solid"
+              borderColor={color}
+              borderRadius="md"
+              ml="auto"
+              px={2}
+              color={color}
+            >
+              {assumption.issue && (
+                <>
+                  <Icon size={16} color="currentColor" />
+                  <Text color="black">{assumption.issue.name}</Text>
+                </>
+              )}
+
+              {!assumption.isConfirmed ? (
+                <>
+                  <Text color="black">{Math.round(assumption.score * 100)}%</Text>
+                  <LuCheck
+                    color="green"
+                    size={16}
+                    onClick={() => confirm(assumption, true)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <LuTrash
+                    color="red"
+                    size={16}
+                    onClick={() => confirm(assumption, false)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </>
+              ) : (
+                <></>
+                //   <button className="edit-issue" onClick={toggleSidebar} />
+              )}
+            </HStack>
+          );
+        })
       ) : (
         <>
           <LuCirclePlus size={20} onClick={toggleSidebar} style={{ marginInlineStart: 'auto', cursor: 'pointer' }} />

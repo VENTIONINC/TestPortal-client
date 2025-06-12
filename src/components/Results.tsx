@@ -115,15 +115,14 @@ const ResultsContent = () => {
                 onClick={() => toggleDayActive(day)}
                 flex={1}
                 justify="center"
-                p={2}
+                p={1}
                 bg={day.isActive ? 'gray.800' : 'white'}
                 color={day.isActive ? 'white' : 'black'}
-                border="1px solid"
-                borderColor="gray.300"
                 borderRadius="sm"
                 cursor="pointer"
                 textAlign="center"
-                textStyle="md"
+                shadow="sm"
+                _hover={{ bg: day.isActive ? 'gray.600' : 'gray.200' }}
               >
                 <Text>{day.name}</Text>
               </Flex>

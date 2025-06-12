@@ -3,8 +3,9 @@ import { Box, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
 import { FilterParamsState } from '@/hooks/useFilterParams';
+import { getIssueCategoryStyle } from '@/utils';
 import { DateConfig } from '@/utils/dateRange';
-import { Result, ResultSpec, ResultExecution, ResultErrorAssumption, ResultError, Issue } from '@/types';
+import { Result, ResultSpec, ResultExecution, ResultErrorAssumption, ResultError, Issue, IssueCategory } from '@/types';
 
 const MAX_MESSAGE_LENGTH = 100;
 
@@ -147,29 +148,45 @@ export const StatSection = memo(({ filterParams, dateConfigs }: StatSectionProps
       </Box>
 
       <HStack gap={4} textStyle="md" mt={2} ms={2}>
-        <Text>
-          Specs: <span>{stats.byModels.specs}</span>
-        </Text>
-        <Text>
-          Results: <span>{stats.byModels.results}</span>
-        </Text>
-        <Text>
-          Executions: <span>{stats.byModels.executions}</span>
-        </Text>
-        <Text>
-          Issues: <span>{stats.byModels.issues}</span>
-        </Text>
-        <Text>
-          Errors: <span>{stats.byModels.errors}</span>
-        </Text>
-        <Text>
-          Assumptions: <span>{stats.byModels.assumptions}</span>
-        </Text>
+        <Text>Specs: {stats.byModels.specs}</Text>
+        <Text>Results: {stats.byModels.results}</Text>
+        <Text>Executions: {stats.byModels.executions}</Text>
+        <Text>Issues: {stats.byModels.issues}</Text>
+        <Text>Errors: {stats.byModels.errors}</Text>
+        <Text>Assumptions: {stats.byModels.assumptions}</Text>
       </HStack>
 
       <HStack align="flex-start" mt={2}>
         {topErrors.length > 0 && <TopSection results={topErrors} label="errors" />}
-        {topIssues.length > 0 && <TopSection results={topIssues} label="issues" />}
+        {topIssues.length > 0 && (
+          <VStack flex={1} align="stretch">
+            <TopSection results={topIssues} label="issues" />
+            <VStack align="stretch" bg="white" p={2} borderRadius="md">
+              <Text fontWeight={700}>Issue Categories</Text>
+              <HStack>
+                {Object.values(IssueCategory).map((category) => {
+                  const { Icon, color } = getIssueCategoryStyle(category);
+
+                  return (
+                    <HStack
+                      key={category}
+                      border="1px solid"
+                      borderColor={color}
+                      borderRadius="md"
+                      color={color}
+                      px={1}
+                    >
+                      <Icon size={16} color="currentColor" />
+                      <Text textStyle="sm" color="black">
+                        {category}
+                      </Text>
+                    </HStack>
+                  );
+                })}
+              </HStack>
+            </VStack>
+          </VStack>
+        )}
       </HStack>
     </Box>
   );

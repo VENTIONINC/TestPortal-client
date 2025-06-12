@@ -3,7 +3,7 @@ import { Button, Text, VStack } from '@chakra-ui/react';
 
 import { Drawer, DrawerBody, DrawerProps, Input, NativeSelect } from '@/components/ui';
 import { useLazyGetIssuesQuery } from '@/redux/apis/issuesApi';
-import { Issue } from '@/types';
+import { Issue, IssueCategory } from '@/types';
 
 interface IssueDrawerProps extends Omit<DrawerProps, 'children'> {
   onSubmit: (issue: Issue) => void;
@@ -12,7 +12,7 @@ interface IssueDrawerProps extends Omit<DrawerProps, 'children'> {
 export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
   const [issue, setIssue] = useState<Issue>({
     name: '',
-    category: '',
+    category: '' as IssueCategory,
     description: '',
     portal: '',
     service: '',
@@ -81,12 +81,12 @@ export const AssignIssueDrawer = ({ onSubmit, ...props }: IssueDrawerProps) => {
           name="category"
           placeholder="Select Category"
           value={issue.category}
-          onChange={(e) => setIssue({ ...issue, category: e.target.value })}
+          onChange={(e) => setIssue({ ...issue, category: e.target.value as IssueCategory })}
           items={[
-            { value: 'Bug', label: 'Bug' },
-            { value: 'Script', label: 'Script' },
-            { value: 'Infra', label: 'Infra' },
-            { value: 'Performance', label: 'Performance' },
+            { value: IssueCategory.Bug, label: 'Bug' },
+            { value: IssueCategory.Script, label: 'Script' },
+            { value: IssueCategory.Infra, label: 'Infra' },
+            { value: IssueCategory.Performance, label: 'Performance' },
           ]}
         />
         <Input

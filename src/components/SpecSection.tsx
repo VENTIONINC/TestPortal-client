@@ -56,17 +56,26 @@ export const SpecSection = memo(({ spec, executions, dateConfigs: globalDateConf
   }
 
   return (
-    <VStack align="stretch" p={2} bg="gray.100" border="2px solid" borderColor="gray.300" borderRadius="md">
+    <VStack align="stretch" p={2} bg="gray.100" shadow="md" borderRadius="md">
       <HStack>
         {dateFilters.map((day) => (
           <DateToggle key={day.yyyy_mm_dd} day={day} toggleHandler={handleDateToggle} />
         ))}
       </HStack>
 
-      <VStack align="stretch" bg="gray.50" py={2} px={4} border="1px solid" borderColor="gray.300" borderRadius="md">
-        <Flex gap={4}>
-          <Text textStyle="md">{spec.key}</Text>
-          <Text textStyle="md">{spec.file}</Text>
+      <VStack
+        gap={1}
+        align="stretch"
+        bg="white"
+        py={2}
+        px={4}
+        border="1px solid"
+        borderColor="gray.300"
+        borderRadius="md"
+      >
+        <Flex gap={4} textStyle="sm">
+          <Text>{spec.key}</Text>
+          <Text>{spec.file}</Text>
 
           <Flex ms="auto" gap={2}>
             {spec.tags?.map((tag) => (
