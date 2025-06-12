@@ -1,3 +1,4 @@
+export { ColorModeProvider, useColorMode, useColorModeValue } from './color-mode';
 export { Dialog, DialogBody, DialogFooter, DialogPortal, type DialogProps } from './dialog';
 export { Drawer, DrawerBody, DrawerFooter, DrawerPortal, type DrawerProps } from './drawer';
 export { Field, type FieldProps } from './field';

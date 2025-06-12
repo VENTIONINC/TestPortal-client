@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { Provider as ReduxProvider } from 'react-redux';
 import { RouterProvider } from 'react-router';
 
-import { ChakraProvider, DialogPortal, DrawerPortal } from '@/components/ui';
+import { ChakraProvider, ColorModeProvider, DialogPortal, DrawerPortal } from '@/components/ui';
 import { store } from '@/redux/store';
 import { router } from '@/router';
 
@@ -13,10 +13,12 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ReduxProvider store={store}>
       <ChakraProvider>
-        <RouterProvider router={router} />
+        <ColorModeProvider defaultTheme="light">
+          <RouterProvider router={router} />
 
-        <DialogPortal />
-        <DrawerPortal />
+          <DialogPortal />
+          <DrawerPortal />
+        </ColorModeProvider>
       </ChakraProvider>
     </ReduxProvider>
   </StrictMode>,
