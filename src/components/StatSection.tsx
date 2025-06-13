@@ -2,12 +2,10 @@ import { memo, useMemo } from 'react';
 import { Box, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
-import { FilterParamsState } from '@/hooks/useFilterParams';
+import { useResultsActions, useResultsFilters } from '@/redux/slices/results';
 import { getIssueCategoryStyle } from '@/utils';
 import { DateConfig } from '@/utils/dateRange';
 import { Result, ResultSpec, ResultExecution, ResultErrorAssumption, ResultError, Issue, IssueCategory } from '@/types';
-
-const MAX_MESSAGE_LENGTH = 100;
 
 interface StatsData {
   byStatus: {
@@ -31,16 +29,19 @@ interface StatsData {
 }
 
 interface StatSectionProps {
-  filterParams: FilterParamsState;
   dateConfigs: DateConfig[];
 }
 
-export const StatSection = memo(({ filterParams, dateConfigs }: StatSectionProps) => {
+export const StatSection = memo(({ dateConfigs }: StatSectionProps) => {
+  const filters = useResultsFilters();
+
+  const { setFilters } = useResultsActions();
+
   const { data } = useGetResultsQuery({
-    status: filterParams.status,
-    from: filterParams.from,
-    to: filterParams.to,
-    page: filterParams.page,
+    status: filters.status,
+    from: filters.from,
+    to: filters.to,
+    page: filters.page,
   });
 
   const stats: StatsData = useMemo(() => {
@@ -133,6 +134,10 @@ export const StatSection = memo(({ filterParams, dateConfigs }: StatSectionProps
       .join(' | ');
   }, [stats.byStatus]);
 
+  const handleFilterChange = (name: string, value: string) => {
+    setFilters({ [name]: value, page: 1 });
+  };
+
   if (!data?.results || data?.results.length === 0) {
     return (
       <Text alignSelf="center" textStyle="md" color="gray.500" mt={2}>
@@ -157,10 +162,20 @@ export const StatSection = memo(({ filterParams, dateConfigs }: StatSectionProps
       </HStack>
 
       <HStack align="flex-start" mt={2}>
-        {topErrors.length > 0 && <TopSection results={topErrors} label="errors" />}
+        {topErrors.length > 0 && (
+          <TopSection
+            results={topErrors}
+            label="errors"
+            onClick={(message) => handleFilterChange('errorMessage', message)}
+          />
+        )}
         {topIssues.length > 0 && (
           <VStack flex={1} align="stretch">
-            <TopSection results={topIssues} label="issues" />
+            <TopSection
+              results={topIssues}
+              label="issues"
+              onClick={(message) => handleFilterChange('issueName', message)}
+            />
             <VStack align="stretch" bg="white" p={2} borderRadius="md">
               <Text fontWeight={700}>Issue Categories</Text>
               <HStack>
@@ -192,7 +207,13 @@ export const StatSection = memo(({ filterParams, dateConfigs }: StatSectionProps
   );
 });
 
-const TopSection = ({ results, label }: { results: [string, number][]; label: string }) => {
+interface TopSectionProps {
+  results: [string, number][];
+  label: string;
+  onClick: (message: string) => void;
+}
+
+const TopSection = ({ results, label, onClick }: TopSectionProps) => {
   return (
     <VStack align="stretch" bg="white" p={2} borderRadius="md" flex={1}>
       <Text fontWeight={700}>
@@ -208,7 +229,14 @@ const TopSection = ({ results, label }: { results: [string, number][]; label: st
           <Text fontWeight={700} color="gray.700">
             {count}x
           </Text>
-          <Text>{errorMsg.length > MAX_MESSAGE_LENGTH ? `${errorMsg.slice(0, MAX_MESSAGE_LENGTH)}...` : errorMsg}</Text>
+          <Text
+            onClick={() => onClick(errorMsg)}
+            lineClamp={1}
+            cursor="pointer"
+            _hover={{ textDecoration: 'underline' }}
+          >
+            {errorMsg}
+          </Text>
         </HStack>
       ))}
     </VStack>

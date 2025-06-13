@@ -5,7 +5,7 @@ import { useDebounce } from 'use-debounce';
 import { ResultsFilters } from '@/components/results/filters';
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
-import { useFilterParams } from '@/hooks/useFilterParams';
+import { useResultsFilters } from '@/redux/slices/results';
 import { getDateRangeMap, DateConfig } from '@/utils/dateRange';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
@@ -14,11 +14,11 @@ import { StatSection } from './StatSection';
 import { BulkActions } from './BulkActions';
 
 const ResultsContent = () => {
-  const { filterParams, setFilterParams } = useFilterParams();
+  const filters = useResultsFilters();
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
-  const [debouncedFilterParams] = useDebounce(filterParams, 500);
-  const { data, isFetching } = useGetResultsQuery(debouncedFilterParams);
+  const [debouncedFilters] = useDebounce(filters, 500);
+  const { data, isFetching } = useGetResultsQuery(debouncedFilters);
 
   const [dateConfigs, setDateConfigs] = useState<DateConfig[]>([]);
 
@@ -80,8 +80,8 @@ const ResultsContent = () => {
   }, [data?.results, dateConfigs]);
 
   useEffect(() => {
-    setDateConfigs(getDateRangeMap(filterParams.from, filterParams.to));
-  }, [filterParams.from, filterParams.to]);
+    setDateConfigs(getDateRangeMap(filters.from, filters.to));
+  }, [filters.from, filters.to]);
 
   const handleSelectAll = () => {
     selectAll(activeDaysResultsIds);
@@ -104,7 +104,7 @@ const ResultsContent = () => {
 
   return (
     <HStack gap={4} align="flex-start" w="100%">
-      <ResultsFilters filterParams={filterParams} setFilterParams={setFilterParams} as="aside" zIndex={10} />
+      <ResultsFilters as="aside" zIndex={10} />
 
       <VStack as="section" align="stretch" w="100%">
         <VStack align="stretch" gap={0} p={2} bg="gray.100" borderRadius="md">
@@ -128,7 +128,7 @@ const ResultsContent = () => {
               </Flex>
             ))}
           </HStack>
-          <StatSection filterParams={filterParams} dateConfigs={dateConfigs} />
+          <StatSection dateConfigs={dateConfigs} />
         </VStack>
 
         <h2>Results</h2>

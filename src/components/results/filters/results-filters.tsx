@@ -3,22 +3,17 @@ import { Circle, StackProps, Text, useDisclosure, VStack } from '@chakra-ui/reac
 import { LuArrowBigLeft } from 'react-icons/lu';
 
 import { Input, NativeSelect } from '@/components/ui';
-import { FilterParamsState } from '@/hooks/useFilterParams';
+import { useResultsActions, useResultsFilters } from '@/redux/slices/results';
 
-interface ResultsFiltersProps extends StackProps {
-  filterParams: FilterParamsState;
-  setFilterParams: React.Dispatch<React.SetStateAction<FilterParamsState>>;
-}
-
-export const ResultsFilters = ({ filterParams, setFilterParams, ...props }: ResultsFiltersProps) => {
+export const ResultsFilters = (props: StackProps) => {
   const { open, onToggle } = useDisclosure({ defaultOpen: true });
 
+  const filters = useResultsFilters();
+
+  const { setFilters } = useResultsActions();
+
   const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    setFilterParams((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-      page: 1,
-    }));
+    setFilters({ [e.target.name]: e.target.value, page: 1 });
   };
 
   return (
@@ -35,8 +30,8 @@ export const ResultsFilters = ({ filterParams, setFilterParams, ...props }: Resu
         <NativeSelect
           label="Status:"
           name="status"
-          placeholder="Select Status"
-          value={filterParams.status}
+          placeholder="Select status"
+          value={filters.status}
           onChange={handleFilterChange}
           items={[
             { value: '', label: 'All' },
@@ -46,9 +41,9 @@ export const ResultsFilters = ({ filterParams, setFilterParams, ...props }: Resu
           ]}
         />
         <NativeSelect
-          label="Review Status:"
+          label="Review status:"
           name="reviewStatus"
-          value={filterParams.reviewStatus}
+          value={filters.reviewStatus}
           onChange={handleFilterChange}
           items={[
             { value: '', label: 'All' },
@@ -56,30 +51,25 @@ export const ResultsFilters = ({ filterParams, setFilterParams, ...props }: Resu
             { value: 'inCompleted', label: 'Not Completed' },
           ]}
         />
-        <Input
-          label="Error Message"
-          name="errorMessage"
-          value={filterParams.errorMessage}
-          onChange={handleFilterChange}
-        />
-        <Input label="From" name="from" value={filterParams.from} onChange={handleFilterChange} type="date" />
-        <Input label="To:" name="to" value={filterParams.to} onChange={handleFilterChange} type="date" />
-      </FiltersGroup>
-
-      <FiltersGroup title="Spec Filters" open={open}>
-        <Input label="Tags:" name="tag" value={filterParams.tag} onChange={handleFilterChange} />
-        <Input label="Spec ID:" name="specId" value={filterParams.specId} onChange={handleFilterChange} />
-        <Input label="Spec File:" name="specFile" value={filterParams.specFile} onChange={handleFilterChange} />
-        <Input label="Spec Name:" name="specName" value={filterParams.specName} onChange={handleFilterChange} />
-      </FiltersGroup>
-
-      <FiltersGroup title="Execution Filters" open={open}>
-        <Input label="Environment:" name="environment" value={filterParams.environment} onChange={handleFilterChange} />
-        <Input label="Type:" name="type" value={filterParams.type} onChange={handleFilterChange} />
+        <Input label="Error message" name="errorMessage" value={filters.errorMessage} onChange={handleFilterChange} />
+        <Input label="From" name="from" value={filters.from} onChange={handleFilterChange} type="date" />
+        <Input label="To:" name="to" value={filters.to} onChange={handleFilterChange} type="date" />
       </FiltersGroup>
 
       <FiltersGroup title="Issue Filters" open={open}>
-        <Input label="Issue Name:" name="issueName" value={filterParams.issueName} onChange={handleFilterChange} />
+        <Input label="Issue name:" name="issueName" value={filters.issueName} onChange={handleFilterChange} />
+      </FiltersGroup>
+
+      <FiltersGroup title="Spec Filters" open={open}>
+        <Input label="Tag:" name="tag" value={filters.tag} onChange={handleFilterChange} />
+        <Input label="Spec ID:" name="specId" value={filters.specId} onChange={handleFilterChange} />
+        <Input label="Spec file:" name="specFile" value={filters.specFile} onChange={handleFilterChange} />
+        <Input label="Spec name:" name="specName" value={filters.specName} onChange={handleFilterChange} />
+      </FiltersGroup>
+
+      <FiltersGroup title="Execution Filters" open={open}>
+        <Input label="Environment:" name="environment" value={filters.environment} onChange={handleFilterChange} />
+        <Input label="Type:" name="type" value={filters.type} onChange={handleFilterChange} />
       </FiltersGroup>
 
       <Circle onClick={onToggle} pos="absolute" top={0} right={-5} bg="blue.600" color="white" p={2} cursor="pointer">

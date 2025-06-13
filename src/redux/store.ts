@@ -3,12 +3,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import { baseApi } from './apis/baseApi';
 import dialogReducer from './slices/dialog';
 import drawerReducer from './slices/drawer';
+import resultsReducer from './slices/results';
 
 export const store = configureStore({
   reducer: {
     [baseApi.reducerPath]: baseApi.reducer,
     dialog: dialogReducer,
     drawer: drawerReducer,
+    results: resultsReducer,
   },
   devTools: import.meta.env.DEV,
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }).concat(baseApi.middleware),

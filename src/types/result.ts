@@ -96,3 +96,19 @@ export type ResultGroup = Map<
     }[];
   }
 >;
+
+export interface ResultsFilters {
+  tag: string;
+  specId: string;
+  specFile: string;
+  specName: string;
+  environment: string;
+  type: string;
+  status: string;
+  reviewStatus: string;
+  errorMessage: string;
+  issueName: string;
+  from: string; // YYYY-MM-DD
+  to: string; // YYYY-MM-DD
+  page: number;
+}

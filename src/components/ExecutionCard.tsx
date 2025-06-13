@@ -1,6 +1,7 @@
 import { Fragment, memo } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
+import { ClipboardCopyText } from '@/components/ui';
 import { useResultsErrorDialog } from '@/components/dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
@@ -58,8 +59,8 @@ export const ExecutionCard = memo(({ execution, results }: ExecutionCardProps) =
     <VStack align="stretch" p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md">
       <HStack gap={6} px={2} bg="gray.200" borderRadius="sm" textStyle="sm" minH={8}>
         <input type="checkbox" checked={results.every(({ id }) => isSelected(id))} onChange={toggleSelectAll} />
-        <Text>{execution.environment}</Text>
-        <Text>{execution.type}</Text>
+        <ClipboardCopyText value={execution.environment}>{execution.environment}</ClipboardCopyText>
+        <ClipboardCopyText value={execution.type}>{execution.type}</ClipboardCopyText>
         <Text>{execution.name}</Text>
         <Text ms="auto" my={1}>
           Playwright v.{execution.version}

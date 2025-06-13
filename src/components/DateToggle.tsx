@@ -30,7 +30,7 @@ export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
         {day.display}
       </Text>
       {day.stats.length > 0 && (
-        <HStack gap={0.5} justify="center" bg="white" p="1.5px" borderRadius="sm">
+        <HStack gap={0.5} justify="center" bg="white" p="2px" borderRadius="sm">
           {day.stats.map((status: string, index: number) => {
             const isFirst = index === 0;
             const isLast = index === day.stats.length - 1;

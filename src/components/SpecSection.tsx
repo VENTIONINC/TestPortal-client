@@ -2,6 +2,8 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuSquareUserRound, LuTag } from 'react-icons/lu';
 
+import { ClipboardCopyText } from '@/components/ui';
+import { useResultsActions } from '@/redux/slices/results';
 import type { DateConfig } from '@/utils/dateRange';
 import { toCleanTitle } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
@@ -17,6 +19,8 @@ interface SpecSectionProps {
 
 export const SpecSection = memo(({ spec, executions, dateConfigs: globalDateConfigs }: SpecSectionProps) => {
   const [dateConfigs, setDateConfigs] = useState(globalDateConfigs);
+
+  const { setFilters } = useResultsActions();
 
   const dateFilters = useMemo(() => {
     return dateConfigs.map((focus) => {
@@ -47,6 +51,10 @@ export const SpecSection = memo(({ spec, executions, dateConfigs: globalDateConf
     );
   };
 
+  const handleTagClick = (tag: string) => {
+    setFilters({ tag, page: 1 });
+  };
+
   useEffect(() => {
     setDateConfigs(globalDateConfigs);
   }, [globalDateConfigs]);
@@ -74,14 +82,23 @@ export const SpecSection = memo(({ spec, executions, dateConfigs: globalDateConf
         borderRadius="md"
       >
         <Flex gap={4} textStyle="sm">
-          <Text>{spec.key}</Text>
-          <Text>{spec.file}</Text>
+          <ClipboardCopyText value={spec.key}>{spec.key}</ClipboardCopyText>
+          <ClipboardCopyText value={spec.file}>{spec.file}</ClipboardCopyText>
 
           <Flex ms="auto" gap={2}>
             {spec.tags?.map((tag) => (
-              <HStack key={tag} px={2} border="1px solid" borderColor="gray.300" borderRadius="sm" textStyle="sm">
+              <HStack
+                key={tag}
+                px={2}
+                border="1px solid"
+                borderColor="gray.300"
+                borderRadius="sm"
+                onClick={() => handleTagClick(tag)}
+                cursor="pointer"
+                _hover={{ bg: 'gray.100' }}
+              >
                 <LuTag size={12} />
-                {tag}
+                <Text textStyle="sm">{tag}</Text>
               </HStack>
             ))}
           </Flex>
@@ -113,7 +130,7 @@ export const SpecSection = memo(({ spec, executions, dateConfigs: globalDateConf
 
           <HStack align="center" textStyle="sm">
             <LuSquareUserRound size={16} />
-            {toCleanTitle(spec.title)}
+            <ClipboardCopyText value={toCleanTitle(spec.title)}>{toCleanTitle(spec.title)}</ClipboardCopyText>
           </HStack>
         </div>
       </VStack>
