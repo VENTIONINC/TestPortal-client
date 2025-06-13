@@ -1,5 +1,5 @@
 export const TAGS = {
-  Result: 'Result',
+  Result: 'Results',
   Issue: 'Issue',
   Spec: 'Spec',
   Assumption: 'Assumption',

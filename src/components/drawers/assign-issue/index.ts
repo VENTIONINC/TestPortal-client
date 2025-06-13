@@ -1,1 +1,0 @@
-export { useAssignIssueDrawer } from './hooks';

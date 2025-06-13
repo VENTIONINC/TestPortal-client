@@ -1,29 +1,34 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button, Text, VStack } from '@chakra-ui/react';
 
-import { Drawer, DrawerBody, Input, NativeSelect } from '@/components/ui';
-import { useCreateAssumptionMutation, useCreateIssueMutation } from '@/redux/apis/extendedApi';
+import { Drawer, DrawerBody, Input, NativeSelect, Textarea, toaster } from '@/components/ui';
+import { useCreateAssumptionMutation, useCreateIssueMutation, useUpdateIssueMutation } from '@/redux/apis/extendedApi';
 import { useLazyGetIssuesQuery } from '@/redux/apis/issuesApi';
 import { DefaultDrawerProps, Issue, IssueCategory, ResultError } from '@/types';
 
-interface IssueDrawerProps extends DefaultDrawerProps {
+interface ManageIssueDrawerProps extends DefaultDrawerProps {
   resultError: ResultError;
+  issue?: Issue;
 }
 
-export const AssignIssueDrawer = ({ resultError, closeDrawer }: IssueDrawerProps) => {
-  const [issue, setIssue] = useState<Issue>({
-    name: '',
-    category: '' as IssueCategory,
-    description: '',
-    portal: '',
-    service: '',
-    ticket: '',
-  } as Issue);
+export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawer }: ManageIssueDrawerProps) => {
+  const [issue, setIssue] = useState<Issue>(
+    initialIssue ??
+      ({
+        name: '',
+        category: '' as IssueCategory,
+        description: '',
+        portal: '',
+        service: '',
+        ticket: '',
+      } as Issue),
+  );
   const [existingIssues, setExistingIssues] = useState<Issue[]>([]);
 
   const [getIssues] = useLazyGetIssuesQuery();
   const [createAssumption] = useCreateAssumptionMutation();
   const [createIssue] = useCreateIssueMutation();
+  const [updateIssue] = useUpdateIssueMutation();
 
   const loadIssues = useCallback(async () => {
     if (!issue.name.trim()) return;
@@ -46,7 +51,7 @@ export const AssignIssueDrawer = ({ resultError, closeDrawer }: IssueDrawerProps
   };
 
   const handleCreateAssumption = async () => {
-    const issueId = issue.id || (await createIssue({ createIssueRequest: issue }).unwrap()).id;
+    const issueId = (await createIssue({ createIssueRequest: issue }).unwrap()).id;
     if (!issueId) {
       throw new Error('Unable to create assumption with no linked issue');
     }
@@ -74,13 +79,27 @@ export const AssignIssueDrawer = ({ resultError, closeDrawer }: IssueDrawerProps
     }
   };
 
+  const handleUpdateIssue = async () => {
+    const res = await updateIssue({
+      issueId: issue.id,
+      updateIssueRequest: { name: issue.name, category: issue.category, description: issue.description },
+    });
+
+    if (res.error) {
+      return toaster.create({ title: 'Failed to update issue', type: 'error' });
+    }
+
+    closeDrawer();
+  };
+
   useEffect(() => {
     const timeoutId = setTimeout(loadIssues, 300);
+
     return () => clearTimeout(timeoutId);
   }, [loadIssues]);
 
   return (
-    <Drawer title={`Assign Issue to Result ${resultError.id}`} onClose={closeDrawer}>
+    <Drawer title={`${initialIssue ? 'Edit' : 'Assign'} Issue to Result ${resultError.id}`} onClose={closeDrawer}>
       <DrawerBody display="flex" flexDir="column" gap={4}>
         <VStack align="flex-start" gap={0}>
           <Input
@@ -121,15 +140,16 @@ export const AssignIssueDrawer = ({ resultError, closeDrawer }: IssueDrawerProps
             { value: IssueCategory.Performance, label: 'Performance' },
           ]}
         />
-        <Input
+        <Textarea
           label="Description:"
           name="description"
           value={issue.description}
           onChange={(e) => setIssue({ ...issue, description: e.target.value })}
+          autoresize
         />
 
-        <Button onClick={handleCreateAssumption} variant="ghost">
-          Submit
+        <Button onClick={initialIssue ? handleUpdateIssue : handleCreateAssumption} variant="ghost">
+          {initialIssue ? 'Update' : 'Create'}
         </Button>
       </DrawerBody>
     </Drawer>

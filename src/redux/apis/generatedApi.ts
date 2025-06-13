@@ -63,7 +63,7 @@ const injectedRtkApi = api
           method: "PATCH",
           body: queryArg.updateIssueRequest,
         }),
-        invalidatesTags: ["Issues"],
+        invalidatesTags: ["Issues", "Results"],
       }),
       getApiV1Results: build.query<
         GetApiV1ResultsApiResponse,
@@ -79,6 +79,9 @@ const injectedRtkApi = api
             environment: queryArg.environment,
             type: queryArg["type"],
             status: queryArg.status,
+            reviewStatus: queryArg.reviewStatus,
+            errorMessage: queryArg.errorMessage,
+            issueName: queryArg.issueName,
             from: queryArg["from"],
             to: queryArg.to,
             page: queryArg.page,
@@ -110,7 +113,7 @@ const injectedRtkApi = api
           method: "POST",
           body: queryArg.createAssumptionRequest,
         }),
-        invalidatesTags: ["Assumptions"],
+        invalidatesTags: ["Assumptions", "Results"],
       }),
       patchApiV1AssumptionsByAssumptionId: build.mutation<
         PatchApiV1AssumptionsByAssumptionIdApiResponse,
@@ -121,7 +124,7 @@ const injectedRtkApi = api
           method: "PATCH",
           body: queryArg.updateAssumptionRequest,
         }),
-        invalidatesTags: ["Assumptions"],
+        invalidatesTags: ["Assumptions", "Results"],
       }),
       patchApiV1ResultErrorsByResultErrorIdAssignIssue: build.mutation<
         PatchApiV1ResultErrorsByResultErrorIdAssignIssueApiResponse,
@@ -281,6 +284,9 @@ export type GetApiV1ResultsApiArg = {
   environment?: string;
   type?: string;
   status?: string;
+  reviewStatus?: string;
+  errorMessage?: string;
+  issueName?: string;
   from?: string;
   to?: string;
   page?: number;

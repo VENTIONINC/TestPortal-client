@@ -1,7 +1,7 @@
 import { HStack, Text } from '@chakra-ui/react';
 import { LuCheck, LuTrash, LuCirclePlus } from 'react-icons/lu';
 
-import { useAssignIssueDrawer } from '@/components/drawers';
+import { useManageIssueDrawer } from '@/components/drawers';
 import { useConfirmAssumptionMutation } from '@/redux/apis/extendedApi';
 import { getIssueCategoryStyle } from '@/utils';
 import { ResultError, ResultErrorAssumption } from '@/types';
@@ -13,7 +13,7 @@ interface InlineIssueProps {
 export const InlineIssue = ({ resultError }: InlineIssueProps) => {
   const [confirmAssumption] = useConfirmAssumptionMutation();
 
-  const openAssignIssueDrawer = useAssignIssueDrawer({ resultError });
+  const openManageIssueDrawer = useManageIssueDrawer({ resultError });
 
   const confirm = async (assumption: ResultErrorAssumption, isConfirmed: boolean) => {
     await confirmAssumption({
@@ -28,10 +28,25 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
         resultError.assumptions.map((assumption, index) => {
           if (!assumption) return null;
 
-          const { Icon, color } = getIssueCategoryStyle(assumption.issue.category);
+          const { Icon, color, hoverBgColor } = getIssueCategoryStyle(assumption.issue.category);
+
+          const isConfirmed = assumption.isConfirmed;
 
           return (
-            <HStack key={index} border="1px solid" borderColor={color} borderRadius="md" ml="auto" px={2} color={color}>
+            <HStack
+              key={index}
+              border="1px solid"
+              borderColor={color}
+              borderRadius="md"
+              ml="auto"
+              px={2}
+              color={color}
+              {...(isConfirmed && {
+                onClick: () => openManageIssueDrawer({ issue: assumption.issue }),
+                cursor: 'pointer',
+                _hover: { bg: hoverBgColor },
+              })}
+            >
               {assumption.issue && (
                 <>
                   <Icon size={16} color="currentColor" />
@@ -39,7 +54,7 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
                 </>
               )}
 
-              {!assumption.isConfirmed ? (
+              {!isConfirmed && (
                 <>
                   <Text color="black">{Math.round(assumption.score * 100)}%</Text>
                   <LuCheck
@@ -55,9 +70,6 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
                     style={{ cursor: 'pointer' }}
                   />
                 </>
-              ) : (
-                <></>
-                //   <button className="edit-issue" onClick={toggleSidebar} />
               )}
             </HStack>
           );
@@ -66,7 +78,7 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
         <>
           <LuCirclePlus
             size={20}
-            onClick={openAssignIssueDrawer}
+            onClick={() => openManageIssueDrawer()}
             style={{ marginInlineStart: 'auto', cursor: 'pointer' }}
           />
         </>

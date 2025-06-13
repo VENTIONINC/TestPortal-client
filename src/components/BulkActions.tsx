@@ -3,8 +3,7 @@ import { HStack, Text, useToken } from '@chakra-ui/react';
 import Tippy from '@tippyjs/react';
 import { LuCheck, LuTrash, LuWandSparkles } from 'react-icons/lu';
 
-import { useBulkReviewMutation } from '@/redux/apis/extendedApi';
-import { useConfirmAssumptionMutation } from '@/redux/apis/assumptionsApi';
+import { useBulkReviewMutation, useConfirmAssumptionMutation } from '@/redux/apis/extendedApi';
 import { BaseResult } from '@/types';
 
 import 'tippy.js/dist/tippy.css';
@@ -65,7 +64,10 @@ export const BulkActions = memo(({ selectedResults }: BulkActionsProps) => {
 
       await Promise.all(
         unconfirmedAssumptions.map((assumption) =>
-          confirmAssumption({ id: assumption.id, madeBy: 'user', isConfirmed: true }),
+          confirmAssumption({
+            assumptionId: assumption.id.toString(),
+            updateAssumptionRequest: { madeBy: 'user', isConfirmed: true },
+          }),
         ),
       );
     }
@@ -81,7 +83,10 @@ export const BulkActions = memo(({ selectedResults }: BulkActionsProps) => {
 
       await Promise.all(
         unconfirmedAssumptions.map((assumption) =>
-          confirmAssumption({ id: assumption.id, madeBy: 'user', isConfirmed: false }),
+          confirmAssumption({
+            assumptionId: assumption.id.toString(),
+            updateAssumptionRequest: { madeBy: 'user', isConfirmed: false },
+          }),
         ),
       );
     }
