@@ -6,3 +6,4 @@ export { InputGroup, type InputGroupProps } from './input-group';
 export { Input, type InputProps } from './input';
 export { NativeSelect, type NativeSelectProps } from './native-select';
 export { ChakraProvider } from './provider';
+export { Toaster, toaster } from './toaster';
