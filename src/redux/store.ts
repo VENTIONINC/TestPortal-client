@@ -12,7 +12,7 @@ import resultsReducer from './slices/results';
 const authPersistConfig = {
   key: 'auth',
   storage,
-  whitelist: ['accessToken', 'refreshToken'],
+  whitelist: ['accessToken', 'refreshToken', 'isAuthenticated'],
 };
 
 const rootReducer = combineReducers({
