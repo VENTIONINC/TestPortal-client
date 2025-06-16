@@ -1,8 +1,9 @@
 import { HStack, Mark, Text, VStack } from '@chakra-ui/react';
-import { LuTrendingUp } from 'react-icons/lu';
+import { LuPencil, LuTrendingUp } from 'react-icons/lu';
 import { format, isToday, isYesterday } from 'date-fns';
 
 import { IssueTimeDiscributionChart } from '@/components/charts';
+import { useManageIssueDrawer } from '@/components/drawers';
 import { getIssueCategoryStyle } from '@/utils';
 import { IssueWithStats } from '@/types';
 
@@ -12,6 +13,8 @@ interface IssueCardProps {
 
 export const IssueCard = ({ issue }: IssueCardProps) => {
   const { Icon, color } = getIssueCategoryStyle(issue.category);
+
+  const openManageIssueDrawer = useManageIssueDrawer();
 
   return (
     <HStack
@@ -27,7 +30,10 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
       px={4}
     >
       <VStack align="flex-start" gap={1} me={4}>
-        <Text fontWeight={600}>{issue.name}</Text>
+        <HStack onClick={() => openManageIssueDrawer({ issue })} cursor="pointer" _hover={{ color: 'gray.600' }}>
+          <Text fontWeight={600}>{issue.name}</Text>
+          <LuPencil size={16} />
+        </HStack>
         <HStack color={color}>
           <Text textStyle="sm">
             <Mark fontWeight={500} color="black">

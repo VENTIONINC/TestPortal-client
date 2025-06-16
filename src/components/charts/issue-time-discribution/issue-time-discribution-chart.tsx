@@ -14,7 +14,7 @@ export const IssueTimeDiscributionChart = ({ data, color }: IssueTimeDiscributio
   const chart = useChart({ data, series: [{ name: 'count', color }] });
 
   return (
-    <Flex minW="30%">
+    <Flex minW="30%" maxW="30%">
       <ResponsiveContainer>
         <Chart.Root chart={chart}>
           <LineChart data={chart.data} margin={{ top: 10, bottom: -10, left: -10 }}>

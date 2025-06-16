@@ -7,7 +7,7 @@ import { useLazyGetIssuesQuery } from '@/redux/apis/issuesApi';
 import { DefaultDrawerProps, Issue, IssueCategory, ResultError } from '@/types';
 
 interface ManageIssueDrawerProps extends DefaultDrawerProps {
-  resultError: ResultError;
+  resultError?: ResultError;
   issue?: Issue;
 }
 
@@ -26,9 +26,9 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
   const [existingIssues, setExistingIssues] = useState<Issue[]>([]);
 
   const [getIssues] = useLazyGetIssuesQuery();
-  const [createAssumption] = useCreateAssumptionMutation();
-  const [createIssue] = useCreateIssueMutation();
-  const [updateIssue] = useUpdateIssueMutation();
+  const [createAssumption, { isLoading: isCreatingAssumption }] = useCreateAssumptionMutation();
+  const [createIssue, { isLoading: isCreatingIssue }] = useCreateIssueMutation();
+  const [updateIssue, { isLoading: isUpdatingIssue }] = useUpdateIssueMutation();
 
   const loadIssues = useCallback(async () => {
     if (!issue.name.trim()) return;
@@ -52,9 +52,9 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
 
   const handleCreateAssumption = async () => {
     const issueId = (await createIssue({ createIssueRequest: issue }).unwrap()).id;
-    if (!issueId) {
-      throw new Error('Unable to create assumption with no linked issue');
-    }
+    if (!issueId) return toaster.create({ title: 'Unable to create assumption with no linked issue', type: 'error' });
+    if (!resultError)
+      return toaster.create({ title: 'Unable to create assumption with no result error', type: 'error' });
 
     const assumptionResponse = await createAssumption({
       createAssumptionRequest: {
@@ -99,7 +99,10 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
   }, [loadIssues]);
 
   return (
-    <Drawer title={`${initialIssue ? 'Edit' : 'Assign'} Issue to Result ${resultError.id}`} onClose={closeDrawer}>
+    <Drawer
+      title={`${initialIssue ? 'Edit' : 'Assign'} Issue${resultError ? ` to Result ${resultError.id}` : ''}`}
+      onClose={closeDrawer}
+    >
       <DrawerBody display="flex" flexDir="column" gap={4}>
         <VStack align="flex-start" gap={0}>
           <Input
@@ -148,7 +151,11 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
           autoresize
         />
 
-        <Button onClick={initialIssue ? handleUpdateIssue : handleCreateAssumption} variant="ghost">
+        <Button
+          onClick={initialIssue ? handleUpdateIssue : handleCreateAssumption}
+          variant="ghost"
+          loading={isCreatingAssumption || isCreatingIssue || isUpdatingIssue}
+        >
           {initialIssue ? 'Update' : 'Create'}
         </Button>
       </DrawerBody>
