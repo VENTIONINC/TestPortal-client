@@ -46,9 +46,6 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
         <Text textStyle="sm">
           <Mark fontWeight={500}>Description:</Mark> {issue.description}
           {issue.description}
-          {issue.description}
-          {issue.description}
-          {issue.description}
         </Text>
         <Text textStyle="sm">
           <Mark fontWeight={500}>Created At:</Mark> {new Date(issue.createdAt).toLocaleDateString()}
