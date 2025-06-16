@@ -1,3 +1,5 @@
+import { Issue } from './issue';
+
 export interface BaseResult {
   id: number;
   createdAt: string;
@@ -65,25 +67,6 @@ export interface ResultErrorAssumption {
   issueId: number;
   resultErrorId: number;
   issue: Issue;
-}
-
-export enum IssueCategory {
-  Bug = 'Bug',
-  Script = 'Script',
-  Infra = 'Infra',
-  Performance = 'Performance',
-}
-
-export interface Issue {
-  id: number;
-  createdAt: string;
-  updatedAt: string;
-  name: string;
-  category: IssueCategory;
-  description: string;
-  portal: string;
-  service: string;
-  ticket: string;
 }
 
 export type ResultGroup = Map<

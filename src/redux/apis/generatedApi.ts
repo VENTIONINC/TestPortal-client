@@ -47,6 +47,23 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Issues"],
       }),
+      getApiV1IssuesWithStats: build.query<
+        GetApiV1IssuesWithStatsApiResponse,
+        GetApiV1IssuesWithStatsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/issues/with-stats`,
+          params: {
+            category: queryArg.category,
+            name: queryArg.name,
+            page: queryArg.page,
+            limit: queryArg.limit,
+            statFrom: queryArg.statFrom,
+            statTo: queryArg.statTo,
+          },
+        }),
+        providesTags: ["Issues"],
+      }),
       getApiV1IssuesByIssueId: build.query<
         GetApiV1IssuesByIssueIdApiResponse,
         GetApiV1IssuesByIssueIdApiArg
@@ -253,7 +270,7 @@ export type GetApiV1ApiArg = void;
 export type GetApiV1IssuesApiResponse =
   /** status 200 List of issues */ Issue[];
 export type GetApiV1IssuesApiArg = {
-  category?: string;
+  category?: "Bug" | "Script" | "Infra" | "Performance";
   name?: string;
   page?: number;
   limit?: number;
@@ -262,6 +279,43 @@ export type PostApiV1IssuesApiResponse =
   /** status 201 Issue created successfully */ Issue;
 export type PostApiV1IssuesApiArg = {
   createIssueRequest: CreateIssueRequest;
+};
+export type GetApiV1IssuesWithStatsApiResponse =
+  /** status 200 List of issues with statistics */ {
+    issues: {
+      id: number;
+      name: string;
+      category?: string;
+      description?: string;
+      portal?: string;
+      service?: string;
+      ticket?: string;
+      createdAt: string;
+      updatedAt: string;
+      statistics: {
+        occurrenceCount: number;
+        firstOccurrence: string | null;
+        lastOccurrence: string | null;
+        impactedTestsCount: number;
+        timeDistribution: {
+          date: string;
+          count: number;
+        }[];
+      };
+    }[];
+    total: number;
+    page: number;
+    totalPages: number;
+  };
+export type GetApiV1IssuesWithStatsApiArg = {
+  category?: "Bug" | "Script" | "Infra" | "Performance";
+  name?: string;
+  page?: number;
+  limit?: number;
+  /** Start date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
+  statFrom?: string;
+  /** End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
+  statTo?: string;
 };
 export type GetApiV1IssuesByIssueIdApiResponse =
   /** status 200 Issue details */ Issue;
@@ -552,6 +606,7 @@ export const {
   useGetApiV1Query,
   useGetApiV1IssuesQuery,
   usePostApiV1IssuesMutation,
+  useGetApiV1IssuesWithStatsQuery,
   useGetApiV1IssuesByIssueIdQuery,
   usePatchApiV1IssuesByIssueIdMutation,
   useGetApiV1ResultsQuery,

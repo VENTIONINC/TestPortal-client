@@ -1,57 +1,44 @@
-import { Button, Heading, HStack, Mark, Text, VStack } from '@chakra-ui/react';
+import { Button, Heading, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
+import { useDebounce } from 'use-debounce';
 
 import { IssuesFilters } from '@/components/issues/filters';
-import { useGetIssuesQuery } from '@/redux/apis/issuesApi';
-import { useIssueFilters } from '@/hooks/useIssueFilters';
+import { IssueCard } from '@/components/issues/card';
+import { useGetIssuesWithStatsQuery } from '@/redux/apis/extendedApi';
+import { useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
+import { IssueWithStats } from '@/types';
 
 export const Issues = () => {
-  const { filters, updateFilters } = useIssueFilters();
+  const filters = useIssuesFilters();
 
-  const { data } = useGetIssuesQuery(filters);
+  const { setFilters } = useIssuesActions();
+
+  const [debouncedFilters] = useDebounce(filters, 500);
+  const { data, isFetching } = useGetIssuesWithStatsQuery(debouncedFilters);
 
   const nextPage = () => {
     if (data && filters.page < data.totalPages) {
-      updateFilters({ page: filters.page + 1 });
+      setFilters({ page: filters.page + 1 });
     }
   };
 
   const prevPage = () => {
     if (data && filters.page > 1) {
-      updateFilters({ page: filters.page - 1 });
+      setFilters({ page: filters.page - 1 });
     }
   };
 
   return (
-    <HStack align="flex-start" gap={4}>
-      <IssuesFilters filters={filters} updateFilters={updateFilters} as="aside" />
+    <HStack align="flex-start" gap={4} w="100%">
+      <IssuesFilters as="aside" />
 
-      <VStack flex={1} align="flex-start">
-        <Heading textStyle="3xl">Issues</Heading>
-        <VStack flex={1} align="flex-start" w="100%">
+      <VStack flex={1} align="stretch">
+        <HStack ps={6}>
+          <Heading textStyle="3xl">Issues</Heading>
+          {isFetching && <Spinner />}
+        </HStack>
+        <VStack flex={1} gap={4}>
           {data && data.issues?.length > 0 ? (
-            data.issues.map((issue, index) => (
-              <VStack
-                key={index}
-                align="flex-start"
-                w="100%"
-                bg="gray.100"
-                border="1px solid"
-                borderColor="gray.400"
-                borderRadius="md"
-                p={4}
-              >
-                <Text fontWeight={600}>{issue.name}</Text>
-                <Text>
-                  <Mark fontWeight={600}>Category:</Mark> {issue.category}
-                </Text>
-                <Text>
-                  <Mark fontWeight={600}>Description:</Mark> {issue.description}
-                </Text>
-                <Text>
-                  <Mark fontWeight={600}>Created At:</Mark> {new Date(issue.createdAt).toLocaleDateString()}
-                </Text>
-              </VStack>
-            ))
+            data.issues.map((issue, index) => <IssueCard key={index} issue={issue as IssueWithStats} />)
           ) : (
             <Text>No issues found.</Text>
           )}

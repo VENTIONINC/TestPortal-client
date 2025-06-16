@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { baseApi } from './apis/baseApi';
 import dialogReducer from './slices/dialog';
 import drawerReducer from './slices/drawer';
+import issuesReducer from './slices/issues';
 import resultsReducer from './slices/results';
 
 export const store = configureStore({
@@ -10,6 +11,7 @@ export const store = configureStore({
     [baseApi.reducerPath]: baseApi.reducer,
     dialog: dialogReducer,
     drawer: drawerReducer,
+    issues: issuesReducer,
     results: resultsReducer,
   },
   devTools: import.meta.env.DEV,

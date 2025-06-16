@@ -38,6 +38,7 @@ export const {
   usePatchApiV1AssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
   usePostApiV1IssuesMutation: useCreateIssueMutation,
   usePatchApiV1IssuesByIssueIdMutation: useUpdateIssueMutation,
+  useGetApiV1IssuesWithStatsQuery: useGetIssuesWithStatsQuery,
 
   // Custom hooks (from extendedApi)
   useGetResultsQuery,
