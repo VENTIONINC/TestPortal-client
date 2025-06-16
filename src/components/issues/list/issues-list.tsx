@@ -1,13 +1,12 @@
 import { Button, Heading, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 
-import { IssuesFilters } from '@/components/issues/filters';
-import { IssueCard } from '@/components/issues/card';
+import { IssueCard, IssuesFilters } from '@/components/issues';
 import { useGetIssuesWithStatsQuery } from '@/redux/apis/extendedApi';
 import { useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
 import { IssueWithStats } from '@/types';
 
-export const Issues = () => {
+export const IssuesList = () => {
   const filters = useIssuesFilters();
 
   const { setFilters } = useIssuesActions();

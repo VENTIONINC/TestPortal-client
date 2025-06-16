@@ -2,13 +2,13 @@ import { Fragment, memo } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { ClipboardCopyText } from '@/components/ui';
+import { InlineIssue } from '@/components/issues';
 import { useResultsErrorDialog } from '@/components/dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution } from '@/types';
 
 import { BulkActions } from './BulkActions';
-import { InlineIssue } from './InlineIssue';
 
 interface ExecutionCardProps {
   execution: ResultExecution;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Flex, HStack } from '@chakra-ui/react';
 
-import { Issues } from '@/components/Issues';
+import { IssuesList } from '@/components/issues';
 import { Results } from '@/components/Results';
 
 enum ACTIVE_TAB {
@@ -42,7 +42,7 @@ function App() {
 
       <Flex p={4}>
         {activeTab === ACTIVE_TAB.Results && <Results />}
-        {activeTab === ACTIVE_TAB.Issues && <Issues />}
+        {activeTab === ACTIVE_TAB.Issues && <IssuesList />}
       </Flex>
     </>
   );
