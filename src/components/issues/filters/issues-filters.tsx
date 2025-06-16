@@ -3,18 +3,18 @@ import { Circle, StackProps, Text, useDisclosure, VStack } from '@chakra-ui/reac
 import { LuArrowBigLeft } from 'react-icons/lu';
 
 import { Input, NativeSelect } from '@/components/ui';
-import { IssueFilters } from '@/types';
+import { useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
+import { IssueCategory } from '@/types';
 
-interface IssuesFiltersProps extends StackProps {
-  filters: IssueFilters;
-  updateFilters: (newFilters: Partial<IssueFilters>) => void;
-}
-
-export const IssuesFilters = ({ filters, updateFilters, ...props }: IssuesFiltersProps) => {
+export const IssuesFilters = (props: StackProps) => {
   const { open, onToggle } = useDisclosure({ defaultOpen: true });
 
+  const filters = useIssuesFilters();
+
+  const { setFilters } = useIssuesActions();
+
   const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    updateFilters({ [e.target.name]: e.target.value, page: 1 });
+    setFilters({ [e.target.name]: e.target.value, page: 1 });
   };
 
   return (
@@ -43,22 +43,22 @@ export const IssuesFilters = ({ filters, updateFilters, ...props }: IssuesFilter
         <NativeSelect
           label="Category:"
           name="category"
-          placeholder="Select Category"
           value={filters.category}
           onChange={handleFilterChange}
           items={[
             { value: '', label: 'All' },
-            { value: 'Bug', label: 'Bug' },
-            { value: 'Improvement', label: 'Improvement' },
-            { value: 'Task', label: 'Task' },
+            ...Object.values(IssueCategory).map((category) => ({ value: category, label: category })),
           ]}
         />
         <Input label="Name:" name="name" value={filters.name} onChange={handleFilterChange} />
-        <Input label="From:" name="fromDate" value={filters.fromDate} onChange={handleFilterChange} type="date" />
-        <Input label="To:" name="toDate" value={filters.toDate} onChange={handleFilterChange} type="date" />
       </FiltersGroup>
 
-      <Circle onClick={onToggle} pos="absolute" top={7} right={-4} bg="blue.600" color="white" p={2} cursor="pointer">
+      <FiltersGroup title="Statistics Filters" open={open}>
+        <Input label="From:" name="statFrom" value={filters.statFrom} onChange={handleFilterChange} type="date" />
+        <Input label="To:" name="statTo" value={filters.statTo} onChange={handleFilterChange} type="date" />
+      </FiltersGroup>
+
+      <Circle onClick={onToggle} pos="absolute" top={0} right={-5} bg="blue.600" color="white" p={2} cursor="pointer">
         <LuArrowBigLeft
           size={24}
           style={{

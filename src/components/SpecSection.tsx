@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuSquareUserRound, LuTag } from 'react-icons/lu';
 
+import { ClipboardCopyText } from '@/components/ui';
+import { useResultsActions } from '@/redux/slices/results';
 import type { DateConfig } from '@/utils/dateRange';
 import { toCleanTitle } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
@@ -13,18 +15,12 @@ interface SpecSectionProps {
   spec: ResultSpec;
   executions: { execution: ResultExecution; results: BaseResult[] }[];
   dateConfigs: DateConfig[];
-  selectedResultsIds: number[];
-  onSelectResult: (resultId: number | number[]) => void;
 }
 
-export const SpecSection = ({
-  spec,
-  executions,
-  dateConfigs: globalDateConfigs,
-  selectedResultsIds,
-  onSelectResult,
-}: SpecSectionProps) => {
+export const SpecSection = memo(({ spec, executions, dateConfigs: globalDateConfigs }: SpecSectionProps) => {
   const [dateConfigs, setDateConfigs] = useState(globalDateConfigs);
+
+  const { setFilters } = useResultsActions();
 
   const dateFilters = useMemo(() => {
     return dateConfigs.map((focus) => {
@@ -55,6 +51,10 @@ export const SpecSection = ({
     );
   };
 
+  const handleTagClick = (tag: string) => {
+    setFilters({ tag, page: 1 });
+  };
+
   useEffect(() => {
     setDateConfigs(globalDateConfigs);
   }, [globalDateConfigs]);
@@ -64,23 +64,41 @@ export const SpecSection = ({
   }
 
   return (
-    <VStack align="stretch" p={2} bg="gray.100" border="2px solid" borderColor="gray.300" borderRadius="md">
+    <VStack align="stretch" p={2} bg="gray.100" shadow="md" borderRadius="md">
       <HStack>
         {dateFilters.map((day) => (
           <DateToggle key={day.yyyy_mm_dd} day={day} toggleHandler={handleDateToggle} />
         ))}
       </HStack>
 
-      <VStack align="stretch" bg="gray.50" py={2} px={4} border="1px solid" borderColor="gray.300" borderRadius="md">
-        <Flex gap={4}>
-          <Text textStyle="md">{spec.key}</Text>
-          <Text textStyle="md">{spec.file}</Text>
+      <VStack
+        gap={1}
+        align="stretch"
+        bg="white"
+        py={2}
+        px={4}
+        border="1px solid"
+        borderColor="gray.300"
+        borderRadius="md"
+      >
+        <Flex gap={4} textStyle="sm">
+          <ClipboardCopyText value={spec.key}>{spec.key}</ClipboardCopyText>
+          <ClipboardCopyText value={spec.file}>{spec.file}</ClipboardCopyText>
 
           <Flex ms="auto" gap={2}>
             {spec.tags?.map((tag) => (
-              <HStack key={tag} px={2} border="1px solid" borderColor="gray.300" borderRadius="sm" textStyle="sm">
+              <HStack
+                key={tag}
+                px={2}
+                border="1px solid"
+                borderColor="gray.300"
+                borderRadius="sm"
+                onClick={() => handleTagClick(tag)}
+                cursor="pointer"
+                _hover={{ bg: 'gray.100' }}
+              >
                 <LuTag size={12} />
-                {tag}
+                <Text textStyle="sm">{tag}</Text>
               </HStack>
             ))}
           </Flex>
@@ -112,20 +130,14 @@ export const SpecSection = ({
 
           <HStack align="center" textStyle="sm">
             <LuSquareUserRound size={16} />
-            {toCleanTitle(spec.title)}
+            <ClipboardCopyText value={toCleanTitle(spec.title)}>{toCleanTitle(spec.title)}</ClipboardCopyText>
           </HStack>
         </div>
       </VStack>
 
       {filteredExecutions.map(({ execution, results }) => (
-        <ExecutionCard
-          key={execution.id}
-          execution={execution}
-          results={results}
-          selectedResultsIds={selectedResultsIds}
-          onSelectResult={onSelectResult}
-        />
+        <ExecutionCard key={execution.id} execution={execution} results={results} />
       ))}
     </VStack>
   );
-};
+});

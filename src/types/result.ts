@@ -1,3 +1,5 @@
+import { Issue } from './issue';
+
 export interface BaseResult {
   id: number;
   createdAt: string;
@@ -67,18 +69,6 @@ export interface ResultErrorAssumption {
   issue: Issue;
 }
 
-export interface Issue {
-  id: number;
-  createdAt: string;
-  updatedAt: string;
-  name: string;
-  category: string;
-  description: string;
-  portal: string;
-  service: string;
-  ticket: string;
-}
-
 export type ResultGroup = Map<
   string,
   {
@@ -89,3 +79,19 @@ export type ResultGroup = Map<
     }[];
   }
 >;
+
+export interface ResultsFilters {
+  tag: string;
+  specId: string;
+  specFile: string;
+  specName: string;
+  environment: string;
+  type: string;
+  status: string;
+  reviewStatus: string;
+  errorMessage: string;
+  issueName: string;
+  from: string; // YYYY-MM-DD
+  to: string; // YYYY-MM-DD
+  page: number;
+}

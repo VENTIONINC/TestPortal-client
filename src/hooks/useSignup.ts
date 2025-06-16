@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { PATHS } from '@/types/paths';
-import { usePostApiUsersSignupMutation } from '@/redux/apis/generatedApi';
+import { usePostApiV2UsersSignupMutation } from '@/redux/apis/generatedApi';
 import { signupSchema, type SignupFormData } from '@/schemas/authSchemas';
 import { extractApiError } from '@/utils/apiErrors';
 
@@ -15,7 +15,7 @@ export interface UseSignupOptions {
 
 export function useSignup(options: UseSignupOptions = {}) {
   const navigate = useNavigate();
-  const [postApiUsersSignup, { isLoading: isApiLoading, error: apiError }] = usePostApiUsersSignupMutation();
+  const [postApiUsersSignup, { isLoading: isApiLoading, error: apiError }] = usePostApiV2UsersSignupMutation();
 
   const { redirectPath = PATHS.LOGIN, onSuccess, onError } = options;
 

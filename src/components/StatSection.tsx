@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Box, HStack, Text, VStack } from '@chakra-ui/react';
 
-import { Result, ResultSpec, ResultExecution, ResultErrorAssumption, ResultError, Issue } from '@/types';
-
-const MAX_MESSAGE_LENGTH = 100;
+import { useGetResultsQuery } from '@/redux/apis/extendedApi';
+import { useResultsActions, useResultsFilters } from '@/redux/slices/results';
+import { getIssueCategoryStyle } from '@/utils';
+import { DateConfig } from '@/utils/dateRange';
+import { Result, ResultSpec, ResultExecution, ResultErrorAssumption, ResultError, Issue, IssueCategory } from '@/types';
 
 interface StatsData {
   byStatus: {
@@ -27,11 +29,25 @@ interface StatsData {
 }
 
 interface StatSectionProps {
-  results: Result[];
+  dateConfigs: DateConfig[];
 }
 
-export const StatSection = ({ results }: StatSectionProps) => {
+export const StatSection = memo(({ dateConfigs }: StatSectionProps) => {
+  const filters = useResultsFilters();
+
+  const { setFilters } = useResultsActions();
+
+  const { data } = useGetResultsQuery({
+    status: filters.status,
+    from: filters.from,
+    to: filters.to,
+    page: filters.page,
+  });
+
   const stats: StatsData = useMemo(() => {
+    const activeDates = new Set(dateConfigs.filter((day) => day.isActive).map(({ date }) => date));
+    const results = (data?.results || []).filter((result) => activeDates.has(result.startTime.split('T')[0]));
+
     const specMap = new Map<string | number, ResultSpec>();
     const executionMap = new Map<string | number, ResultExecution>();
     const errorMap = new Map<string | number, ResultError>();
@@ -98,7 +114,7 @@ export const StatSection = ({ results }: StatSectionProps) => {
     newStats.byModels.assumptions = assumptionMap.size;
 
     return newStats;
-  }, [results]);
+  }, [data?.results, dateConfigs]);
 
   const topErrors = useMemo(() => {
     return Object.entries(stats.byErrors)
@@ -118,7 +134,11 @@ export const StatSection = ({ results }: StatSectionProps) => {
       .join(' | ');
   }, [stats.byStatus]);
 
-  if (!results || results.length === 0) {
+  const handleFilterChange = (name: string, value: string) => {
+    setFilters({ [name]: value, page: 1 });
+  };
+
+  if (!data?.results || data?.results.length === 0) {
     return (
       <Text alignSelf="center" textStyle="md" color="gray.500" mt={2}>
         No active results to display stats for.
@@ -133,35 +153,67 @@ export const StatSection = ({ results }: StatSectionProps) => {
       </Box>
 
       <HStack gap={4} textStyle="md" mt={2} ms={2}>
-        <Text>
-          Specs: <span>{stats.byModels.specs}</span>
-        </Text>
-        <Text>
-          Results: <span>{stats.byModels.results}</span>
-        </Text>
-        <Text>
-          Executions: <span>{stats.byModels.executions}</span>
-        </Text>
-        <Text>
-          Issues: <span>{stats.byModels.issues}</span>
-        </Text>
-        <Text>
-          Errors: <span>{stats.byModels.errors}</span>
-        </Text>
-        <Text>
-          Assumptions: <span>{stats.byModels.assumptions}</span>
-        </Text>
+        <Text>Specs: {stats.byModels.specs}</Text>
+        <Text>Results: {stats.byModels.results}</Text>
+        <Text>Executions: {stats.byModels.executions}</Text>
+        <Text>Issues: {stats.byModels.issues}</Text>
+        <Text>Errors: {stats.byModels.errors}</Text>
+        <Text>Assumptions: {stats.byModels.assumptions}</Text>
       </HStack>
 
       <HStack align="flex-start" mt={2}>
-        {topErrors.length > 0 && <TopSection results={topErrors} label="errors" />}
-        {topIssues.length > 0 && <TopSection results={topIssues} label="issues" />}
+        {topErrors.length > 0 && (
+          <TopSection
+            results={topErrors}
+            label="errors"
+            onClick={(message) => handleFilterChange('errorMessage', message)}
+          />
+        )}
+        {topIssues.length > 0 && (
+          <VStack flex={1} align="stretch">
+            <TopSection
+              results={topIssues}
+              label="issues"
+              onClick={(message) => handleFilterChange('issueName', message)}
+            />
+            <VStack align="stretch" bg="white" p={2} borderRadius="md">
+              <Text fontWeight={700}>Issue Categories</Text>
+              <HStack>
+                {Object.values(IssueCategory).map((category) => {
+                  const { Icon, color } = getIssueCategoryStyle(category);
+
+                  return (
+                    <HStack
+                      key={category}
+                      border="1px solid"
+                      borderColor={color}
+                      borderRadius="md"
+                      color={color}
+                      px={1}
+                    >
+                      <Icon size={16} color="currentColor" />
+                      <Text textStyle="sm" color="black">
+                        {category}
+                      </Text>
+                    </HStack>
+                  );
+                })}
+              </HStack>
+            </VStack>
+          </VStack>
+        )}
       </HStack>
     </Box>
   );
-};
+});
 
-const TopSection = ({ results, label }: { results: [string, number][]; label: string }) => {
+interface TopSectionProps {
+  results: [string, number][];
+  label: string;
+  onClick: (message: string) => void;
+}
+
+const TopSection = ({ results, label, onClick }: TopSectionProps) => {
   return (
     <VStack align="stretch" bg="white" p={2} borderRadius="md" flex={1}>
       <Text fontWeight={700}>
@@ -177,7 +229,14 @@ const TopSection = ({ results, label }: { results: [string, number][]; label: st
           <Text fontWeight={700} color="gray.700">
             {count}x
           </Text>
-          <Text>{errorMsg.length > MAX_MESSAGE_LENGTH ? `${errorMsg.slice(0, MAX_MESSAGE_LENGTH)}...` : errorMsg}</Text>
+          <Text
+            onClick={() => onClick(errorMsg)}
+            lineClamp={1}
+            cursor="pointer"
+            _hover={{ textDecoration: 'underline' }}
+          >
+            {errorMsg}
+          </Text>
         </HStack>
       ))}
     </VStack>

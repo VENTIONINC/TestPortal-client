@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Text, HStack, Box } from '@chakra-ui/react';
 
 interface DateToggleProps {
@@ -10,7 +11,7 @@ interface DateToggleProps {
   toggleHandler: (day: { yyyy_mm_dd: string }) => void;
 }
 
-export const DateToggle = ({ day, toggleHandler }: DateToggleProps) => {
+export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
   return (
     <HStack
       onClick={() => toggleHandler(day)}
@@ -20,27 +21,48 @@ export const DateToggle = ({ day, toggleHandler }: DateToggleProps) => {
       p={1}
       bg={day.isActive ? 'green.600' : 'white'}
       color={day.isActive ? 'white' : 'black'}
-      border="1px solid"
-      borderColor="gray.300"
       borderRadius="sm"
       cursor="pointer"
+      shadow="sm"
+      _hover={{ bg: day.isActive ? 'green.500' : 'gray.200' }}
     >
       <Text textStyle="sm" fontWeight={500}>
         {day.display}
       </Text>
       {day.stats.length > 0 && (
-        <HStack gap={1} flexWrap="wrap" justify="center" bg="white" p={0.5} borderRadius="sm">
-          {day.stats.map((status: string, index: number) => (
-            <Box
-              key={index}
-              w="6px"
-              h="6px"
-              borderRadius="full"
-              bg={status === 'passed' ? 'green.600' : status === 'failed' ? 'red.500' : 'gray.500'}
-            />
-          ))}
+        <HStack gap={0.5} justify="center" bg="white" p="2px" borderRadius="sm">
+          {day.stats.map((status: string, index: number) => {
+            const isFirst = index === 0;
+            const isLast = index === day.stats.length - 1;
+            const isOnly = day.stats.length === 1;
+
+            let borderRadiusProps = {};
+            if (isOnly) {
+              borderRadiusProps = { borderRadius: 'full' };
+            } else if (isFirst) {
+              borderRadiusProps = {
+                borderTopLeftRadius: 'full',
+                borderBottomLeftRadius: 'full',
+              };
+            } else if (isLast) {
+              borderRadiusProps = {
+                borderTopRightRadius: 'full',
+                borderBottomRightRadius: 'full',
+              };
+            }
+
+            return (
+              <Box
+                key={index}
+                w={1.5}
+                h={1.5}
+                {...borderRadiusProps}
+                bg={status === 'passed' ? 'green.600' : status === 'failed' ? 'red.500' : 'gray.500'}
+              />
+            );
+          })}
         </HStack>
       )}
     </HStack>
   );
-};
+});

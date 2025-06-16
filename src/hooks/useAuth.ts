@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
 
 import { logout } from '@/redux/slices/auth';
-import { useGetApiUsersByUserIdQuery } from '@/redux/apis/generatedApi';
+import { useGetApiV2UsersByUserIdQuery } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
 import type { RootState } from '@/redux/store';
 
@@ -22,7 +22,7 @@ export function useAuth() {
 
   const userId = accessToken ? getUserIdFromToken(accessToken) : null;
 
-  const { data: user } = useGetApiUsersByUserIdQuery(
+  const { data: user } = useGetApiV2UsersByUserIdQuery(
     { userId: userId!, authorization: `Bearer ${accessToken}` },
     {
       skip: !accessToken || !userId,
