@@ -3,6 +3,7 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import storage from 'redux-persist/lib/storage';
 
 import { baseApi } from './apis/baseApi';
+import { mcpApi } from './apis/mcp-api/mcpApi';
 import authReducer from './slices/auth';
 import dialogReducer from './slices/dialog';
 import drawerReducer from './slices/drawer';
@@ -17,6 +18,7 @@ const authPersistConfig = {
 
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
+  [mcpApi.reducerPath]: mcpApi.reducer,
   dialog: dialogReducer,
   auth: persistReducer(authPersistConfig, authReducer),
   drawer: drawerReducer,
@@ -32,7 +34,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(baseApi.middleware),
+    }).concat(baseApi.middleware, mcpApi.middleware),
 });
 
 export const persistor = persistStore(store);

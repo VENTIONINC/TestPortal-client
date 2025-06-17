@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Box, Container, Heading, Text, Flex, Input, Button } from '@chakra-ui/react';
+import { Box, Container, Heading, Text, Flex, Input, Button, Spinner } from '@chakra-ui/react';
+
+import { usePostApiChatMutation } from '@/redux/apis/mcp-api/extended';
 
 interface Message {
   id: string;
@@ -19,7 +21,9 @@ export function MCPPage() {
   ]);
   const [inputValue, setInputValue] = useState('');
 
-  const handleSendMessage = () => {
+  const [postApiChat, { isLoading }] = usePostApiChatMutation();
+
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
     const newMessage: Message = {
@@ -30,19 +34,24 @@ export function MCPPage() {
     };
 
     setMessages((prev) => [...prev, newMessage]);
+    const messageToSend = inputValue;
     setInputValue('');
 
-    // TODO: Send message to MCP server and handle response
-    // For now, just simulate a response
-    setTimeout(() => {
-      const response: Message = {
+    try {
+      const response = await postApiChat({
+        body: { messages: [{ role: 'user', content: messageToSend }] },
+      }).unwrap();
+
+      const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: 'MCP Server response will appear here...',
+        content: response.conversation?.at(-1)?.content ?? '',
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, response]);
-    }, 1000);
+      setMessages((prev) => [...prev.filter((msg) => msg.id !== newMessage.id), newMessage, assistantMessage]);
+    } catch {
+      setMessages((prev) => prev.filter((msg) => msg.id !== newMessage.id));
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -81,9 +90,12 @@ export function MCPPage() {
                 Model Context Protocol Client
               </Text>
             </Box>
-            <Box px={3} py={1} bg="green.100" color="green.800" borderRadius="full" fontSize="sm">
-              Connected
-            </Box>
+            <Flex align="center" gap={2}>
+              {isLoading && <Spinner size="sm" />}
+              <Box px={3} py={1} bg="green.100" color="green.800" borderRadius="full" fontSize="sm">
+                Connected
+              </Box>
+            </Flex>
           </Flex>
         </Container>
       </Box>
@@ -143,7 +155,12 @@ export function MCPPage() {
                 size="lg"
                 flex="1"
               />
-              <Button onClick={handleSendMessage} colorScheme="blue" size="lg" disabled={!inputValue.trim()}>
+              <Button
+                onClick={handleSendMessage}
+                colorScheme="blue"
+                size="lg"
+                disabled={!inputValue.trim() || isLoading}
+              >
                 Send
               </Button>
             </Flex>
