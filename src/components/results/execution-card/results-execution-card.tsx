@@ -8,14 +8,14 @@ import { useResultsSelection } from '@/contexts/results-selection';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution } from '@/types';
 
-import { BulkActions } from './BulkActions';
+import { BulkActions } from '../../BulkActions';
 
-interface ExecutionCardProps {
+interface ResultsExecutionCardProps {
   execution: ResultExecution;
   results: BaseResult[];
 }
 
-export const ExecutionCard = memo(({ execution, results }: ExecutionCardProps) => {
+export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecutionCardProps) => {
   const { isSelected, toggleSelection, toggleMultiple, getSelectedIds } = useResultsSelection();
 
   const openResultsErrorDialog = useResultsErrorDialog();

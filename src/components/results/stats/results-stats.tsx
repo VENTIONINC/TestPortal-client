@@ -13,7 +13,7 @@ interface StatSectionProps {
   dateConfigs: DateConfig[];
 }
 
-export const StatSection = memo(({ dateConfigs }: StatSectionProps) => {
+export const ResultsStats = memo(({ dateConfigs }: StatSectionProps) => {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
 
   const { setFilters } = useResultsActions();

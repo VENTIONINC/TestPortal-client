@@ -2,16 +2,14 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Flex, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 
-import { ResultsFilters } from '@/components/results/filters';
+import { ResultsFilters, ResultSpecSection, ResultsStats } from '@/components/results';
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
 import { useResultsFilters } from '@/redux/slices/results';
 import { getDateRangeMap, DateConfig } from '@/utils/dateRange';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
-import { SpecSection } from './SpecSection';
-import { StatSection } from './StatSection';
-import { BulkActions } from './BulkActions';
+import { BulkActions } from '../../BulkActions';
 
 const ResultsContent = () => {
   const filters = useResultsFilters();
@@ -128,7 +126,7 @@ const ResultsContent = () => {
               </Flex>
             ))}
           </HStack>
-          <StatSection dateConfigs={dateConfigs} />
+          <ResultsStats dateConfigs={dateConfigs} />
         </VStack>
 
         <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" textStyle="sm" minH={12}>
@@ -151,7 +149,7 @@ const ResultsContent = () => {
           {results.size > 0 ? (
             <>
               {Array.from(results.entries()).map(([specKey, { spec, executions }]) => (
-                <SpecSection key={specKey} spec={spec} executions={executions} dateConfigs={dateConfigs} />
+                <ResultSpecSection key={specKey} spec={spec} executions={executions} dateConfigs={dateConfigs} />
               ))}
               {activeDaysResultsIds.length === 0 && <Text>No results found matching date config.</Text>}
             </>
@@ -164,7 +162,7 @@ const ResultsContent = () => {
   );
 };
 
-export const Results = () => {
+export const ResultsList = () => {
   return (
     <ResultsSelectionProvider>
       <ResultsContent />
