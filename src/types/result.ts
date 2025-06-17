@@ -1,12 +1,19 @@
 import { Issue } from './issue';
 
+export enum ResultStatus {
+  Passed = 'passed',
+  Failed = 'failed',
+  Skipped = 'skipped',
+  TimedOut = 'timedOut',
+}
+
 export interface BaseResult {
   id: number;
   createdAt: string;
   updatedAt: string;
   allureLink: string;
   retry: number;
-  status: 'passed' | 'failed' | 'skipped';
+  status: ResultStatus;
   duration: number;
   startTime: string;
   specId: number;

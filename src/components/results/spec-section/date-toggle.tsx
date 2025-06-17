@@ -18,7 +18,8 @@ export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
       flex={1}
       gap={1}
       justify="space-between"
-      p={1}
+      py={0.5}
+      px={2}
       bg={day.isActive ? 'green.600' : 'white'}
       color={day.isActive ? 'white' : 'black'}
       borderRadius="sm"
@@ -26,9 +27,7 @@ export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
       shadow="sm"
       _hover={{ bg: day.isActive ? 'green.500' : 'gray.200' }}
     >
-      <Text textStyle="sm" fontWeight={500}>
-        {day.display}
-      </Text>
+      <Text>{day.display}</Text>
       {day.stats.length > 0 && (
         <HStack gap={0.5} justify="center" bg="white" p="2px" borderRadius="sm">
           {day.stats.map((status: string, index: number) => {

@@ -3,21 +3,21 @@ import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuSquareUserRound, LuTag } from 'react-icons/lu';
 
 import { ClipboardCopyText } from '@/components/ui';
-import { useResultsActions } from '@/redux/slices/results';
-import type { DateConfig } from '@/utils/dateRange';
+import { ResultsExecutionCard } from '@/components/results';
+import { useResultsActions, useResultsDateConfigs } from '@/redux/slices/results';
 import { toCleanTitle } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
-import { DateToggle } from './DateToggle';
-import { ExecutionCard } from './ExecutionCard';
+import { DateToggle } from './date-toggle';
 
-interface SpecSectionProps {
+interface ResultSpecSectionProps {
   spec: ResultSpec;
   executions: { execution: ResultExecution; results: BaseResult[] }[];
-  dateConfigs: DateConfig[];
 }
 
-export const SpecSection = memo(({ spec, executions, dateConfigs: globalDateConfigs }: SpecSectionProps) => {
+export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionProps) => {
+  const globalDateConfigs = useResultsDateConfigs();
+
   const [dateConfigs, setDateConfigs] = useState(globalDateConfigs);
 
   const { setFilters } = useResultsActions();
@@ -136,7 +136,7 @@ export const SpecSection = memo(({ spec, executions, dateConfigs: globalDateConf
       </VStack>
 
       {filteredExecutions.map(({ execution, results }) => (
-        <ExecutionCard key={execution.id} execution={execution} results={results} />
+        <ResultsExecutionCard key={execution.id} execution={execution} results={results} />
       ))}
     </VStack>
   );

@@ -172,6 +172,18 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/api/v1/results/${queryArg.resultId}` }),
         providesTags: ["Results"],
       }),
+      getApiV1ResultsStats: build.query<
+        GetApiV1ResultsStatsApiResponse,
+        GetApiV1ResultsStatsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/results-stats`,
+          params: {
+            dates: queryArg.dates,
+          },
+        }),
+        providesTags: ["Results"],
+      }),
       getApiV1SpecsBySpecId: build.query<
         GetApiV1SpecsBySpecIdApiResponse,
         GetApiV1SpecsBySpecIdApiArg
@@ -443,6 +455,12 @@ export type GetApiV1ResultsByResultIdApiResponse =
 export type GetApiV1ResultsByResultIdApiArg = {
   resultId: string;
 };
+export type GetApiV1ResultsStatsApiResponse =
+  /** status 200 Results statistics */ ResultsStats;
+export type GetApiV1ResultsStatsApiArg = {
+  /** Array of dates in YYYY-MM-DD format to filter results. If not provided, returns stats for all results. */
+  dates?: string[];
+};
 export type GetApiV1SpecsBySpecIdApiResponse =
   /** status 200 Spec details */ Spec;
 export type GetApiV1SpecsBySpecIdApiArg = {
@@ -565,6 +583,31 @@ export type Result = {
   startTime?: string;
   createdAt: string;
   updatedAt: string;
+};
+export type ResultsStats = {
+  byStatus: {
+    passed: number;
+    failed: number;
+    skipped: number;
+    timedOut: number;
+  };
+  byStatusTotal: number;
+  entityCounts: {
+    specs: number;
+    results: number;
+    executions: number;
+    issues: number;
+    errors: number;
+    assumptions: number;
+  };
+  topErrors: {
+    title: string;
+    count: number;
+  }[];
+  topIssues: {
+    title: string;
+    count: number;
+  }[];
 };
 export type Spec = {
   id: string;
@@ -709,6 +752,7 @@ export const {
   usePatchApiV2IssuesByIssueIdMutation,
   useGetApiV1ResultsQuery,
   useGetApiV1ResultsByResultIdQuery,
+  useGetApiV1ResultsStatsQuery,
   useGetApiV1SpecsBySpecIdQuery,
   usePostApiV1AssumptionsMutation,
   usePatchApiV1AssumptionsByAssumptionIdMutation,

@@ -1,3 +1,4 @@
+export { Checkbox, type CheckboxProps } from './checkbox';
 export { ClipboardCopyText } from './clipboard';
 export { ColorModeProvider, useColorMode, useColorModeValue } from './color-mode';
 export { Dialog, DialogBody, DialogFooter, DialogPortal, type DialogProps } from './dialog';

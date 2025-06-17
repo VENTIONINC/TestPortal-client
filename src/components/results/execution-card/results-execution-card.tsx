@@ -1,21 +1,22 @@
 import { Fragment, memo } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
-import { ClipboardCopyText } from '@/components/ui';
+import { Checkbox, ClipboardCopyText } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultsErrorDialog } from '@/components/dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
+import { getResultStatusStyle } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution } from '@/types';
 
-import { BulkActions } from './BulkActions';
+import { BulkActions } from '../../BulkActions';
 
-interface ExecutionCardProps {
+interface ResultsExecutionCardProps {
   execution: ResultExecution;
   results: BaseResult[];
 }
 
-export const ExecutionCard = memo(({ execution, results }: ExecutionCardProps) => {
+export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecutionCardProps) => {
   const { isSelected, toggleSelection, toggleMultiple, getSelectedIds } = useResultsSelection();
 
   const openResultsErrorDialog = useResultsErrorDialog();
@@ -58,7 +59,12 @@ export const ExecutionCard = memo(({ execution, results }: ExecutionCardProps) =
   return (
     <VStack align="stretch" p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md">
       <HStack gap={6} px={2} bg="gray.200" borderRadius="sm" textStyle="sm" minH={8}>
-        <input type="checkbox" checked={results.every(({ id }) => isSelected(id))} onChange={toggleSelectAll} />
+        <Checkbox
+          checked={results.every(({ id }) => isSelected(id))}
+          onCheckedChange={toggleSelectAll}
+          size="sm"
+          controlProps={{ borderColor: 'black' }}
+        />
         <ClipboardCopyText value={execution.environment}>{execution.environment}</ClipboardCopyText>
         <ClipboardCopyText value={execution.type}>{execution.type}</ClipboardCopyText>
         <Text>{execution.name}</Text>
@@ -70,15 +76,16 @@ export const ExecutionCard = memo(({ execution, results }: ExecutionCardProps) =
       </HStack>
 
       {results.map((result) => (
-        <HStack key={result.id} align="center" gap={4} px={2} textStyle="sm">
-          <input
-            type="checkbox"
+        <HStack key={result.id} align="center" gap={4} ps={2} textStyle="sm">
+          <Checkbox
             checked={isSelected(result.id)}
-            onChange={() => {
+            onCheckedChange={() => {
               toggleSelection(result.id);
             }}
+            size="sm"
+            controlProps={{ borderColor: 'black' }}
           />
-          <Flex alignSelf="stretch" w={2} borderRadius="xs" bg={getStatusColor(result.status)} />
+          <Flex alignSelf="stretch" w={2} borderRadius="xs" bg={getResultStatusStyle(result.status).color} />
           <Text whiteSpace="nowrap"># {result.retry}</Text>
 
           {result.allureLink.startsWith('http') ? (
@@ -110,16 +117,3 @@ export const ExecutionCard = memo(({ execution, results }: ExecutionCardProps) =
     </VStack>
   );
 });
-
-const getStatusColor = (status: BaseResult['status']) => {
-  switch (status) {
-    case 'passed':
-      return 'green.600';
-    case 'failed':
-      return 'red.500';
-    case 'skipped':
-      return 'gray.500';
-    default:
-      return 'yellow.500';
-  }
-};
