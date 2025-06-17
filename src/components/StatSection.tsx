@@ -1,214 +1,121 @@
-import { memo, useMemo } from 'react';
-import { Box, HStack, Text, VStack } from '@chakra-ui/react';
+import { memo, useState } from 'react';
+import { Collapsible, HStack, Mark, Spinner, Text, VStack } from '@chakra-ui/react';
+import { LuArrowBigRight } from 'react-icons/lu';
+import { useDebounce } from 'use-debounce';
 
-import { useGetResultsQuery } from '@/redux/apis/extendedApi';
-import { useResultsActions, useResultsFilters } from '@/redux/slices/results';
+import { useGetApiV1ResultsStatsQuery } from '@/redux/apis/generatedApi';
+import { useResultsActions } from '@/redux/slices/results';
 import { getIssueCategoryStyle } from '@/utils';
 import { DateConfig } from '@/utils/dateRange';
-import { Result, ResultSpec, ResultExecution, ResultErrorAssumption, ResultError, Issue, IssueCategory } from '@/types';
-
-interface StatsData {
-  byStatus: {
-    passed: number;
-    failed: number;
-    skipped: number;
-    timedOut: number;
-    [key: string]: number; // For other statuses if any
-  };
-  byModels: {
-    specs: number;
-    results: number;
-    executions: number;
-    issues: number;
-    errors: number;
-    assumptions: number;
-  };
-  byErrors: { [errorMessage: string]: number };
-  byIssueNames: { [issueName: string]: number };
-  byIssueCategories: { [issueCategory: string]: number };
-}
+import { IssueCategory } from '@/types';
 
 interface StatSectionProps {
   dateConfigs: DateConfig[];
 }
 
 export const StatSection = memo(({ dateConfigs }: StatSectionProps) => {
-  const filters = useResultsFilters();
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
 
   const { setFilters } = useResultsActions();
 
-  const { data } = useGetResultsQuery({
-    status: filters.status,
-    from: filters.from,
-    to: filters.to,
-    page: filters.page,
+  const [debouncedDateConfigs] = useDebounce(dateConfigs, 200);
+  const { data: statistics, isFetching } = useGetApiV1ResultsStatsQuery({
+    dates: debouncedDateConfigs.filter(({ isActive }) => isActive).map(({ date }) => date),
   });
-
-  const stats: StatsData = useMemo(() => {
-    const activeDates = new Set(dateConfigs.filter((day) => day.isActive).map(({ date }) => date));
-    const results = (data?.results || []).filter((result) => activeDates.has(result.startTime.split('T')[0]));
-
-    const specMap = new Map<string | number, ResultSpec>();
-    const executionMap = new Map<string | number, ResultExecution>();
-    const errorMap = new Map<string | number, ResultError>();
-    const assumptionMap = new Map<string | number, ResultErrorAssumption>();
-    const resultMap = new Map<string | number, Result>();
-    const issueMap = new Map<string | number, Issue>();
-
-    const newStats: StatsData = {
-      byStatus: { passed: 0, failed: 0, skipped: 0, timedOut: 0 },
-      byModels: {
-        specs: 0,
-        results: 0,
-        executions: 0,
-        issues: 0,
-        errors: 0,
-        assumptions: 0,
-      },
-      byErrors: {},
-      byIssueNames: {},
-      byIssueCategories: {},
-    };
-
-    if (!results) return newStats;
-
-    for (const result of results) {
-      if (result.status) {
-        newStats.byStatus[result.status] = (newStats.byStatus[result.status] || 0) + 1;
-      }
-
-      if (!specMap.has(result.spec.id)) specMap.set(result.spec.id, result.spec);
-      if (!executionMap.has(result.execution.id)) executionMap.set(result.execution.id, result.execution);
-      if (!resultMap.has(result.id)) resultMap.set(result.id, result);
-
-      result.errors?.forEach((error) => {
-        const errorKey = error.id || error.message;
-        if (!errorMap.has(errorKey)) errorMap.set(errorKey, error);
-
-        const errorMessage = error.message || 'Unknown Error';
-        newStats.byErrors[errorMessage] = (newStats.byErrors[errorMessage] || 0) + 1;
-
-        error.assumptions?.forEach((assumption) => {
-          const assumptionKey = assumption.id || Math.random().toString();
-          if (!assumptionMap.has(assumptionKey)) assumptionMap.set(assumptionKey, assumption);
-
-          if (assumption.issue) {
-            const issue = assumption.issue;
-            if (!issueMap.has(issue.id)) issueMap.set(issue.id, issue);
-
-            const issueName = issue.name || 'Unknown Issue Name';
-            newStats.byIssueNames[issueName] = (newStats.byIssueNames[issueName] || 0) + 1;
-
-            const issueCategory = issue.category || 'Unknown Category';
-            newStats.byIssueCategories[issueCategory] = (newStats.byIssueCategories[issueCategory] || 0) + 1;
-          }
-        });
-      });
-    }
-
-    newStats.byModels.specs = specMap.size;
-    newStats.byModels.results = resultMap.size;
-    newStats.byModels.executions = executionMap.size;
-    newStats.byModels.issues = issueMap.size;
-    newStats.byModels.errors = errorMap.size;
-    newStats.byModels.assumptions = assumptionMap.size;
-
-    return newStats;
-  }, [data?.results, dateConfigs]);
-
-  const topErrors = useMemo(() => {
-    return Object.entries(stats.byErrors)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10);
-  }, [stats.byErrors]);
-
-  const topIssues = useMemo(() => {
-    return Object.entries(stats.byIssueNames)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10);
-  }, [stats.byIssueNames]);
-
-  const summaryText = useMemo(() => {
-    return Object.entries(stats.byStatus)
-      .map(([key, value]) => `Total ${key}: ${value}`)
-      .join(' | ');
-  }, [stats.byStatus]);
 
   const handleFilterChange = (name: string, value: string) => {
     setFilters({ [name]: value, page: 1 });
   };
 
-  if (!data?.results || data?.results.length === 0) {
+  if (!statistics || statistics.byStatusTotal === 0) {
     return (
-      <Text alignSelf="center" textStyle="md" color="gray.500" mt={2}>
-        No active results to display stats for.
+      <Text alignSelf="center" color="gray.500">
+        No statistics to display.
       </Text>
     );
   }
 
   return (
-    <Box as="details">
-      <Box as="summary" mt={2} cursor="pointer" _hover={{ bg: 'gray.200' }}>
-        {summaryText}
-      </Box>
-
-      <HStack gap={4} textStyle="md" mt={2} ms={2}>
-        <Text>Specs: {stats.byModels.specs}</Text>
-        <Text>Results: {stats.byModels.results}</Text>
-        <Text>Executions: {stats.byModels.executions}</Text>
-        <Text>Issues: {stats.byModels.issues}</Text>
-        <Text>Errors: {stats.byModels.errors}</Text>
-        <Text>Assumptions: {stats.byModels.assumptions}</Text>
-      </HStack>
-
-      <HStack align="flex-start" mt={2}>
-        {topErrors.length > 0 && (
-          <TopSection
-            results={topErrors}
-            label="errors"
-            onClick={(message) => handleFilterChange('errorMessage', message)}
+    <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
+      <Collapsible.Trigger asChild>
+        <HStack flex={1} w="100%" cursor="pointer" _hover={{ bg: 'gray.200' }} borderRadius="sm">
+          <LuArrowBigRight
+            size={16}
+            style={{
+              transform: isStatsOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s ease-in-out',
+            }}
           />
-        )}
-        {topIssues.length > 0 && (
-          <VStack flex={1} align="stretch">
-            <TopSection
-              results={topIssues}
-              label="issues"
-              onClick={(message) => handleFilterChange('issueName', message)}
-            />
-            <VStack align="stretch" bg="white" p={2} borderRadius="md">
-              <Text fontWeight={700}>Issue Categories</Text>
-              <HStack>
-                {Object.values(IssueCategory).map((category) => {
-                  const { Icon, color } = getIssueCategoryStyle(category);
+          <Text fontWeight={500}>
+            Total: {statistics.byStatusTotal} | <Mark color="green.600">Passed: {statistics.byStatus.passed}</Mark> |{' '}
+            <Mark color="red.600">Failed: {statistics.byStatus.failed}</Mark> |{' '}
+            <Mark color="yellow.600">Skipped: {statistics.byStatus.skipped}</Mark> |{' '}
+            <Mark color="orange.600">Timed Out: {statistics.byStatus.timedOut}</Mark>
+          </Text>
 
-                  return (
-                    <HStack
-                      key={category}
-                      border="1px solid"
-                      borderColor={color}
-                      borderRadius="md"
-                      color={color}
-                      px={1}
-                    >
-                      <Icon size={16} color="currentColor" />
-                      <Text textStyle="sm" color="black">
-                        {category}
-                      </Text>
-                    </HStack>
-                  );
-                })}
-              </HStack>
+          {isFetching && <Spinner size="sm" />}
+        </HStack>
+      </Collapsible.Trigger>
+
+      <Collapsible.Content>
+        <HStack gap={4} textStyle="md" mt={2} ms={2}>
+          <Text>Specs: {statistics.entityCounts.specs}</Text>
+          <Text>Results: {statistics.entityCounts.results}</Text>
+          <Text>Executions: {statistics.entityCounts.executions}</Text>
+          <Text>Issues: {statistics.entityCounts.issues}</Text>
+          <Text>Errors: {statistics.entityCounts.errors}</Text>
+          <Text>Assumptions: {statistics.entityCounts.assumptions}</Text>
+        </HStack>
+
+        <HStack align="flex-start" mt={2}>
+          {statistics.topErrors.length > 0 && (
+            <TopSection
+              results={statistics.topErrors}
+              label="errors"
+              onClick={(message) => handleFilterChange('errorMessage', message)}
+            />
+          )}
+          {statistics.topIssues.length > 0 && (
+            <VStack flex={1} align="stretch">
+              <TopSection
+                results={statistics.topIssues}
+                label="issues"
+                onClick={(message) => handleFilterChange('issueName', message)}
+              />
+              <VStack align="stretch" bg="white" p={2} borderRadius="md">
+                <Text fontWeight={700}>Issue Categories</Text>
+                <HStack>
+                  {Object.values(IssueCategory).map((category) => {
+                    const { Icon, color } = getIssueCategoryStyle(category);
+
+                    return (
+                      <HStack
+                        key={category}
+                        border="1px solid"
+                        borderColor={color}
+                        borderRadius="md"
+                        color={color}
+                        px={1}
+                      >
+                        <Icon size={16} color="currentColor" />
+                        <Text textStyle="sm" color="black">
+                          {category}
+                        </Text>
+                      </HStack>
+                    );
+                  })}
+                </HStack>
+              </VStack>
             </VStack>
-          </VStack>
-        )}
-      </HStack>
-    </Box>
+          )}
+        </HStack>
+      </Collapsible.Content>
+    </Collapsible.Root>
   );
 });
 
 interface TopSectionProps {
-  results: [string, number][];
+  results: { title: string; count: number }[];
   label: string;
   onClick: (message: string) => void;
 }
@@ -219,9 +126,9 @@ const TopSection = ({ results, label, onClick }: TopSectionProps) => {
       <Text fontWeight={700}>
         Top {results.length} {label}
       </Text>
-      {results.map(([errorMsg, count], index) => (
+      {results.map(({ title, count }, index) => (
         <HStack
-          key={errorMsg}
+          key={title}
           textStyle="md"
           borderBottom={index === results.length - 1 ? 'none' : '1px solid'}
           borderColor="gray.200"
@@ -229,13 +136,8 @@ const TopSection = ({ results, label, onClick }: TopSectionProps) => {
           <Text fontWeight={700} color="gray.700">
             {count}x
           </Text>
-          <Text
-            onClick={() => onClick(errorMsg)}
-            lineClamp={1}
-            cursor="pointer"
-            _hover={{ textDecoration: 'underline' }}
-          >
-            {errorMsg}
+          <Text onClick={() => onClick(title)} lineClamp={1} cursor="pointer" _hover={{ textDecoration: 'underline' }}>
+            {title}
           </Text>
         </HStack>
       ))}

@@ -107,7 +107,7 @@ const ResultsContent = () => {
       <ResultsFilters as="aside" zIndex={10} />
 
       <VStack as="section" align="stretch" w="100%">
-        <VStack align="stretch" gap={0} p={2} bg="gray.100" borderRadius="md">
+        <VStack align="stretch" p={2} bg="gray.100" borderRadius="md">
           <HStack>
             {dateConfigs.map((day) => (
               <Flex
@@ -131,7 +131,6 @@ const ResultsContent = () => {
           <StatSection dateConfigs={dateConfigs} />
         </VStack>
 
-        <h2>Results</h2>
         <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" textStyle="sm" minH={12}>
           <label>
             <input
