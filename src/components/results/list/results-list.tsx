@@ -1,26 +1,26 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Flex, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
+import { useMemo } from 'react';
+import { Flex, HStack, Mark, Spinner, Text, VStack } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 
-import { ResultsFilters } from '@/components/results/filters';
+import { Checkbox } from '@/components/ui';
+import { ResultsFilters, ResultSpecSection, ResultsStats } from '@/components/results';
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
-import { useResultsFilters } from '@/redux/slices/results';
-import { getDateRangeMap, DateConfig } from '@/utils/dateRange';
+import { useResultsActions, useResultsDateConfigs, useResultsFilters } from '@/redux/slices/results';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
-import { SpecSection } from './SpecSection';
-import { StatSection } from './StatSection';
-import { BulkActions } from './BulkActions';
+import { BulkActions } from '../../BulkActions';
 
 const ResultsContent = () => {
   const filters = useResultsFilters();
+  const dateConfigs = useResultsDateConfigs();
+
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
   const [debouncedFilters] = useDebounce(filters, 500);
   const { data, isFetching } = useGetResultsQuery(debouncedFilters);
 
-  const [dateConfigs, setDateConfigs] = useState<DateConfig[]>([]);
+  const { toggleDateConfig } = useResultsActions();
 
   const { results, activeDaysResultsIds } = useMemo(() => {
     const filteredResults = data?.results || [];
@@ -79,22 +79,9 @@ const ResultsContent = () => {
     };
   }, [data?.results, dateConfigs]);
 
-  useEffect(() => {
-    setDateConfigs(getDateRangeMap(filters.from, filters.to));
-  }, [filters.from, filters.to]);
-
   const handleSelectAll = () => {
     selectAll(activeDaysResultsIds);
   };
-
-  const toggleDayActive = useCallback(
-    (dayToToggle: DateConfig) => {
-      setDateConfigs((prevConfigs) =>
-        prevConfigs.map((d) => (d.date === dayToToggle.date ? { ...d, isActive: !d.isActive } : d)),
-      );
-    },
-    [setDateConfigs],
-  );
 
   const selectedCount = getSelectedCount();
   const selectedResults = useMemo(
@@ -107,12 +94,12 @@ const ResultsContent = () => {
       <ResultsFilters as="aside" zIndex={10} />
 
       <VStack as="section" align="stretch" w="100%">
-        <VStack align="stretch" gap={0} p={2} bg="gray.100" borderRadius="md">
+        <VStack align="stretch" p={2} bg="gray.100" borderRadius="md">
           <HStack>
             {dateConfigs.map((day) => (
               <Flex
                 key={day.date}
-                onClick={() => toggleDayActive(day)}
+                onClick={() => toggleDateConfig(day)}
                 flex={1}
                 justify="center"
                 p={1}
@@ -128,22 +115,20 @@ const ResultsContent = () => {
               </Flex>
             ))}
           </HStack>
-          <StatSection dateConfigs={dateConfigs} />
+          <ResultsStats />
         </VStack>
 
-        <h2>Results</h2>
-        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" textStyle="sm" minH={12}>
-          <label>
-            <input
-              type="checkbox"
-              checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
-              onChange={handleSelectAll}
-            />
+        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" minH={12}>
+          <Checkbox
+            checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
+            onCheckedChange={handleSelectAll}
+          >
             Select all
-          </label>
-          <pre>
-            Shown {activeDaysResultsIds.length}.Selected {selectedCount}
-          </pre>
+          </Checkbox>
+          <Text textStyle="sm">
+            Shown <Mark fontWeight={600}>{activeDaysResultsIds.length}</Mark>. Selected{' '}
+            <Mark fontWeight={600}>{selectedCount}</Mark>
+          </Text>
           <BulkActions selectedResults={selectedResults} />
           {isFetching && <Spinner />}
         </HStack>
@@ -152,7 +137,7 @@ const ResultsContent = () => {
           {results.size > 0 ? (
             <>
               {Array.from(results.entries()).map(([specKey, { spec, executions }]) => (
-                <SpecSection key={specKey} spec={spec} executions={executions} dateConfigs={dateConfigs} />
+                <ResultSpecSection key={specKey} spec={spec} executions={executions} />
               ))}
               {activeDaysResultsIds.length === 0 && <Text>No results found matching date config.</Text>}
             </>
@@ -165,7 +150,7 @@ const ResultsContent = () => {
   );
 };
 
-export const Results = () => {
+export const ResultsList = () => {
   return (
     <ResultsSelectionProvider>
       <ResultsContent />

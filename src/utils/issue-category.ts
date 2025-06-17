@@ -7,7 +7,7 @@ export const getIssueCategoryStyle = (category: IssueCategory) => {
     case IssueCategory.Bug:
       return { Icon: LuBug, color: 'red.500', hoverBgColor: 'red.200' };
     case IssueCategory.Script:
-      return { Icon: LuCode, color: 'green.500', hoverBgColor: 'green.200' };
+      return { Icon: LuCode, color: 'yellow.600', hoverBgColor: 'yellow.200' };
     case IssueCategory.Infra:
       return { Icon: LuServer, color: 'blue.500', hoverBgColor: 'blue.200' };
     case IssueCategory.Performance:
