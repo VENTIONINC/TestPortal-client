@@ -1,7 +1,8 @@
 import { useMemo, useEffect } from 'react';
-import { Flex, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
+import { Flex, HStack, Mark, Spinner, Text, VStack } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 
+import { Checkbox } from '@/components/ui';
 import { ResultsFilters, ResultSpecSection, ResultsStats } from '@/components/results';
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
@@ -122,18 +123,17 @@ const ResultsContent = () => {
           <ResultsStats />
         </VStack>
 
-        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" textStyle="sm" minH={12}>
-          <label>
-            <input
-              type="checkbox"
-              checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
-              onChange={handleSelectAll}
-            />
+        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" minH={12}>
+          <Checkbox
+            checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
+            onCheckedChange={handleSelectAll}
+          >
             Select all
-          </label>
-          <pre>
-            Shown {activeDaysResultsIds.length}.Selected {selectedCount}
-          </pre>
+          </Checkbox>
+          <Text textStyle="sm">
+            Shown <Mark fontWeight={600}>{activeDaysResultsIds.length}</Mark>. Selected{' '}
+            <Mark fontWeight={600}>{selectedCount}</Mark>
+          </Text>
           <BulkActions selectedResults={selectedResults} />
           {isFetching && <Spinner />}
         </HStack>
