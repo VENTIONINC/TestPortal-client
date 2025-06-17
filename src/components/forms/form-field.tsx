@@ -1,5 +1,7 @@
 import { forwardRef } from 'react';
-import { Box, Input, Text, InputProps } from '@chakra-ui/react';
+import { Box, Text } from '@chakra-ui/react';
+
+import { Input, InputProps } from '@/components/ui';
 
 interface FormFieldProps extends Omit<InputProps, 'id'> {
   label: string;
