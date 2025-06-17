@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { DateConfig } from '@/utils';
+import { DateConfig, getDateRangeMap } from '@/utils';
 import { ResultsFilters } from '@/types';
 
 const formatDate = (date: Date): string => {
@@ -39,7 +39,7 @@ const initialFilters: ResultsFilters = {
 
 const initialState: ResultsState = {
   filters: initialFilters,
-  dateConfigs: [],
+  dateConfigs: getDateRangeMap(initialFilters.from, initialFilters.to),
 };
 
 export const resultsSlice = createSlice({

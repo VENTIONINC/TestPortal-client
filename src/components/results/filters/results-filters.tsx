@@ -4,6 +4,7 @@ import { LuArrowBigLeft } from 'react-icons/lu';
 
 import { Input, NativeSelect } from '@/components/ui';
 import { useResultsActions, useResultsFilters } from '@/redux/slices/results';
+import { getDateRangeMap } from '@/utils';
 import { ResultStatus } from '@/types';
 
 export const ResultsFilters = (props: StackProps) => {
@@ -11,10 +12,16 @@ export const ResultsFilters = (props: StackProps) => {
 
   const filters = useResultsFilters();
 
-  const { setFilters } = useResultsActions();
+  const { setFilters, setDateConfigs } = useResultsActions();
 
   const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     setFilters({ [e.target.name]: e.target.value, page: 1 });
+
+    if (e.target.name === 'from' || e.target.name === 'to') {
+      const fromValue = e.target.name === 'from' ? e.target.value : filters.from;
+      const toValue = e.target.name === 'to' ? e.target.value : filters.to;
+      setDateConfigs(getDateRangeMap(fromValue, toValue));
+    }
   };
 
   return (

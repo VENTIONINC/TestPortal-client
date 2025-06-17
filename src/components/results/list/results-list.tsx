@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { Flex, HStack, Mark, Spinner, Text, VStack } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 
@@ -7,7 +7,6 @@ import { ResultsFilters, ResultSpecSection, ResultsStats } from '@/components/re
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
 import { useResultsActions, useResultsDateConfigs, useResultsFilters } from '@/redux/slices/results';
-import { getDateRangeMap } from '@/utils/dateRange';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
 import { BulkActions } from '../../BulkActions';
@@ -21,7 +20,7 @@ const ResultsContent = () => {
   const [debouncedFilters] = useDebounce(filters, 500);
   const { data, isFetching } = useGetResultsQuery(debouncedFilters);
 
-  const { setDateConfigs, toggleDateConfig } = useResultsActions();
+  const { toggleDateConfig } = useResultsActions();
 
   const { results, activeDaysResultsIds } = useMemo(() => {
     const filteredResults = data?.results || [];
@@ -79,10 +78,6 @@ const ResultsContent = () => {
       activeDaysResultsIds: activeIds,
     };
   }, [data?.results, dateConfigs]);
-
-  useEffect(() => {
-    setDateConfigs(getDateRangeMap(filters.from, filters.to));
-  }, [filters.from, filters.to, setDateConfigs]);
 
   const handleSelectAll = () => {
     selectAll(activeDaysResultsIds);
