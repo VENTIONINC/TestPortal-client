@@ -4,17 +4,14 @@ import { LuArrowBigRight } from 'react-icons/lu';
 import { useDebounce } from 'use-debounce';
 
 import { useGetApiV1ResultsStatsQuery } from '@/redux/apis/generatedApi';
-import { useResultsActions } from '@/redux/slices/results';
+import { useResultsActions, useResultsDateConfigs } from '@/redux/slices/results';
 import { getIssueCategoryStyle } from '@/utils';
-import { DateConfig } from '@/utils/dateRange';
 import { IssueCategory } from '@/types';
 
-interface StatSectionProps {
-  dateConfigs: DateConfig[];
-}
-
-export const ResultsStats = memo(({ dateConfigs }: StatSectionProps) => {
+export const ResultsStats = memo(() => {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+
+  const dateConfigs = useResultsDateConfigs();
 
   const { setFilters } = useResultsActions();
 

@@ -1,24 +1,26 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Flex, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 
 import { ResultsFilters, ResultSpecSection, ResultsStats } from '@/components/results';
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
-import { useResultsFilters } from '@/redux/slices/results';
-import { getDateRangeMap, DateConfig } from '@/utils/dateRange';
+import { useResultsActions, useResultsDateConfigs, useResultsFilters } from '@/redux/slices/results';
+import { getDateRangeMap } from '@/utils/dateRange';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
 import { BulkActions } from '../../BulkActions';
 
 const ResultsContent = () => {
   const filters = useResultsFilters();
+  const dateConfigs = useResultsDateConfigs();
+
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
   const [debouncedFilters] = useDebounce(filters, 500);
   const { data, isFetching } = useGetResultsQuery(debouncedFilters);
 
-  const [dateConfigs, setDateConfigs] = useState<DateConfig[]>([]);
+  const { setDateConfigs, toggleDateConfig } = useResultsActions();
 
   const { results, activeDaysResultsIds } = useMemo(() => {
     const filteredResults = data?.results || [];
@@ -79,20 +81,11 @@ const ResultsContent = () => {
 
   useEffect(() => {
     setDateConfigs(getDateRangeMap(filters.from, filters.to));
-  }, [filters.from, filters.to]);
+  }, [filters.from, filters.to, setDateConfigs]);
 
   const handleSelectAll = () => {
     selectAll(activeDaysResultsIds);
   };
-
-  const toggleDayActive = useCallback(
-    (dayToToggle: DateConfig) => {
-      setDateConfigs((prevConfigs) =>
-        prevConfigs.map((d) => (d.date === dayToToggle.date ? { ...d, isActive: !d.isActive } : d)),
-      );
-    },
-    [setDateConfigs],
-  );
 
   const selectedCount = getSelectedCount();
   const selectedResults = useMemo(
@@ -110,7 +103,7 @@ const ResultsContent = () => {
             {dateConfigs.map((day) => (
               <Flex
                 key={day.date}
-                onClick={() => toggleDayActive(day)}
+                onClick={() => toggleDateConfig(day)}
                 flex={1}
                 justify="center"
                 p={1}
@@ -126,7 +119,7 @@ const ResultsContent = () => {
               </Flex>
             ))}
           </HStack>
-          <ResultsStats dateConfigs={dateConfigs} />
+          <ResultsStats />
         </VStack>
 
         <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" textStyle="sm" minH={12}>
@@ -149,7 +142,7 @@ const ResultsContent = () => {
           {results.size > 0 ? (
             <>
               {Array.from(results.entries()).map(([specKey, { spec, executions }]) => (
-                <ResultSpecSection key={specKey} spec={spec} executions={executions} dateConfigs={dateConfigs} />
+                <ResultSpecSection key={specKey} spec={spec} executions={executions} />
               ))}
               {activeDaysResultsIds.length === 0 && <Text>No results found matching date config.</Text>}
             </>

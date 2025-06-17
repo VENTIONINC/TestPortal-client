@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { DateConfig } from '@/utils';
 import { ResultsFilters } from '@/types';
 
 const formatDate = (date: Date): string => {
@@ -17,6 +18,7 @@ weekAgo.setDate(today.getDate() - 7);
 
 export interface ResultsState {
   filters: ResultsFilters;
+  dateConfigs: DateConfig[];
 }
 
 const initialFilters: ResultsFilters = {
@@ -37,6 +39,7 @@ const initialFilters: ResultsFilters = {
 
 const initialState: ResultsState = {
   filters: initialFilters,
+  dateConfigs: [],
 };
 
 export const resultsSlice = createSlice({
@@ -46,6 +49,14 @@ export const resultsSlice = createSlice({
     reset: () => initialState,
     setFilters: (state, action: PayloadAction<Partial<ResultsFilters>>) => {
       state.filters = { ...state.filters, ...action.payload };
+    },
+    setDateConfigs: (state, action: PayloadAction<DateConfig[]>) => {
+      state.dateConfigs = action.payload;
+    },
+    toggleDateConfig: (state, action: PayloadAction<DateConfig>) => {
+      state.dateConfigs = state.dateConfigs.map((d) =>
+        d.date === action.payload.date ? { ...d, isActive: !d.isActive } : d,
+      );
     },
   },
 });
@@ -60,9 +71,22 @@ export const useResultsActions = () => {
       },
       [dispatch],
     ),
+    setDateConfigs: useCallback(
+      (dateConfigs: DateConfig[]) => {
+        dispatch(resultsSlice.actions.setDateConfigs(dateConfigs));
+      },
+      [dispatch],
+    ),
+    toggleDateConfig: useCallback(
+      (dateConfig: DateConfig) => {
+        dispatch(resultsSlice.actions.toggleDateConfig(dateConfig));
+      },
+      [dispatch],
+    ),
   };
 };
 
 export const useResultsFilters = () => useAppSelector((state) => state.results.filters);
+export const useResultsDateConfigs = () => useAppSelector((state) => state.results.dateConfigs);
 
 export default resultsSlice.reducer;
