@@ -1,12 +1,12 @@
 import { memo, useState } from 'react';
-import { Collapsible, HStack, Mark, Spinner, Text, VStack } from '@chakra-ui/react';
+import { Collapsible, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
 import { LuArrowBigRight } from 'react-icons/lu';
 import { useDebounce } from 'use-debounce';
 
 import { useGetApiV1ResultsStatsQuery } from '@/redux/apis/generatedApi';
 import { useResultsActions, useResultsDateConfigs } from '@/redux/slices/results';
-import { getIssueCategoryStyle } from '@/utils';
-import { IssueCategory } from '@/types';
+import { getIssueCategoryStyle, getResultStatusStyle } from '@/utils';
+import { IssueCategory, ResultStatus } from '@/types';
 
 export const ResultsStats = memo(() => {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
@@ -43,12 +43,22 @@ export const ResultsStats = memo(() => {
               transition: 'transform 0.2s ease-in-out',
             }}
           />
-          <Text fontWeight={500}>
-            Total: {statistics.byStatusTotal} | <Mark color="green.600">Passed: {statistics.byStatus.passed}</Mark> |{' '}
-            <Mark color="red.600">Failed: {statistics.byStatus.failed}</Mark> |{' '}
-            <Mark color="yellow.600">Skipped: {statistics.byStatus.skipped}</Mark> |{' '}
-            <Mark color="orange.600">Timed Out: {statistics.byStatus.timedOut}</Mark>
-          </Text>
+
+          <HStack gap={4} fontWeight={500}>
+            <Text>Total: {statistics.byStatusTotal}</Text>
+            {Object.entries(statistics.byStatus).map(([status, count]) => {
+              const { Icon, color, title } = getResultStatusStyle(status as ResultStatus);
+
+              return (
+                <HStack key={status} gap={1} color={color}>
+                  <Icon size={16} />
+                  <Text>
+                    {title}: {count}
+                  </Text>
+                </HStack>
+              );
+            })}
+          </HStack>
 
           {isFetching && <Spinner size="sm" />}
         </HStack>

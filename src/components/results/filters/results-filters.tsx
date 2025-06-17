@@ -4,6 +4,7 @@ import { LuArrowBigLeft } from 'react-icons/lu';
 
 import { Input, NativeSelect } from '@/components/ui';
 import { useResultsActions, useResultsFilters } from '@/redux/slices/results';
+import { ResultStatus } from '@/types';
 
 export const ResultsFilters = (props: StackProps) => {
   const { open, onToggle } = useDisclosure({ defaultOpen: true });
@@ -30,14 +31,14 @@ export const ResultsFilters = (props: StackProps) => {
         <NativeSelect
           label="Status:"
           name="status"
-          placeholder="Select status"
           value={filters.status}
           onChange={handleFilterChange}
           items={[
             { value: '', label: 'All' },
-            { value: 'passed', label: 'Passed' },
-            { value: 'failed', label: 'Failed' },
-            { value: 'skipped', label: 'Skipped' },
+            ...Object.values(ResultStatus).map((status) => ({
+              value: status,
+              label: status.charAt(0).toUpperCase() + status.slice(1),
+            })),
           ]}
         />
         <NativeSelect

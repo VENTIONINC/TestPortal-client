@@ -5,6 +5,7 @@ import { ClipboardCopyText } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultsErrorDialog } from '@/components/dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
+import { getResultStatusStyle } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution } from '@/types';
 
@@ -78,7 +79,7 @@ export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecuti
               toggleSelection(result.id);
             }}
           />
-          <Flex alignSelf="stretch" w={2} borderRadius="xs" bg={getStatusColor(result.status)} />
+          <Flex alignSelf="stretch" w={2} borderRadius="xs" bg={getResultStatusStyle(result.status).color} />
           <Text whiteSpace="nowrap"># {result.retry}</Text>
 
           {result.allureLink.startsWith('http') ? (
@@ -110,16 +111,3 @@ export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecuti
     </VStack>
   );
 });
-
-const getStatusColor = (status: BaseResult['status']) => {
-  switch (status) {
-    case 'passed':
-      return 'green.600';
-    case 'failed':
-      return 'red.500';
-    case 'skipped':
-      return 'gray.500';
-    default:
-      return 'yellow.500';
-  }
-};
