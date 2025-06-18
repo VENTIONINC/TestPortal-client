@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Flex, HStack } from '@chakra-ui/react';
 
+import { AppHeader } from '@/components/AppHeader';
 import { IssuesList } from '@/components/issues';
 import { ResultsList } from '@/components/results/';
 
@@ -18,6 +19,8 @@ function App() {
 
   return (
     <>
+      <AppHeader />
+
       <HStack>
         {Object.values(ACTIVE_TAB).map((tab) => (
           <Flex

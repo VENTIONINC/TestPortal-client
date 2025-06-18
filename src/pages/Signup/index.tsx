@@ -1,30 +1,12 @@
-import { useState } from 'react';
 import { Link } from 'react-router';
-import { Box, Button, Input, Heading, Text, Container } from '@chakra-ui/react';
+import { Box, Button, Heading, Text, Container } from '@chakra-ui/react';
 
 import { PATHS } from '@/types/paths';
+import { FormField } from '@/components/forms';
+import { useSignup } from '@/hooks';
 
 export function SignupPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement signup logic
-    // eslint-disable-next-line no-console
-    console.log('Signup:', formData);
-  };
+  const { register, handleSubmit, errors, loading, errorMessage } = useSignup();
 
   return (
     <Box minH="100vh" bg="gray.50" py={12} px={4}>
@@ -34,65 +16,55 @@ export function SignupPage() {
             Create your account
           </Heading>
 
+          {errorMessage && (
+            <Box bg="red.50" color="red.700" p={3} mb={4} borderRadius="md" border="1px solid" borderColor="red.200">
+              {errorMessage}
+            </Box>
+          )}
+
           <Box as="form" onSubmit={handleSubmit}>
-            <Box mb={4}>
-              <Text mb={2} fontWeight="medium">
-                Full name
-              </Text>
-              <Input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter your full name"
-                required
-              />
-            </Box>
+            <FormField
+              {...register('name')}
+              label="Full name"
+              placeholder="Enter your full name"
+              disabled={loading}
+              error={errors.name?.message}
+              required
+            />
 
-            <Box mb={4}>
-              <Text mb={2} fontWeight="medium">
-                Email address
-              </Text>
-              <Input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                required
-              />
-            </Box>
+            <FormField
+              {...register('email')}
+              label="Email address"
+              type="email"
+              placeholder="Enter your email"
+              disabled={loading}
+              error={errors.email?.message}
+              required
+            />
 
-            <Box mb={4}>
-              <Text mb={2} fontWeight="medium">
-                Password
-              </Text>
-              <Input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                required
-              />
-            </Box>
+            <FormField
+              {...register('password')}
+              label="Password"
+              type="password"
+              placeholder="Enter your password"
+              disabled={loading}
+              error={errors.password?.message}
+              helperText="Must be at least 6 characters"
+              required
+            />
 
-            <Box mb={6}>
-              <Text mb={2} fontWeight="medium">
-                Confirm password
-              </Text>
-              <Input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-                required
-              />
-            </Box>
+            <FormField
+              {...register('confirmPassword')}
+              label="Confirm password"
+              type="password"
+              placeholder="Confirm your password"
+              disabled={loading}
+              error={errors.confirmPassword?.message}
+              required
+            />
 
-            <Button type="submit" colorScheme="blue" width="100%" size="lg" mb={4}>
-              Sign up
+            <Button type="submit" colorScheme="blue" width="100%" size="lg" mb={4} loading={loading} disabled={loading}>
+              {loading ? 'Creating account...' : 'Sign up'}
             </Button>
           </Box>
 

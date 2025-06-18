@@ -82,6 +82,64 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Issues", "Results"],
       }),
+      getApiV2Issues: build.query<
+        GetApiV2IssuesApiResponse,
+        GetApiV2IssuesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/issues`,
+          headers: {
+            authorization: queryArg.authorization,
+          },
+          params: {
+            category: queryArg.category,
+            name: queryArg.name,
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ["Issues"],
+      }),
+      postApiV2Issues: build.mutation<
+        PostApiV2IssuesApiResponse,
+        PostApiV2IssuesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/issues`,
+          method: "POST",
+          body: queryArg.createIssueRequest,
+          headers: {
+            authorization: queryArg.authorization,
+          },
+        }),
+        invalidatesTags: ["Issues"],
+      }),
+      getApiV2IssuesByIssueId: build.query<
+        GetApiV2IssuesByIssueIdApiResponse,
+        GetApiV2IssuesByIssueIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/issues/${queryArg.issueId}`,
+          headers: {
+            authorization: queryArg.authorization,
+          },
+        }),
+        providesTags: ["Issues"],
+      }),
+      patchApiV2IssuesByIssueId: build.mutation<
+        PatchApiV2IssuesByIssueIdApiResponse,
+        PatchApiV2IssuesByIssueIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/issues/${queryArg.issueId}`,
+          method: "PATCH",
+          body: queryArg.updateIssueRequest,
+          headers: {
+            authorization: queryArg.authorization,
+          },
+        }),
+        invalidatesTags: ["Issues"],
+      }),
       getApiV1Results: build.query<
         GetApiV1ResultsApiResponse,
         GetApiV1ResultsApiArg
@@ -302,6 +360,8 @@ export type GetApiV1IssuesWithStatsApiResponse =
       portal?: string;
       service?: string;
       ticket?: string;
+      createdById?: number;
+      updatedById?: number;
       createdAt: string;
       updatedAt: string;
       statistics: {
@@ -338,6 +398,38 @@ export type PatchApiV1IssuesByIssueIdApiResponse =
   /** status 200 Issue updated successfully */ Issue;
 export type PatchApiV1IssuesByIssueIdApiArg = {
   issueId: number;
+  updateIssueRequest: UpdateIssueRequest;
+};
+export type GetApiV2IssuesApiResponse =
+  /** status 200 List of issues */ Issue[];
+export type GetApiV2IssuesApiArg = {
+  category?: string;
+  name?: string;
+  page?: number;
+  limit?: number;
+  /** Bearer JWT token */
+  authorization: string;
+};
+export type PostApiV2IssuesApiResponse =
+  /** status 201 Issue created successfully */ Issue;
+export type PostApiV2IssuesApiArg = {
+  /** Bearer JWT token */
+  authorization: string;
+  createIssueRequest: CreateIssueRequest;
+};
+export type GetApiV2IssuesByIssueIdApiResponse =
+  /** status 200 Issue details */ Issue;
+export type GetApiV2IssuesByIssueIdApiArg = {
+  issueId: number;
+  /** Bearer JWT token */
+  authorization: string;
+};
+export type PatchApiV2IssuesByIssueIdApiResponse =
+  /** status 200 Issue updated successfully */ Issue;
+export type PatchApiV2IssuesByIssueIdApiArg = {
+  issueId: number;
+  /** Bearer JWT token */
+  authorization: string;
   updateIssueRequest: UpdateIssueRequest;
 };
 export type GetApiV1ResultsApiResponse =
@@ -452,6 +544,8 @@ export type Issue = {
   portal?: string;
   service?: string;
   ticket?: string;
+  createdById?: number;
+  updatedById?: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -652,6 +746,10 @@ export const {
   useGetApiV1IssuesWithStatsQuery,
   useGetApiV1IssuesByIssueIdQuery,
   usePatchApiV1IssuesByIssueIdMutation,
+  useGetApiV2IssuesQuery,
+  usePostApiV2IssuesMutation,
+  useGetApiV2IssuesByIssueIdQuery,
+  usePatchApiV2IssuesByIssueIdMutation,
   useGetApiV1ResultsQuery,
   useGetApiV1ResultsByResultIdQuery,
   useGetApiV1ResultsStatsQuery,
