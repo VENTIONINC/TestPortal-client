@@ -31,7 +31,7 @@ export const IssuesList = () => {
       <IssuesFilters as="aside" />
 
       <VStack flex={1} align="stretch">
-        <HStack ps={6}>
+        <HStack ps={2}>
           <Heading textStyle="3xl">Issues</Heading>
           {isFetching && <Spinner />}
         </HStack>

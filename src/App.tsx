@@ -21,7 +21,7 @@ function App() {
     <>
       <AppHeader />
 
-      <HStack>
+      <HStack gap={0}>
         {Object.values(ACTIVE_TAB).map((tab) => (
           <Flex
             key={tab}
@@ -37,6 +37,9 @@ function App() {
               color: 'blue.500',
               borderColor: 'blue.500',
             })}
+            _hover={{
+              bg: 'blue.50',
+            }}
           >
             {tab}
           </Flex>

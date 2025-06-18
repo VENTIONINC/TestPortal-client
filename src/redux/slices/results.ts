@@ -21,7 +21,7 @@ export interface ResultsState {
   dateConfigs: DateConfig[];
 }
 
-const initialFilters: ResultsFilters = {
+export const initialFilters: ResultsFilters = {
   tag: '',
   specId: '',
   specFile: '',
@@ -48,6 +48,15 @@ export const resultsSlice = createSlice({
   reducers: {
     reset: () => initialState,
     setFilters: (state, action: PayloadAction<Partial<ResultsFilters>>) => {
+      if (
+        (action.payload.from && action.payload.from !== state.filters.from) ||
+        (action.payload.to && action.payload.to !== state.filters.to)
+      ) {
+        const fromValue = action.payload.from || state.filters.from;
+        const toValue = action.payload.to || state.filters.to;
+        state.dateConfigs = getDateRangeMap(fromValue, toValue);
+      }
+
       state.filters = { ...state.filters, ...action.payload };
     },
     setDateConfigs: (state, action: PayloadAction<DateConfig[]>) => {

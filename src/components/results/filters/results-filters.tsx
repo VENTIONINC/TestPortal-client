@@ -1,40 +1,51 @@
-import { ChangeEvent, PropsWithChildren } from 'react';
-import { Circle, StackProps, Text, useDisclosure, VStack } from '@chakra-ui/react';
-import { LuArrowBigLeft } from 'react-icons/lu';
+import { ChangeEvent } from 'react';
+import { StackProps } from '@chakra-ui/react';
 
 import { Input, NativeSelect } from '@/components/ui';
-import { useResultsActions, useResultsFilters } from '@/redux/slices/results';
-import { getDateRangeMap } from '@/utils';
-import { ResultStatus } from '@/types';
+import { FiltersContainer, FiltersGroup } from '@/components/filters';
+import { initialFilters, useResultsActions, useResultsFilters } from '@/redux/slices/results';
+import { ResultsFilters as ResultsFiltersType, ResultStatus } from '@/types';
 
 export const ResultsFilters = (props: StackProps) => {
-  const { open, onToggle } = useDisclosure({ defaultOpen: true });
-
   const filters = useResultsFilters();
 
-  const { setFilters, setDateConfigs } = useResultsActions();
+  const { setFilters } = useResultsActions();
 
   const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     setFilters({ [e.target.name]: e.target.value, page: 1 });
+  };
 
-    if (e.target.name === 'from' || e.target.name === 'to') {
-      const fromValue = e.target.name === 'from' ? e.target.value : filters.from;
-      const toValue = e.target.name === 'to' ? e.target.value : filters.to;
-      setDateConfigs(getDateRangeMap(fromValue, toValue));
-    }
+  const isClearable = (filters: Partial<ResultsFiltersType>) => {
+    return Object.keys(filters).some(
+      (key) => filters[key as keyof ResultsFiltersType] !== initialFilters[key as keyof ResultsFiltersType],
+    );
+  };
+
+  const handleSetFilters = (filters: Partial<ResultsFiltersType>) => {
+    setFilters({ ...filters, page: 1 });
   };
 
   return (
-    <VStack
-      gap={4}
-      align="stretch"
-      w="100%"
-      maxW={open ? 64 : 0}
-      pos="relative"
-      transition="max-width 0.3s ease-in-out"
-      {...props}
-    >
-      <FiltersGroup title="Result Filters" open={open}>
+    <FiltersContainer {...props}>
+      <FiltersGroup
+        title="Result Filters"
+        clearable={isClearable({
+          status: filters.status,
+          reviewStatus: filters.reviewStatus,
+          errorMessage: filters.errorMessage,
+          from: filters.from,
+          to: filters.to,
+        })}
+        onClear={() =>
+          handleSetFilters({
+            status: initialFilters.status,
+            reviewStatus: initialFilters.reviewStatus,
+            errorMessage: initialFilters.errorMessage,
+            from: initialFilters.from,
+            to: initialFilters.to,
+          })
+        }
+      >
         <NativeSelect
           label="Status:"
           name="status"
@@ -64,48 +75,45 @@ export const ResultsFilters = (props: StackProps) => {
         <Input label="To:" name="to" value={filters.to} onChange={handleFilterChange} type="date" />
       </FiltersGroup>
 
-      <FiltersGroup title="Issue Filters" open={open}>
+      <FiltersGroup
+        title="Issue Filters"
+        clearable={isClearable({ issueName: filters.issueName })}
+        onClear={() => handleSetFilters({ issueName: initialFilters.issueName })}
+      >
         <Input label="Issue name:" name="issueName" value={filters.issueName} onChange={handleFilterChange} />
       </FiltersGroup>
 
-      <FiltersGroup title="Spec Filters" open={open}>
+      <FiltersGroup
+        title="Spec Filters"
+        clearable={isClearable({
+          tag: filters.tag,
+          specId: filters.specId,
+          specFile: filters.specFile,
+          specName: filters.specName,
+        })}
+        onClear={() =>
+          handleSetFilters({
+            tag: initialFilters.tag,
+            specId: initialFilters.specId,
+            specFile: initialFilters.specFile,
+            specName: initialFilters.specName,
+          })
+        }
+      >
         <Input label="Tag:" name="tag" value={filters.tag} onChange={handleFilterChange} />
         <Input label="Spec ID:" name="specId" value={filters.specId} onChange={handleFilterChange} />
         <Input label="Spec file:" name="specFile" value={filters.specFile} onChange={handleFilterChange} />
         <Input label="Spec name:" name="specName" value={filters.specName} onChange={handleFilterChange} />
       </FiltersGroup>
 
-      <FiltersGroup title="Execution Filters" open={open}>
+      <FiltersGroup
+        title="Execution Filters"
+        clearable={isClearable({ environment: filters.environment, type: filters.type })}
+        onClear={() => handleSetFilters({ environment: initialFilters.environment, type: initialFilters.type })}
+      >
         <Input label="Environment:" name="environment" value={filters.environment} onChange={handleFilterChange} />
         <Input label="Type:" name="type" value={filters.type} onChange={handleFilterChange} />
       </FiltersGroup>
-
-      <Circle onClick={onToggle} pos="absolute" top={0} right={-5} bg="blue.600" color="white" p={2} cursor="pointer">
-        <LuArrowBigLeft
-          size={24}
-          style={{
-            transform: open ? 'rotate(0deg)' : 'rotate(180deg)',
-            transition: 'transform 0.3s ease-in-out',
-          }}
-        />
-      </Circle>
-    </VStack>
-  );
-};
-
-const FiltersGroup = ({ title, open, children }: PropsWithChildren<{ title: string; open: boolean }>) => {
-  return (
-    <VStack
-      align="stretch"
-      border="1px solid"
-      borderColor="gray.400"
-      borderRadius="md"
-      p={open ? 4 : 0}
-      overflowX="clip"
-      transition="padding 0.3s ease-in-out"
-    >
-      <Text fontWeight={700}>{title}</Text>
-      {children}
-    </VStack>
+    </FiltersContainer>
   );
 };

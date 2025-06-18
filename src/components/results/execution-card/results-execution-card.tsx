@@ -1,5 +1,5 @@
 import { Fragment, memo } from 'react';
-import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
+import { Flex, HStack, Link, Text, VStack } from '@chakra-ui/react';
 
 import { Checkbox, ClipboardCopyText } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
@@ -85,22 +85,24 @@ export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecuti
             size="sm"
             controlProps={{ borderColor: 'black' }}
           />
-          <Flex alignSelf="stretch" w={2} borderRadius="xs" bg={getResultStatusStyle(result.status).color} />
-          <Text whiteSpace="nowrap"># {result.retry}</Text>
+          <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(result.status).color} />
+          <Text whiteSpace="nowrap" minW={6}>
+            # {result.retry}
+          </Text>
 
           {result.allureLink.startsWith('http') ? (
-            <a href={result.allureLink} target="_blank" rel="noopener noreferrer">
+            <Link href={result.allureLink} target="_blank" rel="noopener noreferrer" color="blue.600">
               Allure
-            </a>
+            </Link>
           ) : (
-            <p>No allure</p>
+            <Text>No allure</Text>
           )}
 
-          <a href={toDataDogLink(execution, result)} target="_blank" rel="noopener noreferrer">
+          <Link href={toDataDogLink(execution, result)} target="_blank" rel="noopener noreferrer" color="blue.600">
             DataDog
-          </a>
-          <p>{toStartTime(result.startTime)}</p>
-          <p>{toDuration(result.duration)}</p>
+          </Link>
+          <Text>{toStartTime(result.startTime)}</Text>
+          <Text>{toDuration(result.duration)}</Text>
 
           {result.errors &&
             result.errors.length > 0 &&

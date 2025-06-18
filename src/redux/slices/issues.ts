@@ -8,7 +8,7 @@ export interface IssuesState {
   filters: IssueFilters;
 }
 
-const initialFilters: IssueFilters = {
+export const initialFilters: IssueFilters = {
   tag: '',
   specId: '',
   specFile: '',

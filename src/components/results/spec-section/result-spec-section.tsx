@@ -1,6 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
-import { LuSquareUserRound, LuTag } from 'react-icons/lu';
+import { LuFileText, LuTag } from 'react-icons/lu';
 
 import { ClipboardCopyText } from '@/components/ui';
 import { ResultsExecutionCard } from '@/components/results';
@@ -129,7 +129,7 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
           )} */}
 
           <HStack align="center" textStyle="sm">
-            <LuSquareUserRound size={16} />
+            <LuFileText size={16} />
             <ClipboardCopyText value={toCleanTitle(spec.title)}>{toCleanTitle(spec.title)}</ClipboardCopyText>
           </HStack>
         </div>
