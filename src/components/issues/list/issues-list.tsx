@@ -27,7 +27,7 @@ export const IssuesList = () => {
   };
 
   return (
-    <HStack align="flex-start" gap={4} w="100%">
+    <HStack align="flex-start" gap={4} w="100%" px={4}>
       <IssuesFilters as="aside" />
 
       <VStack flex={1} align="stretch">

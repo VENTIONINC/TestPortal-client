@@ -1,13 +1,13 @@
 import { VStack } from '@chakra-ui/react';
 
 import { AppHeader } from '@/components/AppHeader';
+import { IssuesList } from '@/components/issues';
 
-function App() {
+export const IssuesPage = () => {
   return (
-    <VStack minH="100svh" gap={4} align="stretch" justify="flex-start">
+    <VStack gap={4} align="stretch">
       <AppHeader />
+      <IssuesList />
     </VStack>
   );
-}
-
-export default App;
+};

@@ -1,4 +1,6 @@
+export { IssuesPage } from './Issues';
 export { LoginPage } from './Login';
-export { SignupPage } from './Signup';
 export { MCPPage } from './MCP';
 export { NotFoundPage } from './NotFound';
+export { ResultsPage } from './Results';
+export { SignupPage } from './Signup';

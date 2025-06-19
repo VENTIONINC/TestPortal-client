@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 
 import App from '@/App';
-import { LoginPage, MCPPage, NotFoundPage, SignupPage } from '@/pages';
+import { IssuesPage, LoginPage, MCPPage, NotFoundPage, ResultsPage, SignupPage } from '@/pages';
 import { PATHS } from '@/types/paths';
 
 export const router = createBrowserRouter([
@@ -16,6 +16,14 @@ export const router = createBrowserRouter([
   {
     path: PATHS.SIGNUP,
     element: <SignupPage />,
+  },
+  {
+    path: PATHS.RESULTS,
+    element: <ResultsPage />,
+  },
+  {
+    path: PATHS.ISSUES,
+    element: <IssuesPage />,
   },
   {
     path: PATHS.MCP,

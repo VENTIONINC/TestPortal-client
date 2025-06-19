@@ -90,7 +90,7 @@ const ResultsContent = () => {
   );
 
   return (
-    <HStack gap={4} align="flex-start" w="100%">
+    <HStack gap={4} align="flex-start" w="100%" px={4}>
       <ResultsFilters as="aside" zIndex={10} />
 
       <VStack as="section" align="stretch" w="100%">
