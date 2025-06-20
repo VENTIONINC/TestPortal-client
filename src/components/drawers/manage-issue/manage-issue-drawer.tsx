@@ -51,7 +51,7 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
   };
 
   const handleCreateAssumption = async () => {
-    const issueId = (await createIssue({ createIssueRequest: issue }).unwrap()).id;
+    const issueId = issue.id ?? (await createIssue({ createIssueRequest: issue }).unwrap()).id;
     if (!issueId) return toaster.create({ title: 'Unable to create assumption with no linked issue', type: 'error' });
     if (!resultError)
       return toaster.create({ title: 'Unable to create assumption with no result error', type: 'error' });
