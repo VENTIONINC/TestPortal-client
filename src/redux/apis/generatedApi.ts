@@ -265,6 +265,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Reports"],
       }),
+      postApiV1JsonReportUpload: build.mutation<
+        PostApiV1JsonReportUploadApiResponse,
+        PostApiV1JsonReportUploadApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/json-report/upload`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Reports"],
+      }),
       getApiV1Status: build.query<
         GetApiV1StatusApiResponse,
         GetApiV1StatusApiArg
@@ -502,6 +513,14 @@ export type PostApiV1JsonReportApiResponse =
   /** status 201 Report processed successfully */ JsonReportResponse;
 export type PostApiV1JsonReportApiArg = {
   jsonReportRequest: JsonReportRequest;
+};
+export type PostApiV1JsonReportUploadApiResponse =
+  /** status 201 File report processed successfully */ JsonReportResponse;
+export type PostApiV1JsonReportUploadApiArg = {
+  body: {
+    /** JSON test report file to upload */
+    report: Blob;
+  };
 };
 export type GetApiV1StatusApiResponse =
   /** status 200 Server status */ StatusResponse;
@@ -761,6 +780,7 @@ export const {
   usePatchApiV1ResultErrorsBulkReviewMutation,
   useGetApiV1ExecutionsByExecutionIdQuery,
   usePostApiV1JsonReportMutation,
+  usePostApiV1JsonReportUploadMutation,
   useGetApiV1StatusQuery,
   usePostApiV2UsersSignupMutation,
   usePostApiV2UsersLoginMutation,
