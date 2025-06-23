@@ -15,10 +15,6 @@ const baseQuery = fetchBaseQuery({
       headers.set('authorization', `Bearer ${accessToken}`);
     }
 
-    if (!headers.has('content-type')) {
-      headers.set('content-type', 'application/json');
-    }
-
     return headers;
   },
 });

@@ -5,7 +5,7 @@ import { IssuesList } from '@/components/issues';
 
 export const IssuesPage = () => {
   return (
-    <VStack gap={4} align="stretch">
+    <VStack gap={4} align="stretch" mb={4}>
       <AppHeader />
       <IssuesList />
     </VStack>
