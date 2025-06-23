@@ -37,7 +37,7 @@ const ResultsContent = () => {
       const resultDate = result.startTime.split('T')[0];
       const isActiveDate = activeDates.has(resultDate);
 
-      const baseResult = {
+      const baseResult: BaseResult = {
         id: result.id,
         createdAt: result.createdAt,
         updatedAt: result.updatedAt,
@@ -49,6 +49,9 @@ const ResultsContent = () => {
         specId: result.specId,
         executionId: result.executionId,
         errors: result.errors,
+        analysisCategory: result.analysisCategory,
+        analysisConfidence: result.analysisConfidence,
+        analysisStatus: result.analysisStatus,
       };
 
       const specKey = result.spec.key;

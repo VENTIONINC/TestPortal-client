@@ -7,6 +7,19 @@ export enum ResultStatus {
   TimedOut = 'timedOut',
 }
 
+export enum AnalysisStatus {
+  Passed = 'passed',
+  Failed = 'failed',
+}
+
+export enum AnalysisCategory {
+  Bug = 'bug',
+  Infra = 'infra',
+  Performance = 'performance',
+  Script = 'script',
+  Other = 'other',
+}
+
 export interface BaseResult {
   id: number;
   createdAt: string;
@@ -19,6 +32,9 @@ export interface BaseResult {
   specId: number;
   executionId: number;
   errors: ResultError[];
+  analysisCategory?: AnalysisCategory;
+  analysisConfidence?: number;
+  analysisStatus?: AnalysisStatus;
 }
 
 export interface Result extends BaseResult {
