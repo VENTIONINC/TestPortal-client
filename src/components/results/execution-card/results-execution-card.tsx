@@ -1,11 +1,12 @@
 import { Fragment, memo } from 'react';
 import { Flex, HStack, Link, Text, VStack } from '@chakra-ui/react';
+import Tippy from '@tippyjs/react';
 
 import { Checkbox, ClipboardCopyText } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultsErrorDialog } from '@/components/dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
-import { getResultStatusStyle } from '@/utils';
+import { getAnalysisCategoryStyle, getResultStatusStyle } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution } from '@/types';
 
@@ -89,7 +90,6 @@ export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecuti
           <Text whiteSpace="nowrap" minW={6}>
             # {result.retry}
           </Text>
-
           {result.allureLink.startsWith('http') ? (
             <Link href={result.allureLink} target="_blank" rel="noopener noreferrer" color="blue.600">
               Allure
@@ -97,7 +97,6 @@ export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecuti
           ) : (
             <Text>No allure</Text>
           )}
-
           <Link href={toDataDogLink(execution, result)} target="_blank" rel="noopener noreferrer" color="blue.600">
             DataDog
           </Link>
@@ -106,14 +105,29 @@ export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecuti
 
           {result.errors &&
             result.errors.length > 0 &&
-            result.errors.map((resultError) => (
-              <Fragment key={resultError.id}>
-                <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
-                  {resultError.message}
-                </Text>
-                <InlineIssue resultError={resultError} />
-              </Fragment>
-            ))}
+            result.errors.map((resultError) => {
+              const { Icon, color } = getAnalysisCategoryStyle(result.analysisCategory);
+
+              return (
+                <Fragment key={resultError.id}>
+                  <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
+                    {resultError.message}
+                  </Text>
+                  {result.analysisStatus && result.analysisConfidence && (
+                    <Tippy
+                      content={`Result from automated analysis. Category: ${result.analysisCategory}`}
+                      arrow={true}
+                    >
+                      <HStack color={color}>
+                        <Icon size={16} color="currentColor" />
+                        <Text>{result.analysisConfidence * 100}%</Text>
+                      </HStack>
+                    </Tippy>
+                  )}
+                  <InlineIssue resultError={resultError} />
+                </Fragment>
+              );
+            })}
         </HStack>
       ))}
     </VStack>
