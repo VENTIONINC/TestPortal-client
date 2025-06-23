@@ -10,6 +10,7 @@ export const addTagTypes = [
   "Reports",
   "Authentication",
   "Users",
+  "Test Analysis",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -274,7 +275,7 @@ const injectedRtkApi = api
           method: "POST",
           body: queryArg.body,
         }),
-        invalidatesTags: ["Reports"],
+        invalidatesTags: ["Reports", "Results"],
       }),
       getApiV1Status: build.query<
         GetApiV1StatusApiResponse,
@@ -341,6 +342,17 @@ const injectedRtkApi = api
           },
         }),
         invalidatesTags: ["Users"],
+      }),
+      postApiV1TestAnalysisAnalyze: build.mutation<
+        PostApiV1TestAnalysisAnalyzeApiResponse,
+        PostApiV1TestAnalysisAnalyzeApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/test-analysis/analyze`,
+          method: "POST",
+          body: queryArg.testAnalysisRequest,
+        }),
+        invalidatesTags: ["Test Analysis"],
       }),
     }),
     overrideExisting: false,
@@ -555,6 +567,11 @@ export type PatchApiV2UsersByUserIdApiArg = {
   authorization: string;
   userUpdateRequest: UserUpdateRequest;
 };
+export type PostApiV1TestAnalysisAnalyzeApiResponse =
+  /** status 200 Test analysis completed successfully */ TestAnalysisResponse;
+export type PostApiV1TestAnalysisAnalyzeApiArg = {
+  testAnalysisRequest: TestAnalysisRequest;
+};
 export type Issue = {
   id: number;
   name: string;
@@ -758,6 +775,23 @@ export type UserUpdateRequest = {
   email?: string;
   password?: string;
 };
+export type TestResultAnalysis = {
+  id: string;
+  status: "passed" | "failed";
+  category?: "bug" | "infra" | "performance" | "script" | "other";
+  confidence: number;
+};
+export type TestAnalysisResponse = {
+  success: boolean;
+  data: {
+    dataSource: string;
+    totalTests: number;
+    analysisResults: TestResultAnalysis[];
+  };
+};
+export type TestAnalysisRequest = {
+  testResults?: any[];
+};
 export const {
   useGetApiV1Query,
   useGetApiV1IssuesQuery,
@@ -787,4 +821,5 @@ export const {
   usePostApiV2UsersRefreshTokenMutation,
   useGetApiV2UsersByUserIdQuery,
   usePatchApiV2UsersByUserIdMutation,
+  usePostApiV1TestAnalysisAnalyzeMutation,
 } = injectedRtkApi;
