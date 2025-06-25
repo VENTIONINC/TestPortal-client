@@ -52,6 +52,7 @@ const ResultsContent = () => {
         analysisCategory: result.analysisCategory,
         analysisConfidence: result.analysisConfidence,
         analysisStatus: result.analysisStatus,
+        analysisConclusion: result.analysisConclusion,
       };
 
       const specKey = result.spec.key;

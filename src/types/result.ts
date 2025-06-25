@@ -35,6 +35,7 @@ export interface BaseResult {
   analysisCategory?: AnalysisCategory;
   analysisConfidence?: number;
   analysisStatus?: AnalysisStatus;
+  analysisConclusion?: string;
 }
 
 export interface Result extends BaseResult {

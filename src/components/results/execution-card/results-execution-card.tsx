@@ -115,7 +115,7 @@ export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecuti
                   </Text>
                   {result.analysisStatus && result.analysisConfidence && (
                     <Tippy
-                      content={`Result from automated analysis. Category: ${result.analysisCategory}`}
+                      content={`Result from automated analysis. Category: ${result.analysisCategory}. Conclusion: ${result.analysisConclusion}`}
                       arrow={true}
                     >
                       <HStack color={color}>
