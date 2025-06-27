@@ -1,10 +1,9 @@
 import { Fragment, memo } from 'react';
 import { Flex, HStack, Link, Text, VStack } from '@chakra-ui/react';
-import Tippy from '@tippyjs/react';
 
 import { Checkbox, ClipboardCopyText } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
-import { useResultsErrorDialog } from '@/components/dialogs';
+import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
 import { getAnalysisCategoryStyle, getResultStatusStyle } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
@@ -21,6 +20,7 @@ export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecuti
   const { isSelected, toggleSelection, toggleMultiple, getSelectedIds } = useResultsSelection();
 
   const openResultsErrorDialog = useResultsErrorDialog();
+  const openResultAnalysisDialog = useResultAnalysisDialog();
 
   const toggleSelectAll = () => {
     toggleMultiple(results.map(({ id }) => id));
@@ -106,7 +106,7 @@ export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecuti
           {result.errors &&
             result.errors.length > 0 &&
             result.errors.map((resultError) => {
-              const { Icon, color } = getAnalysisCategoryStyle(result.analysisCategory);
+              const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(result.analysisCategory);
 
               return (
                 <Fragment key={resultError.id}>
@@ -114,15 +114,17 @@ export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecuti
                     {resultError.message}
                   </Text>
                   {result.analysisStatus && result.analysisConfidence && (
-                    <Tippy
-                      content={`Result from automated analysis. Category: ${result.analysisCategory}. Conclusion: ${result.analysisConclusion}`}
-                      arrow={true}
+                    <HStack
+                      color={color}
+                      onClick={() => openResultAnalysisDialog(result)}
+                      px={1}
+                      borderRadius="sm"
+                      cursor="pointer"
+                      _hover={{ bg: hoverBgColor }}
                     >
-                      <HStack color={color}>
-                        <Icon size={16} color="currentColor" />
-                        <Text>{result.analysisConfidence * 100}%</Text>
-                      </HStack>
-                    </Tippy>
+                      <Icon size={16} color="currentColor" />
+                      <Text>{result.analysisConfidence * 100}%</Text>
+                    </HStack>
                   )}
                   <InlineIssue resultError={resultError} />
                 </Fragment>

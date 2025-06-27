@@ -4,19 +4,19 @@ import { AnalysisCategory } from '@/types';
 
 export const getAnalysisCategoryStyle = (category?: AnalysisCategory) => {
   if (!category) {
-    return { Icon: LuCircleHelp, color: 'gray.500', hoverBgColor: 'gray.200' };
+    return { Icon: LuCircleHelp, color: 'gray.500', hoverBgColor: 'gray.100' };
   }
 
   switch (category) {
     case AnalysisCategory.Bug:
-      return { Icon: LuBug, color: 'red.500', hoverBgColor: 'red.200' };
+      return { Icon: LuBug, color: 'red.500', hoverBgColor: 'red.100' };
     case AnalysisCategory.Script:
-      return { Icon: LuCode, color: 'yellow.600', hoverBgColor: 'yellow.200' };
+      return { Icon: LuCode, color: 'yellow.600', hoverBgColor: 'yellow.100' };
     case AnalysisCategory.Infra:
-      return { Icon: LuServer, color: 'blue.500', hoverBgColor: 'blue.200' };
+      return { Icon: LuServer, color: 'blue.500', hoverBgColor: 'blue.100' };
     case AnalysisCategory.Performance:
-      return { Icon: LuCpu, color: 'orange.500', hoverBgColor: 'orange.200' };
+      return { Icon: LuCpu, color: 'orange.500', hoverBgColor: 'orange.100' };
     default:
-      return { Icon: LuCircleHelp, color: 'gray.500', hoverBgColor: 'gray.200' };
+      return { Icon: LuCircleHelp, color: 'gray.500', hoverBgColor: 'gray.100' };
   }
 };

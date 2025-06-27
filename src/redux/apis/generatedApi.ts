@@ -185,6 +185,17 @@ const injectedRtkApi = api
         }),
         providesTags: ["Results"],
       }),
+      patchApiV1ResultsByResultIdAnalysis: build.mutation<
+        PatchApiV1ResultsByResultIdAnalysisApiResponse,
+        PatchApiV1ResultsByResultIdAnalysisApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/results/${queryArg.resultId}/analysis`,
+          method: "PATCH",
+          body: queryArg.updateResultAnalysisRequest,
+        }),
+        invalidatesTags: ["Results"],
+      }),
       getApiV1SpecsBySpecId: build.query<
         GetApiV1SpecsBySpecIdApiResponse,
         GetApiV1SpecsBySpecIdApiArg
@@ -484,6 +495,12 @@ export type GetApiV1ResultsStatsApiArg = {
   /** Array of dates in YYYY-MM-DD format to filter results. If not provided, returns stats for all results. */
   dates?: string[];
 };
+export type PatchApiV1ResultsByResultIdAnalysisApiResponse =
+  /** status 200 Result analysis updated successfully */ Result;
+export type PatchApiV1ResultsByResultIdAnalysisApiArg = {
+  resultId: string;
+  updateResultAnalysisRequest: UpdateResultAnalysisRequest;
+};
 export type GetApiV1SpecsBySpecIdApiResponse =
   /** status 200 Spec details */ Spec;
 export type GetApiV1SpecsBySpecIdApiArg = {
@@ -645,6 +662,12 @@ export type ResultsStats = {
     count: number;
   }[];
 };
+export type UpdateResultAnalysisRequest = {
+  analysisStatus?: "passed" | "failed";
+  analysisCategory?: "bug" | "infra" | "performance" | "script" | "other";
+  analysisConfidence?: number;
+  analysisConclusion?: string;
+};
 export type Spec = {
   id: string;
   title: string;
@@ -780,6 +803,7 @@ export type TestResultAnalysis = {
   status: "passed" | "failed";
   category?: "bug" | "infra" | "performance" | "script" | "other";
   confidence: number;
+  conclusion?: string;
 };
 export type TestAnalysisResponse = {
   success: boolean;
@@ -806,6 +830,7 @@ export const {
   useGetApiV1ResultsQuery,
   useGetApiV1ResultsByResultIdQuery,
   useGetApiV1ResultsStatsQuery,
+  usePatchApiV1ResultsByResultIdAnalysisMutation,
   useGetApiV1SpecsBySpecIdQuery,
   usePostApiV1AssumptionsMutation,
   usePatchApiV1AssumptionsByAssumptionIdMutation,
