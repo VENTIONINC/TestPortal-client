@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Container, Heading, Text, Flex, Input, Button, Spinner } from '@chakra-ui/react';
 
-import { usePostApiChatMutation } from '@/redux/apis/mcp-api/extended';
+import { useGetApiChatStatusQuery, usePostApiChatMutation } from '@/redux/apis/mcp-api/extended';
 
 interface Message {
   id: string;
@@ -22,6 +22,7 @@ export function MCPPage() {
   const [inputValue, setInputValue] = useState('');
 
   const [postApiChat, { isLoading }] = usePostApiChatMutation();
+  const { data: chatStatus, isLoading: isChatStatusLoading } = useGetApiChatStatusQuery();
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -80,7 +81,6 @@ export function MCPPage() {
 
   return (
     <Box minH="100vh" bg="gray.50">
-      {/* Header */}
       <Box bg="white" borderBottom="1px" borderColor="gray.200" px={6} py={4}>
         <Container maxW="6xl">
           <Flex align="center" justify="space-between">
@@ -91,19 +91,17 @@ export function MCPPage() {
               </Text>
             </Box>
             <Flex align="center" gap={2}>
-              {isLoading && <Spinner size="sm" />}
+              {isChatStatusLoading && <Spinner size="sm" />}
               <Box px={3} py={1} bg="green.100" color="green.800" borderRadius="full" fontSize="sm">
-                Connected
+                {chatStatus?.ready ? 'Connected' : 'Disconnected'}
               </Box>
             </Flex>
           </Flex>
         </Container>
       </Box>
 
-      {/* Chat Container */}
       <Container maxW="6xl" h="calc(100vh - 140px)">
         <Flex direction="column" h="100%">
-          {/* Messages Area */}
           <Box
             flex="1"
             overflowY="auto"
@@ -144,7 +142,6 @@ export function MCPPage() {
             ))}
           </Box>
 
-          {/* Input Area */}
           <Box p={4} bg="white" borderTop="1px" borderColor="gray.200">
             <Flex gap={2}>
               <Input
