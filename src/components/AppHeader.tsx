@@ -39,6 +39,11 @@ export const AppHeader = () => {
         </HStack>
 
         <Flex align="center" gap={4}>
+          <Link to={PATHS.MCP}>
+            <Button size="sm" variant="outline">
+              MCP Chat
+            </Button>
+          </Link>
           {isAuthenticated && user ? (
             <>
               <Text textStyle="sm" color="gray.600">

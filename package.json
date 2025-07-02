@@ -11,7 +11,8 @@
     "lint": "yarn eslint && yarn tslint",
     "preview": "vite preview",
     "prepare": "husky",
-    "generate-api": "npx @rtk-query/codegen-openapi rtk-query-codegen.config.cjs"
+    "generate-api": "npx @rtk-query/codegen-openapi rtk-query-codegen.config.cjs",
+    "generate-mcp-api": "npx @rtk-query/codegen-openapi rtk-query-codegen.mcp.config.cjs"
   },
   "dependencies": {
     "@chakra-ui/charts": "^3.21.0",
