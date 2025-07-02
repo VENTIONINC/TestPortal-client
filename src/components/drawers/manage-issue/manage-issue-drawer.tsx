@@ -2,7 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button, Text, VStack } from '@chakra-ui/react';
 
 import { Drawer, DrawerBody, Input, NativeSelect, Textarea, toaster } from '@/components/ui';
-import { useCreateAssumptionMutation, useCreateIssueMutation, useUpdateIssueMutation } from '@/redux/apis/extendedApi';
+import { useConfirmIssueDeletionDialog } from '@/components/dialogs';
+import { useCreateAssumptionMutation } from '@/redux/apis/extendedApi';
+import {
+  useDeleteApiV1IssuesByIssueIdMutation,
+  usePatchApiV1IssuesByIssueIdMutation,
+  usePostApiV1IssuesMutation,
+} from '@/redux/apis/generatedApi';
 import { useLazyGetIssuesQuery } from '@/redux/apis/issuesApi';
 import { DefaultDrawerProps, Issue, IssueCategory, ResultError } from '@/types';
 
@@ -27,8 +33,9 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
 
   const [getIssues] = useLazyGetIssuesQuery();
   const [createAssumption, { isLoading: isCreatingAssumption }] = useCreateAssumptionMutation();
-  const [createIssue, { isLoading: isCreatingIssue }] = useCreateIssueMutation();
-  const [updateIssue, { isLoading: isUpdatingIssue }] = useUpdateIssueMutation();
+  const [createIssue, { isLoading: isCreatingIssue }] = usePostApiV1IssuesMutation();
+  const [updateIssue, { isLoading: isUpdatingIssue }] = usePatchApiV1IssuesByIssueIdMutation();
+  const [deleteIssue, { isLoading: isDeletingIssue }] = useDeleteApiV1IssuesByIssueIdMutation();
 
   const loadIssues = useCallback(async () => {
     if (!issue.name.trim()) return;
@@ -92,6 +99,19 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
     closeDrawer();
   };
 
+  const handleDeleteIssue = async () => {
+    try {
+      await deleteIssue({ issueId: issue.id }).unwrap();
+
+      toaster.create({ title: 'Issue deleted successfully', type: 'success' });
+      closeDrawer();
+    } catch {
+      toaster.create({ title: 'Failed to delete issue', type: 'error' });
+    }
+  };
+
+  const openConfirmIssueDeletionDialog = useConfirmIssueDeletionDialog({ onConfirm: handleDeleteIssue });
+
   useEffect(() => {
     const timeoutId = setTimeout(loadIssues, 300);
 
@@ -153,11 +173,22 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
 
         <Button
           onClick={initialIssue ? handleUpdateIssue : handleCreateAssumption}
-          variant="ghost"
           loading={isCreatingAssumption || isCreatingIssue || isUpdatingIssue}
         >
           {initialIssue ? 'Update' : 'Create'}
         </Button>
+
+        {initialIssue && (
+          <Button
+            onClick={openConfirmIssueDeletionDialog}
+            bg="red.500"
+            mt="auto"
+            loading={isDeletingIssue}
+            disabled={isDeletingIssue}
+          >
+            Delete
+          </Button>
+        )}
       </DrawerBody>
     </Drawer>
   );

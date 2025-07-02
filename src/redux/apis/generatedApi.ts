@@ -65,6 +65,16 @@ const injectedRtkApi = api
         }),
         providesTags: ["Issues"],
       }),
+      deleteApiV1IssuesByIssueId: build.mutation<
+        DeleteApiV1IssuesByIssueIdApiResponse,
+        DeleteApiV1IssuesByIssueIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/issues/${queryArg.issueId}`,
+          method: "DELETE",
+        }),
+        invalidatesTags: ["Issues", "Results"],
+      }),
       getApiV1IssuesByIssueId: build.query<
         GetApiV1IssuesByIssueIdApiResponse,
         GetApiV1IssuesByIssueIdApiArg
@@ -140,6 +150,19 @@ const injectedRtkApi = api
           },
         }),
         invalidatesTags: ["Issues"],
+      }),
+      deleteApiV2IssuesByIssueId: build.mutation<
+        DeleteApiV2IssuesByIssueIdApiResponse,
+        DeleteApiV2IssuesByIssueIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/issues/${queryArg.issueId}`,
+          method: "DELETE",
+          headers: {
+            authorization: queryArg.authorization,
+          },
+        }),
+        invalidatesTags: ["Issues", "Results"],
       }),
       getApiV1Results: build.query<
         GetApiV1ResultsApiResponse,
@@ -423,6 +446,14 @@ export type GetApiV1IssuesWithStatsApiArg = {
   /** End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
   statTo?: string;
 };
+export type DeleteApiV1IssuesByIssueIdApiResponse =
+  /** status 200 Issue and all associated assumptions deleted successfully */ {
+    message: string;
+    issue: Issue;
+  };
+export type DeleteApiV1IssuesByIssueIdApiArg = {
+  issueId: number;
+};
 export type GetApiV1IssuesByIssueIdApiResponse =
   /** status 200 Issue details */ Issue;
 export type GetApiV1IssuesByIssueIdApiArg = {
@@ -465,6 +496,16 @@ export type PatchApiV2IssuesByIssueIdApiArg = {
   /** Bearer JWT token */
   authorization: string;
   updateIssueRequest: UpdateIssueRequest;
+};
+export type DeleteApiV2IssuesByIssueIdApiResponse =
+  /** status 200 Issue and all associated assumptions deleted successfully */ {
+    message: string;
+    issue: Issue;
+  };
+export type DeleteApiV2IssuesByIssueIdApiArg = {
+  issueId: number;
+  /** Bearer JWT token */
+  authorization: string;
 };
 export type GetApiV1ResultsApiResponse =
   /** status 200 List of results */ Result[];
@@ -821,12 +862,14 @@ export const {
   useGetApiV1IssuesQuery,
   usePostApiV1IssuesMutation,
   useGetApiV1IssuesWithStatsQuery,
+  useDeleteApiV1IssuesByIssueIdMutation,
   useGetApiV1IssuesByIssueIdQuery,
   usePatchApiV1IssuesByIssueIdMutation,
   useGetApiV2IssuesQuery,
   usePostApiV2IssuesMutation,
   useGetApiV2IssuesByIssueIdQuery,
   usePatchApiV2IssuesByIssueIdMutation,
+  useDeleteApiV2IssuesByIssueIdMutation,
   useGetApiV1ResultsQuery,
   useGetApiV1ResultsByResultIdQuery,
   useGetApiV1ResultsStatsQuery,

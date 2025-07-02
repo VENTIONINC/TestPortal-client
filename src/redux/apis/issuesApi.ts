@@ -1,4 +1,4 @@
-import { Issue, IssueFilters } from '@/types';
+import { IssueFilters } from '@/types';
 import { GetIssuesResponse } from '@/types/apis';
 
 import { baseApi } from './baseApi';
@@ -28,15 +28,8 @@ export const issuesApi = baseApi.injectEndpoints({
         };
       },
     }),
-    createIssue: build.mutation<Issue, Issue>({
-      query: (body) => ({
-        url: '/api/v1/issues',
-        method: 'POST',
-        body,
-      }),
-    }),
   }),
   overrideExisting: true,
 });
 
-export const { useLazyGetIssuesQuery, useCreateIssueMutation } = issuesApi;
+export const { useLazyGetIssuesQuery } = issuesApi;
