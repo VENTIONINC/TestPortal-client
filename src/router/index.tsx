@@ -1,13 +1,12 @@
 import { createBrowserRouter } from 'react-router';
 
-import App from '@/App';
 import { IssuesPage, LoginPage, MCPPage, NotFoundPage, ResultsPage, SignupPage } from '@/pages';
 import { PATHS } from '@/types/paths';
 
 export const router = createBrowserRouter([
   {
     path: PATHS.ROOT,
-    element: <App />,
+    element: <ResultsPage />,
   },
   {
     path: PATHS.LOGIN,
