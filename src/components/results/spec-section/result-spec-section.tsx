@@ -65,7 +65,7 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
 
   return (
     <VStack align="stretch" p={2} bg="gray.100" shadow="md" borderRadius="md">
-      <HStack>
+      <HStack overflowX="auto" pb={2}>
         {dateFilters.map((day) => (
           <DateToggle key={day.yyyy_mm_dd} day={day} toggleHandler={handleDateToggle} />
         ))}
@@ -85,7 +85,7 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
           <ClipboardCopyText value={spec.key}>{spec.key}</ClipboardCopyText>
           <ClipboardCopyText value={spec.file}>{spec.file}</ClipboardCopyText>
 
-          <Flex ms="auto" gap={2}>
+          <Flex ms="auto" flexWrap="wrap" gap={2}>
             {spec.tags?.map((tag) => (
               <HStack
                 key={tag}

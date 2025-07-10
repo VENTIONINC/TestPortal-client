@@ -5,9 +5,10 @@ interface FiltersGroupProps extends StackProps {
   title: string;
   clearable?: boolean;
   onClear?: () => void;
+  actions?: React.ReactNode;
 }
 
-export const FiltersGroup = ({ title, clearable, onClear, children, ...props }: FiltersGroupProps) => {
+export const FiltersGroup = ({ title, clearable, onClear, children, actions, ...props }: FiltersGroupProps) => {
   return (
     <VStack align="stretch" border="1px solid" borderColor="gray.400" borderRadius="md" p={4} {...props}>
       <HStack justify="space-between">
@@ -20,6 +21,7 @@ export const FiltersGroup = ({ title, clearable, onClear, children, ...props }: 
             <LuX size={16} />
           </Circle>
         )}
+        {actions}
       </HStack>
       {children}
     </VStack>

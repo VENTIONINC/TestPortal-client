@@ -18,7 +18,6 @@ createRoot(document.getElementById('root')!).render(
         <ChakraProvider>
           <ColorModeProvider defaultTheme="light">
             <RouterProvider router={router} />
-
             <DialogPortal />
             <DrawerPortal />
             <Toaster />

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Flex, HStack, Mark, Spinner, Text, VStack } from '@chakra-ui/react';
+import { HStack, Mark, Spinner, Text, VStack } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 
 import { Checkbox } from '@/components/ui';
@@ -8,8 +8,9 @@ import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/result
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
 import { useResultsActions, useResultsDateConfigs, useResultsFilters } from '@/redux/slices/results';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
+import { BulkActions } from '@/components/BulkActions';
 
-import { BulkActions } from '../../BulkActions';
+import { DateList } from './date-list';
 
 const ResultsContent = () => {
   const filters = useResultsFilters();
@@ -94,35 +95,16 @@ const ResultsContent = () => {
   );
 
   return (
-    <HStack gap={4} align="flex-start" w="100%" px={4}>
+    <HStack gap={4} w="100%" px={4} display="grid" alignItems="start" gridTemplateColumns="auto 1fr">
       <ResultsFilters as="aside" zIndex={10} />
 
-      <VStack as="section" align="stretch" w="100%">
-        <VStack align="stretch" p={2} bg="gray.100" borderRadius="md">
-          <HStack>
-            {dateConfigs.map((day) => (
-              <Flex
-                key={day.date}
-                onClick={() => toggleDateConfig(day)}
-                flex={1}
-                justify="center"
-                p={1}
-                bg={day.isActive ? 'gray.800' : 'white'}
-                color={day.isActive ? 'white' : 'black'}
-                borderRadius="sm"
-                cursor="pointer"
-                textAlign="center"
-                shadow="sm"
-                _hover={{ bg: day.isActive ? 'gray.600' : 'gray.200' }}
-              >
-                <Text>{day.name}</Text>
-              </Flex>
-            ))}
-          </HStack>
+      <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="hidden">
+        <VStack align="stretch" p={2} bg="gray.100" borderRadius="md" flexShrink={0}>
+          <DateList dateConfigs={dateConfigs} toggleDateConfig={toggleDateConfig} />
           <ResultsStats />
         </VStack>
 
-        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" minH={12}>
+        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" minH={12} flexShrink={0}>
           <Checkbox
             checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
             onCheckedChange={handleSelectAll}
@@ -137,7 +119,30 @@ const ResultsContent = () => {
           {isFetching && <Spinner />}
         </HStack>
 
-        <VStack align="stretch" gap={4}>
+        <VStack
+          align="stretch"
+          gap={4}
+          flex={1}
+          overflowY="auto"
+          overflowX="hidden"
+          pr={2}
+          css={{
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'var(--chakra-colors-gray-100)',
+              borderRadius: '4px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'var(--chakra-colors-gray-300)',
+              borderRadius: '4px',
+              '&:hover': {
+                background: 'var(--chakra-colors-gray-400)',
+              },
+            },
+          }}
+        >
           {results.size > 0 ? (
             <>
               {Array.from(results.entries()).map(([specKey, { spec, executions }]) => (

@@ -5,7 +5,7 @@ export const FiltersContainer = ({ children, ...props }: StackProps) => {
   const { open, onToggle } = useDisclosure({ defaultOpen: true });
 
   return (
-    <VStack maxW={open ? 64 : 0} pos="relative" transition="max-width 0.3s ease-in-out" {...props}>
+    <VStack h="100%" maxW={open ? 64 : 0} pos="relative" transition="max-width 0.3s ease-in-out" {...props}>
       <VStack
         gap={4}
         align="stretch"
@@ -30,6 +30,7 @@ export const FiltersContainer = ({ children, ...props }: StackProps) => {
         _hover={{ bg: 'blue.700' }}
       >
         <LuArrowBigLeft
+          onClick={onToggle}
           size={24}
           style={{
             transform: open ? 'rotate(0deg)' : 'rotate(180deg)',
