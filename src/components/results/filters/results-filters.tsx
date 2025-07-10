@@ -1,33 +1,27 @@
-import { ChangeEvent, useState } from 'react';
-import { Button, HStack, StackProps, Text, useFileUpload, VStack } from '@chakra-ui/react';
-import { LuX } from 'react-icons/lu';
+import { ChangeEvent, useEffect, useState } from 'react';
+import { Button, StackProps } from '@chakra-ui/react';
 
-import {
-  FileUploadDropzone,
-  FileUploadRoot,
-  Input,
-  NativeSelect,
-  ProgressBar,
-  ProgressRoot,
-  toaster,
-} from '@/components/ui';
+import { Input, NativeSelect } from '@/components/ui';
 import { FiltersContainer, FiltersGroup } from '@/components/filters';
-import { usePostApiV1JsonReportUploadMutation } from '@/redux/apis/generatedApi';
 import { initialFilters, useResultsActions, useResultsFilters } from '@/redux/slices/results';
-import { ResultsFilters as ResultsFiltersType, ResultStatus } from '@/types';
+import { ResultsFilters as ResultsFiltersType } from '@/types';
+
+import { getStatusOptions } from './helpers';
+import { REVIEW_STATUS_OPTIONS } from './constants';
+import { ResultsFileUpload } from '../file-upload';
 
 export const ResultsFilters = (props: StackProps) => {
-  const filters = useResultsFilters();
-  const fileUpload = useFileUpload({ maxFiles: 1000, accept: ['application/json'] });
+  const globalFilters = useResultsFilters();
+  const [localFilters, setLocalFilters] = useState(globalFilters);
+
   const { setFilters } = useResultsActions();
 
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-
-  const [uploadJsonResults] = usePostApiV1JsonReportUploadMutation();
-
   const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    setFilters({ [e.target.name]: e.target.value, page: 1 });
+    setLocalFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleSearch = () => {
+    setFilters({ ...localFilters, page: 1 });
   };
 
   const isClearable = (filters: Partial<ResultsFiltersType>) => {
@@ -40,62 +34,20 @@ export const ResultsFilters = (props: StackProps) => {
     setFilters({ ...filters, page: 1 });
   };
 
-  const handleUpload = async () => {
-    if (fileUpload.acceptedFiles.length === 0) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    try {
-      const files = fileUpload.acceptedFiles;
-      const totalFiles = files.length;
-      let processedCount = 0;
-
-      // Process files in chunks of 5 to avoid overwhelming the server
-      const fileChunks = chunkArray(files, 5);
-
-      for (const chunk of fileChunks) {
-        // Process chunk in parallel
-        await Promise.all(
-          chunk.map(async (file) => {
-            // Create FormData with the file
-            const formData = new FormData();
-            formData.append('report', file);
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await uploadJsonResults({ body: formData as any });
-
-            processedCount++;
-            setUploadProgress((processedCount / totalFiles) * 100);
-          }),
-        );
-
-        // Small delay between chunks to be nice to the server
-        if (fileChunks.indexOf(chunk) < fileChunks.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-      }
-
-      fileUpload.clearFiles();
-      setUploadProgress(0);
-      toaster.create({ title: 'Files uploaded', type: 'success' });
-    } catch {
-      toaster.create({ title: 'Failed to upload files', type: 'error' });
-    } finally {
-      setIsUploading(false);
-    }
-  };
+  useEffect(() => {
+    setLocalFilters(globalFilters);
+  }, [globalFilters]);
 
   return (
     <FiltersContainer {...props}>
       <FiltersGroup
         title="Result Filters"
         clearable={isClearable({
-          status: filters.status,
-          reviewStatus: filters.reviewStatus,
-          errorMessage: filters.errorMessage,
-          from: filters.from,
-          to: filters.to,
+          status: localFilters.status,
+          reviewStatus: localFilters.reviewStatus,
+          errorMessage: localFilters.errorMessage,
+          from: localFilters.from,
+          to: localFilters.to,
         })}
         onClear={() =>
           handleSetFilters({
@@ -110,47 +62,44 @@ export const ResultsFilters = (props: StackProps) => {
         <NativeSelect
           label="Status:"
           name="status"
-          value={filters.status}
+          value={localFilters.status}
           onChange={handleFilterChange}
-          items={[
-            { value: '', label: 'All' },
-            ...Object.values(ResultStatus).map((status) => ({
-              value: status,
-              label: status.charAt(0).toUpperCase() + status.slice(1),
-            })),
-          ]}
+          items={getStatusOptions()}
         />
         <NativeSelect
           label="Review status:"
           name="reviewStatus"
-          value={filters.reviewStatus}
+          value={localFilters.reviewStatus}
           onChange={handleFilterChange}
-          items={[
-            { value: '', label: 'All' },
-            { value: 'completed', label: 'Completed' },
-            { value: 'inCompleted', label: 'Not Completed' },
-          ]}
+          items={REVIEW_STATUS_OPTIONS}
         />
-        <Input label="Error message" name="errorMessage" value={filters.errorMessage} onChange={handleFilterChange} />
-        <Input label="From" name="from" value={filters.from} onChange={handleFilterChange} type="date" />
-        <Input label="To:" name="to" value={filters.to} onChange={handleFilterChange} type="date" />
+        <Input
+          label="Error message"
+          name="errorMessage"
+          value={localFilters.errorMessage}
+          onChange={handleFilterChange}
+        />
+        <Input label="From" name="from" value={localFilters.from} onChange={handleFilterChange} type="date" />
+        <Input label="To:" name="to" value={localFilters.to} onChange={handleFilterChange} type="date" />
+        <Button onClick={handleSearch}>Apply</Button>
       </FiltersGroup>
 
       <FiltersGroup
         title="Issue Filters"
-        clearable={isClearable({ issueName: filters.issueName })}
+        clearable={isClearable({ issueName: localFilters.issueName })}
         onClear={() => handleSetFilters({ issueName: initialFilters.issueName })}
       >
-        <Input label="Issue name:" name="issueName" value={filters.issueName} onChange={handleFilterChange} />
+        <Input label="Issue name:" name="issueName" value={localFilters.issueName} onChange={handleFilterChange} />
+        <Button onClick={handleSearch}>Apply</Button>
       </FiltersGroup>
 
       <FiltersGroup
         title="Spec Filters"
         clearable={isClearable({
-          tag: filters.tag,
-          specId: filters.specId,
-          specFile: filters.specFile,
-          specName: filters.specName,
+          tag: localFilters.tag,
+          specId: localFilters.specId,
+          specFile: localFilters.specFile,
+          specName: localFilters.specName,
         })}
         onClear={() =>
           handleSetFilters({
@@ -161,59 +110,24 @@ export const ResultsFilters = (props: StackProps) => {
           })
         }
       >
-        <Input label="Tag:" name="tag" value={filters.tag} onChange={handleFilterChange} />
-        <Input label="Spec ID:" name="specId" value={filters.specId} onChange={handleFilterChange} />
-        <Input label="Spec file:" name="specFile" value={filters.specFile} onChange={handleFilterChange} />
-        <Input label="Spec name:" name="specName" value={filters.specName} onChange={handleFilterChange} />
+        <Input label="Tag:" name="tag" value={localFilters.tag} onChange={handleFilterChange} />
+        <Input label="Spec ID:" name="specId" value={localFilters.specId} onChange={handleFilterChange} />
+        <Input label="Spec file:" name="specFile" value={localFilters.specFile} onChange={handleFilterChange} />
+        <Input label="Spec name:" name="specName" value={localFilters.specName} onChange={handleFilterChange} />
+        <Button onClick={handleSearch}>Apply</Button>
       </FiltersGroup>
 
       <FiltersGroup
         title="Execution Filters"
-        clearable={isClearable({ environment: filters.environment, type: filters.type })}
+        clearable={isClearable({ environment: localFilters.environment, type: localFilters.type })}
         onClear={() => handleSetFilters({ environment: initialFilters.environment, type: initialFilters.type })}
       >
-        <Input label="Environment:" name="environment" value={filters.environment} onChange={handleFilterChange} />
-        <Input label="Type:" name="type" value={filters.type} onChange={handleFilterChange} />
+        <Input label="Environment:" name="environment" value={localFilters.environment} onChange={handleFilterChange} />
+        <Input label="Type:" name="type" value={localFilters.type} onChange={handleFilterChange} />
+        <Button onClick={handleSearch}>Apply</Button>
       </FiltersGroup>
 
-      <VStack align="stretch" border="1px solid" borderColor="gray.400" borderRadius="md" p={4}>
-        <Text fontWeight={700}>Upload Results</Text>
-        <FileUploadRoot value={fileUpload} cursor="pointer">
-          <FileUploadDropzone label="Select JSON files" w="100%" minH="unset" p={4} flexDir="row" />
-        </FileUploadRoot>
-
-        {fileUpload.acceptedFiles.length > 0 && (
-          <VStack align="stretch" gap={3}>
-            <HStack justify="space-between">
-              <Text fontSize="sm">
-                Selected {fileUpload.acceptedFiles.length} file{fileUpload.acceptedFiles.length > 1 ? 's' : ''}
-              </Text>
-              <LuX size={20} onClick={fileUpload.clearFiles} style={{ cursor: 'pointer' }} />
-            </HStack>
-
-            {isUploading && (
-              <ProgressRoot value={uploadProgress} min={0} max={100}>
-                <ProgressBar />
-              </ProgressRoot>
-            )}
-
-            <Button onClick={handleUpload} disabled={isUploading} colorScheme="blue">
-              {isUploading
-                ? 'Uploading...'
-                : `Upload ${fileUpload.acceptedFiles.length} Report${fileUpload.acceptedFiles.length > 1 ? 's' : ''}`}
-            </Button>
-          </VStack>
-        )}
-      </VStack>
+      <ResultsFileUpload />
     </FiltersContainer>
   );
-};
-
-const chunkArray = <T,>(array: T[], size: number): T[][] => {
-  const chunks = [];
-  for (let i = 0; i < array.length; i += size) {
-    chunks.push(array.slice(i, i + size));
-  }
-
-  return chunks;
 };

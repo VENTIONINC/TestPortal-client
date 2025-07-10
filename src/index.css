@@ -13,10 +13,30 @@
   flex: 1;
 
   --bg-secondary-color: #f3f3f6;
+
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
   display: flex;
   place-items: center;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d1d1d1;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #b1b1b1;
 }
