@@ -5,5 +5,6 @@ export enum PATHS {
   LOGIN = '/login',
   SIGNUP = '/signup',
   MCP = '/mcp',
+  USER_SETTINGS = '/settings',
   NOT_FOUND = '*',
 }

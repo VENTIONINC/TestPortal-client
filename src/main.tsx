@@ -5,7 +5,7 @@ import { RouterProvider } from 'react-router';
 import { PersistGate } from 'redux-persist/integration/react';
 
 import { store, persistor } from '@/redux/store';
-import { LoadingFallback } from '@/components/LoadingFallback';
+import { AppGuard, LoadingFallback } from '@/components';
 import { ChakraProvider, ColorModeProvider, DialogPortal, DrawerPortal, Toaster } from '@/components/ui';
 import { router } from '@/router';
 
@@ -17,10 +17,12 @@ createRoot(document.getElementById('root')!).render(
       <PersistGate loading={<LoadingFallback />} persistor={persistor}>
         <ChakraProvider>
           <ColorModeProvider defaultTheme="light">
-            <RouterProvider router={router} />
-            <DialogPortal />
-            <DrawerPortal />
-            <Toaster />
+            <AppGuard>
+              <RouterProvider router={router} />
+              <DialogPortal />
+              <DrawerPortal />
+              <Toaster />
+            </AppGuard>
           </ColorModeProvider>
         </ChakraProvider>
       </PersistGate>

@@ -30,12 +30,12 @@ const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQuery
     const state = api.getState() as RootState;
     const refreshToken = state.auth.refreshToken;
 
-    const isRefreshRequest = typeof args === 'object' && 'url' in args && args.url === '/api/users/refresh-token';
+    const isRefreshRequest = typeof args === 'object' && 'url' in args && args.url === '/api/v2/users/refresh-token';
 
     if (refreshToken && !isRefreshRequest) {
       const refreshResult = await baseQuery(
         {
-          url: '/api/users/refresh-token',
+          url: '/api/v2/users/refresh-token',
           method: 'POST',
           body: { refreshToken },
         },

@@ -1,8 +1,9 @@
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router';
+import { useSelector } from 'react-redux';
 
-import { useAuth } from '@/hooks';
 import { PATHS } from '@/types/paths';
+import type { RootState } from '@/redux/store';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,9 +11,9 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, fallback = PATHS.LOGIN }: ProtectedRouteProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, accessToken } = useSelector((state: RootState) => state.auth);
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !accessToken) {
     return <Navigate to={fallback} replace />;
   }
 
