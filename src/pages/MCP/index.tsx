@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Box, Container, Heading, Text, Flex, Input, Button, Spinner } from '@chakra-ui/react';
 
+import { AppHeader } from '@/components/AppHeader';
 import { useGetApiChatStatusQuery, usePostApiChatMutation } from '@/redux/apis/mcp-api/extended';
 
 interface Message {
@@ -81,7 +82,8 @@ export function MCPPage() {
 
   return (
     <Box minH="100vh" bg="gray.50">
-      <Box bg="white" borderBottom="1px" borderColor="gray.200" px={6} py={4}>
+      <AppHeader />
+      <Box bg="white" shadow="sm" borderBottom="1px" borderColor="gray.200" px={6} py={4}>
         <Container maxW="6xl">
           <Flex align="center" justify="space-between">
             <Box>
@@ -100,7 +102,7 @@ export function MCPPage() {
         </Container>
       </Box>
 
-      <Container maxW="6xl" h="calc(100vh - 140px)">
+      <Container maxW="6xl" h="calc(100vh - 200px)">
         <Flex direction="column" h="100%">
           <Box
             flex="1"

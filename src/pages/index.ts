@@ -4,3 +4,4 @@ export { MCPPage } from './MCP';
 export { NotFoundPage } from './NotFound';
 export { ResultsPage } from './Results';
 export { SignupPage } from './Signup';
+export { UserSettingsPage } from './UserSettings';
