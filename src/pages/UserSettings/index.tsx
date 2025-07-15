@@ -1,11 +1,9 @@
-import { Box, Container, Heading, Text, Flex, Button, VStack } from '@chakra-ui/react';
+import { Box, Container, Heading, Text, VStack } from '@chakra-ui/react';
 
 import { AppHeader } from '@/components/AppHeader';
-
-import { useMCPKeys } from './hooks';
+import { MCPTokenSection } from '@/components/mcp-token';
 
 export function UserSettingsPage() {
-  const { isRequestingToken, handleRequestToken } = useMCPKeys();
 
   return (
     <Box minH="100vh" bg="gray.50">
@@ -23,51 +21,68 @@ export function UserSettingsPage() {
 
       <Container maxW="4xl" py={8}>
         <VStack gap={6} align="stretch">
-          <Box bg="white" border="1px" borderColor="gray.200" borderRadius="md" shadow="md">
-            <Box p={6} borderBottom="1px" borderColor="gray.200">
-              <Flex justify="space-between" align="center">
-                <Box>
-                  <Heading size="md">MCP Token</Heading>
-                  <Text color="gray.600" fontSize="sm" mt={1}>
-                    Generate your Model Context Protocol token
-                  </Text>
-                </Box>
-                <Button colorScheme="blue" onClick={handleRequestToken} disabled={isRequestingToken}>
-                  {isRequestingToken ? 'Generating...' : 'Generate MCP Token'}
-                </Button>
-              </Flex>
-            </Box>
-            <Box p={6}>
-              <Box p={4} bg="blue.50" border="1px" borderColor="blue.200" borderRadius="md">
-                <Text fontWeight="bold" color="blue.800">
-                  MCP Token Generation
-                </Text>
-                <Text fontSize="sm" color="blue.700" mt={1}>
-                  Click the button above to generate your MCP token. This feature will be fully available once the API
-                  endpoint is implemented.
-                </Text>
-              </Box>
-            </Box>
-          </Box>
+          <MCPTokenSection />
 
           <Box bg="white" border="1px" borderColor="gray.200" borderRadius="md" shadow="md">
             <Box p={6} borderBottom="1px" borderColor="gray.200">
-              <Heading size="md">About MCP Tokens</Heading>
+              <Heading size="md">Claude Desktop Configuration</Heading>
             </Box>
             <Box p={6}>
-              <VStack align="start" gap={2}>
+              <VStack align="start" gap={4}>
                 <Text fontSize="sm" color="gray.600">
-                  • MCP (Model Context Protocol) tokens allow you to interact with AI models through the MCP interface
+                  To use your MCP token with Claude Desktop, add the following configuration to your Claude config file:
                 </Text>
-                <Text fontSize="sm" color="gray.600">
-                  • Keep your tokens secure and never share them publicly
-                </Text>
-                <Text fontSize="sm" color="gray.600">
-                  • Tokens are used to authenticate your requests to the MCP API endpoints
-                </Text>
-                <Text fontSize="sm" color="gray.600">
-                  • This feature will be available once the backend API is implemented
-                </Text>
+                
+                <Box p={4} bg="gray.50" borderRadius="md" border="1px" borderColor="gray.200" w="100%">
+                  <Text fontSize="xs" color="gray.500" mb={2} fontWeight="semibold">
+                    Claude Desktop Configuration:
+                  </Text>
+                  <Box as="pre" fontSize="xs" fontFamily="mono" whiteSpace="pre-wrap" color="gray.800">
+{`{
+  "mcpServers": {
+    "test-portal": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "${window.location.origin}/api/v1/mcp",
+        "--header",
+        "Authorization:\${AUTH_TOKEN}"
+      ],
+      "env": {
+        "AUTH_TOKEN": "Bearer YOUR_MCP_TOKEN_HERE"
+      }
+    }
+  }
+}`}
+                  </Box>
+                </Box>
+
+                <VStack align="start" gap={2} w="100%">
+                  <Text fontSize="sm" color="gray.600" fontWeight="semibold">
+                    Setup Instructions:
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    1. Copy your MCP token from above
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    2. Replace "YOUR_MCP_TOKEN_HERE" with your actual token in the AUTH_TOKEN environment variable
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    3. Save the configuration and restart Claude Desktop
+                  </Text>
+                  <Text fontSize="sm" color="gray.600">
+                    4. The test-portal server will be available in your Claude conversations
+                  </Text>
+                </VStack>
+
+                <Box p={3} bg="amber.50" border="1px" borderColor="amber.200" borderRadius="md" w="100%">
+                  <Text fontSize="sm" color="amber.800" fontWeight="semibold">
+                    Security Note:
+                  </Text>
+                  <Text fontSize="sm" color="amber.700" mt={1}>
+                    Keep your MCP token secure and never share it publicly. Treat it like a password.
+                  </Text>
+                </Box>
               </VStack>
             </Box>
           </Box>

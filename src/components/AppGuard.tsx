@@ -25,7 +25,7 @@ export function AppGuard({ children }: AppGuardProps) {
   const userId = accessToken ? getUserIdFromToken(accessToken) : null;
 
   const { isLoading: isUserLoading, isError } = useGetApiV2UsersByUserIdQuery(
-    { userId: userId!, authorization: `Bearer ${accessToken}` },
+    { userId: userId! },
     {
       skip: !accessToken || !userId || !isAuthenticated,
       refetchOnMountOrArgChange: false,

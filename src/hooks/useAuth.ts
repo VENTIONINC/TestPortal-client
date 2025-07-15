@@ -23,7 +23,7 @@ export function useAuth() {
   const userId = accessToken ? getUserIdFromToken(accessToken) : null;
 
   const { data: user } = useGetApiV2UsersByUserIdQuery(
-    { userId: userId!, authorization: `Bearer ${accessToken}` },
+    { userId: userId! },
     {
       skip: !accessToken || !userId,
       refetchOnMountOrArgChange: false,
