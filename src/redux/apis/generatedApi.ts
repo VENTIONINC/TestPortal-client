@@ -10,6 +10,7 @@ export const addTagTypes = [
   "Reports",
   "Authentication",
   "Users",
+  "MCP",
   "Test Analysis",
 ] as const;
 const injectedRtkApi = api
@@ -99,9 +100,6 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/issues`,
-          headers: {
-            authorization: queryArg.authorization,
-          },
           params: {
             category: queryArg.category,
             name: queryArg.name,
@@ -119,9 +117,6 @@ const injectedRtkApi = api
           url: `/api/v2/issues`,
           method: "POST",
           body: queryArg.createIssueRequest,
-          headers: {
-            authorization: queryArg.authorization,
-          },
         }),
         invalidatesTags: ["Issues"],
       }),
@@ -129,12 +124,7 @@ const injectedRtkApi = api
         GetApiV2IssuesByIssueIdApiResponse,
         GetApiV2IssuesByIssueIdApiArg
       >({
-        query: (queryArg) => ({
-          url: `/api/v2/issues/${queryArg.issueId}`,
-          headers: {
-            authorization: queryArg.authorization,
-          },
-        }),
+        query: (queryArg) => ({ url: `/api/v2/issues/${queryArg.issueId}` }),
         providesTags: ["Issues"],
       }),
       patchApiV2IssuesByIssueId: build.mutation<
@@ -145,9 +135,6 @@ const injectedRtkApi = api
           url: `/api/v2/issues/${queryArg.issueId}`,
           method: "PATCH",
           body: queryArg.updateIssueRequest,
-          headers: {
-            authorization: queryArg.authorization,
-          },
         }),
         invalidatesTags: ["Issues"],
       }),
@@ -158,9 +145,6 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/v2/issues/${queryArg.issueId}`,
           method: "DELETE",
-          headers: {
-            authorization: queryArg.authorization,
-          },
         }),
         invalidatesTags: ["Issues", "Results"],
       }),
@@ -355,12 +339,7 @@ const injectedRtkApi = api
         GetApiV2UsersByUserIdApiResponse,
         GetApiV2UsersByUserIdApiArg
       >({
-        query: (queryArg) => ({
-          url: `/api/v2/users/${queryArg.userId}`,
-          headers: {
-            authorization: queryArg.authorization,
-          },
-        }),
+        query: (queryArg) => ({ url: `/api/v2/users/${queryArg.userId}` }),
         providesTags: ["Users"],
       }),
       patchApiV2UsersByUserId: build.mutation<
@@ -371,11 +350,28 @@ const injectedRtkApi = api
           url: `/api/v2/users/${queryArg.userId}`,
           method: "PATCH",
           body: queryArg.userUpdateRequest,
-          headers: {
-            authorization: queryArg.authorization,
-          },
         }),
         invalidatesTags: ["Users"],
+      }),
+      postApiV2UsersByUserIdMcpToken: build.mutation<
+        PostApiV2UsersByUserIdMcpTokenApiResponse,
+        PostApiV2UsersByUserIdMcpTokenApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/users/${queryArg.userId}/mcp-token`,
+          method: "POST",
+        }),
+        invalidatesTags: ["MCP"],
+      }),
+      deleteApiV2UsersByUserIdMcpToken: build.mutation<
+        DeleteApiV2UsersByUserIdMcpTokenApiResponse,
+        DeleteApiV2UsersByUserIdMcpTokenApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/users/${queryArg.userId}/mcp-token`,
+          method: "DELETE",
+        }),
+        invalidatesTags: ["MCP"],
       }),
       postApiV1TestAnalysisAnalyze: build.mutation<
         PostApiV1TestAnalysisAnalyzeApiResponse,
@@ -387,6 +383,41 @@ const injectedRtkApi = api
           body: queryArg.testAnalysisRequest,
         }),
         invalidatesTags: ["Test Analysis"],
+      }),
+      postApiV1Mcp: build.mutation<PostApiV1McpApiResponse, PostApiV1McpApiArg>(
+        {
+          query: (queryArg) => ({
+            url: `/api/v1/mcp`,
+            method: "POST",
+            body: queryArg.body,
+            headers: {
+              "mcp-session-id": queryArg["mcp-session-id"],
+            },
+          }),
+          invalidatesTags: ["MCP"],
+        },
+      ),
+      getApiV1Mcp: build.query<GetApiV1McpApiResponse, GetApiV1McpApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v1/mcp`,
+          headers: {
+            "mcp-session-id": queryArg["mcp-session-id"],
+          },
+        }),
+        providesTags: ["MCP"],
+      }),
+      deleteApiV1Mcp: build.mutation<
+        DeleteApiV1McpApiResponse,
+        DeleteApiV1McpApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v1/mcp`,
+          method: "DELETE",
+          headers: {
+            "mcp-session-id": queryArg["mcp-session-id"],
+          },
+        }),
+        invalidatesTags: ["MCP"],
       }),
     }),
     overrideExisting: false,
@@ -472,29 +503,21 @@ export type GetApiV2IssuesApiArg = {
   name?: string;
   page?: number;
   limit?: number;
-  /** Bearer JWT token */
-  authorization: string;
 };
 export type PostApiV2IssuesApiResponse =
   /** status 201 Issue created successfully */ Issue;
 export type PostApiV2IssuesApiArg = {
-  /** Bearer JWT token */
-  authorization: string;
   createIssueRequest: CreateIssueRequest;
 };
 export type GetApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue details */ Issue;
 export type GetApiV2IssuesByIssueIdApiArg = {
   issueId: number;
-  /** Bearer JWT token */
-  authorization: string;
 };
 export type PatchApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue updated successfully */ Issue;
 export type PatchApiV2IssuesByIssueIdApiArg = {
   issueId: number;
-  /** Bearer JWT token */
-  authorization: string;
   updateIssueRequest: UpdateIssueRequest;
 };
 export type DeleteApiV2IssuesByIssueIdApiResponse =
@@ -504,8 +527,6 @@ export type DeleteApiV2IssuesByIssueIdApiResponse =
   };
 export type DeleteApiV2IssuesByIssueIdApiArg = {
   issueId: number;
-  /** Bearer JWT token */
-  authorization: string;
 };
 export type GetApiV1ResultsApiResponse =
   /** status 200 List of results */ Result[];
@@ -614,21 +635,41 @@ export type GetApiV2UsersByUserIdApiResponse =
   /** status 200 User details */ User;
 export type GetApiV2UsersByUserIdApiArg = {
   userId: number;
-  /** Bearer JWT token */
-  authorization: string;
 };
 export type PatchApiV2UsersByUserIdApiResponse =
   /** status 200 User updated successfully */ User;
 export type PatchApiV2UsersByUserIdApiArg = {
   userId: number;
-  /** Bearer JWT token */
-  authorization: string;
   userUpdateRequest: UserUpdateRequest;
+};
+export type PostApiV2UsersByUserIdMcpTokenApiResponse =
+  /** status 201 MCP token generated successfully */ McpTokenResponse;
+export type PostApiV2UsersByUserIdMcpTokenApiArg = {
+  userId: number;
+};
+export type DeleteApiV2UsersByUserIdMcpTokenApiResponse =
+  /** status 200 MCP token revoked successfully */ SuccessResponse;
+export type DeleteApiV2UsersByUserIdMcpTokenApiArg = {
+  userId: number;
 };
 export type PostApiV1TestAnalysisAnalyzeApiResponse =
   /** status 200 Test analysis completed successfully */ TestAnalysisResponse;
 export type PostApiV1TestAnalysisAnalyzeApiArg = {
   testAnalysisRequest: TestAnalysisRequest;
+};
+export type PostApiV1McpApiResponse = /** status 200 MCP response */ any;
+export type PostApiV1McpApiArg = {
+  "mcp-session-id"?: string;
+  body: any;
+};
+export type GetApiV1McpApiResponse = /** status 200 MCP session response */ any;
+export type GetApiV1McpApiArg = {
+  "mcp-session-id": string;
+};
+export type DeleteApiV1McpApiResponse =
+  /** status 200 Session cleanup successful */ any;
+export type DeleteApiV1McpApiArg = {
+  "mcp-session-id": string;
 };
 export type Issue = {
   id: number;
@@ -816,6 +857,7 @@ export type User = {
   email: string;
   createdAt: string;
   updatedAt: string;
+  mcpToken?: string;
 };
 export type UserSignupRequest = {
   name: string;
@@ -838,6 +880,11 @@ export type UserUpdateRequest = {
   name?: string;
   email?: string;
   password?: string;
+};
+export type McpTokenResponse = {
+  token: string;
+  expiresAt: string;
+  message: string;
 };
 export type TestResultAnalysis = {
   id: string;
@@ -889,5 +936,10 @@ export const {
   usePostApiV2UsersRefreshTokenMutation,
   useGetApiV2UsersByUserIdQuery,
   usePatchApiV2UsersByUserIdMutation,
+  usePostApiV2UsersByUserIdMcpTokenMutation,
+  useDeleteApiV2UsersByUserIdMcpTokenMutation,
   usePostApiV1TestAnalysisAnalyzeMutation,
+  usePostApiV1McpMutation,
+  useGetApiV1McpQuery,
+  useDeleteApiV1McpMutation,
 } = injectedRtkApi;
