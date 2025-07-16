@@ -1,16 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
 import { Button, Text, VStack } from '@chakra-ui/react';
 
-import { Drawer, DrawerBody, Input, NativeSelect, Textarea, toaster } from '@/components/ui';
-import { useConfirmIssueDeletionDialog } from '@/components/dialogs';
-import { useCreateAssumptionMutation } from '@/redux/apis/extendedApi';
-import {
-  useDeleteApiV1IssuesByIssueIdMutation,
-  usePatchApiV1IssuesByIssueIdMutation,
-  usePostApiV1IssuesMutation,
-} from '@/redux/apis/generatedApi';
-import { useLazyGetIssuesQuery } from '@/redux/apis/issuesApi';
+import { Drawer, DrawerBody, Input, NativeSelect, Textarea } from '@/components/ui';
 import { DefaultDrawerProps, Issue, IssueCategory, ResultError } from '@/types';
+
+import { useManageIssue } from './useManageIssue';
 
 interface ManageIssueDrawerProps extends DefaultDrawerProps {
   resultError?: ResultError;
@@ -18,105 +11,22 @@ interface ManageIssueDrawerProps extends DefaultDrawerProps {
 }
 
 export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawer }: ManageIssueDrawerProps) => {
-  const [issue, setIssue] = useState<Issue>(
-    initialIssue ??
-      ({
-        name: '',
-        category: '' as IssueCategory,
-        description: '',
-        portal: '',
-        service: '',
-        ticket: '',
-      } as Issue),
-  );
-  const [existingIssues, setExistingIssues] = useState<Issue[]>([]);
-
-  const [getIssues] = useLazyGetIssuesQuery();
-  const [createAssumption, { isLoading: isCreatingAssumption }] = useCreateAssumptionMutation();
-  const [createIssue, { isLoading: isCreatingIssue }] = usePostApiV1IssuesMutation();
-  const [updateIssue, { isLoading: isUpdatingIssue }] = usePatchApiV1IssuesByIssueIdMutation();
-  const [deleteIssue, { isLoading: isDeletingIssue }] = useDeleteApiV1IssuesByIssueIdMutation();
-
-  const loadIssues = useCallback(async () => {
-    if (!issue.name.trim()) return;
-
-    try {
-      const res = await getIssues({ name: issue.name, category: issue.category }).unwrap();
-      setExistingIssues(res.issues);
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Failed to load issues:', error);
-    }
-  }, [getIssues, issue.category, issue.name]);
-
-  const handleIssueNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIssue({ ...issue, name: e.target.value });
-  };
-
-  const handleIssueSelected = (selectedIssue: Issue) => {
-    setIssue(selectedIssue);
-  };
-
-  const handleCreateAssumption = async () => {
-    const issueId = issue.id ?? (await createIssue({ createIssueRequest: issue }).unwrap()).id;
-    if (!issueId) return toaster.create({ title: 'Unable to create assumption with no linked issue', type: 'error' });
-    if (!resultError)
-      return toaster.create({ title: 'Unable to create assumption with no result error', type: 'error' });
-
-    const assumptionResponse = await createAssumption({
-      createAssumptionRequest: {
-        madeBy: 'user',
-        score: 1,
-        isConfirmed: true,
-        issueId,
-        resultErrorId: resultError.id,
-      },
-    });
-
-    if (assumptionResponse.error) {
-      throw new Error(`Cant post new assumption ${assumptionResponse.error}`);
-    }
-
-    // TODO: handle assumptionResponse.data
-    if (assumptionResponse.data) {
-      closeDrawer();
-    } else {
-      // eslint-disable-next-line no-console
-      console.error('Failed to assign issue');
-    }
-  };
-
-  const handleUpdateIssue = async () => {
-    const res = await updateIssue({
-      issueId: issue.id,
-      updateIssueRequest: { name: issue.name, category: issue.category, description: issue.description },
-    });
-
-    if (res.error) {
-      return toaster.create({ title: 'Failed to update issue', type: 'error' });
-    }
-
-    closeDrawer();
-  };
-
-  const handleDeleteIssue = async () => {
-    try {
-      await deleteIssue({ issueId: issue.id }).unwrap();
-
-      toaster.create({ title: 'Issue deleted successfully', type: 'success' });
-      closeDrawer();
-    } catch {
-      toaster.create({ title: 'Failed to delete issue', type: 'error' });
-    }
-  };
-
-  const openConfirmIssueDeletionDialog = useConfirmIssueDeletionDialog({ onConfirm: handleDeleteIssue });
-
-  useEffect(() => {
-    const timeoutId = setTimeout(loadIssues, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [loadIssues]);
+  const {
+    existingIssues,
+    watchedName,
+    isFormattingMessage,
+    register,
+    errors,
+    isCreatingAssumption,
+    isCreatingIssue,
+    isUpdatingIssue,
+    isDeletingIssue,
+    handleIssueSelected,
+    handleCreateAssumption,
+    handleUpdateIssue,
+    handleFormatMessage,
+    openConfirmIssueDeletionDialog,
+  } = useManageIssue({ initialIssue, resultError, closeDrawer });
 
   return (
     <Drawer
@@ -126,13 +36,12 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
       <DrawerBody display="flex" flexDir="column" gap={4}>
         <VStack align="flex-start" gap={0}>
           <Input
+            {...register('name')}
             label="Issue Name"
-            name="name"
             placeholder="Search for issues..."
-            value={issue.name}
-            onChange={handleIssueNameChange}
+            error={errors.name?.message}
           />
-          {issue.name && existingIssues.length > 0 && (
+          {watchedName && existingIssues.length > 0 && (
             <VStack align="stretch" bg="gray.100" borderRadius="sm">
               {existingIssues.map((suggestion, index) => (
                 <Text
@@ -151,25 +60,22 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
         </VStack>
 
         <NativeSelect
+          {...register('category')}
           label="Category:"
-          name="category"
           placeholder="Select Category"
-          value={issue.category}
-          onChange={(e) => setIssue({ ...issue, category: e.target.value as IssueCategory })}
           items={[
             { value: IssueCategory.Bug, label: 'Bug' },
             { value: IssueCategory.Script, label: 'Script' },
             { value: IssueCategory.Infra, label: 'Infra' },
             { value: IssueCategory.Performance, label: 'Performance' },
           ]}
+          error={errors.category?.message}
         />
-        <Textarea
-          label="Description:"
-          name="description"
-          value={issue.description}
-          onChange={(e) => setIssue({ ...issue, description: e.target.value })}
-          autoresize
-        />
+        <Textarea {...register('description')} label="Description:" autoresize error={errors.description?.message} />
+
+        <Button onClick={handleFormatMessage} loading={isFormattingMessage} variant="outline">
+          Format message
+        </Button>
 
         <Button
           onClick={initialIssue ? handleUpdateIssue : handleCreateAssumption}

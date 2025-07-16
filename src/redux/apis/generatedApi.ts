@@ -12,6 +12,7 @@ export const addTagTypes = [
   "Users",
   "MCP",
   "Test Analysis",
+  "Error Formatter",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -384,6 +385,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Test Analysis"],
       }),
+      postApiV2ErrorFormatter: build.mutation<
+        PostApiV2ErrorFormatterApiResponse,
+        PostApiV2ErrorFormatterApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/error-formatter`,
+          method: "POST",
+          body: queryArg.errorFormatterRequest,
+        }),
+        invalidatesTags: ["Error Formatter"],
+      }),
       postApiV1Mcp: build.mutation<PostApiV1McpApiResponse, PostApiV1McpApiArg>(
         {
           query: (queryArg) => ({
@@ -657,6 +669,11 @@ export type PostApiV1TestAnalysisAnalyzeApiResponse =
 export type PostApiV1TestAnalysisAnalyzeApiArg = {
   testAnalysisRequest: TestAnalysisRequest;
 };
+export type PostApiV2ErrorFormatterApiResponse =
+  /** status 200 Error formatted successfully */ ErrorFormatterResponse;
+export type PostApiV2ErrorFormatterApiArg = {
+  errorFormatterRequest: ErrorFormatterRequest;
+};
 export type PostApiV1McpApiResponse = /** status 200 MCP response */ any;
 export type PostApiV1McpApiArg = {
   "mcp-session-id"?: string;
@@ -904,6 +921,22 @@ export type TestAnalysisResponse = {
 export type TestAnalysisRequest = {
   testResults?: any[];
 };
+export type ErrorFormatterResponse = {
+  original: {
+    name: string;
+    description: string;
+    category: string;
+  };
+  formatted: {
+    name: string;
+    description: string;
+  };
+};
+export type ErrorFormatterRequest = {
+  name: string;
+  description: string;
+  category: string;
+};
 export const {
   useGetApiV1Query,
   useGetApiV1IssuesQuery,
@@ -939,6 +972,7 @@ export const {
   usePostApiV2UsersByUserIdMcpTokenMutation,
   useDeleteApiV2UsersByUserIdMcpTokenMutation,
   usePostApiV1TestAnalysisAnalyzeMutation,
+  usePostApiV2ErrorFormatterMutation,
   usePostApiV1McpMutation,
   useGetApiV1McpQuery,
   useDeleteApiV1McpMutation,
