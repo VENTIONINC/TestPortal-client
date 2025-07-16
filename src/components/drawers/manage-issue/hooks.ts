@@ -8,3 +8,5 @@ export const useManageIssueDrawer = ({ resultError }: { resultError?: ResultErro
 
   return ({ issue }: { issue?: Issue } = {}) => openDrawer(ManageIssueDrawer, { resultError, issue });
 };
+
+export { useManageIssue } from './useManageIssue';
