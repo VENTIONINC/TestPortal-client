@@ -4,7 +4,6 @@ import { AppHeader } from '@/components/AppHeader';
 import { MCPTokenSection } from '@/components/mcp-token';
 
 export function UserSettingsPage() {
-
   return (
     <Box minH="100vh" bg="gray.50">
       <AppHeader />
@@ -32,19 +31,20 @@ export function UserSettingsPage() {
                 <Text fontSize="sm" color="gray.600">
                   To use your MCP token with Claude Desktop, add the following configuration to your Claude config file:
                 </Text>
-                
+
                 <Box p={4} bg="gray.50" borderRadius="md" border="1px" borderColor="gray.200" w="100%">
                   <Text fontSize="xs" color="gray.500" mb={2} fontWeight="semibold">
                     Claude Desktop Configuration:
                   </Text>
                   <Box as="pre" fontSize="xs" fontFamily="mono" whiteSpace="pre-wrap" color="gray.800">
-{`{
+                    {`{
   "mcpServers": {
     "test-portal": {
       "command": "npx",
       "args": [
         "mcp-remote",
-        "${window.location.origin}/api/v1/mcp",
+        "${import.meta.env.VITE_API_URL}/api/v1/mcp",
+        "--allow-http",
         "--header",
         "Authorization:\${AUTH_TOKEN}"
       ],
