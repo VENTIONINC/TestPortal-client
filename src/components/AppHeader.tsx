@@ -9,7 +9,6 @@ import { PATHS } from '@/types/paths';
 const NAVIGATION_LINKS = [
   { label: 'Results', path: PATHS.RESULTS },
   { label: 'Issues', path: PATHS.ISSUES },
-  { label: 'MCP', path: PATHS.MCP },
 ];
 
 export const AppHeader = () => {
@@ -23,7 +22,7 @@ export const AppHeader = () => {
           <Link href={PATHS.ROOT} textStyle="lg" fontWeight="bold" color="blue.600">
             Test Portal
           </Link>
-          
+
           <HStack gap={4}>
             {NAVIGATION_LINKS.map((link) => {
               const isActive = location.pathname === link.path;

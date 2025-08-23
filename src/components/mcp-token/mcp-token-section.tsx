@@ -1,5 +1,6 @@
 import { Box, Heading, Text, Flex, Button, VStack, HStack, Input } from '@chakra-ui/react';
 import { LuCopy, LuTrash2 } from 'react-icons/lu';
+import { useCopyToClipboard } from 'usehooks-ts';
 
 import { toaster, InputGroup } from '@/components/ui';
 
@@ -9,9 +10,11 @@ export function MCPTokenSection() {
   const { mcpToken, tokenExpiresAt, isRequestingToken, isRevokingToken, handleRequestToken, handleRevokeToken } =
     useMCPKeys();
 
+  const [, copy] = useCopyToClipboard();
+
   const handleCopyToken = () => {
     if (mcpToken) {
-      navigator.clipboard.writeText(mcpToken);
+      copy(mcpToken);
       toaster.create({
         title: 'Token Copied',
         description: 'MCP token copied to clipboard',
