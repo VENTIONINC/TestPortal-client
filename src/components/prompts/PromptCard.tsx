@@ -1,42 +1,13 @@
 import { Badge, Button, Card, Heading, HStack, Text, VStack } from '@chakra-ui/react';
-import { LuArrowRight, LuCode, LuFileText, LuTrendingUp, LuZap } from 'react-icons/lu';
+import { LuArrowRight } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
 
 import { PromptConfig } from '@/redux/apis/generatedApi';
+import { getCategoryIcon, getCategoryColor } from './promptUtils';
 
 interface PromptCardProps {
   prompt: PromptConfig;
 }
-
-const getCategoryIcon = (category: string) => {
-  switch (category) {
-    case 'development':
-      return { icon: LuCode, color: 'blue.500' };
-    case 'reporting':
-      return { icon: LuFileText, color: 'green.500' };
-    case 'analysis':
-      return { icon: LuTrendingUp, color: 'purple.500' };
-    case 'performance':
-      return { icon: LuZap, color: 'orange.500' };
-    default:
-      return { icon: LuCode, color: 'gray.500' };
-  }
-};
-
-const getCategoryColor = (category: string) => {
-  switch (category) {
-    case 'development':
-      return 'blue';
-    case 'reporting':
-      return 'green';
-    case 'analysis':
-      return 'purple';
-    case 'performance':
-      return 'orange';
-    default:
-      return 'gray';
-  }
-};
 
 export const PromptCard = ({ prompt }: PromptCardProps) => {
   const navigate = useNavigate();

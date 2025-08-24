@@ -1,5 +1,5 @@
 import { Badge, Button, Grid, Heading, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
-import { LuArrowLeft, LuCode, LuFileText, LuTrendingUp, LuZap } from 'react-icons/lu';
+import { LuArrowLeft } from 'react-icons/lu';
 import { useNavigate, useParams } from 'react-router';
 import { useState, useEffect, useCallback } from 'react';
 
@@ -7,36 +7,7 @@ import { useGetApiV2PromptsByNameQuery, usePostApiV2PromptsByNameGenerateMutatio
 
 import { ParameterForm } from './ParameterForm';
 import { PromptPreview } from './PromptPreview';
-
-const getCategoryIcon = (category: string) => {
-  switch (category) {
-    case 'development':
-      return { icon: LuCode, color: 'blue.500' };
-    case 'reporting':
-      return { icon: LuFileText, color: 'green.500' };
-    case 'analysis':
-      return { icon: LuTrendingUp, color: 'purple.500' };
-    case 'performance':
-      return { icon: LuZap, color: 'orange.500' };
-    default:
-      return { icon: LuCode, color: 'gray.500' };
-  }
-};
-
-const getCategoryColor = (category: string) => {
-  switch (category) {
-    case 'development':
-      return 'blue';
-    case 'reporting':
-      return 'green';
-    case 'analysis':
-      return 'purple';
-    case 'performance':
-      return 'orange';
-    default:
-      return 'gray';
-  }
-};
+import { getCategoryIcon, getCategoryColor } from './promptUtils';
 
 export const PromptBuilder = () => {
   const { name } = useParams<{ name: string }>();
