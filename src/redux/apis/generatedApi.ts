@@ -13,6 +13,7 @@ export const addTagTypes = [
   "MCP",
   "Test Analysis",
   "Error Formatter",
+  "Prompts",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -396,6 +397,31 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Error Formatter"],
       }),
+      getApiV2Prompts: build.query<
+        GetApiV2PromptsApiResponse,
+        GetApiV2PromptsApiArg
+      >({
+        query: () => ({ url: `/api/v2/prompts` }),
+        providesTags: ["Prompts"],
+      }),
+      getApiV2PromptsByName: build.query<
+        GetApiV2PromptsByNameApiResponse,
+        GetApiV2PromptsByNameApiArg
+      >({
+        query: (queryArg) => ({ url: `/api/v2/prompts/${queryArg.name}` }),
+        providesTags: ["Prompts"],
+      }),
+      postApiV2PromptsByNameGenerate: build.mutation<
+        PostApiV2PromptsByNameGenerateApiResponse,
+        PostApiV2PromptsByNameGenerateApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/prompts/${queryArg.name}/generate`,
+          method: "POST",
+          body: queryArg.generatePromptRequest,
+        }),
+        invalidatesTags: ["Prompts"],
+      }),
       postApiV1Mcp: build.mutation<PostApiV1McpApiResponse, PostApiV1McpApiArg>(
         {
           query: (queryArg) => ({
@@ -674,6 +700,28 @@ export type PostApiV2ErrorFormatterApiResponse =
 export type PostApiV2ErrorFormatterApiArg = {
   errorFormatterRequest: ErrorFormatterRequest;
 };
+export type GetApiV2PromptsApiResponse =
+  /** status 200 List of available prompts */ PromptsListResponse;
+export type GetApiV2PromptsApiArg = void;
+export type GetApiV2PromptsByNameApiResponse =
+  /** status 200 Prompt configuration */ PromptConfig;
+export type GetApiV2PromptsByNameApiArg = {
+  name:
+    | "developer-code-assistant"
+    | "test-portal-assistant"
+    | "issue-analysis-assistant"
+    | "environment-performance-assistant";
+};
+export type PostApiV2PromptsByNameGenerateApiResponse =
+  /** status 200 Generated prompt */ GeneratePromptResponse;
+export type PostApiV2PromptsByNameGenerateApiArg = {
+  name:
+    | "developer-code-assistant"
+    | "test-portal-assistant"
+    | "issue-analysis-assistant"
+    | "environment-performance-assistant";
+  generatePromptRequest: GeneratePromptRequest;
+};
 export type PostApiV1McpApiResponse = /** status 200 MCP response */ any;
 export type PostApiV1McpApiArg = {
   "mcp-session-id"?: string;
@@ -937,6 +985,34 @@ export type ErrorFormatterRequest = {
   description: string;
   category: string;
 };
+export type PromptParameter = {
+  type: string;
+  required: boolean;
+  description: string;
+  example?: string;
+};
+export type PromptConfig = {
+  name: string;
+  title: string;
+  description: string;
+  category: "development" | "reporting" | "analysis" | "performance";
+  parameters: {
+    [key: string]: PromptParameter;
+  };
+};
+export type PromptsListResponse = {
+  prompts: PromptConfig[];
+};
+export type GeneratePromptResponse = {
+  name: string;
+  parameters: {
+    [key: string]: any;
+  };
+  generated_prompt: string;
+};
+export type GeneratePromptRequest = {
+  [key: string]: any;
+};
 export const {
   useGetApiV1Query,
   useGetApiV1IssuesQuery,
@@ -973,6 +1049,9 @@ export const {
   useDeleteApiV2UsersByUserIdMcpTokenMutation,
   usePostApiV1TestAnalysisAnalyzeMutation,
   usePostApiV2ErrorFormatterMutation,
+  useGetApiV2PromptsQuery,
+  useGetApiV2PromptsByNameQuery,
+  usePostApiV2PromptsByNameGenerateMutation,
   usePostApiV1McpMutation,
   useGetApiV1McpQuery,
   useDeleteApiV1McpMutation,
