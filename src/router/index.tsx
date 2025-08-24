@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 
 import { ProtectedRoute } from '@/components';
-import { IssuesPage, LoginPage, MCPPage, NotFoundPage, ResultsPage, SignupPage, UserSettingsPage } from '@/pages';
+import { IssuesPage, LoginPage, MCPPage, NotFoundPage, PromptBuilderPage, PromptsPage, ResultsPage, SignupPage, UserSettingsPage } from '@/pages';
 import { PATHS } from '@/types/paths';
 
 export const router = createBrowserRouter([
@@ -42,6 +42,22 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <MCPPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.PROMPTS,
+    element: (
+      <ProtectedRoute>
+        <PromptsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.PROMPT_BUILDER,
+    element: (
+      <ProtectedRoute>
+        <PromptBuilderPage />
       </ProtectedRoute>
     ),
   },

@@ -2,6 +2,8 @@ export { IssuesPage } from './Issues';
 export { LoginPage } from './Login';
 export { MCPPage } from './MCP';
 export { NotFoundPage } from './NotFound';
+export { PromptBuilderPage } from './PromptBuilder';
+export { PromptsPage } from './Prompts';
 export { ResultsPage } from './Results';
 export { SignupPage } from './Signup';
 export { UserSettingsPage } from './UserSettings';

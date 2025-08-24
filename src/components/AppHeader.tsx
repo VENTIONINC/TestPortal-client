@@ -9,6 +9,7 @@ import { PATHS } from '@/types/paths';
 const NAVIGATION_LINKS = [
   { label: 'Results', path: PATHS.RESULTS },
   { label: 'Issues', path: PATHS.ISSUES },
+  { label: 'Prompts', path: PATHS.PROMPTS },
 ];
 
 export const AppHeader = () => {
