@@ -7,8 +7,10 @@ import { ResultsExecutionCard } from '@/components/results';
 import { useResultsActions, useResultsDateConfigs } from '@/redux/slices/results';
 import { toCleanTitle } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 import { DateToggle } from './date-toggle';
+import { serializeExecution } from './helpers';
 
 interface ResultSpecSectionProps {
   spec: ResultSpec;
@@ -17,6 +19,7 @@ interface ResultSpecSectionProps {
 
 export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionProps) => {
   const globalDateConfigs = useResultsDateConfigs();
+  const user = useCurrentUser();
 
   const [dateConfigs, setDateConfigs] = useState(globalDateConfigs);
 
@@ -105,29 +108,6 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
         </Flex>
 
         <div className="row spec-meta" style={{ display: 'flex', justifyContent: 'space-between' }}>
-          {/* {issueAnnotations.length > 0 && (
-            <div className="col issue-links" style={{ display: 'flex', alignItems: 'center' }}>
-              {issueAnnotations.map((annotation: Annotation, index: number) => (
-                <a
-                  key={index}
-                  href={annotation.description}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="issue-link"
-                  style={{ marginRight: '0.5rem', fontSize: '0.9em' }}
-                >
-                  <img
-                    src="https://icongr.am/clarity/link.svg?size=10&color=currentColor"
-                    alt="link icon"
-                    className="icon"
-                    style={{ marginRight: '0.2rem' }}
-                  />
-                  Jira Issue {issueAnnotations.length > 1 ? index + 1 : ''}
-                </a>
-              ))}
-            </div>
-          )} */}
-
           <HStack align="center" textStyle="sm">
             <LuFileText size={16} />
             <ClipboardCopyText value={toCleanTitle(spec.title)}>{toCleanTitle(spec.title)}</ClipboardCopyText>
@@ -135,9 +115,11 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
         </div>
       </VStack>
 
-      {filteredExecutions.map(({ execution, results }) => (
-        <ResultsExecutionCard key={execution.id} execution={execution} results={results} />
-      ))}
+      {filteredExecutions.map(({ execution, results }) => {
+        const serizedExecution = serializeExecution(execution, user);
+
+        return <ResultsExecutionCard key={execution.id} results={results} {...serizedExecution} />;
+      })}
     </VStack>
   );
 });

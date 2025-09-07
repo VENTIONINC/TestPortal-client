@@ -42,7 +42,7 @@ const ResultsContent = () => {
         id: result.id,
         createdAt: result.createdAt,
         updatedAt: result.updatedAt,
-        allureLink: result.allureLink,
+        reportPortalLink: result.reportPortalLink,
         retry: result.retry,
         status: result.status,
         duration: result.duration,
@@ -145,8 +145,8 @@ const ResultsContent = () => {
         >
           {results.size > 0 ? (
             <>
-              {Array.from(results.entries()).map(([specKey, { spec, executions }]) => (
-                <ResultSpecSection key={specKey} spec={spec} executions={executions} />
+              {Array.from(results.entries()).map(([, { spec, executions }]) => (
+                <ResultSpecSection key={spec.id} spec={spec} executions={executions} />
               ))}
               {activeDaysResultsIds.length === 0 && <Text>No results found matching date config.</Text>}
             </>

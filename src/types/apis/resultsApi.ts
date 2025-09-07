@@ -36,7 +36,7 @@ export interface BulkReviewResponse {
       id: number;
       createdAt: string;
       updatedAt: string;
-      allureLink: string;
+      reportPortalLink: string;
       retry: number;
       status: string;
       duration: number;
