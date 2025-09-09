@@ -3,6 +3,7 @@ import { LuArrowRight } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
 
 import { PromptConfig } from '@/redux/apis/generatedApi';
+
 import { getCategoryIcon, getCategoryColor } from './promptUtils';
 
 interface PromptCardProps {
@@ -15,7 +16,7 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
   const badgeColor = getCategoryColor(prompt.category);
 
   const parameterCount = Object.keys(prompt.parameters).length;
-  const requiredParameterCount = Object.values(prompt.parameters).filter(p => p.required).length;
+  const requiredParameterCount = Object.values(prompt.parameters).filter((p) => p.required).length;
 
   const handleUsePrompt = () => {
     navigate(`/prompts/${prompt.name}`);
@@ -56,12 +57,8 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
           <Text fontSize="xs" color="gray.500">
             {parameterCount} parameters ({requiredParameterCount} required)
           </Text>
-          
-          <Button
-            size="sm"
-            width="100%"
-            colorPalette={badgeColor}
-          >
+
+          <Button size="sm" width="100%" colorPalette={badgeColor}>
             <LuArrowRight />
             Use This Prompt
           </Button>
