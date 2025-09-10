@@ -1,5 +1,5 @@
 import { Fragment, memo } from 'react';
-import { Flex, HStack, Link, Text, VStack } from '@chakra-ui/react';
+import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { Checkbox, ClipboardCopyText } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
@@ -7,131 +7,110 @@ import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/dia
 import { useResultsSelection } from '@/contexts/results-selection';
 import { getAnalysisCategoryStyle, getResultStatusStyle } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
-import { BaseResult, ResultExecution } from '@/types';
 
 import { BulkActions } from '../../BulkActions';
+import { ResultsExecutionCardProps } from './types';
+import { IntegrationLinks } from './integration-links';
 
-interface ResultsExecutionCardProps {
-  execution: ResultExecution;
-  results: BaseResult[];
-}
+export const ResultsExecutionCard = memo(
+  ({
+    results,
+    environment,
+    type,
+    name,
+    version,
+    monitoringPortalUrl,
+    reportPortalUrl,
+    monitoringPortalEnabled,
+    reportPortalEnabled,
+  }: ResultsExecutionCardProps) => {
+    const { isSelected, toggleSelection, toggleMultiple, getSelectedIds } = useResultsSelection();
 
-export const ResultsExecutionCard = memo(({ execution, results }: ResultsExecutionCardProps) => {
-  const { isSelected, toggleSelection, toggleMultiple, getSelectedIds } = useResultsSelection();
+    const openResultsErrorDialog = useResultsErrorDialog();
+    const openResultAnalysisDialog = useResultAnalysisDialog();
 
-  const openResultsErrorDialog = useResultsErrorDialog();
-  const openResultAnalysisDialog = useResultAnalysisDialog();
+    const toggleSelectAll = () => {
+      toggleMultiple(results.map(({ id }) => id));
+    };
 
-  const toggleSelectAll = () => {
-    toggleMultiple(results.map(({ id }) => id));
-  };
+    const selectedResults = results.filter(({ id }) => getSelectedIds().includes(id));
 
-  const selectedResults = results.filter(({ id }) => getSelectedIds().includes(id));
-
-  const toDataDogLink = (execution: ResultExecution, result: BaseResult) => {
-    const env = execution.environment;
-    const start = new Date(result.startTime).getTime();
-    const end = start + result.duration;
-
-    const searchParams = new URLSearchParams({
-      query: `env:${env}`,
-      agg_m: 'count',
-      agg_m_source: 'base',
-      agg_t: 'count',
-      cols: 'core_service,core_resource_name,log_duration,log_http.method,log_http.status_code',
-      fromUser: 'false',
-      historicalData: 'true',
-      messageDisplay: 'inline',
-      query_translation_version: 'v0',
-      sort: 'desc',
-      sort_by: 'time',
-      sort_order: 'asc',
-      spanType: 'all',
-      storage: 'hot',
-      view: 'spans',
-      start: start.toString(),
-      end: end.toString(),
-      paused: 'true',
-    });
-
-    return `https://app.datadoghq.com/apm/traces?${searchParams.toString()}`;
-  };
-
-  return (
-    <VStack align="stretch" p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md">
-      <HStack gap={6} px={2} bg="gray.200" borderRadius="sm" textStyle="sm" minH={8}>
-        <Checkbox
-          checked={results.every(({ id }) => isSelected(id))}
-          onCheckedChange={toggleSelectAll}
-          size="sm"
-          controlProps={{ borderColor: 'black' }}
-        />
-        <ClipboardCopyText value={execution.environment}>{execution.environment}</ClipboardCopyText>
-        <ClipboardCopyText value={execution.type}>{execution.type}</ClipboardCopyText>
-        <Text>{execution.name}</Text>
-        <Text ms="auto" my={1}>
-          Playwright v.{execution.version}
-        </Text>
-
-        <BulkActions selectedResults={selectedResults} />
-      </HStack>
-
-      {results.map((result) => (
-        <HStack key={result.id} align="center" gap={4} ps={2} textStyle="sm">
+    return (
+      <VStack align="stretch" p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md">
+        <HStack gap={6} px={2} bg="gray.200" borderRadius="sm" textStyle="sm" minH={8}>
           <Checkbox
-            checked={isSelected(result.id)}
-            onCheckedChange={() => {
-              toggleSelection(result.id);
-            }}
+            checked={results.every(({ id }) => isSelected(id))}
+            onCheckedChange={toggleSelectAll}
             size="sm"
             controlProps={{ borderColor: 'black' }}
           />
-          <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(result.status).color} />
-          <Text whiteSpace="nowrap" minW={6}>
-            # {result.retry}
+          <ClipboardCopyText value={environment}>{environment}</ClipboardCopyText>
+          <ClipboardCopyText value={type}>{type}</ClipboardCopyText>
+          <Text>{name}</Text>
+          <Text ms="auto" my={1}>
+            Playwright v.{version}
           </Text>
-          {result.allureLink.startsWith('http') ? (
-            <Link href={result.allureLink} target="_blank" rel="noopener noreferrer" color="blue.600">
-              Allure
-            </Link>
-          ) : (
-            <Text>No allure</Text>
-          )}
-          <Link href={toDataDogLink(execution, result)} target="_blank" rel="noopener noreferrer" color="blue.600">
-            DataDog
-          </Link>
-          <Text>{toStartTime(result.startTime)}</Text>
-          <Text>{toDuration(result.duration)}</Text>
 
-          {result.errors &&
-            result.errors.length > 0 &&
-            result.errors.map((resultError) => {
-              const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(result.analysisCategory);
-
-              return (
-                <Fragment key={resultError.id}>
-                  <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
-                    {resultError.message}
-                  </Text>
-                  {result.analysisStatus && result.analysisConfidence && (
-                    <HStack
-                      color={color}
-                      onClick={() => openResultAnalysisDialog(result)}
-                      px={1}
-                      borderRadius="sm"
-                      cursor="pointer"
-                      _hover={{ bg: hoverBgColor }}
-                    >
-                      <Icon size={16} color="currentColor" />
-                      <Text>{result.analysisConfidence * 100}%</Text>
-                    </HStack>
-                  )}
-                  <InlineIssue resultError={resultError} />
-                </Fragment>
-              );
-            })}
+          <BulkActions selectedResults={selectedResults} />
         </HStack>
-      ))}
-    </VStack>
-  );
-});
+
+        {results.map((result) => (
+          <HStack key={result.id} align="center" gap={4} ps={2} textStyle="sm">
+            <Checkbox
+              checked={isSelected(result.id)}
+              onCheckedChange={() => {
+                toggleSelection(result.id);
+              }}
+              size="sm"
+              controlProps={{ borderColor: 'black' }}
+            />
+            <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(result.status).color} />
+            <Text whiteSpace="nowrap" minW={6}>
+              # {result.retry}
+            </Text>
+            <IntegrationLinks
+              monitoringUrl={monitoringPortalUrl}
+              reportPortalUrl={reportPortalUrl}
+              monitoringPortalEnabled={monitoringPortalEnabled}
+              reportPortalEnabled={reportPortalEnabled}
+              duration={result.duration}
+              startTime={result.startTime}
+              environment={environment}
+            />
+
+            <Text>{toStartTime(result.startTime)}</Text>
+            <Text>{toDuration(result.duration)}</Text>
+
+            {result.errors &&
+              result.errors.length > 0 &&
+              result.errors.map((resultError) => {
+                const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(result.analysisCategory);
+
+                return (
+                  <Fragment key={resultError.id}>
+                    <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
+                      {resultError.message}
+                    </Text>
+                    {result.analysisStatus && result.analysisConfidence && (
+                      <HStack
+                        color={color}
+                        onClick={() => openResultAnalysisDialog(result)}
+                        px={1}
+                        borderRadius="sm"
+                        cursor="pointer"
+                        _hover={{ bg: hoverBgColor }}
+                      >
+                        <Icon size={16} color="currentColor" />
+                        <Text>{result.analysisConfidence * 100}%</Text>
+                      </HStack>
+                    )}
+                    <InlineIssue resultError={resultError} />
+                  </Fragment>
+                );
+              })}
+          </HStack>
+        ))}
+      </VStack>
+    );
+  },
+);

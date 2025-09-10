@@ -24,7 +24,7 @@ export interface BaseResult {
   id: number;
   createdAt: string;
   updatedAt: string;
-  allureLink: string;
+  reportPortalLink: string;
   retry: number;
   status: ResultStatus;
   duration: number;
