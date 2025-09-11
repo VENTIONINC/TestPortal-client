@@ -1,10 +1,12 @@
-import { Box, SimpleGrid, Text, Heading, Spinner } from '@chakra-ui/react';
+import { Box, SimpleGrid, Text, Heading, Spinner, Button, Flex } from '@chakra-ui/react';
 
 import { useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
 import { ProjectCard } from '@/components/ProjectCard';
+import { useCreateProjectDialog } from '@/components/dialogs';
 
 export function ProjectsSettings() {
   const { data: projects, isLoading, error } = useGetApiV2ProjectsQuery({});
+  const openCreateProjectDialog = useCreateProjectDialog();
 
   if (isLoading) {
     return (
@@ -32,9 +34,14 @@ export function ProjectsSettings() {
 
   return (
     <Box>
-      <Heading size="md" mb={4}>
-        Projects ({projects.length})
-      </Heading>
+      <Flex justifyContent="space-between" alignItems="center" mb={4}>
+        <Heading size="md">
+          Projects ({projects.length})
+        </Heading>
+        <Button onClick={openCreateProjectDialog}>
+          Create Project
+        </Button>
+      </Flex>
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
         {projects.map((project) => (
           <ProjectCard key={project.id} project={project} />
