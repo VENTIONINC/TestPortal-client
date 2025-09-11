@@ -4,6 +4,7 @@ import { AppHeader } from '@/components/AppHeader';
 
 import { MCPSettings } from './MCPSettings';
 import { PortalSettings } from './PortalSettings';
+import { ProjectsSettings } from './ProjectsSettings';
 
 export function UserSettingsPage() {
   return (
@@ -25,6 +26,7 @@ export function UserSettingsPage() {
           <Tabs.List>
             <Tabs.Trigger value="mcp">MCP</Tabs.Trigger>
             <Tabs.Trigger value="portals">Portal URLs</Tabs.Trigger>
+            <Tabs.Trigger value="projects">Projects</Tabs.Trigger>
           </Tabs.List>
 
           <Tabs.Content value="mcp">
@@ -36,6 +38,12 @@ export function UserSettingsPage() {
           <Tabs.Content value="portals">
             <Box pt={6}>
               <PortalSettings />
+            </Box>
+          </Tabs.Content>
+
+          <Tabs.Content value="projects">
+            <Box pt={6}>
+              <ProjectsSettings />
             </Box>
           </Tabs.Content>
         </Tabs.Root>
