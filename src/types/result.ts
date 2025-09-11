@@ -118,4 +118,5 @@ export interface ResultsFilters {
   from: string; // YYYY-MM-DD
   to: string; // YYYY-MM-DD
   page: number;
+  projectId: string;
 }

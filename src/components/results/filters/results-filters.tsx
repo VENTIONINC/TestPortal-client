@@ -5,6 +5,7 @@ import { Input, NativeSelect } from '@/components/ui';
 import { FiltersContainer, FiltersGroup } from '@/components/filters';
 import { initialFilters, useResultsActions, useResultsFilters } from '@/redux/slices/results';
 import { ResultsFilters as ResultsFiltersType } from '@/types';
+import { useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
 
 import { getStatusOptions } from './helpers';
 import { REVIEW_STATUS_OPTIONS } from './constants';
@@ -13,8 +14,17 @@ import { ResultsFileUpload } from '../file-upload';
 export const ResultsFilters = (props: StackProps) => {
   const globalFilters = useResultsFilters();
   const [localFilters, setLocalFilters] = useState(globalFilters);
+  const { data: projects } = useGetApiV2ProjectsQuery({});
 
   const { setFilters } = useResultsActions();
+
+  useEffect(() => {
+    if (projects && projects.length > 0 && !localFilters.projectId) {
+      const firstProject = projects[0];
+      setLocalFilters((prev) => ({ ...prev, projectId: firstProject.id.toString() }));
+      setFilters({ projectId: firstProject.id.toString(), page: 1 });
+    }
+  }, [projects, localFilters.projectId, setFilters]);
 
   const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     setLocalFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -38,6 +48,11 @@ export const ResultsFilters = (props: StackProps) => {
     setLocalFilters(globalFilters);
   }, [globalFilters]);
 
+  const projectItems = projects?.map(project => ({
+    value: project.id.toString(),
+    label: project.name
+  })) || [];
+
   return (
     <FiltersContainer {...props}>
       <FiltersGroup
@@ -48,6 +63,7 @@ export const ResultsFilters = (props: StackProps) => {
           errorMessage: localFilters.errorMessage,
           from: localFilters.from,
           to: localFilters.to,
+          projectId: localFilters.projectId,
         })}
         onClear={() =>
           handleSetFilters({
@@ -56,9 +72,18 @@ export const ResultsFilters = (props: StackProps) => {
             errorMessage: initialFilters.errorMessage,
             from: initialFilters.from,
             to: initialFilters.to,
+            projectId: initialFilters.projectId,
           })
         }
       >
+        <NativeSelect
+          label="Project:"
+          name="projectId"
+          value={localFilters.projectId}
+          onChange={handleFilterChange}
+          items={projectItems}
+          placeholder="Select project"
+        />
         <NativeSelect
           label="Status:"
           name="status"
