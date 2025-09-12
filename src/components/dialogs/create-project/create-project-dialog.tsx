@@ -10,9 +10,7 @@ import { DefaultDialogProps } from '@/types';
 
 type CreateProjectFormData = z.infer<typeof createProjectSchema>;
 
-interface CreateProjectDialogProps extends DefaultDialogProps {}
-
-export const CreateProjectDialog = ({ closeDialog, closeAllDialogs }: CreateProjectDialogProps) => {
+export const CreateProjectDialog = ({ closeDialog }: DefaultDialogProps) => {
   const {
     register,
     handleSubmit,
@@ -45,11 +43,7 @@ export const CreateProjectDialog = ({ closeDialog, closeAllDialogs }: CreateProj
   return (
     <Dialog title="Create Project" onClose={closeDialog} size="lg">
       <DialogBody display="flex" flexDir="column" gap={5}>
-        <Input
-          {...register('name')}
-          label="Project Name:"
-          error={errors.name?.message}
-        />
+        <Input {...register('name')} label="Project Name:" error={errors.name?.message} />
         <Textarea
           {...register('description')}
           label="Description (optional):"

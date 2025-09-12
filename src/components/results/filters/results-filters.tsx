@@ -11,47 +11,44 @@ import { getStatusOptions } from './helpers';
 import { REVIEW_STATUS_OPTIONS } from './constants';
 import { ResultsFileUpload } from '../file-upload';
 
+const isClearable = (filters: Partial<ResultsFiltersType>) => {
+  return Object.keys(filters).some(
+    (key) => filters[key as keyof ResultsFiltersType] !== initialFilters[key as keyof ResultsFiltersType],
+  );
+};
+
 export const ResultsFilters = (props: StackProps) => {
   const globalFilters = useResultsFilters();
   const [localFilters, setLocalFilters] = useState(globalFilters);
   const { data: projects } = useGetApiV2ProjectsQuery({});
 
-  const { setFilters } = useResultsActions();
-
-  useEffect(() => {
-    if (projects && projects.length > 0 && !localFilters.projectId) {
-      const firstProject = projects[0];
-      setLocalFilters((prev) => ({ ...prev, projectId: firstProject.id.toString() }));
-      setFilters({ projectId: firstProject.id.toString(), page: 1 });
-    }
-  }, [projects, localFilters.projectId, setFilters]);
-
-  const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    setLocalFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSearch = () => {
-    setFilters({ ...localFilters, page: 1 });
-  };
-
-  const isClearable = (filters: Partial<ResultsFiltersType>) => {
-    return Object.keys(filters).some(
-      (key) => filters[key as keyof ResultsFiltersType] !== initialFilters[key as keyof ResultsFiltersType],
-    );
-  };
-
-  const handleSetFilters = (filters: Partial<ResultsFiltersType>) => {
-    setFilters({ ...filters, page: 1 });
-  };
+  const { updateFilters, clearFilterGroup } = useResultsActions();
 
   useEffect(() => {
     setLocalFilters(globalFilters);
   }, [globalFilters]);
 
-  const projectItems = projects?.map(project => ({
-    value: project.id.toString(),
-    label: project.name
-  })) || [];
+  useEffect(() => {
+    if (projects && projects.length > 0 && !localFilters.projectId) {
+      const firstProject = projects[0];
+      setLocalFilters((prev) => ({ ...prev, projectId: firstProject.id.toString() }));
+      updateFilters({ projectId: firstProject.id.toString() });
+    }
+  }, [projects, localFilters.projectId, updateFilters]);
+
+  const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    setLocalFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleApplyFilters = () => {
+    updateFilters(localFilters);
+  };
+
+  const projectItems =
+    projects?.map((project) => ({
+      value: project.id.toString(),
+      label: project.name,
+    })) || [];
 
   return (
     <FiltersContainer {...props}>
@@ -65,16 +62,7 @@ export const ResultsFilters = (props: StackProps) => {
           to: localFilters.to,
           projectId: localFilters.projectId,
         })}
-        onClear={() =>
-          handleSetFilters({
-            status: initialFilters.status,
-            reviewStatus: initialFilters.reviewStatus,
-            errorMessage: initialFilters.errorMessage,
-            from: initialFilters.from,
-            to: initialFilters.to,
-            projectId: initialFilters.projectId,
-          })
-        }
+        onClear={() => clearFilterGroup(['status', 'reviewStatus', 'errorMessage', 'from', 'to', 'projectId'])}
       >
         <NativeSelect
           label="Project:"
@@ -98,24 +86,19 @@ export const ResultsFilters = (props: StackProps) => {
           onChange={handleFilterChange}
           items={REVIEW_STATUS_OPTIONS}
         />
-        <Input
-          label="Error message"
-          name="errorMessage"
-          value={localFilters.errorMessage}
-          onChange={handleFilterChange}
-        />
+        <Input label="Error message" name="errorMessage" value={localFilters.errorMessage} onChange={handleFilterChange} />
         <Input label="From" name="from" value={localFilters.from} onChange={handleFilterChange} type="date" />
         <Input label="To:" name="to" value={localFilters.to} onChange={handleFilterChange} type="date" />
-        <Button onClick={handleSearch}>Apply</Button>
+        <Button onClick={handleApplyFilters}>Apply</Button>
       </FiltersGroup>
 
       <FiltersGroup
         title="Issue Filters"
         clearable={isClearable({ issueName: localFilters.issueName })}
-        onClear={() => handleSetFilters({ issueName: initialFilters.issueName })}
+        onClear={() => clearFilterGroup(['issueName'])}
       >
         <Input label="Issue name:" name="issueName" value={localFilters.issueName} onChange={handleFilterChange} />
-        <Button onClick={handleSearch}>Apply</Button>
+        <Button onClick={handleApplyFilters}>Apply</Button>
       </FiltersGroup>
 
       <FiltersGroup
@@ -126,30 +109,23 @@ export const ResultsFilters = (props: StackProps) => {
           specFile: localFilters.specFile,
           specName: localFilters.specName,
         })}
-        onClear={() =>
-          handleSetFilters({
-            tag: initialFilters.tag,
-            specId: initialFilters.specId,
-            specFile: initialFilters.specFile,
-            specName: initialFilters.specName,
-          })
-        }
+        onClear={() => clearFilterGroup(['tag', 'specId', 'specFile', 'specName'])}
       >
         <Input label="Tag:" name="tag" value={localFilters.tag} onChange={handleFilterChange} />
         <Input label="Spec ID:" name="specId" value={localFilters.specId} onChange={handleFilterChange} />
         <Input label="Spec file:" name="specFile" value={localFilters.specFile} onChange={handleFilterChange} />
         <Input label="Spec name:" name="specName" value={localFilters.specName} onChange={handleFilterChange} />
-        <Button onClick={handleSearch}>Apply</Button>
+        <Button onClick={handleApplyFilters}>Apply</Button>
       </FiltersGroup>
 
       <FiltersGroup
         title="Execution Filters"
         clearable={isClearable({ environment: localFilters.environment, type: localFilters.type })}
-        onClear={() => handleSetFilters({ environment: initialFilters.environment, type: initialFilters.type })}
+        onClear={() => clearFilterGroup(['environment', 'type'])}
       >
         <Input label="Environment:" name="environment" value={localFilters.environment} onChange={handleFilterChange} />
         <Input label="Type:" name="type" value={localFilters.type} onChange={handleFilterChange} />
-        <Button onClick={handleSearch}>Apply</Button>
+        <Button onClick={handleApplyFilters}>Apply</Button>
       </FiltersGroup>
 
       <ResultsFileUpload />

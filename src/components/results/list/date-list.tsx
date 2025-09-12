@@ -2,7 +2,7 @@ import { HStack, Flex, Text } from '@chakra-ui/react';
 
 interface DateListProps {
   dateConfigs: { date: string; name: string; isActive: boolean }[];
-  toggleDateConfig: (dateConfig: { date: string; name: string; isActive: boolean }) => void;
+  toggleDateConfig: (date: string) => void;
 }
 
 export const DateList = ({ dateConfigs, toggleDateConfig }: DateListProps) => {
@@ -11,7 +11,7 @@ export const DateList = ({ dateConfigs, toggleDateConfig }: DateListProps) => {
       {dateConfigs.map((day) => (
         <Flex
           key={day.date}
-          onClick={() => toggleDateConfig(day)}
+          onClick={() => toggleDateConfig(day.date)}
           flex={1}
           justify="center"
           p={1}

@@ -1,10 +1,11 @@
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuFileText, LuTag } from 'react-icons/lu';
 
 import { ClipboardCopyText } from '@/components/ui';
 import { ResultsExecutionCard } from '@/components/results';
-import { useResultsActions, useResultsDateConfigs } from '@/redux/slices/results';
+import { useResultsActions, useSelectedDates } from '@/redux/slices/results';
+import { getDateDisplayName } from '@/utils/dateUtils';
 import { toCleanTitle } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -18,49 +19,44 @@ interface ResultSpecSectionProps {
 }
 
 export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionProps) => {
-  const globalDateConfigs = useResultsDateConfigs();
+  const selectedDates = useSelectedDates();
   const user = useCurrentUser();
 
-  const [dateConfigs, setDateConfigs] = useState(globalDateConfigs);
-
-  const { setFilters } = useResultsActions();
+  const { updateFilters, toggleDate } = useResultsActions();
 
   const dateFilters = useMemo(() => {
-    return dateConfigs.map((focus) => {
+    const allResultDates = executions
+      .flatMap(({ results }) => results.map((result) => result.startTime.split('T')[0]))
+      .filter((date, index, arr) => arr.indexOf(date) === index)
+      .sort();
+
+    return allResultDates.map((date) => {
       const statuses = executions
-        .filter(({ results }) => results.some((result) => result.startTime.split('T')[0] === focus.date))
+        .filter(({ results }) => results.some((result) => result.startTime.split('T')[0] === date))
         .flatMap(({ results }) => results.map((result) => result.status));
 
       return {
-        yyyy_mm_dd: focus.date,
+        yyyy_mm_dd: date,
         stats: statuses,
-        isActive: focus.isActive,
-        display: focus.name,
+        isActive: selectedDates.includes(date),
+        display: getDateDisplayName(date),
       };
     });
-  }, [dateConfigs, executions]);
+  }, [selectedDates, executions]);
 
   const filteredExecutions = useMemo(() => {
-    const activeDates = dateConfigs.filter((day) => day.isActive).map(({ date }) => date);
-
     return executions
-      .filter(({ results }) => results.some((result) => activeDates.includes(result.startTime.split('T')[0])))
+      .filter(({ results }) => results.some((result) => selectedDates.includes(result.startTime.split('T')[0])))
       .sort((a, b) => new Date(b.execution.createdAt).getTime() - new Date(a.execution.createdAt).getTime());
-  }, [executions, dateConfigs]);
+  }, [executions, selectedDates]);
 
   const handleDateToggle = (dayFilter: { yyyy_mm_dd: string }) => {
-    setDateConfigs((prevConfigs) =>
-      prevConfigs.map((d) => (d.date === dayFilter.yyyy_mm_dd ? { ...d, isActive: !d.isActive } : d)),
-    );
+    toggleDate(dayFilter.yyyy_mm_dd);
   };
 
   const handleTagClick = (tag: string) => {
-    setFilters({ tag, page: 1 });
+    updateFilters({ tag });
   };
-
-  useEffect(() => {
-    setDateConfigs(globalDateConfigs);
-  }, [globalDateConfigs]);
 
   if (!dateFilters.some((day) => day.stats.length !== 0 && day.isActive)) {
     return null;
