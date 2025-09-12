@@ -158,6 +158,7 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/v1/results`,
           params: {
+            projectId: queryArg.projectId,
             tag: queryArg.tag,
             specId: queryArg.specId,
             specFile: queryArg.specFile,
@@ -634,6 +635,7 @@ export type DeleteApiV2IssuesByIssueIdApiArg = {
 export type GetApiV1ResultsApiResponse =
   /** status 200 List of results */ Result[];
 export type GetApiV1ResultsApiArg = {
+  projectId: number;
   tag?: string;
   specId?: string;
   specFile?: string;
