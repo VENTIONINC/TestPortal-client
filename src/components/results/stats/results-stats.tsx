@@ -4,7 +4,7 @@ import { LuArrowBigRight } from 'react-icons/lu';
 import { useDebounce } from 'use-debounce';
 
 import { useGetApiV1ResultsStatsQuery } from '@/redux/apis/generatedApi';
-import { useResultsActions, useSelectedDates } from '@/redux/slices/results';
+import { useResultsActions, useSelectedDates, useSelectedProjectId } from '@/redux/slices/results';
 import { getIssueCategoryStyle, getResultStatusStyle } from '@/utils';
 import { IssueCategory, ResultStatus } from '@/types';
 
@@ -12,12 +12,14 @@ export const ResultsStats = memo(() => {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
 
   const selectedDates = useSelectedDates();
+  const selectedProjectId = useSelectedProjectId();
 
   const { updateFilters } = useResultsActions();
 
   const [debouncedDates] = useDebounce(selectedDates, 200);
   const { data: statistics, isFetching } = useGetApiV1ResultsStatsQuery({
     dates: debouncedDates,
+    projectId: selectedProjectId,
   });
 
   const handleFilterChange = (name: string, value: string) => {

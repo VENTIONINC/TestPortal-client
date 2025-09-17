@@ -63,9 +63,7 @@ export const resultsSlice = createSlice({
     },
     clearFilterGroup: (state, action: PayloadAction<(keyof ResultsFilters)[]>) => {
       const filtersToClear = action.payload;
-      const filtersToReset = Object.fromEntries(
-        filtersToClear.map((key) => [key, initialFilters[key]])
-      );
+      const filtersToReset = Object.fromEntries(filtersToClear.map((key) => [key, initialFilters[key]]));
       state.filters = { ...state.filters, ...filtersToReset, page: 1 };
     },
   },
@@ -104,5 +102,6 @@ export const useResultsActions = () => {
 
 export const useResultsFilters = () => useAppSelector((state) => state.results.filters);
 export const useSelectedDates = () => useAppSelector((state) => state.results.selectedDates);
+export const useSelectedProjectId = () => useAppSelector((state) => state.results.filters.projectId);
 
 export default resultsSlice.reducer;

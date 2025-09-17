@@ -191,6 +191,7 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/v1/results-stats`,
           params: {
+            projectId: queryArg.projectId,
             dates: queryArg.dates,
           },
         }),
@@ -635,7 +636,7 @@ export type DeleteApiV2IssuesByIssueIdApiArg = {
 export type GetApiV1ResultsApiResponse =
   /** status 200 List of results */ Result[];
 export type GetApiV1ResultsApiArg = {
-  projectId: number;
+  projectId: string;
   tag?: string;
   specId?: string;
   specFile?: string;
@@ -659,6 +660,7 @@ export type GetApiV1ResultsByResultIdApiArg = {
 export type GetApiV1ResultsStatsApiResponse =
   /** status 200 Results statistics */ ResultsStats;
 export type GetApiV1ResultsStatsApiArg = {
+  projectId: string;
   /** Array of dates in YYYY-MM-DD format to filter results. If not provided, returns stats for all results. */
   dates?: string[];
 };
@@ -714,6 +716,8 @@ export type PostApiV1JsonReportUploadApiResponse =
   /** status 201 File report processed successfully */ JsonReportResponse;
 export type PostApiV1JsonReportUploadApiArg = {
   body: {
+    /** Project ID to associate the report with */
+    projectId: string;
     /** JSON test report file to upload */
     report: Blob;
   };
