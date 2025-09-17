@@ -4,24 +4,27 @@ import { LuArrowBigRight } from 'react-icons/lu';
 import { useDebounce } from 'use-debounce';
 
 import { useGetApiV1ResultsStatsQuery } from '@/redux/apis/generatedApi';
-import { useResultsActions, useResultsDateConfigs } from '@/redux/slices/results';
+import { useResultsActions, useSelectedDates } from '@/redux/slices/results';
+import { useSelectedProjectId } from '@/redux/slices/projects';
 import { getIssueCategoryStyle, getResultStatusStyle } from '@/utils';
 import { IssueCategory, ResultStatus } from '@/types';
 
 export const ResultsStats = memo(() => {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
 
-  const dateConfigs = useResultsDateConfigs();
+  const selectedDates = useSelectedDates();
+  const selectedProjectId = useSelectedProjectId();
 
-  const { setFilters } = useResultsActions();
+  const { updateFilters } = useResultsActions();
 
-  const [debouncedDateConfigs] = useDebounce(dateConfigs, 200);
+  const [debouncedDates] = useDebounce(selectedDates, 200);
   const { data: statistics, isFetching } = useGetApiV1ResultsStatsQuery({
-    dates: debouncedDateConfigs.filter(({ isActive }) => isActive).map(({ date }) => date),
+    dates: debouncedDates,
+    projectId: selectedProjectId!,
   });
 
   const handleFilterChange = (name: string, value: string) => {
-    setFilters({ [name]: value, page: 1 });
+    updateFilters({ [name]: value });
   };
 
   if (!statistics || statistics.byStatusTotal === 0) {

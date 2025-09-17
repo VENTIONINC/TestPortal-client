@@ -13,4 +13,10 @@ export const formatMessageSchema = z.object({
   }),
 });
 
+export const createProjectSchema = z.object({
+  name: z.string().min(1, 'Project name is required'),
+  description: z.string().optional(),
+});
+
 export type FormatMessageFormData = z.infer<typeof formatMessageSchema>;
+export type CreateProjectFormData = z.infer<typeof createProjectSchema>;

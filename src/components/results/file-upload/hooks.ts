@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useFileUpload } from '@chakra-ui/react';
 
 import { usePostApiV1JsonReportUploadMutation } from '@/redux/apis/generatedApi';
+import { useSelectedProjectId } from '@/redux/slices/projects';
 import { toaster } from '@/components/ui';
 
 const chunkArray = <T>(array: T[], size: number): T[][] => {
@@ -20,6 +21,7 @@ type UseResultsUploaderProps = {
 export const useResultsUploader = ({ fileUpload }: UseResultsUploaderProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const selectedProjectId = useSelectedProjectId();
 
   const [uploadJsonResults] = usePostApiV1JsonReportUploadMutation();
 
@@ -34,16 +36,15 @@ export const useResultsUploader = ({ fileUpload }: UseResultsUploaderProps) => {
       const totalFiles = files.length;
       let processedCount = 0;
 
-      // Process files in chunks of 5 to avoid overwhelming the server
       const fileChunks = chunkArray(files, 5);
 
       for (const chunk of fileChunks) {
-        // Process chunk in parallel
         await Promise.all(
           chunk.map(async (file) => {
-            // Create FormData with the file
             const formData = new FormData();
+
             formData.append('report', file);
+            formData.append('projectId', selectedProjectId);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await uploadJsonResults({ body: formData as any });
@@ -53,7 +54,6 @@ export const useResultsUploader = ({ fileUpload }: UseResultsUploaderProps) => {
           }),
         );
 
-        // Small delay between chunks to be nice to the server
         if (fileChunks.indexOf(chunk) < fileChunks.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 500));
         }

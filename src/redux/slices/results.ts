@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { DateConfig, getDateRangeMap } from '@/utils';
 import { ResultsFilters } from '@/types';
 
 const formatDate = (date: Date): string => {
@@ -18,7 +17,7 @@ weekAgo.setDate(today.getDate() - 7);
 
 export interface ResultsState {
   filters: ResultsFilters;
-  dateConfigs: DateConfig[];
+  selectedDates: string[];
 }
 
 export const initialFilters: ResultsFilters = {
@@ -39,7 +38,7 @@ export const initialFilters: ResultsFilters = {
 
 const initialState: ResultsState = {
   filters: initialFilters,
-  dateConfigs: getDateRangeMap(initialFilters.from, initialFilters.to),
+  selectedDates: [formatDate(today)],
 };
 
 export const resultsSlice = createSlice({
@@ -47,25 +46,24 @@ export const resultsSlice = createSlice({
   initialState: initialState,
   reducers: {
     reset: () => initialState,
-    setFilters: (state, action: PayloadAction<Partial<ResultsFilters>>) => {
-      if (
-        (action.payload.from && action.payload.from !== state.filters.from) ||
-        (action.payload.to && action.payload.to !== state.filters.to)
-      ) {
-        const fromValue = action.payload.from || state.filters.from;
-        const toValue = action.payload.to || state.filters.to;
-        state.dateConfigs = getDateRangeMap(fromValue, toValue);
+    updateFilters: (state, action: PayloadAction<Partial<ResultsFilters>>) => {
+      state.filters = { ...state.filters, ...action.payload, page: 1 };
+    },
+    setSelectedDates: (state, action: PayloadAction<string[]>) => {
+      state.selectedDates = action.payload;
+    },
+    toggleDate: (state, action: PayloadAction<string>) => {
+      const date = action.payload;
+      if (state.selectedDates.includes(date)) {
+        state.selectedDates = state.selectedDates.filter((d) => d !== date);
+      } else {
+        state.selectedDates = [...state.selectedDates, date];
       }
-
-      state.filters = { ...state.filters, ...action.payload };
     },
-    setDateConfigs: (state, action: PayloadAction<DateConfig[]>) => {
-      state.dateConfigs = action.payload;
-    },
-    toggleDateConfig: (state, action: PayloadAction<DateConfig>) => {
-      state.dateConfigs = state.dateConfigs.map((d) =>
-        d.date === action.payload.date ? { ...d, isActive: !d.isActive } : d,
-      );
+    clearFilterGroup: (state, action: PayloadAction<(keyof ResultsFilters)[]>) => {
+      const filtersToClear = action.payload;
+      const filtersToReset = Object.fromEntries(filtersToClear.map((key) => [key, initialFilters[key]]));
+      state.filters = { ...state.filters, ...filtersToReset, page: 1 };
     },
   },
 });
@@ -74,21 +72,27 @@ export const useResultsActions = () => {
   const dispatch = useAppDispatch();
 
   return {
-    setFilters: useCallback(
+    updateFilters: useCallback(
       (filters: Partial<ResultsFilters>) => {
-        dispatch(resultsSlice.actions.setFilters(filters));
+        dispatch(resultsSlice.actions.updateFilters(filters));
       },
       [dispatch],
     ),
-    setDateConfigs: useCallback(
-      (dateConfigs: DateConfig[]) => {
-        dispatch(resultsSlice.actions.setDateConfigs(dateConfigs));
+    setSelectedDates: useCallback(
+      (dates: string[]) => {
+        dispatch(resultsSlice.actions.setSelectedDates(dates));
       },
       [dispatch],
     ),
-    toggleDateConfig: useCallback(
-      (dateConfig: DateConfig) => {
-        dispatch(resultsSlice.actions.toggleDateConfig(dateConfig));
+    toggleDate: useCallback(
+      (date: string) => {
+        dispatch(resultsSlice.actions.toggleDate(date));
+      },
+      [dispatch],
+    ),
+    clearFilterGroup: useCallback(
+      (filters: (keyof ResultsFilters)[]) => {
+        dispatch(resultsSlice.actions.clearFilterGroup(filters));
       },
       [dispatch],
     ),
@@ -96,6 +100,6 @@ export const useResultsActions = () => {
 };
 
 export const useResultsFilters = () => useAppSelector((state) => state.results.filters);
-export const useResultsDateConfigs = () => useAppSelector((state) => state.results.dateConfigs);
+export const useSelectedDates = () => useAppSelector((state) => state.results.selectedDates);
 
 export default resultsSlice.reducer;

@@ -5,6 +5,7 @@ export interface GetResultsRequest {
   to?: string;
   status?: string;
   page?: number;
+  projectId: string;
 }
 
 export interface GetResultsResponse {

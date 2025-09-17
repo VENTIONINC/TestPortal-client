@@ -1,9 +1,9 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Flex, Image } from '@chakra-ui/react';
 
 import { useGetApiV2UsersByUserIdQuery } from '@/redux/apis/generatedApi';
 import type { RootState } from '@/redux/store';
+import { LoadingPlaceholder } from '@/components/ui/LoadingPlaceholder';
 
 interface AppGuardProps {
   children: ReactNode;
@@ -44,25 +44,7 @@ export function AppGuard({ children }: AppGuardProps) {
   }, [isAuthenticated, accessToken, isUserLoading, isError]);
 
   if (!isInitialized) {
-    return (
-      <Flex
-        direction="column"
-        align="center"
-        justify="center"
-        minH="100vh"
-        bg="gray.50"
-        _dark={{ bg: "gray.900" }}
-      >
-        <Box mb={8}>
-          <Image
-            src="/Gemini_Generated_Image_fbnppgfbnppgfbnp.jpg"
-            alt="Test Analysis Portal"
-            maxW="300px"
-            h="auto"
-          />
-        </Box>
-      </Flex>
-    );
+    return <LoadingPlaceholder />;
   }
 
   return <>{children}</>;

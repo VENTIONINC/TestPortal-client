@@ -8,6 +8,7 @@ import authReducer from './slices/auth';
 import dialogReducer from './slices/dialog';
 import drawerReducer from './slices/drawer';
 import issuesReducer from './slices/issues';
+import projectsReducer from './slices/projects';
 import resultsReducer from './slices/results';
 
 const authPersistConfig = {
@@ -23,6 +24,7 @@ const rootReducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   drawer: drawerReducer,
   issues: issuesReducer,
+  projects: projectsReducer,
   results: resultsReducer,
 });
 

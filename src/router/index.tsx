@@ -1,7 +1,17 @@
 import { createBrowserRouter } from 'react-router';
 
-import { ProtectedRoute } from '@/components';
-import { IssuesPage, LoginPage, MCPPage, NotFoundPage, PromptBuilderPage, PromptsPage, ResultsPage, SignupPage, UserSettingsPage } from '@/pages';
+import { ProtectedRoute, ProjectGuard } from '@/components';
+import {
+  IssuesPage,
+  LoginPage,
+  MCPPage,
+  NotFoundPage,
+  PromptBuilderPage,
+  PromptsPage,
+  ResultsPage,
+  SignupPage,
+  UserSettingsPage,
+} from '@/pages';
 import { PATHS } from '@/types/paths';
 
 export const router = createBrowserRouter([
@@ -9,7 +19,9 @@ export const router = createBrowserRouter([
     path: PATHS.ROOT,
     element: (
       <ProtectedRoute>
-        <ResultsPage />
+        <ProjectGuard>
+          <ResultsPage />
+        </ProjectGuard>
       </ProtectedRoute>
     ),
   },
@@ -25,7 +37,9 @@ export const router = createBrowserRouter([
     path: PATHS.RESULTS,
     element: (
       <ProtectedRoute>
-        <ResultsPage />
+        <ProjectGuard>
+          <ResultsPage />
+        </ProjectGuard>
       </ProtectedRoute>
     ),
   },
@@ -33,7 +47,9 @@ export const router = createBrowserRouter([
     path: PATHS.ISSUES,
     element: (
       <ProtectedRoute>
-        <IssuesPage />
+        <ProjectGuard>
+          <IssuesPage />
+        </ProjectGuard>
       </ProtectedRoute>
     ),
   },
@@ -41,7 +57,9 @@ export const router = createBrowserRouter([
     path: PATHS.MCP,
     element: (
       <ProtectedRoute>
-        <MCPPage />
+        <ProjectGuard>
+          <MCPPage />
+        </ProjectGuard>
       </ProtectedRoute>
     ),
   },
@@ -49,7 +67,9 @@ export const router = createBrowserRouter([
     path: PATHS.PROMPTS,
     element: (
       <ProtectedRoute>
-        <PromptsPage />
+        <ProjectGuard>
+          <PromptsPage />
+        </ProjectGuard>
       </ProtectedRoute>
     ),
   },
@@ -57,7 +77,9 @@ export const router = createBrowserRouter([
     path: PATHS.PROMPT_BUILDER,
     element: (
       <ProtectedRoute>
-        <PromptBuilderPage />
+        <ProjectGuard>
+          <PromptBuilderPage />
+        </ProjectGuard>
       </ProtectedRoute>
     ),
   },

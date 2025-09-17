@@ -1,9 +1,9 @@
-import { Box, Flex, Button, HStack } from '@chakra-ui/react';
+import { Box, Flex, HStack } from '@chakra-ui/react';
 import { useLocation } from 'react-router';
 
 import { Link } from '@/components/ui';
 import { UserMenu } from '@/components/UserMenu';
-import { useAuth } from '@/hooks';
+import { ProjectSelect } from '@/components/ProjectSelect';
 import { PATHS } from '@/types/paths';
 
 const NAVIGATION_LINKS = [
@@ -13,7 +13,6 @@ const NAVIGATION_LINKS = [
 ];
 
 export const AppHeader = () => {
-  const { isAuthenticated } = useAuth();
   const location = useLocation();
 
   return (
@@ -43,22 +42,9 @@ export const AppHeader = () => {
         </HStack>
 
         <Flex align="center" gap={4}>
-          {isAuthenticated ? (
-            <UserMenu />
-          ) : (
-            <Flex gap={2}>
-              <Link href={PATHS.LOGIN}>
-                <Button size="sm" variant="outline">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href={PATHS.SIGNUP}>
-                <Button size="sm" colorScheme="blue">
-                  Sign Up
-                </Button>
-              </Link>
-            </Flex>
-          )}
+          <ProjectSelect />
+
+          <UserMenu />
         </Flex>
       </Flex>
     </Box>

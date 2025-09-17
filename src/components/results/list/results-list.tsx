@@ -6,26 +6,29 @@ import { Checkbox } from '@/components/ui';
 import { ResultsFilters, ResultSpecSection, ResultsStats } from '@/components/results';
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
-import { useResultsActions, useResultsDateConfigs, useResultsFilters } from '@/redux/slices/results';
+import { useResultsActions, useSelectedDates, useResultsFilters } from '@/redux/slices/results';
+import { getDatesBetween, getDateDisplayName } from '@/utils/dateUtils';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { BulkActions } from '@/components/BulkActions';
+import { useSelectedProjectId } from '@/redux/slices/projects';
 
 import { DateList } from './date-list';
 
 const ResultsContent = () => {
   const filters = useResultsFilters();
-  const dateConfigs = useResultsDateConfigs();
+  const selectedDates = useSelectedDates();
+  const selectedProjectId = useSelectedProjectId();
 
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
   const [debouncedFilters] = useDebounce(filters, 500);
-  const { data, isFetching } = useGetResultsQuery(debouncedFilters);
+  const { data, isFetching } = useGetResultsQuery({ ...debouncedFilters, projectId: selectedProjectId! });
 
-  const { toggleDateConfig } = useResultsActions();
+  const { toggleDate } = useResultsActions();
 
-  const { results, activeDaysResultsIds } = useMemo(() => {
+  const { results, activeDaysResultsIds, availableDates } = useMemo(() => {
     const filteredResults = data?.results || [];
-    const activeDates = new Set(dateConfigs.filter((day) => day.isActive).map(({ date }) => date));
+    const activeDates = new Set(selectedDates);
 
     const resultsMap = new Map<
       string,
@@ -78,11 +81,19 @@ const ResultsContent = () => {
       }
     });
 
+    const dates = getDatesBetween(filters.from, filters.to);
+    const dateItems = dates.map((date) => ({
+      date,
+      name: getDateDisplayName(date),
+      isActive: selectedDates.includes(date),
+    }));
+
     return {
       results: resultsMap,
       activeDaysResultsIds: activeIds,
+      availableDates: dateItems,
     };
-  }, [data?.results, dateConfigs]);
+  }, [data?.results, selectedDates, filters.from, filters.to]);
 
   const handleSelectAll = () => {
     selectAll(activeDaysResultsIds);
@@ -100,7 +111,7 @@ const ResultsContent = () => {
 
       <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="hidden">
         <VStack align="stretch" p={2} bg="gray.100" borderRadius="md" flexShrink={0}>
-          <DateList dateConfigs={dateConfigs} toggleDateConfig={toggleDateConfig} />
+          <DateList dateConfigs={availableDates} toggleDateConfig={toggleDate} />
           <ResultsStats />
         </VStack>
 
