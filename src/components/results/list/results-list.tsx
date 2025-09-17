@@ -10,17 +10,19 @@ import { useResultsActions, useSelectedDates, useResultsFilters } from '@/redux/
 import { getDatesBetween, getDateDisplayName } from '@/utils/dateUtils';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { BulkActions } from '@/components/BulkActions';
+import { useSelectedProjectId } from '@/redux/slices/projects';
 
 import { DateList } from './date-list';
 
 const ResultsContent = () => {
   const filters = useResultsFilters();
   const selectedDates = useSelectedDates();
+  const selectedProjectId = useSelectedProjectId();
 
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
   const [debouncedFilters] = useDebounce(filters, 500);
-  const { data, isFetching } = useGetResultsQuery(debouncedFilters);
+  const { data, isFetching } = useGetResultsQuery({ ...debouncedFilters, projectId: selectedProjectId! });
 
   const { toggleDate } = useResultsActions();
 

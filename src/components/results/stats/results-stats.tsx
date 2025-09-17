@@ -18,15 +18,10 @@ export const ResultsStats = memo(() => {
   const { updateFilters } = useResultsActions();
 
   const [debouncedDates] = useDebounce(selectedDates, 200);
-  const { data: statistics, isFetching } = useGetApiV1ResultsStatsQuery(
-    {
-      dates: debouncedDates,
-      projectId: selectedProjectId!,
-    },
-    {
-      skip: !selectedProjectId,
-    },
-  );
+  const { data: statistics, isFetching } = useGetApiV1ResultsStatsQuery({
+    dates: debouncedDates,
+    projectId: selectedProjectId!,
+  });
 
   const handleFilterChange = (name: string, value: string) => {
     updateFilters({ [name]: value });

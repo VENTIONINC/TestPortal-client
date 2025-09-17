@@ -34,7 +34,6 @@ export const initialFilters: ResultsFilters = {
   from: formatDate(weekAgo),
   to: formatDate(today),
   page: 1,
-  projectId: '',
 };
 
 const initialState: ResultsState = {

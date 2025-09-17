@@ -44,7 +44,7 @@ export const useResultsUploader = ({ fileUpload }: UseResultsUploaderProps) => {
             const formData = new FormData();
 
             formData.append('report', file);
-            formData.append('projectId', selectedProjectId!);
+            formData.append('projectId', selectedProjectId);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await uploadJsonResults({ body: formData as any });
