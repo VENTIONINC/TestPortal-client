@@ -102,6 +102,5 @@ export const useResultsActions = () => {
 
 export const useResultsFilters = () => useAppSelector((state) => state.results.filters);
 export const useSelectedDates = () => useAppSelector((state) => state.results.selectedDates);
-export const useSelectedProjectId = () => useAppSelector((state) => state.results.filters.projectId);
 
 export default resultsSlice.reducer;

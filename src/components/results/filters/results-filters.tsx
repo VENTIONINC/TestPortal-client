@@ -5,7 +5,6 @@ import { Input, NativeSelect } from '@/components/ui';
 import { FiltersContainer, FiltersGroup } from '@/components/filters';
 import { initialFilters, useResultsActions, useResultsFilters } from '@/redux/slices/results';
 import { ResultsFilters as ResultsFiltersType } from '@/types';
-import { useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
 
 import { getStatusOptions } from './helpers';
 import { REVIEW_STATUS_OPTIONS } from './constants';
@@ -20,7 +19,6 @@ const isClearable = (filters: Partial<ResultsFiltersType>) => {
 export const ResultsFilters = (props: StackProps) => {
   const globalFilters = useResultsFilters();
   const [localFilters, setLocalFilters] = useState(globalFilters);
-  const { data: projects } = useGetApiV2ProjectsQuery({});
 
   const { updateFilters, clearFilterGroup } = useResultsActions();
 
@@ -28,13 +26,6 @@ export const ResultsFilters = (props: StackProps) => {
     setLocalFilters(globalFilters);
   }, [globalFilters]);
 
-  useEffect(() => {
-    if (projects && projects.length > 0 && !localFilters.projectId) {
-      const firstProject = projects[0];
-      setLocalFilters((prev) => ({ ...prev, projectId: firstProject.id.toString() }));
-      updateFilters({ projectId: firstProject.id.toString() });
-    }
-  }, [projects, localFilters.projectId, updateFilters]);
 
   const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
     setLocalFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -44,11 +35,6 @@ export const ResultsFilters = (props: StackProps) => {
     updateFilters(localFilters);
   };
 
-  const projectItems =
-    projects?.map((project) => ({
-      value: project.id.toString(),
-      label: project.name,
-    })) || [];
 
   return (
     <FiltersContainer {...props}>
@@ -60,18 +46,9 @@ export const ResultsFilters = (props: StackProps) => {
           errorMessage: localFilters.errorMessage,
           from: localFilters.from,
           to: localFilters.to,
-          projectId: localFilters.projectId,
         })}
-        onClear={() => clearFilterGroup(['status', 'reviewStatus', 'errorMessage', 'from', 'to', 'projectId'])}
+        onClear={() => clearFilterGroup(['status', 'reviewStatus', 'errorMessage', 'from', 'to'])}
       >
-        <NativeSelect
-          label="Project:"
-          name="projectId"
-          value={localFilters.projectId}
-          onChange={handleFilterChange}
-          items={projectItems}
-          placeholder="Select project"
-        />
         <NativeSelect
           label="Status:"
           name="status"
