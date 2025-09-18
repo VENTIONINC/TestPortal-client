@@ -70,7 +70,7 @@ export const ResultsExecutionCard = memo(
             </Text>
             <IntegrationLinks
               monitoringUrl={monitoringPortalUrl}
-              reportPortalUrl={reportPortalUrl}
+              reportPortalUrl={result.reportPortalLink || reportPortalUrl}
               monitoringPortalEnabled={monitoringPortalEnabled}
               reportPortalEnabled={reportPortalEnabled}
               duration={result.duration}
