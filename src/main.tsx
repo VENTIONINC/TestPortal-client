@@ -7,6 +7,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from '@/redux/store';
 import { AppGuard, LoadingFallback } from '@/components';
 import { ChakraProvider, ColorModeProvider, DialogPortal, DrawerPortal, Toaster } from '@/components/ui';
+import { ContextMenu } from '@/components/context-menu';
 import { router } from '@/router';
 
 import './index.css';
@@ -21,6 +22,7 @@ createRoot(document.getElementById('root')!).render(
               <RouterProvider router={router} />
               <DialogPortal />
               <DrawerPortal />
+              <ContextMenu />
               <Toaster />
             </AppGuard>
           </ColorModeProvider>

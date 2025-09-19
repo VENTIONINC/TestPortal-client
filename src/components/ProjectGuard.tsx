@@ -20,7 +20,7 @@ export function ProjectGuard({ children }: ProjectGuardProps) {
       return;
     }
 
-    const firstProject = projects[0];
+    const firstProject = projects.find((p) => p.isActive) || projects[0];
     setSelectedProjectId(firstProject.id.toString());
   }, [projects, selectedProjectId, setSelectedProjectId, isLoading]);
 

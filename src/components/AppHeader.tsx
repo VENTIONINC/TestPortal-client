@@ -1,4 +1,4 @@
-import { Box, Flex, HStack } from '@chakra-ui/react';
+import { Box, Flex, HStack, Image } from '@chakra-ui/react';
 import { useLocation } from 'react-router';
 
 import { Link } from '@/components/ui';
@@ -20,7 +20,7 @@ export const AppHeader = () => {
       <Flex justify="space-between" align="center" px={6} py={4}>
         <HStack gap={8}>
           <Link href={PATHS.ROOT} textStyle="lg" fontWeight="bold" color="blue.600">
-            Test Portal
+            <Image src="image.png" alt="TestPortal Logo" height="10" />
           </Link>
 
           <HStack gap={4}>

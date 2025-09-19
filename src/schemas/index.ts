@@ -18,5 +18,11 @@ export const createProjectSchema = z.object({
   description: z.string().optional(),
 });
 
+export const updateProjectSchema = z.object({
+  name: z.string().min(1, 'Project name is required'),
+  description: z.string().optional(),
+});
+
 export type FormatMessageFormData = z.infer<typeof formatMessageSchema>;
 export type CreateProjectFormData = z.infer<typeof createProjectSchema>;
+export type UpdateProjectFormData = z.infer<typeof updateProjectSchema>;
