@@ -1,8 +1,10 @@
 import { ReactNode, useLayoutEffect } from 'react';
+import { Navigate } from 'react-router';
 
 import { useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
 import { useProjectsActions, useSelectedProjectId } from '@/redux/slices/projects';
 import { LoadingPlaceholder } from '@/components/ui/LoadingPlaceholder';
+import { PATHS } from '@/types/paths';
 
 interface ProjectGuardProps {
   children: ReactNode;
@@ -27,7 +29,7 @@ export function ProjectGuard({ children }: ProjectGuardProps) {
   }
 
   if (projects && projects.length === 0) {
-    return null;
+    return <Navigate to={PATHS.USER_SETTINGS_PROJECTS} />;
   }
 
   return <>{children}</>;
