@@ -97,7 +97,6 @@ export function PortalSettings() {
               <Switch.Root
                 size="sm"
                 checked={watch('monitoringPortalEnabled')}
-                // {...register('monitoringPortalEnabled')}
                 onChange={handleCheckChange('monitoringPortalEnabled')}
               >
                 <Switch.HiddenInput />

@@ -1,41 +1,41 @@
 import { Box, Container, Tabs } from '@chakra-ui/react';
+import { Outlet, useLocation } from 'react-router';
 
 import { SettingsHeader } from '@/components/SettingsHeader';
-
-import { MCPSettings } from './MCPSettings';
-import { PortalSettings } from './PortalSettings';
-import { ProjectsSettings } from './ProjectsSettings';
+import { Link } from '@/components/ui/link';
+import { PATHS } from '@/types/paths';
 
 export function UserSettingsPage() {
+  const location = useLocation();
+
+  const getActiveTab = () => {
+    if (location.pathname === PATHS.USER_SETTINGS_MCP) return 'mcp';
+    if (location.pathname === PATHS.USER_SETTINGS_PORTALS) return 'portals';
+    if (location.pathname === PATHS.USER_SETTINGS_PROJECTS) return 'projects';
+    return 'mcp';
+  };
+
   return (
     <Box minH="100vh" bg="gray.50">
       <SettingsHeader />
 
       <Container maxW="4xl" py={8}>
-        <Tabs.Root defaultValue="mcp">
+        <Tabs.Root value={getActiveTab()}>
           <Tabs.List>
-            <Tabs.Trigger value="mcp">MCP</Tabs.Trigger>
-            <Tabs.Trigger value="portals">Portal URLs</Tabs.Trigger>
-            <Tabs.Trigger value="projects">Projects</Tabs.Trigger>
+            <Link href={PATHS.USER_SETTINGS_MCP}>
+              <Tabs.Trigger value="mcp">MCP</Tabs.Trigger>
+            </Link>
+            <Link href={PATHS.USER_SETTINGS_PORTALS}>
+              <Tabs.Trigger value="portals">Portal URLs</Tabs.Trigger>
+            </Link>
+            <Link href={PATHS.USER_SETTINGS_PROJECTS}>
+              <Tabs.Trigger value="projects">Projects</Tabs.Trigger>
+            </Link>
           </Tabs.List>
 
-          <Tabs.Content value="mcp">
-            <Box pt={6}>
-              <MCPSettings />
-            </Box>
-          </Tabs.Content>
-
-          <Tabs.Content value="portals">
-            <Box pt={6}>
-              <PortalSettings />
-            </Box>
-          </Tabs.Content>
-
-          <Tabs.Content value="projects">
-            <Box pt={6}>
-              <ProjectsSettings />
-            </Box>
-          </Tabs.Content>
+          <Box pt={6}>
+            <Outlet />
+          </Box>
         </Tabs.Root>
       </Container>
     </Box>
