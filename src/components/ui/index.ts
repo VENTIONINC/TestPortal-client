@@ -1,6 +1,7 @@
 export { Checkbox, type CheckboxProps } from './checkbox';
 export { ClipboardCopyText } from './clipboard';
 export { ColorModeProvider, useColorMode, useColorModeValue } from './color-mode';
+export { ContextMenuButton, type ContextMenuButtonProps } from './context-menu-button';
 export { Dialog, DialogBody, DialogFooter, DialogPortal, type DialogProps } from './dialog';
 export { Drawer, DrawerBody, DrawerFooter, DrawerPortal, type DrawerProps } from './drawer';
 export { Field, type FieldProps } from './field';

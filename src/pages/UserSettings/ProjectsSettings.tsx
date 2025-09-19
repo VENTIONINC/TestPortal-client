@@ -3,10 +3,12 @@ import { Box, SimpleGrid, Text, Heading, Spinner, Button, Flex } from '@chakra-u
 import { useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
 import { ProjectCard } from '@/components/ProjectCard';
 import { useCreateProjectDialog } from '@/components/dialogs';
+import { useProjectContextMenu } from '@/components/context-menu/hooks';
 
 export function ProjectsSettings() {
   const { data: projects, isLoading, error } = useGetApiV2ProjectsQuery({});
   const openCreateProjectDialog = useCreateProjectDialog();
+  const handleProjectContextMenu = useProjectContextMenu();
 
   if (isLoading) {
     return (
@@ -35,16 +37,16 @@ export function ProjectsSettings() {
   return (
     <Box>
       <Flex justifyContent="space-between" alignItems="center" mb={4}>
-        <Heading size="md">
-          Projects ({projects.length})
-        </Heading>
-        <Button onClick={openCreateProjectDialog}>
-          Create Project
-        </Button>
+        <Heading size="md">Projects ({projects.length})</Heading>
+        <Button onClick={openCreateProjectDialog}>Create Project</Button>
       </Flex>
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
         {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
+          <ProjectCard
+            key={project.id}
+            project={project}
+            onContextMenu={(evt, projectData) => handleProjectContextMenu(evt, projectData)}
+          />
         ))}
       </SimpleGrid>
     </Box>

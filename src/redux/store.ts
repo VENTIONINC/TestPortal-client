@@ -1,10 +1,11 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
+import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 
 import { baseApi } from './apis/baseApi';
 import { mcpApi } from './apis/mcp-api/mcpApi';
 import authReducer from './slices/auth';
+import contextMenuReducer from './slices/contextMenu';
 import dialogReducer from './slices/dialog';
 import drawerReducer from './slices/drawer';
 import issuesReducer from './slices/issues';
@@ -20,8 +21,9 @@ const authPersistConfig = {
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
   [mcpApi.reducerPath]: mcpApi.reducer,
-  dialog: dialogReducer,
   auth: persistReducer(authPersistConfig, authReducer),
+  contextMenu: contextMenuReducer,
+  dialog: dialogReducer,
   drawer: drawerReducer,
   issues: issuesReducer,
   projects: projectsReducer,
@@ -33,9 +35,7 @@ export const store = configureStore({
   devTools: import.meta.env.DEV,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-      },
+      serializableCheck: false,
     }).concat(baseApi.middleware, mcpApi.middleware),
 });
 

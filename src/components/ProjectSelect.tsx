@@ -13,10 +13,12 @@ export const ProjectSelect = () => {
     setSelectedProjectId(projectId);
   };
 
-  const projectItems = projects!.map((project) => ({
-    value: project.id.toString(),
-    label: project.name,
-  }));
+  const projectItems = projects!
+    .filter((project) => project.isActive)
+    .map((project) => ({
+      value: project.id.toString(),
+      label: project.name,
+    }));
 
   return <NativeSelect value={selectedProjectId} onChange={handleProjectChange} items={projectItems} />;
 };
