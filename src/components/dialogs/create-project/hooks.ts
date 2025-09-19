@@ -1,15 +1,12 @@
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { toaster } from '@/components/ui';
 import { usePostApiV2ProjectsMutation } from '@/redux/apis/generatedApi';
-import { createProjectSchema } from '@/schemas';
+import { createProjectSchema, CreateProjectFormData } from '@/schemas';
 import { useDialogActions } from '@/redux/slices/dialog';
 
 import { CreateProjectDialog } from './create-project-dialog';
-
-type CreateProjectFormData = z.infer<typeof createProjectSchema>;
 
 export const useCreateProject = (closeDialog: () => void) => {
   const {

@@ -1,15 +1,12 @@
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { toaster } from '@/components/ui';
 import { usePutApiV2ProjectsByIdMutation, useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
-import { updateProjectSchema } from '@/schemas';
+import { updateProjectSchema, UpdateProjectFormData } from '@/schemas';
 import { useDialogActions } from '@/redux/slices/dialog';
 
 import { UpdateProjectDialog } from './update-project-dialog';
-
-type UpdateProjectFormData = z.infer<typeof updateProjectSchema>;
 
 export interface UpdateProjectDialogParams {
   projectId: string;

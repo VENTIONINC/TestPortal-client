@@ -84,13 +84,13 @@ export const ContextMenu = () => {
     }
   }, [show, position.x, position.y]);
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: globalThis.MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         closeContextMenu();
       }
     };
 
-    const handleEscape = (event: KeyboardEvent) => {
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') {
         closeContextMenu();
       }
