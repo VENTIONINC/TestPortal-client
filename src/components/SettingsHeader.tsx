@@ -9,7 +9,7 @@ export const SettingsHeader = () => {
     <Box bg="white" shadow="sm" borderBottom="1px" borderColor="gray.200">
       <Flex justify="space-between" align="center" px={6} py={4}>
         <Link href={PATHS.ROOT} textStyle="lg" fontWeight="bold" color="blue.600">
-          <Image src="image.png" alt="TestPortal Logo" height="10" />
+          <Image src="/image.png" alt="TestPortal Logo" height="10" />
         </Link>
         <Container maxW="6xl">
           <Box>

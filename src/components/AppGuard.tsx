@@ -21,7 +21,7 @@ function getUserIdFromToken(token: string): number | null {
 export function AppGuard({ children }: AppGuardProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const { accessToken, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  
+
   const userId = accessToken ? getUserIdFromToken(accessToken) : null;
 
   const { isLoading: isUserLoading, isError } = useGetApiV2UsersByUserIdQuery(
