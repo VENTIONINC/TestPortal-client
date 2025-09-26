@@ -15,6 +15,7 @@ export const addTagTypes = [
   "Error Formatter",
   "Prompts",
   "Projects",
+  "CTRF",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -489,6 +490,31 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Projects"],
       }),
+      postApiV2CtrfReport: build.mutation<
+        PostApiV2CtrfReportApiResponse,
+        PostApiV2CtrfReportApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/ctrf/report`,
+          method: "POST",
+          body: queryArg.ctrfReportRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["CTRF"],
+      }),
+      patchApiV2CtrfReportByExecutionId: build.mutation<
+        PatchApiV2CtrfReportByExecutionIdApiResponse,
+        PatchApiV2CtrfReportByExecutionIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/ctrf/report/${queryArg.executionId}`,
+          method: "PATCH",
+          body: queryArg.ctrfReportUpdateRequest,
+        }),
+        invalidatesTags: ["CTRF"],
+      }),
       postApiV1Mcp: build.mutation<PostApiV1McpApiResponse, PostApiV1McpApiArg>(
         {
           query: (queryArg) => ({
@@ -822,13 +848,23 @@ export type PutApiV2ProjectsByIdApiArg = {
   id: number;
   updateProjectRequest: UpdateProjectRequest;
 };
-export type DeleteApiV2ProjectsByIdApiResponse =
-  /** status 200 Project and all associated data deleted successfully */ {
-    message: string;
-    project: Project;
-  };
+export type DeleteApiV2ProjectsByIdApiResponse = unknown;
 export type DeleteApiV2ProjectsByIdApiArg = {
   id: number;
+};
+export type PostApiV2CtrfReportApiResponse =
+  /** status 200 CTRF report processed successfully */ CtrfReportResponse;
+export type PostApiV2CtrfReportApiArg = {
+  /** Project ID to associate the report with */
+  projectId: string;
+  ctrfReportRequest: CtrfReportRequest;
+};
+export type PatchApiV2CtrfReportByExecutionIdApiResponse =
+  /** status 200 CTRF report updated successfully */ CtrfReportResponse;
+export type PatchApiV2CtrfReportByExecutionIdApiArg = {
+  /** Execution ID to update */
+  executionId: number;
+  ctrfReportUpdateRequest: CtrfReportUpdateRequest;
 };
 export type PostApiV1McpApiResponse = /** status 200 MCP response */ any;
 export type PostApiV1McpApiArg = {
@@ -1155,6 +1191,115 @@ export type UpdateProjectRequest = {
   description?: string;
   isActive?: boolean;
 };
+export type CtrfReportResponse = {
+  success: boolean;
+  message: string;
+  /** Execution ID for the processed report */
+  executionId: number;
+  data: {
+    /** Number of test specs processed */
+    specsProcessed: number;
+    /** Database execution ID */
+    executionId: number;
+  };
+};
+export type CtrfTool = {
+  /** Test tool name (e.g., 'playwright', 'jest') */
+  name: string;
+  /** Tool version */
+  version?: string;
+};
+export type CtrfSummary = {
+  /** Total number of tests */
+  tests: number;
+  /** Number of passed tests */
+  passed: number;
+  /** Number of failed tests */
+  failed: number;
+  /** Number of pending tests */
+  pending: number;
+  /** Number of skipped tests */
+  skipped: number;
+  /** Number of tests with other status */
+  other: number;
+  /** Start timestamp (Unix epoch) */
+  start: number;
+  /** End timestamp (Unix epoch) */
+  stop: number;
+};
+export type CtrfTestStatus =
+  | "passed"
+  | "failed"
+  | "skipped"
+  | "pending"
+  | "other";
+export type CtrfTest = {
+  /** Test name/title */
+  name: string;
+  status: CtrfTestStatus;
+  /** Test duration in milliseconds */
+  duration: number;
+  /** Error/failure message */
+  message?: string;
+  /** Stack trace or detailed error info */
+  trace?: string;
+  /** Original status from test framework */
+  rawStatus?: string;
+  /** Test type (e.g., 'unit', 'integration') */
+  type?: string;
+  /** Path to test file */
+  filePath?: string;
+  /** Retry attempt number */
+  retry?: number;
+  /** Whether test is flaky */
+  flaky?: boolean;
+  /** Test suite name */
+  suite?: string;
+  /** Array of test tags */
+  tags?: string[];
+  /** Custom test metadata */
+  meta?: {
+    [key: string]: any;
+  };
+};
+export type CtrfEnvironment = {
+  /** Application name */
+  appName?: string;
+  /** Build name */
+  buildName?: string;
+  /** Build number */
+  buildNumber?: string;
+  /** Build URL */
+  buildUrl?: string;
+  /** Repository name */
+  repositoryName?: string;
+  /** Repository URL */
+  repositoryUrl?: string;
+  /** Git branch name */
+  branchName?: string;
+  /** Test environment (e.g., 'staging', 'prod') */
+  testEnvironment?: string;
+  /** Custom environment metadata */
+  extra?: {
+    [key: string]: any;
+  };
+};
+export type CtrfResults = {
+  tool: CtrfTool;
+  summary: CtrfSummary;
+  tests: CtrfTest[];
+  environment?: CtrfEnvironment;
+  /** Custom metadata */
+  extra?: {
+    [key: string]: any;
+  };
+};
+export type CtrfReportRequest = {
+  results: CtrfResults;
+};
+export type CtrfReportUpdateRequest = {
+  results: CtrfResults;
+};
 export const {
   useGetApiV1Query,
   useGetApiV1IssuesQuery,
@@ -1200,6 +1345,8 @@ export const {
   useGetApiV2ProjectsByIdQuery,
   usePutApiV2ProjectsByIdMutation,
   useDeleteApiV2ProjectsByIdMutation,
+  usePostApiV2CtrfReportMutation,
+  usePatchApiV2CtrfReportByExecutionIdMutation,
   usePostApiV1McpMutation,
   useGetApiV1McpQuery,
   useDeleteApiV1McpMutation,

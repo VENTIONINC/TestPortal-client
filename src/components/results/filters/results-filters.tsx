@@ -8,7 +8,6 @@ import { ResultsFilters as ResultsFiltersType } from '@/types';
 
 import { getStatusOptions } from './helpers';
 import { REVIEW_STATUS_OPTIONS } from './constants';
-import { ResultsFileUpload } from '../file-upload';
 
 const isClearable = (filters: Partial<ResultsFiltersType>) => {
   return Object.keys(filters).some(
@@ -105,7 +104,6 @@ export const ResultsFilters = (props: StackProps) => {
         <Button onClick={handleApplyFilters}>Apply</Button>
       </FiltersGroup>
 
-      <ResultsFileUpload />
     </FiltersContainer>
   );
 };

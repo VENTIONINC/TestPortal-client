@@ -1,9 +1,11 @@
-import { Box, Flex, HStack, Image } from '@chakra-ui/react';
+import { Box, Button, Flex, HStack, Image } from '@chakra-ui/react';
 import { useLocation } from 'react-router';
+import { LuUpload } from 'react-icons/lu';
 
 import { Link } from '@/components/ui';
 import { UserMenu } from '@/components/UserMenu';
 import { ProjectSelect } from '@/components/ProjectSelect';
+import { useResultsFileUploadDialog } from '@/components/dialogs';
 import { PATHS } from '@/types/paths';
 
 const NAVIGATION_LINKS = [
@@ -14,6 +16,7 @@ const NAVIGATION_LINKS = [
 
 export const AppHeader = () => {
   const location = useLocation();
+  const openUploadDialog = useResultsFileUploadDialog();
 
   return (
     <Box bg="white" shadow="sm" borderBottom="1px" borderColor="gray.200">
@@ -43,7 +46,15 @@ export const AppHeader = () => {
 
         <Flex align="center" gap={4}>
           <ProjectSelect />
-
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openUploadDialog}
+            colorScheme="blue"
+          >
+            <LuUpload size={16} />
+            Upload
+          </Button>
           <UserMenu />
         </Flex>
       </Flex>
