@@ -18,7 +18,7 @@ import { useResultsFileUpload } from './hooks';
 
 export const ResultsFileUploadDialog = ({ closeDialog }: DefaultDialogProps) => {
   const [uploadMethod, setUploadMethod] = useState('playwright');
-  const { fileUpload, isUploading, uploadProgress, handleUpload } = useResultsFileUpload(closeDialog);
+  const { fileUpload, isUploading, uploadProgress, handleUpload } = useResultsFileUpload(closeDialog, uploadMethod as 'playwright' | 'ctrf');
 
   return (
     <Dialog title="Upload Results" onClose={closeDialog} size="lg">
@@ -33,7 +33,7 @@ export const ResultsFileUploadDialog = ({ closeDialog }: DefaultDialogProps) => 
             <FileUploadDropzone label="Drag and drop JSON files or click to select" w="100%" minH="120px" p={6} />
           </FileUploadRoot>
 
-          {uploadMethod === 'playwright' && fileUpload.acceptedFiles.length > 0 && (
+          {fileUpload.acceptedFiles.length > 0 && (
             <VStack align="stretch" gap={3}>
               <HStack justify="space-between">
                 <Text fontSize="sm">
