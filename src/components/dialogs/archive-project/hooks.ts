@@ -16,7 +16,7 @@ export const useArchiveProjectBusinessLogic = (closeDialog: () => void, projectI
   const onConfirm = async () => {
     try {
       await updateProject({
-        id: Number(projectId),
+        id: projectId,
         updateProjectRequest: {
           isActive: false,
         },

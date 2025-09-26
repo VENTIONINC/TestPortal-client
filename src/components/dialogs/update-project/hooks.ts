@@ -14,7 +14,7 @@ export interface UpdateProjectDialogParams {
 
 export const useUpdateProject = (closeDialog: () => void, params: UpdateProjectDialogParams) => {
   const { data: projects } = useGetApiV2ProjectsQuery({});
-  const project = projects!.find((p) => p.id === Number(params.projectId));
+  const project = projects!.find((p) => p.id === params.projectId);
 
   if (!project) {
     throw new Error('Project not found');
@@ -38,7 +38,7 @@ export const useUpdateProject = (closeDialog: () => void, params: UpdateProjectD
   const onSubmit = async (data: UpdateProjectFormData) => {
     try {
       await updateProject({
-        id: Number(params.projectId),
+        id: params.projectId,
         updateProjectRequest: data,
       }).unwrap();
 

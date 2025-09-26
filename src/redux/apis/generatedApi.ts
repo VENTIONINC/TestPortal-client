@@ -8,9 +8,9 @@ export const addTagTypes = [
   "Result Errors",
   "Executions",
   "Reports",
-  "Authentication",
   "Users",
   "MCP",
+  "Authentication",
   "Test Analysis",
   "Error Formatter",
   "Prompts",
@@ -25,6 +25,13 @@ const injectedRtkApi = api
     endpoints: (build) => ({
       getApiV1: build.query<GetApiV1ApiResponse, GetApiV1ApiArg>({
         query: () => ({ url: `/api/v1/` }),
+        providesTags: ["System"],
+      }),
+      getApiV1Status: build.query<
+        GetApiV1StatusApiResponse,
+        GetApiV1StatusApiArg
+      >({
+        query: () => ({ url: `/api/v1/status` }),
         providesTags: ["System"],
       }),
       getApiV1Issues: build.query<
@@ -301,46 +308,6 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Reports", "Results"],
       }),
-      getApiV1Status: build.query<
-        GetApiV1StatusApiResponse,
-        GetApiV1StatusApiArg
-      >({
-        query: () => ({ url: `/api/v1/status` }),
-        providesTags: ["System"],
-      }),
-      postApiV2UsersSignup: build.mutation<
-        PostApiV2UsersSignupApiResponse,
-        PostApiV2UsersSignupApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v2/users/signup`,
-          method: "POST",
-          body: queryArg.userSignupRequest,
-        }),
-        invalidatesTags: ["Authentication"],
-      }),
-      postApiV2UsersLogin: build.mutation<
-        PostApiV2UsersLoginApiResponse,
-        PostApiV2UsersLoginApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v2/users/login`,
-          method: "POST",
-          body: queryArg.userLoginRequest,
-        }),
-        invalidatesTags: ["Authentication"],
-      }),
-      postApiV2UsersRefreshToken: build.mutation<
-        PostApiV2UsersRefreshTokenApiResponse,
-        PostApiV2UsersRefreshTokenApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v2/users/refresh-token`,
-          method: "POST",
-          body: queryArg.refreshTokenRequest,
-        }),
-        invalidatesTags: ["Authentication"],
-      }),
       getApiV2UsersByUserId: build.query<
         GetApiV2UsersByUserIdApiResponse,
         GetApiV2UsersByUserIdApiArg
@@ -389,6 +356,39 @@ const injectedRtkApi = api
           method: "DELETE",
         }),
         invalidatesTags: ["MCP"],
+      }),
+      postApiV2UsersSignup: build.mutation<
+        PostApiV2UsersSignupApiResponse,
+        PostApiV2UsersSignupApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/users/signup`,
+          method: "POST",
+          body: queryArg.userSignupRequest,
+        }),
+        invalidatesTags: ["Authentication"],
+      }),
+      postApiV2UsersLogin: build.mutation<
+        PostApiV2UsersLoginApiResponse,
+        PostApiV2UsersLoginApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/users/login`,
+          method: "POST",
+          body: queryArg.userLoginRequest,
+        }),
+        invalidatesTags: ["Authentication"],
+      }),
+      postApiV2UsersRefreshToken: build.mutation<
+        PostApiV2UsersRefreshTokenApiResponse,
+        PostApiV2UsersRefreshTokenApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/users/refresh-token`,
+          method: "POST",
+          body: queryArg.refreshTokenRequest,
+        }),
+        invalidatesTags: ["Authentication"],
       }),
       postApiV1TestAnalysisAnalyze: build.mutation<
         PostApiV1TestAnalysisAnalyzeApiResponse,
@@ -556,6 +556,9 @@ const injectedRtkApi = api
 export { injectedRtkApi as generatedApi };
 export type GetApiV1ApiResponse = unknown;
 export type GetApiV1ApiArg = void;
+export type GetApiV1StatusApiResponse =
+  /** status 200 Server status */ StatusResponse;
+export type GetApiV1StatusApiArg = void;
 export type GetApiV1IssuesApiResponse =
   /** status 200 List of issues */ Issue[];
 export type GetApiV1IssuesApiArg = {
@@ -748,24 +751,6 @@ export type PostApiV1JsonReportUploadApiArg = {
     report: Blob;
   };
 };
-export type GetApiV1StatusApiResponse =
-  /** status 200 Server status */ StatusResponse;
-export type GetApiV1StatusApiArg = void;
-export type PostApiV2UsersSignupApiResponse =
-  /** status 201 User created successfully */ User;
-export type PostApiV2UsersSignupApiArg = {
-  userSignupRequest: UserSignupRequest;
-};
-export type PostApiV2UsersLoginApiResponse =
-  /** status 200 Login successful - returns user data, access token, and refresh token */ UserLoginResponse;
-export type PostApiV2UsersLoginApiArg = {
-  userLoginRequest: UserLoginRequest;
-};
-export type PostApiV2UsersRefreshTokenApiResponse =
-  /** status 200 Token refresh successful - returns new access and refresh tokens */ UserLoginResponse;
-export type PostApiV2UsersRefreshTokenApiArg = {
-  refreshTokenRequest: RefreshTokenRequest;
-};
 export type GetApiV2UsersByUserIdApiResponse =
   /** status 200 User details */ User;
 export type GetApiV2UsersByUserIdApiArg = {
@@ -792,6 +777,21 @@ export type DeleteApiV2UsersByUserIdMcpTokenApiResponse =
   /** status 200 MCP token revoked successfully */ SuccessResponse;
 export type DeleteApiV2UsersByUserIdMcpTokenApiArg = {
   userId: number;
+};
+export type PostApiV2UsersSignupApiResponse =
+  /** status 201 User created successfully */ User;
+export type PostApiV2UsersSignupApiArg = {
+  userSignupRequest: UserSignupRequest;
+};
+export type PostApiV2UsersLoginApiResponse =
+  /** status 200 Login successful - returns user data, access token, and refresh token */ UserLoginResponse;
+export type PostApiV2UsersLoginApiArg = {
+  userLoginRequest: UserLoginRequest;
+};
+export type PostApiV2UsersRefreshTokenApiResponse =
+  /** status 200 Token refresh successful - returns new access and refresh tokens */ UserLoginResponse;
+export type PostApiV2UsersRefreshTokenApiArg = {
+  refreshTokenRequest: RefreshTokenRequest;
 };
 export type PostApiV1TestAnalysisAnalyzeApiResponse =
   /** status 200 Test analysis completed successfully */ TestAnalysisResponse;
@@ -840,17 +840,17 @@ export type PostApiV2ProjectsApiArg = {
 export type GetApiV2ProjectsByIdApiResponse =
   /** status 200 Project details */ Project;
 export type GetApiV2ProjectsByIdApiArg = {
-  id: number;
+  id: string;
 };
 export type PutApiV2ProjectsByIdApiResponse =
   /** status 200 Project updated successfully */ Project;
 export type PutApiV2ProjectsByIdApiArg = {
-  id: number;
+  id: string;
   updateProjectRequest: UpdateProjectRequest;
 };
 export type DeleteApiV2ProjectsByIdApiResponse = unknown;
 export type DeleteApiV2ProjectsByIdApiArg = {
-  id: number;
+  id: string;
 };
 export type PostApiV2CtrfReportApiResponse =
   /** status 200 CTRF report processed successfully */ CtrfReportResponse;
@@ -880,6 +880,15 @@ export type DeleteApiV1McpApiResponse =
 export type DeleteApiV1McpApiArg = {
   "mcp-session-id": string;
 };
+export type StatusResponse = {
+  status: string;
+  database: string;
+  version: string;
+  timestamp?: string;
+};
+export type ErrorResponse = {
+  error: string;
+};
 export type Issue = {
   id: number;
   name: string;
@@ -892,9 +901,6 @@ export type Issue = {
   updatedById?: number;
   createdAt: string;
   updatedAt: string;
-};
-export type ErrorResponse = {
-  error: string;
 };
 export type CreateIssueRequest = {
   name: string;
@@ -1055,12 +1061,6 @@ export type JsonReportRequest = {
   };
   tests: JsonReportTestSpec[];
 };
-export type StatusResponse = {
-  status: string;
-  database: string;
-  version: string;
-  timestamp?: string;
-};
 export type User = {
   id: number;
   name: string;
@@ -1072,6 +1072,22 @@ export type User = {
   reportPortalEnabled: boolean;
   monitoringPortalUrl?: string | null;
   monitoringPortalEnabled: boolean;
+};
+export type UserUpdateRequest = {
+  name?: string;
+  email?: string;
+  password?: string;
+};
+export type UserIntegrationsUpdateRequest = {
+  reportPortalUrl?: string | null;
+  reportPortalEnabled?: boolean;
+  monitoringPortalUrl?: string | null;
+  monitoringPortalEnabled?: boolean;
+};
+export type McpTokenResponse = {
+  token: string;
+  expiresAt: string;
+  message: string;
 };
 export type UserSignupRequest = {
   name: string;
@@ -1089,22 +1105,6 @@ export type UserLoginRequest = {
 };
 export type RefreshTokenRequest = {
   refreshToken: string;
-};
-export type UserUpdateRequest = {
-  name?: string;
-  email?: string;
-  password?: string;
-};
-export type UserIntegrationsUpdateRequest = {
-  reportPortalUrl?: string | null;
-  reportPortalEnabled?: boolean;
-  monitoringPortalUrl?: string | null;
-  monitoringPortalEnabled?: boolean;
-};
-export type McpTokenResponse = {
-  token: string;
-  expiresAt: string;
-  message: string;
 };
 export type TestResultAnalysis = {
   id: string;
@@ -1169,7 +1169,7 @@ export type GeneratePromptRequest = {
   [key: string]: any;
 };
 export type Project = {
-  id: number;
+  id: string;
   name: string;
   description: string | null;
   isActive: boolean;
@@ -1302,6 +1302,7 @@ export type CtrfReportUpdateRequest = {
 };
 export const {
   useGetApiV1Query,
+  useGetApiV1StatusQuery,
   useGetApiV1IssuesQuery,
   usePostApiV1IssuesMutation,
   useGetApiV1IssuesWithStatsQuery,
@@ -1326,15 +1327,14 @@ export const {
   useGetApiV1ExecutionsByExecutionIdQuery,
   usePostApiV1JsonReportMutation,
   usePostApiV1JsonReportUploadMutation,
-  useGetApiV1StatusQuery,
-  usePostApiV2UsersSignupMutation,
-  usePostApiV2UsersLoginMutation,
-  usePostApiV2UsersRefreshTokenMutation,
   useGetApiV2UsersByUserIdQuery,
   usePatchApiV2UsersByUserIdMutation,
   usePatchApiV2UsersByUserIdIntegrationsMutation,
   usePostApiV2UsersByUserIdMcpTokenMutation,
   useDeleteApiV2UsersByUserIdMcpTokenMutation,
+  usePostApiV2UsersSignupMutation,
+  usePostApiV2UsersLoginMutation,
+  usePostApiV2UsersRefreshTokenMutation,
   usePostApiV1TestAnalysisAnalyzeMutation,
   usePostApiV2ErrorFormatterMutation,
   useGetApiV2PromptsQuery,
