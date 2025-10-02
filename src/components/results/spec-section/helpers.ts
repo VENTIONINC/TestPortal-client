@@ -5,7 +5,7 @@ type SerializedExecution = (
   execution: ResultExecution,
   user: User,
 ) => {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   environment: string;

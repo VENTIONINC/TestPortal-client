@@ -21,7 +21,7 @@ export enum AnalysisCategory {
 }
 
 export interface BaseResult {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   reportPortalLink: string;
@@ -29,8 +29,8 @@ export interface BaseResult {
   status: ResultStatus;
   duration: number;
   startTime: string;
-  specId: number;
-  executionId: number;
+  specId: string;
+  executionId: string;
   errors: ResultError[];
   analysisCategory?: AnalysisCategory;
   analysisConfidence?: number;
@@ -44,7 +44,7 @@ export interface Result extends BaseResult {
 }
 
 export interface ResultSpec {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   key: string;
@@ -55,7 +55,7 @@ export interface ResultSpec {
 }
 
 export interface ResultExecution {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   type: string;
@@ -66,7 +66,7 @@ export interface ResultExecution {
 }
 
 export interface ResultError {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   type: string;
@@ -77,19 +77,19 @@ export interface ResultError {
   expectedPattern: string;
   receivedString: string;
   location: string;
-  resultId: number;
+  resultId: string;
   assumptions: ResultErrorAssumption[];
 }
 
 export interface ResultErrorAssumption {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   isConfirmed: boolean;
   score: number;
   madeBy: string;
-  issueId: number;
-  resultErrorId: number;
+  issueId: string;
+  resultErrorId: string;
   issue: Issue;
 }
 

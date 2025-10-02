@@ -515,6 +515,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["CTRF"],
       }),
+      postApiV2CtrfReportUpload: build.mutation<
+        PostApiV2CtrfReportUploadApiResponse,
+        PostApiV2CtrfReportUploadApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/ctrf/report/upload`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["CTRF"],
+      }),
       postApiV1Mcp: build.mutation<PostApiV1McpApiResponse, PostApiV1McpApiArg>(
         {
           query: (queryArg) => ({
@@ -575,15 +586,16 @@ export type PostApiV1IssuesApiArg = {
 export type GetApiV1IssuesWithStatsApiResponse =
   /** status 200 List of issues with statistics */ {
     issues: {
-      id: number;
+      id: string;
       name: string;
       category?: string;
       description?: string;
       portal?: string;
       service?: string;
       ticket?: string;
-      createdById?: number;
-      updatedById?: number;
+      projectId: string;
+      createdById?: string;
+      updatedById?: string;
       createdAt: string;
       updatedAt: string;
       statistics: {
@@ -617,17 +629,17 @@ export type DeleteApiV1IssuesByIssueIdApiResponse =
     issue: Issue;
   };
 export type DeleteApiV1IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
 };
 export type GetApiV1IssuesByIssueIdApiResponse =
   /** status 200 Issue details */ Issue;
 export type GetApiV1IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
 };
 export type PatchApiV1IssuesByIssueIdApiResponse =
   /** status 200 Issue updated successfully */ Issue;
 export type PatchApiV1IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
   updateIssueRequest: UpdateIssueRequest;
 };
 export type GetApiV2IssuesApiResponse =
@@ -646,12 +658,12 @@ export type PostApiV2IssuesApiArg = {
 export type GetApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue details */ Issue;
 export type GetApiV2IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
 };
 export type PatchApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue updated successfully */ Issue;
 export type PatchApiV2IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
   updateIssueRequest: UpdateIssueRequest;
 };
 export type DeleteApiV2IssuesByIssueIdApiResponse =
@@ -660,7 +672,7 @@ export type DeleteApiV2IssuesByIssueIdApiResponse =
     issue: Issue;
   };
 export type DeleteApiV2IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
 };
 export type GetApiV1ResultsApiResponse =
   /** status 200 List of results */ Result[];
@@ -754,29 +766,29 @@ export type PostApiV1JsonReportUploadApiArg = {
 export type GetApiV2UsersByUserIdApiResponse =
   /** status 200 User details */ User;
 export type GetApiV2UsersByUserIdApiArg = {
-  userId: number;
+  userId: string;
 };
 export type PatchApiV2UsersByUserIdApiResponse =
   /** status 200 User updated successfully */ User;
 export type PatchApiV2UsersByUserIdApiArg = {
-  userId: number;
+  userId: string;
   userUpdateRequest: UserUpdateRequest;
 };
 export type PatchApiV2UsersByUserIdIntegrationsApiResponse =
   /** status 200 User integrations updated successfully */ User;
 export type PatchApiV2UsersByUserIdIntegrationsApiArg = {
-  userId: number;
+  userId: string;
   userIntegrationsUpdateRequest: UserIntegrationsUpdateRequest;
 };
 export type PostApiV2UsersByUserIdMcpTokenApiResponse =
   /** status 201 MCP token generated successfully */ McpTokenResponse;
 export type PostApiV2UsersByUserIdMcpTokenApiArg = {
-  userId: number;
+  userId: string;
 };
 export type DeleteApiV2UsersByUserIdMcpTokenApiResponse =
   /** status 200 MCP token revoked successfully */ SuccessResponse;
 export type DeleteApiV2UsersByUserIdMcpTokenApiArg = {
-  userId: number;
+  userId: string;
 };
 export type PostApiV2UsersSignupApiResponse =
   /** status 201 User created successfully */ User;
@@ -828,7 +840,7 @@ export type PostApiV2PromptsByNameGenerateApiArg = {
 export type GetApiV2ProjectsApiResponse =
   /** status 200 List of projects */ Project[];
 export type GetApiV2ProjectsApiArg = {
-  ownerId?: number;
+  ownerId?: string;
   isActive?: boolean;
   name?: string;
 };
@@ -863,8 +875,18 @@ export type PatchApiV2CtrfReportByExecutionIdApiResponse =
   /** status 200 CTRF report updated successfully */ CtrfReportResponse;
 export type PatchApiV2CtrfReportByExecutionIdApiArg = {
   /** Execution ID to update */
-  executionId: number;
+  executionId: string;
   ctrfReportUpdateRequest: CtrfReportUpdateRequest;
+};
+export type PostApiV2CtrfReportUploadApiResponse =
+  /** status 200 CTRF report file processed successfully */ CtrfReportResponse;
+export type PostApiV2CtrfReportUploadApiArg = {
+  body: {
+    /** CTRF report JSON file to upload */
+    report?: Blob;
+    /** Project ID to associate the report with */
+    projectId: string;
+  };
 };
 export type PostApiV1McpApiResponse = /** status 200 MCP response */ any;
 export type PostApiV1McpApiArg = {
@@ -890,15 +912,16 @@ export type ErrorResponse = {
   error: string;
 };
 export type Issue = {
-  id: number;
+  id: string;
   name: string;
   category?: string;
   description?: string;
   portal?: string;
   service?: string;
   ticket?: string;
-  createdById?: number;
-  updatedById?: number;
+  projectId: string;
+  createdById?: string;
+  updatedById?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -909,6 +932,8 @@ export type CreateIssueRequest = {
   portal?: string;
   service?: string;
   ticket?: string;
+  /** The UUID of the project this issue belongs to */
+  projectId: string;
 };
 export type UpdateIssueRequest = {
   name?: string;
@@ -977,8 +1002,8 @@ export type Spec = {
 };
 export type Assumption = {
   id: string;
-  issueId: number;
-  resultErrorId: number;
+  issueId: string;
+  resultErrorId: string;
   madeBy?: string;
   isConfirmed?: boolean;
   description?: string;
@@ -988,8 +1013,8 @@ export type Assumption = {
   updatedAt: string;
 };
 export type CreateAssumptionRequest = {
-  issueId: number;
-  resultErrorId: number;
+  issueId: string;
+  resultErrorId: string;
   madeBy?: string;
   isConfirmed?: boolean;
   description?: string;
@@ -1008,10 +1033,10 @@ export type SuccessResponse = {
   message: string;
 };
 export type AssignIssueRequest = {
-  issueId: number;
+  issueId: string;
 };
 export type BulkReviewRequest = {
-  errorIds: number[];
+  errorIds: string[];
 };
 export type Execution = {
   id: string;
@@ -1026,7 +1051,7 @@ export type Execution = {
 };
 export type JsonReportResponse = {
   success: boolean;
-  executionId: number;
+  executionId: string;
   specsProcessed: number;
 };
 export type JsonReportTestResult = {
@@ -1062,7 +1087,7 @@ export type JsonReportRequest = {
   tests: JsonReportTestSpec[];
 };
 export type User = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   createdAt: string;
@@ -1173,7 +1198,7 @@ export type Project = {
   name: string;
   description: string | null;
   isActive: boolean;
-  ownerId: number;
+  ownerId: string;
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -1195,12 +1220,12 @@ export type CtrfReportResponse = {
   success: boolean;
   message: string;
   /** Execution ID for the processed report */
-  executionId: number;
+  executionId: string;
   data: {
     /** Number of test specs processed */
     specsProcessed: number;
     /** Database execution ID */
-    executionId: number;
+    executionId: string;
   };
 };
 export type CtrfTool = {
@@ -1347,6 +1372,7 @@ export const {
   useDeleteApiV2ProjectsByIdMutation,
   usePostApiV2CtrfReportMutation,
   usePatchApiV2CtrfReportByExecutionIdMutation,
+  usePostApiV2CtrfReportUploadMutation,
   usePostApiV1McpMutation,
   useGetApiV1McpQuery,
   useDeleteApiV1McpMutation,
