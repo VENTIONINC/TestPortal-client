@@ -8,6 +8,7 @@ export const addTagTypes = [
   "Result Errors",
   "Executions",
   "Reports",
+  "Upload",
   "Users",
   "MCP",
   "Authentication",
@@ -16,6 +17,7 @@ export const addTagTypes = [
   "Prompts",
   "Projects",
   "CTRF",
+  "Upload API Keys",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -308,6 +310,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Reports", "Results"],
       }),
+      postApiV2JsonReportUpload: build.mutation<
+        PostApiV2JsonReportUploadApiResponse,
+        PostApiV2JsonReportUploadApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/json-report/upload`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Reports", "Results", "Upload"],
+      }),
       getApiV2UsersByUserId: build.query<
         GetApiV2UsersByUserIdApiResponse,
         GetApiV2UsersByUserIdApiArg
@@ -561,6 +574,36 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["MCP"],
       }),
+      postApiV2UploadGenerateKey: build.mutation<
+        PostApiV2UploadGenerateKeyApiResponse,
+        PostApiV2UploadGenerateKeyApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/upload/generate-key`,
+          method: "POST",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Upload API Keys"],
+      }),
+      getApiV2UploadKeys: build.query<
+        GetApiV2UploadKeysApiResponse,
+        GetApiV2UploadKeysApiArg
+      >({
+        query: () => ({ url: `/api/v2/upload/keys` }),
+        providesTags: ["Upload API Keys"],
+      }),
+      deleteApiV2UploadKeysById: build.mutation<
+        DeleteApiV2UploadKeysByIdApiResponse,
+        DeleteApiV2UploadKeysByIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/upload/keys/${queryArg.id}`,
+          method: "DELETE",
+        }),
+        invalidatesTags: ["Upload API Keys"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -763,6 +806,14 @@ export type PostApiV1JsonReportUploadApiArg = {
     report: Blob;
   };
 };
+export type PostApiV2JsonReportUploadApiResponse =
+  /** status 201 File report processed successfully with optional AI analysis */ JsonReportResponseWithAnalysis;
+export type PostApiV2JsonReportUploadApiArg = {
+  body: {
+    /** JSON test report file to upload (CTRF format) */
+    report: Blob;
+  };
+};
 export type GetApiV2UsersByUserIdApiResponse =
   /** status 200 User details */ User;
 export type GetApiV2UsersByUserIdApiArg = {
@@ -901,6 +952,21 @@ export type DeleteApiV1McpApiResponse =
   /** status 200 Session cleanup successful */ any;
 export type DeleteApiV1McpApiArg = {
   "mcp-session-id": string;
+};
+export type PostApiV2UploadGenerateKeyApiResponse =
+  /** status 200 API key generated successfully. The plain text key is returned - save it securely as it will not be shown again. */ GenerateApiKeyResponse;
+export type PostApiV2UploadGenerateKeyApiArg = {
+  /** The UUID of the project to generate an API key for */
+  projectId: string;
+};
+export type GetApiV2UploadKeysApiResponse =
+  /** status 200 List of API keys for the authenticated user */ ListApiKeysResponse;
+export type GetApiV2UploadKeysApiArg = void;
+export type DeleteApiV2UploadKeysByIdApiResponse =
+  /** status 200 API key revoked successfully */ RevokeApiKeyResponse;
+export type DeleteApiV2UploadKeysByIdApiArg = {
+  /** The UUID of the API key to revoke */
+  id: string;
 };
 export type StatusResponse = {
   status: string;
@@ -1085,6 +1151,13 @@ export type JsonReportRequest = {
     startTime: string;
   };
   tests: JsonReportTestSpec[];
+};
+export type JsonReportResponseWithAnalysis = {
+  success: boolean;
+  executionId: string;
+  specsProcessed: number;
+  /** Optional AI analysis results for test failures */
+  analysis?: any[];
 };
 export type User = {
   id: string;
@@ -1325,6 +1398,39 @@ export type CtrfReportRequest = {
 export type CtrfReportUpdateRequest = {
   results: CtrfResults;
 };
+export type GenerateApiKeyResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    projectId: string;
+    /** Plain text API key - only shown once at generation */
+    apiKey: string;
+    createdAt: string;
+  };
+};
+export type DetailedErrorResponse = {
+  error: string;
+  details?: string;
+};
+export type UploadApiKey = {
+  id: string;
+  projectId: string;
+  projectName: string;
+  /** Hashed API key value */
+  apiKey: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+export type ListApiKeysResponse = {
+  success: boolean;
+  data: UploadApiKey[];
+};
+export type RevokeApiKeyResponse = {
+  success: boolean;
+  message: string;
+};
 export const {
   useGetApiV1Query,
   useGetApiV1StatusQuery,
@@ -1352,6 +1458,7 @@ export const {
   useGetApiV1ExecutionsByExecutionIdQuery,
   usePostApiV1JsonReportMutation,
   usePostApiV1JsonReportUploadMutation,
+  usePostApiV2JsonReportUploadMutation,
   useGetApiV2UsersByUserIdQuery,
   usePatchApiV2UsersByUserIdMutation,
   usePatchApiV2UsersByUserIdIntegrationsMutation,
@@ -1376,4 +1483,7 @@ export const {
   usePostApiV1McpMutation,
   useGetApiV1McpQuery,
   useDeleteApiV1McpMutation,
+  usePostApiV2UploadGenerateKeyMutation,
+  useGetApiV2UploadKeysQuery,
+  useDeleteApiV2UploadKeysByIdMutation,
 } = injectedRtkApi;

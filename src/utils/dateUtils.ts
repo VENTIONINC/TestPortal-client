@@ -9,14 +9,14 @@ export const getDatesBetween = (fromDate: string, toDate: string): string[] => {
   const start = new Date(fromDate);
   const end = new Date(toDate);
   const dates: string[] = [];
-  
+
   const current = new Date(start);
   while (current <= end) {
     dates.push(formatDate(current));
     current.setDate(current.getDate() + 1);
   }
-  
-  return dates;
+
+  return dates.reverse();
 };
 
 export const getDateDisplayName = (date: string): string => {

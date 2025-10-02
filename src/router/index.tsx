@@ -15,6 +15,7 @@ import {
 import { MCPSettings } from '@/pages/UserSettings/MCPSettings';
 import { PortalSettings } from '@/pages/UserSettings/PortalSettings';
 import { ProjectsSettings } from '@/pages/UserSettings/ProjectsSettings';
+import { UploadApiSettings } from '@/pages/UserSettings/UploadApiSettings';
 import { PATHS } from '@/types/paths';
 
 export const router = createBrowserRouter([
@@ -109,6 +110,10 @@ export const router = createBrowserRouter([
       {
         path: PATHS.USER_SETTINGS_PROJECTS,
         element: <ProjectsSettings />,
+      },
+      {
+        path: PATHS.USER_SETTINGS_UPLOAD_API,
+        element: <UploadApiSettings />,
       },
     ],
   },
