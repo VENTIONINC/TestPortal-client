@@ -7,13 +7,14 @@ import { useCreateAssumptionMutation } from '@/redux/apis/extendedApi';
 import {
   useDeleteApiV1IssuesByIssueIdMutation,
   usePatchApiV1IssuesByIssueIdMutation,
-  usePostApiV1IssuesMutation,
   usePostApiV2ErrorFormatterMutation,
+  usePostApiV2IssuesMutation,
 } from '@/redux/apis/generatedApi';
 import { useLazyGetIssuesQuery } from '@/redux/apis/issuesApi';
 import { Issue, IssueCategory, ResultError } from '@/types';
 import { formatMessageSchema, FormatMessageFormData } from '@/schemas';
 import { toaster } from '@/components/ui';
+import { useSelectedProjectId } from '@/redux/slices/projects';
 
 interface UseManageIssueProps {
   initialIssue?: Issue;
@@ -22,6 +23,7 @@ interface UseManageIssueProps {
 }
 
 export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseManageIssueProps) => {
+  const selectedProjectId = useSelectedProjectId();
   const [issue, setIssue] = useState<Issue>(
     initialIssue ??
       ({
@@ -56,7 +58,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
   // API hooks
   const [getIssues] = useLazyGetIssuesQuery();
   const [createAssumption, { isLoading: isCreatingAssumption }] = useCreateAssumptionMutation();
-  const [createIssue, { isLoading: isCreatingIssue }] = usePostApiV1IssuesMutation();
+  const [createIssue, { isLoading: isCreatingIssue }] = usePostApiV2IssuesMutation();
   const [updateIssue, { isLoading: isUpdatingIssue }] = usePatchApiV1IssuesByIssueIdMutation();
   const [deleteIssue, { isLoading: isDeletingIssue }] = useDeleteApiV1IssuesByIssueIdMutation();
   const [formatError, { isLoading: isFormattingError }] = usePostApiV2ErrorFormatterMutation();
@@ -85,6 +87,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
   const handleCreateAssumption = handleSubmit(async (formData) => {
     const issueToCreate = {
       ...issue,
+      projectId: selectedProjectId,
       name: formData.name,
       description: formData.description,
       category: formData.category,
@@ -120,10 +123,10 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
   const handleUpdateIssue = handleSubmit(async (formData) => {
     const res = await updateIssue({
       issueId: issue.id,
-      updateIssueRequest: { 
-        name: formData.name, 
-        category: formData.category, 
-        description: formData.description 
+      updateIssueRequest: {
+        name: formData.name,
+        category: formData.category,
+        description: formData.description,
       },
     });
 

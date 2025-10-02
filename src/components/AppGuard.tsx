@@ -9,7 +9,7 @@ interface AppGuardProps {
   children: ReactNode;
 }
 
-function getUserIdFromToken(token: string): number | null {
+function getUserIdFromToken(token: string): string | null {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     return payload.userId || payload.sub || payload.id || null;

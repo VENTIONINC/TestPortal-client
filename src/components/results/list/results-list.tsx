@@ -35,7 +35,7 @@ const ResultsContent = () => {
       { spec: ResultSpec; executions: { execution: ResultExecution; results: BaseResult[] }[] }
     >();
 
-    const activeIds: number[] = [];
+    const activeIds: string[] = [];
 
     filteredResults.forEach((result) => {
       const resultDate = result.startTime.split('T')[0];
