@@ -9,6 +9,7 @@ export enum PATHS {
   USER_SETTINGS_MCP = '/settings/mcp',
   USER_SETTINGS_PORTALS = '/settings/portals',
   USER_SETTINGS_PROJECTS = '/settings/projects',
+  USER_SETTINGS_UPLOAD_API = '/settings/upload-api',
   PROMPTS = '/prompts',
   PROMPT_BUILDER = '/prompts/:name',
   NOT_FOUND = '*',

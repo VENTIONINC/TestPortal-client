@@ -23,6 +23,11 @@ export const updateProjectSchema = z.object({
   description: z.string().optional(),
 });
 
+export const generateApiKeySchema = z.object({
+  projectId: z.string().min(1, 'Project is required'),
+});
+
 export type FormatMessageFormData = z.infer<typeof formatMessageSchema>;
 export type CreateProjectFormData = z.infer<typeof createProjectSchema>;
 export type UpdateProjectFormData = z.infer<typeof updateProjectSchema>;
+export type GenerateApiKeyFormData = z.infer<typeof generateApiKeySchema>;
