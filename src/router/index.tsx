@@ -17,6 +17,8 @@ import { MCPSettings } from '@/pages/UserSettings/MCPSettings';
 import { PortalSettings } from '@/pages/UserSettings/PortalSettings';
 import { ProjectsSettings } from '@/pages/UserSettings/ProjectsSettings';
 import { UploadApiSettings } from '@/pages/UserSettings/UploadApiSettings';
+import { PlaywrightReportGenerator } from '@/pages/ReportGenerator/PlaywrightReportGenerator';
+import { CTRFReportGenerator } from '@/pages/ReportGenerator/CTRFReportGenerator';
 import { PATHS } from '@/types/paths';
 
 export const router = createBrowserRouter([
@@ -127,6 +129,20 @@ export const router = createBrowserRouter([
         </ProjectGuard>
       </ProtectedRoute>
     ),
+    children: [
+      {
+        index: true,
+        element: <Navigate to={PATHS.REPORT_GENERATOR_PLAYWRIGHT} replace />,
+      },
+      {
+        path: PATHS.REPORT_GENERATOR_PLAYWRIGHT,
+        element: <PlaywrightReportGenerator />,
+      },
+      {
+        path: PATHS.REPORT_GENERATOR_CTRF,
+        element: <CTRFReportGenerator />,
+      },
+    ],
   },
   {
     path: PATHS.NOT_FOUND,

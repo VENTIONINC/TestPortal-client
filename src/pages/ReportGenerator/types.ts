@@ -144,3 +144,72 @@ export interface PlaywrightReport {
   errors: unknown[];
   stats: ReportStats;
 }
+
+// CTRF Types
+export interface CTRFConfig {
+  toolName: string;
+  toolVersion: string;
+  appName: string;
+  branchName: string;
+  totalTests: number;
+  passRate: number;
+  framework: string;
+  ciProvider: string;
+  parallelWorkers: number;
+  includeFlaky: boolean;
+  includeRetries: boolean;
+}
+
+export interface CTRFTest {
+  name: string;
+  status: string;
+  duration: number;
+  suite: string;
+  filePath: string;
+  tags: string[];
+  message?: string;
+  trace?: string;
+  retry?: number;
+  flaky?: boolean;
+}
+
+export interface CTRFReport {
+  results: {
+    tool: {
+      name: string;
+      version: string;
+    };
+    summary: {
+      tests: number;
+      passed: number;
+      failed: number;
+      pending: number;
+      skipped: number;
+      other: number;
+      start: number;
+      stop: number;
+    };
+    tests: CTRFTest[];
+    environment: {
+      appName: string;
+      buildName: string;
+      buildNumber: string;
+      buildUrl: string;
+      repositoryName: string;
+      repositoryUrl: string;
+      branchName: string;
+      testEnvironment: string;
+      extra: {
+        nodeVersion: string;
+        platform: string;
+        architecture: string;
+      };
+    };
+    extra: {
+      framework: string;
+      testRunId: string;
+      ciProvider: string;
+      parallelWorkers: number;
+    };
+  };
+}
