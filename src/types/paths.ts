@@ -12,5 +12,6 @@ export enum PATHS {
   USER_SETTINGS_UPLOAD_API = '/settings/upload-api',
   PROMPTS = '/prompts',
   PROMPT_BUILDER = '/prompts/:name',
+  REPORT_GENERATOR = '/report-generator',
   NOT_FOUND = '*',
 }

@@ -8,6 +8,7 @@ import {
   NotFoundPage,
   PromptBuilderPage,
   PromptsPage,
+  ReportGeneratorPage,
   ResultsPage,
   SignupPage,
   UserSettingsPage,
@@ -116,6 +117,16 @@ export const router = createBrowserRouter([
         element: <UploadApiSettings />,
       },
     ],
+  },
+  {
+    path: PATHS.REPORT_GENERATOR,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <ReportGeneratorPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
   },
   {
     path: PATHS.NOT_FOUND,
