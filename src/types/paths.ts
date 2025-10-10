@@ -13,5 +13,7 @@ export enum PATHS {
   PROMPTS = '/prompts',
   PROMPT_BUILDER = '/prompts/:name',
   REPORT_GENERATOR = '/report-generator',
+  REPORT_GENERATOR_PLAYWRIGHT = '/report-generator/playwright',
+  REPORT_GENERATOR_CTRF = '/report-generator/ctrf',
   NOT_FOUND = '*',
 }

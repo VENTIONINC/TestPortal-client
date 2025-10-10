@@ -2,6 +2,11 @@ import { saveAs } from 'file-saver';
 
 import {
   BUILDS,
+  CTRF_ERROR_MESSAGES,
+  CTRF_STACK_TRACES,
+  CTRF_TAGS,
+  CTRF_TEST_NAMES,
+  CTRF_TEST_SUITES,
   ENVIRONMENTS,
   REPORT_PORTAL_BASE_URL,
   SERVICES,
@@ -10,7 +15,7 @@ import {
   TEST_ERRORS,
   TEST_SUBJECTS,
 } from './constants';
-import type { PlaywrightReport, ReportConfig, ReportError, Test, TestResult } from './types';
+import type { CTRFConfig, CTRFReport, CTRFTest, PlaywrightReport, ReportConfig, ReportError, Test, TestResult } from './types';
 
 export const generateRandomString = (length = 8): string => {
   return Math.random()
@@ -284,4 +289,112 @@ export const downloadReport = (report: PlaywrightReport, filename?: string): voi
   const blob = new Blob([jsonString], { type: 'application/json' });
 
   saveAs(blob, `${sanitizedFilename}.json`);
+};
+
+// CTRF Helper Functions
+export const getRandomElement = <T,>(array: T[]): T => {
+  return array[Math.floor(Math.random() * array.length)];
+};
+
+export const generateCTRFDuration = (status: string): number => {
+  const ranges: Record<string, [number, number]> = {
+    passed: [50, 800],
+    failed: [100, 1500],
+    pending: [0, 0],
+    skipped: [0, 0],
+  };
+  const [min, max] = ranges[status] || [0, 0];
+  return min === max ? min : Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+export const generateCTRFTest = (suite: string, config: CTRFConfig): CTRFTest => {
+  const names = CTRF_TEST_NAMES[suite] || ['should perform basic operation'];
+  const name = getRandomElement(names);
+
+  let status: string;
+  const rand = Math.random() * 100;
+  if (rand < config.passRate) {
+    status = 'passed';
+  } else if (rand < config.passRate + 15) {
+    status = 'failed';
+  } else if (rand < config.passRate + 20) {
+    status = 'pending';
+  } else {
+    status = 'skipped';
+  }
+
+  const test: CTRFTest = {
+    name,
+    status,
+    duration: generateCTRFDuration(status),
+    suite,
+    filePath: `/project/src/__tests__/${suite.toLowerCase().replace(/ /g, '-')}.test.js`,
+    tags: [...getRandomElement(CTRF_TAGS)],
+  };
+
+  if (status === 'failed') {
+    test.message = getRandomElement(CTRF_ERROR_MESSAGES);
+    test.trace = getRandomElement(CTRF_STACK_TRACES);
+    if (config.includeRetries && Math.random() < 0.3) {
+      test.retry = Math.floor(Math.random() * 3) + 1;
+    }
+    if (config.includeFlaky && Math.random() < 0.2) {
+      test.flaky = true;
+    }
+  }
+
+  return test;
+};
+
+export const generateCTRFReport = (config: CTRFConfig): CTRFReport => {
+  const tests: CTRFTest[] = [];
+  for (let i = 0; i < config.totalTests; i++) {
+    const suite = getRandomElement(CTRF_TEST_SUITES);
+    tests.push(generateCTRFTest(suite, config));
+  }
+
+  const now = Date.now();
+  const totalDuration = tests.reduce((sum, test) => sum + test.duration, 0);
+
+  const report: CTRFReport = {
+    results: {
+      tool: { name: config.toolName, version: config.toolVersion },
+      summary: {
+        tests: tests.length,
+        passed: tests.filter((t) => t.status === 'passed').length,
+        failed: tests.filter((t) => t.status === 'failed').length,
+        pending: tests.filter((t) => t.status === 'pending').length,
+        skipped: tests.filter((t) => t.status === 'skipped').length,
+        other: 0,
+        start: now - totalDuration,
+        stop: now,
+      },
+      tests,
+      environment: {
+        appName: config.appName,
+        buildName: config.branchName,
+        buildNumber: `1.0.0-build.${Math.floor(Math.random() * 9999)}`,
+        buildUrl: 'https://ci.example.com/builds/123',
+        repositoryName: config.appName,
+        repositoryUrl: `https://github.com/example/${config.appName}`,
+        branchName: config.branchName,
+        testEnvironment: 'ci',
+        extra: { nodeVersion: '18.17.0', platform: 'linux', architecture: 'x64' },
+      },
+      extra: {
+        framework: config.framework,
+        testRunId: `run-${Date.now()}`,
+        ciProvider: config.ciProvider,
+        parallelWorkers: config.parallelWorkers,
+      },
+    },
+  };
+
+  return report;
+};
+
+export const downloadCTRFReport = (report: CTRFReport): void => {
+  const jsonString = JSON.stringify(report, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  saveAs(blob, `ctrf-report-${Date.now()}.json`);
 };
