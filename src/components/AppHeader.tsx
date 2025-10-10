@@ -12,6 +12,7 @@ const NAVIGATION_LINKS = [
   { label: 'Results', path: PATHS.RESULTS },
   { label: 'Issues', path: PATHS.ISSUES },
   { label: 'Prompts', path: PATHS.PROMPTS },
+  { label: 'Report Generator', path: PATHS.REPORT_GENERATOR },
 ];
 
 export const AppHeader = () => {

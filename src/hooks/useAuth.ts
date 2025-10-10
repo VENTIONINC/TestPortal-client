@@ -6,7 +6,7 @@ import { useGetApiV2UsersByUserIdQuery } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
 import type { RootState } from '@/redux/store';
 
-function getUserIdFromToken(token: string): number | null {
+function getUserIdFromToken(token: string): string | null {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     return payload.userId || payload.sub || payload.id || null;

@@ -1,5 +1,5 @@
 export interface Issue {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   name: string;

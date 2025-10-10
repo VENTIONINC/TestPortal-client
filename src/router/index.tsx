@@ -8,6 +8,7 @@ import {
   NotFoundPage,
   PromptBuilderPage,
   PromptsPage,
+  ReportGeneratorPage,
   ResultsPage,
   SignupPage,
   UserSettingsPage,
@@ -15,6 +16,9 @@ import {
 import { MCPSettings } from '@/pages/UserSettings/MCPSettings';
 import { PortalSettings } from '@/pages/UserSettings/PortalSettings';
 import { ProjectsSettings } from '@/pages/UserSettings/ProjectsSettings';
+import { UploadApiSettings } from '@/pages/UserSettings/UploadApiSettings';
+import { PlaywrightReportGenerator } from '@/pages/ReportGenerator/PlaywrightReportGenerator';
+import { CTRFReportGenerator } from '@/pages/ReportGenerator/CTRFReportGenerator';
 import { PATHS } from '@/types/paths';
 
 export const router = createBrowserRouter([
@@ -109,6 +113,34 @@ export const router = createBrowserRouter([
       {
         path: PATHS.USER_SETTINGS_PROJECTS,
         element: <ProjectsSettings />,
+      },
+      {
+        path: PATHS.USER_SETTINGS_UPLOAD_API,
+        element: <UploadApiSettings />,
+      },
+    ],
+  },
+  {
+    path: PATHS.REPORT_GENERATOR,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <ReportGeneratorPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Navigate to={PATHS.REPORT_GENERATOR_PLAYWRIGHT} replace />,
+      },
+      {
+        path: PATHS.REPORT_GENERATOR_PLAYWRIGHT,
+        element: <PlaywrightReportGenerator />,
+      },
+      {
+        path: PATHS.REPORT_GENERATOR_CTRF,
+        element: <CTRFReportGenerator />,
       },
     ],
   },

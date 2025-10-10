@@ -8,6 +8,7 @@ export const addTagTypes = [
   "Result Errors",
   "Executions",
   "Reports",
+  "Upload",
   "Users",
   "MCP",
   "Authentication",
@@ -16,6 +17,7 @@ export const addTagTypes = [
   "Prompts",
   "Projects",
   "CTRF",
+  "Upload API Keys",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -308,6 +310,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Reports", "Results"],
       }),
+      postApiV2JsonReportUpload: build.mutation<
+        PostApiV2JsonReportUploadApiResponse,
+        PostApiV2JsonReportUploadApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/json-report/upload`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Reports", "Results", "Upload"],
+      }),
       getApiV2UsersByUserId: build.query<
         GetApiV2UsersByUserIdApiResponse,
         GetApiV2UsersByUserIdApiArg
@@ -561,6 +574,36 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["MCP"],
       }),
+      postApiV2UploadGenerateKey: build.mutation<
+        PostApiV2UploadGenerateKeyApiResponse,
+        PostApiV2UploadGenerateKeyApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/upload/generate-key`,
+          method: "POST",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Upload API Keys"],
+      }),
+      getApiV2UploadKeys: build.query<
+        GetApiV2UploadKeysApiResponse,
+        GetApiV2UploadKeysApiArg
+      >({
+        query: () => ({ url: `/api/v2/upload/keys` }),
+        providesTags: ["Upload API Keys"],
+      }),
+      deleteApiV2UploadKeysById: build.mutation<
+        DeleteApiV2UploadKeysByIdApiResponse,
+        DeleteApiV2UploadKeysByIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/upload/keys/${queryArg.id}`,
+          method: "DELETE",
+        }),
+        invalidatesTags: ["Upload API Keys"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -586,15 +629,16 @@ export type PostApiV1IssuesApiArg = {
 export type GetApiV1IssuesWithStatsApiResponse =
   /** status 200 List of issues with statistics */ {
     issues: {
-      id: number;
+      id: string;
       name: string;
       category?: string;
       description?: string;
       portal?: string;
       service?: string;
       ticket?: string;
-      createdById?: number;
-      updatedById?: number;
+      projectId: string;
+      createdById?: string;
+      updatedById?: string;
       createdAt: string;
       updatedAt: string;
       statistics: {
@@ -628,17 +672,17 @@ export type DeleteApiV1IssuesByIssueIdApiResponse =
     issue: Issue;
   };
 export type DeleteApiV1IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
 };
 export type GetApiV1IssuesByIssueIdApiResponse =
   /** status 200 Issue details */ Issue;
 export type GetApiV1IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
 };
 export type PatchApiV1IssuesByIssueIdApiResponse =
   /** status 200 Issue updated successfully */ Issue;
 export type PatchApiV1IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
   updateIssueRequest: UpdateIssueRequest;
 };
 export type GetApiV2IssuesApiResponse =
@@ -657,12 +701,12 @@ export type PostApiV2IssuesApiArg = {
 export type GetApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue details */ Issue;
 export type GetApiV2IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
 };
 export type PatchApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue updated successfully */ Issue;
 export type PatchApiV2IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
   updateIssueRequest: UpdateIssueRequest;
 };
 export type DeleteApiV2IssuesByIssueIdApiResponse =
@@ -671,7 +715,7 @@ export type DeleteApiV2IssuesByIssueIdApiResponse =
     issue: Issue;
   };
 export type DeleteApiV2IssuesByIssueIdApiArg = {
-  issueId: number;
+  issueId: string;
 };
 export type GetApiV1ResultsApiResponse =
   /** status 200 List of results */ Result[];
@@ -762,32 +806,40 @@ export type PostApiV1JsonReportUploadApiArg = {
     report: Blob;
   };
 };
+export type PostApiV2JsonReportUploadApiResponse =
+  /** status 201 File report processed successfully with optional AI analysis */ JsonReportResponseWithAnalysis;
+export type PostApiV2JsonReportUploadApiArg = {
+  body: {
+    /** JSON test report file to upload (CTRF format) */
+    report: Blob;
+  };
+};
 export type GetApiV2UsersByUserIdApiResponse =
   /** status 200 User details */ User;
 export type GetApiV2UsersByUserIdApiArg = {
-  userId: number;
+  userId: string;
 };
 export type PatchApiV2UsersByUserIdApiResponse =
   /** status 200 User updated successfully */ User;
 export type PatchApiV2UsersByUserIdApiArg = {
-  userId: number;
+  userId: string;
   userUpdateRequest: UserUpdateRequest;
 };
 export type PatchApiV2UsersByUserIdIntegrationsApiResponse =
   /** status 200 User integrations updated successfully */ User;
 export type PatchApiV2UsersByUserIdIntegrationsApiArg = {
-  userId: number;
+  userId: string;
   userIntegrationsUpdateRequest: UserIntegrationsUpdateRequest;
 };
 export type PostApiV2UsersByUserIdMcpTokenApiResponse =
   /** status 201 MCP token generated successfully */ McpTokenResponse;
 export type PostApiV2UsersByUserIdMcpTokenApiArg = {
-  userId: number;
+  userId: string;
 };
 export type DeleteApiV2UsersByUserIdMcpTokenApiResponse =
   /** status 200 MCP token revoked successfully */ SuccessResponse;
 export type DeleteApiV2UsersByUserIdMcpTokenApiArg = {
-  userId: number;
+  userId: string;
 };
 export type PostApiV2UsersSignupApiResponse =
   /** status 201 User created successfully */ User;
@@ -839,7 +891,7 @@ export type PostApiV2PromptsByNameGenerateApiArg = {
 export type GetApiV2ProjectsApiResponse =
   /** status 200 List of projects */ Project[];
 export type GetApiV2ProjectsApiArg = {
-  ownerId?: number;
+  ownerId?: string;
   isActive?: boolean;
   name?: string;
 };
@@ -874,7 +926,7 @@ export type PatchApiV2CtrfReportByExecutionIdApiResponse =
   /** status 200 CTRF report updated successfully */ CtrfReportResponse;
 export type PatchApiV2CtrfReportByExecutionIdApiArg = {
   /** Execution ID to update */
-  executionId: number;
+  executionId: string;
   ctrfReportUpdateRequest: CtrfReportUpdateRequest;
 };
 export type PostApiV2CtrfReportUploadApiResponse =
@@ -901,6 +953,21 @@ export type DeleteApiV1McpApiResponse =
 export type DeleteApiV1McpApiArg = {
   "mcp-session-id": string;
 };
+export type PostApiV2UploadGenerateKeyApiResponse =
+  /** status 200 API key generated successfully. The plain text key is returned - save it securely as it will not be shown again. */ GenerateApiKeyResponse;
+export type PostApiV2UploadGenerateKeyApiArg = {
+  /** The UUID of the project to generate an API key for */
+  projectId: string;
+};
+export type GetApiV2UploadKeysApiResponse =
+  /** status 200 List of API keys for the authenticated user */ ListApiKeysResponse;
+export type GetApiV2UploadKeysApiArg = void;
+export type DeleteApiV2UploadKeysByIdApiResponse =
+  /** status 200 API key revoked successfully */ RevokeApiKeyResponse;
+export type DeleteApiV2UploadKeysByIdApiArg = {
+  /** The UUID of the API key to revoke */
+  id: string;
+};
 export type StatusResponse = {
   status: string;
   database: string;
@@ -911,15 +978,16 @@ export type ErrorResponse = {
   error: string;
 };
 export type Issue = {
-  id: number;
+  id: string;
   name: string;
   category?: string;
   description?: string;
   portal?: string;
   service?: string;
   ticket?: string;
-  createdById?: number;
-  updatedById?: number;
+  projectId: string;
+  createdById?: string;
+  updatedById?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -930,6 +998,8 @@ export type CreateIssueRequest = {
   portal?: string;
   service?: string;
   ticket?: string;
+  /** The UUID of the project this issue belongs to */
+  projectId: string;
 };
 export type UpdateIssueRequest = {
   name?: string;
@@ -998,8 +1068,8 @@ export type Spec = {
 };
 export type Assumption = {
   id: string;
-  issueId: number;
-  resultErrorId: number;
+  issueId: string;
+  resultErrorId: string;
   madeBy?: string;
   isConfirmed?: boolean;
   description?: string;
@@ -1009,8 +1079,8 @@ export type Assumption = {
   updatedAt: string;
 };
 export type CreateAssumptionRequest = {
-  issueId: number;
-  resultErrorId: number;
+  issueId: string;
+  resultErrorId: string;
   madeBy?: string;
   isConfirmed?: boolean;
   description?: string;
@@ -1029,10 +1099,10 @@ export type SuccessResponse = {
   message: string;
 };
 export type AssignIssueRequest = {
-  issueId: number;
+  issueId: string;
 };
 export type BulkReviewRequest = {
-  errorIds: number[];
+  errorIds: string[];
 };
 export type Execution = {
   id: string;
@@ -1047,7 +1117,7 @@ export type Execution = {
 };
 export type JsonReportResponse = {
   success: boolean;
-  executionId: number;
+  executionId: string;
   specsProcessed: number;
 };
 export type JsonReportTestResult = {
@@ -1082,8 +1152,15 @@ export type JsonReportRequest = {
   };
   tests: JsonReportTestSpec[];
 };
+export type JsonReportResponseWithAnalysis = {
+  success: boolean;
+  executionId: string;
+  specsProcessed: number;
+  /** Optional AI analysis results for test failures */
+  analysis?: any[];
+};
 export type User = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   createdAt: string;
@@ -1194,7 +1271,7 @@ export type Project = {
   name: string;
   description: string | null;
   isActive: boolean;
-  ownerId: number;
+  ownerId: string;
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -1216,12 +1293,12 @@ export type CtrfReportResponse = {
   success: boolean;
   message: string;
   /** Execution ID for the processed report */
-  executionId: number;
+  executionId: string;
   data: {
     /** Number of test specs processed */
     specsProcessed: number;
     /** Database execution ID */
-    executionId: number;
+    executionId: string;
   };
 };
 export type CtrfTool = {
@@ -1321,6 +1398,39 @@ export type CtrfReportRequest = {
 export type CtrfReportUpdateRequest = {
   results: CtrfResults;
 };
+export type GenerateApiKeyResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    projectId: string;
+    /** Plain text API key - only shown once at generation */
+    apiKey: string;
+    createdAt: string;
+  };
+};
+export type DetailedErrorResponse = {
+  error: string;
+  details?: string;
+};
+export type UploadApiKey = {
+  id: string;
+  projectId: string;
+  projectName: string;
+  /** Hashed API key value */
+  apiKey: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+export type ListApiKeysResponse = {
+  success: boolean;
+  data: UploadApiKey[];
+};
+export type RevokeApiKeyResponse = {
+  success: boolean;
+  message: string;
+};
 export const {
   useGetApiV1Query,
   useGetApiV1StatusQuery,
@@ -1348,6 +1458,7 @@ export const {
   useGetApiV1ExecutionsByExecutionIdQuery,
   usePostApiV1JsonReportMutation,
   usePostApiV1JsonReportUploadMutation,
+  usePostApiV2JsonReportUploadMutation,
   useGetApiV2UsersByUserIdQuery,
   usePatchApiV2UsersByUserIdMutation,
   usePatchApiV2UsersByUserIdIntegrationsMutation,
@@ -1372,4 +1483,7 @@ export const {
   usePostApiV1McpMutation,
   useGetApiV1McpQuery,
   useDeleteApiV1McpMutation,
+  usePostApiV2UploadGenerateKeyMutation,
+  useGetApiV2UploadKeysQuery,
+  useDeleteApiV2UploadKeysByIdMutation,
 } = injectedRtkApi;

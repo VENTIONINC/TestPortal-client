@@ -9,7 +9,11 @@ export enum PATHS {
   USER_SETTINGS_MCP = '/settings/mcp',
   USER_SETTINGS_PORTALS = '/settings/portals',
   USER_SETTINGS_PROJECTS = '/settings/projects',
+  USER_SETTINGS_UPLOAD_API = '/settings/upload-api',
   PROMPTS = '/prompts',
   PROMPT_BUILDER = '/prompts/:name',
+  REPORT_GENERATOR = '/report-generator',
+  REPORT_GENERATOR_PLAYWRIGHT = '/report-generator/playwright',
+  REPORT_GENERATOR_CTRF = '/report-generator/ctrf',
   NOT_FOUND = '*',
 }

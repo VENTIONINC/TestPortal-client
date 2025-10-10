@@ -1543,6 +1543,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/file-saver@npm:^2.0.7":
+  version: 2.0.7
+  resolution: "@types/file-saver@npm:2.0.7"
+  checksum: c3d1cd80eab1214767922cabac97681f3fb688e82b74890450d70deaca49537949bbc96d80d363d91e8f0a4752c7164909cc8902d9721c5c4809baafc42a3801
+  languageName: node
+  linkType: hard
+
 "@types/json-schema@npm:^7.0.15":
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
@@ -3926,6 +3933,13 @@ __metadata:
   dependencies:
     flat-cache: ^4.0.0
   checksum: f67802d3334809048c69b3d458f672e1b6d26daefda701761c81f203b80149c35dea04d78ea4238969dd617678e530876722a0634c43031a0957f10cc3ed190f
+  languageName: node
+  linkType: hard
+
+"file-saver@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "file-saver@npm:2.0.5"
+  checksum: c62d96e5cebc58b4bdf3ae8a60d5cf9607ad82f75f798c33a4ee63435ac2203002584d5256a2a780eda7feb5e19dc3b6351c2212e58b3f529e63d265a7cc79f7
   languageName: node
   linkType: hard
 
@@ -6498,6 +6512,7 @@ __metadata:
     "@reduxjs/toolkit": ^2.8.2
     "@rtk-query/codegen-openapi": ^2.0.0
     "@tippyjs/react": ^4.2.6
+    "@types/file-saver": ^2.0.7
     "@types/react": ^19.1.2
     "@types/react-dom": ^19.1.2
     "@vitejs/plugin-react": ^4.4.1
@@ -6506,6 +6521,7 @@ __metadata:
     eslint-plugin-import: ^2.31.0
     eslint-plugin-react-hooks: ^5.2.0
     eslint-plugin-react-refresh: ^0.4.19
+    file-saver: ^2.0.5
     globals: ^16.0.0
     husky: ^9.1.7
     next-themes: ^0.4.6

@@ -1,13 +1,13 @@
 import { createContext, useContext, useState, useCallback, PropsWithChildren } from 'react';
 
 interface ResultsSelectionContextType {
-  selectedIds: Set<number>;
-  isSelected: (id: number) => boolean;
-  toggleSelection: (id: number) => void;
-  toggleMultiple: (ids: number[]) => void;
-  selectAll: (ids: number[]) => void;
+  selectedIds: Set<string>;
+  isSelected: (id: string) => boolean;
+  toggleSelection: (id: string) => void;
+  toggleMultiple: (ids: string[]) => void;
+  selectAll: (ids: string[]) => void;
   clearSelection: () => void;
-  getSelectedIds: () => number[];
+  getSelectedIds: () => string[];
   getSelectedCount: () => number;
 }
 
@@ -23,11 +23,11 @@ export const useResultsSelection = () => {
 };
 
 export const ResultsSelectionProvider = ({ children }: PropsWithChildren) => {
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const isSelected = useCallback((id: number) => selectedIds.has(id), [selectedIds]);
+  const isSelected = useCallback((id: string) => selectedIds.has(id), [selectedIds]);
 
-  const toggleSelection = useCallback((id: number) => {
+  const toggleSelection = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
@@ -39,7 +39,7 @@ export const ResultsSelectionProvider = ({ children }: PropsWithChildren) => {
     });
   }, []);
 
-  const toggleMultiple = useCallback((ids: number[]) => {
+  const toggleMultiple = useCallback((ids: string[]) => {
     setSelectedIds((prev) => {
       const newSet = new Set(prev);
       const allSelected = ids.every((id) => newSet.has(id));
@@ -54,7 +54,7 @@ export const ResultsSelectionProvider = ({ children }: PropsWithChildren) => {
     });
   }, []);
 
-  const selectAll = useCallback((ids: number[]) => {
+  const selectAll = useCallback((ids: string[]) => {
     setSelectedIds((prev) => {
       const newSet = new Set(prev);
       const allSelected = ids.every((id) => newSet.has(id));
