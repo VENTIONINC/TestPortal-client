@@ -61,6 +61,7 @@ export interface ResultExecution {
   type: string;
   name: string;
   environment: string;
+  provider: string;
   version: string;
   startedAt: string;
 }

@@ -1109,6 +1109,7 @@ export type Execution = {
   runId: string;
   env?: string;
   version?: string;
+  provider: string;
   startTime: string;
   endTime?: string;
   status: string;

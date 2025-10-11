@@ -18,7 +18,7 @@ export const ResultsExecutionCard = memo(
     environment,
     type,
     name,
-    version,
+    provider,
     monitoringPortalUrl,
     reportPortalUrl,
     monitoringPortalEnabled,
@@ -48,7 +48,7 @@ export const ResultsExecutionCard = memo(
           <ClipboardCopyText value={type}>{type}</ClipboardCopyText>
           <Text>{name}</Text>
           <Text ms="auto" my={1}>
-            Playwright v.{version}
+            {provider}
           </Text>
 
           <BulkActions selectedResults={selectedResults} />
