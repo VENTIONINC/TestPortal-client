@@ -46,13 +46,6 @@ export function NotFoundPage() {
                   </Text>
                 </Link>
               </Box>
-              <Box>
-                <Link to={PATHS.MCP}>
-                  <Text color="blue.500" textDecoration="underline">
-                    MCP Dashboard
-                  </Text>
-                </Link>
-              </Box>
             </Box>
           </Box>
         </Box>

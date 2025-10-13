@@ -3,7 +3,6 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 
 import { baseApi } from './apis/baseApi';
-import { mcpApi } from './apis/mcp-api/mcpApi';
 import authReducer from './slices/auth';
 import contextMenuReducer from './slices/contextMenu';
 import dialogReducer from './slices/dialog';
@@ -20,7 +19,6 @@ const authPersistConfig = {
 
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
-  [mcpApi.reducerPath]: mcpApi.reducer,
   auth: persistReducer(authPersistConfig, authReducer),
   contextMenu: contextMenuReducer,
   dialog: dialogReducer,
@@ -36,7 +34,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }).concat(baseApi.middleware, mcpApi.middleware),
+    }).concat(baseApi.middleware),
 });
 
 export const persistor = persistStore(store);
