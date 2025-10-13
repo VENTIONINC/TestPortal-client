@@ -4,7 +4,6 @@ import { ProtectedRoute, ProjectGuard } from '@/components';
 import {
   IssuesPage,
   LoginPage,
-  MCPPage,
   NotFoundPage,
   PromptBuilderPage,
   PromptsPage,
@@ -56,16 +55,6 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <ProjectGuard>
           <IssuesPage />
-        </ProjectGuard>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: PATHS.MCP,
-    element: (
-      <ProtectedRoute>
-        <ProjectGuard>
-          <MCPPage />
         </ProjectGuard>
       </ProtectedRoute>
     ),
