@@ -5,7 +5,7 @@ export interface ResultsExecutionCardProps {
   environment: string;
   type: string;
   name: string;
-  version: string;
+  provider: string;
   monitoringPortalUrl: string;
   reportPortalUrl: string;
   reportPortalEnabled: boolean;
