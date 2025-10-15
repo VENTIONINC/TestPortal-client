@@ -5,6 +5,7 @@ export interface GetResultsRequest {
   to?: string;
   status?: string;
   page?: number;
+  projectId: string;
 }
 
 export interface GetResultsResponse {
@@ -15,12 +16,12 @@ export interface GetResultsResponse {
 }
 
 export interface BulkReviewRequest {
-  errorIds: number[];
+  errorIds: string[];
 }
 
 export interface BulkReviewResponse {
   successful: Array<{
-    id: number;
+    id: string;
     createdAt: string;
     updatedAt: string;
     type: string;
@@ -31,18 +32,18 @@ export interface BulkReviewResponse {
     expectedPattern: string;
     receivedString: string;
     location: string;
-    resultId: number;
+    resultId: string;
     result: {
-      id: number;
+      id: string;
       createdAt: string;
       updatedAt: string;
-      allureLink: string;
+      reportPortalLink: string;
       retry: number;
       status: string;
       duration: number;
       startTime: string;
-      specId: number;
-      executionId: number;
+      specId: string;
+      executionId: string;
     };
     assumptions: ResultErrorAssumption[];
   }>;

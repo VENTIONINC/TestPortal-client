@@ -1,4 +1,4 @@
-import { Issue, IssueFilters } from '@/types';
+import { IssueFilters } from '@/types';
 import { GetIssuesResponse } from '@/types/apis';
 
 import { baseApi } from './baseApi';
@@ -17,26 +17,19 @@ export const issuesApi = baseApi.injectEndpoints({
         if (filters.type) queryParams.append('type', filters.type);
         if (filters.category) queryParams.append('category', filters.category);
         if (filters.name) queryParams.append('name', filters.name);
-        if (filters.fromDate) queryParams.append('from', filters.fromDate);
-        if (filters.toDate) queryParams.append('to', filters.toDate);
+        if (filters.statFrom) queryParams.append('from', filters.statFrom);
+        if (filters.statTo) queryParams.append('to', filters.statTo);
         if (filters.page) queryParams.append('page', filters.page.toString());
         queryParams.append('limit', '10');
 
         return {
-          url: `issues?${queryParams.toString()}`,
+          url: `/api/v1/issues?${queryParams.toString()}`,
           method: 'GET',
         };
       },
-    }),
-    createIssue: build.mutation<Issue, Issue>({
-      query: (body) => ({
-        url: 'issues',
-        method: 'POST',
-        body,
-      }),
     }),
   }),
   overrideExisting: true,
 });
 
-export const { useGetIssuesQuery, useLazyGetIssuesQuery, useCreateIssueMutation } = issuesApi;
+export const { useLazyGetIssuesQuery } = issuesApi;

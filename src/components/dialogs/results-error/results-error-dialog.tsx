@@ -11,16 +11,18 @@ export const ResultsErrorDialog = ({ resultError, closeDialog }: ResultsErrorDia
   return (
     <Dialog title="Results Error" onClose={closeDialog} size="lg">
       <DialogBody display="flex" flexDir="column" gap={5}>
-        <Code size="lg">{resultError?.message}</Code>
+        <Code size="lg" whiteSpace="pre-wrap" wordBreak="break-word">
+          {resultError?.message}
+        </Code>
 
         {resultError?.callLog && resultError.callLog.length > 0 && (
-          <Code size="lg" whiteSpace="pre">
+          <Code size="lg" whiteSpace="pre-wrap" wordBreak="break-word">
             {resultError.callLog.join('\n')}
           </Code>
         )}
 
         {resultError?.callStack && resultError.callStack.length > 0 && (
-          <Code size="lg" whiteSpace="pre">
+          <Code size="lg" whiteSpace="pre-wrap" wordBreak="break-word">
             {resultError.callStack.join('\n')}
           </Code>
         )}

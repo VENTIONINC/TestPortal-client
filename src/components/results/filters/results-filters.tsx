@@ -1,109 +1,109 @@
-import { ChangeEvent, PropsWithChildren } from 'react';
-import { Circle, StackProps, Text, useDisclosure, VStack } from '@chakra-ui/react';
-import { LuArrowBigLeft } from 'react-icons/lu';
+import { ChangeEvent, useEffect, useState } from 'react';
+import { Button, StackProps } from '@chakra-ui/react';
 
 import { Input, NativeSelect } from '@/components/ui';
-import { FilterParamsState } from '@/hooks/useFilterParams';
+import { FiltersContainer, FiltersGroup } from '@/components/filters';
+import { initialFilters, useResultsActions, useResultsFilters } from '@/redux/slices/results';
+import { ResultsFilters as ResultsFiltersType } from '@/types';
 
-interface ResultsFiltersProps extends StackProps {
-  filterParams: FilterParamsState;
-  setFilterParams: React.Dispatch<React.SetStateAction<FilterParamsState>>;
-}
+import { getStatusOptions } from './helpers';
+import { REVIEW_STATUS_OPTIONS } from './constants';
 
-export const ResultsFilters = ({ filterParams, setFilterParams, ...props }: ResultsFiltersProps) => {
-  const { open, onToggle } = useDisclosure({ defaultOpen: true });
-
-  const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    setFilterParams((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-      page: 1,
-    }));
-  };
-
-  return (
-    <VStack
-      gap={4}
-      align="stretch"
-      w="100%"
-      maxW={open ? 64 : 0}
-      pos="relative"
-      transition="max-width 0.3s ease-in-out"
-      {...props}
-    >
-      <FiltersGroup title="Result Filters" open={open}>
-        <NativeSelect
-          label="Status:"
-          name="status"
-          placeholder="Select Status"
-          value={filterParams.status}
-          onChange={handleFilterChange}
-          items={[
-            { value: '', label: 'All' },
-            { value: 'passed', label: 'Passed' },
-            { value: 'failed', label: 'Failed' },
-            { value: 'skipped', label: 'Skipped' },
-          ]}
-        />
-        <NativeSelect
-          label="Review Status:"
-          name="reviewStatus"
-          value={filterParams.reviewStatus}
-          onChange={handleFilterChange}
-          items={[
-            { value: '', label: 'All' },
-            { value: 'completed', label: 'Completed' },
-            { value: 'inCompleted', label: 'Not Completed' },
-          ]}
-        />
-        <Input
-          label="Error Message"
-          name="errorMessage"
-          value={filterParams.errorMessage}
-          onChange={handleFilterChange}
-        />
-        <Input label="From" name="from" value={filterParams.from} onChange={handleFilterChange} type="date" />
-        <Input label="To:" name="to" value={filterParams.to} onChange={handleFilterChange} type="date" />
-      </FiltersGroup>
-
-      <FiltersGroup title="Spec Filters" open={open}>
-        <Input label="Tags:" name="tag" value={filterParams.tag} onChange={handleFilterChange} />
-        <Input label="Spec ID:" name="specId" value={filterParams.specId} onChange={handleFilterChange} />
-        <Input label="Spec File:" name="specFile" value={filterParams.specFile} onChange={handleFilterChange} />
-        <Input label="Spec Name:" name="specName" value={filterParams.specName} onChange={handleFilterChange} />
-      </FiltersGroup>
-
-      <FiltersGroup title="Execution Filters" open={open}>
-        <Input label="Environment:" name="environment" value={filterParams.environment} onChange={handleFilterChange} />
-        <Input label="Type:" name="type" value={filterParams.type} onChange={handleFilterChange} />
-      </FiltersGroup>
-
-      <Circle onClick={onToggle} pos="absolute" top={0} right={-5} bg="blue.600" color="white" p={2} cursor="pointer">
-        <LuArrowBigLeft
-          size={24}
-          style={{
-            transform: open ? 'rotate(0deg)' : 'rotate(180deg)',
-            transition: 'transform 0.3s ease-in-out',
-          }}
-        />
-      </Circle>
-    </VStack>
+const isClearable = (filters: Partial<ResultsFiltersType>) => {
+  return Object.keys(filters).some(
+    (key) => filters[key as keyof ResultsFiltersType] !== initialFilters[key as keyof ResultsFiltersType],
   );
 };
 
-const FiltersGroup = ({ title, open, children }: PropsWithChildren<{ title: string; open: boolean }>) => {
+export const ResultsFilters = (props: StackProps) => {
+  const globalFilters = useResultsFilters();
+  const [localFilters, setLocalFilters] = useState(globalFilters);
+
+  const { updateFilters, clearFilterGroup } = useResultsActions();
+
+  useEffect(() => {
+    setLocalFilters(globalFilters);
+  }, [globalFilters]);
+
+
+  const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+    setLocalFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleApplyFilters = () => {
+    updateFilters(localFilters);
+  };
+
+
   return (
-    <VStack
-      align="stretch"
-      border="1px solid"
-      borderColor="gray.400"
-      borderRadius="md"
-      p={open ? 4 : 0}
-      overflowX="clip"
-      transition="padding 0.3s ease-in-out"
-    >
-      <Text fontWeight={700}>{title}</Text>
-      {children}
-    </VStack>
+    <FiltersContainer {...props}>
+      <FiltersGroup
+        title="Result Filters"
+        clearable={isClearable({
+          status: localFilters.status,
+          reviewStatus: localFilters.reviewStatus,
+          errorMessage: localFilters.errorMessage,
+          from: localFilters.from,
+          to: localFilters.to,
+        })}
+        onClear={() => clearFilterGroup(['status', 'reviewStatus', 'errorMessage', 'from', 'to'])}
+      >
+        <NativeSelect
+          label="Status:"
+          name="status"
+          value={localFilters.status}
+          onChange={handleFilterChange}
+          items={getStatusOptions()}
+        />
+        <NativeSelect
+          label="Review status:"
+          name="reviewStatus"
+          value={localFilters.reviewStatus}
+          onChange={handleFilterChange}
+          items={REVIEW_STATUS_OPTIONS}
+        />
+        <Input label="Error message" name="errorMessage" value={localFilters.errorMessage} onChange={handleFilterChange} />
+        <Input label="From" name="from" value={localFilters.from} onChange={handleFilterChange} type="date" />
+        <Input label="To:" name="to" value={localFilters.to} onChange={handleFilterChange} type="date" />
+        <Button onClick={handleApplyFilters}>Apply</Button>
+      </FiltersGroup>
+
+      <FiltersGroup
+        title="Issue Filters"
+        clearable={isClearable({ issueName: localFilters.issueName })}
+        onClear={() => clearFilterGroup(['issueName'])}
+      >
+        <Input label="Issue name:" name="issueName" value={localFilters.issueName} onChange={handleFilterChange} />
+        <Button onClick={handleApplyFilters}>Apply</Button>
+      </FiltersGroup>
+
+      <FiltersGroup
+        title="Spec Filters"
+        clearable={isClearable({
+          tag: localFilters.tag,
+          specId: localFilters.specId,
+          specFile: localFilters.specFile,
+          specName: localFilters.specName,
+        })}
+        onClear={() => clearFilterGroup(['tag', 'specId', 'specFile', 'specName'])}
+      >
+        <Input label="Tag:" name="tag" value={localFilters.tag} onChange={handleFilterChange} />
+        <Input label="Spec ID:" name="specId" value={localFilters.specId} onChange={handleFilterChange} />
+        <Input label="Spec file:" name="specFile" value={localFilters.specFile} onChange={handleFilterChange} />
+        <Input label="Spec name:" name="specName" value={localFilters.specName} onChange={handleFilterChange} />
+        <Button onClick={handleApplyFilters}>Apply</Button>
+      </FiltersGroup>
+
+      <FiltersGroup
+        title="Execution Filters"
+        clearable={isClearable({ environment: localFilters.environment, type: localFilters.type })}
+        onClear={() => clearFilterGroup(['environment', 'type'])}
+      >
+        <Input label="Environment:" name="environment" value={localFilters.environment} onChange={handleFilterChange} />
+        <Input label="Type:" name="type" value={localFilters.type} onChange={handleFilterChange} />
+        <Button onClick={handleApplyFilters}>Apply</Button>
+      </FiltersGroup>
+
+    </FiltersContainer>
   );
 };

@@ -1,0 +1,10 @@
+import { useDialogActions } from '@/redux/slices/dialog';
+import { BaseResult } from '@/types';
+
+import { ResultAnalysisDialog } from './result-analysis-dialog';
+
+export const useResultAnalysisDialog = () => {
+  const { openDialog } = useDialogActions();
+
+  return (result: BaseResult) => openDialog(ResultAnalysisDialog, { result });
+};

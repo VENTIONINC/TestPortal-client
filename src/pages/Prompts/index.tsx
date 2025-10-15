@@ -1,0 +1,1 @@
+export { PromptsPage } from './PromptsPage';

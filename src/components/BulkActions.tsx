@@ -1,10 +1,9 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, memo } from 'react';
 import { HStack, Text, useToken } from '@chakra-ui/react';
 import Tippy from '@tippyjs/react';
 import { LuCheck, LuTrash, LuWandSparkles } from 'react-icons/lu';
 
-import { useBulkReviewMutation } from '@/redux/apis/resultsApi';
-import { useConfirmAssumptionMutation } from '@/redux/apis/assumptionsApi';
+import { useBulkReviewMutation, useConfirmAssumptionMutation } from '@/redux/apis/extendedApi';
 import { BaseResult } from '@/types';
 
 import 'tippy.js/dist/tippy.css';
@@ -13,7 +12,7 @@ interface BulkActionsProps {
   selectedResults: BaseResult[];
 }
 
-export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
+export const BulkActions = memo(({ selectedResults }: BulkActionsProps) => {
   const purple700 = useToken('colors', 'purple.700')[0];
 
   const unreviewedResults = useMemo(
@@ -65,7 +64,10 @@ export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
 
       await Promise.all(
         unconfirmedAssumptions.map((assumption) =>
-          confirmAssumption({ id: assumption.id, madeBy: 'user', isConfirmed: true }),
+          confirmAssumption({
+            assumptionId: assumption.id.toString(),
+            updateAssumptionRequest: { madeBy: 'user', isConfirmed: true },
+          }),
         ),
       );
     }
@@ -81,7 +83,10 @@ export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
 
       await Promise.all(
         unconfirmedAssumptions.map((assumption) =>
-          confirmAssumption({ id: assumption.id, madeBy: 'user', isConfirmed: false }),
+          confirmAssumption({
+            assumptionId: assumption.id.toString(),
+            updateAssumptionRequest: { madeBy: 'user', isConfirmed: false },
+          }),
         ),
       );
     }
@@ -115,4 +120,4 @@ export const BulkActions = ({ selectedResults }: BulkActionsProps) => {
       )}
     </HStack>
   );
-};
+});

@@ -1,15 +1,41 @@
+import { Issue } from './issue';
+
+export enum ResultStatus {
+  Passed = 'passed',
+  Failed = 'failed',
+  Skipped = 'skipped',
+  TimedOut = 'timedOut',
+}
+
+export enum AnalysisStatus {
+  Passed = 'passed',
+  Failed = 'failed',
+}
+
+export enum AnalysisCategory {
+  Bug = 'bug',
+  Infra = 'infra',
+  Performance = 'performance',
+  Script = 'script',
+  Other = 'other',
+}
+
 export interface BaseResult {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
-  allureLink: string;
+  reportPortalLink: string;
   retry: number;
-  status: 'passed' | 'failed' | 'skipped';
+  status: ResultStatus;
   duration: number;
   startTime: string;
-  specId: number;
-  executionId: number;
+  specId: string;
+  executionId: string;
   errors: ResultError[];
+  analysisCategory?: AnalysisCategory;
+  analysisConfidence?: number;
+  analysisStatus?: AnalysisStatus;
+  analysisConclusion?: string;
 }
 
 export interface Result extends BaseResult {
@@ -18,7 +44,7 @@ export interface Result extends BaseResult {
 }
 
 export interface ResultSpec {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   key: string;
@@ -29,18 +55,19 @@ export interface ResultSpec {
 }
 
 export interface ResultExecution {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   type: string;
   name: string;
   environment: string;
+  provider: string;
   version: string;
   startedAt: string;
 }
 
 export interface ResultError {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   type: string;
@@ -51,32 +78,20 @@ export interface ResultError {
   expectedPattern: string;
   receivedString: string;
   location: string;
-  resultId: number;
+  resultId: string;
   assumptions: ResultErrorAssumption[];
 }
 
 export interface ResultErrorAssumption {
-  id: number;
+  id: string;
   createdAt: string;
   updatedAt: string;
   isConfirmed: boolean;
   score: number;
   madeBy: string;
-  issueId: number;
-  resultErrorId: number;
+  issueId: string;
+  resultErrorId: string;
   issue: Issue;
-}
-
-export interface Issue {
-  id: number;
-  createdAt: string;
-  updatedAt: string;
-  name: string;
-  category: string;
-  description: string;
-  portal: string;
-  service: string;
-  ticket: string;
 }
 
 export type ResultGroup = Map<
@@ -89,3 +104,19 @@ export type ResultGroup = Map<
     }[];
   }
 >;
+
+export interface ResultsFilters {
+  tag: string;
+  specId: string;
+  specFile: string;
+  specName: string;
+  environment: string;
+  type: string;
+  status: string;
+  reviewStatus: string;
+  errorMessage: string;
+  issueName: string;
+  from: string; // YYYY-MM-DD
+  to: string; // YYYY-MM-DD
+  page: number;
+}
