@@ -23,7 +23,7 @@ export const issuesApi = baseApi.injectEndpoints({
         queryParams.append('limit', '10');
 
         return {
-          url: `/api/v1/issues?${queryParams.toString()}`,
+          url: `/api/v2/issues?${queryParams.toString()}`,
           method: 'GET',
         };
       },

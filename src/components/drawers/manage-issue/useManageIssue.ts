@@ -5,8 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useConfirmIssueDeletionDialog } from '@/components/dialogs';
 import { useCreateAssumptionMutation } from '@/redux/apis/extendedApi';
 import {
-  useDeleteApiV1IssuesByIssueIdMutation,
-  usePatchApiV1IssuesByIssueIdMutation,
+  useDeleteApiV2IssuesByIssueIdMutation,
+  usePatchApiV2IssuesByIssueIdMutation,
   usePostApiV2ErrorFormatterMutation,
   usePostApiV2IssuesMutation,
 } from '@/redux/apis/generatedApi';
@@ -59,8 +59,8 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
   const [getIssues] = useLazyGetIssuesQuery();
   const [createAssumption, { isLoading: isCreatingAssumption }] = useCreateAssumptionMutation();
   const [createIssue, { isLoading: isCreatingIssue }] = usePostApiV2IssuesMutation();
-  const [updateIssue, { isLoading: isUpdatingIssue }] = usePatchApiV1IssuesByIssueIdMutation();
-  const [deleteIssue, { isLoading: isDeletingIssue }] = useDeleteApiV1IssuesByIssueIdMutation();
+  const [updateIssue, { isLoading: isUpdatingIssue }] = usePatchApiV2IssuesByIssueIdMutation();
+  const [deleteIssue, { isLoading: isDeletingIssue }] = useDeleteApiV2IssuesByIssueIdMutation();
   const [formatError, { isLoading: isFormattingError }] = usePostApiV2ErrorFormatterMutation();
 
   // Load existing issues for search

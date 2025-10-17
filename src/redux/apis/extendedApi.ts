@@ -14,7 +14,7 @@ export const extendedApi = generatedApi.injectEndpoints({
         );
 
         return {
-          url: '/api/v1/results',
+          url: '/api/v2/results',
           params: filteredParams,
           method: 'GET',
         };
@@ -23,7 +23,7 @@ export const extendedApi = generatedApi.injectEndpoints({
     }),
     bulkReview: build.mutation<BulkReviewResponse, BulkReviewRequest>({
       query: ({ errorIds }) => ({
-        url: '/api/v1/result-errors/bulk-review',
+        url: '/api/v2/result-errors/bulk-review',
         method: 'PATCH',
         body: { errorIds },
       }),
@@ -34,9 +34,9 @@ export const extendedApi = generatedApi.injectEndpoints({
 });
 
 export const {
-  usePostApiV1AssumptionsMutation: useCreateAssumptionMutation,
-  usePatchApiV1AssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
-  useGetApiV1IssuesWithStatsQuery: useGetIssuesWithStatsQuery,
+  usePostApiV2AssumptionsMutation: useCreateAssumptionMutation,
+  usePatchApiV2AssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
+  useGetApiV2IssuesWithStatsQuery: useGetIssuesWithStatsQuery,
 
   // Custom hooks (from extendedApi)
   useGetResultsQuery,

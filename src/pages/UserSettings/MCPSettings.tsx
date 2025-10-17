@@ -29,7 +29,7 @@ export function MCPSettings() {
       "command": "npx",
       "args": [
         "mcp-remote",
-        "${import.meta.env.VITE_API_URL}/api/v1/mcp",
+        "${import.meta.env.VITE_API_URL}/api/v2/mcp",
         "--allow-http",
         "--header",
         "Authorization:\${AUTH_TOKEN}"

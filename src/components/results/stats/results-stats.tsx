@@ -3,7 +3,7 @@ import { Collapsible, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
 import { LuArrowBigRight } from 'react-icons/lu';
 import { useDebounce } from 'use-debounce';
 
-import { useGetApiV1ResultsStatsQuery } from '@/redux/apis/generatedApi';
+import { useGetApiV2ResultsStatsQuery } from '@/redux/apis/generatedApi';
 import { useResultsActions, useSelectedDates } from '@/redux/slices/results';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { getIssueCategoryStyle, getResultStatusStyle } from '@/utils';
@@ -18,7 +18,7 @@ export const ResultsStats = memo(() => {
   const { updateFilters } = useResultsActions();
 
   const [debouncedDates] = useDebounce(selectedDates, 200);
-  const { data: statistics, isFetching } = useGetApiV1ResultsStatsQuery({
+  const { data: statistics, isFetching } = useGetApiV2ResultsStatsQuery({
     dates: debouncedDates,
     projectId: selectedProjectId!,
   });

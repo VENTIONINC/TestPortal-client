@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Dialog, DialogBody, DialogFooter, NativeSelect, Slider, Textarea, toaster } from '@/components/ui';
-import { usePatchApiV1ResultsByResultIdAnalysisMutation } from '@/redux/apis/generatedApi';
+import { usePatchApiV2ResultsByResultIdAnalysisMutation } from '@/redux/apis/generatedApi';
 import { resultAnalysisSchema } from '@/schemas';
 import { AnalysisCategory, BaseResult, DefaultDialogProps } from '@/types';
 
@@ -31,7 +31,7 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
     },
   });
 
-  const [updateResultAnalysis] = usePatchApiV1ResultsByResultIdAnalysisMutation();
+  const [updateResultAnalysis] = usePatchApiV2ResultsByResultIdAnalysisMutation();
 
   const onSubmit = async (data: ResultAnalysisFormData) => {
     try {

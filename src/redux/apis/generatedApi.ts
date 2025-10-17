@@ -12,7 +12,6 @@ export const addTagTypes = [
   "Users",
   "MCP",
   "Authentication",
-  "Test Analysis",
   "Error Formatter",
   "Prompts",
   "Projects",
@@ -25,87 +24,12 @@ const injectedRtkApi = api
   })
   .injectEndpoints({
     endpoints: (build) => ({
-      getApiV1: build.query<GetApiV1ApiResponse, GetApiV1ApiArg>({
-        query: () => ({ url: `/api/v1/` }),
+      getApiV2Status: build.query<
+        GetApiV2StatusApiResponse,
+        GetApiV2StatusApiArg
+      >({
+        query: () => ({ url: `/api/v2/status` }),
         providesTags: ["System"],
-      }),
-      getApiV1Status: build.query<
-        GetApiV1StatusApiResponse,
-        GetApiV1StatusApiArg
-      >({
-        query: () => ({ url: `/api/v1/status` }),
-        providesTags: ["System"],
-      }),
-      getApiV1Issues: build.query<
-        GetApiV1IssuesApiResponse,
-        GetApiV1IssuesApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v1/issues`,
-          params: {
-            category: queryArg.category,
-            name: queryArg.name,
-            page: queryArg.page,
-            limit: queryArg.limit,
-          },
-        }),
-        providesTags: ["Issues"],
-      }),
-      postApiV1Issues: build.mutation<
-        PostApiV1IssuesApiResponse,
-        PostApiV1IssuesApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v1/issues`,
-          method: "POST",
-          body: queryArg.createIssueRequest,
-        }),
-        invalidatesTags: ["Issues"],
-      }),
-      getApiV1IssuesWithStats: build.query<
-        GetApiV1IssuesWithStatsApiResponse,
-        GetApiV1IssuesWithStatsApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v1/issues/with-stats`,
-          params: {
-            category: queryArg.category,
-            name: queryArg.name,
-            page: queryArg.page,
-            limit: queryArg.limit,
-            statFrom: queryArg.statFrom,
-            statTo: queryArg.statTo,
-          },
-        }),
-        providesTags: ["Issues"],
-      }),
-      deleteApiV1IssuesByIssueId: build.mutation<
-        DeleteApiV1IssuesByIssueIdApiResponse,
-        DeleteApiV1IssuesByIssueIdApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v1/issues/${queryArg.issueId}`,
-          method: "DELETE",
-        }),
-        invalidatesTags: ["Issues", "Results"],
-      }),
-      getApiV1IssuesByIssueId: build.query<
-        GetApiV1IssuesByIssueIdApiResponse,
-        GetApiV1IssuesByIssueIdApiArg
-      >({
-        query: (queryArg) => ({ url: `/api/v1/issues/${queryArg.issueId}` }),
-        providesTags: ["Issues"],
-      }),
-      patchApiV1IssuesByIssueId: build.mutation<
-        PatchApiV1IssuesByIssueIdApiResponse,
-        PatchApiV1IssuesByIssueIdApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v1/issues/${queryArg.issueId}`,
-          method: "PATCH",
-          body: queryArg.updateIssueRequest,
-        }),
-        invalidatesTags: ["Issues", "Results"],
       }),
       getApiV2Issues: build.query<
         GetApiV2IssuesApiResponse,
@@ -161,12 +85,29 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Issues", "Results"],
       }),
-      getApiV1Results: build.query<
-        GetApiV1ResultsApiResponse,
-        GetApiV1ResultsApiArg
+      getApiV2IssuesWithStats: build.query<
+        GetApiV2IssuesWithStatsApiResponse,
+        GetApiV2IssuesWithStatsApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/results`,
+          url: `/api/v2/issues/with-stats`,
+          params: {
+            category: queryArg.category,
+            name: queryArg.name,
+            page: queryArg.page,
+            limit: queryArg.limit,
+            statFrom: queryArg.statFrom,
+            statTo: queryArg.statTo,
+          },
+        }),
+        providesTags: ["Issues"],
+      }),
+      getApiV2Results: build.query<
+        GetApiV2ResultsApiResponse,
+        GetApiV2ResultsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/results`,
           params: {
             projectId: queryArg.projectId,
             tag: queryArg.tag,
@@ -187,19 +128,19 @@ const injectedRtkApi = api
         }),
         providesTags: ["Results"],
       }),
-      getApiV1ResultsByResultId: build.query<
-        GetApiV1ResultsByResultIdApiResponse,
-        GetApiV1ResultsByResultIdApiArg
+      getApiV2ResultsByResultId: build.query<
+        GetApiV2ResultsByResultIdApiResponse,
+        GetApiV2ResultsByResultIdApiArg
       >({
-        query: (queryArg) => ({ url: `/api/v1/results/${queryArg.resultId}` }),
+        query: (queryArg) => ({ url: `/api/v2/results/${queryArg.resultId}` }),
         providesTags: ["Results"],
       }),
-      getApiV1ResultsStats: build.query<
-        GetApiV1ResultsStatsApiResponse,
-        GetApiV1ResultsStatsApiArg
+      getApiV2ResultsStats: build.query<
+        GetApiV2ResultsStatsApiResponse,
+        GetApiV2ResultsStatsApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/results-stats`,
+          url: `/api/v2/results-stats`,
           params: {
             projectId: queryArg.projectId,
             dates: queryArg.dates,
@@ -207,115 +148,122 @@ const injectedRtkApi = api
         }),
         providesTags: ["Results"],
       }),
-      patchApiV1ResultsByResultIdAnalysis: build.mutation<
-        PatchApiV1ResultsByResultIdAnalysisApiResponse,
-        PatchApiV1ResultsByResultIdAnalysisApiArg
+      patchApiV2ResultsByResultIdAnalysis: build.mutation<
+        PatchApiV2ResultsByResultIdAnalysisApiResponse,
+        PatchApiV2ResultsByResultIdAnalysisApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/results/${queryArg.resultId}/analysis`,
+          url: `/api/v2/results/${queryArg.resultId}/analysis`,
           method: "PATCH",
           body: queryArg.updateResultAnalysisRequest,
         }),
         invalidatesTags: ["Results"],
       }),
-      getApiV1SpecsBySpecId: build.query<
-        GetApiV1SpecsBySpecIdApiResponse,
-        GetApiV1SpecsBySpecIdApiArg
+      getApiV2SpecsBySpecId: build.query<
+        GetApiV2SpecsBySpecIdApiResponse,
+        GetApiV2SpecsBySpecIdApiArg
       >({
-        query: (queryArg) => ({ url: `/api/v1/specs/${queryArg.specId}` }),
+        query: (queryArg) => ({ url: `/api/v2/specs/${queryArg.specId}` }),
         providesTags: ["Specs"],
       }),
-      postApiV1Assumptions: build.mutation<
-        PostApiV1AssumptionsApiResponse,
-        PostApiV1AssumptionsApiArg
+      postApiV2Assumptions: build.mutation<
+        PostApiV2AssumptionsApiResponse,
+        PostApiV2AssumptionsApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/assumptions`,
+          url: `/api/v2/assumptions`,
           method: "POST",
           body: queryArg.createAssumptionRequest,
         }),
-        invalidatesTags: ["Assumptions", "Results"],
+        invalidatesTags: ["Assumptions"],
       }),
-      patchApiV1AssumptionsByAssumptionId: build.mutation<
-        PatchApiV1AssumptionsByAssumptionIdApiResponse,
-        PatchApiV1AssumptionsByAssumptionIdApiArg
+      patchApiV2AssumptionsByAssumptionId: build.mutation<
+        PatchApiV2AssumptionsByAssumptionIdApiResponse,
+        PatchApiV2AssumptionsByAssumptionIdApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/assumptions/${queryArg.assumptionId}`,
+          url: `/api/v2/assumptions/${queryArg.assumptionId}`,
           method: "PATCH",
           body: queryArg.updateAssumptionRequest,
         }),
-        invalidatesTags: ["Assumptions", "Results"],
+        invalidatesTags: ["Assumptions"],
       }),
-      patchApiV1ResultErrorsByResultErrorIdAssignIssue: build.mutation<
-        PatchApiV1ResultErrorsByResultErrorIdAssignIssueApiResponse,
-        PatchApiV1ResultErrorsByResultErrorIdAssignIssueApiArg
+      getApiV2AssumptionsByAssumptionId: build.query<
+        GetApiV2AssumptionsByAssumptionIdApiResponse,
+        GetApiV2AssumptionsByAssumptionIdApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/result-errors/${queryArg.resultErrorId}/assign-issue`,
+          url: `/api/v2/assumptions/${queryArg.assumptionId}`,
+        }),
+        providesTags: ["Assumptions"],
+      }),
+      patchApiV2ResultErrorsByResultErrorIdAssignIssue: build.mutation<
+        PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiResponse,
+        PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/result-errors/${queryArg.resultErrorId}/assign-issue`,
           method: "PATCH",
           body: queryArg.assignIssueRequest,
         }),
         invalidatesTags: ["Result Errors"],
       }),
-      patchApiV1ResultErrorsByResultErrorIdReview: build.mutation<
-        PatchApiV1ResultErrorsByResultErrorIdReviewApiResponse,
-        PatchApiV1ResultErrorsByResultErrorIdReviewApiArg
+      patchApiV2ResultErrorsByResultErrorIdReview: build.mutation<
+        PatchApiV2ResultErrorsByResultErrorIdReviewApiResponse,
+        PatchApiV2ResultErrorsByResultErrorIdReviewApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/result-errors/${queryArg.resultErrorId}/review`,
+          url: `/api/v2/result-errors/${queryArg.resultErrorId}/review`,
           method: "PATCH",
         }),
         invalidatesTags: ["Result Errors"],
       }),
-      patchApiV1ResultErrorsBulkReview: build.mutation<
-        PatchApiV1ResultErrorsBulkReviewApiResponse,
-        PatchApiV1ResultErrorsBulkReviewApiArg
+      patchApiV2ResultErrorsBulkReview: build.mutation<
+        PatchApiV2ResultErrorsBulkReviewApiResponse,
+        PatchApiV2ResultErrorsBulkReviewApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/result-errors/bulk-review`,
+          url: `/api/v2/result-errors/bulk-review`,
           method: "PATCH",
           body: queryArg.bulkReviewRequest,
         }),
         invalidatesTags: ["Result Errors"],
       }),
-      getApiV1ExecutionsByExecutionId: build.query<
-        GetApiV1ExecutionsByExecutionIdApiResponse,
-        GetApiV1ExecutionsByExecutionIdApiArg
+      getApiV2ResultErrorsByResultErrorId: build.query<
+        GetApiV2ResultErrorsByResultErrorIdApiResponse,
+        GetApiV2ResultErrorsByResultErrorIdApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/executions/${queryArg.executionId}`,
+          url: `/api/v2/result-errors/${queryArg.resultErrorId}`,
+        }),
+        providesTags: ["Result Errors"],
+      }),
+      getApiV2ExecutionsByExecutionId: build.query<
+        GetApiV2ExecutionsByExecutionIdApiResponse,
+        GetApiV2ExecutionsByExecutionIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/executions/${queryArg.executionId}`,
         }),
         providesTags: ["Executions"],
       }),
-      postApiV1JsonReport: build.mutation<
-        PostApiV1JsonReportApiResponse,
-        PostApiV1JsonReportApiArg
+      postApiV2UploadJsonReport: build.mutation<
+        PostApiV2UploadJsonReportApiResponse,
+        PostApiV2UploadJsonReportApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/json-report`,
-          method: "POST",
-          body: queryArg.jsonReportRequest,
-        }),
-        invalidatesTags: ["Reports"],
-      }),
-      postApiV1JsonReportUpload: build.mutation<
-        PostApiV1JsonReportUploadApiResponse,
-        PostApiV1JsonReportUploadApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v1/json-report/upload`,
+          url: `/api/v2/upload-json-report`,
           method: "POST",
           body: queryArg.body,
         }),
         invalidatesTags: ["Reports", "Results"],
       }),
-      postApiV2JsonReportUpload: build.mutation<
-        PostApiV2JsonReportUploadApiResponse,
-        PostApiV2JsonReportUploadApiArg
+      postApiV2UploadJsonReportApiKey: build.mutation<
+        PostApiV2UploadJsonReportApiKeyApiResponse,
+        PostApiV2UploadJsonReportApiKeyApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/json-report/upload`,
+          url: `/api/v2/upload-json-report-api-key`,
           method: "POST",
           body: queryArg.body,
         }),
@@ -402,17 +350,6 @@ const injectedRtkApi = api
           body: queryArg.refreshTokenRequest,
         }),
         invalidatesTags: ["Authentication"],
-      }),
-      postApiV1TestAnalysisAnalyze: build.mutation<
-        PostApiV1TestAnalysisAnalyzeApiResponse,
-        PostApiV1TestAnalysisAnalyzeApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v1/test-analysis/analyze`,
-          method: "POST",
-          body: queryArg.testAnalysisRequest,
-        }),
-        invalidatesTags: ["Test Analysis"],
       }),
       postApiV2ErrorFormatter: build.mutation<
         PostApiV2ErrorFormatterApiResponse,
@@ -503,76 +440,27 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Projects"],
       }),
-      postApiV2CtrfReport: build.mutation<
-        PostApiV2CtrfReportApiResponse,
-        PostApiV2CtrfReportApiArg
+      postApiV2UploadCtrfReport: build.mutation<
+        PostApiV2UploadCtrfReportApiResponse,
+        PostApiV2UploadCtrfReportApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/ctrf/report`,
-          method: "POST",
-          body: queryArg.ctrfReportRequest,
-          params: {
-            projectId: queryArg.projectId,
-          },
-        }),
-        invalidatesTags: ["CTRF"],
-      }),
-      patchApiV2CtrfReportByExecutionId: build.mutation<
-        PatchApiV2CtrfReportByExecutionIdApiResponse,
-        PatchApiV2CtrfReportByExecutionIdApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v2/ctrf/report/${queryArg.executionId}`,
-          method: "PATCH",
-          body: queryArg.ctrfReportUpdateRequest,
-        }),
-        invalidatesTags: ["CTRF"],
-      }),
-      postApiV2CtrfReportUpload: build.mutation<
-        PostApiV2CtrfReportUploadApiResponse,
-        PostApiV2CtrfReportUploadApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v2/ctrf/report/upload`,
+          url: `/api/v2/upload-ctrf-report`,
           method: "POST",
           body: queryArg.body,
         }),
         invalidatesTags: ["CTRF"],
       }),
-      postApiV1Mcp: build.mutation<PostApiV1McpApiResponse, PostApiV1McpApiArg>(
-        {
-          query: (queryArg) => ({
-            url: `/api/v1/mcp`,
-            method: "POST",
-            body: queryArg.body,
-            headers: {
-              "mcp-session-id": queryArg["mcp-session-id"],
-            },
-          }),
-          invalidatesTags: ["MCP"],
-        },
-      ),
-      getApiV1Mcp: build.query<GetApiV1McpApiResponse, GetApiV1McpApiArg>({
-        query: (queryArg) => ({
-          url: `/api/v1/mcp`,
-          headers: {
-            "mcp-session-id": queryArg["mcp-session-id"],
-          },
-        }),
-        providesTags: ["MCP"],
-      }),
-      deleteApiV1Mcp: build.mutation<
-        DeleteApiV1McpApiResponse,
-        DeleteApiV1McpApiArg
+      postApiV2UploadCtrfReportApiKey: build.mutation<
+        PostApiV2UploadCtrfReportApiKeyApiResponse,
+        PostApiV2UploadCtrfReportApiKeyApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v1/mcp`,
-          method: "DELETE",
-          headers: {
-            "mcp-session-id": queryArg["mcp-session-id"],
-          },
+          url: `/api/v2/upload-ctrf-report-api-key`,
+          method: "POST",
+          body: queryArg.body,
         }),
-        invalidatesTags: ["MCP"],
+        invalidatesTags: ["CTRF"],
       }),
       postApiV2UploadGenerateKey: build.mutation<
         PostApiV2UploadGenerateKeyApiResponse,
@@ -608,83 +496,9 @@ const injectedRtkApi = api
     overrideExisting: false,
   });
 export { injectedRtkApi as generatedApi };
-export type GetApiV1ApiResponse = unknown;
-export type GetApiV1ApiArg = void;
-export type GetApiV1StatusApiResponse =
+export type GetApiV2StatusApiResponse =
   /** status 200 Server status */ StatusResponse;
-export type GetApiV1StatusApiArg = void;
-export type GetApiV1IssuesApiResponse =
-  /** status 200 List of issues */ Issue[];
-export type GetApiV1IssuesApiArg = {
-  category?: "Bug" | "Script" | "Infra" | "Performance";
-  name?: string;
-  page?: number;
-  limit?: number;
-};
-export type PostApiV1IssuesApiResponse =
-  /** status 201 Issue created successfully */ Issue;
-export type PostApiV1IssuesApiArg = {
-  createIssueRequest: CreateIssueRequest;
-};
-export type GetApiV1IssuesWithStatsApiResponse =
-  /** status 200 List of issues with statistics */ {
-    issues: {
-      id: string;
-      name: string;
-      category?: string;
-      description?: string;
-      portal?: string;
-      service?: string;
-      ticket?: string;
-      projectId: string;
-      createdById?: string;
-      updatedById?: string;
-      createdAt: string;
-      updatedAt: string;
-      statistics: {
-        occurrenceCount: number;
-        firstOccurrence: string | null;
-        lastOccurrence: string | null;
-        impactedTestsCount: number;
-        timeDistribution: {
-          date: string;
-          count: number;
-        }[];
-      };
-    }[];
-    total: number;
-    page: number;
-    totalPages: number;
-  };
-export type GetApiV1IssuesWithStatsApiArg = {
-  category?: "Bug" | "Script" | "Infra" | "Performance";
-  name?: string;
-  page?: number;
-  limit?: number;
-  /** Start date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
-  statFrom?: string;
-  /** End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
-  statTo?: string;
-};
-export type DeleteApiV1IssuesByIssueIdApiResponse =
-  /** status 200 Issue and all associated assumptions deleted successfully */ {
-    message: string;
-    issue: Issue;
-  };
-export type DeleteApiV1IssuesByIssueIdApiArg = {
-  issueId: string;
-};
-export type GetApiV1IssuesByIssueIdApiResponse =
-  /** status 200 Issue details */ Issue;
-export type GetApiV1IssuesByIssueIdApiArg = {
-  issueId: string;
-};
-export type PatchApiV1IssuesByIssueIdApiResponse =
-  /** status 200 Issue updated successfully */ Issue;
-export type PatchApiV1IssuesByIssueIdApiArg = {
-  issueId: string;
-  updateIssueRequest: UpdateIssueRequest;
-};
+export type GetApiV2StatusApiArg = void;
 export type GetApiV2IssuesApiResponse =
   /** status 200 List of issues */ Issue[];
 export type GetApiV2IssuesApiArg = {
@@ -717,9 +531,49 @@ export type DeleteApiV2IssuesByIssueIdApiResponse =
 export type DeleteApiV2IssuesByIssueIdApiArg = {
   issueId: string;
 };
-export type GetApiV1ResultsApiResponse =
+export type GetApiV2IssuesWithStatsApiResponse =
+  /** status 200 List of issues with statistics */ {
+    issues: {
+      id: string;
+      name: string;
+      category?: string;
+      description?: string;
+      portal?: string;
+      service?: string;
+      ticket?: string;
+      projectId: string;
+      createdById?: string;
+      updatedById?: string;
+      createdAt: string;
+      updatedAt: string;
+      statistics: {
+        occurrenceCount: number;
+        firstOccurrence: string | null;
+        lastOccurrence: string | null;
+        impactedTestsCount: number;
+        timeDistribution: {
+          date: string;
+          count: number;
+        }[];
+      };
+    }[];
+    total: number;
+    page: number;
+    totalPages: number;
+  };
+export type GetApiV2IssuesWithStatsApiArg = {
+  category?: "Bug" | "Script" | "Infra" | "Performance";
+  name?: string;
+  page?: number;
+  limit?: number;
+  /** Start date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
+  statFrom?: string;
+  /** End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
+  statTo?: string;
+};
+export type GetApiV2ResultsApiResponse =
   /** status 200 List of results */ Result[];
-export type GetApiV1ResultsApiArg = {
+export type GetApiV2ResultsApiArg = {
   projectId: string;
   tag?: string;
   specId?: string;
@@ -736,69 +590,76 @@ export type GetApiV1ResultsApiArg = {
   page?: number;
   limit?: number;
 };
-export type GetApiV1ResultsByResultIdApiResponse =
+export type GetApiV2ResultsByResultIdApiResponse =
   /** status 200 Result details */ Result;
-export type GetApiV1ResultsByResultIdApiArg = {
+export type GetApiV2ResultsByResultIdApiArg = {
   resultId: string;
 };
-export type GetApiV1ResultsStatsApiResponse =
+export type GetApiV2ResultsStatsApiResponse =
   /** status 200 Results statistics */ ResultsStats;
-export type GetApiV1ResultsStatsApiArg = {
+export type GetApiV2ResultsStatsApiArg = {
   projectId: string;
   /** Array of dates in YYYY-MM-DD format to filter results. If not provided, returns stats for all results. */
   dates?: string[];
 };
-export type PatchApiV1ResultsByResultIdAnalysisApiResponse =
+export type PatchApiV2ResultsByResultIdAnalysisApiResponse =
   /** status 200 Result analysis updated successfully */ Result;
-export type PatchApiV1ResultsByResultIdAnalysisApiArg = {
+export type PatchApiV2ResultsByResultIdAnalysisApiArg = {
   resultId: string;
   updateResultAnalysisRequest: UpdateResultAnalysisRequest;
 };
-export type GetApiV1SpecsBySpecIdApiResponse =
+export type GetApiV2SpecsBySpecIdApiResponse =
   /** status 200 Spec details */ Spec;
-export type GetApiV1SpecsBySpecIdApiArg = {
+export type GetApiV2SpecsBySpecIdApiArg = {
   specId: string;
 };
-export type PostApiV1AssumptionsApiResponse =
-  /** status 201 Assumption created successfully */ Assumption;
-export type PostApiV1AssumptionsApiArg = {
+export type PostApiV2AssumptionsApiResponse =
+  /** status 201 Successfully created assumption */ Assumption;
+export type PostApiV2AssumptionsApiArg = {
   createAssumptionRequest: CreateAssumptionRequest;
 };
-export type PatchApiV1AssumptionsByAssumptionIdApiResponse =
-  /** status 200 Assumption updated successfully */ Assumption;
-export type PatchApiV1AssumptionsByAssumptionIdApiArg = {
+export type PatchApiV2AssumptionsByAssumptionIdApiResponse =
+  /** status 200 Successfully updated assumption */ Assumption;
+export type PatchApiV2AssumptionsByAssumptionIdApiArg = {
   assumptionId: string;
   updateAssumptionRequest: UpdateAssumptionRequest;
 };
-export type PatchApiV1ResultErrorsByResultErrorIdAssignIssueApiResponse =
+export type GetApiV2AssumptionsByAssumptionIdApiResponse =
+  /** status 200 Successfully retrieved assumption */ Assumption;
+export type GetApiV2AssumptionsByAssumptionIdApiArg = {
+  assumptionId: string;
+};
+export type PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiResponse =
   /** status 200 Issue assigned successfully */ SuccessResponse;
-export type PatchApiV1ResultErrorsByResultErrorIdAssignIssueApiArg = {
+export type PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiArg = {
   resultErrorId: string;
   assignIssueRequest: AssignIssueRequest;
 };
-export type PatchApiV1ResultErrorsByResultErrorIdReviewApiResponse =
+export type PatchApiV2ResultErrorsByResultErrorIdReviewApiResponse =
   /** status 200 Result error reviewed successfully */ SuccessResponse;
-export type PatchApiV1ResultErrorsByResultErrorIdReviewApiArg = {
+export type PatchApiV2ResultErrorsByResultErrorIdReviewApiArg = {
   resultErrorId: string;
 };
-export type PatchApiV1ResultErrorsBulkReviewApiResponse =
+export type PatchApiV2ResultErrorsBulkReviewApiResponse =
   /** status 200 Bulk review completed successfully */ SuccessResponse;
-export type PatchApiV1ResultErrorsBulkReviewApiArg = {
+export type PatchApiV2ResultErrorsBulkReviewApiArg = {
   bulkReviewRequest: BulkReviewRequest;
 };
-export type GetApiV1ExecutionsByExecutionIdApiResponse =
-  /** status 200 Execution details */ Execution;
-export type GetApiV1ExecutionsByExecutionIdApiArg = {
+export type GetApiV2ResultErrorsByResultErrorIdApiResponse =
+  /** status 200 Result error retrieved successfully */ {
+    data: ResultError;
+  };
+export type GetApiV2ResultErrorsByResultErrorIdApiArg = {
+  resultErrorId: string;
+};
+export type GetApiV2ExecutionsByExecutionIdApiResponse =
+  /** status 200 Execution details retrieved successfully */ Execution;
+export type GetApiV2ExecutionsByExecutionIdApiArg = {
   executionId: string;
 };
-export type PostApiV1JsonReportApiResponse =
-  /** status 201 Report processed successfully */ JsonReportResponse;
-export type PostApiV1JsonReportApiArg = {
-  jsonReportRequest: JsonReportRequest;
-};
-export type PostApiV1JsonReportUploadApiResponse =
+export type PostApiV2UploadJsonReportApiResponse =
   /** status 201 File report processed successfully */ JsonReportResponse;
-export type PostApiV1JsonReportUploadApiArg = {
+export type PostApiV2UploadJsonReportApiArg = {
   body: {
     /** Project ID to associate the report with */
     projectId: string;
@@ -806,9 +667,9 @@ export type PostApiV1JsonReportUploadApiArg = {
     report: Blob;
   };
 };
-export type PostApiV2JsonReportUploadApiResponse =
+export type PostApiV2UploadJsonReportApiKeyApiResponse =
   /** status 201 File report processed successfully with optional AI analysis */ JsonReportResponseWithAnalysis;
-export type PostApiV2JsonReportUploadApiArg = {
+export type PostApiV2UploadJsonReportApiKeyApiArg = {
   body: {
     /** JSON test report file to upload (CTRF format) */
     report: Blob;
@@ -855,11 +716,6 @@ export type PostApiV2UsersRefreshTokenApiResponse =
   /** status 200 Token refresh successful - returns new access and refresh tokens */ UserLoginResponse;
 export type PostApiV2UsersRefreshTokenApiArg = {
   refreshTokenRequest: RefreshTokenRequest;
-};
-export type PostApiV1TestAnalysisAnalyzeApiResponse =
-  /** status 200 Test analysis completed successfully */ TestAnalysisResponse;
-export type PostApiV1TestAnalysisAnalyzeApiArg = {
-  testAnalysisRequest: TestAnalysisRequest;
 };
 export type PostApiV2ErrorFormatterApiResponse =
   /** status 200 Error formatted successfully */ ErrorFormatterResponse;
@@ -915,23 +771,9 @@ export type DeleteApiV2ProjectsByIdApiResponse = unknown;
 export type DeleteApiV2ProjectsByIdApiArg = {
   id: string;
 };
-export type PostApiV2CtrfReportApiResponse =
-  /** status 200 CTRF report processed successfully */ CtrfReportResponse;
-export type PostApiV2CtrfReportApiArg = {
-  /** Project ID to associate the report with */
-  projectId: string;
-  ctrfReportRequest: CtrfReportRequest;
-};
-export type PatchApiV2CtrfReportByExecutionIdApiResponse =
-  /** status 200 CTRF report updated successfully */ CtrfReportResponse;
-export type PatchApiV2CtrfReportByExecutionIdApiArg = {
-  /** Execution ID to update */
-  executionId: string;
-  ctrfReportUpdateRequest: CtrfReportUpdateRequest;
-};
-export type PostApiV2CtrfReportUploadApiResponse =
+export type PostApiV2UploadCtrfReportApiResponse =
   /** status 200 CTRF report file processed successfully */ CtrfReportResponse;
-export type PostApiV2CtrfReportUploadApiArg = {
+export type PostApiV2UploadCtrfReportApiArg = {
   body: {
     /** CTRF report JSON file to upload */
     report?: Blob;
@@ -939,19 +781,15 @@ export type PostApiV2CtrfReportUploadApiArg = {
     projectId: string;
   };
 };
-export type PostApiV1McpApiResponse = /** status 200 MCP response */ any;
-export type PostApiV1McpApiArg = {
-  "mcp-session-id"?: string;
-  body: any;
-};
-export type GetApiV1McpApiResponse = /** status 200 MCP session response */ any;
-export type GetApiV1McpApiArg = {
-  "mcp-session-id": string;
-};
-export type DeleteApiV1McpApiResponse =
-  /** status 200 Session cleanup successful */ any;
-export type DeleteApiV1McpApiArg = {
-  "mcp-session-id": string;
+export type PostApiV2UploadCtrfReportApiKeyApiResponse =
+  /** status 200 CTRF report file processed successfully */ CtrfReportResponse;
+export type PostApiV2UploadCtrfReportApiKeyApiArg = {
+  body: {
+    /** CTRF report JSON file to upload */
+    report?: Blob;
+    /** Project ID to associate the report with */
+    projectId: string;
+  };
 };
 export type PostApiV2UploadGenerateKeyApiResponse =
   /** status 200 API key generated successfully. The plain text key is returned - save it securely as it will not be shown again. */ GenerateApiKeyResponse;
@@ -1104,6 +942,15 @@ export type AssignIssueRequest = {
 export type BulkReviewRequest = {
   errorIds: string[];
 };
+export type ResultError = {
+  id: string;
+  resultId: string;
+  errorMessage: string;
+  stackTrace?: string;
+  assertionInfo?: string;
+  createdAt: string;
+  updatedAt: string;
+};
 export type Execution = {
   id: string;
   runId: string;
@@ -1120,38 +967,6 @@ export type JsonReportResponse = {
   success: boolean;
   executionId: string;
   specsProcessed: number;
-};
-export type JsonReportTestResult = {
-  reportPortalLink?: string;
-  retry?: number;
-  status: string;
-  duration?: number;
-  startTime: string;
-  error?: {
-    message: string;
-    stack?: string;
-    assertion?: string;
-  };
-};
-export type JsonReportTestSpec = {
-  title: string;
-  custom_id?: string;
-  location?: {
-    file?: string;
-  };
-  tags?: string[];
-  annotations?: string[];
-  results: JsonReportTestResult[];
-};
-export type JsonReportRequest = {
-  runId?: string;
-  env?: string;
-  version?: string;
-  identifierStrategy?: "time-period" | "hourly" | "daily";
-  stats?: {
-    startTime: string;
-  };
-  tests: JsonReportTestSpec[];
 };
 export type JsonReportResponseWithAnalysis = {
   success: boolean;
@@ -1204,24 +1019,6 @@ export type UserLoginRequest = {
 };
 export type RefreshTokenRequest = {
   refreshToken: string;
-};
-export type TestResultAnalysis = {
-  id: string;
-  status: "passed" | "failed";
-  category?: "bug" | "infra" | "performance" | "script" | "other";
-  confidence: number;
-  conclusion?: string;
-};
-export type TestAnalysisResponse = {
-  success: boolean;
-  data: {
-    dataSource: string;
-    totalTests: number;
-    analysisResults: TestResultAnalysis[];
-  };
-};
-export type TestAnalysisRequest = {
-  testResults?: any[];
 };
 export type ErrorFormatterResponse = {
   original: {
@@ -1302,103 +1099,6 @@ export type CtrfReportResponse = {
     executionId: string;
   };
 };
-export type CtrfTool = {
-  /** Test tool name (e.g., 'playwright', 'jest') */
-  name: string;
-  /** Tool version */
-  version?: string;
-};
-export type CtrfSummary = {
-  /** Total number of tests */
-  tests: number;
-  /** Number of passed tests */
-  passed: number;
-  /** Number of failed tests */
-  failed: number;
-  /** Number of pending tests */
-  pending: number;
-  /** Number of skipped tests */
-  skipped: number;
-  /** Number of tests with other status */
-  other: number;
-  /** Start timestamp (Unix epoch) */
-  start: number;
-  /** End timestamp (Unix epoch) */
-  stop: number;
-};
-export type CtrfTestStatus =
-  | "passed"
-  | "failed"
-  | "skipped"
-  | "pending"
-  | "other";
-export type CtrfTest = {
-  /** Test name/title */
-  name: string;
-  status: CtrfTestStatus;
-  /** Test duration in milliseconds */
-  duration: number;
-  /** Error/failure message */
-  message?: string;
-  /** Stack trace or detailed error info */
-  trace?: string;
-  /** Original status from test framework */
-  rawStatus?: string;
-  /** Test type (e.g., 'unit', 'integration') */
-  type?: string;
-  /** Path to test file */
-  filePath?: string;
-  /** Retry attempt number */
-  retry?: number;
-  /** Whether test is flaky */
-  flaky?: boolean;
-  /** Test suite name */
-  suite?: string;
-  /** Array of test tags */
-  tags?: string[];
-  /** Custom test metadata */
-  meta?: {
-    [key: string]: any;
-  };
-};
-export type CtrfEnvironment = {
-  /** Application name */
-  appName?: string;
-  /** Build name */
-  buildName?: string;
-  /** Build number */
-  buildNumber?: string;
-  /** Build URL */
-  buildUrl?: string;
-  /** Repository name */
-  repositoryName?: string;
-  /** Repository URL */
-  repositoryUrl?: string;
-  /** Git branch name */
-  branchName?: string;
-  /** Test environment (e.g., 'staging', 'prod') */
-  testEnvironment?: string;
-  /** Custom environment metadata */
-  extra?: {
-    [key: string]: any;
-  };
-};
-export type CtrfResults = {
-  tool: CtrfTool;
-  summary: CtrfSummary;
-  tests: CtrfTest[];
-  environment?: CtrfEnvironment;
-  /** Custom metadata */
-  extra?: {
-    [key: string]: any;
-  };
-};
-export type CtrfReportRequest = {
-  results: CtrfResults;
-};
-export type CtrfReportUpdateRequest = {
-  results: CtrfResults;
-};
 export type GenerateApiKeyResponse = {
   success: boolean;
   message: string;
@@ -1433,33 +1133,28 @@ export type RevokeApiKeyResponse = {
   message: string;
 };
 export const {
-  useGetApiV1Query,
-  useGetApiV1StatusQuery,
-  useGetApiV1IssuesQuery,
-  usePostApiV1IssuesMutation,
-  useGetApiV1IssuesWithStatsQuery,
-  useDeleteApiV1IssuesByIssueIdMutation,
-  useGetApiV1IssuesByIssueIdQuery,
-  usePatchApiV1IssuesByIssueIdMutation,
+  useGetApiV2StatusQuery,
   useGetApiV2IssuesQuery,
   usePostApiV2IssuesMutation,
   useGetApiV2IssuesByIssueIdQuery,
   usePatchApiV2IssuesByIssueIdMutation,
   useDeleteApiV2IssuesByIssueIdMutation,
-  useGetApiV1ResultsQuery,
-  useGetApiV1ResultsByResultIdQuery,
-  useGetApiV1ResultsStatsQuery,
-  usePatchApiV1ResultsByResultIdAnalysisMutation,
-  useGetApiV1SpecsBySpecIdQuery,
-  usePostApiV1AssumptionsMutation,
-  usePatchApiV1AssumptionsByAssumptionIdMutation,
-  usePatchApiV1ResultErrorsByResultErrorIdAssignIssueMutation,
-  usePatchApiV1ResultErrorsByResultErrorIdReviewMutation,
-  usePatchApiV1ResultErrorsBulkReviewMutation,
-  useGetApiV1ExecutionsByExecutionIdQuery,
-  usePostApiV1JsonReportMutation,
-  usePostApiV1JsonReportUploadMutation,
-  usePostApiV2JsonReportUploadMutation,
+  useGetApiV2IssuesWithStatsQuery,
+  useGetApiV2ResultsQuery,
+  useGetApiV2ResultsByResultIdQuery,
+  useGetApiV2ResultsStatsQuery,
+  usePatchApiV2ResultsByResultIdAnalysisMutation,
+  useGetApiV2SpecsBySpecIdQuery,
+  usePostApiV2AssumptionsMutation,
+  usePatchApiV2AssumptionsByAssumptionIdMutation,
+  useGetApiV2AssumptionsByAssumptionIdQuery,
+  usePatchApiV2ResultErrorsByResultErrorIdAssignIssueMutation,
+  usePatchApiV2ResultErrorsByResultErrorIdReviewMutation,
+  usePatchApiV2ResultErrorsBulkReviewMutation,
+  useGetApiV2ResultErrorsByResultErrorIdQuery,
+  useGetApiV2ExecutionsByExecutionIdQuery,
+  usePostApiV2UploadJsonReportMutation,
+  usePostApiV2UploadJsonReportApiKeyMutation,
   useGetApiV2UsersByUserIdQuery,
   usePatchApiV2UsersByUserIdMutation,
   usePatchApiV2UsersByUserIdIntegrationsMutation,
@@ -1468,7 +1163,6 @@ export const {
   usePostApiV2UsersSignupMutation,
   usePostApiV2UsersLoginMutation,
   usePostApiV2UsersRefreshTokenMutation,
-  usePostApiV1TestAnalysisAnalyzeMutation,
   usePostApiV2ErrorFormatterMutation,
   useGetApiV2PromptsQuery,
   useGetApiV2PromptsByNameQuery,
@@ -1478,12 +1172,8 @@ export const {
   useGetApiV2ProjectsByIdQuery,
   usePutApiV2ProjectsByIdMutation,
   useDeleteApiV2ProjectsByIdMutation,
-  usePostApiV2CtrfReportMutation,
-  usePatchApiV2CtrfReportByExecutionIdMutation,
-  usePostApiV2CtrfReportUploadMutation,
-  usePostApiV1McpMutation,
-  useGetApiV1McpQuery,
-  useDeleteApiV1McpMutation,
+  usePostApiV2UploadCtrfReportMutation,
+  usePostApiV2UploadCtrfReportApiKeyMutation,
   usePostApiV2UploadGenerateKeyMutation,
   useGetApiV2UploadKeysQuery,
   useDeleteApiV2UploadKeysByIdMutation,
