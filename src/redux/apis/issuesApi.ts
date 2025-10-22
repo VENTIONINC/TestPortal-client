@@ -9,6 +9,7 @@ export const issuesApi = baseApi.injectEndpoints({
       query: (filters) => {
         const queryParams = new URLSearchParams();
 
+        if (filters.projectId) queryParams.append('projectId', filters.projectId);
         if (filters.tag) queryParams.append('tag', filters.tag);
         if (filters.specId) queryParams.append('specId', filters.specId.toString());
         if (filters.specFile) queryParams.append('specFile', filters.specFile);

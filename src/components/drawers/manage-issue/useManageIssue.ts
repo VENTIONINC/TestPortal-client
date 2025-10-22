@@ -68,12 +68,12 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
     if (!watchedName?.trim()) return;
 
     try {
-      const res = await getIssues({ name: watchedName, category: issue.category }).unwrap();
+      const res = await getIssues({ name: watchedName, category: issue.category, projectId: selectedProjectId }).unwrap();
       setExistingIssues(res.issues);
     } catch {
       toaster.create({ title: 'Failed to load issues', type: 'error' });
     }
-  }, [getIssues, issue.category, watchedName]);
+  }, [getIssues, issue.category, watchedName, selectedProjectId]);
 
   // Handle issue selection from search results
   const handleIssueSelected = (selectedIssue: Issue) => {
