@@ -9,6 +9,7 @@ export interface IssuesState {
 }
 
 export const initialFilters: IssueFilters = {
+  projectId: '',
   tag: '',
   specId: '',
   specFile: '',

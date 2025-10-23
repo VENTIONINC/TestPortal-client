@@ -33,6 +33,7 @@ export enum IssueCategory {
 }
 
 export interface IssueFilters {
+  projectId: string;
   tag: string;
   specId: string;
   specFile: string;

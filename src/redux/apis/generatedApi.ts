@@ -38,6 +38,7 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/v2/issues`,
           params: {
+            projectId: queryArg.projectId,
             category: queryArg.category,
             name: queryArg.name,
             page: queryArg.page,
@@ -61,7 +62,12 @@ const injectedRtkApi = api
         GetApiV2IssuesByIssueIdApiResponse,
         GetApiV2IssuesByIssueIdApiArg
       >({
-        query: (queryArg) => ({ url: `/api/v2/issues/${queryArg.issueId}` }),
+        query: (queryArg) => ({
+          url: `/api/v2/issues/${queryArg.issueId}`,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
         providesTags: ["Issues"],
       }),
       patchApiV2IssuesByIssueId: build.mutation<
@@ -92,6 +98,7 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/v2/issues/with-stats`,
           params: {
+            projectId: queryArg.projectId,
             category: queryArg.category,
             name: queryArg.name,
             page: queryArg.page,
@@ -502,6 +509,8 @@ export type GetApiV2StatusApiArg = void;
 export type GetApiV2IssuesApiResponse =
   /** status 200 List of issues */ Issue[];
 export type GetApiV2IssuesApiArg = {
+  /** Project ID to filter issues */
+  projectId: string;
   category?: string;
   name?: string;
   page?: number;
@@ -516,6 +525,8 @@ export type GetApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue details */ Issue;
 export type GetApiV2IssuesByIssueIdApiArg = {
   issueId: string;
+  /** Project ID to verify ownership of the issue */
+  projectId: string;
 };
 export type PatchApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue updated successfully */ Issue;
@@ -562,6 +573,8 @@ export type GetApiV2IssuesWithStatsApiResponse =
     totalPages: number;
   };
 export type GetApiV2IssuesWithStatsApiArg = {
+  /** Project ID to filter issues with statistics */
+  projectId: string;
   category?: "Bug" | "Script" | "Infra" | "Performance";
   name?: string;
   page?: number;

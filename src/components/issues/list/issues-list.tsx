@@ -4,15 +4,17 @@ import { useDebounce } from 'use-debounce';
 import { IssueCard, IssuesFilters } from '@/components/issues';
 import { useGetIssuesWithStatsQuery } from '@/redux/apis/extendedApi';
 import { useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
+import { useSelectedProjectId } from '@/redux/slices/projects';
 import { IssueWithStats } from '@/types';
 
 export const IssuesList = () => {
   const filters = useIssuesFilters();
+  const selectedProjectId = useSelectedProjectId();
 
   const { setFilters } = useIssuesActions();
 
   const [debouncedFilters] = useDebounce(filters, 500);
-  const { data, isFetching } = useGetIssuesWithStatsQuery(debouncedFilters);
+  const { data, isFetching } = useGetIssuesWithStatsQuery({ ...debouncedFilters, projectId: selectedProjectId });
 
   const nextPage = () => {
     if (data && filters.page < data.totalPages) {
