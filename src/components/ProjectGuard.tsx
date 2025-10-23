@@ -24,7 +24,7 @@ export function ProjectGuard({ children }: ProjectGuardProps) {
     setSelectedProjectId(firstProject.id.toString());
   }, [projects, selectedProjectId, setSelectedProjectId, isLoading]);
 
-  if (isLoading || !selectedProjectId) {
+  if (isLoading) {
     return <LoadingPlaceholder />;
   }
 
