@@ -140,7 +140,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
   // Delete issue
   const handleDeleteIssue = async () => {
     try {
-      await deleteIssue({ issueId: issue.id }).unwrap();
+      await deleteIssue({ issueId: issue.id, projectId: selectedProjectId }).unwrap();
       toaster.create({ title: 'Issue deleted successfully', type: 'success' });
       closeDrawer();
     } catch {

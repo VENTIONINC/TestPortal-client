@@ -88,6 +88,9 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/v2/issues/${queryArg.issueId}`,
           method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
         }),
         invalidatesTags: ["Issues", "Results"],
       }),
@@ -560,6 +563,8 @@ export type DeleteApiV2IssuesByIssueIdApiResponse =
   };
 export type DeleteApiV2IssuesByIssueIdApiArg = {
   issueId: string;
+  /** Project ID to verify ownership of the issue */
+  projectId: string;
 };
 export type GetApiV2IssuesWithStatsApiResponse =
   /** status 200 List of issues with statistics */ {
