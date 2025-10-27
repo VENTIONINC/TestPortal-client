@@ -139,7 +139,12 @@ const injectedRtkApi = api
         GetApiV2ResultsByResultIdApiResponse,
         GetApiV2ResultsByResultIdApiArg
       >({
-        query: (queryArg) => ({ url: `/api/v2/results/${queryArg.resultId}` }),
+        query: (queryArg) => ({
+          url: `/api/v2/results/${queryArg.resultId}`,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
         providesTags: ["Results"],
       }),
       getApiV2ResultsStats: build.query<
@@ -170,7 +175,12 @@ const injectedRtkApi = api
         GetApiV2SpecsBySpecIdApiResponse,
         GetApiV2SpecsBySpecIdApiArg
       >({
-        query: (queryArg) => ({ url: `/api/v2/specs/${queryArg.specId}` }),
+        query: (queryArg) => ({
+          url: `/api/v2/specs/${queryArg.specId}`,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
         providesTags: ["Specs"],
       }),
       postApiV2Assumptions: build.mutation<
@@ -201,6 +211,9 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/assumptions/${queryArg.assumptionId}`,
+          params: {
+            projectId: queryArg.projectId,
+          },
         }),
         providesTags: ["Assumptions"],
       }),
@@ -242,6 +255,9 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/result-errors/${queryArg.resultErrorId}`,
+          params: {
+            projectId: queryArg.projectId,
+          },
         }),
         providesTags: ["Result Errors"],
       }),
@@ -251,6 +267,9 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/executions/${queryArg.executionId}`,
+          params: {
+            projectId: queryArg.projectId,
+          },
         }),
         providesTags: ["Executions"],
       }),
@@ -607,6 +626,8 @@ export type GetApiV2ResultsByResultIdApiResponse =
   /** status 200 Result details */ Result;
 export type GetApiV2ResultsByResultIdApiArg = {
   resultId: string;
+  /** Project ID to verify ownership of the result */
+  projectId: string;
 };
 export type GetApiV2ResultsStatsApiResponse =
   /** status 200 Results statistics */ ResultsStats;
@@ -625,6 +646,8 @@ export type GetApiV2SpecsBySpecIdApiResponse =
   /** status 200 Spec details */ Spec;
 export type GetApiV2SpecsBySpecIdApiArg = {
   specId: string;
+  /** Project ID to verify ownership of the spec */
+  projectId: string;
 };
 export type PostApiV2AssumptionsApiResponse =
   /** status 201 Successfully created assumption */ Assumption;
@@ -641,6 +664,8 @@ export type GetApiV2AssumptionsByAssumptionIdApiResponse =
   /** status 200 Successfully retrieved assumption */ Assumption;
 export type GetApiV2AssumptionsByAssumptionIdApiArg = {
   assumptionId: string;
+  /** Project ID to verify ownership of the assumption */
+  projectId: string;
 };
 export type PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiResponse =
   /** status 200 Issue assigned successfully */ SuccessResponse;
@@ -664,11 +689,15 @@ export type GetApiV2ResultErrorsByResultErrorIdApiResponse =
   };
 export type GetApiV2ResultErrorsByResultErrorIdApiArg = {
   resultErrorId: string;
+  /** Project ID to verify ownership of the result error */
+  projectId: string;
 };
 export type GetApiV2ExecutionsByExecutionIdApiResponse =
   /** status 200 Execution details retrieved successfully */ Execution;
 export type GetApiV2ExecutionsByExecutionIdApiArg = {
   executionId: string;
+  /** Project ID to verify ownership of the execution */
+  projectId: string;
 };
 export type PostApiV2UploadJsonReportApiResponse =
   /** status 201 File report processed successfully */ JsonReportResponse;
