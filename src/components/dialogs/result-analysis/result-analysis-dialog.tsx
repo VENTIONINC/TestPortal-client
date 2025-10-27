@@ -7,6 +7,7 @@ import { Dialog, DialogBody, DialogFooter, NativeSelect, Slider, Textarea, toast
 import { usePatchApiV2ResultsByResultIdAnalysisMutation } from '@/redux/apis/generatedApi';
 import { resultAnalysisSchema } from '@/schemas';
 import { AnalysisCategory, BaseResult, DefaultDialogProps } from '@/types';
+import { getConfidenceLabel } from '@/utils';
 
 type ResultAnalysisFormData = z.infer<typeof resultAnalysisSchema>;
 
@@ -73,17 +74,17 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
           onValueChange={({ value }) => {
             setValue('analysisConfidence', value[0], { shouldDirty: true });
           }}
-          min={0}
-          max={1}
-          step={0.01}
+          min={1}
+          max={5}
+          step={1}
           showValue
-          formatValue={(value) => `${Math.round(value * 100)}%`}
+          formatValue={(value) => getConfidenceLabel(value)}
           marks={[
-            { value: 0, label: '0%' },
-            { value: 0.25, label: '25%' },
-            { value: 0.5, label: '50%' },
-            { value: 0.75, label: '75%' },
-            { value: 1, label: '100%' },
+            { value: 1 },
+            { value: 2 },
+            { value: 3 },
+            { value: 4 },
+            { value: 5 },
           ]}
         />
       </DialogBody>

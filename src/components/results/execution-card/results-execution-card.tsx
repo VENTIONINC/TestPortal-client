@@ -5,7 +5,7 @@ import { Checkbox, ClipboardCopyText } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
-import { getAnalysisCategoryStyle, getResultStatusStyle } from '@/utils';
+import { getAnalysisCategoryStyle, getConfidenceLabel, getResultStatusStyle } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 
 import { BulkActions } from '../../BulkActions';
@@ -101,7 +101,7 @@ export const ResultsExecutionCard = memo(
                         _hover={{ bg: hoverBgColor }}
                       >
                         <Icon size={16} color="currentColor" />
-                        <Text>{result.analysisConfidence * 100}%</Text>
+                        <Text>{getConfidenceLabel(result.analysisConfidence)}</Text>
                       </HStack>
                     )}
                     <InlineIssue resultError={resultError} />

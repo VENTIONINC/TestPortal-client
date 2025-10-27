@@ -20,3 +20,22 @@ export const getAnalysisCategoryStyle = (category?: AnalysisCategory) => {
       return { Icon: LuCircleHelp, color: 'gray.500', hoverBgColor: 'gray.100' };
   }
 };
+
+export const getConfidenceLabel = (confidence?: number): string => {
+  if (!confidence) return '';
+
+  switch (confidence) {
+    case 1:
+      return 'Not Confident';
+    case 2:
+      return 'Somewhat';
+    case 3:
+      return 'Moderate';
+    case 4:
+      return 'Confident';
+    case 5:
+      return 'Very Confident';
+    default:
+      return String(confidence);
+  }
+};
