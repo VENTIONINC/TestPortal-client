@@ -57,6 +57,8 @@ const ResultsContent = () => {
         analysisConfidence: result.analysisConfidence,
         analysisStatus: result.analysisStatus,
         analysisConclusion: result.analysisConclusion,
+        analysisErrorQuality: result.analysisErrorQuality,
+        analysisErrorQualityConclusion: result.analysisErrorQualityConclusion,
       };
 
       const specKey = result.spec.key;

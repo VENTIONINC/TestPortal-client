@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { Dialog, DialogBody, DialogFooter, NativeSelect, Slider, Textarea, toaster } from '@/components/ui';
+import { Dialog, DialogBody, DialogFooter, Field, NativeSelect, Slider, Textarea, toaster } from '@/components/ui';
 import { usePatchApiV2ResultsByResultIdAnalysisMutation } from '@/redux/apis/generatedApi';
 import { resultAnalysisSchema } from '@/schemas';
 import { AnalysisCategory, BaseResult, DefaultDialogProps } from '@/types';
@@ -79,14 +79,22 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
           step={1}
           showValue
           formatValue={(value) => getConfidenceLabel(value)}
-          marks={[
-            { value: 1 },
-            { value: 2 },
-            { value: 3 },
-            { value: 4 },
-            { value: 5 },
-          ]}
+          marks={[1, 2, 3, 4, 5]}
         />
+        <Slider
+          label="Error Quality:"
+          value={[result.analysisErrorQuality || 0]}
+          min={0}
+          max={5}
+          step={1}
+          showValue
+          formatValue={(value) => getConfidenceLabel(value)}
+          marks={[0, 1, 2, 3, 4, 5]}
+          readOnly
+        />
+        <Field label="Error Quality Conclusion:" readOnly>
+          {result.analysisErrorQualityConclusion || 'N/A'}
+        </Field>
       </DialogBody>
 
       <DialogFooter>

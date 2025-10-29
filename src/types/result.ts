@@ -36,6 +36,8 @@ export interface BaseResult {
   analysisConfidence?: number;
   analysisStatus?: AnalysisStatus;
   analysisConclusion?: string;
+  analysisErrorQuality?: number;
+  analysisErrorQualityConclusion?: string;
 }
 
 export interface Result extends BaseResult {

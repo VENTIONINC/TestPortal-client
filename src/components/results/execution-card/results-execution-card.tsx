@@ -82,16 +82,16 @@ export const ResultsExecutionCard = memo(
             <Text>{toDuration(result.duration)}</Text>
 
             {result.errors &&
-              result.errors.length > 0 &&
               result.errors.map((resultError) => {
                 const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(result.analysisCategory);
+                const hasAnalysis = Boolean(result.analysisStatus && result.analysisConfidence);
 
                 return (
                   <Fragment key={resultError.id}>
                     <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
                       {resultError.message}
                     </Text>
-                    {result.analysisStatus && result.analysisConfidence && (
+                    {hasAnalysis && (
                       <HStack
                         color={color}
                         onClick={() => openResultAnalysisDialog(result)}
