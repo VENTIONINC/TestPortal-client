@@ -907,6 +907,18 @@ export type Result = {
   retry?: number;
   duration?: number;
   startTime?: string;
+  /** Test analysis status */
+  analysisStatus?: "passed" | "failed";
+  /** Failure category from AI analysis */
+  analysisCategory?: "bug" | "infra" | "performance" | "script" | "other";
+  /** Confidence level of analysis (1-5 scale) */
+  analysisConfidence?: number;
+  /** Explanation for the categorization decision */
+  analysisConclusion?: string;
+  /** Quality rating of error messages (1-5 scale, only for failed tests) */
+  analysisErrorQuality?: number;
+  /** Explanation for the error quality rating */
+  analysisErrorQualityConclusion?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -936,10 +948,18 @@ export type ResultsStats = {
   }[];
 };
 export type UpdateResultAnalysisRequest = {
+  /** Test analysis status */
   analysisStatus?: "passed" | "failed";
+  /** Failure category from AI analysis */
   analysisCategory?: "bug" | "infra" | "performance" | "script" | "other";
+  /** Confidence level of analysis (1-5 scale) */
   analysisConfidence?: number;
+  /** Explanation for the categorization decision */
   analysisConclusion?: string;
+  /** Quality rating of error messages (1-5 scale, only for failed tests) */
+  analysisErrorQuality?: number;
+  /** Explanation for the error quality rating */
+  analysisErrorQualityConclusion?: string;
 };
 export type Spec = {
   id: string;
