@@ -10,6 +10,9 @@ export const getDatesBetween = (fromDate: string, toDate: string): string[] => {
   const end = new Date(toDate);
   const dates: string[] = [];
 
+  start.setHours(0, 0, 0, 0);
+  end.setHours(23, 59, 59, 999);
+
   const current = new Date(start);
   while (current <= end) {
     dates.push(formatDate(current));
@@ -24,11 +27,11 @@ export const getDateDisplayName = (date: string): string => {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
-  
+
   today.setHours(0, 0, 0, 0);
   yesterday.setHours(0, 0, 0, 0);
   dateObj.setHours(0, 0, 0, 0);
-  
+
   if (dateObj.getTime() === today.getTime()) {
     return 'Today';
   } else if (dateObj.getTime() === yesterday.getTime()) {
