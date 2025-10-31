@@ -6,7 +6,7 @@ export enum PATHS {
   SIGNUP = '/signup',
   USER_SETTINGS = '/settings',
   USER_SETTINGS_MCP = '/settings/mcp',
-  USER_SETTINGS_PORTALS = '/settings/portals',
+  USER_SETTINGS_CONFIGURATION = '/settings/configuration',
   USER_SETTINGS_PROJECTS = '/settings/projects',
   USER_SETTINGS_UPLOAD_API = '/settings/upload-api',
   PROMPTS = '/prompts',

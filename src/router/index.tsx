@@ -13,7 +13,7 @@ import {
   UserSettingsPage,
 } from '@/pages';
 import { MCPSettings } from '@/pages/UserSettings/MCPSettings';
-import { PortalSettings } from '@/pages/UserSettings/PortalSettings';
+import { Configuration } from '@/pages/UserSettings/Configuration';
 import { ProjectsSettings } from '@/pages/UserSettings/ProjectsSettings';
 import { UploadApiSettings } from '@/pages/UserSettings/UploadApiSettings';
 import { PlaywrightReportGenerator } from '@/pages/ReportGenerator/PlaywrightReportGenerator';
@@ -96,8 +96,8 @@ export const router = createBrowserRouter([
         element: <MCPSettings />,
       },
       {
-        path: PATHS.USER_SETTINGS_PORTALS,
-        element: <PortalSettings />,
+        path: PATHS.USER_SETTINGS_CONFIGURATION,
+        element: <Configuration />,
       },
       {
         path: PATHS.USER_SETTINGS_PROJECTS,
