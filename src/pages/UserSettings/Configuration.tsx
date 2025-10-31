@@ -8,6 +8,7 @@ import { toaster } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const portalSettingsSchema = z.object({
+  analyzeEnabled: z.boolean(),
   reportalPortalUrl: z.string().optional(),
   monitoringPortalUrl: z.string().optional(),
   reportPortalEnabled: z.boolean(),
@@ -16,13 +17,14 @@ const portalSettingsSchema = z.object({
 
 type PortalSettingsFormData = z.infer<typeof portalSettingsSchema>;
 
-export function PortalSettings() {
+export function Configuration() {
   const user = useCurrentUser();
   const [updateUserIntegrations, { isLoading: isUpdating }] = usePatchApiV2UsersByUserIdIntegrationsMutation();
 
   const { register, handleSubmit, watch, setValue } = useForm<PortalSettingsFormData>({
     resolver: zodResolver(portalSettingsSchema),
     defaultValues: {
+      analyzeEnabled: user.analyzeEnabled || false,
       reportalPortalUrl: user.reportPortalUrl || '',
       monitoringPortalUrl: user.monitoringPortalUrl || '',
       reportPortalEnabled: user.reportPortalEnabled || false,
@@ -35,6 +37,7 @@ export function PortalSettings() {
       await updateUserIntegrations({
         userId: user.id,
         userIntegrationsUpdateRequest: {
+          analyzeEnabled: data.analyzeEnabled,
           reportPortalUrl: data.reportalPortalUrl,
           reportPortalEnabled: data.reportPortalEnabled,
           monitoringPortalUrl: data.monitoringPortalUrl,
@@ -44,13 +47,13 @@ export function PortalSettings() {
 
       toaster.create({
         title: 'Settings saved',
-        description: 'Portal URLs have been updated successfully.',
+        description: 'Integration settings have been updated successfully.',
         type: 'success',
       });
     } catch {
       toaster.create({
         title: 'Error saving settings',
-        description: 'Failed to update portal URLs. Please try again.',
+        description: 'Failed to update integration settings. Please try again.',
         type: 'error',
       });
     }
@@ -68,11 +71,25 @@ export function PortalSettings() {
         <VStack gap={6} align="stretch">
           <Box>
             <Text fontSize="lg" fontWeight="semibold" mb={4}>
-              Portal URLs
+              Integration Settings
             </Text>
             <Text color="gray.600" fontSize="sm" mb={6}>
-              Configure the URLs for your portal integrations.
+              Configure your integration settings.
             </Text>
+          </Box>
+
+          <Box>
+            <HStack justify="space-between" align="center" mb={3}>
+              <Text fontWeight="medium">Enable Analysis</Text>
+              <Switch.Root
+                size="sm"
+                checked={watch('analyzeEnabled')}
+                onChange={handleCheckChange('analyzeEnabled')}
+              >
+                <Switch.HiddenInput />
+                <Switch.Control />
+              </Switch.Root>
+            </HStack>
           </Box>
 
           <Box>

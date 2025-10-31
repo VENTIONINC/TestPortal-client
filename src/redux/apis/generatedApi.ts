@@ -956,10 +956,6 @@ export type UpdateResultAnalysisRequest = {
   analysisConfidence?: number;
   /** Explanation for the categorization decision */
   analysisConclusion?: string;
-  /** Quality rating of error messages (1-5 scale, only for failed tests) */
-  analysisErrorQuality?: number;
-  /** Explanation for the error quality rating */
-  analysisErrorQualityConclusion?: string;
 };
 export type Spec = {
   id: string;
@@ -1053,6 +1049,7 @@ export type User = {
   reportPortalEnabled: boolean;
   monitoringPortalUrl?: string | null;
   monitoringPortalEnabled: boolean;
+  analyzeEnabled: boolean;
 };
 export type UserUpdateRequest = {
   name?: string;
@@ -1064,6 +1061,7 @@ export type UserIntegrationsUpdateRequest = {
   reportPortalEnabled?: boolean;
   monitoringPortalUrl?: string | null;
   monitoringPortalEnabled?: boolean;
+  analyzeEnabled?: boolean;
 };
 export type McpTokenResponse = {
   token: string;
