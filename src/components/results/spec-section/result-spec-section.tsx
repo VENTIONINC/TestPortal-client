@@ -27,8 +27,7 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
   const dateFilters = useMemo(() => {
     const allResultDates = executions
       .flatMap(({ results }) => results.map((result) => result.startTime.split('T')[0]))
-      .filter((date, index, arr) => arr.indexOf(date) === index)
-      .sort();
+      .filter((date, index, arr) => arr.indexOf(date) === index);
 
     return allResultDates.map((date) => {
       const statuses = executions
