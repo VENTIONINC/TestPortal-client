@@ -16,9 +16,10 @@ import { serializeExecution } from './helpers';
 interface ResultSpecSectionProps {
   spec: ResultSpec;
   executions: { execution: ResultExecution; results: BaseResult[] }[];
+  allExecutions: { execution: ResultExecution; results: BaseResult[] }[];
 }
 
-export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionProps) => {
+export const ResultSpecSection = memo(({ spec, executions, allExecutions }: ResultSpecSectionProps) => {
   const selectedDates = useSelectedDates();
   const filters = useResultsFilters();
   const user = useCurrentUser();
@@ -29,7 +30,7 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
     const allDates = getDatesBetween(filters.from, filters.to);
 
     return allDates.map((date) => {
-      const statuses = executions
+      const statuses = allExecutions
         .filter(({ results }) => results.some((result) => result.startTime.split('T')[0] === date))
         .flatMap(({ results }) => results.map((result) => result.status));
 
@@ -40,7 +41,7 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
         display: getDateDisplayName(date),
       };
     });
-  }, [filters.from, filters.to, selectedDates, executions]);
+  }, [filters.from, filters.to, selectedDates, allExecutions]);
 
   const filteredExecutions = useMemo(() => {
     return executions

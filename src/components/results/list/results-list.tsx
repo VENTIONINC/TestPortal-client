@@ -22,13 +22,133 @@ const ResultsContent = () => {
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
   const [debouncedFilters] = useDebounce(filters, 500);
-  const { data, isFetching } = useGetResultsQuery({ ...debouncedFilters, projectId: selectedProjectId! });
+  const { data, isFetching } = useGetResultsQuery({
+    from: debouncedFilters.from,
+    to: debouncedFilters.to,
+    projectId: selectedProjectId!,
+  });
 
   const { toggleDate } = useResultsActions();
 
-  const { results, activeDaysResultsIds, availableDates } = useMemo(() => {
-    const filteredResults = data?.results || [];
+  const { results, allResultsMap, activeDaysResultsIds, availableDates } = useMemo(() => {
+    const allResults = data?.results || [];
     const activeDates = new Set(selectedDates);
+
+    // Build unfiltered map (for stats on all days)
+    const unfilteredMap = new Map<
+      string,
+      { spec: ResultSpec; executions: { execution: ResultExecution; results: BaseResult[] }[] }
+    >();
+
+    allResults.forEach((result) => {
+      const baseResult: BaseResult = {
+        id: result.id,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+        reportPortalLink: result.reportPortalLink,
+        retry: result.retry,
+        status: result.status,
+        duration: result.duration,
+        startTime: result.startTime,
+        specId: result.specId,
+        executionId: result.executionId,
+        errors: result.errors,
+        analysisCategory: result.analysisCategory,
+        analysisConfidence: result.analysisConfidence,
+        analysisStatus: result.analysisStatus,
+        analysisConclusion: result.analysisConclusion,
+        analysisErrorQuality: result.analysisErrorQuality,
+        analysisErrorQualityConclusion: result.analysisErrorQualityConclusion,
+      };
+
+      const specKey = result.spec.key;
+      if (unfilteredMap.has(specKey)) {
+        const savedResult = unfilteredMap.get(specKey)!;
+        const savedExecution = savedResult.executions.find((e) => e.execution.id === result.execution.id);
+
+        if (savedExecution) {
+          savedExecution.results.push(baseResult);
+        } else {
+          savedResult.executions.push({ execution: result.execution, results: [baseResult] });
+        }
+      } else {
+        unfilteredMap.set(specKey, {
+          spec: result.spec,
+          executions: [{ execution: result.execution, results: [baseResult] }],
+        });
+      }
+    });
+
+    // Filter results: only active dates get full filtering
+    const filteredResults = allResults.filter((result) => {
+      const resultDate = result.startTime.split('T')[0];
+      const isActiveDate = activeDates.has(resultDate);
+
+      // Only apply filters to active dates
+      if (!isActiveDate) {
+        return false;
+      }
+
+      // Apply spec filters
+      if (debouncedFilters.tag && !result.spec.tags.includes(debouncedFilters.tag)) {
+        return false;
+      }
+      if (debouncedFilters.specId && result.spec.id !== debouncedFilters.specId) {
+        return false;
+      }
+      if (debouncedFilters.specFile && !result.spec.file.toLowerCase().includes(debouncedFilters.specFile.toLowerCase())) {
+        return false;
+      }
+      if (debouncedFilters.specName && !result.spec.title.toLowerCase().includes(debouncedFilters.specName.toLowerCase())) {
+        return false;
+      }
+
+      // Apply execution filters
+      if (debouncedFilters.environment && result.execution.environment !== debouncedFilters.environment) {
+        return false;
+      }
+      if (debouncedFilters.type && result.execution.type !== debouncedFilters.type) {
+        return false;
+      }
+
+      // Apply result filters
+      if (debouncedFilters.status && result.status !== debouncedFilters.status) {
+        return false;
+      }
+      if (debouncedFilters.errorMessage) {
+        const hasMatchingError = result.errors.some((error) =>
+          error.message.toLowerCase().includes(debouncedFilters.errorMessage.toLowerCase())
+        );
+        if (!hasMatchingError) {
+          return false;
+        }
+      }
+
+      // Apply issue filters
+      if (debouncedFilters.issueName) {
+        const hasMatchingIssue = result.errors.some((error) =>
+          error.assumptions.some((assumption) =>
+            assumption.issue.name.toLowerCase().includes(debouncedFilters.issueName.toLowerCase())
+          )
+        );
+        if (!hasMatchingIssue) {
+          return false;
+        }
+      }
+
+      // Apply review status filter
+      if (debouncedFilters.reviewStatus) {
+        const hasReviewedErrors = result.errors.some((error) => error.assumptions.length > 0);
+        if (debouncedFilters.reviewStatus === 'reviewed' && !hasReviewedErrors) {
+          return false;
+        }
+        if (debouncedFilters.reviewStatus === 'unreviewed' && hasReviewedErrors) {
+          return false;
+        }
+      }
+
+      return true;
+    });
 
     const resultsMap = new Map<
       string,
@@ -38,9 +158,6 @@ const ResultsContent = () => {
     const activeIds: string[] = [];
 
     filteredResults.forEach((result) => {
-      const resultDate = result.startTime.split('T')[0];
-      const isActiveDate = activeDates.has(resultDate);
-
       const baseResult: BaseResult = {
         id: result.id,
         createdAt: result.createdAt,
@@ -78,9 +195,7 @@ const ResultsContent = () => {
         });
       }
 
-      if (isActiveDate) {
-        activeIds.push(result.id);
-      }
+      activeIds.push(result.id);
     });
 
     const dates = getDatesBetween(filters.from, filters.to);
@@ -92,10 +207,11 @@ const ResultsContent = () => {
 
     return {
       results: resultsMap,
+      allResultsMap: unfilteredMap,
       activeDaysResultsIds: activeIds,
       availableDates: dateItems,
     };
-  }, [data?.results, selectedDates, filters.from, filters.to]);
+  }, [data?.results, selectedDates, filters.from, filters.to, debouncedFilters]);
 
   const handleSelectAll = () => {
     selectAll(activeDaysResultsIds);
@@ -157,9 +273,17 @@ const ResultsContent = () => {
         >
           {results.size > 0 ? (
             <>
-              {Array.from(results.entries()).map(([, { spec, executions }]) => (
-                <ResultSpecSection key={spec.id} spec={spec} executions={executions} />
-              ))}
+              {Array.from(results.entries()).map(([specKey, { spec, executions }]) => {
+                const allExecutions = allResultsMap.get(specKey)?.executions || [];
+                return (
+                  <ResultSpecSection
+                    key={spec.id}
+                    spec={spec}
+                    executions={executions}
+                    allExecutions={allExecutions}
+                  />
+                );
+              })}
               {activeDaysResultsIds.length === 0 && <Text>No results found matching date config.</Text>}
             </>
           ) : (
