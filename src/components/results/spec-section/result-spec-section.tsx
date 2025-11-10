@@ -4,8 +4,8 @@ import { LuFileText, LuTag } from 'react-icons/lu';
 
 import { ClipboardCopyText } from '@/components/ui';
 import { ResultsExecutionCard } from '@/components/results';
-import { useResultsActions, useSelectedDates } from '@/redux/slices/results';
-import { getDateDisplayName } from '@/utils/dateUtils';
+import { useResultsActions, useResultsFilters, useSelectedDates } from '@/redux/slices/results';
+import { getDateDisplayName, getDatesBetween } from '@/utils/dateUtils';
 import { toCleanTitle } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -20,16 +20,15 @@ interface ResultSpecSectionProps {
 
 export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionProps) => {
   const selectedDates = useSelectedDates();
+  const filters = useResultsFilters();
   const user = useCurrentUser();
 
   const { updateFilters, toggleDate } = useResultsActions();
 
   const dateFilters = useMemo(() => {
-    const allResultDates = executions
-      .flatMap(({ results }) => results.map((result) => result.startTime.split('T')[0]))
-      .filter((date, index, arr) => arr.indexOf(date) === index);
+    const allDates = getDatesBetween(filters.from, filters.to);
 
-    return allResultDates.map((date) => {
+    return allDates.map((date) => {
       const statuses = executions
         .filter(({ results }) => results.some((result) => result.startTime.split('T')[0] === date))
         .flatMap(({ results }) => results.map((result) => result.status));
@@ -41,7 +40,7 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
         display: getDateDisplayName(date),
       };
     });
-  }, [selectedDates, executions]);
+  }, [filters.from, filters.to, selectedDates, executions]);
 
   const filteredExecutions = useMemo(() => {
     return executions

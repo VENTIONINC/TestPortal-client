@@ -20,12 +20,12 @@ export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
       justify="space-between"
       py={0.5}
       px={2}
-      bg={day.isActive ? 'green.600' : 'white'}
-      color={day.isActive ? 'white' : 'black'}
+      bg={day.isActive ? 'green.600' : day.stats.length > 0 ? 'white' : 'gray.500'}
+      color={day.isActive ? 'white' : day.stats.length > 0 ? 'black' : 'white'}
       borderRadius="sm"
       cursor="pointer"
       shadow="sm"
-      _hover={{ bg: day.isActive ? 'green.500' : 'gray.200' }}
+      _hover={{ bg: day.isActive ? 'green.500' : day.stats.length > 0 ? 'gray.200' : 'gray.600' }}
     >
       <Text whiteSpace="nowrap">{day.display}</Text>
       {day.stats.length > 0 && (

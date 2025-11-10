@@ -138,7 +138,6 @@ const ResultsContent = () => {
           flex={1}
           overflowY="auto"
           overflowX="hidden"
-          pr={2}
           css={{
             '&::-webkit-scrollbar': {
               width: '8px',
