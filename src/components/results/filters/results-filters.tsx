@@ -5,6 +5,7 @@ import { Input, NativeSelect } from '@/components/ui';
 import { FiltersContainer, FiltersGroup } from '@/components/filters';
 import { initialFilters, useResultsActions, useResultsFilters } from '@/redux/slices/results';
 import { ResultsFilters as ResultsFiltersType } from '@/types';
+import { calculateDateDiff, adjustDateToWeekRange } from '@/utils/dateUtils';
 
 import { getStatusOptions } from './helpers';
 import { REVIEW_STATUS_OPTIONS } from './constants';
@@ -27,7 +28,29 @@ export const ResultsFilters = (props: StackProps) => {
 
 
   const handleFilterChange = (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
-    setLocalFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+
+    if (name === 'from' || name === 'to') {
+      setLocalFilters((prev) => {
+        const updatedFilters = { ...prev, [name]: value };
+
+        if (value && updatedFilters.from && updatedFilters.to) {
+          const diff = calculateDateDiff(updatedFilters.from, updatedFilters.to);
+
+          if (diff > 7) {
+            if (name === 'from') {
+              updatedFilters.to = adjustDateToWeekRange(value, true);
+            } else {
+              updatedFilters.from = adjustDateToWeekRange(value, false);
+            }
+          }
+        }
+
+        return updatedFilters;
+      });
+    } else {
+      setLocalFilters((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleApplyFilters = () => {

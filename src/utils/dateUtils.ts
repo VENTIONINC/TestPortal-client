@@ -44,3 +44,24 @@ export const getDateDisplayName = (date: string): string => {
     }).format(dateObj);
   }
 };
+
+export const calculateDateDiff = (from: string, to: string): number => {
+  const fromDate = new Date(from);
+  const toDate = new Date(to);
+  fromDate.setHours(0, 0, 0, 0);
+  toDate.setHours(0, 0, 0, 0);
+  const diffTime = toDate.getTime() - fromDate.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
+
+export const adjustDateToWeekRange = (anchorDate: string, isFromField: boolean): string => {
+  const anchor = new Date(anchorDate);
+  const adjusted = new Date(anchor);
+  if (isFromField) {
+    adjusted.setDate(anchor.getDate() + 7);
+  } else {
+    adjusted.setDate(anchor.getDate() - 7);
+  }
+  return formatDate(adjusted);
+};
