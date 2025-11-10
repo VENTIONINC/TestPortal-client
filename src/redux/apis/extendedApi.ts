@@ -7,7 +7,7 @@ export const extendedApi = generatedApi
   .enhanceEndpoints({
     endpoints: {
       postApiV2Assumptions: {
-        invalidatesTags: [TAGS.Assumption, TAGS.Issues],
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result],
       },
     },
   })
