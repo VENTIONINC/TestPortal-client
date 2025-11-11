@@ -1,0 +1,1 @@
+export { useConfirmResultDeletionDialog } from './hooks';

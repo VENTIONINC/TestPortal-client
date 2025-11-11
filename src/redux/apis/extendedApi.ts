@@ -9,6 +9,9 @@ export const extendedApi = generatedApi
       postApiV2Assumptions: {
         invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result],
       },
+      deleteApiV2ExecutionsByExecutionId: {
+        invalidatesTags: [TAGS.Result],
+      },
     },
   })
   .injectEndpoints({

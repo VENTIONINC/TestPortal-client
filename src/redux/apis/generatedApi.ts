@@ -150,6 +150,19 @@ const injectedRtkApi = api
         }),
         providesTags: ["Results"],
       }),
+      deleteApiV2ResultsByResultId: build.mutation<
+        DeleteApiV2ResultsByResultIdApiResponse,
+        DeleteApiV2ResultsByResultIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/results/${queryArg.resultId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Results"],
+      }),
       getApiV2ResultsStats: build.query<
         GetApiV2ResultsStatsApiResponse,
         GetApiV2ResultsStatsApiArg
@@ -186,6 +199,19 @@ const injectedRtkApi = api
         }),
         providesTags: ["Specs"],
       }),
+      deleteApiV2SpecsBySpecId: build.mutation<
+        DeleteApiV2SpecsBySpecIdApiResponse,
+        DeleteApiV2SpecsBySpecIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/specs/${queryArg.specId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Specs"],
+      }),
       postApiV2Assumptions: build.mutation<
         PostApiV2AssumptionsApiResponse,
         PostApiV2AssumptionsApiArg
@@ -219,6 +245,19 @@ const injectedRtkApi = api
           },
         }),
         providesTags: ["Assumptions"],
+      }),
+      deleteApiV2AssumptionsByAssumptionId: build.mutation<
+        DeleteApiV2AssumptionsByAssumptionIdApiResponse,
+        DeleteApiV2AssumptionsByAssumptionIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/assumptions/${queryArg.assumptionId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Assumptions"],
       }),
       patchApiV2ResultErrorsByResultErrorIdAssignIssue: build.mutation<
         PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiResponse,
@@ -275,6 +314,19 @@ const injectedRtkApi = api
           },
         }),
         providesTags: ["Executions"],
+      }),
+      deleteApiV2ExecutionsByExecutionId: build.mutation<
+        DeleteApiV2ExecutionsByExecutionIdApiResponse,
+        DeleteApiV2ExecutionsByExecutionIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/executions/${queryArg.executionId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Executions"],
       }),
       postApiV2UploadJsonReport: build.mutation<
         PostApiV2UploadJsonReportApiResponse,
@@ -634,6 +686,12 @@ export type GetApiV2ResultsByResultIdApiArg = {
   /** Project ID to verify ownership of the result */
   projectId: string;
 };
+export type DeleteApiV2ResultsByResultIdApiResponse = unknown;
+export type DeleteApiV2ResultsByResultIdApiArg = {
+  resultId: string;
+  /** Project ID to verify ownership of the result */
+  projectId: string;
+};
 export type GetApiV2ResultsStatsApiResponse =
   /** status 200 Results statistics */ ResultsStats;
 export type GetApiV2ResultsStatsApiArg = {
@@ -654,6 +712,12 @@ export type GetApiV2SpecsBySpecIdApiArg = {
   /** Project ID to verify ownership of the spec */
   projectId: string;
 };
+export type DeleteApiV2SpecsBySpecIdApiResponse = unknown;
+export type DeleteApiV2SpecsBySpecIdApiArg = {
+  specId: string;
+  /** Project ID to verify ownership of the spec */
+  projectId: string;
+};
 export type PostApiV2AssumptionsApiResponse =
   /** status 201 Successfully created assumption */ Assumption;
 export type PostApiV2AssumptionsApiArg = {
@@ -668,6 +732,12 @@ export type PatchApiV2AssumptionsByAssumptionIdApiArg = {
 export type GetApiV2AssumptionsByAssumptionIdApiResponse =
   /** status 200 Successfully retrieved assumption */ Assumption;
 export type GetApiV2AssumptionsByAssumptionIdApiArg = {
+  assumptionId: string;
+  /** Project ID to verify ownership of the assumption */
+  projectId: string;
+};
+export type DeleteApiV2AssumptionsByAssumptionIdApiResponse = unknown;
+export type DeleteApiV2AssumptionsByAssumptionIdApiArg = {
   assumptionId: string;
   /** Project ID to verify ownership of the assumption */
   projectId: string;
@@ -700,6 +770,12 @@ export type GetApiV2ResultErrorsByResultErrorIdApiArg = {
 export type GetApiV2ExecutionsByExecutionIdApiResponse =
   /** status 200 Execution details retrieved successfully */ Execution;
 export type GetApiV2ExecutionsByExecutionIdApiArg = {
+  executionId: string;
+  /** Project ID to verify ownership of the execution */
+  projectId: string;
+};
+export type DeleteApiV2ExecutionsByExecutionIdApiResponse = unknown;
+export type DeleteApiV2ExecutionsByExecutionIdApiArg = {
   executionId: string;
   /** Project ID to verify ownership of the execution */
   projectId: string;
@@ -1207,17 +1283,21 @@ export const {
   useGetApiV2IssuesWithStatsQuery,
   useGetApiV2ResultsQuery,
   useGetApiV2ResultsByResultIdQuery,
+  useDeleteApiV2ResultsByResultIdMutation,
   useGetApiV2ResultsStatsQuery,
   usePatchApiV2ResultsByResultIdAnalysisMutation,
   useGetApiV2SpecsBySpecIdQuery,
+  useDeleteApiV2SpecsBySpecIdMutation,
   usePostApiV2AssumptionsMutation,
   usePatchApiV2AssumptionsByAssumptionIdMutation,
   useGetApiV2AssumptionsByAssumptionIdQuery,
+  useDeleteApiV2AssumptionsByAssumptionIdMutation,
   usePatchApiV2ResultErrorsByResultErrorIdAssignIssueMutation,
   usePatchApiV2ResultErrorsByResultErrorIdReviewMutation,
   usePatchApiV2ResultErrorsBulkReviewMutation,
   useGetApiV2ResultErrorsByResultErrorIdQuery,
   useGetApiV2ExecutionsByExecutionIdQuery,
+  useDeleteApiV2ExecutionsByExecutionIdMutation,
   usePostApiV2UploadJsonReportMutation,
   usePostApiV2UploadJsonReportApiKeyMutation,
   useGetApiV2UsersByUserIdQuery,
