@@ -252,20 +252,6 @@ export const generateReport = (config: ReportConfig): PlaywrightReport => {
   };
 };
 
-export const copyToClipboard = async (text: string): Promise<void> => {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    // Fallback for older browsers
-    const tempInput = document.createElement('input');
-    tempInput.value = text;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand('copy');
-    document.body.removeChild(tempInput);
-  }
-};
-
 export const copyTextareaToClipboard = async (textareaId: string): Promise<void> => {
   try {
     const textarea = document.getElementById(textareaId) as HTMLTextAreaElement;
@@ -273,7 +259,7 @@ export const copyTextareaToClipboard = async (textareaId: string): Promise<void>
 
     await navigator.clipboard.writeText(textarea.value);
   } catch {
-    // Fallback for older browsers
+    // Fallback for HTTP/insecure contexts
     const textarea = document.getElementById(textareaId) as HTMLTextAreaElement;
     if (textarea) {
       textarea.select();

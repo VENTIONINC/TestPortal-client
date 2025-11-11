@@ -20,7 +20,6 @@ export const CopyButton = ({ text, variant = 'button', disabled }: CopyButtonPro
     try {
       await copyToClipboard(text);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
 
       toaster.create({
         title: 'Copied!',
