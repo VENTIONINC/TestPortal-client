@@ -30,9 +30,8 @@ const ResultsContent = () => {
 
   const { toggleDate } = useResultsActions();
 
-  const { results, allResultsMap, activeDaysResultsIds, availableDates } = useMemo(() => {
+  const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates } = useMemo(() => {
     const allResults = data?.results || [];
-    const activeDates = new Set(selectedDates);
 
     // Build unfiltered map (for stats on all days)
     const unfilteredMap = new Map<
@@ -79,16 +78,8 @@ const ResultsContent = () => {
       }
     });
 
-    // Filter results: only active dates get full filtering
-    const filteredResults = allResults.filter((result) => {
-      const resultDate = result.startTime.split('T')[0];
-      const isActiveDate = activeDates.has(resultDate);
-
-      // Only apply filters to active dates
-      if (!isActiveDate) {
-        return false;
-      }
-
+    // Apply all filters EXCEPT date selection (for showing spec cards with all dates)
+    const allDatesResults = allResults.filter((result) => {
       // Apply spec filters
       if (debouncedFilters.tag && !result.spec.tags.includes(debouncedFilters.tag)) {
         return false;
@@ -96,10 +87,16 @@ const ResultsContent = () => {
       if (debouncedFilters.specId && result.spec.id !== debouncedFilters.specId) {
         return false;
       }
-      if (debouncedFilters.specFile && !result.spec.file.toLowerCase().includes(debouncedFilters.specFile.toLowerCase())) {
+      if (
+        debouncedFilters.specFile &&
+        !result.spec.file.toLowerCase().includes(debouncedFilters.specFile.toLowerCase())
+      ) {
         return false;
       }
-      if (debouncedFilters.specName && !result.spec.title.toLowerCase().includes(debouncedFilters.specName.toLowerCase())) {
+      if (
+        debouncedFilters.specName &&
+        !result.spec.title.toLowerCase().includes(debouncedFilters.specName.toLowerCase())
+      ) {
         return false;
       }
 
@@ -117,7 +114,7 @@ const ResultsContent = () => {
       }
       if (debouncedFilters.errorMessage) {
         const hasMatchingError = result.errors.some((error) =>
-          error.message.toLowerCase().includes(debouncedFilters.errorMessage.toLowerCase())
+          error.message.toLowerCase().includes(debouncedFilters.errorMessage.toLowerCase()),
         );
         if (!hasMatchingError) {
           return false;
@@ -128,8 +125,8 @@ const ResultsContent = () => {
       if (debouncedFilters.issueName) {
         const hasMatchingIssue = result.errors.some((error) =>
           error.assumptions.some((assumption) =>
-            assumption.issue.name.toLowerCase().includes(debouncedFilters.issueName.toLowerCase())
-          )
+            assumption.issue.name.toLowerCase().includes(debouncedFilters.issueName.toLowerCase()),
+          ),
         );
         if (!hasMatchingIssue) {
           return false;
@@ -145,6 +142,19 @@ const ResultsContent = () => {
         if (debouncedFilters.reviewStatus === 'unreviewed' && hasReviewedErrors) {
           return false;
         }
+      }
+
+      return true;
+    });
+
+    // Apply date selection filter to get final results
+    const filteredResults = allDatesResults.filter((result) => {
+      const resultDate = result.startTime.split('T')[0];
+      const isActiveDate = selectedDates.includes(resultDate);
+
+      // Only show results from selected dates
+      if (!isActiveDate) {
+        return false;
       }
 
       return true;
@@ -207,7 +217,7 @@ const ResultsContent = () => {
 
     return {
       results: resultsMap,
-      allResultsMap: unfilteredMap,
+      unfilteredResultsMap: unfilteredMap,
       activeDaysResultsIds: activeIds,
       availableDates: dateItems,
     };
@@ -271,24 +281,19 @@ const ResultsContent = () => {
             },
           }}
         >
-          {results.size > 0 ? (
-            <>
-              {Array.from(results.entries()).map(([specKey, { spec, executions }]) => {
-                const allExecutions = allResultsMap.get(specKey)?.executions || [];
-                return (
-                  <ResultSpecSection
-                    key={spec.id}
-                    spec={spec}
-                    executions={executions}
-                    allExecutions={allExecutions}
-                  />
-                );
-              })}
-              {activeDaysResultsIds.length === 0 && <Text>No results found matching date config.</Text>}
-            </>
-          ) : (
-            <Text>No results found matching your filters.</Text>
-          )}
+          <>
+            {Array.from(results.entries()).map(([specKey, { spec, executions }]) => {
+              const unfilteredExecutions = unfilteredResultsMap.get(specKey)?.executions || [];
+              return (
+                <ResultSpecSection
+                  key={spec.id}
+                  spec={spec}
+                  executions={executions}
+                  allExecutions={unfilteredExecutions}
+                />
+              );
+            })}
+          </>
         </VStack>
       </VStack>
     </HStack>

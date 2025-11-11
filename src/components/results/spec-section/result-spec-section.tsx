@@ -44,10 +44,9 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
   }, [filters.from, filters.to, selectedDates, allExecutions]);
 
   const filteredExecutions = useMemo(() => {
-    return executions
-      .filter(({ results }) => results.some((result) => selectedDates.includes(result.startTime.split('T')[0])))
-      .sort((a, b) => new Date(b.execution.createdAt).getTime() - new Date(a.execution.createdAt).getTime());
-  }, [executions, selectedDates]);
+    // Executions are already filtered by date in results-list.tsx, just sort them
+    return executions.sort((a, b) => new Date(b.execution.createdAt).getTime() - new Date(a.execution.createdAt).getTime());
+  }, [executions]);
 
   const handleDateToggle = (dayFilter: { yyyy_mm_dd: string }) => {
     toggleDate(dayFilter.yyyy_mm_dd);
@@ -57,7 +56,8 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
     updateFilters({ tag });
   };
 
-  if (!dateFilters.some((day) => day.stats.length !== 0 && day.isActive)) {
+  // Hide spec section if no executions match filters and selected dates
+  if (executions.length === 0) {
     return null;
   }
 

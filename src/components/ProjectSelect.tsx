@@ -16,7 +16,7 @@ export const ProjectSelect = () => {
   const projectItems = projects!
     .filter((project) => project.isActive)
     .map((project) => ({
-      value: project.id.toString(),
+      value: project.id,
       label: project.name,
     }));
 
