@@ -11,7 +11,7 @@ export const issuesApi = baseApi.injectEndpoints({
 
         if (filters.projectId) queryParams.append('projectId', filters.projectId);
         if (filters.tag) queryParams.append('tag', filters.tag);
-        if (filters.specId) queryParams.append('specId', filters.specId.toString());
+        if (filters.specId) queryParams.append('specId', filters.specId);
         if (filters.specFile) queryParams.append('specFile', filters.specFile);
         if (filters.specName) queryParams.append('specName', filters.specName);
         if (filters.environment) queryParams.append('environment', filters.environment);

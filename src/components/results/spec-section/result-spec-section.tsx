@@ -16,9 +16,10 @@ import { serializeExecution } from './helpers';
 interface ResultSpecSectionProps {
   spec: ResultSpec;
   executions: { execution: ResultExecution; results: BaseResult[] }[];
+  allExecutions: { execution: ResultExecution; results: BaseResult[] }[];
 }
 
-export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionProps) => {
+export const ResultSpecSection = memo(({ spec, executions, allExecutions }: ResultSpecSectionProps) => {
   const selectedDates = useSelectedDates();
   const filters = useResultsFilters();
   const user = useCurrentUser();
@@ -29,7 +30,7 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
     const allDates = getDatesBetween(filters.from, filters.to);
 
     return allDates.map((date) => {
-      const statuses = executions
+      const statuses = allExecutions
         .filter(({ results }) => results.some((result) => result.startTime.split('T')[0] === date))
         .flatMap(({ results }) => results.map((result) => result.status));
 
@@ -40,13 +41,12 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
         display: getDateDisplayName(date),
       };
     });
-  }, [filters.from, filters.to, selectedDates, executions]);
+  }, [filters.from, filters.to, selectedDates, allExecutions]);
 
   const filteredExecutions = useMemo(() => {
-    return executions
-      .filter(({ results }) => results.some((result) => selectedDates.includes(result.startTime.split('T')[0])))
-      .sort((a, b) => new Date(b.execution.createdAt).getTime() - new Date(a.execution.createdAt).getTime());
-  }, [executions, selectedDates]);
+    // Executions are already filtered by date in results-list.tsx, just sort them
+    return executions.sort((a, b) => new Date(b.execution.createdAt).getTime() - new Date(a.execution.createdAt).getTime());
+  }, [executions]);
 
   const handleDateToggle = (dayFilter: { yyyy_mm_dd: string }) => {
     toggleDate(dayFilter.yyyy_mm_dd);
@@ -56,7 +56,8 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
     updateFilters({ tag });
   };
 
-  if (!dateFilters.some((day) => day.stats.length !== 0 && day.isActive)) {
+  // Hide spec section if no executions match filters and selected dates
+  if (executions.length === 0) {
     return null;
   }
 
