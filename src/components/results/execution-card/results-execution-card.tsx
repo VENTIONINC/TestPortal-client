@@ -75,58 +75,60 @@ export const ResultsExecutionCard = memo(
           } = result;
 
           return (
-            <HStack key={id} align="center" gap={4} ps={2} textStyle="sm" position="relative">
-              <Checkbox
-                checked={isSelected(id)}
-                onCheckedChange={() => {
-                  toggleSelection(id);
-                }}
-                size="sm"
-                controlProps={{ borderColor: 'black' }}
-              />
-              <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(status).color} />
-              <Text whiteSpace="nowrap" minW={6}>
-                # {retry}
-              </Text>
-              <IntegrationLinks
-                monitoringUrl={monitoringPortalUrl}
-                reportPortalUrl={reportPortalLink || reportPortalUrl}
-                monitoringPortalEnabled={monitoringPortalEnabled}
-                reportPortalEnabled={reportPortalEnabled}
-                duration={duration}
-                startTime={startTime}
-                environment={environment}
-              />
+            <HStack key={id} align="center" ps={2} textStyle="sm" position="relative">
+              <HStack align="center" gap={4} flex={1}>
+                <Checkbox
+                  checked={isSelected(id)}
+                  onCheckedChange={() => {
+                    toggleSelection(id);
+                  }}
+                  size="sm"
+                  controlProps={{ borderColor: 'black' }}
+                />
+                <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(status).color} />
+                <Text whiteSpace="nowrap" minW={6}>
+                  # {retry}
+                </Text>
+                <IntegrationLinks
+                  monitoringUrl={monitoringPortalUrl}
+                  reportPortalUrl={reportPortalLink || reportPortalUrl}
+                  monitoringPortalEnabled={monitoringPortalEnabled}
+                  reportPortalEnabled={reportPortalEnabled}
+                  duration={duration}
+                  startTime={startTime}
+                  environment={environment}
+                />
 
-              <Text>{toStartTime(startTime)}</Text>
-              <Text>{toDuration(duration)}</Text>
+                <Text>{toStartTime(startTime)}</Text>
+                <Text>{toDuration(duration)}</Text>
 
-              {errors.map((resultError) => {
-                const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(analysisCategory);
-                const hasAnalysis = Boolean(analysisStatus && analysisConfidence);
+                {errors.map((resultError) => {
+                  const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(analysisCategory);
+                  const hasAnalysis = Boolean(analysisStatus && analysisConfidence);
 
-                return (
-                  <Fragment key={resultError.id}>
-                    <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
-                      {resultError.message}
-                    </Text>
-                    {hasAnalysis && (
-                      <HStack
-                        color={color}
-                        onClick={() => openResultAnalysisDialog(result)}
-                        px={1}
-                        borderRadius="sm"
-                        cursor="pointer"
-                        _hover={{ bg: hoverBgColor }}
-                      >
-                        <Icon size={16} color="currentColor" />
-                        <Text>{getConfidenceLabel(analysisConfidence)}</Text>
-                      </HStack>
-                    )}
-                    <InlineIssue resultError={resultError} />
-                  </Fragment>
-                );
-              })}
+                  return (
+                    <Fragment key={resultError.id}>
+                      <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
+                        {resultError.message}
+                      </Text>
+                      {hasAnalysis && (
+                        <HStack
+                          color={color}
+                          onClick={() => openResultAnalysisDialog(result)}
+                          px={1}
+                          borderRadius="sm"
+                          cursor="pointer"
+                          _hover={{ bg: hoverBgColor }}
+                        >
+                          <Icon size={16} color="currentColor" />
+                          <Text>{getConfidenceLabel(analysisConfidence)}</Text>
+                        </HStack>
+                      )}
+                      <InlineIssue resultError={resultError} />
+                    </Fragment>
+                  );
+                })}
+              </HStack>
 
               <ContextMenuButton
                 onClick={(evt) =>
