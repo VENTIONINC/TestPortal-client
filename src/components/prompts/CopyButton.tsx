@@ -1,9 +1,9 @@
 import { Button, IconButton } from '@chakra-ui/react';
 import { LuCheck, LuCopy } from 'react-icons/lu';
 import { useState } from 'react';
-import { useCopyToClipboard } from 'usehooks-ts';
 
 import { toaster } from '@/components/ui';
+import { copyToClipboard } from '@/utils';
 
 interface CopyButtonProps {
   text: string;
@@ -13,20 +13,26 @@ interface CopyButtonProps {
 
 export const CopyButton = ({ text, variant = 'button', disabled }: CopyButtonProps) => {
   const [copied, setCopied] = useState(false);
-  const [, copy] = useCopyToClipboard();
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!text || disabled) return;
 
-    copy(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    
-    toaster.create({
-      title: 'Copied!',
-      description: 'Prompt copied to clipboard',
-      type: 'success',
-    });
+    try {
+      await copyToClipboard(text);
+      setCopied(true);
+
+      toaster.create({
+        title: 'Copied!',
+        description: 'Prompt copied to clipboard',
+        type: 'success',
+      });
+    } catch {
+      toaster.create({
+        title: 'Copy Failed',
+        description: 'Unable to copy to clipboard',
+        type: 'error',
+      });
+    }
   };
 
   if (variant === 'icon') {
