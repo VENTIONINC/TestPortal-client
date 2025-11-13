@@ -17,7 +17,7 @@ export const ConfirmExecutionDeletionDialog = ({
   executionName,
   projectId,
 }: ConfirmExecutionDeletionDialogProps) => {
-  const { onConfirm } = useConfirmExecutionDeletionBusinessLogic(closeDialog, executionId, Number(projectId));
+  const { onConfirm } = useConfirmExecutionDeletionBusinessLogic(closeDialog, executionId, projectId);
 
   return (
     <Dialog title="Delete Execution" onClose={closeDialog} role="alertdialog">

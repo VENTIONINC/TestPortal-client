@@ -14,7 +14,7 @@ export const useConfirmExecutionDeletionDialog = () => {
 export const useConfirmExecutionDeletionBusinessLogic = (
   closeDialog: () => void,
   executionId: string,
-  projectId: number,
+  projectId: string,
 ) => {
   const [deleteExecution] = useDeleteApiV2ExecutionsByExecutionIdMutation();
 
@@ -22,7 +22,7 @@ export const useConfirmExecutionDeletionBusinessLogic = (
     try {
       await deleteExecution({
         executionId,
-        projectId: String(projectId),
+        projectId: projectId,
       }).unwrap();
 
       toaster.create({
