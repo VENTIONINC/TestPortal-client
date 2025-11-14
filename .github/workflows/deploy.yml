@@ -23,8 +23,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: TypeScript check
+        run: yarn tsc
+
       - name: Lint code
-        run: yarn lint
+        run: yarn eslint
 
       - name: Build application
         run: yarn build
