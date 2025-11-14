@@ -44,7 +44,6 @@ export const ResultsFilters = (props: StackProps) => {
     }
   };
 
-
   return (
     <FiltersContainer {...props}>
       <FiltersGroup
@@ -109,7 +108,6 @@ export const ResultsFilters = (props: StackProps) => {
         <Input label="Environment:" name="environment" value={filters.environment} onChange={handleFilterChange} />
         <Input label="Type:" name="type" value={filters.type} onChange={handleFilterChange} />
       </FiltersGroup>
-
     </FiltersContainer>
   );
 };
