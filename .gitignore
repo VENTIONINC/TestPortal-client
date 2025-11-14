@@ -28,6 +28,9 @@ dist-ssr
 # Environment variables
 .env
 
+# TypeScript
+*.tsbuildinfo
+
 # Yarn
 .yarn/*
 !.yarn/patches
