@@ -1,7 +1,7 @@
 import { Fragment, memo } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
-import { Checkbox, ClipboardCopyText, ContextMenuButton } from '@/components/ui';
+import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
@@ -48,12 +48,18 @@ export const ResultsExecutionCard = memo(
             size="sm"
             controlProps={{ borderColor: 'black' }}
           />
-          <ClipboardCopyText value={environment}>{environment}</ClipboardCopyText>
-          <ClipboardCopyText value={type}>{type}</ClipboardCopyText>
+          <Tooltip content="Environment">
+            <ClipboardCopyText value={environment}>{environment}</ClipboardCopyText>
+          </Tooltip>
+          <Tooltip content="Type">
+            <ClipboardCopyText value={type}>{type}</ClipboardCopyText>
+          </Tooltip>
           <Text>{name}</Text>
-          <Text ms="auto" my={1}>
-            {provider}
-          </Text>
+          <Tooltip content="Provider">
+            <Text ms="auto" my={1}>
+              {provider}
+            </Text>
+          </Tooltip>
 
           <BulkActions selectedResults={selectedResults} />
 
@@ -86,9 +92,11 @@ export const ResultsExecutionCard = memo(
                   controlProps={{ borderColor: 'black' }}
                 />
                 <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(status).color} />
-                <Text whiteSpace="nowrap" minW={6}>
-                  # {retry}
-                </Text>
+                <Tooltip content="Retry">
+                  <Text whiteSpace="nowrap" minW={6}>
+                    # {retry}
+                  </Text>
+                </Tooltip>
                 <IntegrationLinks
                   monitoringUrl={monitoringPortalUrl}
                   reportPortalUrl={reportPortalLink || reportPortalUrl}
@@ -98,9 +106,12 @@ export const ResultsExecutionCard = memo(
                   startTime={startTime}
                   environment={environment}
                 />
-
-                <Text>{toStartTime(startTime)}</Text>
-                <Text>{toDuration(duration)}</Text>
+                <Tooltip content="Start Time">
+                  <Text>{toStartTime(startTime)}</Text>
+                </Tooltip>
+                <Tooltip content="Duration">
+                  <Text>{toDuration(duration)}</Text>
+                </Tooltip>
 
                 {errors.map((resultError) => {
                   const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(analysisCategory);
