@@ -74,5 +74,7 @@ export const baseApi = createApi({
   endpoints: () => ({}),
   reducerPath: 'baseApi',
   tagTypes: Object.values(TAGS),
+  refetchOnFocus: true,
+  refetchOnReconnect: true,
   keepUnusedDataFor: 60 * 5,
 });
