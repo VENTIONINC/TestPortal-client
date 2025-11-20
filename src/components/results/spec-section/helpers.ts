@@ -36,3 +36,11 @@ export const serializeExecution: SerializedExecution = (execution, user) => {
     reportPortalEnabled,
   };
 };
+
+export const sanitizeFileName = (fileName: string) => {
+  if (fileName === 'unknown' || fileName.trim() === '') {
+    return '';
+  }
+
+  return fileName;
+};

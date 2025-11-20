@@ -1,19 +1,14 @@
 import { memo, useMemo } from 'react';
-import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
-import { LuFileText, LuTag } from 'react-icons/lu';
 
-import { ClipboardCopyText } from '@/components/ui';
-import { ResultsExecutionCard } from '@/components/results';
 import { useResultsActions, useResultsFilters, useSelectedDates } from '@/redux/slices/results';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { getDateDisplayName, getDatesBetween } from '@/utils/dateUtils';
-import { toCleanTitle } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useExecutionContextMenu, useResultContextMenu } from '@/hooks';
 
-import { DateToggle } from './date-toggle';
-import { serializeExecution } from './helpers';
+import { sanitizeFileName, serializeExecution } from './helpers';
+import { ResultSpecSectionView } from './result-spec-section-view';
 
 interface ResultSpecSectionProps {
   spec: ResultSpec;
@@ -50,10 +45,16 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
 
   const filteredExecutions = useMemo(() => {
     // Executions are already filtered by date in results-list.tsx, just sort them
-    return executions.sort(
+    const sorted = executions.sort(
       (a, b) => new Date(b.execution.createdAt).getTime() - new Date(a.execution.createdAt).getTime(),
     );
-  }, [executions]);
+
+    return sorted.map(({ execution, results }) => ({
+      execution,
+      results,
+      serialized: serializeExecution(execution, user),
+    }));
+  }, [executions, user]);
 
   const handleDateToggle = (dayFilter: { yyyy_mm_dd: string }) => {
     toggleDate(dayFilter.yyyy_mm_dd);
@@ -69,75 +70,18 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
   }
 
   return (
-    <VStack align="stretch" p={2} bg="gray.100" shadow="md" borderRadius="md">
-      <HStack overflowX="auto" pb={2}>
-        {dateFilters.map((day) => (
-          <DateToggle key={day.yyyy_mm_dd} day={day} toggleHandler={handleDateToggle} />
-        ))}
-      </HStack>
-
-      <VStack
-        gap={1}
-        align="stretch"
-        bg="white"
-        py={2}
-        px={4}
-        border="1px solid"
-        borderColor="gray.300"
-        borderRadius="md"
-      >
-        <Flex gap={4} textStyle="sm">
-          <ClipboardCopyText value={spec.key}>{spec.key}</ClipboardCopyText>
-          <ClipboardCopyText value={spec.file}>{spec.file}</ClipboardCopyText>
-
-          <Flex ms="auto" flexWrap="wrap" gap={2}>
-            {spec.tags?.map((tag) => (
-              <HStack
-                key={tag}
-                px={2}
-                border="1px solid"
-                borderColor="gray.300"
-                borderRadius="sm"
-                onClick={() => handleTagClick(tag)}
-                cursor="pointer"
-                _hover={{ bg: 'gray.100' }}
-              >
-                <LuTag size={12} />
-                <Text textStyle="sm">{tag}</Text>
-              </HStack>
-            ))}
-          </Flex>
-        </Flex>
-
-        <div className="row spec-meta" style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <HStack align="center" textStyle="sm">
-            <LuFileText size={16} />
-            <ClipboardCopyText value={toCleanTitle(spec.title)}>{toCleanTitle(spec.title)}</ClipboardCopyText>
-          </HStack>
-        </div>
-      </VStack>
-
-      {filteredExecutions.map(({ execution, results }) => {
-        const serializedExecution = serializeExecution(execution, user);
-
-        return (
-          <ResultsExecutionCard
-            key={execution.id}
-            results={results}
-            specName={spec.title}
-            projectId={projectId}
-            onContextMenu={(evt) =>
-              handleExecutionContextMenu(evt, {
-                id: execution.id,
-                name: execution.name,
-                projectId: projectId,
-              })
-            }
-            onResultContextMenu={handleResultContextMenu}
-            {...serializedExecution}
-          />
-        );
-      })}
-    </VStack>
+    <ResultSpecSectionView
+      specKey={spec.key}
+      specFile={sanitizeFileName(spec.file)}
+      specTitle={spec.title}
+      specTags={spec.tags}
+      dateFilters={dateFilters}
+      filteredExecutions={filteredExecutions}
+      projectId={projectId}
+      onDateToggle={handleDateToggle}
+      onTagClick={handleTagClick}
+      onExecutionContextMenu={handleExecutionContextMenu}
+      onResultContextMenu={handleResultContextMenu}
+    />
   );
 });
