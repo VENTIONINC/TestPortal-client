@@ -1,11 +1,11 @@
 import { Fragment, memo } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
-import { Checkbox, ClipboardCopyText } from '@/components/ui';
+import { Checkbox, ClipboardCopyText, ContextMenuButton } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
-import { getAnalysisCategoryStyle, getResultStatusStyle } from '@/utils';
+import { getAnalysisCategoryStyle, getConfidenceLabel, getResultStatusStyle } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 
 import { BulkActions } from '../../BulkActions';
@@ -15,6 +15,8 @@ import { IntegrationLinks } from './integration-links';
 export const ResultsExecutionCard = memo(
   ({
     results,
+    onContextMenu,
+    onResultContextMenu,
     environment,
     type,
     name,
@@ -23,6 +25,8 @@ export const ResultsExecutionCard = memo(
     reportPortalUrl,
     monitoringPortalEnabled,
     reportPortalEnabled,
+    specName,
+    projectId,
   }: ResultsExecutionCardProps) => {
     const { isSelected, toggleSelection, toggleMultiple, getSelectedIds } = useResultsSelection();
 
@@ -37,7 +41,7 @@ export const ResultsExecutionCard = memo(
 
     return (
       <VStack align="stretch" p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md">
-        <HStack gap={6} px={2} bg="gray.200" borderRadius="sm" textStyle="sm" minH={8}>
+        <HStack gap={6} pl={2} bg="gray.200" borderRadius="sm" textStyle="sm" minH={8}>
           <Checkbox
             checked={results.every(({ id }) => isSelected(id))}
             onCheckedChange={toggleSelectAll}
@@ -52,64 +56,93 @@ export const ResultsExecutionCard = memo(
           </Text>
 
           <BulkActions selectedResults={selectedResults} />
+
+          <ContextMenuButton onClick={onContextMenu} />
         </HStack>
 
-        {results.map((result) => (
-          <HStack key={result.id} align="center" gap={4} ps={2} textStyle="sm">
-            <Checkbox
-              checked={isSelected(result.id)}
-              onCheckedChange={() => {
-                toggleSelection(result.id);
-              }}
-              size="sm"
-              controlProps={{ borderColor: 'black' }}
-            />
-            <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(result.status).color} />
-            <Text whiteSpace="nowrap" minW={6}>
-              # {result.retry}
-            </Text>
-            <IntegrationLinks
-              monitoringUrl={monitoringPortalUrl}
-              reportPortalUrl={result.reportPortalLink || reportPortalUrl}
-              monitoringPortalEnabled={monitoringPortalEnabled}
-              reportPortalEnabled={reportPortalEnabled}
-              duration={result.duration}
-              startTime={result.startTime}
-              environment={environment}
-            />
+        {results.map((result) => {
+          const {
+            id,
+            retry,
+            reportPortalLink,
+            duration,
+            startTime,
+            status,
+            errors = [],
+            analysisCategory,
+            analysisStatus,
+            analysisConfidence,
+          } = result;
 
-            <Text>{toStartTime(result.startTime)}</Text>
-            <Text>{toDuration(result.duration)}</Text>
+          return (
+            <HStack key={id} align="center" ps={2} textStyle="sm" position="relative">
+              <HStack align="center" gap={4} flex={1}>
+                <Checkbox
+                  checked={isSelected(id)}
+                  onCheckedChange={() => {
+                    toggleSelection(id);
+                  }}
+                  size="sm"
+                  controlProps={{ borderColor: 'black' }}
+                />
+                <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(status).color} />
+                <Text whiteSpace="nowrap" minW={6}>
+                  # {retry}
+                </Text>
+                <IntegrationLinks
+                  monitoringUrl={monitoringPortalUrl}
+                  reportPortalUrl={reportPortalLink || reportPortalUrl}
+                  monitoringPortalEnabled={monitoringPortalEnabled}
+                  reportPortalEnabled={reportPortalEnabled}
+                  duration={duration}
+                  startTime={startTime}
+                  environment={environment}
+                />
 
-            {result.errors &&
-              result.errors.length > 0 &&
-              result.errors.map((resultError) => {
-                const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(result.analysisCategory);
+                <Text>{toStartTime(startTime)}</Text>
+                <Text>{toDuration(duration)}</Text>
 
-                return (
-                  <Fragment key={resultError.id}>
-                    <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
-                      {resultError.message}
-                    </Text>
-                    {result.analysisStatus && result.analysisConfidence && (
-                      <HStack
-                        color={color}
-                        onClick={() => openResultAnalysisDialog(result)}
-                        px={1}
-                        borderRadius="sm"
-                        cursor="pointer"
-                        _hover={{ bg: hoverBgColor }}
-                      >
-                        <Icon size={16} color="currentColor" />
-                        <Text>{result.analysisConfidence * 100}%</Text>
-                      </HStack>
-                    )}
-                    <InlineIssue resultError={resultError} />
-                  </Fragment>
-                );
-              })}
-          </HStack>
-        ))}
+                {errors.map((resultError) => {
+                  const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(analysisCategory);
+                  const hasAnalysis = Boolean(analysisStatus && analysisConfidence);
+
+                  return (
+                    <Fragment key={resultError.id}>
+                      <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
+                        {resultError.message}
+                      </Text>
+                      {hasAnalysis && (
+                        <HStack
+                          color={color}
+                          onClick={() => openResultAnalysisDialog(result)}
+                          px={1}
+                          borderRadius="sm"
+                          cursor="pointer"
+                          _hover={{ bg: hoverBgColor }}
+                        >
+                          <Icon size={16} color="currentColor" />
+                          <Text>{getConfidenceLabel(analysisConfidence)}</Text>
+                        </HStack>
+                      )}
+                      <InlineIssue resultError={resultError} />
+                    </Fragment>
+                  );
+                })}
+              </HStack>
+
+              <ContextMenuButton
+                onClick={(evt) =>
+                  onResultContextMenu(evt, {
+                    id,
+                    retry,
+                    specName,
+                    projectId,
+                  })
+                }
+              />
+            </HStack>
+          );
+        })}
       </VStack>
     );
   },

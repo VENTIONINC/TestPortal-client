@@ -10,7 +10,7 @@ export function UserSettingsPage() {
 
   const getActiveTab = () => {
     if (location.pathname === PATHS.USER_SETTINGS_MCP) return 'mcp';
-    if (location.pathname === PATHS.USER_SETTINGS_PORTALS) return 'portals';
+    if (location.pathname === PATHS.USER_SETTINGS_CONFIGURATION) return 'configuration';
     if (location.pathname === PATHS.USER_SETTINGS_PROJECTS) return 'projects';
     if (location.pathname === PATHS.USER_SETTINGS_UPLOAD_API) return 'upload-api';
     return 'mcp';
@@ -26,8 +26,8 @@ export function UserSettingsPage() {
             <Link href={PATHS.USER_SETTINGS_MCP}>
               <Tabs.Trigger value="mcp">MCP</Tabs.Trigger>
             </Link>
-            <Link href={PATHS.USER_SETTINGS_PORTALS}>
-              <Tabs.Trigger value="portals">Portal URLs</Tabs.Trigger>
+            <Link href={PATHS.USER_SETTINGS_CONFIGURATION}>
+              <Tabs.Trigger value="configuration">Configuration</Tabs.Trigger>
             </Link>
             <Link href={PATHS.USER_SETTINGS_PROJECTS}>
               <Tabs.Trigger value="projects">Projects</Tabs.Trigger>

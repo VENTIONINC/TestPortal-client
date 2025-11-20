@@ -14,8 +14,7 @@ export function MCPSettings() {
         <Box p={6}>
           <VStack align="start" gap={4}>
             <Text fontSize="sm" color="gray.600">
-              To use your MCP token with Claude Desktop, add the following configuration to your Claude config
-              file:
+              To use your MCP token with Claude Desktop, add the following configuration to your Claude config file:
             </Text>
 
             <Box p={4} bg="gray.50" borderRadius="md" border="1px" borderColor="gray.200" w="100%">
@@ -29,7 +28,7 @@ export function MCPSettings() {
       "command": "npx",
       "args": [
         "mcp-remote",
-        "${import.meta.env.VITE_API_URL}/api/v1/mcp",
+        "${import.meta.env.VITE_API_URL}/api/v2/mcp",
         "--allow-http",
         "--header",
         "Authorization:\${AUTH_TOKEN}"

@@ -9,8 +9,9 @@ export const issuesApi = baseApi.injectEndpoints({
       query: (filters) => {
         const queryParams = new URLSearchParams();
 
+        if (filters.projectId) queryParams.append('projectId', filters.projectId);
         if (filters.tag) queryParams.append('tag', filters.tag);
-        if (filters.specId) queryParams.append('specId', filters.specId.toString());
+        if (filters.specId) queryParams.append('specId', filters.specId);
         if (filters.specFile) queryParams.append('specFile', filters.specFile);
         if (filters.specName) queryParams.append('specName', filters.specName);
         if (filters.environment) queryParams.append('environment', filters.environment);
@@ -23,7 +24,7 @@ export const issuesApi = baseApi.injectEndpoints({
         queryParams.append('limit', '10');
 
         return {
-          url: `/api/v1/issues?${queryParams.toString()}`,
+          url: `/api/v2/issues?${queryParams.toString()}`,
           method: 'GET',
         };
       },

@@ -20,16 +20,16 @@ export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
       justify="space-between"
       py={0.5}
       px={2}
-      bg={day.isActive ? 'green.600' : 'white'}
-      color={day.isActive ? 'white' : 'black'}
+      bg={day.isActive ? 'green.600' : 'gray.500'}
+      color="white"
       borderRadius="sm"
       cursor="pointer"
       shadow="sm"
-      _hover={{ bg: day.isActive ? 'green.500' : 'gray.200' }}
+      _hover={{ bg: day.isActive ? 'green.500' : 'gray.600' }}
     >
       <Text whiteSpace="nowrap">{day.display}</Text>
       {day.stats.length > 0 && (
-        <HStack gap={0.5} justify="center" bg="white" p="2px" borderRadius="sm">
+        <HStack gap={0.5} justify="center" bg={day.isActive ? 'white' : 'gray.300'} p="2px" borderRadius="sm">
           {day.stats.map((status: string, index: number) => {
             const isFirst = index === 0;
             const isLast = index === day.stats.length - 1;
@@ -50,15 +50,9 @@ export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
               };
             }
 
-            return (
-              <Box
-                key={index}
-                w={1.5}
-                h={1.5}
-                {...borderRadiusProps}
-                bg={status === 'passed' ? 'green.600' : status === 'failed' ? 'red.500' : 'gray.500'}
-              />
-            );
+            const statusColor = status === 'passed' ? 'green.600' : status === 'failed' ? 'red.500' : 'gray.500';
+
+            return <Box key={index} w={1.5} h={1.5} {...borderRadiusProps} bg={statusColor} />;
           })}
         </HStack>
       )}

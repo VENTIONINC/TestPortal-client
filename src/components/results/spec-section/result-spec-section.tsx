@@ -4,11 +4,13 @@ import { LuFileText, LuTag } from 'react-icons/lu';
 
 import { ClipboardCopyText } from '@/components/ui';
 import { ResultsExecutionCard } from '@/components/results';
-import { useResultsActions, useSelectedDates } from '@/redux/slices/results';
-import { getDateDisplayName } from '@/utils/dateUtils';
+import { useResultsActions, useResultsFilters, useSelectedDates } from '@/redux/slices/results';
+import { useSelectedProjectId } from '@/redux/slices/projects';
+import { getDateDisplayName, getDatesBetween } from '@/utils/dateUtils';
 import { toCleanTitle } from '@/utils/date-time.converter';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useExecutionContextMenu, useResultContextMenu } from '@/hooks';
 
 import { DateToggle } from './date-toggle';
 import { serializeExecution } from './helpers';
@@ -16,22 +18,24 @@ import { serializeExecution } from './helpers';
 interface ResultSpecSectionProps {
   spec: ResultSpec;
   executions: { execution: ResultExecution; results: BaseResult[] }[];
+  allExecutions: { execution: ResultExecution; results: BaseResult[] }[];
 }
 
-export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionProps) => {
+export const ResultSpecSection = memo(({ spec, executions, allExecutions }: ResultSpecSectionProps) => {
   const selectedDates = useSelectedDates();
+  const filters = useResultsFilters();
   const user = useCurrentUser();
+  const projectId = useSelectedProjectId();
+  const handleExecutionContextMenu = useExecutionContextMenu();
+  const handleResultContextMenu = useResultContextMenu();
 
   const { updateFilters, toggleDate } = useResultsActions();
 
   const dateFilters = useMemo(() => {
-    const allResultDates = executions
-      .flatMap(({ results }) => results.map((result) => result.startTime.split('T')[0]))
-      .filter((date, index, arr) => arr.indexOf(date) === index)
-      .sort();
+    const allDates = getDatesBetween(filters.from, filters.to);
 
-    return allResultDates.map((date) => {
-      const statuses = executions
+    return allDates.map((date) => {
+      const statuses = allExecutions
         .filter(({ results }) => results.some((result) => result.startTime.split('T')[0] === date))
         .flatMap(({ results }) => results.map((result) => result.status));
 
@@ -42,13 +46,14 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
         display: getDateDisplayName(date),
       };
     });
-  }, [selectedDates, executions]);
+  }, [filters.from, filters.to, selectedDates, allExecutions]);
 
   const filteredExecutions = useMemo(() => {
-    return executions
-      .filter(({ results }) => results.some((result) => selectedDates.includes(result.startTime.split('T')[0])))
-      .sort((a, b) => new Date(b.execution.createdAt).getTime() - new Date(a.execution.createdAt).getTime());
-  }, [executions, selectedDates]);
+    // Executions are already filtered by date in results-list.tsx, just sort them
+    return executions.sort(
+      (a, b) => new Date(b.execution.createdAt).getTime() - new Date(a.execution.createdAt).getTime(),
+    );
+  }, [executions]);
 
   const handleDateToggle = (dayFilter: { yyyy_mm_dd: string }) => {
     toggleDate(dayFilter.yyyy_mm_dd);
@@ -58,7 +63,8 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
     updateFilters({ tag });
   };
 
-  if (!dateFilters.some((day) => day.stats.length !== 0 && day.isActive)) {
+  // Hide spec section if no executions match filters and selected dates
+  if (executions.length === 0) {
     return null;
   }
 
@@ -112,9 +118,25 @@ export const ResultSpecSection = memo(({ spec, executions }: ResultSpecSectionPr
       </VStack>
 
       {filteredExecutions.map(({ execution, results }) => {
-        const serizedExecution = serializeExecution(execution, user);
+        const serializedExecution = serializeExecution(execution, user);
 
-        return <ResultsExecutionCard key={execution.id} results={results} {...serizedExecution} />;
+        return (
+          <ResultsExecutionCard
+            key={execution.id}
+            results={results}
+            specName={spec.title}
+            projectId={projectId}
+            onContextMenu={(evt) =>
+              handleExecutionContextMenu(evt, {
+                id: execution.id,
+                name: execution.name,
+                projectId: projectId,
+              })
+            }
+            onResultContextMenu={handleResultContextMenu}
+            {...serializedExecution}
+          />
+        );
       })}
     </VStack>
   );

@@ -3,7 +3,7 @@ import { Box, SimpleGrid, Text, Heading, Button, Flex } from '@chakra-ui/react';
 import { useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
 import { ProjectCard } from '@/components/ProjectCard';
 import { useCreateProjectDialog } from '@/components/dialogs';
-import { useProjectContextMenu } from '@/components/context-menu/hooks';
+import { useProjectContextMenu } from '@/hooks';
 
 export function ProjectsSettings() {
   const { data: projects, error } = useGetApiV2ProjectsQuery({});

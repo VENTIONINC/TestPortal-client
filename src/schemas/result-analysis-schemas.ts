@@ -7,6 +7,7 @@ export const resultAnalysisSchema = z.object({
   analysisConclusion: z.string().min(1, 'Analysis conclusion is required'),
   analysisConfidence: z
     .number()
-    .min(0, 'Analysis confidence is required')
-    .max(1, 'Analysis confidence must be less than or equal to 1'),
+    .int('Analysis confidence must be an integer')
+    .min(1, 'Analysis confidence must be at least 1')
+    .max(5, 'Analysis confidence must be at most 5'),
 });

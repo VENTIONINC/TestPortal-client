@@ -15,7 +15,16 @@ import {
   TEST_ERRORS,
   TEST_SUBJECTS,
 } from './constants';
-import type { CTRFConfig, CTRFReport, CTRFTest, PlaywrightReport, ReportConfig, ReportError, Test, TestResult } from './types';
+import type {
+  CTRFConfig,
+  CTRFReport,
+  CTRFTest,
+  PlaywrightReport,
+  ReportConfig,
+  ReportError,
+  Test,
+  TestResult,
+} from './types';
 
 export const generateRandomString = (length = 8): string => {
   return Math.random()
@@ -154,7 +163,7 @@ export const generateReport = (config: ReportConfig): PlaywrightReport => {
           projectName: browserProjectName,
           reportName,
           workers,
-        })
+        }),
       );
     }
 
@@ -168,7 +177,7 @@ export const generateReport = (config: ReportConfig): PlaywrightReport => {
           projectName: browserProjectName,
           reportName,
           workers,
-        })
+        }),
       );
     }
 
@@ -252,36 +261,6 @@ export const generateReport = (config: ReportConfig): PlaywrightReport => {
   };
 };
 
-export const copyToClipboard = async (text: string): Promise<void> => {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch {
-    // Fallback for older browsers
-    const tempInput = document.createElement('input');
-    tempInput.value = text;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand('copy');
-    document.body.removeChild(tempInput);
-  }
-};
-
-export const copyTextareaToClipboard = async (textareaId: string): Promise<void> => {
-  try {
-    const textarea = document.getElementById(textareaId) as HTMLTextAreaElement;
-    if (!textarea) return;
-
-    await navigator.clipboard.writeText(textarea.value);
-  } catch {
-    // Fallback for older browsers
-    const textarea = document.getElementById(textareaId) as HTMLTextAreaElement;
-    if (textarea) {
-      textarea.select();
-      document.execCommand('copy');
-    }
-  }
-};
-
 export const downloadReport = (report: PlaywrightReport, filename?: string): void => {
   const reportName = filename || report.reportName || 'playwright-report';
   const sanitizedFilename = reportName.replace(/[^a-zA-Z0-9-_]/g, '_');
@@ -292,7 +271,7 @@ export const downloadReport = (report: PlaywrightReport, filename?: string): voi
 };
 
 // CTRF Helper Functions
-export const getRandomElement = <T,>(array: T[]): T => {
+export const getRandomElement = <T>(array: T[]): T => {
   return array[Math.floor(Math.random() * array.length)];
 };
 

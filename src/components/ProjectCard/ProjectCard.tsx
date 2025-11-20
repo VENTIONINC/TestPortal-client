@@ -114,7 +114,7 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
             </Flex>
           </Flex>
 
-          <ContextMenuButton onClick={(evt) => onContextMenu(evt, { id: id.toString(), isActive })} size="sm" />
+          <ContextMenuButton onClick={(evt) => onContextMenu(evt, { id, isActive })} size="sm" />
         </Flex>
 
         {description && (

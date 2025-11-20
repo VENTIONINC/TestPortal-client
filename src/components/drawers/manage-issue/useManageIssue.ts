@@ -5,8 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useConfirmIssueDeletionDialog } from '@/components/dialogs';
 import { useCreateAssumptionMutation } from '@/redux/apis/extendedApi';
 import {
-  useDeleteApiV1IssuesByIssueIdMutation,
-  usePatchApiV1IssuesByIssueIdMutation,
+  useDeleteApiV2IssuesByIssueIdMutation,
+  usePatchApiV2IssuesByIssueIdMutation,
   usePostApiV2ErrorFormatterMutation,
   usePostApiV2IssuesMutation,
 } from '@/redux/apis/generatedApi';
@@ -59,8 +59,8 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
   const [getIssues] = useLazyGetIssuesQuery();
   const [createAssumption, { isLoading: isCreatingAssumption }] = useCreateAssumptionMutation();
   const [createIssue, { isLoading: isCreatingIssue }] = usePostApiV2IssuesMutation();
-  const [updateIssue, { isLoading: isUpdatingIssue }] = usePatchApiV1IssuesByIssueIdMutation();
-  const [deleteIssue, { isLoading: isDeletingIssue }] = useDeleteApiV1IssuesByIssueIdMutation();
+  const [updateIssue, { isLoading: isUpdatingIssue }] = usePatchApiV2IssuesByIssueIdMutation();
+  const [deleteIssue, { isLoading: isDeletingIssue }] = useDeleteApiV2IssuesByIssueIdMutation();
   const [formatError, { isLoading: isFormattingError }] = usePostApiV2ErrorFormatterMutation();
 
   // Load existing issues for search
@@ -68,12 +68,16 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
     if (!watchedName?.trim()) return;
 
     try {
-      const res = await getIssues({ name: watchedName, category: issue.category }).unwrap();
+      const res = await getIssues({
+        name: watchedName,
+        category: issue.category,
+        projectId: selectedProjectId,
+      }).unwrap();
       setExistingIssues(res.issues);
     } catch {
       toaster.create({ title: 'Failed to load issues', type: 'error' });
     }
-  }, [getIssues, issue.category, watchedName]);
+  }, [getIssues, issue.category, watchedName, selectedProjectId]);
 
   // Handle issue selection from search results
   const handleIssueSelected = (selectedIssue: Issue) => {
@@ -140,7 +144,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
   // Delete issue
   const handleDeleteIssue = async () => {
     try {
-      await deleteIssue({ issueId: issue.id }).unwrap();
+      await deleteIssue({ issueId: issue.id, projectId: selectedProjectId }).unwrap();
       toaster.create({ title: 'Issue deleted successfully', type: 'success' });
       closeDrawer();
     } catch {
