@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.github
+.husky
+.vscode
+.idea
+*.log
+.DS_Store
+coverage
