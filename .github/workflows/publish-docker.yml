@@ -1,10 +1,6 @@
 name: Create and publish a Docker image
 
 on:
-  push:
-    branches: ['main']
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       api_url:
@@ -15,6 +11,11 @@ on:
         description: 'Custom Image Tag (e.g. customer-name)'
         required: false
         type: string
+      branch_tag:
+        description: 'Tag with branch name (default: true)'
+        required: false
+        type: boolean
+        default: true
 
 env:
   REGISTRY: ghcr.io
@@ -44,12 +45,13 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha
+            type=ref,event=branch,enable=${{ inputs.image_tag == '' }}
+            type=ref,event=pr,enable=${{ inputs.image_tag == '' }}
+            type=semver,pattern={{version}},enable=${{ inputs.image_tag == '' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ inputs.image_tag == '' }}
+            type=sha,enable=${{ inputs.image_tag == '' }}
             type=raw,value=${{ inputs.image_tag }},enable=${{ inputs.image_tag != '' }}
+            type=ref,event=branch,enable=${{ inputs.branch_tag == true && inputs.image_tag != '' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
