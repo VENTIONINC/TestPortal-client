@@ -50,22 +50,9 @@ export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
               };
             }
 
-            const statusColor =
-              status === 'passed'
-                ? 'green.600'
-                : status === 'failed'
-                  ? 'red.500'
-                  : 'gray.500';
+            const statusColor = status === 'passed' ? 'green.600' : status === 'failed' ? 'red.500' : 'gray.500';
 
-            return (
-              <Box
-                key={index}
-                w={1.5}
-                h={1.5}
-                {...borderRadiusProps}
-                bg={statusColor}
-              />
-            );
+            return <Box key={index} w={1.5} h={1.5} {...borderRadiusProps} bg={statusColor} />;
           })}
         </HStack>
       )}

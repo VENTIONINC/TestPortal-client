@@ -1,0 +1,64 @@
+name: Create and publish a Docker image
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'API URL (overrides repo variable)'
+        required: false
+        type: string
+      image_tag:
+        description: 'Custom Image Tag (e.g. customer-name)'
+        required: false
+        type: string
+      branch_tag:
+        description: 'Tag with branch name (default: true)'
+        required: false
+        type: boolean
+        default: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,enable=${{ inputs.image_tag == '' }}
+            type=ref,event=pr,enable=${{ inputs.image_tag == '' }}
+            type=semver,pattern={{version}},enable=${{ inputs.image_tag == '' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ inputs.image_tag == '' }}
+            type=sha,enable=${{ inputs.image_tag == '' }}
+            type=raw,value=${{ inputs.image_tag }},enable=${{ inputs.image_tag != '' }}
+            type=ref,event=branch,enable=${{ inputs.branch_tag == true && inputs.image_tag != '' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            API_URL=${{ inputs.api_url != '' && inputs.api_url || vars.VITE_API_URL }}
