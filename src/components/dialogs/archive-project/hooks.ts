@@ -7,10 +7,15 @@ import { ArchiveProjectDialog } from './archive-project-dialog';
 export const useArchiveProjectDialog = () => {
   const { openDialog } = useDialogActions();
 
-  return (projectId: string) => openDialog(ArchiveProjectDialog, { projectId });
+  return (projectId: string, archive = false) =>
+    openDialog(ArchiveProjectDialog, { projectId, archive });
 };
 
-export const useArchiveProjectBusinessLogic = (closeDialog: () => void, projectId: string) => {
+export const useArchiveProjectBusinessLogic = (
+  closeDialog: () => void,
+  projectId: string,
+  archive = false
+) => {
   const [updateProject] = usePutApiV2ProjectsByIdMutation();
 
   const onConfirm = async () => {
@@ -18,19 +23,19 @@ export const useArchiveProjectBusinessLogic = (closeDialog: () => void, projectI
       await updateProject({
         id: projectId,
         updateProjectRequest: {
-          isActive: false,
+          isActive: !archive,
         },
       }).unwrap();
 
       toaster.create({
-        title: 'Project archived successfully.',
+        title: archive ? 'Project archived successfully.' : 'Project unarchived successfully.',
         type: 'success',
       });
 
       closeDialog();
     } catch {
       toaster.create({
-        title: 'Failed to archive project.',
+        title: archive ? 'Failed to archive project.' : 'Failed to unarchive project.',
         type: 'error',
       });
     }

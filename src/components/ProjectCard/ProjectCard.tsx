@@ -1,6 +1,6 @@
 import { Badge, Card, Text, Heading, Flex, Box, Icon } from '@chakra-ui/react';
 import { MouseEvent } from 'react';
-import { FiCode, FiAlertCircle, FiPlay, FiLayers, FiHash, FiCheckCircle } from 'react-icons/fi';
+import { FiCode, FiAlertCircle, FiPlay, FiLayers, FiCheckCircle } from 'react-icons/fi';
 
 import { ContextMenuButton } from '@/components/ui';
 import type { Project } from '@/redux/apis/generatedApi';
@@ -30,7 +30,6 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
     specColor,
     activeOrderColor,
     activeIconColor,
-    inactiveTextColor,
     dividerColor,
   } = useProjectCardColors(isActive);
 
@@ -42,7 +41,6 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
       border="1px solid"
       borderColor={cardBorder}
       bg={cardBg}
-      opacity={isActive ? 1 : 0.7}
       transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
       cursor="pointer"
       _hover={
@@ -103,12 +101,6 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
                       Inactive
                     </Badge>
                   )}
-                </Flex>
-                <Flex gap={1} align="center">
-                  <Icon as={FiHash} boxSize={3} color={inactiveTextColor} />
-                  <Text fontSize="xs" color={mutedTextColor} fontFamily="mono">
-                    {id}
-                  </Text>
                 </Flex>
               </Flex>
             </Flex>
