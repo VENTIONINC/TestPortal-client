@@ -753,7 +753,8 @@ export type GetApiV2PromptsByNameApiArg = {
     | 'developer-code-assistant'
     | 'test-portal-assistant'
     | 'issue-analysis-assistant'
-    | 'environment-performance-assistant';
+    | 'environment-performance-assistant'
+    | 'software-documentation-assistant';
 };
 export type PostApiV2PromptsByNameGenerateApiResponse = /** status 200 Generated prompt */ GeneratePromptResponse;
 export type PostApiV2PromptsByNameGenerateApiArg = {
@@ -761,7 +762,8 @@ export type PostApiV2PromptsByNameGenerateApiArg = {
     | 'developer-code-assistant'
     | 'test-portal-assistant'
     | 'issue-analysis-assistant'
-    | 'environment-performance-assistant';
+    | 'environment-performance-assistant'
+    | 'software-documentation-assistant';
   generatePromptRequest: GeneratePromptRequest;
 };
 export type GetApiV2ProjectsApiResponse = /** status 200 List of projects */ Project[];
@@ -1079,7 +1081,7 @@ export type PromptConfig = {
   name: string;
   title: string;
   description: string;
-  category: 'development' | 'reporting' | 'analysis' | 'performance';
+  category: 'development' | 'reporting' | 'analysis' | 'performance' | 'documentation';
   parameters: {
     [key: string]: PromptParameter;
   };
