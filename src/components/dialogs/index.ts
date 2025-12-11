@@ -4,6 +4,7 @@ export { useConfirmExecutionDeletionDialog } from './confirm-execution-deletion'
 export { useConfirmIssueDeletionDialog } from './confirm-issue-deteletion';
 export { useConfirmResultDeletionDialog } from './confirm-result-deletion';
 export { useCreateProjectDialog } from './create-project';
+export { useDeleteProjectDialog } from './delete-project';
 export { useGenerateApiKeyDialog } from './generate-api-key';
 export { useResultAnalysisDialog } from './result-analysis';
 export { useResultsErrorDialog } from './results-error';

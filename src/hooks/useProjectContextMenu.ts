@@ -1,9 +1,10 @@
 import { MouseEvent } from 'react';
-import { FiEdit, FiArchive, FiRotateCcw } from 'react-icons/fi';
+import { FiEdit, FiArchive, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
 
 import { useOpenContextMenu } from '@/redux/slices/contextMenu';
 import { useUpdateProjectDialog } from '@/components/dialogs/update-project';
 import { useArchiveProjectDialog } from '@/components/dialogs/archive-project';
+import { useDeleteProjectDialog } from '@/components/dialogs/delete-project';
 
 type UseProjectContextMenuType = () => (evt: MouseEvent, project: { id: string; isActive: boolean }) => void;
 
@@ -11,6 +12,7 @@ export const useProjectContextMenu: UseProjectContextMenuType = () => {
   const openContextMenu = useOpenContextMenu();
   const updateProjectDialog = useUpdateProjectDialog();
   const archiveProjectDialog = useArchiveProjectDialog();
+  const deleteProjectDialog = useDeleteProjectDialog();
 
   const getOptions = (project: { id: string; isActive: boolean }) => [
     {
@@ -30,6 +32,12 @@ export const useProjectContextMenu: UseProjectContextMenuType = () => {
           onClick: () => archiveProjectDialog(project.id, false),
           icon: FiRotateCcw,
         },
+    {
+      title: 'Delete Project',
+      onClick: () => deleteProjectDialog(project.id),
+      icon: FiTrash2,
+      disabled: project.isActive,
+    },
   ];
 
   return (evt, project) => {
