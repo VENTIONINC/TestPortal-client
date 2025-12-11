@@ -1,4 +1,4 @@
-import { Code } from '@chakra-ui/react';
+import { Box, Code } from '@chakra-ui/react';
 
 import { Dialog, DialogBody, DialogFooter } from '@/components/ui';
 import { DefaultDialogProps, ResultError } from '@/types';
@@ -11,20 +11,28 @@ export const ResultsErrorDialog = ({ resultError, closeDialog }: ResultsErrorDia
   return (
     <Dialog title="Results Error" onClose={closeDialog} size="lg">
       <DialogBody display="flex" flexDir="column" gap={5}>
-        <Code size="lg" whiteSpace="pre-wrap" wordBreak="break-word">
-          {resultError?.message}
-        </Code>
+        {resultError?.message && (
+          <Box>
+            <Code display="block" size="lg" whiteSpace="pre-wrap" wordBreak="break-word">
+              {resultError.message}
+            </Code>
+          </Box>
+        )}
 
         {resultError?.callLog && resultError.callLog.length > 0 && (
-          <Code size="lg" whiteSpace="pre-wrap" wordBreak="break-word">
-            {resultError.callLog.join('\n')}
-          </Code>
+          <Box>
+            <Code display="block" size="lg" whiteSpace="pre-wrap" wordBreak="break-word">
+              {resultError.callLog.join('\n')}
+            </Code>
+          </Box>
         )}
 
         {resultError?.callStack && resultError.callStack.length > 0 && (
-          <Code size="lg" whiteSpace="pre-wrap" wordBreak="break-word">
-            {resultError.callStack.join('\n')}
-          </Code>
+          <Box>
+            <Code display="block" size="lg" whiteSpace="pre-wrap" wordBreak="break-word">
+              {resultError.callStack.join('\n')}
+            </Code>
+          </Box>
         )}
       </DialogBody>
 

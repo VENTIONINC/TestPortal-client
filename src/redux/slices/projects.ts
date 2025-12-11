@@ -5,10 +5,12 @@ import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 
 export interface ProjectsState {
   selectedProjectId: string;
+  isInitialized: boolean;
 }
 
 const initialState: ProjectsState = {
   selectedProjectId: '',
+  isInitialized: false,
 };
 
 export const projectsSlice = createSlice({
@@ -17,6 +19,9 @@ export const projectsSlice = createSlice({
   reducers: {
     setSelectedProjectId: (state, action: PayloadAction<string>) => {
       state.selectedProjectId = action.payload;
+    },
+    setIsInitialized: (state, action: PayloadAction<boolean>) => {
+      state.isInitialized = action.payload;
     },
     reset: () => initialState,
   },
@@ -32,6 +37,12 @@ export const useProjectsActions = () => {
       },
       [dispatch],
     ),
+    setIsInitialized: useCallback(
+      (isInitialized: boolean) => {
+        dispatch(projectsSlice.actions.setIsInitialized(isInitialized));
+      },
+      [dispatch],
+    ),
     reset: useCallback(() => {
       dispatch(projectsSlice.actions.reset());
     }, [dispatch]),
@@ -39,5 +50,6 @@ export const useProjectsActions = () => {
 };
 
 export const useSelectedProjectId = () => useAppSelector((state) => state.projects.selectedProjectId);
+export const useIsInitialized = () => useAppSelector((state) => state.projects.isInitialized);
 
 export default projectsSlice.reducer;

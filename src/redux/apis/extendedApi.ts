@@ -12,6 +12,9 @@ export const extendedApi = generatedApi
       deleteApiV2ExecutionsByExecutionId: {
         invalidatesTags: [TAGS.Result],
       },
+      patchApiV2AssumptionsByAssumptionId: {
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result],
+      },
     },
   })
   .injectEndpoints({

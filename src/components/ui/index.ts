@@ -21,3 +21,4 @@ export { ChakraProvider } from './provider';
 export { Slider, type SliderProps } from './slider';
 export { Textarea, type TextareaProps } from './textarea';
 export { Toaster, toaster } from './toaster';
+export { Tooltip, type TooltipProps } from './tooltip';
