@@ -1,5 +1,5 @@
 import { MouseEvent } from 'react';
-import { FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FiEdit, FiArchive, FiRotateCcw } from 'react-icons/fi';
 
 import { useOpenContextMenu } from '@/redux/slices/contextMenu';
 import { useUpdateProjectDialog } from '@/components/dialogs/update-project';
@@ -19,13 +19,17 @@ export const useProjectContextMenu: UseProjectContextMenuType = () => {
       icon: FiEdit,
       disabled: !project.isActive,
     },
-    {
-      title: 'Archive Project',
-      onClick: () => archiveProjectDialog(project.id),
-      icon: FiTrash2,
-      divider: true,
-      disabled: !project.isActive,
-    },
+    project.isActive
+      ? {
+          title: 'Archive Project',
+          onClick: () => archiveProjectDialog(project.id, true),
+          icon: FiArchive,
+        }
+      : {
+          title: 'Unarchive Project',
+          onClick: () => archiveProjectDialog(project.id, false),
+          icon: FiRotateCcw,
+        },
   ];
 
   return (evt, project) => {

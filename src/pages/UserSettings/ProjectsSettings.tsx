@@ -35,7 +35,7 @@ export function ProjectsSettings() {
         <Heading size="md">Projects ({projects.length})</Heading>
         <Button onClick={openCreateProjectDialog}>Create Project</Button>
       </Flex>
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
         {projects.map((project) => (
           <ProjectCard
             key={project.id}
