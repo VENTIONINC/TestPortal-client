@@ -39,7 +39,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
             <Mark fontWeight={500} color="black">
               Category:
             </Mark>{' '}
-            {issue.category}
+            {issue.category === 'Infra' ? 'Environment' : issue.category}
           </Text>
           <Icon size={16} />
         </HStack>
