@@ -66,7 +66,7 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
           items={[
             { value: IssueCategory.Bug, label: 'Bug' },
             { value: IssueCategory.Script, label: 'Script' },
-            { value: IssueCategory.Infra, label: 'Infra' },
+            { value: IssueCategory.Infra, label: 'Environment' },
             { value: IssueCategory.Performance, label: 'Performance' },
           ]}
           error={errors.category?.message}
