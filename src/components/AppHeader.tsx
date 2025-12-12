@@ -23,7 +23,7 @@ export const AppHeader = () => {
       <Flex justify="space-between" align="center" px={6} py={4}>
         <HStack gap={8}>
           <Link href={PATHS.ROOT} textStyle="lg" fontWeight="bold" color="blue.600">
-            <Image src="image.png" alt="TestPortal Logo" height="10" />
+            <Image src="/image.png" alt="TestPortal Logo" height="10" />
           </Link>
 
           <HStack gap={4}>
