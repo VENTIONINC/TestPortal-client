@@ -24,7 +24,7 @@ export const AppHeader = () => {
       <Flex justify="space-between" align="center" px={6} py={4}>
         <HStack gap={8}>
           <Link href={PATHS.ROOT} textStyle="lg" fontWeight="bold" color="blue.600">
-            <Image src="image.png" alt="TestPortal Logo" height="10" />
+            <Image src="/image.png" alt="TestPortal Logo" height="10" />
           </Link>
 
           <HStack gap={4}>
@@ -47,12 +47,7 @@ export const AppHeader = () => {
 
         <Flex align="center" gap={4}>
           <ProjectSelect />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={openUploadDialog}
-            colorScheme="blue"
-          >
+          <Button variant="outline" size="sm" onClick={openUploadDialog} colorScheme="blue">
             <LuUpload size={16} />
             Upload
           </Button>
