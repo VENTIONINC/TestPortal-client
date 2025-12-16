@@ -96,7 +96,7 @@ export const ResultsStats = memo(() => {
                 <Text fontWeight={700}>Issue Categories</Text>
                 <HStack>
                   {Object.values(IssueCategory).map((category) => {
-                    const { Icon, color } = getIssueCategoryStyle(category);
+                    const { Icon, color, name } = getIssueCategoryStyle(category);
 
                     return (
                       <HStack
@@ -109,7 +109,7 @@ export const ResultsStats = memo(() => {
                       >
                         <Icon size={16} color="currentColor" />
                         <Text textStyle="sm" color="black">
-                          {category}
+                          {name}
                         </Text>
                       </HStack>
                     );
