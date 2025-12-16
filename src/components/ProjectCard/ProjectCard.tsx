@@ -2,7 +2,7 @@ import { Badge, Card, Text, Heading, Flex, Box, Icon } from '@chakra-ui/react';
 import { MouseEvent } from 'react';
 import { FiCode, FiAlertCircle, FiPlay, FiLayers, FiCheckCircle } from 'react-icons/fi';
 
-import { ContextMenuButton } from '@/components/ui';
+import { ContextMenuButton, ClipboardCopyText } from '@/components/ui';
 import type { Project } from '@/redux/apis/generatedApi';
 
 import { useProjectCardColors } from './hooks';
@@ -102,6 +102,9 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
                     </Badge>
                   )}
                 </Flex>
+                <ClipboardCopyText value={id} fontSize="xs" color={mutedTextColor}>
+                  ID: {id}
+                </ClipboardCopyText>
               </Flex>
             </Flex>
           </Flex>
