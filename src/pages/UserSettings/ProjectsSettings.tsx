@@ -6,11 +6,11 @@ import { useCreateProjectDialog } from '@/components/dialogs';
 import { useProjectContextMenu } from '@/hooks';
 
 export function ProjectsSettings() {
-  const { data: projects, error } = useGetApiV2ProjectsQuery({});
+  const { data: projects } = useGetApiV2ProjectsQuery({});
   const openCreateProjectDialog = useCreateProjectDialog();
   const handleProjectContextMenu = useProjectContextMenu();
 
-  if (!projects || error) {
+  if (!projects) {
     return (
       <Box p={4} bg="red.50" borderRadius="md" border="1px" borderColor="red.200">
         <Text color="red.700">Failed to load projects</Text>

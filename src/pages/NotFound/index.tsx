@@ -1,55 +1,66 @@
-import { Link } from 'react-router';
-import { Box, Container, Heading, Text, Button } from '@chakra-ui/react';
+import { useNavigate } from 'react-router';
+import { Box, Container, Heading, Text, Button, VStack, Flex } from '@chakra-ui/react';
 
+import { Link, useColorModeValue } from '@/components/ui';
 import { PATHS } from '@/types/paths';
 
 export function NotFoundPage() {
+  const navigate = useNavigate();
+
+  const pageBg = useColorModeValue('gray.50', 'gray.900');
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const shadow = useColorModeValue('lg', 'dark-lg');
+
+  const titleColor = useColorModeValue('blue.500', 'blue.300');
+  const descriptionColor = useColorModeValue('gray.600', 'gray.300');
+  const linkColor = useColorModeValue('blue.600', 'blue.300');
+
   return (
-    <Box minH="100vh" bg="gray.50" py={12} px={4}>
-      <Container maxW="md" centerContent>
-        <Box textAlign="center">
-          <Heading fontSize="9xl" fontWeight="bold" color="blue.500" mb={8}>
-            404
-          </Heading>
-
-          <Box mb={8}>
-            <Heading size="xl" mb={4}>
-              Page not found
+    <Flex minH="100vh" bg={pageBg} px={4} align="center" justify="center">
+      <Container maxW="md" p={0}>
+        <Box
+          bg={cardBg}
+          borderRadius="lg"
+          boxShadow={shadow}
+          borderWidth="1px"
+          borderColor={borderColor}
+          p={8}
+          w="100%"
+          textAlign="center"
+        >
+          <VStack gap={8}>
+            <Heading fontSize="9xl" fontWeight="bold" color={titleColor} lineHeight={1}>
+              404
             </Heading>
-            <Text color="gray.600">Sorry, we couldn't find the page you're looking for.</Text>
-          </Box>
 
-          <Box mb={8}>
-            <Link to={PATHS.ROOT}>
-              <Button colorScheme="blue" size="lg">
-                Go back home
-              </Button>
-            </Link>
-          </Box>
-
-          <Box>
-            <Heading size="lg" mb={4}>
-              Popular pages
-            </Heading>
             <Box>
-              <Box mb={2}>
-                <Link to={PATHS.RESULTS}>
-                  <Text color="blue.500" textDecoration="underline">
-                    Results
-                  </Text>
-                </Link>
-              </Box>
-              <Box mb={2}>
-                <Link to={PATHS.ISSUES}>
-                  <Text color="blue.500" textDecoration="underline">
-                    Issues
-                  </Text>
-                </Link>
-              </Box>
+              <Heading size="lg" mb={2}>
+                Page not found
+              </Heading>
+              <Text color={descriptionColor}>Sorry, we couldn't find the page you're looking for.</Text>
             </Box>
-          </Box>
+
+            <Button colorScheme="blue" size="lg" w="100%" onClick={() => navigate(PATHS.ROOT)}>
+              Go back home
+            </Button>
+
+            <Box w="100%">
+              <Heading size="md" mb={3}>
+                Popular pages
+              </Heading>
+              <VStack gap={2} align="center">
+                <Link href={PATHS.RESULTS} color={linkColor} textDecoration="underline" fontWeight="medium">
+                  Results
+                </Link>
+                <Link href={PATHS.ISSUES} color={linkColor} textDecoration="underline" fontWeight="medium">
+                  Issues
+                </Link>
+              </VStack>
+            </Box>
+          </VStack>
         </Box>
       </Container>
-    </Box>
+    </Flex>
   );
 }
