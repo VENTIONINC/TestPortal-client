@@ -39,3 +39,22 @@ export const getConfidenceLabel = (confidence?: number): string => {
       return String(confidence);
   }
 };
+
+export const getErrorQualityLabel = (quality?: number): string => {
+  if (!quality) return 'N/A';
+
+  switch (quality) {
+    case 1:
+      return 'Very Poor';
+    case 2:
+      return 'Poor';
+    case 3:
+      return 'Fair';
+    case 4:
+      return 'Good';
+    case 5:
+      return 'Excellent';
+    default:
+      return String(quality);
+  }
+};
