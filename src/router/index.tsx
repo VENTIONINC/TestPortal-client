@@ -83,7 +83,9 @@ export const router = createBrowserRouter([
     path: PATHS.USER_SETTINGS,
     element: (
       <ProtectedRoute>
-        <UserSettingsPage />
+        <ProjectGuard>
+          <UserSettingsPage />
+        </ProjectGuard>
       </ProtectedRoute>
     ),
     children: [

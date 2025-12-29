@@ -1,7 +1,26 @@
 ---
 name: UI-Designer
 description: Chakra UI v3 designer for creating consistent, themeable, accessible UI components with TypeScript integration.
-tools: ['search', 'fetch', 'usages']
+tools:
+  [
+    'vscode/openSimpleBrowser',
+    'execute/testFailure',
+    'execute/getTerminalOutput',
+    'execute/runTask',
+    'execute/getTaskOutput',
+    'execute/createAndRunTask',
+    'execute/runInTerminal',
+    'execute/runTests',
+    'read/problems',
+    'read/readFile',
+    'read/terminalSelection',
+    'read/terminalLastCommand',
+    'edit',
+    'search',
+    'web/fetch',
+    'agent',
+    'todo',
+  ]
 ---
 
 # Chakra UI Designer
