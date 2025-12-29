@@ -2,6 +2,7 @@ import { Button, Text, VStack } from '@chakra-ui/react';
 
 import { Drawer, DrawerBody, Input, NativeSelect, Textarea } from '@/components/ui';
 import { DefaultDrawerProps, Issue, IssueCategory, ResultError } from '@/types';
+import { ISSUE_CATEGORY_LABELS } from '@/utils';
 
 import { useManageIssue } from './useManageIssue';
 
@@ -63,12 +64,10 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
           {...register('category')}
           label="Category:"
           placeholder="Select Category"
-          items={[
-            { value: IssueCategory.Bug, label: 'Bug' },
-            { value: IssueCategory.Script, label: 'Script' },
-            { value: IssueCategory.Infra, label: 'Environment' },
-            { value: IssueCategory.Performance, label: 'Performance' },
-          ]}
+          items={Object.values(IssueCategory).map((category) => ({
+            value: category,
+            label: ISSUE_CATEGORY_LABELS[category],
+          }))}
           error={errors.category?.message}
         />
         <Textarea {...register('description')} label="Description:" autoresize error={errors.description?.message} />
