@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { loginSchema, type LoginFormData } from '@/schemas/authSchemas';
 import { usePostApiV2UsersLoginMutation } from '@/redux/apis/generatedApi';
 import { setTokens } from '@/redux/slices/auth';
+import { useResetState } from '@/hooks/useResetState';
 import { extractApiError } from '@/utils/apiErrors';
 import { PATHS } from '@/types/paths';
 
@@ -14,6 +15,7 @@ export function useLogin() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const resetState = useResetState();
   const [postApiUsersLogin, { isLoading: isApiLoading, error: apiError }] = usePostApiV2UsersLoginMutation();
 
   const form = useForm<LoginFormData>({
@@ -54,6 +56,9 @@ export function useLogin() {
           refreshToken: response.refreshToken,
         }),
       );
+
+      // Reset global state to ensure fresh initialization
+      resetState();
 
       // Navigate to intended destination
       navigate(PATHS.ROOT);
