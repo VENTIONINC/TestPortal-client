@@ -4,390 +4,140 @@ This project uses a powerful combination of **React Hook Form**, **Zod**, and **
 
 ## 🚀 Why This Combination?
 
-### **React Hook Form**
-
-- ✅ **Better Performance**: Minimal re-renders, uncontrolled components
-- ✅ **Smaller Bundle**: Lightweight library
-- ✅ **Better DX**: Less boilerplate code
-- ✅ **Built-in Validation**: Comprehensive validation support
-
-### **Zod**
-
-- ✅ **Type Safety**: TypeScript-first schema validation
-- ✅ **Runtime Validation**: Catch errors at runtime
-- ✅ **Reusable Schemas**: Share validation logic across client/server
-- ✅ **Great Error Messages**: User-friendly validation messages
-
-### **ChakraUI Integration**
-
-- ✅ **Fully Compatible**: Works seamlessly with ChakraUI components
-- ✅ **Consistent Styling**: Maintains design system consistency
-- ✅ **Accessible**: Built-in accessibility features
-- ✅ **Customizable**: Easy to theme and customize
+- **React Hook Form**: Minimal re-renders, uncontrolled components, and less boilerplate.
+- **Zod**: TypeScript-first schema validation with great error messages and runtime safety.
+- **ChakraUI**: Accessible, consistent, and customizable UI components.
 
 ## 🏗️ Clean Architecture
 
-We follow clean architecture principles by separating business logic from UI components:
+We follow clean architecture principles by separating business logic from UI components.
 
-### **File Structure**
+### **File Structure Pattern**
 
-```
+\`\`\`
 src/
 ├── schemas/
-│   └── authSchemas.ts          # Validation schemas
+│   └── [feature]Schemas.ts     # Validation schemas (Zod)
 ├── hooks/
-│   ├── useSignup.ts            # Signup business logic
-│   ├── useLogin.ts             # Login business logic
-│   └── index.ts                # Hook exports
-├── utils/
-│   └── apiErrors.ts            # Error handling utilities
+│   └── use[Feature].ts         # Business logic & form state (RHF)
 ├── components/
 │   └── forms/
-│       ├── FormField.tsx       # Reusable form field
-│       └── index.ts            # Component exports
+│       └── FormField.tsx       # Reusable UI wrapper
 └── pages/
-    ├── Signup/
-    │   └── index.tsx           # Clean UI component
-    └── Login/
-        └── index.tsx           # Clean UI component
-```
+    └── [Feature]/
+        └── index.tsx           # Clean UI component (Rendering only)
+\`\`\`
 
-### **Benefits of This Architecture**
+### **Benefits**
+- ✅ **Separation of Concerns**: UI components focus only on rendering.
+- ✅ **Reusable Logic**: Business logic can be shared across components.
+- ✅ **Testability**: Hooks and utilities can be unit tested independently.
+- ✅ **Maintainability**: Changes to business logic don't affect UI structure.
 
-- ✅ **Separation of Concerns**: UI components focus only on rendering
-- ✅ **Reusable Logic**: Business logic can be shared across components
-- ✅ **Testability**: Hooks and utilities can be unit tested independently
-- ✅ **Maintainability**: Changes to business logic don't affect UI structure
-- ✅ **Type Safety**: Full TypeScript support throughout
+## 🎯 Implementation Pattern
 
-## 📦 Dependencies
+### 1. Define Schema
+Define the shape and validation rules of your form data.
 
-```bash
-yarn add react-hook-form zod @hookform/resolvers
-```
-
-## 🎯 Basic Usage
-
-### 1. Define Schemas (src/schemas/authSchemas.ts)
-
-```typescript
+\`\`\`typescript
+// src/schemas/exampleSchema.ts
 import { z } from 'zod';
 
-const signupSchema = z
-  .object({
-    name: z.string().min(2, 'Name must be at least 2 characters').max(50, 'Name must be less than 50 characters'),
-    email: z.string().email('Please enter a valid email address'),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[a-z]/, 'Password must contain at least one lowercase character')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase character')
-      .regex(/[0-9]/, 'Password must contain at least one numeric character'),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword'],
-  });
+export const exampleSchema = z.object({
+  email: z.string().email('Invalid email'),
+  password: z.string().min(8, 'Too short'),
+});
 
-export type SignupFormData = z.infer<typeof signupSchema>;
-```
+export type ExampleFormData = z.infer<typeof exampleSchema>;
+\`\`\`
 
-### 2. Create Custom Hook (src/hooks/useSignup.ts)
+### 2. Create Custom Hook
+Encapsulate form logic, API calls, and navigation.
 
-```typescript
-import { useSignup } from '@/hooks';
-
-export function useSignup(options: UseSignupOptions = {}) {
-  const form = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
+\`\`\`typescript
+// src/hooks/useExample.ts
+export function useExample() {
+  const form = useForm<ExampleFormData>({
+    resolver: zodResolver(exampleSchema),
     mode: 'onBlur',
   });
 
-  const onSubmit = async (data: SignupFormData) => {
-    // API logic, navigation, error handling
+  const onSubmit = async (data: ExampleFormData) => {
+    // Handle API logic, success/error notifications, and navigation here
   };
 
   return {
-    register: form.register,
+    ...form,
     handleSubmit: form.handleSubmit(onSubmit),
-    errors: form.formState.errors,
-    loading,
-    errorMessage,
+    loading: form.formState.isSubmitting,
   };
 }
-```
+\`\`\`
 
-### 3. Clean UI Component (src/pages/Signup/index.tsx)
+### 3. Clean UI Component
+Use the hook and \`FormField\` to keep the component declarative.
 
-```typescript
-import { useSignup } from '@/hooks';
-import { FormField } from '@/components/forms';
-
-export function SignupPage() {
-  const { register, handleSubmit, errors, loading } = useSignup();
+\`\`\`tsx
+// src/pages/Example/index.tsx
+export function ExamplePage() {
+  const { register, handleSubmit, formState: { errors }, loading } = useExample();
 
   return (
-    <Box as="form" onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <FormField
         {...register('email')}
-        label="Email address"
+        label="Email"
         error={errors.email?.message}
         disabled={loading}
-        required
       />
-      {/* More fields... */}
-      <Button type="submit" loading={loading}>
-        Sign up
-      </Button>
-    </Box>
+      <Button type="submit" loading={loading}>Submit</Button>
+    </form>
   );
 }
-```
+\`\`\`
 
-## 🧩 Custom FormField Component
+## �� Reusable FormField
 
-We've created a reusable `FormField` component that integrates all three libraries:
+The \`FormField\` component (found in \`src/components/forms/FormField.tsx\`) is a wrapper that handles:
+- Label rendering (with required indicator)
+- Input registration (via \`ref\` forwarding)
+- Error message display
+- Helper text display
+- ChakraUI styling integration
 
-```typescript
-// components/forms/FormField.tsx
-interface FormFieldProps extends Omit<InputProps, 'id'> {
-  label: string;
-  error?: string;
-  helperText?: string;
-  required?: boolean;
-}
-
-export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
-  ({ label, error, helperText, required, ...inputProps }, ref) => {
-    return (
-      <Box mb={4}>
-        <Text mb={2} fontWeight="medium">
-          {label}
-          {required && <Text as="span" color="red.500" ml={1}>*</Text>}
-        </Text>
-        <Input
-          {...inputProps}
-          ref={ref}
-          borderColor={error ? 'red.300' : undefined}
-          _focus={{
-            borderColor: error ? 'red.500' : 'blue.500',
-            boxShadow: error
-              ? '0 0 0 1px var(--chakra-colors-red-500)'
-              : '0 0 0 1px var(--chakra-colors-blue-500)',
-          }}
-        />
-        {error && (
-          <Text color="red.500" fontSize="sm" mt={1}>
-            {error}
-          </Text>
-        )}
-        {helperText && !error && (
-          <Text color="gray.600" fontSize="sm" mt={1}>
-            {helperText}
-          </Text>
-        )}
-      </Box>
-    );
-  }
-);
-```
-
-## 🔥 Advanced Features
-
-### Custom Hook Options
-
-```typescript
-const { register, handleSubmit, errors, loading } = useSignup({
-  redirectPath: PATHS.DASHBOARD, // Custom redirect
-  onSuccess: (data) => {
-    // Custom success handling
-    analytics.track('user_signed_up', { email: data.email });
-  },
-  onError: (error) => {
-    // Custom error handling
-    console.error('Signup failed:', error);
-  },
-});
-```
-
-### Error Handling Utilities
-
-```typescript
-// utils/apiErrors.ts
-export function extractApiError(error: FetchBaseQueryError | SerializedError): string {
-  // Comprehensive error extraction logic
-  if ('status' in error) {
-    switch (error.status) {
-      case 409:
-        return 'This email is already registered';
-      case 422:
-        return 'Please check your input';
-      default:
-        return 'An unexpected error occurred';
-    }
-  }
-  return 'Network error. Please try again.';
-}
-```
+## 🔥 Advanced Patterns
 
 ### Schema Composition
+Reuse validation pieces across different schemas to ensure consistency.
 
-```typescript
-// Reusable validation pieces
-const emailValidation = z.string().email('Please enter a valid email address');
-const passwordValidation = z
-  .string()
-  .min(8, 'Password must be at least 8 characters')
-  .regex(/[a-z]/, 'Password must contain at least one lowercase character')
-  .regex(/[A-Z]/, 'Password must contain at least one uppercase character')
-  .regex(/[0-9]/, 'Password must contain at least one numeric character');
+\`\`\`typescript
+const passwordRules = z.string().min(8).regex(/[a-z]/).regex(/[A-Z]/);
 
-// Compose into different schemas
-export const signupSchema = z
-  .object({
-    name: nameValidation,
-    email: emailValidation,
-    password: passwordValidation,
-    confirmPassword: z.string(),
-  })
-  .refine(/* password matching logic */);
-
-export const loginSchema = z.object({
-  email: emailValidation,
-  password: z.string().min(1, 'Password is required'),
+export const signupSchema = z.object({
+  password: passwordRules,
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
 });
-```
+\`\`\`
 
-## 🎨 ChakraUI Integration Patterns
-
-### Custom Styling
-
-```typescript
-<FormField
-  {...register('email')}
-  label="Email"
-  placeholder="Enter email"
-  error={errors.email?.message}
-  // ChakraUI props work seamlessly
-  size="lg"
-  variant="filled"
-  bg="gray.50"
-/>
-```
-
-### Loading States
-
-```typescript
-const loading = isSubmitting || isApiLoading;
-
-<FormField
-  {...register('email')}
-  disabled={loading}
-  placeholder={loading ? 'Loading...' : 'Enter email'}
-/>
-
-<Button
-  type="submit"
-  loading={loading}
-  disabled={loading}
->
-  {loading ? 'Submitting...' : 'Submit'}
-</Button>
-```
+### Error Handling
+Use utility functions (like \`extractApiError\`) to transform backend errors into user-friendly messages that can be set via \`setError('root', ...)\` or displayed in toasts.
 
 ## 📋 Best Practices
 
-1. **Separate Business Logic**: Use custom hooks for form logic
-2. **Reusable Schemas**: Keep validation schemas in separate files
-3. **Error Handling**: Create utility functions for consistent error handling
-4. **Clean Components**: UI components should focus only on rendering
-5. **Type Safety**: Use TypeScript throughout the entire flow
-6. **Testing**: Test hooks and utilities independently
-7. **Documentation**: Document hook interfaces and options
+1. **Keep Components Dumb**: If a component has more than 2-3 lines of form logic, move it to a hook.
+2. **Validate Early**: Use \`mode: 'onBlur'\` or \`'onChange'\` for better UX.
+3. **Type Everything**: Always infer types from Zod schemas using \`z.infer<typeof schema>\`.
+4. **Centralize Schemas**: Keep schemas in \`src/schemas\` so they can be reused by both hooks and components.
+5. **Use FormField**: Avoid manual \`FormControl\`, \`FormLabel\`, and \`FormErrorMessage\` boilerplate.
 
 ## 🧪 Testing Strategy
 
-### Testing Custom Hooks
+- **Test Hooks**: Use \`@testing-library/react\`'s \`renderHook\` to test form submission logic and validation triggers.
+- **Test Components**: Use \`screen.getByLabelText\` and \`userEvent\` to test the end-to-end form flow.
 
-```typescript
-import { renderHook, act } from '@testing-library/react';
-import { useSignup } from '@/hooks/useSignup';
+---
 
-test('should handle successful signup', async () => {
-  const { result } = renderHook(() => useSignup());
-
-  await act(async () => {
-    result.current.handleSubmit({
-      name: 'John Doe',
-      email: 'john@example.com',
-      password: 'password123',
-      confirmPassword: 'password123',
-    });
-  });
-
-  expect(result.current.loading).toBe(false);
-  // Assert success behavior
-});
-```
-
-### Testing Components
-
-```typescript
-import { render, screen } from '@testing-library/react';
-import { SignupPage } from '@/pages/Signup';
-
-test('should render signup form', () => {
-  render(<SignupPage />);
-
-  expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
-  expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument();
-});
-```
-
-## 🔧 Migration from Manual State
-
-**Before (Mixed Concerns):**
-
-```typescript
-export function SignupPage() {
-  const [formData, setFormData] = useState({});
-  const [errors, setErrors] = useState({});
-
-  const handleSubmit = async (e) => {
-    // Validation logic
-    // API logic
-    // Navigation logic
-    // Error handling
-  };
-
-  return (
-    // UI with inline logic
-  );
-}
-```
-
-**After (Clean Architecture):**
-
-```typescript
-// Custom hook handles all business logic
-export function SignupPage() {
-  const { register, handleSubmit, errors, loading } = useSignup();
-
-  return (
-    // Clean UI focused on rendering
-    <FormField {...register('email')} error={errors.email?.message} />
-  );
-}
-```
-
-## 🚀 Performance Benefits
-
-- **Fewer re-renders**: Uncontrolled components reduce re-renders
-- **Better bundle size**: React Hook Form is lighter than alternatives
-- **Optimized validation**: Only validates dirty fields
-- **Efficient error handling**: Built-in error state management
-- **Code splitting**: Business logic can be lazy-loaded independently
-
-This setup provides a robust, type-safe, and performant foundation for all forms in the application! 🎉
+This architecture ensures that as the project grows, our forms remain maintainable, type-safe, and easy to test. 🚀
