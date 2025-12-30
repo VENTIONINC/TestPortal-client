@@ -4,19 +4,22 @@ This project uses a powerful combination of **React Hook Form**, **Zod**, and **
 
 ## 🚀 Why This Combination?
 
-### **React Hook Form** 
+### **React Hook Form**
+
 - ✅ **Better Performance**: Minimal re-renders, uncontrolled components
 - ✅ **Smaller Bundle**: Lightweight library
 - ✅ **Better DX**: Less boilerplate code
 - ✅ **Built-in Validation**: Comprehensive validation support
 
-### **Zod** 
+### **Zod**
+
 - ✅ **Type Safety**: TypeScript-first schema validation
 - ✅ **Runtime Validation**: Catch errors at runtime
 - ✅ **Reusable Schemas**: Share validation logic across client/server
 - ✅ **Great Error Messages**: User-friendly validation messages
 
 ### **ChakraUI Integration**
+
 - ✅ **Fully Compatible**: Works seamlessly with ChakraUI components
 - ✅ **Consistent Styling**: Maintains design system consistency
 - ✅ **Accessible**: Built-in accessibility features
@@ -27,6 +30,7 @@ This project uses a powerful combination of **React Hook Form**, **Zod**, and **
 We follow clean architecture principles by separating business logic from UI components:
 
 ### **File Structure**
+
 ```
 src/
 ├── schemas/
@@ -49,6 +53,7 @@ src/
 ```
 
 ### **Benefits of This Architecture**
+
 - ✅ **Separation of Concerns**: UI components focus only on rendering
 - ✅ **Reusable Logic**: Business logic can be shared across components
 - ✅ **Testability**: Hooks and utilities can be unit tested independently
@@ -68,19 +73,22 @@ yarn add react-hook-form zod @hookform/resolvers
 ```typescript
 import { z } from 'zod';
 
-const signupSchema = z.object({
-  name: z.string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(50, 'Name must be less than 50 characters'),
-  email: z.string()
-    .email('Please enter a valid email address'),
-  password: z.string()
-    .min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+const signupSchema = z
+  .object({
+    name: z.string().min(2, 'Name must be at least 2 characters').max(50, 'Name must be less than 50 characters'),
+    email: z.string().email('Please enter a valid email address'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase character')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase character')
+      .regex(/[0-9]/, 'Password must contain at least one numeric character'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 export type SignupFormData = z.infer<typeof signupSchema>;
 ```
@@ -164,8 +172,8 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
           borderColor={error ? 'red.300' : undefined}
           _focus={{
             borderColor: error ? 'red.500' : 'blue.500',
-            boxShadow: error 
-              ? '0 0 0 1px var(--chakra-colors-red-500)' 
+            boxShadow: error
+              ? '0 0 0 1px var(--chakra-colors-red-500)'
               : '0 0 0 1px var(--chakra-colors-blue-500)',
           }}
         />
@@ -191,7 +199,7 @@ export const FormField = forwardRef<HTMLInputElement, FormFieldProps>(
 
 ```typescript
 const { register, handleSubmit, errors, loading } = useSignup({
-  redirectPath: PATHS.DASHBOARD,  // Custom redirect
+  redirectPath: PATHS.DASHBOARD, // Custom redirect
   onSuccess: (data) => {
     // Custom success handling
     analytics.track('user_signed_up', { email: data.email });
@@ -211,9 +219,12 @@ export function extractApiError(error: FetchBaseQueryError | SerializedError): s
   // Comprehensive error extraction logic
   if ('status' in error) {
     switch (error.status) {
-      case 409: return 'This email is already registered';
-      case 422: return 'Please check your input';
-      default: return 'An unexpected error occurred';
+      case 409:
+        return 'This email is already registered';
+      case 422:
+        return 'Please check your input';
+      default:
+        return 'An unexpected error occurred';
     }
   }
   return 'Network error. Please try again.';
@@ -225,15 +236,22 @@ export function extractApiError(error: FetchBaseQueryError | SerializedError): s
 ```typescript
 // Reusable validation pieces
 const emailValidation = z.string().email('Please enter a valid email address');
-const passwordValidation = z.string().min(6, 'Password must be at least 6 characters');
+const passwordValidation = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[a-z]/, 'Password must contain at least one lowercase character')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase character')
+  .regex(/[0-9]/, 'Password must contain at least one numeric character');
 
 // Compose into different schemas
-export const signupSchema = z.object({
-  name: nameValidation,
-  email: emailValidation,
-  password: passwordValidation,
-  confirmPassword: z.string()
-}).refine(/* password matching logic */);
+export const signupSchema = z
+  .object({
+    name: nameValidation,
+    email: emailValidation,
+    password: passwordValidation,
+    confirmPassword: z.string(),
+  })
+  .refine(/* password matching logic */);
 
 export const loginSchema = z.object({
   email: emailValidation,
@@ -298,7 +316,7 @@ import { useSignup } from '@/hooks/useSignup';
 
 test('should handle successful signup', async () => {
   const { result } = renderHook(() => useSignup());
-  
+
   await act(async () => {
     result.current.handleSubmit({
       name: 'John Doe',
@@ -321,7 +339,7 @@ import { SignupPage } from '@/pages/Signup';
 
 test('should render signup form', () => {
   render(<SignupPage />);
-  
+
   expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /sign up/i })).toBeInTheDocument();
@@ -331,11 +349,12 @@ test('should render signup form', () => {
 ## 🔧 Migration from Manual State
 
 **Before (Mixed Concerns):**
+
 ```typescript
 export function SignupPage() {
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
-  
+
   const handleSubmit = async (e) => {
     // Validation logic
     // API logic
@@ -350,6 +369,7 @@ export function SignupPage() {
 ```
 
 **After (Clean Architecture):**
+
 ```typescript
 // Custom hook handles all business logic
 export function SignupPage() {
@@ -370,4 +390,4 @@ export function SignupPage() {
 - **Efficient error handling**: Built-in error state management
 - **Code splitting**: Business logic can be lazy-loaded independently
 
-This setup provides a robust, type-safe, and performant foundation for all forms in the application! 🎉 
+This setup provides a robust, type-safe, and performant foundation for all forms in the application! 🎉

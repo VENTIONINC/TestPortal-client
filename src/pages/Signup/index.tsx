@@ -49,7 +49,7 @@ export function SignupPage() {
               placeholder="Enter your password"
               disabled={loading}
               error={errors.password?.message}
-              helperText="Must be at least 6 characters"
+              helperText="Must be at least 8 characters and contain lowercase, uppercase, and numeric characters"
               required
             />
 
