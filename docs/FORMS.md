@@ -14,7 +14,7 @@ We follow clean architecture principles by separating business logic from UI com
 
 ### **File Structure Pattern**
 
-\`\`\`
+```
 src/
 ├── schemas/
 │   └── [feature]Schemas.ts     # Validation schemas (Zod)
@@ -26,7 +26,7 @@ src/
 └── pages/
     └── [Feature]/
         └── index.tsx           # Clean UI component (Rendering only)
-\`\`\`
+```
 
 ### **Benefits**
 - ✅ **Separation of Concerns**: UI components focus only on rendering.
@@ -39,7 +39,7 @@ src/
 ### 1. Define Schema
 Define the shape and validation rules of your form data.
 
-\`\`\`typescript
+```typescript
 // src/schemas/exampleSchema.ts
 import { z } from 'zod';
 
@@ -49,12 +49,12 @@ export const exampleSchema = z.object({
 });
 
 export type ExampleFormData = z.infer<typeof exampleSchema>;
-\`\`\`
+```
 
 ### 2. Create Custom Hook
 Encapsulate form logic, API calls, and navigation.
 
-\`\`\`typescript
+```typescript
 // src/hooks/useExample.ts
 export function useExample() {
   const form = useForm<ExampleFormData>({
@@ -72,12 +72,12 @@ export function useExample() {
     loading: form.formState.isSubmitting,
   };
 }
-\`\`\`
+```
 
 ### 3. Clean UI Component
-Use the hook and \`FormField\` to keep the component declarative.
+Use the hook and `FormField` to keep the component declarative.
 
-\`\`\`tsx
+```tsx
 // src/pages/Example/index.tsx
 export function ExamplePage() {
   const { register, handleSubmit, formState: { errors }, loading } = useExample();
@@ -94,13 +94,13 @@ export function ExamplePage() {
     </form>
   );
 }
-\`\`\`
+```
 
-## �� Reusable FormField
+## 🧩 Reusable FormField
 
-The \`FormField\` component (found in \`src/components/forms/FormField.tsx\`) is a wrapper that handles:
+The `FormField` component (found in `src/components/forms/FormField.tsx`) is a wrapper that handles:
 - Label rendering (with required indicator)
-- Input registration (via \`ref\` forwarding)
+- Input registration (via `ref` forwarding)
 - Error message display
 - Helper text display
 - ChakraUI styling integration
@@ -110,7 +110,7 @@ The \`FormField\` component (found in \`src/components/forms/FormField.tsx\`) is
 ### Schema Composition
 Reuse validation pieces across different schemas to ensure consistency.
 
-\`\`\`typescript
+```typescript
 const passwordRules = z.string().min(8).regex(/[a-z]/).regex(/[A-Z]/);
 
 export const signupSchema = z.object({
@@ -120,23 +120,23 @@ export const signupSchema = z.object({
   message: "Passwords don't match",
   path: ['confirmPassword'],
 });
-\`\`\`
+```
 
 ### Error Handling
-Use utility functions (like \`extractApiError\`) to transform backend errors into user-friendly messages that can be set via \`setError('root', ...)\` or displayed in toasts.
+Use utility functions (like `extractApiError`) to transform backend errors into user-friendly messages that can be set via `setError('root', ...)` or displayed in toasts.
 
 ## 📋 Best Practices
 
 1. **Keep Components Dumb**: If a component has more than 2-3 lines of form logic, move it to a hook.
-2. **Validate Early**: Use \`mode: 'onBlur'\` or \`'onChange'\` for better UX.
-3. **Type Everything**: Always infer types from Zod schemas using \`z.infer<typeof schema>\`.
-4. **Centralize Schemas**: Keep schemas in \`src/schemas\` so they can be reused by both hooks and components.
-5. **Use FormField**: Avoid manual \`FormControl\`, \`FormLabel\`, and \`FormErrorMessage\` boilerplate.
+2. **Validate Early**: Use `mode: 'onBlur'` or `'onChange'` for better UX.
+3. **Type Everything**: Always infer types from Zod schemas using `z.infer<typeof schema>`.
+4. **Centralize Schemas**: Keep schemas in `src/schemas` so they can be reused by both hooks and components.
+5. **Use FormField**: Avoid manual `FormControl`, `FormLabel`, and `FormErrorMessage` boilerplate.
 
 ## 🧪 Testing Strategy
 
-- **Test Hooks**: Use \`@testing-library/react\`'s \`renderHook\` to test form submission logic and validation triggers.
-- **Test Components**: Use \`screen.getByLabelText\` and \`userEvent\` to test the end-to-end form flow.
+- **Test Hooks**: Use `@testing-library/react`'s `renderHook` to test form submission logic and validation triggers.
+- **Test Components**: Use `screen.getByLabelText` and `userEvent` to test the end-to-end form flow.
 
 ---
 
