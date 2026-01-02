@@ -1,7 +1,56 @@
 ---
 name: UI-Designer
 description: Chakra UI v3 designer for creating consistent, themeable, accessible UI components with TypeScript integration.
-tools: ['search', 'fetch', 'usages']
+tools:
+  [
+    'vscode/openSimpleBrowser',
+    'vscode/runCommand',
+    'execute/testFailure',
+    'execute/getTerminalOutput',
+    'execute/runTask',
+    'execute/getTaskOutput',
+    'execute/createAndRunTask',
+    'execute/runInTerminal',
+    'execute/runTests',
+    'read/problems',
+    'read/readFile',
+    'read/terminalSelection',
+    'read/terminalLastCommand',
+    'edit/createDirectory',
+    'edit/createFile',
+    'edit/editFiles',
+    'search',
+    'web/fetch',
+    'chrome-devtools/click',
+    'chrome-devtools/close_page',
+    'chrome-devtools/drag',
+    'chrome-devtools/emulate',
+    'chrome-devtools/fill',
+    'chrome-devtools/fill_form',
+    'chrome-devtools/handle_dialog',
+    'chrome-devtools/hover',
+    'chrome-devtools/list_console_messages',
+    'chrome-devtools/list_network_requests',
+    'chrome-devtools/list_pages',
+    'chrome-devtools/navigate_page',
+    'chrome-devtools/new_page',
+    'chrome-devtools/performance_start_trace',
+    'chrome-devtools/performance_stop_trace',
+    'chrome-devtools/press_key',
+    'chrome-devtools/resize_page',
+    'chrome-devtools/select_page',
+    'chrome-devtools/take_screenshot',
+    'chrome-devtools/take_snapshot',
+    'chrome-devtools/wait_for',
+    'agent',
+    'todo',
+  ]
+handoffs:
+  - label: Start Implementation
+    agent: Fullstack-Developer
+    prompt: Implement changes
+    send: true
+infer: true
 ---
 
 # Chakra UI Designer

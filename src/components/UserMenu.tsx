@@ -2,9 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { Button, Text, Box, VStack, Circle } from '@chakra-ui/react';
 import { LuUser } from 'react-icons/lu';
 
-import { Link } from '@/components/ui';
+import { Link, useColorModeValue } from '@/components/ui';
 import { useAuth } from '@/hooks';
 import { PATHS } from '@/types/paths';
+import { useSurfaceColors } from '@/theme';
 
 export const UserMenu = () => {
   const { user, logout } = useAuth();
@@ -27,6 +28,9 @@ export const UserMenu = () => {
     };
   }, [isOpen]);
 
+  const { surfaces, borders, text, states } = useSurfaceColors();
+  const avatarBg = useColorModeValue('blue.500', 'blue.300');
+
   if (!user) return null;
 
   const handleLogout = () => {
@@ -34,10 +38,13 @@ export const UserMenu = () => {
     setIsOpen(false);
   };
 
+  const hoverBg = states.hoverSubtle;
+  const buttonColor = text.primary;
+
   return (
     <Box position="relative" ref={menuRef}>
       <Button variant="ghost" size="sm" onClick={() => setIsOpen(!isOpen)} _hover={{ bg: 'transparent' }}>
-        <Circle size="8" bg="blue.500" color="white">
+        <Circle size="8" bg={avatarBg} color="white">
           <LuUser size={16} />
         </Circle>
       </Button>
@@ -48,22 +55,30 @@ export const UserMenu = () => {
           top="100%"
           right={0}
           mt={1}
-          bg="white"
+          bg={surfaces.popover}
           border="1px"
-          borderColor="gray.200"
+          borderColor={borders.subtle}
           borderRadius="md"
           shadow="lg"
           zIndex={1000}
           minWidth="200px"
         >
-          <VStack align="start" p={3} borderBottom="1px" borderColor="gray.200" gap={1}>
-            <Text fontSize="sm" fontWeight="medium">
+          <VStack align="start" p={3} borderBottom="1px" borderColor={borders.subtle} gap={1}>
+            <Text fontSize="sm" fontWeight="medium" color={text.primary}>
               {user.name}
             </Text>
           </VStack>
           <VStack gap={0} align="stretch">
             <Link href={PATHS.USER_SETTINGS} onClick={() => setIsOpen(false)}>
-              <Button variant="ghost" size="sm" width="100%" justifyContent="flex-start" borderRadius={0}>
+              <Button
+                variant="ghost"
+                size="sm"
+                width="100%"
+                justifyContent="flex-start"
+                borderRadius={0}
+                color={buttonColor}
+                _hover={{ bg: hoverBg }}
+              >
                 Settings
               </Button>
             </Link>
@@ -75,6 +90,8 @@ export const UserMenu = () => {
               onClick={handleLogout}
               borderRadius={0}
               borderBottomRadius="md"
+              color={buttonColor}
+              _hover={{ bg: hoverBg }}
             >
               Sign Out
             </Button>

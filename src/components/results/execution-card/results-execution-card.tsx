@@ -1,6 +1,7 @@
 import { Fragment, memo } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
+import { useSurfaceColors } from '@/theme';
 import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/dialogs';
@@ -29,6 +30,7 @@ export const ResultsExecutionCard = memo(
     projectId,
   }: ResultsExecutionCardProps) => {
     const { isSelected, toggleSelection, toggleMultiple, getSelectedIds } = useResultsSelection();
+    const { surfaces, borders, states } = useSurfaceColors();
 
     const openResultsErrorDialog = useResultsErrorDialog();
     const openResultAnalysisDialog = useResultAnalysisDialog();
@@ -40,13 +42,20 @@ export const ResultsExecutionCard = memo(
     const selectedResults = results.filter(({ id }) => getSelectedIds().includes(id));
 
     return (
-      <VStack align="stretch" p={2} bg="white" border="1px solid" borderColor="gray.200" borderRadius="md">
-        <HStack gap={6} pl={2} bg="gray.200" borderRadius="sm" textStyle="sm" minH={8}>
+      <VStack
+        align="stretch"
+        p={2}
+        bg={surfaces.card}
+        border="1px solid"
+        borderColor={borders.subtle}
+        borderRadius="md"
+      >
+        <HStack gap={6} pl={2} bg={surfaces.panel} borderRadius="sm" textStyle="sm" minH={8}>
           <Checkbox
             checked={results.every(({ id }) => isSelected(id))}
             onCheckedChange={toggleSelectAll}
             size="sm"
-            controlProps={{ borderColor: 'black' }}
+            controlProps={{ borderColor: borders.subtle }}
           />
           <Tooltip content="Environment">
             <ClipboardCopyText value={environment}>{environment}</ClipboardCopyText>
@@ -89,7 +98,7 @@ export const ResultsExecutionCard = memo(
                     toggleSelection(id);
                   }}
                   size="sm"
-                  controlProps={{ borderColor: 'black' }}
+                  controlProps={{ borderColor: borders.subtle }}
                 />
                 <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(status).color} />
                 <Tooltip content="Retry">
@@ -129,7 +138,7 @@ export const ResultsExecutionCard = memo(
                           px={1}
                           borderRadius="sm"
                           cursor="pointer"
-                          _hover={{ bg: hoverBgColor }}
+                          _hover={{ bg: hoverBgColor ?? states.hoverSubtle }}
                         >
                           <Icon size={16} color="currentColor" />
                           <Text>{getConfidenceLabel(analysisConfidence)}</Text>
