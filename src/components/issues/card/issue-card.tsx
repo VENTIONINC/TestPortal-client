@@ -4,8 +4,9 @@ import { format, isToday, isYesterday } from 'date-fns';
 
 import { IssueTimeDiscributionChart } from '@/components/charts';
 import { useManageIssueDrawer } from '@/components/drawers';
-import { getIssueCategoryStyle } from '@/utils';
+import { getIssueCategoryStyle, ISSUE_CATEGORY_LABELS } from '@/utils';
 import { IssueWithStats } from '@/types';
+import { useSurfaceColors } from '@/theme';
 
 interface IssueCardProps {
   issue: IssueWithStats;
@@ -13,6 +14,7 @@ interface IssueCardProps {
 
 export const IssueCard = ({ issue }: IssueCardProps) => {
   const { Icon, color } = getIssueCategoryStyle(issue.category);
+  const { surfaces, borders, text, states } = useSurfaceColors();
 
   const openManageIssueDrawer = useManageIssueDrawer();
 
@@ -21,37 +23,57 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
       align="stretch"
       gap={0}
       w="100%"
-      bg="gray.50"
+      bg={surfaces.panel}
       border="1px solid"
-      borderColor="gray.300"
+      borderColor={borders.subtle}
       borderRadius="md"
       shadow="md"
       py={2}
       px={4}
     >
       <VStack align="flex-start" gap={1} me={4}>
-        <HStack onClick={() => openManageIssueDrawer({ issue })} cursor="pointer" _hover={{ color: 'gray.600' }}>
-          <Text fontWeight={600}>{issue.name}</Text>
+        <HStack
+          onClick={() => openManageIssueDrawer({ issue })}
+          cursor="pointer"
+          _hover={{ color: states.hoverStrong }}
+        >
+          <Text fontWeight={600} color={text.primary}>
+            {issue.name}
+          </Text>
           <LuPencil size={16} />
         </HStack>
         <HStack color={color}>
           <Text textStyle="sm">
-            <Mark fontWeight={500} color="black">
+            <Mark fontWeight={500} color={text.primary}>
               Category:
             </Mark>{' '}
-            {issue.category === 'Infra' ? 'Environment' : issue.category}
+            {ISSUE_CATEGORY_LABELS[issue.category]}
           </Text>
           <Icon size={16} />
         </HStack>
         <Text textStyle="sm">
-          <Mark fontWeight={500}>Description:</Mark> {issue.description}
+          <Mark fontWeight={500} color={text.primary}>
+            Description:
+          </Mark>{' '}
+          {issue.description}
         </Text>
         <Text textStyle="sm">
-          <Mark fontWeight={500}>Created At:</Mark> {new Date(issue.createdAt).toLocaleDateString()}
+          <Mark fontWeight={500} color={text.primary}>
+            Created At:
+          </Mark>{' '}
+          {new Date(issue.createdAt).toLocaleDateString()}
         </Text>
       </VStack>
 
-      <VStack align="flex-start" gap={1} flexShrink={0} borderStart="1px solid" borderColor="gray.300" ps={4} ms="auto">
+      <VStack
+        align="flex-start"
+        gap={1}
+        flexShrink={0}
+        borderStart="1px solid"
+        borderColor={borders.subtle}
+        ps={4}
+        ms="auto"
+      >
         <HStack>
           <LuTrendingUp size={16} />
           <Text fontWeight={600}>Statistics</Text>

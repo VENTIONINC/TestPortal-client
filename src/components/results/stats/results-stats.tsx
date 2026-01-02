@@ -6,6 +6,7 @@ import { useDebounce } from 'use-debounce';
 import { useGetApiV2ResultsStatsQuery } from '@/redux/apis/generatedApi';
 import { useResultsActions, useSelectedDates } from '@/redux/slices/results';
 import { useSelectedProjectId } from '@/redux/slices/projects';
+import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
 import { getIssueCategoryStyle, getResultStatusStyle } from '@/utils';
 import { IssueCategory, ResultStatus } from '@/types';
 
@@ -26,10 +27,11 @@ export const ResultsStats = memo(() => {
   const handleFilterChange = (name: string, value: string) => {
     updateFilters({ [name]: value });
   };
+  const { stats } = useResultsSurfaceColors();
 
   if (!statistics || statistics.byStatusTotal === 0) {
     return (
-      <Text alignSelf="center" color="gray.500">
+      <Text alignSelf="center" color={stats.emptyText}>
         No statistics to display.
       </Text>
     );
@@ -38,7 +40,7 @@ export const ResultsStats = memo(() => {
   return (
     <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
       <Collapsible.Trigger asChild>
-        <HStack flex={1} w="100%" cursor="pointer" _hover={{ bg: 'gray.200' }} borderRadius="sm">
+        <HStack flex={1} w="100%" cursor="pointer" _hover={{ bg: stats.triggerHover }} borderRadius="sm">
           <LuArrowBigRight
             size={16}
             style={{
@@ -92,7 +94,7 @@ export const ResultsStats = memo(() => {
                 label="issues"
                 onClick={(message) => handleFilterChange('issueName', message)}
               />
-              <VStack align="stretch" bg="white" p={2} borderRadius="md">
+              <VStack align="stretch" bg={stats.cardBg} p={2} borderRadius="md" border="1px solid" borderColor={stats.cardBorder}>
                 <Text fontWeight={700}>Issue Categories</Text>
                 <HStack>
                   {Object.values(IssueCategory).map((category) => {
@@ -108,7 +110,7 @@ export const ResultsStats = memo(() => {
                         px={1}
                       >
                         <Icon size={16} color="currentColor" />
-                        <Text textStyle="sm" color="black">
+                        <Text textStyle="sm" color={stats.strongText}>
                           {name}
                         </Text>
                       </HStack>
@@ -131,8 +133,10 @@ interface TopSectionProps {
 }
 
 const TopSection = ({ results, label, onClick }: TopSectionProps) => {
+  const { stats } = useResultsSurfaceColors();
+
   return (
-    <VStack align="stretch" bg="white" p={2} borderRadius="md" flex={1}>
+    <VStack align="stretch" bg={stats.cardBg} p={2} borderRadius="md" border="1px solid" borderColor={stats.cardBorder} flex={1}>
       <Text fontWeight={700}>
         Top {results.length} {label}
       </Text>
@@ -141,9 +145,9 @@ const TopSection = ({ results, label, onClick }: TopSectionProps) => {
           key={title}
           textStyle="md"
           borderBottom={index === results.length - 1 ? 'none' : '1px solid'}
-          borderColor="gray.200"
+          borderColor={stats.cardBorder}
         >
-          <Text fontWeight={700} color="gray.700">
+          <Text fontWeight={700} color={stats.countText}>
             {count}x
           </Text>
           <Text onClick={() => onClick(title)} lineClamp={1} cursor="pointer" _hover={{ textDecoration: 'underline' }}>

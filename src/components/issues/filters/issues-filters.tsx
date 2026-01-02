@@ -5,6 +5,7 @@ import { Input, NativeSelect } from '@/components/ui';
 import { FiltersContainer, FiltersGroup } from '@/components/filters';
 import { initialFilters, useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
 import { IssueCategory, IssueFilters } from '@/types';
+import { ISSUE_CATEGORY_LABELS } from '@/utils';
 
 export const IssuesFilters = (props: StackProps) => {
   const globalFilters = useIssuesFilters();
@@ -82,7 +83,10 @@ export const IssuesFilters = (props: StackProps) => {
           onChange={handleFilterChange}
           items={[
             { value: '', label: 'All' },
-            ...Object.values(IssueCategory).map((category) => ({ value: category, label: category })),
+            ...Object.values(IssueCategory).map((category) => ({
+              value: category,
+              label: ISSUE_CATEGORY_LABELS[category],
+            })),
           ]}
         />
         <Input label="Name:" name="name" value={localFilters.name} onChange={handleFilterChange} />

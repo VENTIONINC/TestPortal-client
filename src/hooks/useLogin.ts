@@ -7,22 +7,16 @@ import { useDispatch } from 'react-redux';
 import { loginSchema, type LoginFormData } from '@/schemas/authSchemas';
 import { usePostApiV2UsersLoginMutation } from '@/redux/apis/generatedApi';
 import { setTokens } from '@/redux/slices/auth';
+import { useResetState } from '@/hooks/useResetState';
 import { extractApiError } from '@/utils/apiErrors';
 import { PATHS } from '@/types/paths';
 
-export interface UseLoginOptions {
-  redirectPath?: string;
-  onSuccess?: (data: LoginFormData) => void;
-  onError?: (error: string) => void;
-}
-
-export function useLogin(options: UseLoginOptions = {}) {
+export function useLogin() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const resetState = useResetState();
   const [postApiUsersLogin, { isLoading: isApiLoading, error: apiError }] = usePostApiV2UsersLoginMutation();
-
-  const { redirectPath = PATHS.ROOT, onSuccess, onError } = options;
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -50,8 +44,8 @@ export function useLogin(options: UseLoginOptions = {}) {
 
       const response = await postApiUsersLogin({
         userLoginRequest: {
-          email: data.email,
-          password: data.password,
+          email: data.email.trim(),
+          password: data.password.trim(),
         },
       }).unwrap();
 
@@ -63,10 +57,11 @@ export function useLogin(options: UseLoginOptions = {}) {
         }),
       );
 
-      onSuccess?.(data);
+      // Reset global state to ensure fresh initialization
+      resetState();
 
       // Navigate to intended destination
-      navigate(redirectPath);
+      navigate(PATHS.ROOT);
     } catch {
       const errorMessage = 'Login failed. Please check your credentials.';
 
@@ -74,8 +69,6 @@ export function useLogin(options: UseLoginOptions = {}) {
         type: 'manual',
         message: errorMessage,
       });
-
-      onError?.(errorMessage);
     }
   };
 

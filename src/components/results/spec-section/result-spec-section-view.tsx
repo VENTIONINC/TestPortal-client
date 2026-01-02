@@ -4,6 +4,7 @@ import { LuFileText, LuTag } from 'react-icons/lu';
 import { ClipboardCopyText } from '@/components/ui';
 import { ResultsExecutionCard } from '@/components/results';
 import { toCleanTitle } from '@/utils/date-time.converter';
+import { useSurfaceColors } from '@/theme';
 
 import { DateToggle } from './date-toggle';
 import { ResultSpecSectionViewProps } from './types';
@@ -21,8 +22,10 @@ export const ResultSpecSectionView = ({
   onExecutionContextMenu,
   onResultContextMenu,
 }: ResultSpecSectionViewProps) => {
+  const { surfaces, borders, text, states } = useSurfaceColors();
+
   return (
-    <VStack align="stretch" p={2} bg="gray.100" shadow="md" borderRadius="md">
+    <VStack align="stretch" p={2} bg={surfaces.panel} shadow="md" borderRadius="md">
       <HStack overflowX="auto" pb={2}>
         {dateFilters.map((day) => (
           <DateToggle key={day.yyyy_mm_dd} day={day} toggleHandler={onDateToggle} />
@@ -32,11 +35,11 @@ export const ResultSpecSectionView = ({
       <VStack
         gap={1}
         align="stretch"
-        bg="white"
+        bg={surfaces.card}
         py={2}
         px={4}
         border="1px solid"
-        borderColor="gray.300"
+        borderColor={borders.subtle}
         borderRadius="md"
       >
         <Flex gap={4} textStyle="sm">
@@ -49,14 +52,16 @@ export const ResultSpecSectionView = ({
                 key={tag}
                 px={2}
                 border="1px solid"
-                borderColor="gray.300"
+                borderColor={borders.subtle}
                 borderRadius="sm"
                 onClick={() => onTagClick(tag)}
                 cursor="pointer"
-                _hover={{ bg: 'gray.100' }}
+                _hover={{ bg: states.hoverSubtle }}
               >
                 <LuTag size={12} />
-                <Text textStyle="sm">{tag}</Text>
+                <Text textStyle="sm" color={text.primary}>
+                  {tag}
+                </Text>
               </HStack>
             ))}
           </Flex>
