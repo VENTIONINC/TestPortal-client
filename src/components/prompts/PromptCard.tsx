@@ -3,6 +3,7 @@ import { LuArrowRight } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
 
 import { PromptConfig } from '@/redux/apis/generatedApi';
+import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 import { getCategoryIcon, getCategoryColor } from './promptUtils';
 
@@ -12,6 +13,7 @@ interface PromptCardProps {
 
 export const PromptCard = ({ prompt }: PromptCardProps) => {
   const navigate = useNavigate();
+  const { surfaces, borders, text } = useSurfaceColors();
   const { icon: CategoryIcon, color: iconColor } = getCategoryIcon(prompt.category);
   const badgeColor = getCategoryColor(prompt.category);
 
@@ -26,6 +28,8 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
     <Card.Root
       variant="elevated"
       height="fit-content"
+      bg={surfaces.card}
+      borderColor={borders.subtle}
       _hover={{
         transform: 'translateY(-2px)',
         shadow: 'lg',
@@ -43,18 +47,18 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
                 {prompt.category}
               </Badge>
             </HStack>
-            <Heading size="md" lineHeight="short">
+            <Heading size="md" lineHeight="short" color={text.primary}>
               {prompt.title}
             </Heading>
           </VStack>
         </HStack>
 
-        <Text fontSize="sm" color="gray.600" lineHeight="base" minHeight="48px">
+        <Text fontSize="sm" color={text.muted} lineHeight="base" minHeight="48px">
           {prompt.description}
         </Text>
 
         <VStack align="start" gap={2}>
-          <Text fontSize="xs" color="gray.500">
+          <Text fontSize="xs" color={text.muted}>
             {parameterCount} parameters ({requiredParameterCount} required)
           </Text>
 

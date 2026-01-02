@@ -2,6 +2,7 @@ import { Box, Heading, Text, Flex, Button, VStack, HStack, Input } from '@chakra
 import { LuCopy, LuTrash2 } from 'react-icons/lu';
 
 import { toaster, InputGroup } from '@/components/ui';
+import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { copyToClipboard } from '@/utils';
 
 import { useMCPKeys } from './hooks';
@@ -9,6 +10,7 @@ import { useMCPKeys } from './hooks';
 export function MCPTokenSection() {
   const { mcpToken, tokenExpiresAt, isRequestingToken, isRevokingToken, handleRequestToken, handleRevokeToken } =
     useMCPKeys();
+  const { surfaces, borders, text, alerts } = useSurfaceColors();
 
   const handleCopyToken = async () => {
     if (mcpToken) {
@@ -30,12 +32,14 @@ export function MCPTokenSection() {
   };
 
   return (
-    <Box bg="white" border="1px" borderColor="gray.200" borderRadius="md" shadow="md">
-      <Box p={6} borderBottom="1px" borderColor="gray.200">
+    <Box bg={surfaces.card} border="1px" borderColor={borders.subtle} borderRadius="md" shadow="md">
+      <Box p={6} borderBottom="1px" borderColor={borders.subtle}>
         <Flex justify="space-between" align="center">
           <Box>
-            <Heading size="md">MCP Token</Heading>
-            <Text color="gray.600" fontSize="sm" mt={1}>
+            <Heading size="md" color={text.primary}>
+              MCP Token
+            </Heading>
+            <Text color={text.muted} fontSize="sm" mt={1}>
               Generate your Model Context Protocol token for Claude desktop
             </Text>
           </Box>
@@ -56,7 +60,7 @@ export function MCPTokenSection() {
         {mcpToken ? (
           <VStack align="stretch" gap={4}>
             <Box>
-              <Text fontWeight="semibold" mb={2}>
+              <Text fontWeight="semibold" mb={2} color={text.primary}>
                 Your MCP Token:
               </Text>
               <InputGroup
@@ -66,31 +70,31 @@ export function MCPTokenSection() {
                   </Button>
                 }
               >
-                <Input value={mcpToken} readOnly fontFamily="mono" fontSize="sm" bg="gray.50" />
+                <Input value={mcpToken} readOnly fontFamily="mono" fontSize="sm" bg={surfaces.page} />
               </InputGroup>
             </Box>
             {tokenExpiresAt && (
               <Box>
-                <Text fontSize="sm" color="gray.600">
+                <Text fontSize="sm" color={text.muted}>
                   <strong>Expires:</strong> {new Date(tokenExpiresAt).toLocaleString()}
                 </Text>
               </Box>
             )}
-            <Box p={4} bg="green.50" border="1px" borderColor="green.200" borderRadius="md">
-              <Text fontWeight="bold" color="green.800">
+            <Box p={4} bg={alerts.success.bg} border="1px" borderColor={alerts.success.border} borderRadius="md">
+              <Text fontWeight="bold" color={alerts.success.text}>
                 Token Ready
               </Text>
-              <Text fontSize="sm" color="green.700" mt={1}>
+              <Text fontSize="sm" color={alerts.success.text} mt={1}>
                 Copy this token and use it in your Claude desktop application to connect to the MCP server.
               </Text>
             </Box>
           </VStack>
         ) : (
-          <Box p={4} bg="blue.50" border="1px" borderColor="blue.200" borderRadius="md">
-            <Text fontWeight="bold" color="blue.800">
+          <Box p={4} bg={alerts.info.bg} border="1px" borderColor={alerts.info.border} borderRadius="md">
+            <Text fontWeight="bold" color={alerts.info.text}>
               MCP Token Generation
             </Text>
-            <Text fontSize="sm" color="blue.700" mt={1}>
+            <Text fontSize="sm" color={alerts.info.text} mt={1}>
               Click the button above to generate your MCP token for use with Claude desktop application.
             </Text>
           </Box>

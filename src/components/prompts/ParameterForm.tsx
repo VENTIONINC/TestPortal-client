@@ -4,6 +4,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { PromptConfig, PromptParameter } from '@/redux/apis/generatedApi';
+import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 interface ParameterFormProps {
   prompt: PromptConfig;
@@ -22,6 +23,8 @@ export const ParameterForm = ({
   isGenerating, 
   errors = {} 
 }: ParameterFormProps) => {
+  const { text } = useSurfaceColors();
+
   const renderField = (name: string, parameter: PromptParameter) => {
     const value = values[name] || '';
     const error = errors[name];
@@ -41,7 +44,7 @@ export const ParameterForm = ({
         key={name}
         label={
           <HStack>
-            <Text fontWeight="medium">
+            <Text fontWeight="medium" color={text.primary}>
               {name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
             </Text>
             {isRequired && <Text color="red.500" fontSize="sm">*</Text>}
@@ -77,7 +80,7 @@ export const ParameterForm = ({
 
   return (
     <VStack align="stretch" gap={4}>
-      <Text fontSize="sm" color="gray.600">
+      <Text fontSize="sm" color={text.muted}>
         Configure the parameters below to customize your prompt
       </Text>
 
