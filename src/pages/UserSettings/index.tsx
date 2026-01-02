@@ -15,6 +15,7 @@ export function UserSettingsPage() {
     if (location.pathname === PATHS.USER_SETTINGS_CONFIGURATION) return 'configuration';
     if (location.pathname === PATHS.USER_SETTINGS_PROJECTS) return 'projects';
     if (location.pathname === PATHS.USER_SETTINGS_UPLOAD_API) return 'upload-api';
+    if (location.pathname === PATHS.USER_SETTINGS_INFO) return 'info';
     return 'mcp';
   };
 
@@ -36,6 +37,9 @@ export function UserSettingsPage() {
             </Link>
             <Link href={PATHS.USER_SETTINGS_UPLOAD_API}>
               <Tabs.Trigger value="upload-api">Upload API Keys</Tabs.Trigger>
+            </Link>
+            <Link href={PATHS.USER_SETTINGS_INFO}>
+              <Tabs.Trigger value="info">Info</Tabs.Trigger>
             </Link>
           </Tabs.List>
 
