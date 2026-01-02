@@ -4,7 +4,7 @@ import { format, isToday, isYesterday } from 'date-fns';
 
 import { IssueTimeDiscributionChart } from '@/components/charts';
 import { useManageIssueDrawer } from '@/components/drawers';
-import { getIssueCategoryStyle } from '@/utils';
+import { getIssueCategoryStyle, ISSUE_CATEGORY_LABELS } from '@/utils';
 import { IssueWithStats } from '@/types';
 import { useSurfaceColors } from '@/theme';
 
@@ -47,7 +47,7 @@ export const IssueCard = ({ issue }: IssueCardProps) => {
             <Mark fontWeight={500} color={text.primary}>
               Category:
             </Mark>{' '}
-            {issue.category === 'Infra' ? 'Environment' : issue.category}
+            {ISSUE_CATEGORY_LABELS[issue.category]}
           </Text>
           <Icon size={16} />
         </HStack>

@@ -292,4 +292,4 @@ Before finalizing a component, ensure:
 - [ ] Proper error states and loading indicators
 - [ ] Documentation for props and usage
 
-Use #tool:search to find similar components in the codebase and #tool:usages to understand how existing UI patterns are used throughout the project.
+Use #tool:search to find similar components in the codebase and #tool:search/usages usages to understand how existing UI patterns are used throughout the project.

@@ -7,12 +7,12 @@ import { useProjectContextMenu } from '@/hooks';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 export function ProjectsSettings() {
-  const { data: projects, error } = useGetApiV2ProjectsQuery({});
+  const { data: projects } = useGetApiV2ProjectsQuery({});
   const openCreateProjectDialog = useCreateProjectDialog();
   const handleProjectContextMenu = useProjectContextMenu();
   const { alerts, text } = useSurfaceColors();
 
-  if (!projects || error) {
+  if (!projects) {
     return (
       <Box p={4} bg={alerts.error.bg} borderRadius="md" border="1px" borderColor={alerts.error.border}>
         <Text color={alerts.error.text}>Failed to load projects</Text>

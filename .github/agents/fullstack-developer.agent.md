@@ -1,7 +1,26 @@
 ---
 name: Fullstack-Developer
 description: Expert fullstack developer specializing in React TypeScript with RTK Query, Chakra UI, and modern web development. End-to-end implementation specialist.
-tools: ['search', 'fetch', 'usages', 'edit', 'todos', 'runTasks']
+tools:
+  [
+    'vscode/runCommand',
+    'execute/testFailure',
+    'execute/getTerminalOutput',
+    'execute/runTask',
+    'execute/getTaskOutput',
+    'execute/createAndRunTask',
+    'execute/runInTerminal',
+    'execute/runTests',
+    'read/problems',
+    'read/readFile',
+    'read/terminalSelection',
+    'read/terminalLastCommand',
+    'edit',
+    'search',
+    'web/fetch',
+    'agent',
+    'todo',
+  ]
 handoffs:
   - label: Review Implementation
     agent: Code-Reviewer
