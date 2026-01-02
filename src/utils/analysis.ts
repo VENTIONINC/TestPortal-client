@@ -1,6 +1,7 @@
 import { LuCircleHelp } from 'react-icons/lu';
 
 import { AnalysisCategory, IssueCategory } from '@/types';
+
 import { getIssueCategoryStyle, ISSUE_CATEGORY_LABELS } from './issue-category';
 
 export const ANALYSIS_CATEGORY_LABELS: Record<AnalysisCategory, string> = {
