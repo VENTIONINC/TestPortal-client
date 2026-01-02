@@ -1,7 +1,8 @@
 import { forwardRef } from 'react';
 import { Textarea as ChakraTextarea, TextareaProps as ChakraTextareaProps } from '@chakra-ui/react';
 
-import { Field, FieldProps, useColorModeValue } from '@/components/ui';
+import { Field, FieldProps } from '@/components/ui';
+import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 export interface TextareaProps extends ChakraTextareaProps {
   label?: string;
@@ -12,12 +13,13 @@ export interface TextareaProps extends ChakraTextareaProps {
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(props, ref) {
   const { label, error, fieldProps, ...rest } = props;
+  const { surfaces, borders, text } = useSurfaceColors();
 
-  const textareaBg = useColorModeValue('white', 'gray.900');
-  const textareaBorder = useColorModeValue('gray.200', 'gray.600');
-  const textareaHoverBorder = useColorModeValue('gray.300', 'gray.500');
-  const textareaFocusBorder = useColorModeValue('blue.500', 'blue.300');
-  const placeholderColor = useColorModeValue('gray.500', 'gray.400');
+  const textareaBg = surfaces.card;
+  const textareaBorder = borders.subtle;
+  const textareaHoverBorder = borders.subtle;
+  const textareaFocusBorder = borders.focus;
+  const placeholderColor = text.muted;
 
   const sharedStyles: ChakraTextareaProps = {
     bg: rest.bg ?? textareaBg,

@@ -1,9 +1,10 @@
 import { Box, Flex, Image } from '@chakra-ui/react';
 
-import { useColorModeValue } from '@/components/ui';
+import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 export function LoadingPlaceholder() {
-  const bg = useColorModeValue('gray.50', 'gray.900');
+  const { surfaces } = useSurfaceColors();
+  const bg = surfaces.page;
 
   return (
     <Flex direction="column" align="center" justify="center" minH="100vh" bg={bg}>

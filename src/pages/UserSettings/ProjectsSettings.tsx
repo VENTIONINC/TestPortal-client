@@ -10,7 +10,7 @@ export function ProjectsSettings() {
   const { data: projects, error } = useGetApiV2ProjectsQuery({});
   const openCreateProjectDialog = useCreateProjectDialog();
   const handleProjectContextMenu = useProjectContextMenu();
-  const { alerts, text, borders } = useSurfaceColors();
+  const { alerts, text } = useSurfaceColors();
 
   if (!projects || error) {
     return (
