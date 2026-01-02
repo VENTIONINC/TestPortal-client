@@ -1,4 +1,3 @@
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider as ReduxProvider } from 'react-redux';
 import { RouterProvider } from 'react-router';
@@ -13,23 +12,21 @@ import { router } from '@/router';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ReduxProvider store={store}>
-      <PersistGate loading={<LoadingFallback />} persistor={persistor}>
-        <ChakraProvider>
-          <ColorModeProvider defaultTheme="light">
-            <ErrorBoundary>
-              <AppGuard>
-                <RouterProvider router={router} />
-                <DialogPortal />
-                <DrawerPortal />
-                <ContextMenu />
-                <Toaster />
-              </AppGuard>
-            </ErrorBoundary>
-          </ColorModeProvider>
-        </ChakraProvider>
-      </PersistGate>
-    </ReduxProvider>
-  </StrictMode>,
+  <ChakraProvider>
+    <ColorModeProvider defaultTheme="light">
+      <ErrorBoundary>
+        <ReduxProvider store={store}>
+          <PersistGate loading={<LoadingFallback />} persistor={persistor}>
+            <AppGuard>
+              <RouterProvider router={router} />
+              <DialogPortal />
+              <DrawerPortal />
+              <ContextMenu />
+              <Toaster />
+            </AppGuard>
+          </PersistGate>
+        </ReduxProvider>
+      </ErrorBoundary>
+    </ColorModeProvider>
+  </ChakraProvider>,
 );
