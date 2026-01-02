@@ -825,9 +825,7 @@ export type DeleteApiV2UploadKeysByIdApiArg = {
 };
 export type StatusResponse = {
   status: string;
-  database: string;
   version: string;
-  timestamp?: string;
 };
 export type ErrorResponse = {
   error: string;

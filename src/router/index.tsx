@@ -16,6 +16,7 @@ import { MCPSettings } from '@/pages/UserSettings/MCPSettings';
 import { Configuration } from '@/pages/UserSettings/Configuration';
 import { ProjectsSettings } from '@/pages/UserSettings/ProjectsSettings';
 import { UploadApiSettings } from '@/pages/UserSettings/UploadApiSettings';
+import { InfoSettings } from '@/pages/UserSettings/InfoSettings';
 import { PlaywrightReportGenerator } from '@/pages/ReportGenerator/PlaywrightReportGenerator';
 import { CTRFReportGenerator } from '@/pages/ReportGenerator/CTRFReportGenerator';
 import { PATHS } from '@/types/paths';
@@ -106,6 +107,10 @@ export const router = createBrowserRouter([
       {
         path: PATHS.USER_SETTINGS_UPLOAD_API,
         element: <UploadApiSettings />,
+      },
+      {
+        path: PATHS.USER_SETTINGS_INFO,
+        element: <InfoSettings />,
       },
     ],
   },
