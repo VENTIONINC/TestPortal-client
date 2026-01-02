@@ -4,12 +4,14 @@ import { LuCopy, LuTrash } from 'react-icons/lu';
 import { useGetApiV2UploadKeysQuery, useDeleteApiV2UploadKeysByIdMutation } from '@/redux/apis/generatedApi';
 import { useGenerateApiKeyDialog, useConfirmApiKeyDeletionDialog } from '@/components/dialogs';
 import { toaster, InputGroup } from '@/components/ui';
+import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { copyToClipboard } from '@/utils';
 
 export function UploadApiSettings() {
   const { data, isLoading, error } = useGetApiV2UploadKeysQuery();
   const [deleteApiKey] = useDeleteApiV2UploadKeysByIdMutation();
   const openGenerateApiKeyDialog = useGenerateApiKeyDialog();
+  const { surfaces, borders, text, alerts } = useSurfaceColors();
 
   const handleCopyApiKey = async (apiKey: string, projectName: string) => {
     try {
@@ -54,16 +56,16 @@ export function UploadApiSettings() {
 
   if (isLoading) {
     return (
-      <Box p={4} bg="gray.50" borderRadius="md" border="1px" borderColor="gray.200">
-        <Text color="gray.600">Loading API keys...</Text>
+      <Box p={4} bg={surfaces.page} borderRadius="md" border="1px" borderColor={borders.subtle}>
+        <Text color={text.muted}>Loading API keys...</Text>
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box p={4} bg="red.50" borderRadius="md" border="1px" borderColor="red.200">
-        <Text color="red.700">Failed to load API keys</Text>
+      <Box p={4} bg={alerts.error.bg} borderRadius="md" border="1px" borderColor={alerts.error.border}>
+        <Text color={alerts.error.text}>Failed to load API keys</Text>
       </Box>
     );
   }
@@ -72,9 +74,16 @@ export function UploadApiSettings() {
 
   if (apiKeys.length === 0) {
     return (
-      <Box textAlign="center" py={8} bg="white" border="1px" borderColor="gray.200" borderRadius="md">
-        <Text color="gray.500">No API keys found</Text>
-        <Text color="gray.400" fontSize="sm" mt={2}>
+      <Box
+        textAlign="center"
+        py={8}
+        bg={surfaces.card}
+        border="1px"
+        borderColor={borders.subtle}
+        borderRadius="md"
+      >
+        <Text color={text.muted}>No API keys found</Text>
+        <Text color={text.muted} fontSize="sm" mt={2}>
           Generate an API key to get started
         </Text>
         <Button mt={4} onClick={openGenerateApiKeyDialog}>
@@ -85,14 +94,14 @@ export function UploadApiSettings() {
   }
 
   return (
-    <Box bg="white" border="1px" borderColor="gray.200" borderRadius="md" shadow="md">
-      <Box p={6} borderBottom="1px" borderColor="gray.200">
+    <Box bg={surfaces.card} border="1px" borderColor={borders.subtle} borderRadius="md" shadow="md">
+      <Box p={6} borderBottom="1px" borderColor={borders.subtle}>
         <Flex justifyContent="space-between" alignItems="center">
           <VStack align="start" gap={2}>
-            <Text fontSize="lg" fontWeight="semibold">
+            <Text fontSize="lg" fontWeight="semibold" color={text.primary}>
               Upload API Keys
             </Text>
-            <Text color="gray.600" fontSize="sm">
+            <Text color={text.muted} fontSize="sm">
               Manage your API keys for uploading test results
             </Text>
           </VStack>
@@ -103,14 +112,14 @@ export function UploadApiSettings() {
       <Box p={6}>
         <VStack align="stretch" gap={4}>
           {apiKeys.map((key) => (
-            <Box key={key.id} p={4} border="1px" borderColor="gray.200" borderRadius="md" bg="gray.50">
+            <Box key={key.id} p={4} border="1px" borderColor={borders.subtle} borderRadius="md" bg={surfaces.page}>
               <VStack align="stretch" gap={3}>
                 <HStack justify="space-between">
-                  <Text fontWeight="semibold" fontSize="md">
+                  <Text fontWeight="semibold" fontSize="md" color={text.primary}>
                     {key.projectName}
                   </Text>
                   <HStack gap={2}>
-                    <Text fontSize="sm" color="gray.600">
+                    <Text fontSize="sm" color={text.muted}>
                       Created: {new Date(key.createdAt).toLocaleDateString()}
                     </Text>
                     <Button
@@ -125,7 +134,7 @@ export function UploadApiSettings() {
                 </HStack>
 
                 <Box>
-                  <Text fontSize="sm" fontWeight="semibold" mb={2}>
+                  <Text fontSize="sm" fontWeight="semibold" mb={2} color={text.primary}>
                     API Key:
                   </Text>
                   <InputGroup
@@ -135,7 +144,7 @@ export function UploadApiSettings() {
                       </Button>
                     }
                   >
-                    <Input value={key.apiKey} readOnly fontFamily="mono" fontSize="sm" bg="white" />
+                    <Input value={key.apiKey} readOnly fontFamily="mono" fontSize="sm" bg={surfaces.card} />
                   </InputGroup>
                 </Box>
               </VStack>

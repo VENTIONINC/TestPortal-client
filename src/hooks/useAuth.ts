@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 
 import { logout } from '@/redux/slices/auth';
 import { useGetApiV2UsersByUserIdQuery } from '@/redux/apis/generatedApi';
+import { useResetState } from '@/hooks/useResetState';
 import { PATHS } from '@/types/paths';
 import type { RootState } from '@/redux/store';
 
@@ -18,6 +19,7 @@ function getUserIdFromToken(token: string): string | null {
 export function useAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const resetState = useResetState();
   const { accessToken, refreshToken, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   const userId = accessToken ? getUserIdFromToken(accessToken) : null;
@@ -32,6 +34,7 @@ export function useAuth() {
 
   const handleLogout = () => {
     dispatch(logout());
+    resetState();
     navigate(PATHS.LOGIN);
   };
 

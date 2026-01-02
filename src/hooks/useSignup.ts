@@ -7,17 +7,9 @@ import { usePostApiV2UsersSignupMutation } from '@/redux/apis/generatedApi';
 import { signupSchema, type SignupFormData } from '@/schemas/authSchemas';
 import { extractApiError } from '@/utils/apiErrors';
 
-export interface UseSignupOptions {
-  redirectPath?: string;
-  onSuccess?: (data: SignupFormData) => void;
-  onError?: (error: string) => void;
-}
-
-export function useSignup(options: UseSignupOptions = {}) {
+export function useSignup() {
   const navigate = useNavigate();
   const [postApiUsersSignup, { isLoading: isApiLoading, error: apiError }] = usePostApiV2UsersSignupMutation();
-
-  const { redirectPath = PATHS.LOGIN, onSuccess, onError } = options;
 
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -39,15 +31,13 @@ export function useSignup(options: UseSignupOptions = {}) {
 
       await postApiUsersSignup({
         userSignupRequest: {
-          name: data.name,
-          email: data.email,
-          password: data.password,
+          name: data.name.trim(),
+          email: data.email.trim(),
+          password: data.password.trim(),
         },
       }).unwrap();
 
-      onSuccess?.(data);
-
-      navigate(redirectPath, {
+      navigate(PATHS.LOGIN, {
         state: {
           message: 'Account created successfully! Please sign in to continue.',
           email: data.email,
@@ -60,8 +50,6 @@ export function useSignup(options: UseSignupOptions = {}) {
         type: 'manual',
         message: errorMessage,
       });
-
-      onError?.(errorMessage);
     }
   };
 

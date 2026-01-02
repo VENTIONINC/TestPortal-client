@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router';
 import { useState, useEffect, useCallback } from 'react';
 
 import { useGetApiV2PromptsByNameQuery, usePostApiV2PromptsByNameGenerateMutation } from '@/redux/apis/generatedApi';
+import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 import { ParameterForm } from './ParameterForm';
 import { PromptPreview } from './PromptPreview';
@@ -15,6 +16,7 @@ export const PromptBuilder = () => {
   const [parameterValues, setParameterValues] = useState<Record<string, string>>({});
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
+  const { text } = useSurfaceColors();
 
   const { data: prompt, isFetching, error } = useGetApiV2PromptsByNameQuery({ 
     name: name as 'developer-code-assistant' | 'test-portal-assistant' | 'issue-analysis-assistant' | 'environment-performance-assistant'
@@ -91,7 +93,7 @@ export const PromptBuilder = () => {
     return (
       <VStack justify="center" align="center" minHeight="400px">
         <Spinner size="lg" />
-        <Text>Loading prompt configuration...</Text>
+        <Text color={text.muted}>Loading prompt configuration...</Text>
       </VStack>
     );
   }
@@ -113,7 +115,7 @@ export const PromptBuilder = () => {
   if (!prompt) {
     return (
       <VStack justify="center" align="center" minHeight="400px" gap={4}>
-        <Text fontSize="lg">Prompt not found</Text>
+        <Text fontSize="lg" color={text.primary}>Prompt not found</Text>
         <Button onClick={() => navigate('/prompts')}>
           <LuArrowLeft />
           Back to Prompts
@@ -142,12 +144,12 @@ export const PromptBuilder = () => {
           <CategoryIcon size={24} color={iconColor} />
           <VStack align="start" gap={2}>
             <HStack>
-              <Heading size="lg">{prompt.title}</Heading>
+              <Heading size="lg" color={text.primary}>{prompt.title}</Heading>
               <Badge colorPalette={badgeColor} variant="subtle">
                 {prompt.category}
               </Badge>
             </HStack>
-            <Text color="gray.600" maxWidth="600px">
+            <Text color={text.muted} maxWidth="600px">
               {prompt.description}
             </Text>
           </VStack>
@@ -162,7 +164,7 @@ export const PromptBuilder = () => {
       >
         {/* Parameter Form */}
         <VStack align="stretch" gap={4}>
-          <Heading size="md">Configure Parameters</Heading>
+          <Heading size="md" color={text.primary}>Configure Parameters</Heading>
           <ParameterForm
             prompt={prompt}
             values={parameterValues}
