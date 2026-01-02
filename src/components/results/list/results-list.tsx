@@ -11,6 +11,7 @@ import { getDatesBetween, getDateDisplayName } from '@/utils/dateUtils';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { BulkActions } from '@/components/BulkActions';
 import { useSelectedProjectId } from '@/redux/slices/projects';
+import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
 
 import { DateList } from './date-list';
 
@@ -29,6 +30,7 @@ const ResultsContent = () => {
   });
 
   const { toggleDate } = useResultsActions();
+  const { controlsBg, controlsBorder, toolbarBorder } = useResultsSurfaceColors();
 
   const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates } = useMemo(() => {
     const allResults = data?.results || [];
@@ -238,12 +240,20 @@ const ResultsContent = () => {
       <ResultsFilters as="aside" zIndex={10} />
 
       <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="hidden">
-        <VStack align="stretch" p={2} bg="gray.100" borderRadius="md" flexShrink={0}>
+        <VStack
+          align="stretch"
+          p={2}
+          bg={controlsBg}
+          borderRadius="md"
+          border="1px solid"
+          borderColor={controlsBorder}
+          flexShrink={0}
+        >
           <DateList dateConfigs={availableDates} toggleDateConfig={toggleDate} />
           <ResultsStats />
         </VStack>
 
-        <HStack gap={4} p={2} border="1px solid" borderColor="gray.200" borderRadius="md" minH={12} flexShrink={0}>
+        <HStack gap={4} p={2} border="1px solid" borderColor={toolbarBorder} borderRadius="md" minH={12} flexShrink={0}>
           <Checkbox
             checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
             onCheckedChange={handleSelectAll}
