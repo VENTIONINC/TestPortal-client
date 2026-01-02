@@ -7,7 +7,7 @@ import { Dialog, DialogBody, DialogFooter, Field, NativeSelect, Slider, Textarea
 import { usePatchApiV2ResultsByResultIdAnalysisMutation } from '@/redux/apis/generatedApi';
 import { resultAnalysisSchema } from '@/schemas';
 import { AnalysisCategory, BaseResult, DefaultDialogProps } from '@/types';
-import { getConfidenceLabel, getErrorQualityLabel } from '@/utils';
+import { ANALYSIS_CATEGORY_LABELS, getConfidenceLabel, getErrorQualityLabel } from '@/utils';
 
 type ResultAnalysisFormData = z.infer<typeof resultAnalysisSchema>;
 
@@ -64,7 +64,7 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
           items={[
             ...Object.values(AnalysisCategory).map((category) => ({
               value: category,
-              label: category.charAt(0).toUpperCase() + category.slice(1),
+              label: ANALYSIS_CATEGORY_LABELS[category],
             })),
           ]}
         />
