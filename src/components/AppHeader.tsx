@@ -1,8 +1,8 @@
 import { Box, Button, Flex, HStack, Image } from '@chakra-ui/react';
 import { useLocation } from 'react-router';
-import { LuMoon, LuSun, LuUpload } from 'react-icons/lu';
+import { LuUpload } from 'react-icons/lu';
 
-import { Link, useColorMode } from '@/components/ui';
+import { Link } from '@/components/ui';
 import { UserMenu } from '@/components/UserMenu';
 import { ProjectSelect } from '@/components/ProjectSelect';
 import { useResultsFileUploadDialog } from '@/components/dialogs';
@@ -19,11 +19,9 @@ export const AppHeader = () => {
   const location = useLocation();
   const openUploadDialog = useResultsFileUploadDialog();
   const { surfaces, borders, text } = useSurfaceColors();
-  const { colorMode, toggleColorMode } = useColorMode();
   const brandColor = text.link;
   const navColor = text.muted;
   const navActiveColor = brandColor;
-  const isDark = colorMode === 'dark';
 
   return (
     <Box bg={surfaces.card} shadow="sm" borderBottom="1px" borderColor={borders.subtle}>
@@ -53,10 +51,6 @@ export const AppHeader = () => {
 
         <Flex align="center" gap={4}>
           <ProjectSelect />
-          <Button variant="ghost" size="sm" onClick={toggleColorMode} aria-label="Toggle color mode" gap={2}>
-            {isDark ? <LuSun /> : <LuMoon />}
-            {isDark ? 'Light' : 'Dark'}
-          </Button>
           <Button variant="outline" size="sm" onClick={openUploadDialog}>
             <LuUpload size={16} />
             Upload
