@@ -9,6 +9,7 @@ import { useResultsFileUploadDialog } from '@/components/dialogs';
 import { PATHS } from '@/types/paths';
 
 const NAVIGATION_LINKS = [
+  { label: 'Dashboard', path: PATHS.DASHBOARD },
   { label: 'Results', path: PATHS.RESULTS },
   { label: 'Issues', path: PATHS.ISSUES },
   { label: 'Prompts', path: PATHS.PROMPTS },

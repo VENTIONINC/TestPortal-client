@@ -1,4 +1,5 @@
 export { IssuesPage } from './Issues';
+export { DashboardPage } from './Dashboard';
 export { LoginPage } from './Login';
 export { NotFoundPage } from './NotFound';
 export { PromptBuilderPage } from './PromptBuilder';

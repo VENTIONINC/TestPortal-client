@@ -953,6 +953,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@faker-js/faker@npm:^10.2.0":
+  version: 10.2.0
+  resolution: "@faker-js/faker@npm:10.2.0"
+  checksum: 7f3a138f0f1e61b5d22a39c9d182729225d2cb907baf6cb98e2421206a012faf6b5cd65c5114deebb317df451f7cea439cd61c9b40822a55bc7faa8c7bde8729
+  languageName: node
+  linkType: hard
+
 "@floating-ui/core@npm:^1.6.0":
   version: 1.7.1
   resolution: "@floating-ui/core@npm:1.7.1"
@@ -6508,6 +6515,7 @@ __metadata:
     "@commitlint/config-conventional": ^19.8.1
     "@emotion/react": ^11.14.0
     "@eslint/js": ^9.25.0
+    "@faker-js/faker": ^10.2.0
     "@hookform/resolvers": ^5.0.1
     "@reduxjs/toolkit": ^2.8.2
     "@rtk-query/codegen-openapi": ^2.0.0
