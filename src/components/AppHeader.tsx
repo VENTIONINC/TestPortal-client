@@ -10,6 +10,7 @@ import { PATHS } from '@/types/paths';
 import { useSurfaceColors } from '@/theme';
 
 const NAVIGATION_LINKS = [
+  // { label: 'Dashboard', path: PATHS.DASHBOARD },
   { label: 'Results', path: PATHS.RESULTS },
   { label: 'Issues', path: PATHS.ISSUES },
   { label: 'Prompts', path: PATHS.PROMPTS },

@@ -446,6 +446,20 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ['Projects'],
       }),
+      getApiV2ProjectsByProjectIdDashboard: build.query<
+        GetApiV2ProjectsByProjectIdDashboardApiResponse,
+        GetApiV2ProjectsByProjectIdDashboardApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/dashboard`,
+          params: {
+            environment: queryArg.environment,
+            period: queryArg.period,
+            type: queryArg['type'],
+          },
+        }),
+        providesTags: ['Projects'],
+      }),
       postApiV2UploadCtrfReport: build.mutation<PostApiV2UploadCtrfReportApiResponse, PostApiV2UploadCtrfReportApiArg>({
         query: (queryArg) => ({
           url: `/api/v2/upload-ctrf-report`,
@@ -789,6 +803,18 @@ export type DeleteApiV2ProjectsByIdApiResponse = unknown;
 export type DeleteApiV2ProjectsByIdApiArg = {
   id: string;
 };
+export type GetApiV2ProjectsByProjectIdDashboardApiResponse =
+  /** status 200 Dashboard data with summary statistics, daily metrics history, and recent executions */ DashboardResponse;
+export type GetApiV2ProjectsByProjectIdDashboardApiArg = {
+  /** The unique identifier of the project */
+  projectId: string;
+  /** Environment filter (e.g., staging, production, development) */
+  environment: string;
+  /** Number of days to include in the history (default: 30) */
+  period?: number;
+  /** Execution type filter (e.g., Nightly, Release, OnDemand) */
+  type?: string;
+};
 export type PostApiV2UploadCtrfReportApiResponse =
   /** status 200 CTRF report file processed successfully */ CtrfReportResponse;
 export type PostApiV2UploadCtrfReportApiArg = {
@@ -1120,6 +1146,66 @@ export type UpdateProjectRequest = {
   description?: string;
   isActive?: boolean;
 };
+export type DashboardIssueMetrics = {
+  bug: number;
+  environment: number;
+  script: number;
+  performance: number;
+  other: number;
+};
+export type DailyExecutionMetrics = {
+  /** Total number of tests */
+  total: number;
+  /** Number of passed tests */
+  passed: number;
+  /** Number of failed tests */
+  failed: number;
+  /** Number of skipped tests */
+  skipped: number;
+  /** Total duration in milliseconds */
+  duration: number;
+  issues: DashboardIssueMetrics;
+};
+export type ExecutionSummary = {
+  id: string;
+  /** Name of the execution */
+  name: string;
+  /** Overall execution status */
+  status: 'passed' | 'failed' | 'skipped' | 'running';
+  /** ISO 8601 timestamp when execution started */
+  startedAt: string;
+  /** Total duration in milliseconds */
+  duration: number;
+  /** Execution type (e.g., Nightly, Release, OnDemand) */
+  type: string;
+  /** Environment where execution ran */
+  environment: string;
+  /** Test metrics for the execution */
+  metrics?: {
+    /** Total number of tests */
+    total: number;
+    /** Number of passed tests */
+    passed: number;
+    /** Number of failed tests */
+    failed: number;
+  };
+};
+export type DashboardResponse = {
+  summary: {
+    /** Total number of test runs in the period */
+    totalRuns: number;
+    /** Pass rate percentage (0-100) */
+    passRate: number;
+    /** Pass rate trend indicator (percentage change) */
+    passRateTrend?: number;
+  };
+  history: {
+    /** Date in YYYY-MM-DD format */
+    date: string;
+    metrics: DailyExecutionMetrics;
+  }[];
+  recentExecutions: ExecutionSummary[];
+};
 export type CtrfReportResponse = {
   success: boolean;
   message: string;
@@ -1209,6 +1295,7 @@ export const {
   useGetApiV2ProjectsByIdQuery,
   usePutApiV2ProjectsByIdMutation,
   useDeleteApiV2ProjectsByIdMutation,
+  useGetApiV2ProjectsByProjectIdDashboardQuery,
   usePostApiV2UploadCtrfReportMutation,
   usePostApiV2UploadCtrfReportApiKeyMutation,
   usePostApiV2UploadGenerateKeyMutation,

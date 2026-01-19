@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router';
 import { ProtectedRoute, ProjectGuard, RouterErrorFallback } from '@/components';
 import {
   IssuesPage,
+  DashboardPage,
   LoginPage,
   NotFoundPage,
   PromptBuilderPage,
@@ -50,6 +51,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <ProjectGuard>
           <ResultsPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.DASHBOARD,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <DashboardPage />
         </ProjectGuard>
       </ProtectedRoute>
     ),
