@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Text, HStack, Portal, Card } from '@chakra-ui/react';
 
-import { useColorModeValue } from '@/components/ui';
+import { useSurfaceColors } from '@/theme';
 import { useCloseContextMenu, useContextMenuState } from '@/redux/slices/contextMenu';
 
 interface AdjustedPosition {
@@ -66,14 +66,14 @@ export const ContextMenu = () => {
   const closeContextMenu = useCloseContextMenu();
   const menuRef = useRef<HTMLDivElement>(null);
   const [adjustedPosition, setAdjustedPosition] = useState<AdjustedPosition | null>(null);
-
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.600');
-  const textColor = useColorModeValue('gray.900', 'white');
-  const secondaryTextColor = useColorModeValue('gray.600', 'gray.400');
-  const hoverBgColor = useColorModeValue('gray.50', 'gray.700');
-  const disabledTextColor = useColorModeValue('gray.400', 'gray.500');
-  const shadowColor = useColorModeValue('lg', 'dark-lg');
+  const { surfaces, borders, text, states } = useSurfaceColors();
+  const bgColor = surfaces.card;
+  const borderColor = borders.subtle;
+  const textColor = text.primary;
+  const secondaryTextColor = text.muted;
+  const hoverBgColor = states.hoverSubtle;
+  const disabledTextColor = text.muted;
+  const shadowColor = useSurfaceColors().surfaces.shadow;
 
   useEffect(() => {
     if (show && menuRef.current) {

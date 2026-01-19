@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { usePatchApiV2UsersByUserIdIntegrationsMutation } from '@/redux/apis/generatedApi';
 import { toaster } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 const portalSettingsSchema = z.object({
   analyzeEnabled: z.boolean(),
@@ -20,6 +21,7 @@ type PortalSettingsFormData = z.infer<typeof portalSettingsSchema>;
 export function Configuration() {
   const user = useCurrentUser();
   const [updateUserIntegrations, { isLoading: isUpdating }] = usePatchApiV2UsersByUserIdIntegrationsMutation();
+  const { surfaces, borders, text } = useSurfaceColors();
 
   const { register, handleSubmit, watch, setValue } = useForm<PortalSettingsFormData>({
     resolver: zodResolver(portalSettingsSchema),
@@ -66,21 +68,23 @@ export function Configuration() {
   };
 
   return (
-    <Box bg="white" border="1px" borderColor="gray.200" borderRadius="md" shadow="md" p={6}>
+    <Box bg={surfaces.card} border="1px" borderColor={borders.subtle} borderRadius="md" shadow="md" p={6}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <VStack gap={6} align="stretch">
           <Box>
-            <Text fontSize="lg" fontWeight="semibold" mb={4}>
+            <Text fontSize="lg" fontWeight="semibold" mb={4} color={text.primary}>
               Integration Settings
             </Text>
-            <Text color="gray.600" fontSize="sm" mb={6}>
+            <Text color={text.muted} fontSize="sm" mb={6}>
               Configure your integration settings.
             </Text>
           </Box>
 
           <Box>
             <HStack justify="space-between" align="center" mb={3}>
-              <Text fontWeight="medium">Enable Analysis</Text>
+              <Text fontWeight="medium" color={text.primary}>
+                Enable Analysis
+              </Text>
               <Switch.Root
                 size="sm"
                 checked={watch('analyzeEnabled')}
@@ -94,7 +98,9 @@ export function Configuration() {
 
           <Box>
             <HStack justify="space-between" align="center" mb={3}>
-              <Text fontWeight="medium">Reportal Portal URL</Text>
+              <Text fontWeight="medium" color={text.primary}>
+                Reportal Portal URL
+              </Text>
               <Switch.Root
                 size="sm"
                 checked={watch('reportPortalEnabled')}
@@ -110,7 +116,9 @@ export function Configuration() {
 
           <Box>
             <HStack justify="space-between" align="center" mb={3}>
-              <Text fontWeight="medium">Monitoring Portal URL</Text>
+              <Text fontWeight="medium" color={text.primary}>
+                Monitoring Portal URL
+              </Text>
               <Switch.Root
                 size="sm"
                 checked={watch('monitoringPortalEnabled')}

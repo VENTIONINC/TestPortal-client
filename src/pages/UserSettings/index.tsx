@@ -3,21 +3,24 @@ import { Outlet, useLocation } from 'react-router';
 
 import { SettingsHeader } from '@/components/SettingsHeader';
 import { Link } from '@/components/ui/link';
+import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { PATHS } from '@/types/paths';
 
 export function UserSettingsPage() {
   const location = useLocation();
+  const { surfaces } = useSurfaceColors();
 
   const getActiveTab = () => {
     if (location.pathname === PATHS.USER_SETTINGS_MCP) return 'mcp';
     if (location.pathname === PATHS.USER_SETTINGS_CONFIGURATION) return 'configuration';
     if (location.pathname === PATHS.USER_SETTINGS_PROJECTS) return 'projects';
     if (location.pathname === PATHS.USER_SETTINGS_UPLOAD_API) return 'upload-api';
+    if (location.pathname === PATHS.USER_SETTINGS_INFO) return 'info';
     return 'mcp';
   };
 
   return (
-    <Box minH="100vh" bg="gray.50">
+    <Box minH="100vh" bg={surfaces.page}>
       <SettingsHeader />
 
       <Container maxW="4xl" py={8}>
@@ -34,6 +37,9 @@ export function UserSettingsPage() {
             </Link>
             <Link href={PATHS.USER_SETTINGS_UPLOAD_API}>
               <Tabs.Trigger value="upload-api">Upload API Keys</Tabs.Trigger>
+            </Link>
+            <Link href={PATHS.USER_SETTINGS_INFO}>
+              <Tabs.Trigger value="info">Info</Tabs.Trigger>
             </Link>
           </Tabs.List>
 

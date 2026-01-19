@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { useGetApiV2UsersByUserIdQuery } from '@/redux/apis/generatedApi';
+import { useGetApiV2StatusQuery, useGetApiV2UsersByUserIdQuery } from '@/redux/apis/generatedApi';
 import type { RootState } from '@/redux/store';
 import { LoadingPlaceholder } from '@/components/ui/LoadingPlaceholder';
 
@@ -21,6 +21,12 @@ function getUserIdFromToken(token: string): string | null {
 export function AppGuard({ children }: AppGuardProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const { accessToken, isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  const { isError: isStatusError } = useGetApiV2StatusQuery();
+
+  if (isStatusError) {
+    throw new Error("Server isn't available");
+  }
 
   const userId = accessToken ? getUserIdFromToken(accessToken) : null;
 

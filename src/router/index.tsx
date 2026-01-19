@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 
-import { ProtectedRoute, ProjectGuard } from '@/components';
+import { ProtectedRoute, ProjectGuard, RouterErrorFallback } from '@/components';
 import {
   IssuesPage,
   DashboardPage,
@@ -17,6 +17,7 @@ import { MCPSettings } from '@/pages/UserSettings/MCPSettings';
 import { Configuration } from '@/pages/UserSettings/Configuration';
 import { ProjectsSettings } from '@/pages/UserSettings/ProjectsSettings';
 import { UploadApiSettings } from '@/pages/UserSettings/UploadApiSettings';
+import { InfoSettings } from '@/pages/UserSettings/InfoSettings';
 import { PlaywrightReportGenerator } from '@/pages/ReportGenerator/PlaywrightReportGenerator';
 import { CTRFReportGenerator } from '@/pages/ReportGenerator/CTRFReportGenerator';
 import { PATHS } from '@/types/paths';
@@ -24,6 +25,7 @@ import { PATHS } from '@/types/paths';
 export const router = createBrowserRouter([
   {
     path: PATHS.ROOT,
+    errorElement: <RouterErrorFallback />,
     element: (
       <ProtectedRoute>
         <ProjectGuard>
@@ -34,14 +36,17 @@ export const router = createBrowserRouter([
   },
   {
     path: PATHS.LOGIN,
+    errorElement: <RouterErrorFallback />,
     element: <LoginPage />,
   },
   {
     path: PATHS.SIGNUP,
+    errorElement: <RouterErrorFallback />,
     element: <SignupPage />,
   },
   {
     path: PATHS.RESULTS,
+    errorElement: <RouterErrorFallback />,
     element: (
       <ProtectedRoute>
         <ProjectGuard>
@@ -62,6 +67,7 @@ export const router = createBrowserRouter([
   },
   {
     path: PATHS.ISSUES,
+    errorElement: <RouterErrorFallback />,
     element: (
       <ProtectedRoute>
         <ProjectGuard>
@@ -72,6 +78,7 @@ export const router = createBrowserRouter([
   },
   {
     path: PATHS.PROMPTS,
+    errorElement: <RouterErrorFallback />,
     element: (
       <ProtectedRoute>
         <ProjectGuard>
@@ -82,6 +89,7 @@ export const router = createBrowserRouter([
   },
   {
     path: PATHS.PROMPT_BUILDER,
+    errorElement: <RouterErrorFallback />,
     element: (
       <ProtectedRoute>
         <ProjectGuard>
@@ -92,6 +100,7 @@ export const router = createBrowserRouter([
   },
   {
     path: PATHS.USER_SETTINGS,
+    errorElement: <RouterErrorFallback />,
     element: (
       <ProtectedRoute>
         <ProjectGuard>
@@ -120,10 +129,15 @@ export const router = createBrowserRouter([
         path: PATHS.USER_SETTINGS_UPLOAD_API,
         element: <UploadApiSettings />,
       },
+      {
+        path: PATHS.USER_SETTINGS_INFO,
+        element: <InfoSettings />,
+      },
     ],
   },
   {
     path: PATHS.REPORT_GENERATOR,
+    errorElement: <RouterErrorFallback />,
     element: (
       <ProtectedRoute>
         <ProjectGuard>
@@ -148,6 +162,7 @@ export const router = createBrowserRouter([
   },
   {
     path: PATHS.NOT_FOUND,
+    errorElement: <RouterErrorFallback />,
     element: <NotFoundPage />,
   },
 ]);

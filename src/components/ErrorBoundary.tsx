@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { useRouteError, isRouteErrorResponse } from 'react-router';
 import { Box, Button, Container, Heading, Text, VStack, Code, HStack, Link as ChakraLink } from '@chakra-ui/react';
 
 import { useColorModeValue } from '@/components/ui';
@@ -13,7 +14,7 @@ interface State {
   error: Error | null;
 }
 
-function ErrorFallback({ error }: { error: Error | null }) {
+export function ErrorFallback({ error }: { error: Error | null }) {
   const bg = useColorModeValue('gray.50', 'gray.900');
   const cardBg = useColorModeValue('white', 'gray.800');
   const color = useColorModeValue('gray.600', 'gray.400');
@@ -67,6 +68,20 @@ function ErrorFallback({ error }: { error: Error | null }) {
       </Container>
     </Box>
   );
+}
+
+export function RouterErrorFallback() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    return <ErrorFallback error={new Error(`${error.status} ${error.statusText}`)} />;
+  }
+
+  if (error instanceof Error) {
+    return <ErrorFallback error={error} />;
+  }
+
+  return <ErrorFallback error={new Error('Unknown error')} />;
 }
 
 export class ErrorBoundary extends Component<Props, State> {

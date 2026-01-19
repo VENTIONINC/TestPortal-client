@@ -1,7 +1,8 @@
 import { forwardRef, ReactNode, useMemo } from 'react';
 import { NativeSelect as Select } from '@chakra-ui/react';
 
-import { Field } from './field';
+import { Field } from '@/components/ui';
+import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 export interface NativeSelectProps extends NativeSelectField {
   label?: string;
@@ -45,6 +46,31 @@ interface NativeSelectField extends Select.FieldProps {
 
 const NativeSelectField = forwardRef<HTMLSelectElement, NativeSelectField>(function NativeSelectField(props, ref) {
   const { items: itemsProp, children, placeholder, ...rest } = props;
+  const { surfaces, borders, text } = useSurfaceColors();
+
+  const selectBg = surfaces.card;
+  const selectBorder = borders.subtle;
+  const selectHoverBorder = borders.subtle;
+  const selectFocusBorder = borders.focus;
+  const placeholderColor = text.muted;
+
+  const sharedStyles: Select.FieldProps = {
+    bg: rest.bg ?? selectBg,
+    borderColor: rest.borderColor ?? selectBorder,
+    _hover: {
+      ...rest._hover,
+      borderColor: rest._hover?.borderColor ?? selectHoverBorder,
+    },
+    _focusVisible: {
+      ...rest._focusVisible,
+      borderColor: rest._focusVisible?.borderColor ?? selectFocusBorder,
+      boxShadow: rest._focusVisible?.boxShadow ?? `0 0 0 1px ${selectFocusBorder}`,
+    },
+    _placeholder: {
+      ...rest._placeholder,
+      color: rest._placeholder?.color ?? placeholderColor,
+    },
+  };
 
   const items = useMemo(
     () => itemsProp?.map((item) => (typeof item === 'string' ? { label: item, value: item } : item)),
@@ -52,7 +78,7 @@ const NativeSelectField = forwardRef<HTMLSelectElement, NativeSelectField>(funct
   );
 
   return (
-    <Select.Field ref={ref} {...rest}>
+    <Select.Field ref={ref} {...rest} {...sharedStyles}>
       {children}
       {placeholder && (
         <option disabled value="">

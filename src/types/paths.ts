@@ -10,6 +10,7 @@ export enum PATHS {
   USER_SETTINGS_CONFIGURATION = '/settings/configuration',
   USER_SETTINGS_PROJECTS = '/settings/projects',
   USER_SETTINGS_UPLOAD_API = '/settings/upload-api',
+  USER_SETTINGS_INFO = '/settings/info',
   PROMPTS = '/prompts',
   PROMPT_BUILDER = '/prompts/:name',
   REPORT_GENERATOR = '/report-generator',
