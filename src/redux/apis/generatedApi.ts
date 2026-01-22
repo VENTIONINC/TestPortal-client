@@ -17,6 +17,7 @@ export const addTagTypes = [
   'Projects',
   'CTRF',
   'Upload API Keys',
+  'Exports',
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -456,6 +457,7 @@ const injectedRtkApi = api
             environment: queryArg.environment,
             period: queryArg.period,
             type: queryArg['type'],
+            granularity: queryArg.granularity,
           },
         }),
         providesTags: ['Projects'],
@@ -502,6 +504,17 @@ const injectedRtkApi = api
           method: 'DELETE',
         }),
         invalidatesTags: ['Upload API Keys'],
+      }),
+      getApiV2AnalysisExport: build.query<GetApiV2AnalysisExportApiResponse, GetApiV2AnalysisExportApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v2/analysis-export`,
+          params: {
+            projectId: queryArg.projectId,
+            dateFrom: queryArg.dateFrom,
+            dateTo: queryArg.dateTo,
+          },
+        }),
+        providesTags: ['Exports'],
       }),
     }),
     overrideExisting: false,
@@ -804,16 +817,18 @@ export type DeleteApiV2ProjectsByIdApiArg = {
   id: string;
 };
 export type GetApiV2ProjectsByProjectIdDashboardApiResponse =
-  /** status 200 Dashboard data with summary statistics, daily metrics history, and recent executions */ DashboardResponse;
+  /** status 200 Dashboard data retrieved successfully */ DashboardResponse;
 export type GetApiV2ProjectsByProjectIdDashboardApiArg = {
   /** The unique identifier of the project */
   projectId: string;
-  /** Environment filter (e.g., staging, production, development) */
+  /** Target environment to filter results */
   environment: string;
-  /** Number of days to include in the history (default: 30) */
-  period?: number;
-  /** Execution type filter (e.g., Nightly, Release, OnDemand) */
+  /** Number of days to include in history (default 30) */
+  period?: string;
+  /** Filter by execution type */
   type?: string;
+  /** Aggregation level for history data (daily, weekly, monthly). Defaults to daily for short periods, weekly for long periods. */
+  granularity?: 'daily' | 'weekly' | 'monthly';
 };
 export type PostApiV2UploadCtrfReportApiResponse =
   /** status 200 CTRF report file processed successfully */ CtrfReportResponse;
@@ -848,6 +863,14 @@ export type DeleteApiV2UploadKeysByIdApiResponse = /** status 200 API key revoke
 export type DeleteApiV2UploadKeysByIdApiArg = {
   /** The UUID of the API key to revoke */
   id: string;
+};
+export type GetApiV2AnalysisExportApiResponse = /** status 200 JSONL export file */ string;
+export type GetApiV2AnalysisExportApiArg = {
+  projectId: string;
+  /** Start date/time (ISO) */
+  dateFrom: string;
+  /** End date/time (ISO) */
+  dateTo: string;
 };
 export type StatusResponse = {
   status: string;
@@ -1301,4 +1324,5 @@ export const {
   usePostApiV2UploadGenerateKeyMutation,
   useGetApiV2UploadKeysQuery,
   useDeleteApiV2UploadKeysByIdMutation,
+  useGetApiV2AnalysisExportQuery,
 } = injectedRtkApi;
