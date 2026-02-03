@@ -1,4 +1,4 @@
-import { Button, HStack, Text, VStack } from '@chakra-ui/react';
+import { HStack, Text, VStack, SimpleGrid } from '@chakra-ui/react';
 
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -10,19 +10,12 @@ interface ParameterFormProps {
   prompt: PromptConfig;
   values: Record<string, string>;
   onChange: (name: string, value: string) => void;
-  onGenerate: () => void;
-  isGenerating?: boolean;
+
   errors?: Record<string, string>;
+  requiredFieldsEmpty?: boolean;
 }
 
-export const ParameterForm = ({ 
-  prompt, 
-  values, 
-  onChange, 
-  onGenerate, 
-  isGenerating, 
-  errors = {} 
-}: ParameterFormProps) => {
+export const ParameterForm = ({ prompt, values, onChange, errors = {}, requiredFieldsEmpty }: ParameterFormProps) => {
   const { text } = useSurfaceColors();
 
   const renderField = (name: string, parameter: PromptParameter) => {
@@ -35,9 +28,10 @@ export const ParameterForm = ({
     };
 
     // Use textarea for longer description fields or if example is long
-    const useTextarea = parameter.description.toLowerCase().includes('description') || 
-                       parameter.description.toLowerCase().includes('context') ||
-                       (parameter.example && parameter.example.length > 50);
+    const useTextarea =
+      parameter.description.toLowerCase().includes('description') ||
+      parameter.description.toLowerCase().includes('context') ||
+      (parameter.example && parameter.example.length > 50);
 
     return (
       <Field
@@ -45,9 +39,13 @@ export const ParameterForm = ({
         label={
           <HStack>
             <Text fontWeight="medium" color={text.primary}>
-              {name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              {name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
             </Text>
-            {isRequired && <Text color="red.500" fontSize="sm">*</Text>}
+            {isRequired && (
+              <Text color="red.500" fontSize="sm">
+                *
+              </Text>
+            )}
           </HStack>
         }
         helperText={parameter.description}
@@ -74,34 +72,15 @@ export const ParameterForm = ({
     );
   };
 
-  const hasRequiredFields = Object.entries(prompt.parameters).some(([, param]) => param.required);
-  const requiredFieldsEmpty = hasRequiredFields && 
-    Object.entries(prompt.parameters).some(([name, param]) => param.required && !values[name]);
-
   return (
     <VStack align="stretch" gap={4}>
       <Text fontSize="sm" color={text.muted}>
         Configure the parameters below to customize your prompt
       </Text>
 
-      <VStack align="stretch" gap={4}>
-        {Object.entries(prompt.parameters).map(([name, parameter]) =>
-          renderField(name, parameter)
-        )}
-      </VStack>
-
-      <Button
-        onClick={onGenerate}
-        disabled={isGenerating || requiredFieldsEmpty}
-        loading={isGenerating}
-        colorPalette="blue"
-        size="lg"
-        alignSelf="center"
-        w="fit-content"
-      >
-        {isGenerating ? 'Generating...' : 'Generate Prompt'}
-      </Button>
-
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+        {Object.entries(prompt.parameters).map(([name, parameter]) => renderField(name, parameter))}
+      </SimpleGrid>
       {requiredFieldsEmpty && (
         <Text fontSize="sm" color="red.500" textAlign="center">
           Please fill in all required fields (marked with *)

@@ -1,10 +1,11 @@
-import { Box, Container, Heading, Text, VStack } from '@chakra-ui/react';
+import { Box, Heading, Text, VStack } from '@chakra-ui/react';
 
 import { useGetApiV2ProjectsByProjectIdDashboardQuery } from '@/redux/apis/generatedApi';
 import { useSelectedProjectId } from '@/redux/slices/projects';
-import { AppHeader } from '@/components/AppHeader';
 import { DashboardTrendChart } from '@/components/charts/DashboardTrendChart';
 import { LoadingFallback } from '@/components/LoadingFallback';
+import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
+import { Alert } from '@/components/ui';
 
 export const DashboardPage = () => {
   const selectedProjectId = useSelectedProjectId();
@@ -19,18 +20,21 @@ export const DashboardPage = () => {
   if (error) {
     return (
       <Box>
-        <AppHeader />
-        <Container maxW="container.xl" py={8}>
-          <Text color="red.500">Failed to load dashboard data. Please try again later.</Text>
-        </Container>
+        <MainTemplate pageHeader="Dashboard">
+          <Alert.Root status="error">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title>Failed to load dashboard data. Please try again later.</Alert.Title>
+            </Alert.Content>
+          </Alert.Root>
+        </MainTemplate>
       </Box>
     );
   }
 
   return (
-    <Box pb={8}>
-      <AppHeader />
-      <Container maxW="container.xl" py={8}>
+    <Box>
+      <MainTemplate pageHeader="Dashboard">
         <Heading size="lg" mb={6}>
           Dashboard
         </Heading>
@@ -49,7 +53,7 @@ export const DashboardPage = () => {
         ) : (
           <Text>No data available for this project.</Text>
         )}
-      </Container>
+      </MainTemplate>
     </Box>
   );
 };

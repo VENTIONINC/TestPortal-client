@@ -1,9 +1,10 @@
-import { Badge, Button, Card, Heading, HStack, Text, VStack } from '@chakra-ui/react';
+import { Heading, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuArrowRight } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
 
 import { PromptConfig } from '@/redux/apis/generatedApi';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
+import { Card, Badge, Button } from '@/components/ui';
 
 import { getCategoryIcon, getCategoryColor } from './promptUtils';
 
@@ -13,7 +14,7 @@ interface PromptCardProps {
 
 export const PromptCard = ({ prompt }: PromptCardProps) => {
   const navigate = useNavigate();
-  const { surfaces, borders, text } = useSurfaceColors();
+  const { surfaces, text } = useSurfaceColors();
   const { icon: CategoryIcon, color: iconColor } = getCategoryIcon(prompt.category);
   const badgeColor = getCategoryColor(prompt.category);
 
@@ -27,9 +28,9 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
   return (
     <Card.Root
       variant="elevated"
-      height="fit-content"
       bg={surfaces.card}
-      borderColor={borders.subtle}
+      // borderColor={borders.subtle}
+
       _hover={{
         transform: 'translateY(-2px)',
         shadow: 'lg',
@@ -42,8 +43,8 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
         <HStack justify="space-between" align="start">
           <VStack align="start" gap={2} flex={1}>
             <HStack>
-              <CategoryIcon size={20} color={iconColor} />
-              <Badge colorPalette={badgeColor} variant="subtle" size="sm">
+              <Badge status={badgeColor}>
+                <CategoryIcon size={20} color={iconColor} />
                 {prompt.category}
               </Badge>
             </HStack>
@@ -57,14 +58,13 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
           {prompt.description}
         </Text>
 
-        <VStack align="start" gap={2}>
+        <VStack align="start" gap={2} mt="auto">
           <Text fontSize="xs" color={text.muted}>
             {parameterCount} parameters ({requiredParameterCount} required)
           </Text>
 
-          <Button size="sm" width="100%" colorPalette={badgeColor}>
-            <LuArrowRight />
-            Use This Prompt
+          <Button size="sm" width="100%" colorPalette="gray">
+            Use this prompt
           </Button>
         </VStack>
       </Card.Body>

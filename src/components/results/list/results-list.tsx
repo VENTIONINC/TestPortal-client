@@ -15,7 +15,7 @@ import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceC
 
 import { DateList } from './date-list';
 
-const ResultsContent = () => {
+const ResultsContent = ({ showFilters = true }: { showFilters?: boolean }) => {
   const filters = useResultsFilters();
   const selectedDates = useSelectedDates();
   const selectedProjectId = useSelectedProjectId();
@@ -236,7 +236,7 @@ const ResultsContent = () => {
   );
 
   return (
-    <HStack gap={4} w="100%" px={4} display="grid" alignItems="start" gridTemplateColumns="auto 1fr">
+    <HStack gap={4} w="100%" display="grid" alignItems="start" gridTemplateColumns="auto 1fr">
       <ResultsFilters as="aside" zIndex={10} />
 
       <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="hidden">
@@ -310,10 +310,10 @@ const ResultsContent = () => {
   );
 };
 
-export const ResultsList = () => {
+export const ResultsList = ({ showFilters = true }: { showFilters?: boolean }) => {
   return (
     <ResultsSelectionProvider>
-      <ResultsContent />
+      <ResultsContent showFilters={showFilters} />
     </ResultsSelectionProvider>
   );
 };

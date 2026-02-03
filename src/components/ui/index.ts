@@ -22,3 +22,7 @@ export { Slider, type SliderProps } from './slider';
 export { Textarea, type TextareaProps } from './textarea';
 export { Toaster, toaster } from './toaster';
 export { Tooltip, type TooltipProps } from './tooltip';
+export { Alert } from './components/Feedback';
+export { Wrap } from './components/Layout';
+
+export * from './components';

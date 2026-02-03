@@ -1,4 +1,4 @@
-import { Button, Heading, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
+import { Button, Heading, HStack, Spinner, Text, VStack, Box } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 
 import { IssueCard, IssuesFilters } from '@/components/issues';
@@ -7,7 +7,11 @@ import { useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { IssueWithStats } from '@/types';
 
-export const IssuesList = () => {
+interface IssuesListProps {
+  showFilters?: boolean;
+}
+
+export const IssuesList = ({ showFilters = true }: IssuesListProps) => {
   const filters = useIssuesFilters();
   const selectedProjectId = useSelectedProjectId();
 
@@ -29,14 +33,18 @@ export const IssuesList = () => {
   };
 
   return (
-    <HStack align="flex-start" gap={4} w="100%" px={4}>
-      <IssuesFilters as="aside" />
-
+    <HStack align="flex-start" gap={4} w="100%">
+      <Box
+        width={showFilters ? '270px' : '0px'}
+        opacity={showFilters ? 1 : 0}
+        overflow="hidden"
+        transition="all 0.3s ease-in-out"
+        flexShrink={0}
+      >
+        <IssuesFilters as="aside" width="270px" />
+      </Box>
       <VStack flex={1} align="stretch">
-        <HStack ps={2}>
-          <Heading textStyle="3xl">Issues</Heading>
-          {isFetching && <Spinner />}
-        </HStack>
+        <HStack ps={2}>{isFetching && <Spinner />}</HStack>
         <VStack flex={1} gap={4}>
           {data && data.issues?.length > 0 ? (
             data.issues.map((issue, index) => <IssueCard key={index} issue={issue as IssueWithStats} />)

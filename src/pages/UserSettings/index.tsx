@@ -1,14 +1,14 @@
 import { Box, Container, Tabs } from '@chakra-ui/react';
 import { Outlet, useLocation } from 'react-router';
 
-import { SettingsHeader } from '@/components/SettingsHeader';
 import { Link } from '@/components/ui/link';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { PATHS } from '@/types/paths';
+import { MainTemplate } from '@/components/ui/components';
 
 export function UserSettingsPage() {
   const location = useLocation();
-  const { surfaces } = useSurfaceColors();
+  // const { surfaces } = useSurfaceColors();
 
   const getActiveTab = () => {
     if (location.pathname === PATHS.USER_SETTINGS_MCP) return 'mcp';
@@ -20,10 +20,8 @@ export function UserSettingsPage() {
   };
 
   return (
-    <Box minH="100vh" bg={surfaces.page}>
-      <SettingsHeader />
-
-      <Container maxW="4xl" py={8}>
+    <MainTemplate pageHeader="Settings">
+      <Container maxW="800px" centerContent={false} ml={0} px={0}>
         <Tabs.Root value={getActiveTab()}>
           <Tabs.List>
             <Link href={PATHS.USER_SETTINGS_MCP}>
@@ -48,6 +46,6 @@ export function UserSettingsPage() {
           </Box>
         </Tabs.Root>
       </Container>
-    </Box>
+    </MainTemplate>
   );
 }

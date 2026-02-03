@@ -24,14 +24,14 @@ export const getCategoryIcon = (category: string): CategoryIconConfig => {
 export const getCategoryColor = (category: string): string => {
   switch (category) {
     case 'development':
-      return 'blue';
+      return 'info';
     case 'reporting':
-      return 'green';
+      return 'success';
     case 'analysis':
-      return 'purple';
+      return 'attention';
     case 'performance':
-      return 'orange';
+      return 'warning';
     default:
-      return 'gray';
+      return 'default';
   }
 };

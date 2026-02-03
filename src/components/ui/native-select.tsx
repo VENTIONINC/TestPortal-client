@@ -42,6 +42,7 @@ interface NativeSelectItem {
 
 interface NativeSelectField extends Select.FieldProps {
   items?: Array<string | NativeSelectItem>;
+  disabled?: boolean;
 }
 
 const NativeSelectField = forwardRef<HTMLSelectElement, NativeSelectField>(function NativeSelectField(props, ref) {
