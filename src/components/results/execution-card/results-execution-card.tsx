@@ -1,4 +1,4 @@
-import { Fragment, memo } from 'react';
+import { Fragment, memo, useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { useSurfaceColors } from '@/theme';
@@ -36,7 +36,8 @@ export const ResultsExecutionCard = memo(
 
     const openResultsErrorDialog = useResultsErrorDialog();
     const openResultAnalysisDialog = useResultAnalysisDialog();
-    const [analyzeErrors, { isLoading: isAnalyzing }] = usePostApiV2ResultErrorsAnalyzeMutation();
+    const [analyzeErrors] = usePostApiV2ResultErrorsAnalyzeMutation();
+    const [analyzingResultId, setAnalyzingResultId] = useState<string | null>(null);
 
     const toggleSelectAll = () => {
       toggleMultiple(results.map(({ id }) => id));
@@ -44,7 +45,8 @@ export const ResultsExecutionCard = memo(
 
     const selectedResults = results.filter(({ id }) => getSelectedIds().includes(id));
 
-    const handleAnalyze = async (errorIds: string[]) => {
+    const handleAnalyze = async (resultId: string, errorIds: string[]) => {
+      setAnalyzingResultId(resultId);
       const id = toaster.create({
         title: 'Analyzing errors...',
         type: 'loading',
@@ -67,6 +69,8 @@ export const ResultsExecutionCard = memo(
           title: 'Failed to categorize errors',
           type: 'error',
         });
+      } finally {
+        setAnalyzingResultId(null);
       }
     };
 
@@ -169,8 +173,8 @@ export const ResultsExecutionCard = memo(
                     </HStack>
                   ) : (
                     <AnalyzeCategoryButton
-                      onClick={() => handleAnalyze(errors.map((e) => String(e.id)))}
-                      isLoading={isAnalyzing}
+                      onClick={() => handleAnalyze(String(id), errors.map((e) => String(e.id)))}
+                      isLoading={analyzingResultId === String(id)}
                     />
                   ))}
 
