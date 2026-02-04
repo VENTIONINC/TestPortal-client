@@ -13,7 +13,7 @@ export const DashboardPage = () => {
   const { data, isLoading, error } = useGetApiV2ProjectsByProjectIdDashboardQuery({
     projectId: selectedProjectId,
     environment: 'development',
-    period: 30,
+    period: '30',
   });
 
   if (error) {
