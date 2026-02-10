@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { retry } from '@reduxjs/toolkit/query';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 import type { RootState } from '@/redux/store';
@@ -6,7 +7,7 @@ import { logout, refreshTokenSuccess } from '@/redux/slices/auth';
 
 import { TAGS } from './tags';
 
-const baseQuery = fetchBaseQuery({
+const rawBaseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
   prepareHeaders: (headers, { getState }) => {
     const accessToken = (getState() as RootState).auth.accessToken;
@@ -18,6 +19,22 @@ const baseQuery = fetchBaseQuery({
     return headers;
   },
 });
+
+const timeoutOnlyBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
+  args,
+  api,
+  extraOptions,
+) => {
+  const result = await rawBaseQuery(args, api, extraOptions);
+
+  if (result.error && result.error.status !== 'TIMEOUT_ERROR') {
+    return retry.fail(result.error, result.meta);
+  }
+
+  return result;
+};
+
+const baseQuery = retry(timeoutOnlyBaseQuery, { maxRetries: 2 });
 
 const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,

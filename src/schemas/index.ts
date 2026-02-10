@@ -27,7 +27,25 @@ export const generateApiKeySchema = z.object({
   projectId: z.string().min(1, 'Project is required'),
 });
 
+export const analysisExportSchema = z
+  .object({
+    projectId: z.string().min(1, 'Project is required'),
+    dateFrom: z.string().min(1, 'Date from is required'),
+    dateTo: z.string().min(1, 'Date to is required'),
+  })
+  .refine(
+    (data) => {
+      if (!data.dateFrom || !data.dateTo) return true;
+      return new Date(data.dateFrom) <= new Date(data.dateTo);
+    },
+    {
+      message: 'Date to must be on or after date from',
+      path: ['dateTo'],
+    },
+  );
+
 export type FormatMessageFormData = z.infer<typeof formatMessageSchema>;
 export type CreateProjectFormData = z.infer<typeof createProjectSchema>;
 export type UpdateProjectFormData = z.infer<typeof updateProjectSchema>;
 export type GenerateApiKeyFormData = z.infer<typeof generateApiKeySchema>;
+export type AnalysisExportFormData = z.infer<typeof analysisExportSchema>;
