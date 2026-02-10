@@ -1,17 +1,41 @@
-import { forwardRef, ReactNode } from 'react';
+import { forwardRef, ReactNode, type ComponentPropsWithoutRef } from 'react';
 import { Tooltip as ChakraTooltip } from '@chakra-ui/react';
+
+import { useColorModeValue } from './color-mode';
+
+type TooltipContentProps = ComponentPropsWithoutRef<typeof ChakraTooltip.Content>;
 
 export interface TooltipProps extends ChakraTooltip.RootProps {
   content: ReactNode;
   children: ReactNode;
+  contentProps?: TooltipContentProps;
 }
 
-export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(function Tooltip({ content, children, ...props }, ref) {
+export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(function Tooltip(
+  { content, children, contentProps, ...props },
+  ref,
+) {
+  const contentBg = useColorModeValue('gray.100', '#2C2C2E');
+  const contentColor = useColorModeValue('#333333', '#EAEAEA');
+  const contentBorder = useColorModeValue('#E0E0E0', '#3D3D3F');
+  const mergedContentProps: TooltipContentProps = {
+    bg: contentBg,
+    color: contentColor,
+    borderWidth: '1px',
+    borderColor: contentBorder,
+    boxShadow: 'sm',
+    px: 2,
+    py: 1,
+    ...contentProps,
+  };
+
   return (
     <ChakraTooltip.Root positioning={{ placement: 'top' }} {...props}>
       <ChakraTooltip.Trigger asChild>{children}</ChakraTooltip.Trigger>
       <ChakraTooltip.Positioner>
-        <ChakraTooltip.Content ref={ref}>{content}</ChakraTooltip.Content>
+        <ChakraTooltip.Content ref={ref} {...mergedContentProps}>
+          {content}
+        </ChakraTooltip.Content>
       </ChakraTooltip.Positioner>
     </ChakraTooltip.Root>
   );

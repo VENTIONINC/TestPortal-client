@@ -1,10 +1,11 @@
-import { Box, Button, Input, VStack, Text, Switch, HStack, Flex, Heading } from '@chakra-ui/react';
+import { Box, Button, Input, VStack, Text, Switch, HStack, Flex, Card } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
+import { CiFloppyDisk } from 'react-icons/ci';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { usePatchApiV2UsersByUserIdIntegrationsMutation } from '@/redux/apis/generatedApi';
-import { Card, toaster } from '@/components/ui';
+import { toaster, Section } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
@@ -69,26 +70,21 @@ export function Configuration() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>
-            <Flex justify="space-between" align="center">
-              <Box>Integration Settings</Box>
-              <HStack>
-                <Button
-                  onClick={handleSubmit(onSubmit)}
-                  colorScheme="blue"
-                  loading={isUpdating}
-                  loadingText="Saving..."
-                >
-                  Save Settings
-                </Button>
-              </HStack>
-            </Flex>
-          </Card.Title>
-          <Card.Description>Configure your integration settings.</Card.Description>
-        </Card.Header>
-        <Card.Body>
+      <Section.Root>
+        <Section.Head>
+          <Flex justify="space-between" align="center">
+            <Box>Integration Settings</Box>
+            <HStack>
+              <Button onClick={handleSubmit(onSubmit)} variant="primary" loading={isUpdating} loadingText="Saving...">
+                <CiFloppyDisk />
+                Save Settings
+              </Button>
+            </HStack>
+          </Flex>
+        </Section.Head>
+        <Section.Description>Configure your integration settings.</Section.Description>
+
+        <Section.Body>
           <VStack gap={6} align="stretch">
             <Box>
               <HStack justify="space-between" align="center" mb={3}>
@@ -137,8 +133,8 @@ export function Configuration() {
               <Input {...register('monitoringPortalUrl')} placeholder="Enter monitoring portal URL" size="md" />
             </Box>
           </VStack>
-        </Card.Body>
-      </Card.Root>
+        </Section.Body>
+      </Section.Root>
     </form>
   );
 }

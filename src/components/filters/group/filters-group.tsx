@@ -1,42 +1,37 @@
-import { Circle, HStack, StackProps, Text, VStack } from '@chakra-ui/react';
-import { LuX } from 'react-icons/lu';
+import { Box, HStack, StackProps, Text, VStack, Button } from '@chakra-ui/react';
 
-import { useColorModeValue } from '@/components/ui';
 import { useSurfaceColors } from '@/theme';
 
 interface FiltersGroupProps extends StackProps {
   title: string;
-  clearable?: boolean;
-  onClear?: () => void;
-  actions?: React.ReactNode;
+  handleSearch: () => void;
 }
 
-export const FiltersGroup = ({ title, clearable, onClear, children, actions, ...props }: FiltersGroupProps) => {
-  const { borders, text, states } = useSurfaceColors();
-  const clearBg = useColorModeValue('gray.100', 'gray.700');
+export const FiltersGroup = ({ title, children, handleSearch, ...props }: FiltersGroupProps) => {
+  const { borders, text } = useSurfaceColors();
 
   return (
-    <VStack align="stretch" border="1px solid" borderColor={borders.subtle} borderRadius="md" p={4} {...props}>
-      <HStack justify="space-between">
+    <VStack
+      w="100%"
+      align="stretch"
+      border="1px solid"
+      p="16px 6px"
+      mb="10px"
+      borderColor={borders.subtle}
+      borderRadius="md"
+      {...props}
+    >
+      <HStack justify="space-between" pl="6px">
         <Text fontWeight={700} whiteSpace="nowrap" color={text.primary}>
           {title}
         </Text>
-
-        {clearable && (
-          <Circle
-            p={1}
-            bg={clearBg}
-            color={text.primary}
-            cursor="pointer"
-            onClick={onClear}
-            _hover={{ bg: states.hoverSubtle }}
-          >
-            <LuX size={16} />
-          </Circle>
-        )}
-        {actions}
       </HStack>
-      {children}
+      <Box mt={4} px={2}>
+        {children}
+      </Box>
+      <Button variant="secondary" onClick={handleSearch}>
+        Apply
+      </Button>
     </VStack>
   );
 };

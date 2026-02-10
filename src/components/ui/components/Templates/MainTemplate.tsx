@@ -18,7 +18,8 @@ export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBrea
   const { surfaces } = useSurfaceColors();
   const [collapsed, setCollapsed] = useState(false);
   return (
-    <Box minH="100vh" maxH="100%" bg={surfaces.page} display="flex" flexDirection="column">
+    // <Box minH="100vh" maxH="100%" bg={surfaces.page} display="flex" flexDirection="column">
+    <>
       <Grid
         templateColumns={`${collapsed ? '64px' : '250px'} 1fr`}
         flex="1"
@@ -32,11 +33,12 @@ export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBrea
           <Header title={pageHeader} actionButton={actionButton} isIncludeBreadcrumb={isIncludeBreadcrumb} />
 
           <BasicWrapper>
-            {isIncludeBreadcrumb && <Breadcrumb ml={8} />}
+            {isIncludeBreadcrumb && <Breadcrumb ml={6} />}
             {children}
           </BasicWrapper>
         </GridItem>
       </Grid>
-    </Box>
+      {/* </Box> */}
+    </>
   );
 };

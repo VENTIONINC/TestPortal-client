@@ -10,6 +10,7 @@ import { ContextMenu } from '@/components/context-menu';
 import { router } from '@/router';
 
 import './index.css';
+import './theme/fonts.css';
 
 createRoot(document.getElementById('root')!).render(
   <ChakraProvider>

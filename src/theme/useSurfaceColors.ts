@@ -1,4 +1,5 @@
 import { useColorModeValue } from '@/components/ui';
+import { status } from '@/theme/colors/status';
 
 export const useSurfaceColors = () => {
   const surfaces = {
@@ -86,102 +87,114 @@ export const useSurfaceColors = () => {
   const badge = {
     info: {
       surface: {
-        bg: useColorModeValue('#6EC8FF1A', '#3AA9FF1A'),
-        color: useColorModeValue('#6EC8FF', '#3AA9FF'),
+        bg: status.info,
+        color: status.info,
         border: 'none',
       },
       outline: {
         bg: 'transparent',
-        color: useColorModeValue('#6EC8FF', '#3AA9FF'),
-        border: useColorModeValue('1px solid #6EC8FF', '1px solid #3AA9FF'),
+        color: useColorModeValue(status.info.value._light, status.info.value._dark),
+        border: useColorModeValue(`1px solid ${status.info.value._light}`, `1px solid ${status.info.value._dark}`),
       },
       solid: {
-        bg: useColorModeValue('#6EC8FF', '#3AA9FF'),
+        bg: useColorModeValue(status.info.value._light, status.info.value._dark),
         color: 'white',
         border: 'none',
       },
     },
     success: {
       surface: {
-        bg: useColorModeValue('#5AF87A1A', '#2CD9581A'),
-        color: useColorModeValue('#1FE647', '#2CD958'),
+        bg: useColorModeValue(`${status.success.value._light}1A`, `${status.success.value._dark}1A`),
+        color: useColorModeValue(status.success.value._light, status.success.value._dark),
         border: 'none',
       },
       outline: {
         bg: 'transparent',
-        color: useColorModeValue('#1FE647', '#2CD958'),
-        border: useColorModeValue('1px solid #1FE647', '1px solid #2CD958'),
+        color: useColorModeValue(status.success.value._light, status.success.value._dark),
+        border: useColorModeValue(
+          `1px solid ${status.success.value._light}`,
+          `1px solid ${status.success.value._dark}`,
+        ),
       },
       solid: {
-        bg: useColorModeValue('#1FE647', '#2CD958'),
+        bg: useColorModeValue(status.success.value._light, status.success.value._dark),
         color: 'white',
         border: 'none',
       },
     },
     attention: {
       surface: {
-        bg: useColorModeValue('#D8FE6A1A', '#BBEF4E1A'), // Inferred from D8FE6A/BBEF4E
-        color: useColorModeValue('#C3F532', '#BBEF4E'),
+        bg: useColorModeValue(`${status.attention.value._light}1A`, `${status.attention.value._dark}1A`), // Inferred from D8FE6A/BBEF4E
+        color: useColorModeValue(status.attention.value._light, status.attention.value._dark),
         border: 'none',
       },
       outline: {
         bg: 'transparent',
-        color: useColorModeValue('#C3F532', '#BBEF4E'),
-        border: useColorModeValue('1px solid #C3F532', '1px solid #BBEF4E'),
+        color: useColorModeValue(status.attention.value._light, status.attention.value._dark),
+        border: useColorModeValue(
+          `1px solid ${status.attention.value._light}`,
+          `1px solid ${status.attention.value._dark}`,
+        ),
       },
       solid: {
-        bg: useColorModeValue('#C3F532', '#BBEF4E'),
+        bg: useColorModeValue(status.attention.value._light, status.attention.value._dark),
         color: 'black', // Ensuring contrast for yellow/lime
         border: 'none',
       },
     },
     warning: {
       surface: {
-        bg: useColorModeValue('#FF874D1A', '##E69A2D1A'), // Inferred from D8FE6A/BBEF4E
-        color: useColorModeValue('#C3F532', '#BBEF4E'),
+        bg: useColorModeValue(`${status.warning.value._light}1A`, `${status.warning.value._dark}1A`), // Inferred from D8FE6A/BBEF4E
+        color: useColorModeValue(status.warning.value._light, status.warning.value._dark),
         border: 'none',
       },
       outline: {
         bg: 'transparent',
-        color: useColorModeValue('#C3F532', '#BBEF4E'),
-        border: useColorModeValue('1px solid #C3F532', '1px solid #BBEF4E'),
+        color: useColorModeValue(status.warning.value._light, status.warning.value._dark),
+        border: useColorModeValue(
+          `1px solid ${status.warning.value._light}`,
+          `1px solid ${status.warning.value._dark}`,
+        ),
       },
       solid: {
-        bg: useColorModeValue('#C3F532', '#BBEF4E'),
+        bg: useColorModeValue(status.warning.value._light, status.warning.value._dark),
         color: 'black', // Ensuring contrast for yellow/lime
         border: 'none',
       },
     },
     error: {
       surface: {
-        bg: useColorModeValue('#FF45451A', '#E035381A'),
-        color: useColorModeValue('#FF4545', '#E03538'),
+        bg: useColorModeValue(`${status.error.value._light}1A`, `${status.error.value._dark}1A`),
+        color: useColorModeValue(status.error.value._light, status.error.value._dark),
         border: 'none',
       },
       outline: {
         bg: 'transparent',
-        color: useColorModeValue('#FF4545', '#E03538'),
-        border: useColorModeValue('1px solid #FF4545', '1px solid #E03538'),
+        color: useColorModeValue(status.error.value._light, status.error.value._dark),
+        border: useColorModeValue(`1px solid ${status.error.value._light}`, `1px solid ${status.error.value._dark}`),
       },
       solid: {
-        bg: useColorModeValue('#FF4545', '#E03538'),
+        bg: useColorModeValue(status.error.value._light, status.error.value._dark),
         color: 'white',
         border: 'none',
       },
     },
     default: {
       surface: {
-        bg: useColorModeValue('#B2B2B21A', '#7D7D7F1A'),
-        color: useColorModeValue('#B2B2B2', '#7D7D7F'),
+        bg: useColorModeValue(`${status.neutral.value._light}1A`, `${status.neutral.value._dark}1A`),
+        color: useColorModeValue(status.neutral.value._light, status.neutral.value._dark),
         border: 'none',
       },
       outline: {
         bg: 'transparent',
-        color: useColorModeValue('#B2B2B2', '#7D7D7F'),
-        border: useColorModeValue('1px solid #B2B2B2', '1px solid #7D7D7F'),
+        color: useColorModeValue(status.neutral.value._light, status.neutral.value._dark),
+        border: useColorModeValue(
+          `1px solid ${status.neutral.value._light}`,
+          `1px solid ${status.neutral.value._dark}`,
+        ),
       },
       solid: {
-        bg: useColorModeValue('#B2B2B2', '#7D7D7F'),
+        bg: useColorModeValue(status.neutral.value._light, status.neutral.value._dark),
         color: 'white',
         border: 'none',
       },

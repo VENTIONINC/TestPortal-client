@@ -19,41 +19,37 @@ export const DashboardPage = () => {
 
   if (error) {
     return (
-      <Box>
-        <MainTemplate pageHeader="Dashboard">
-          <Alert.Root status="error">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title>Failed to load dashboard data. Please try again later.</Alert.Title>
-            </Alert.Content>
-          </Alert.Root>
-        </MainTemplate>
-      </Box>
+      <MainTemplate pageHeader="Dashboard">
+        <Alert.Root status="error">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Failed to load dashboard data. Please try again later.</Alert.Title>
+          </Alert.Content>
+        </Alert.Root>
+      </MainTemplate>
     );
   }
 
   return (
-    <Box>
-      <MainTemplate pageHeader="Dashboard">
-        <Heading size="lg" mb={6}>
-          Dashboard
-        </Heading>
+    <MainTemplate pageHeader="Dashboard">
+      <Heading size="lg" mb={6}>
+        Dashboard
+      </Heading>
 
-        {isLoading ? (
-          <LoadingFallback />
-        ) : data ? (
-          <VStack gap={8} align="stretch">
-            <Box>
-              <Heading size="md" mb={4} color="gray.700">
-                Pass Rate Trend (Last 30 Days)
-              </Heading>
-              <DashboardTrendChart data={data.history} />
-            </Box>
-          </VStack>
-        ) : (
-          <Text>No data available for this project.</Text>
-        )}
-      </MainTemplate>
-    </Box>
+      {isLoading ? (
+        <LoadingFallback />
+      ) : data ? (
+        <VStack gap={8} align="stretch">
+          <Box>
+            <Heading size="md" mb={4} color="gray.700">
+              Pass Rate Trend (Last 30 Days)
+            </Heading>
+            <DashboardTrendChart data={data.history} />
+          </Box>
+        </VStack>
+      ) : (
+        <Text>No data available for this project.</Text>
+      )}
+    </MainTemplate>
   );
 };

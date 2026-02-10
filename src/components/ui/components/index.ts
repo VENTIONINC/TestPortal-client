@@ -2,8 +2,7 @@ export { Sidebar } from './Sidebar/Sidebar';
 export { MainTemplate } from './Templates/MainTemplate';
 export { Header } from './Header/Header';
 export { Alert } from './Feedback';
-export { Wrap } from './Layout';
-export { Card } from './DataDisplay';
-export { Badge } from './DataDisplay';
-export { Button } from './Button';
+export * from './Layout';
+export { Badge, CopyableText } from './DataDisplay';
+
 export { Breadcrumb } from './Breadcrumb';

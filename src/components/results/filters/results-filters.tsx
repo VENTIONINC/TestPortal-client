@@ -1,8 +1,8 @@
 import { ChangeEvent } from 'react';
-import { StackProps } from '@chakra-ui/react';
+import { StackProps, Box } from '@chakra-ui/react';
 
 import { Input, NativeSelect } from '@/components/ui';
-import { FiltersContainer, FiltersGroup } from '@/components/filters';
+import { FiltersContainer, FiltersGroup, FiltersTitle, FiltersRow } from '@/components/filters';
 import { initialFilters, useResultsActions, useResultsFilters } from '@/redux/slices/results';
 import { ResultsFilters as ResultsFiltersType } from '@/types';
 import { calculateDateDiff, adjustDateToWeekRange } from '@/utils/dateUtils';
@@ -44,69 +44,78 @@ export const ResultsFilters = (props: StackProps) => {
     }
   };
 
+  const handleSearch = () => {
+    updateFilters({ ...filters });
+  };
+
   return (
     <FiltersContainer {...props}>
-      <FiltersGroup
-        title="Result Filters"
-        clearable={isClearable({
-          status: filters.status,
-          reviewStatus: filters.reviewStatus,
-          errorMessage: filters.errorMessage,
-          from: filters.from,
-          to: filters.to,
-        })}
-        onClear={() => clearFilterGroup(['status', 'reviewStatus', 'errorMessage', 'from', 'to'])}
-      >
-        <NativeSelect
-          label="Status:"
-          name="status"
-          value={filters.status}
-          onChange={handleFilterChange}
-          items={getStatusOptions()}
-        />
-        <NativeSelect
-          label="Review status:"
-          name="reviewStatus"
-          value={filters.reviewStatus}
-          onChange={handleFilterChange}
-          items={REVIEW_STATUS_OPTIONS}
-        />
-        <Input label="Error message" name="errorMessage" value={filters.errorMessage} onChange={handleFilterChange} />
-        <Input label="From" name="from" value={filters.from} onChange={handleFilterChange} type="date" />
-        <Input label="To:" name="to" value={filters.to} onChange={handleFilterChange} type="date" />
+      <FiltersTitle
+        title="Filters"
+        clearable={isClearable(filters)}
+        onClear={() => clearFilterGroup(Object.keys(initialFilters) as (keyof ResultsFiltersType)[])}
+      />
+      <FiltersGroup handleSearch={handleSearch} title="Result Filters">
+        <FiltersRow>
+          <NativeSelect
+            label="Status:"
+            name="status"
+            value={filters.status}
+            onChange={handleFilterChange}
+            items={getStatusOptions()}
+          />
+        </FiltersRow>
+
+        <FiltersRow>
+          <NativeSelect
+            label="Review status:"
+            name="reviewStatus"
+            value={filters.reviewStatus}
+            onChange={handleFilterChange}
+            items={REVIEW_STATUS_OPTIONS}
+          />
+        </FiltersRow>
+
+        <FiltersRow>
+          <Input label="Error message" name="errorMessage" value={filters.errorMessage} onChange={handleFilterChange} />
+        </FiltersRow>
+
+        <FiltersRow>
+          <Box display="flex" flexDirection="row" gap={4}>
+            <Input label="From" name="from" value={filters.from} onChange={handleFilterChange} type="date" />
+            <Input label="To:" name="to" value={filters.to} onChange={handleFilterChange} type="date" />
+          </Box>
+        </FiltersRow>
       </FiltersGroup>
 
-      <FiltersGroup
-        title="Issue Filters"
-        clearable={isClearable({ issueName: filters.issueName })}
-        onClear={() => clearFilterGroup(['issueName'])}
-      >
-        <Input label="Issue name:" name="issueName" value={filters.issueName} onChange={handleFilterChange} />
+      <FiltersGroup title="Issue Filters" handleSearch={handleSearch}>
+        <FiltersRow>
+          <Input label="Issue name:" name="issueName" value={filters.issueName} onChange={handleFilterChange} />
+        </FiltersRow>
       </FiltersGroup>
 
-      <FiltersGroup
-        title="Spec Filters"
-        clearable={isClearable({
-          tag: filters.tag,
-          specId: filters.specId,
-          specFile: filters.specFile,
-          specName: filters.specName,
-        })}
-        onClear={() => clearFilterGroup(['tag', 'specId', 'specFile', 'specName'])}
-      >
-        <Input label="Tag:" name="tag" value={filters.tag} onChange={handleFilterChange} />
-        <Input label="Spec ID:" name="specId" value={filters.specId} onChange={handleFilterChange} />
-        <Input label="Spec file:" name="specFile" value={filters.specFile} onChange={handleFilterChange} />
-        <Input label="Spec name:" name="specName" value={filters.specName} onChange={handleFilterChange} />
+      <FiltersGroup title="Spec Filters" handleSearch={handleSearch}>
+        <FiltersRow>
+          <Input label="Tag:" name="tag" value={filters.tag} onChange={handleFilterChange} />
+        </FiltersRow>
+        <FiltersRow>
+          <Input label="Spec ID:" name="specId" value={filters.specId} onChange={handleFilterChange} />
+        </FiltersRow>
+        <FiltersRow>
+          <Input label="Spec file:" name="specFile" value={filters.specFile} onChange={handleFilterChange} />
+        </FiltersRow>
+        <FiltersRow>
+          <Input label="Spec name:" name="specName" value={filters.specName} onChange={handleFilterChange} />
+        </FiltersRow>
       </FiltersGroup>
 
-      <FiltersGroup
-        title="Execution Filters"
-        clearable={isClearable({ environment: filters.environment, type: filters.type })}
-        onClear={() => clearFilterGroup(['environment', 'type'])}
-      >
-        <Input label="Environment:" name="environment" value={filters.environment} onChange={handleFilterChange} />
-        <Input label="Type:" name="type" value={filters.type} onChange={handleFilterChange} />
+      <FiltersGroup title="Execution Filters" handleSearch={handleSearch}>
+        <FiltersRow>
+          <Input label="Environment:" name="environment" value={filters.environment} onChange={handleFilterChange} />
+        </FiltersRow>
+        <FiltersRow>
+          <Input label="Type:" name="type" value={filters.type} onChange={handleFilterChange} />
+        </FiltersRow>
       </FiltersGroup>
     </FiltersContainer>
   );

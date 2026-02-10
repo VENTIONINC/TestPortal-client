@@ -36,7 +36,7 @@ export const PromptGallery = () => {
         {data?.prompts && (
           <Grid templateColumns="repeat(auto-fit, minmax(376px, 1fr))" gap={6} justifyContent="center">
             {data.prompts.map((prompt) => (
-              <PromptCard key={prompt.name} prompt={prompt} width="100%" />
+              <PromptCard key={prompt.name} prompt={prompt} />
             ))}
           </Grid>
         )}

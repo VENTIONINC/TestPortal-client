@@ -1,10 +1,10 @@
-import { Heading, HStack, Text, VStack } from '@chakra-ui/react';
+import { Heading, HStack, Text, VStack, Button, Card } from '@chakra-ui/react';
 import { LuArrowRight } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
 
 import { PromptConfig } from '@/redux/apis/generatedApi';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
-import { Card, Badge, Button } from '@/components/ui';
+import { Badge } from '@/components/ui';
 
 import { getCategoryIcon, getCategoryColor } from './promptUtils';
 
@@ -14,7 +14,7 @@ interface PromptCardProps {
 
 export const PromptCard = ({ prompt }: PromptCardProps) => {
   const navigate = useNavigate();
-  const { surfaces, text } = useSurfaceColors();
+  const { text } = useSurfaceColors();
   const { icon: CategoryIcon, color: iconColor } = getCategoryIcon(prompt.category);
   const badgeColor = getCategoryColor(prompt.category);
 
@@ -28,9 +28,7 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
   return (
     <Card.Root
       variant="elevated"
-      bg={surfaces.card}
-      // borderColor={borders.subtle}
-
+      bg="bg.cardSecondary"
       _hover={{
         transform: 'translateY(-2px)',
         shadow: 'lg',
@@ -63,7 +61,7 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
             {parameterCount} parameters ({requiredParameterCount} required)
           </Text>
 
-          <Button size="sm" width="100%" colorPalette="gray">
+          <Button size="sm" width="100%" variant="tertiary">
             Use this prompt
           </Button>
         </VStack>

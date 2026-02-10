@@ -14,13 +14,15 @@ export const Badge = forwardRef<BadgeProps, 'span'>(
 
     const statusColors = badge[status] || badge.default;
     const variantStyles = statusColors[variant];
-
+    console.log(statusColors, status);
     return (
       <ChakraBadge
         ref={ref}
-        bg={variantStyles.bg}
-        color={variantStyles.color}
-        border={variantStyles.border}
+        variant={variant}
+        status={status}
+        // bg={variantStyles.bg}
+        // color={variantStyles.color}
+        // border={variantStyles.border}
         borderRadius="full"
         px="8px"
         py="4px"

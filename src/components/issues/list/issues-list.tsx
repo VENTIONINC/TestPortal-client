@@ -1,4 +1,4 @@
-import { Button, Heading, HStack, Spinner, Text, VStack, Box } from '@chakra-ui/react';
+import { Button, Heading, HStack, Spinner, Text, VStack, Box, useMediaQuery } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 
 import { IssueCard, IssuesFilters } from '@/components/issues';
@@ -14,6 +14,7 @@ interface IssuesListProps {
 export const IssuesList = ({ showFilters = true }: IssuesListProps) => {
   const filters = useIssuesFilters();
   const selectedProjectId = useSelectedProjectId();
+  const [isWideScreen] = useMediaQuery(['(min-width: 1920px)']);
 
   const { setFilters } = useIssuesActions();
 
@@ -35,23 +36,30 @@ export const IssuesList = ({ showFilters = true }: IssuesListProps) => {
   return (
     <HStack align="flex-start" gap={4} w="100%">
       <Box
-        width={showFilters ? '270px' : '0px'}
+        width={showFilters ? '360px' : '0px'}
         opacity={showFilters ? 1 : 0}
         overflow="hidden"
         transition="all 0.3s ease-in-out"
         flexShrink={0}
       >
-        <IssuesFilters as="aside" width="270px" />
+        <IssuesFilters as="aside" width="360px" />
       </Box>
-      <VStack flex={1} align="stretch">
+      <VStack flex={1} align="stretch" minW={0}>
         <HStack ps={2}>{isFetching && <Spinner />}</HStack>
-        <VStack flex={1} gap={4}>
+        <Box
+          display="grid"
+          gridTemplateColumns={{ base: '1fr', lg: showFilters && !isWideScreen ? '1fr' : '1fr 1fr' }}
+          gap={4}
+          flex={1}
+          w="100%"
+          minW={0}
+        >
           {data && data.issues?.length > 0 ? (
             data.issues.map((issue, index) => <IssueCard key={index} issue={issue as IssueWithStats} />)
           ) : (
             <Text>No issues found.</Text>
           )}
-        </VStack>
+        </Box>
 
         {data && data.totalPages > 1 && (
           <HStack alignSelf="center">

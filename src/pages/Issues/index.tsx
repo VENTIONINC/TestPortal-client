@@ -1,4 +1,4 @@
-import { Button, VStack } from '@chakra-ui/react';
+import { Button } from '@chakra-ui/react';
 import { useState } from 'react';
 import { FiFilter } from 'react-icons/fi';
 
@@ -10,21 +10,14 @@ export const IssuesPage = () => {
 
   const actionButton = (
     <>
-      <Button
-        colorScheme="blue"
-        size="sm"
-        variant={showFilters ? 'solid' : 'outline'}
-        onClick={() => setShowFilters(!showFilters)}
-      >
+      <Button size="sm" variant="secondary" onClick={() => setShowFilters(!showFilters)}>
         <FiFilter /> Filter
       </Button>
     </>
   );
   return (
-    <VStack gap={4} align="stretch" mb={4}>
-      <MainTemplate pageHeader="Issues" actionButton={actionButton}>
-        <IssuesList showFilters={showFilters} />
-      </MainTemplate>
-    </VStack>
+    <MainTemplate pageHeader="Issues" actionButton={actionButton}>
+      <IssuesList showFilters={showFilters} />
+    </MainTemplate>
   );
 };

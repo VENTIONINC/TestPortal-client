@@ -40,8 +40,7 @@ export function UserSettingsPage() {
               <Tabs.Trigger value="info">Info</Tabs.Trigger>
             </Link>
           </Tabs.List>
-
-          <Box pt={6}>
+          <Box pt="17px">
             <Outlet />
           </Box>
         </Tabs.Root>

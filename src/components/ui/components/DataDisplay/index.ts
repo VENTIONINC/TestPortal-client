@@ -1,2 +1,2 @@
-export { Card } from './Card';
 export { Badge } from './Badge';
+export { CopyableText } from './CopyableText';

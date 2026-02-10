@@ -1,6 +1,7 @@
 import { Button, Grid, Flex, Heading, Spacer, Spinner, Text, VStack } from '@chakra-ui/react';
 import { useParams } from 'react-router';
 import { useState, useEffect, useCallback } from 'react';
+import { LuRefreshCcw } from 'react-icons/lu';
 
 import { useGetApiV2PromptsByNameQuery, usePostApiV2PromptsByNameGenerateMutation } from '@/redux/apis/generatedApi';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
@@ -154,6 +155,7 @@ export const PromptBuilder = () => {
                   alignSelf="center"
                   w="fit-content"
                 >
+                  <LuRefreshCcw />
                   {isGenerating ? 'Generating...' : 'Generate Prompt'}
                 </Button>
               </Flex>
