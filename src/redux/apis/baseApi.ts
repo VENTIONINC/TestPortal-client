@@ -20,6 +20,14 @@ const rawBaseQuery = fetchBaseQuery({
   },
 });
 
+const shouldRetry = (status: FetchBaseQueryError['status']) => {
+  if (status === 'TIMEOUT_ERROR' || status === 'FETCH_ERROR' || status === 'PARSING_ERROR') {
+    return true;
+  }
+
+  return typeof status === 'number' && (status >= 500 || status === 429);
+};
+
 const timeoutOnlyBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,
   api,
@@ -27,14 +35,19 @@ const timeoutOnlyBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQu
 ) => {
   const result = await rawBaseQuery(args, api, extraOptions);
 
-  if (result.error && result.error.status !== 'TIMEOUT_ERROR') {
+  if (result.error && !shouldRetry(result.error.status)) {
     return retry.fail(result.error, result.meta);
   }
 
   return result;
 };
 
-const baseQuery = retry(timeoutOnlyBaseQuery, { maxRetries: 2 });
+const baseQuery = retry(timeoutOnlyBaseQuery, {
+  maxRetries: 2,
+  backoff: async (attempt) => {
+    await new Promise((resolve) => setTimeout(resolve, 3000 * attempt));
+  },
+});
 
 const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,
