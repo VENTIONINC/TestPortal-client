@@ -9,11 +9,9 @@ export const IssuesPage = () => {
   const [showFilters, setShowFilters] = useState(true);
 
   const actionButton = (
-    <>
-      <Button size="sm" variant="secondary" onClick={() => setShowFilters(!showFilters)}>
-        <FiFilter /> Filter
-      </Button>
-    </>
+    <Button size="sm" variant="secondary" onClick={() => setShowFilters(!showFilters)}>
+      <FiFilter /> Filter
+    </Button>
   );
   return (
     <MainTemplate pageHeader="Issues" actionButton={actionButton}>
