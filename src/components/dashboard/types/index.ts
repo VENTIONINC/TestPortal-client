@@ -4,6 +4,8 @@ export interface TestStat {
   label: string;
   value: number;
   status: TestStatus;
+  icon: React.ElementType;
+  color: string;
 }
 
 export interface TestDescriptionData {
@@ -16,4 +18,5 @@ export interface TestDescriptionData {
 
 export interface TestDescriptionProps {
   data?: TestDescriptionData;
+  isGrid?: boolean;
 }

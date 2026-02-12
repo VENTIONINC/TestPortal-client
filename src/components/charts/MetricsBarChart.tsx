@@ -1,4 +1,4 @@
-import { Box, Card, HStack, IconButton, Text } from '@chakra-ui/react';
+import { Box, Button, ButtonGroup, Card, HStack, IconButton, Text } from '@chakra-ui/react';
 import { Chart, useChart } from '@chakra-ui/charts';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { FiBarChart2, FiLayers } from 'react-icons/fi';
@@ -30,11 +30,12 @@ export const MetricsBarChart = ({
   multipleBarSize = 10,
   showLegend = true,
   showToggle = true,
-  showValueToggle = true,
+  showValueToggle = false,
 }: MetricsBarChartProps) => {
   const tooltipBg = useColorModeValue('white', 'gray.800');
   const tooltipBorder = useColorModeValue('gray.200', 'gray.700');
   const tooltipText = useColorModeValue('gray.900', 'gray.100');
+  const cursorFill = useColorModeValue('rgba(0,0,0,0.05)', 'rgba(255,255,255,0.05)');
   const normalizedData: CategoriesChartDatum[] = data.map((row) => {
     if (valueMode !== 'percent') {
       return row;
@@ -56,6 +57,27 @@ export const MetricsBarChart = ({
   });
   const resolvedYDomain = valueMode === 'percent' ? [0, 100] : (yDomain ?? [0, 50]);
   const valueSuffix = valueMode === 'percent' ? '%' : '';
+
+  const customTicks = (() => {
+    const [min, max] = resolvedYDomain;
+    if (min !== 0) return undefined;
+
+    // Prioritize powers of 10 as requested ("tens, hundreds, thousands")
+    const possibleSteps = [10000, 1000, 100, 10, 1];
+
+    for (const step of possibleSteps) {
+      if (max >= step && max % step === 0) {
+        const count = max / step;
+        // Ensure not too few ticks (sparse) and not too many (cluttered)
+        // For max=100, step=100 gives count 1 (<2), so it falls to step=10 (count 10)
+        // For max=200, step=100 gives count 2, which creates [0, 100, 200]
+        if (count >= 2 && count <= 30) {
+          return Array.from({ length: count + 1 }, (_, i) => i * step);
+        }
+      }
+    }
+    return undefined;
+  })();
 
   const renderTooltip = ({ active, payload, label, series, bg, border, text }: TooltipProps) => {
     if (!active || !payload?.length) {
@@ -86,123 +108,130 @@ export const MetricsBarChart = ({
   };
 
   return (
-    <Card.Root p={4} borderRadius="lg">
+    <Card.Root>
       <Card.Body>
-        <HStack justify="space-between" align="start" mb={4} gap={4} flexWrap="wrap">
-          <Text fontWeight="semibold">{title}</Text>
-          <HStack gap={4} flexWrap="wrap" justify="flex-end">
+        <Box bg="bg.cardSecondary" borderRadius="lg" p="20px">
+          <HStack justify="space-between" align="center" mb={4} gap={4} flexWrap="wrap">
+            <Text fontWeight="semibold">{title}</Text>
+            <HStack gap={4} flexWrap="wrap" justify="flex-end">
+              <HStack gap={2}>
+                {showValueToggle && (
+                  <ButtonGroup size="sm" attached variant="outline">
+                    <Button
+                      variant={valueMode === 'count' ? 'solid' : 'ghost'}
+                      aria-label="Count view"
+                      onClick={() => onValueModeChange?.('count')}
+                      w="32px"
+                      minW="32px"
+                      p={0}
+                    >
+                      N
+                    </Button>
+                    <Button
+                      variant={valueMode === 'percent' ? 'solid' : 'ghost'}
+                      aria-label="Percent view"
+                      onClick={() => onValueModeChange?.('percent')}
+                      w="32px"
+                      minW="32px"
+                      p={0}
+                    >
+                      %
+                    </Button>
+                  </ButtonGroup>
+                )}
+                {showToggle && (
+                  <HStack gap={2} p={1} borderRadius="md" bg="bg.subtle">
+                    <IconButton
+                      size="sm"
+                      variant={view === 'stacked' ? 'solid' : 'ghost'}
+                      aria-label="Stacked view"
+                      onClick={() => onViewChange?.('stacked')}
+                    >
+                      <FiLayers />
+                    </IconButton>
+                    <IconButton
+                      size="sm"
+                      variant={view === 'multiple' ? 'solid' : 'ghost'}
+                      aria-label="Multiple view"
+                      onClick={() => onViewChange?.('multiple')}
+                    >
+                      <FiBarChart2 />
+                    </IconButton>
+                  </HStack>
+                )}
+              </HStack>
+            </HStack>
+          </HStack>
+          <Box display="flex" justifyContent="end">
             {showLegend && (
-              <HStack gap={4} fontSize="sm" color="fg.muted">
+              <HStack gap={5} fontSize="sm" color="fg.muted">
                 {series.map((item) => (
-                  <HStack key={item.name} gap={2} align="center">
-                    <Box w="10px" h="10px" borderRadius="sm" bg={item.color} />
-                    <Text>{item.label}</Text>
+                  <HStack key={item.name} align="center">
+                    <Box w="10px" h="10px" borderRadius="xs" bg={item.color} />
+                    <Text fontSize="2xs">{item.label}</Text>
                   </HStack>
                 ))}
               </HStack>
             )}
-            <HStack gap={2}>
-              {showValueToggle && (
-                <HStack gap={2} p={1} borderRadius="md" bg="bg.subtle">
-                  <IconButton
-                    size="sm"
-                    variant={valueMode === 'count' ? 'solid' : 'ghost'}
-                    aria-label="Count view"
-                    onClick={() => onValueModeChange?.('count')}
-                  >
-                    N
-                  </IconButton>
-                  <IconButton
-                    size="sm"
-                    variant={valueMode === 'percent' ? 'solid' : 'ghost'}
-                    aria-label="Percent view"
-                    onClick={() => onValueModeChange?.('percent')}
-                  >
-                    %
-                  </IconButton>
-                </HStack>
-              )}
-              {showToggle && (
-                <HStack gap={2} p={1} borderRadius="md" bg="bg.subtle">
-                  <IconButton
-                    size="sm"
-                    variant={view === 'stacked' ? 'solid' : 'ghost'}
-                    aria-label="Stacked view"
-                    onClick={() => onViewChange?.('stacked')}
-                  >
-                    <FiLayers />
-                  </IconButton>
-                  <IconButton
-                    size="sm"
-                    variant={view === 'multiple' ? 'solid' : 'ghost'}
-                    aria-label="Multiple view"
-                    onClick={() => onViewChange?.('multiple')}
-                  >
-                    <FiBarChart2 />
-                  </IconButton>
-                </HStack>
-              )}
-            </HStack>
-          </HStack>
-        </HStack>
+          </Box>
 
-        <Box h={`${height}px`} w="100%">
-          <ResponsiveContainer width="100%" height="100%">
-            <Chart.Root chart={chart}>
-              <BarChart
-                data={chart.data}
-                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                barGap={view === 'stacked' ? 0 : 8}
-                barCategoryGap="20%"
-              >
-                <CartesianGrid
-                  stroke={chart.color('border')}
-                  strokeDasharray="3 3"
-                  strokeOpacity={0.6}
-                  vertical={false}
-                  horizontal
-                />
-                <XAxis
-                  dataKey={chart.key('date')}
-                  axisLine={false}
-                  tickLine={false}
-                  stroke={chart.color('fg.muted')}
-                  fontSize={12}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  stroke={chart.color('fg.muted')}
-                  fontSize={12}
-                  domain={resolvedYDomain}
-                />
-                <Tooltip
-                  cursor={false}
-                  wrapperStyle={{ zIndex: 10 }}
-                  content={({ active, payload, label }) =>
-                    renderTooltip({
-                      active,
-                      payload,
-                      label,
-                      series,
-                      bg: tooltipBg,
-                      border: tooltipBorder,
-                      text: tooltipText,
-                    })
-                  }
-                />
-                {series.map((item) => (
-                  <Bar
-                    key={item.name}
-                    dataKey={chart.key(item.name)}
-                    fill={chart.color(item.color)}
-                    stackId={view === 'stacked' ? 'issues' : undefined}
-                    barSize={view === 'stacked' ? stackedBarSize : multipleBarSize}
-                  />
-                ))}
-              </BarChart>
-            </Chart.Root>
-          </ResponsiveContainer>
+          <Box h={`${height}px`} w="calc(100% + 40px)" mx="-36px" minW={0} position="relative">
+            <Box position="absolute" inset={0}>
+              <ResponsiveContainer width="100%" height="100%">
+                <Chart.Root chart={chart}>
+                  <BarChart
+                    data={chart.data}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                    barGap={view === 'stacked' ? 0 : 8}
+                    barCategoryGap={20}
+                  >
+                    <CartesianGrid stroke="red" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} horizontal />
+                    <XAxis
+                      dataKey={chart.key('date')}
+                      axisLine={false}
+                      tickLine={false}
+                      stroke={chart.color('fg.muted')}
+                      fontSize={12}
+                      padding={{ left: 20, right: 20 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      stroke={chart.color('fg.muted')}
+                      fontSize={12}
+                      domain={resolvedYDomain}
+                      ticks={customTicks}
+                      interval={0} // allowDecimals={false}
+                    />
+                    <Tooltip
+                      cursor={{ fill: cursorFill }}
+                      wrapperStyle={{ zIndex: 10 }}
+                      content={({ active, payload, label }) =>
+                        renderTooltip({
+                          active,
+                          payload,
+                          label,
+                          series,
+                          bg: tooltipBg,
+                          border: tooltipBorder,
+                          text: tooltipText,
+                        })
+                      }
+                    />
+                    {series.map((item) => (
+                      <Bar
+                        key={item.name}
+                        dataKey={chart.key(item.name)}
+                        fill={chart.color(item.color)}
+                        stackId={view === 'stacked' ? 'issues' : undefined}
+                        barSize={view === 'stacked' ? stackedBarSize : multipleBarSize}
+                      />
+                    ))}
+                  </BarChart>
+                </Chart.Root>
+              </ResponsiveContainer>
+            </Box>
+          </Box>
         </Box>
       </Card.Body>
     </Card.Root>

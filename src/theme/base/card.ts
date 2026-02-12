@@ -7,16 +7,19 @@ export const cardRecipe = defineSlotRecipe({
     //   display: 'flex',
     //   flexDirection: 'column',
     //   bg: 'bg.card',
-    //   borderRadius: 'lg',
+    //
     //   borderWidth: '1px',
     //   borderColor: 'border.default',
     // },
+    root: {
+      borderRadius: 'xl',
+    },
     header: {
       pt: '15px',
       pl: '15px',
     },
     body: {
-      p: '15px 14px',
+      p: '15px 16px',
       // flex: '1',
     },
     // footer: {

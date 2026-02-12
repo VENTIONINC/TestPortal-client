@@ -1,8 +1,13 @@
 import { useState } from 'react';
 
 import { useColorModeValue } from '@/components/ui';
-import { MetricsBarChart } from '@/components/charts/MetricsBarChart';
-import type { BarChartValueMode, BarChartView, CategorySeries, CategoriesChartDatum } from '@/types';
+import {
+  BarChartView,
+  BarChartValueMode,
+  CategorySeries,
+  CategoriesChartDatum,
+  MetricsBarChart,
+} from '@/components/charts/MetricsBarChart';
 
 const mockData: CategoriesChartDatum[] = [
   { date: 'Dec 8', bug: 1, environment: 2, script: 4, performance: 1 },
@@ -14,17 +19,19 @@ const mockData: CategoriesChartDatum[] = [
   { date: 'Dec 14', bug: 37, environment: 34, script: 43, performance: 30 },
 ];
 
-export const IssuesCategories = () => {
+export const IssuesCategoriesChart = () => {
   const [view, setView] = useState<BarChartView>('multiple');
   const [valueMode, setValueMode] = useState<BarChartValueMode>('count');
   const series: CategorySeries[] = [
-    { name: 'bug', label: 'bug', color: useColorModeValue('purple.500', 'purple.300') },
-    { name: 'environment', label: 'environment', color: useColorModeValue('pink.500', 'pink.300') },
-    { name: 'script', label: 'script', color: useColorModeValue('lime.500', 'lime.300') },
-    { name: 'performance', label: 'performance', color: useColorModeValue('cyan.500', 'cyan.300') },
+    { name: 'bug', label: 'bug', color: 'dashboard.purple' },
+    { name: 'environment', label: 'environment', color: 'dashboard.pink' },
+    { name: 'script', label: 'script', color: 'dashboard.yellow' },
+    { name: 'performance', label: 'performance', color: 'dashboard.blue' },
   ];
+
   return (
     <MetricsBarChart
+      title="Issues categories"
       data={mockData}
       series={series}
       view={view}

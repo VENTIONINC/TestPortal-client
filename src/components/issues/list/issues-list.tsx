@@ -1,4 +1,5 @@
 import { Button, Heading, HStack, Spinner, Text, VStack, Box, useMediaQuery } from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 
 import { IssueCard, IssuesFilters } from '@/components/issues';
@@ -21,6 +22,20 @@ export const IssuesList = ({ showFilters = true }: IssuesListProps) => {
   const [debouncedFilters] = useDebounce(filters, 500);
   const { data, isFetching } = useGetIssuesWithStatsQuery({ ...debouncedFilters, projectId: selectedProjectId });
 
+  const [isVisible, setIsVisible] = useState(showFilters);
+
+  useEffect(() => {
+    if (showFilters) {
+      setIsVisible(true);
+    }
+  }, [showFilters]);
+
+  const handleTransitionEnd = () => {
+    if (!showFilters) {
+      setIsVisible(false);
+    }
+  };
+
   const nextPage = () => {
     if (data && filters.page < data.totalPages) {
       setFilters({ page: filters.page + 1 });
@@ -41,6 +56,8 @@ export const IssuesList = ({ showFilters = true }: IssuesListProps) => {
         overflow="hidden"
         transition="all 0.3s ease-in-out"
         flexShrink={0}
+        display={isVisible ? 'block' : 'none'}
+        onTransitionEnd={handleTransitionEnd}
       >
         <IssuesFilters as="aside" width="360px" />
       </Box>

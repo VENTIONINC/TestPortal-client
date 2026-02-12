@@ -1,38 +1,51 @@
 export const dashboard = {
   green: {
     value: {
-      _light: '#3CCB7F',
-      _dark: '#4ADE80',
+      _light: '#5AFB7A',
+      _dark: '#3CFF8F',
     },
   },
   blue: {
     value: {
-      _light: '#6EC8FF',
-      _dark: '#60A5FA',
+      _light: '#53ABFC',
+      _dark: '#4DB8FF',
     },
   },
   yellow: {
     value: {
-      _light: '#E5D84A',
-      _dark: '#FACC15',
+      _light: '#D0FC53',
+      _dark: '#C6FF2E',
     },
   },
-  orange: {
+  pink: {
     value: {
-      _light: '#FF8F5A',
-      _dark: '#FB923C',
+      _light: '#FF6FFF',
+      _dark: '#FF5CFF',
     },
   },
+  purple: {
+    value: {
+      _light: '#61457C',
+      _dark: '#7A5B9E',
+    },
+  },
+
   red: {
     value: {
-      _light: '#FF6B6B',
-      _dark: '#F87171',
+      _light: '#FF6A47',
+      _dark: '#FF6B3D',
     },
   },
   gray: {
     value: {
-      _light: '#B2B2B2',
-      _dark: '#A1A1A1',
+      _light: '#D2D2D5',
+      _dark: '#E6E6EB',
+    },
+  },
+  base: {
+    value: {
+      _light: '#333333',
+      _dark: '#EAEAEA',
     },
   },
 };

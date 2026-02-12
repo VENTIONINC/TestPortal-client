@@ -1,3 +1,5 @@
+import { act } from 'react';
+
 export const button = {
   primary: {
     bg: {
@@ -19,6 +21,7 @@ export const button = {
       hover: { value: { _light: '#E4E4E7', _dark: '#19191D' } },
       focus: { value: { _light: '#F4F4F5', _dark: '#18181B' } },
       disabled: { value: { _light: '#F0F0F0', _dark: '#2A2A2D' } },
+      active: { value: { _light: 'rgba(20, 113, 235, 0.15)', _dark: 'rgba(20, 113, 235, 0.15)' } },
     },
     color: {
       value: {
@@ -30,6 +33,12 @@ export const button = {
       value: {
         _light: '#B2B2B2',
         _dark: '#7A7A7A',
+      },
+    },
+    borderActiveColor: {
+      value: {
+        _light: '#1471EB',
+        _dark: '#5A88FF',
       },
     },
   },
@@ -46,6 +55,7 @@ export const button = {
         _dark: '#3D3D3F',
       },
     },
+
     default: { value: { _light: 'transparent', _dark: 'transparent' } },
     bg: {
       default: { value: 'transparent' },

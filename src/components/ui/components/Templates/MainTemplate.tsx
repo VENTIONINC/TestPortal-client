@@ -1,8 +1,10 @@
-import { Box, Grid, GridItem } from '@chakra-ui/react';
+import { Box, Grid, GridItem, HStack } from '@chakra-ui/react';
 import { useState } from 'react';
 
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { Breadcrumb } from '@/components/ui';
+import { useFilterContext } from '@/contexts/FilterContext';
+import { FilterToggleButton } from '@/components/filters';
 
 import { Sidebar } from '../Sidebar/Sidebar';
 import { Header } from '../Header/Header';
@@ -12,11 +14,38 @@ interface MainTemplateProps {
   pageHeader: string;
   actionButton?: React.ReactNode;
   isIncludeBreadcrumb?: boolean;
+  isFilterVisible?: boolean;
 }
 
-export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBreadcrumb }: MainTemplateProps) => {
-  const { surfaces } = useSurfaceColors();
-  const [collapsed, setCollapsed] = useState(false);
+const getInitialCollapsedState = () => {
+  const item = localStorage.getItem('sidebar_collapsed');
+  return item ? JSON.parse(item) : false;
+};
+
+const setCollapsedState = (collapsed: boolean) => {
+  localStorage.setItem('sidebar_collapsed', JSON.stringify(collapsed));
+  return !collapsed;
+};
+
+export const MainTemplate = ({
+  children,
+  pageHeader,
+  actionButton,
+  isIncludeBreadcrumb,
+  isFilterVisible,
+}: MainTemplateProps) => {
+  const [collapsed, setCollapsed] = useState(() => getInitialCollapsedState());
+  const handleSetCollapsed = () => setCollapsed((prev: boolean) => setCollapsedState(prev));
+
+  const { toggleFilters } = useFilterContext();
+
+  const headerAction = (
+    <HStack gap={2}>
+      {isFilterVisible && <FilterToggleButton onClick={toggleFilters} />}
+      {actionButton}
+    </HStack>
+  );
+
   return (
     // <Box minH="100vh" maxH="100%" bg={surfaces.page} display="flex" flexDirection="column">
     <>
@@ -24,18 +53,22 @@ export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBrea
         templateColumns={`${collapsed ? '64px' : '250px'} 1fr`}
         flex="1"
         transition="grid-template-columns 0.2s ease-in-out"
+        h="100vh"
+        overflow="hidden"
       >
         <GridItem>
-          <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+          <Sidebar collapsed={collapsed} setCollapsed={handleSetCollapsed} />
         </GridItem>
 
-        <GridItem>
-          <Header title={pageHeader} actionButton={actionButton} isIncludeBreadcrumb={isIncludeBreadcrumb} />
+        <GridItem display="flex" flexDirection="column" h="100%" overflow="hidden">
+          <Header title={pageHeader} actionButton={headerAction} isIncludeBreadcrumb={isIncludeBreadcrumb} />
 
-          <BasicWrapper>
-            {isIncludeBreadcrumb && <Breadcrumb ml={6} />}
-            {children}
-          </BasicWrapper>
+          <Box flex="1" overflowY="auto">
+            <BasicWrapper>
+              {isIncludeBreadcrumb && <Breadcrumb ml={6} />}
+              {children}
+            </BasicWrapper>
+          </Box>
         </GridItem>
       </Grid>
       {/* </Box> */}

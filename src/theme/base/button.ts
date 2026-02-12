@@ -59,7 +59,15 @@ export const buttonRecipe = defineRecipe({
         },
         _active: {
           bg: 'button.secondary.bg.active',
+          borderColor: 'button.secondary.borderActiveColor',
         },
+        _expanded: {
+          bg: 'button.secondary.bg.active',
+        },
+        // // For FilterToggleButton or other custom active states
+        // '&[data-active]': {
+        //   bg: { value: '{colors.button.secondary.bg.active}' },
+        // },
         _disabled: {
           opacity: 1,
           bg: 'button.secondary.bg.disabled',

@@ -1,21 +1,19 @@
-import { Button } from '@chakra-ui/react';
-import { useState } from 'react';
-import { FiFilter } from 'react-icons/fi';
-
 import { IssuesList } from '@/components/issues';
 import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
+import { useFilterContext, FilterProvider } from '@/contexts/FilterContext';
 
-export const IssuesPage = () => {
-  const [showFilters, setShowFilters] = useState(true);
+const IssuesPageContent = () => {
+  const { showFilters } = useFilterContext();
 
-  const actionButton = (
-    <Button size="sm" variant="secondary" onClick={() => setShowFilters(!showFilters)}>
-      <FiFilter /> Filter
-    </Button>
-  );
   return (
-    <MainTemplate pageHeader="Issues" actionButton={actionButton}>
+    <MainTemplate pageHeader="Issues" isFilterVisible>
       <IssuesList showFilters={showFilters} />
     </MainTemplate>
   );
 };
+
+export const IssuesPage = () => (
+  <FilterProvider storageKey="issues">
+    <IssuesPageContent />
+  </FilterProvider>
+);
