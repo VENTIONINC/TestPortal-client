@@ -85,7 +85,6 @@ export const ResultsExecutionCard = memo(
             status,
             errors = [],
             analysisCategory,
-            analysisStatus,
             analysisConfidence,
           } = result;
 
@@ -124,7 +123,7 @@ export const ResultsExecutionCard = memo(
 
                 {errors.map((resultError) => {
                   const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(analysisCategory);
-                  const hasAnalysis = Boolean(analysisStatus && analysisConfidence);
+                  const hasAnalysis = Boolean(analysisConfidence);
 
                   return (
                     <Fragment key={resultError.id}>

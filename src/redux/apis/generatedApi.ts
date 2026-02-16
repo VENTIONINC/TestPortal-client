@@ -161,6 +161,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ['Results'],
       }),
+      patchApiV2ResultsByResultIdAnalysisFeedback: build.mutation<
+        PatchApiV2ResultsByResultIdAnalysisFeedbackApiResponse,
+        PatchApiV2ResultsByResultIdAnalysisFeedbackApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/results/${queryArg.resultId}/analysis-feedback`,
+          method: 'PATCH',
+          body: queryArg.updateResultAnalysisFeedbackRequest,
+        }),
+        invalidatesTags: ['Results'],
+      }),
       getApiV2SpecsBySpecId: build.query<GetApiV2SpecsBySpecIdApiResponse, GetApiV2SpecsBySpecIdApiArg>({
         query: (queryArg) => ({
           url: `/api/v2/specs/${queryArg.specId}`,
@@ -253,6 +264,17 @@ const injectedRtkApi = api
           url: `/api/v2/result-errors/bulk-review`,
           method: 'PATCH',
           body: queryArg.bulkReviewRequest,
+        }),
+        invalidatesTags: ['Result Errors'],
+      }),
+      postApiV2ResultErrorsAnalyze: build.mutation<
+        PostApiV2ResultErrorsAnalyzeApiResponse,
+        PostApiV2ResultErrorsAnalyzeApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/result-errors/analyze`,
+          method: 'POST',
+          body: queryArg.analyzeResultErrorsRequest,
         }),
         invalidatesTags: ['Result Errors'],
       }),
@@ -639,6 +661,12 @@ export type PatchApiV2ResultsByResultIdAnalysisApiArg = {
   resultId: string;
   updateResultAnalysisRequest: UpdateResultAnalysisRequest;
 };
+export type PatchApiV2ResultsByResultIdAnalysisFeedbackApiResponse =
+  /** status 200 Result analysis feedback updated successfully */ Result;
+export type PatchApiV2ResultsByResultIdAnalysisFeedbackApiArg = {
+  resultId: string;
+  updateResultAnalysisFeedbackRequest: UpdateResultAnalysisFeedbackRequest;
+};
 export type GetApiV2SpecsBySpecIdApiResponse = /** status 200 Spec details */ Spec;
 export type GetApiV2SpecsBySpecIdApiArg = {
   specId: string;
@@ -689,6 +717,11 @@ export type PatchApiV2ResultErrorsBulkReviewApiResponse =
   /** status 200 Bulk review completed successfully */ SuccessResponse;
 export type PatchApiV2ResultErrorsBulkReviewApiArg = {
   bulkReviewRequest: BulkReviewRequest;
+};
+export type PostApiV2ResultErrorsAnalyzeApiResponse =
+  /** status 200 Analysis completed successfully */ AnalyzeResultErrorsResponse;
+export type PostApiV2ResultErrorsAnalyzeApiArg = {
+  analyzeResultErrorsRequest: AnalyzeResultErrorsRequest;
 };
 export type GetApiV2ResultErrorsByResultErrorIdApiResponse = /** status 200 Result error retrieved successfully */ {
   data: ResultError;
@@ -933,9 +966,9 @@ export type Result = {
   /** Explanation for the categorization decision */
   analysisConclusion?: string;
   /** Quality rating of error messages (1-5 scale, only for failed tests) */
-  analysisErrorQuality?: number;
+  analysisErrorQuality?: number | null;
   /** Explanation for the error quality rating */
-  analysisErrorQualityConclusion?: string;
+  analysisErrorQualityConclusion?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -973,6 +1006,11 @@ export type UpdateResultAnalysisRequest = {
   analysisConfidence?: number;
   /** Explanation for the categorization decision */
   analysisConclusion?: string;
+};
+export type UpdateResultAnalysisFeedbackRequest = {
+  analysisFeedbackCategory?: string;
+  analysisFeedbackConfidence?: number;
+  analysisFeedbackConclusion?: string;
 };
 export type Spec = {
   id: string;
@@ -1020,6 +1058,16 @@ export type AssignIssueRequest = {
   issueId: string;
 };
 export type BulkReviewRequest = {
+  errorIds: string[];
+};
+export type AnalyzeResultErrorsResponse = {
+  analyzedResults: number;
+  updatedResultIds: string[];
+  skippedErrorIds: string[];
+  totalErrors: number;
+};
+export type AnalyzeResultErrorsRequest = {
+  projectId: string;
   errorIds: string[];
 };
 export type ResultError = {
@@ -1287,6 +1335,7 @@ export const {
   useDeleteApiV2ResultsByResultIdMutation,
   useGetApiV2ResultsStatsQuery,
   usePatchApiV2ResultsByResultIdAnalysisMutation,
+  usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation,
   useGetApiV2SpecsBySpecIdQuery,
   useDeleteApiV2SpecsBySpecIdMutation,
   usePostApiV2AssumptionsMutation,
@@ -1296,6 +1345,7 @@ export const {
   usePatchApiV2ResultErrorsByResultErrorIdAssignIssueMutation,
   usePatchApiV2ResultErrorsByResultErrorIdReviewMutation,
   usePatchApiV2ResultErrorsBulkReviewMutation,
+  usePostApiV2ResultErrorsAnalyzeMutation,
   useGetApiV2ResultErrorsByResultErrorIdQuery,
   useGetApiV2ExecutionsByExecutionIdQuery,
   useDeleteApiV2ExecutionsByExecutionIdMutation,
