@@ -455,6 +455,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Error Formatter"],
       }),
+      postApiV2ErrorFormatterResult: build.mutation<
+        PostApiV2ErrorFormatterResultApiResponse,
+        PostApiV2ErrorFormatterResultApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/error-formatter/result`,
+          method: "POST",
+          body: queryArg.errorSuggestionRequest,
+        }),
+        invalidatesTags: ["Error Formatter"],
+      }),
       getApiV2Prompts: build.query<
         GetApiV2PromptsApiResponse,
         GetApiV2PromptsApiArg
@@ -692,7 +703,7 @@ export type GetApiV2IssuesWithStatsApiResponse =
 export type GetApiV2IssuesWithStatsApiArg = {
   /** Project ID to filter issues with statistics */
   projectId: string;
-  category?: "Bug" | "Script" | "Infra" | "Performance";
+  category?: "Bug" | "Script" | "Infra" | "Performance" | "Other";
   name?: string;
   page?: number;
   limit?: number;
@@ -890,6 +901,11 @@ export type PostApiV2ErrorFormatterApiResponse =
   /** status 200 Error formatted successfully */ ErrorFormatterResponse;
 export type PostApiV2ErrorFormatterApiArg = {
   errorFormatterRequest: ErrorFormatterRequest;
+};
+export type PostApiV2ErrorFormatterResultApiResponse =
+  /** status 200 Suggestion generated successfully */ ErrorSuggestionResponse;
+export type PostApiV2ErrorFormatterResultApiArg = {
+  errorSuggestionRequest: ErrorSuggestionRequest;
 };
 export type GetApiV2PromptsApiResponse =
   /** status 200 List of available prompts */ PromptsListResponse;
@@ -1256,6 +1272,14 @@ export type ErrorFormatterRequest = {
   description: string;
   category: string;
 };
+export type ErrorSuggestionResponse = {
+  category: string;
+  description: string;
+};
+export type ErrorSuggestionRequest = {
+  resultId: string;
+  projectId: string;
+};
 export type PromptParameter = {
   type: string;
   required: boolean;
@@ -1454,6 +1478,7 @@ export const {
   usePostApiV2UsersLoginMutation,
   usePostApiV2UsersRefreshTokenMutation,
   usePostApiV2ErrorFormatterMutation,
+  usePostApiV2ErrorFormatterResultMutation,
   useGetApiV2PromptsQuery,
   useGetApiV2PromptsByNameQuery,
   usePostApiV2PromptsByNameGenerateMutation,
