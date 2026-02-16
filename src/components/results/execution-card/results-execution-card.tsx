@@ -118,12 +118,11 @@ export const ResultsExecutionCard = memo(
             status,
             errors = [],
             analysisCategory,
-            analysisStatus,
             analysisConfidence,
           } = result;
 
           const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(analysisCategory);
-          const hasAnalysis = Boolean(analysisStatus && analysisConfidence);
+          const hasAnalysis = Boolean(analysisConfidence);
 
           return (
             <HStack key={id} align="center" ps={2} textStyle="sm" position="relative">
@@ -173,7 +172,12 @@ export const ResultsExecutionCard = memo(
                     </HStack>
                   ) : (
                     <AnalyzeCategoryButton
-                      onClick={() => handleAnalyze(String(id), errors.map((e) => String(e.id)))}
+                      onClick={() =>
+                        handleAnalyze(
+                          String(id),
+                          errors.map((e) => String(e.id)),
+                        )
+                      }
                       isLoading={analyzingResultId === String(id)}
                     />
                   ))}

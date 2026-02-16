@@ -8,12 +8,20 @@ import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/result
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
 import { useResultsActions, useSelectedDates, useResultsFilters } from '@/redux/slices/results';
 import { getDatesBetween, getDateDisplayName } from '@/utils/dateUtils';
-import { BaseResult, ResultExecution, ResultSpec } from '@/types';
+import { AnalysisCategory, BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { BulkActions } from '@/components/BulkActions';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
 
 import { DateList } from './date-list';
+
+const toAnalysisCategory = (value?: string): AnalysisCategory | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  return Object.values(AnalysisCategory).includes(value as AnalysisCategory) ? (value as AnalysisCategory) : undefined;
+};
 
 const ResultsContent = () => {
   const filters = useResultsFilters();
@@ -54,10 +62,13 @@ const ResultsContent = () => {
         specId: result.specId,
         executionId: result.executionId,
         errors: result.errors,
-        analysisCategory: result.analysisCategory,
-        analysisConfidence: result.analysisConfidence,
+        analysisCategory: toAnalysisCategory(result.analysisFeedbackCategory) ?? result.analysisCategory,
+        analysisConfidence: result.analysisFeedbackConfidence ?? result.analysisConfidence,
         analysisStatus: result.analysisStatus,
-        analysisConclusion: result.analysisConclusion,
+        analysisConclusion: result.analysisFeedbackConclusion ?? result.analysisConclusion,
+        analysisFeedbackCategory: result.analysisFeedbackCategory,
+        analysisFeedbackConfidence: result.analysisFeedbackConfidence,
+        analysisFeedbackConclusion: result.analysisFeedbackConclusion,
         analysisErrorQuality: result.analysisErrorQuality,
         analysisErrorQualityConclusion: result.analysisErrorQualityConclusion,
       };
@@ -182,10 +193,13 @@ const ResultsContent = () => {
         specId: result.specId,
         executionId: result.executionId,
         errors: result.errors,
-        analysisCategory: result.analysisCategory,
-        analysisConfidence: result.analysisConfidence,
+        analysisCategory: toAnalysisCategory(result.analysisFeedbackCategory) ?? result.analysisCategory,
+        analysisConfidence: result.analysisFeedbackConfidence ?? result.analysisConfidence,
         analysisStatus: result.analysisStatus,
-        analysisConclusion: result.analysisConclusion,
+        analysisConclusion: result.analysisFeedbackConclusion ?? result.analysisConclusion,
+        analysisFeedbackCategory: result.analysisFeedbackCategory,
+        analysisFeedbackConfidence: result.analysisFeedbackConfidence,
+        analysisFeedbackConclusion: result.analysisFeedbackConclusion,
         analysisErrorQuality: result.analysisErrorQuality,
         analysisErrorQualityConclusion: result.analysisErrorQualityConclusion,
       };

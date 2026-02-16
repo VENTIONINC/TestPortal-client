@@ -188,6 +188,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Results"],
       }),
+      patchApiV2ResultsByResultIdAnalysisFeedback: build.mutation<
+        PatchApiV2ResultsByResultIdAnalysisFeedbackApiResponse,
+        PatchApiV2ResultsByResultIdAnalysisFeedbackApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/results/${queryArg.resultId}/analysis-feedback`,
+          method: "PATCH",
+          body: queryArg.updateResultAnalysisFeedbackRequest,
+        }),
+        invalidatesTags: ["Results"],
+      }),
       getApiV2SpecsBySpecId: build.query<
         GetApiV2SpecsBySpecIdApiResponse,
         GetApiV2SpecsBySpecIdApiArg
@@ -713,7 +724,7 @@ export type GetApiV2IssuesWithStatsApiArg = {
   statTo?: string;
 };
 export type GetApiV2ResultsApiResponse =
-  /** status 200 List of results */ Result[];
+  /** status 200 List of results */ ResultsListResponse;
 export type GetApiV2ResultsApiArg = {
   projectId: string;
   tag?: string;
@@ -756,6 +767,12 @@ export type PatchApiV2ResultsByResultIdAnalysisApiResponse =
 export type PatchApiV2ResultsByResultIdAnalysisApiArg = {
   resultId: string;
   updateResultAnalysisRequest: UpdateResultAnalysisRequest;
+};
+export type PatchApiV2ResultsByResultIdAnalysisFeedbackApiResponse =
+  /** status 200 Result analysis feedback updated successfully */ Result;
+export type PatchApiV2ResultsByResultIdAnalysisFeedbackApiArg = {
+  resultId: string;
+  updateResultAnalysisFeedbackRequest: UpdateResultAnalysisFeedbackRequest;
 };
 export type GetApiV2SpecsBySpecIdApiResponse =
   /** status 200 Spec details */ Spec;
@@ -988,8 +1005,6 @@ export type PostApiV2UploadCtrfReportApiKeyApiArg = {
   body: {
     /** CTRF report JSON file to upload */
     report?: Blob;
-    /** Project ID to associate the report with */
-    projectId: string;
   };
 };
 export type PostApiV2UploadGenerateKeyApiResponse =
@@ -1083,6 +1098,12 @@ export type Result = {
   createdAt: string;
   updatedAt: string;
 };
+export type ResultsListResponse = {
+  results: Result[];
+  total: number;
+  page: number;
+  totalPages: number;
+};
 export type ResultsStats = {
   byStatus: {
     passed: number;
@@ -1117,6 +1138,19 @@ export type UpdateResultAnalysisRequest = {
   analysisConfidence?: number;
   /** Explanation for the categorization decision */
   analysisConclusion?: string;
+};
+export type UpdateResultAnalysisFeedbackRequest = {
+  /** Manual reviewer category */
+  analysisFeedbackCategory?:
+    | "bug"
+    | "infra"
+    | "performance"
+    | "script"
+    | "other";
+  /** Manual reviewer confidence (1-5 scale) */
+  analysisFeedbackConfidence?: number;
+  /** Manual reviewer conclusion */
+  analysisFeedbackConclusion?: string;
 };
 export type Spec = {
   id: string;
@@ -1454,6 +1488,7 @@ export const {
   useDeleteApiV2ResultsByResultIdMutation,
   useGetApiV2ResultsStatsQuery,
   usePatchApiV2ResultsByResultIdAnalysisMutation,
+  usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation,
   useGetApiV2SpecsBySpecIdQuery,
   useDeleteApiV2SpecsBySpecIdMutation,
   usePostApiV2AssumptionsMutation,
