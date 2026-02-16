@@ -1,7 +1,23 @@
 ---
 name: Modal-Dialog
 description: Creates and updates modal dialogs in React TypeScript following project patterns. Expert in Redux dialog system, custom hooks, and business logic separation.
-tools: ['search', 'usages']
+tools:
+  [
+    'execute/testFailure',
+    'execute/getTerminalOutput',
+    'execute/runTask',
+    'execute/createAndRunTask',
+    'execute/runInTerminal',
+    'execute/runTests',
+    'read/problems',
+    'read/readFile',
+    'read/getTaskOutput',
+    'edit',
+    'search',
+    'web',
+    'agent',
+    'todo',
+  ]
 ---
 
 # Modal Dialog Specialist

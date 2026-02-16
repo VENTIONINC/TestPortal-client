@@ -703,7 +703,7 @@ export type GetApiV2IssuesWithStatsApiResponse =
 export type GetApiV2IssuesWithStatsApiArg = {
   /** Project ID to filter issues with statistics */
   projectId: string;
-  category?: "Bug" | "Script" | "Infra" | "Performance";
+  category?: "Bug" | "Script" | "Infra" | "Performance" | "Other";
   name?: string;
   page?: number;
   limit?: number;

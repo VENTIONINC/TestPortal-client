@@ -15,6 +15,9 @@ export const extendedApi = generatedApi
       patchApiV2AssumptionsByAssumptionId: {
         invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result],
       },
+      postApiV2ResultErrorsAnalyze: {
+        invalidatesTags: [TAGS.Result],
+      },
     },
   })
   .injectEndpoints({
@@ -35,6 +38,14 @@ export const extendedApi = generatedApi
         },
         providesTags: [TAGS.Result],
       }),
+      getAnalysisExport: build.query<string, { projectId: string; dateFrom: string; dateTo: string }>({
+        query: (params) => ({
+          url: '/api/v2/analysis-export',
+          params,
+          method: 'GET',
+          responseHandler: 'text',
+        }),
+      }),
       bulkReview: build.mutation<BulkReviewResponse, BulkReviewRequest>({
         query: ({ errorIds }) => ({
           url: '/api/v2/result-errors/bulk-review',
@@ -54,5 +65,6 @@ export const {
 
   // Custom hooks (from extendedApi)
   useGetResultsQuery,
+  useLazyGetAnalysisExportQuery,
   useBulkReviewMutation,
 } = extendedApi;
