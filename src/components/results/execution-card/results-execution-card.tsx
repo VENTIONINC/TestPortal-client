@@ -1,17 +1,19 @@
-import { Fragment, memo } from 'react';
+import { Fragment, memo, useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { useSurfaceColors } from '@/theme';
-import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip } from '@/components/ui';
+import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip, toaster } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
 import { getAnalysisCategoryStyle, getConfidenceLabel, getResultStatusStyle } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
+import { usePostApiV2ResultErrorsAnalyzeMutation } from '@/redux/apis/generatedApi';
 
 import { BulkActions } from '../../BulkActions';
 import { ResultsExecutionCardProps } from './types';
 import { IntegrationLinks } from './integration-links';
+import { AnalyzeCategoryButton } from './analyze-category-button';
 
 export const ResultsExecutionCard = memo(
   ({
@@ -34,12 +36,43 @@ export const ResultsExecutionCard = memo(
 
     const openResultsErrorDialog = useResultsErrorDialog();
     const openResultAnalysisDialog = useResultAnalysisDialog();
+    const [analyzeErrors] = usePostApiV2ResultErrorsAnalyzeMutation();
+    const [analyzingResultId, setAnalyzingResultId] = useState<string | null>(null);
 
     const toggleSelectAll = () => {
       toggleMultiple(results.map(({ id }) => id));
     };
 
     const selectedResults = results.filter(({ id }) => getSelectedIds().includes(id));
+
+    const handleAnalyze = async (resultId: string, errorIds: string[]) => {
+      setAnalyzingResultId(resultId);
+      const id = toaster.create({
+        title: 'Analyzing errors...',
+        type: 'loading',
+      });
+
+      try {
+        await analyzeErrors({
+          analyzeResultErrorsRequest: {
+            projectId,
+            errorIds,
+          },
+        }).unwrap();
+
+        toaster.update(id, {
+          title: 'Categorization completed successfully',
+          type: 'success',
+        });
+      } catch {
+        toaster.update(id, {
+          title: 'Failed to categorize errors',
+          type: 'error',
+        });
+      } finally {
+        setAnalyzingResultId(null);
+      }
+    };
 
     return (
       <VStack
@@ -88,6 +121,9 @@ export const ResultsExecutionCard = memo(
             analysisConfidence,
           } = result;
 
+          const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(analysisCategory);
+          const hasAnalysis = Boolean(analysisConfidence);
+
           return (
             <HStack key={id} align="center" ps={2} textStyle="sm" position="relative">
               <HStack align="center" gap={4} flex={1}>
@@ -121,28 +157,37 @@ export const ResultsExecutionCard = memo(
                   <Text>{toDuration(duration)}</Text>
                 </Tooltip>
 
-                {errors.map((resultError) => {
-                  const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(analysisCategory);
-                  const hasAnalysis = Boolean(analysisConfidence);
+                {errors.length > 0 &&
+                  (hasAnalysis ? (
+                    <HStack
+                      color={color}
+                      onClick={() => openResultAnalysisDialog(result)}
+                      px={1}
+                      borderRadius="sm"
+                      cursor="pointer"
+                      _hover={{ bg: hoverBgColor ?? states.hoverSubtle }}
+                    >
+                      <Icon size={16} color="currentColor" />
+                      <Text>{getConfidenceLabel(analysisConfidence)}</Text>
+                    </HStack>
+                  ) : (
+                    <AnalyzeCategoryButton
+                      onClick={() =>
+                        handleAnalyze(
+                          String(id),
+                          errors.map((e) => String(e.id)),
+                        )
+                      }
+                      isLoading={analyzingResultId === String(id)}
+                    />
+                  ))}
 
+                {errors.map((resultError) => {
                   return (
                     <Fragment key={resultError.id}>
                       <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
                         {resultError.message}
                       </Text>
-                      {hasAnalysis && (
-                        <HStack
-                          color={color}
-                          onClick={() => openResultAnalysisDialog(result)}
-                          px={1}
-                          borderRadius="sm"
-                          cursor="pointer"
-                          _hover={{ bg: hoverBgColor ?? states.hoverSubtle }}
-                        >
-                          <Icon size={16} color="currentColor" />
-                          <Text>{getConfidenceLabel(analysisConfidence)}</Text>
-                        </HStack>
-                      )}
                       <InlineIssue resultError={resultError} />
                     </Fragment>
                   );

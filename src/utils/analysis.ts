@@ -12,6 +12,33 @@ export const ANALYSIS_CATEGORY_LABELS: Record<AnalysisCategory, string> = {
   [AnalysisCategory.Other]: 'Other',
 };
 
+const ANALYSIS_TO_ISSUE_CATEGORY_MAP: Record<Exclude<AnalysisCategory, AnalysisCategory.Other>, IssueCategory> = {
+  [AnalysisCategory.Bug]: IssueCategory.Bug,
+  [AnalysisCategory.Script]: IssueCategory.Script,
+  [AnalysisCategory.Infra]: IssueCategory.Infra,
+  [AnalysisCategory.Performance]: IssueCategory.Performance,
+};
+
+export const serializeAnalysisCategoryToIssueCategory = (category?: string): IssueCategory | undefined => {
+  if (!category) return undefined;
+
+  const normalizedCategory = category.trim().toLowerCase();
+
+  if (normalizedCategory === 'environment') {
+    return IssueCategory.Infra;
+  }
+
+  if (normalizedCategory === AnalysisCategory.Other) {
+    return undefined;
+  }
+
+  if (!Object.values(AnalysisCategory).includes(normalizedCategory as AnalysisCategory)) {
+    return undefined;
+  }
+
+  return ANALYSIS_TO_ISSUE_CATEGORY_MAP[normalizedCategory as Exclude<AnalysisCategory, AnalysisCategory.Other>];
+};
+
 export const getAnalysisCategoryStyle = (category?: AnalysisCategory) => {
   if (!category || category === AnalysisCategory.Other) {
     return {
@@ -22,14 +49,7 @@ export const getAnalysisCategoryStyle = (category?: AnalysisCategory) => {
     };
   }
 
-  const issueCategoryMap: Record<Exclude<AnalysisCategory, AnalysisCategory.Other>, IssueCategory> = {
-    [AnalysisCategory.Bug]: IssueCategory.Bug,
-    [AnalysisCategory.Script]: IssueCategory.Script,
-    [AnalysisCategory.Infra]: IssueCategory.Infra,
-    [AnalysisCategory.Performance]: IssueCategory.Performance,
-  };
-
-  const issueCategory = issueCategoryMap[category];
+  const issueCategory = ANALYSIS_TO_ISSUE_CATEGORY_MAP[category];
   const style = getIssueCategoryStyle(issueCategory);
 
   return {
