@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { Dialog, DialogBody, DialogFooter, Field, NativeSelect, Slider, Textarea, toaster } from '@/components/ui';
-import { usePatchApiV2ResultsByResultIdAnalysisMutation } from '@/redux/apis/generatedApi';
+import { usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation } from '@/redux/apis/generatedApi';
 import { resultAnalysisSchema } from '@/schemas';
 import { AnalysisCategory, BaseResult, DefaultDialogProps } from '@/types';
 import { ANALYSIS_CATEGORY_LABELS, getConfidenceLabel, getErrorQualityLabel } from '@/utils';
@@ -14,6 +14,14 @@ type ResultAnalysisFormData = z.infer<typeof resultAnalysisSchema>;
 interface ResultAnalysisDialogProps extends DefaultDialogProps {
   result: BaseResult;
 }
+
+const toAnalysisCategory = (value?: string): AnalysisCategory | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  return Object.values(AnalysisCategory).includes(value as AnalysisCategory) ? (value as AnalysisCategory) : undefined;
+};
 
 export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDialogProps) => {
   const {
@@ -26,19 +34,23 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
     resolver: zodResolver(resultAnalysisSchema),
     mode: 'onChange',
     defaultValues: {
-      analysisCategory: result.analysisCategory,
-      analysisConclusion: result.analysisConclusion,
-      analysisConfidence: result.analysisConfidence,
+      analysisCategory: toAnalysisCategory(result.analysisFeedbackCategory) ?? result.analysisCategory,
+      analysisConclusion: result.analysisFeedbackConclusion ?? result.analysisConclusion,
+      analysisConfidence: result.analysisFeedbackConfidence ?? result.analysisConfidence,
     },
   });
 
-  const [updateResultAnalysis] = usePatchApiV2ResultsByResultIdAnalysisMutation();
+  const [updateResultAnalysis] = usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation();
 
   const onSubmit = async (data: ResultAnalysisFormData) => {
     try {
       await updateResultAnalysis({
         resultId: String(result.id),
-        updateResultAnalysisRequest: data,
+        updateResultAnalysisFeedbackRequest: {
+          analysisFeedbackCategory: data.analysisCategory,
+          analysisFeedbackConclusion: data.analysisConclusion,
+          analysisFeedbackConfidence: data.analysisConfidence,
+        },
       }).unwrap();
 
       toaster.create({ title: 'The result analysis has been updated successfully.', type: 'success' });

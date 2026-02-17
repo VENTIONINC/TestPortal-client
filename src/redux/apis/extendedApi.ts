@@ -15,6 +15,9 @@ export const extendedApi = generatedApi
       patchApiV2AssumptionsByAssumptionId: {
         invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result],
       },
+      postApiV2ResultErrorsAnalyze: {
+        invalidatesTags: [TAGS.Result],
+      },
     },
   })
   .injectEndpoints({

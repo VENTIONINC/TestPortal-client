@@ -36,6 +36,9 @@ export interface BaseResult {
   analysisConfidence?: number;
   analysisStatus?: AnalysisStatus;
   analysisConclusion?: string;
+  analysisFeedbackCategory?: string;
+  analysisFeedbackConfidence?: number;
+  analysisFeedbackConclusion?: string;
   analysisErrorQuality?: number;
   analysisErrorQualityConclusion?: string;
 }

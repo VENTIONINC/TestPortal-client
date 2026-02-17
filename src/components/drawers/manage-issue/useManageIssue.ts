@@ -8,6 +8,7 @@ import {
   useDeleteApiV2IssuesByIssueIdMutation,
   usePatchApiV2IssuesByIssueIdMutation,
   usePostApiV2ErrorFormatterMutation,
+  usePostApiV2ErrorFormatterResultMutation,
   usePostApiV2IssuesMutation,
 } from '@/redux/apis/generatedApi';
 import { useLazyGetIssuesQuery } from '@/redux/apis/issuesApi';
@@ -15,6 +16,7 @@ import { Issue, IssueCategory, ResultError } from '@/types';
 import { formatMessageSchema, FormatMessageFormData } from '@/schemas';
 import { toaster } from '@/components/ui';
 import { useSelectedProjectId } from '@/redux/slices/projects';
+import { serializeAnalysisCategoryToIssueCategory } from '@/utils';
 
 interface UseManageIssueProps {
   initialIssue?: Issue;
@@ -62,6 +64,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
   const [updateIssue, { isLoading: isUpdatingIssue }] = usePatchApiV2IssuesByIssueIdMutation();
   const [deleteIssue, { isLoading: isDeletingIssue }] = useDeleteApiV2IssuesByIssueIdMutation();
   const [formatError, { isLoading: isFormattingError }] = usePostApiV2ErrorFormatterMutation();
+  const [formatFromResult, { isLoading: isFormattingFromResult }] = usePostApiV2ErrorFormatterResultMutation();
 
   // Load existing issues for search
   const loadIssues = useCallback(async () => {
@@ -180,6 +183,46 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
     }
   });
 
+  // Format from result
+  const handleFormatFromResult = async () => {
+    // Safety check: only available in Create mode with resultError
+    if (!resultError?.id) {
+      toaster.create({ title: 'No result error available', type: 'error' });
+      return;
+    }
+
+    try {
+      const result = await formatFromResult({
+        errorSuggestionRequest: {
+          resultId: resultError.resultId,
+          projectId: selectedProjectId,
+        },
+      }).unwrap();
+      const category = serializeAnalysisCategoryToIssueCategory(result.category);
+      const description = result.description;
+
+      if (!category) {
+        toaster.create({ title: 'Failed to map analysis category to issue category', type: 'error' });
+        return;
+      }
+
+      // The API returns { category, description } (no name field)
+      setValue('category', category);
+      setValue('description', description);
+
+      // Update issue state for other operations
+      setIssue({
+        ...issue,
+        category: category,
+        description: description,
+      });
+
+      toaster.create({ title: 'Suggestion applied successfully', type: 'success' });
+    } catch {
+      toaster.create({ title: 'Failed to get suggestion from result', type: 'error' });
+    }
+  };
+
   const openConfirmIssueDeletionDialog = useConfirmIssueDeletionDialog({ onConfirm: handleDeleteIssue });
 
   // Load issues on name change
@@ -194,6 +237,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
     existingIssues,
     watchedName,
     isFormattingMessage: isFormattingError,
+    isFormattingFromResult,
 
     // Form
     register,
@@ -210,6 +254,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
     handleCreateAssumption,
     handleUpdateIssue,
     handleFormatMessage,
+    handleFormatFromResult,
     openConfirmIssueDeletionDialog,
   };
 };

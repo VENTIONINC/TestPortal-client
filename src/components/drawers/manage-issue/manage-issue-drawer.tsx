@@ -16,6 +16,7 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
     existingIssues,
     watchedName,
     isFormattingMessage,
+    isFormattingFromResult,
     register,
     errors,
     isCreatingAssumption,
@@ -26,6 +27,7 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
     handleCreateAssumption,
     handleUpdateIssue,
     handleFormatMessage,
+    handleFormatFromResult,
     openConfirmIssueDeletionDialog,
   } = useManageIssue({ initialIssue, resultError, closeDrawer });
 
@@ -75,6 +77,12 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
         <Button onClick={handleFormatMessage} loading={isFormattingMessage} variant="outline">
           Format message
         </Button>
+
+        {!initialIssue && resultError && (
+          <Button onClick={handleFormatFromResult} loading={isFormattingFromResult} variant="outline">
+            Format from result
+          </Button>
+        )}
 
         <Button
           onClick={initialIssue ? handleUpdateIssue : handleCreateAssumption}
