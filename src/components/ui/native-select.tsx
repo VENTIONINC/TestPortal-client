@@ -47,20 +47,18 @@ interface NativeSelectField extends Select.FieldProps {
 
 const NativeSelectField = forwardRef<HTMLSelectElement, NativeSelectField>(function NativeSelectField(props, ref) {
   const { items: itemsProp, children, placeholder, ...rest } = props;
-  const { surfaces, borders, text } = useSurfaceColors();
+  const { borders, text } = useSurfaceColors();
 
-  const selectBg = surfaces.card;
-  const selectBorder = borders.subtle;
-  const selectHoverBorder = borders.subtle;
   const selectFocusBorder = borders.focus;
   const placeholderColor = text.muted;
 
   const sharedStyles: Select.FieldProps = {
-    bg: rest.bg ?? selectBg,
-    borderColor: rest.borderColor ?? selectBorder,
+    bg: rest.bg ?? 'bg.input',
+    color: rest.color ?? 'text.primary',
+    borderColor: rest.borderColor ?? 'border.main',
     _hover: {
       ...rest._hover,
-      borderColor: rest._hover?.borderColor ?? selectHoverBorder,
+      borderColor: rest._hover?.borderColor ?? 'border.active',
     },
     _focusVisible: {
       ...rest._focusVisible,

@@ -9,6 +9,7 @@ import { ChakraProvider, ColorModeProvider, DialogPortal, DrawerPortal, Toaster 
 import { ContextMenu } from '@/components/context-menu';
 import { router } from '@/router';
 
+import './theme/fonts.css';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(

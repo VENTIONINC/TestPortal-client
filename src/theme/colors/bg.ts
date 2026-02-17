@@ -22,5 +22,11 @@ export const bg = {
       _dark: 'rgba(90, 139, 255, 0.15)',
     },
   },
+  activeSecondary: {
+    value: {
+      _light: '#F5F5F5',
+      _dark: '#38383C',
+    },
+  },
   disabled: { value: { _light: '#F0F0F0', _dark: '#2A2A2D' } },
 };

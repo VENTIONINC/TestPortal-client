@@ -13,7 +13,7 @@ export const navigationMenuConfig: NavigationMenuGroup[] = [
       { id: 'results', icon: FiFileText, label: 'Results', path: PATHS.RESULTS, active: true },
       { id: 'issues', icon: FiAlertTriangle, label: 'Issues', path: PATHS.ISSUES },
       { id: 'prompts', icon: FiMessageSquare, label: 'Prompts', path: PATHS.PROMPTS },
-      { id: 'report-generator', icon: FiPieChart, label: 'Report Generator', path: PATHS.REPORT_GENERATOR },
+      // { id: 'report-generator', icon: FiPieChart, label: 'Report Generator', path: PATHS.REPORT_GENERATOR },
     ],
   },
   {

@@ -24,12 +24,11 @@ interface DonutChartProps {
   failed: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   donutChart: any;
-  data: {
-    totalRuns: number;
-  };
+
+  totalRuns: number;
 }
 
-export const DonutChart = ({ title, passed, failed, donutChart, data }: DonutChartProps) => {
+export const DonutChart = ({ title, passed, failed, donutChart, totalRuns }: DonutChartProps) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const activeIndex = donutChart.data.findIndex((item: any) => item.name === 'passed');
 
@@ -77,7 +76,7 @@ export const DonutChart = ({ title, passed, failed, donutChart, data }: DonutCha
                   Total
                 </Text>
                 <Text fontSize="2xl" fontWeight="bold">
-                  {data.totalRuns}
+                  {totalRuns}
                 </Text>
               </VStack>
             </Box>

@@ -2,7 +2,7 @@ import { Box, Text, VStack, Flex, Button, HStack, Input } from '@chakra-ui/react
 import { LuCopy, LuTrash } from 'react-icons/lu';
 
 import { useGetApiV2UploadKeysQuery, useDeleteApiV2UploadKeysByIdMutation } from '@/redux/apis/generatedApi';
-import { useGenerateApiKeyDialog, useConfirmApiKeyDeletionDialog } from '@/components/dialogs';
+import { useGenerateApiKeyDialog, useConfirmApiKeyDeletionDialog } from '@/components/ui/components/Dialogs';
 import { toaster, InputGroup } from '@/components/ui';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { copyToClipboard } from '@/utils';
@@ -74,14 +74,7 @@ export function UploadApiSettings() {
 
   if (apiKeys.length === 0) {
     return (
-      <Box
-        textAlign="center"
-        py={8}
-        bg={surfaces.card}
-        border="1px"
-        borderColor={borders.subtle}
-        borderRadius="md"
-      >
+      <Box textAlign="center" py={8} bg={surfaces.card} border="1px" borderColor={borders.subtle} borderRadius="md">
         <Text color={text.muted}>No API keys found</Text>
         <Text color={text.muted} fontSize="sm" mt={2}>
           Generate an API key to get started

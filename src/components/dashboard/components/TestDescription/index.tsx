@@ -6,21 +6,29 @@ import { FaCircleCheck, FaRegCircleXmark } from 'react-icons/fa6';
 import { TestDescriptionData, TestDescriptionProps } from '../../types';
 import { Stats, DonutChart, QualityChart } from './components';
 
-const mockData: TestDescriptionData = {
-  title: 'Test runs',
-  stats: [
-    { label: 'Test runs', value: 68, status: 'runs', icon: PiDotsNineBold, color: 'dashboard.base' },
-    { label: 'Test passed', value: 50, status: 'passed', icon: FaCircleCheck, color: 'dashboard.green' },
-    { label: 'Test failed', value: 18, status: 'failed', icon: FaRegCircleXmark, color: 'dashboard.red' },
-  ],
-  totalRuns: 68,
-  passRate: 73,
-  passRateDelta: 3,
-};
+// const mockData: TestDescriptionData = {
+//   title: 'Test runs',
+//   stats: [
+//     { label: 'Test runs', value: 68, status: 'runs', icon: PiDotsNineBold, color: 'dashboard.base' },
+//     { label: 'Test passed', value: 50, status: 'passed', icon: FaCircleCheck, color: 'dashboard.green' },
+//     { label: 'Test failed', value: 18, status: 'failed', icon: FaRegCircleXmark, color: 'dashboard.red' },
+//   ],
+//   totalRuns: 68,
+//   passRate: 73,
+//   passRateDelta: 3,
+// };
 
-export const TestDescription = ({ data = mockData, isGrid }: TestDescriptionProps) => {
-  const passed = data.stats.find((stat) => stat.status === 'passed')?.value ?? 0;
-  const failed = data.stats.find((stat) => stat.status === 'failed')?.value ?? 0;
+export const TestDescription = ({ summary, isGrid }: TestDescriptionProps) => {
+  const { totalRuns, passRate } = summary || {};
+
+  const passed = passRate ?? 0;
+  const failed = totalRuns && passRate ? totalRuns - passRate : 0;
+  const stats = [
+    { label: 'Test runs', value: totalRuns, status: 'runs', icon: PiDotsNineBold, color: 'dashboard.base' },
+    { label: 'Test passed', value: passed, status: 'passed', icon: FaCircleCheck, color: 'dashboard.green' },
+    { label: 'Test failed', value: failed, status: 'failed', icon: FaRegCircleXmark, color: 'dashboard.red' },
+  ];
+
   const donutData = [
     { name: 'passed', value: passed, color: 'dashboard.green' },
     { name: 'failed', value: failed, color: 'dashboard.red' },
@@ -30,7 +38,7 @@ export const TestDescription = ({ data = mockData, isGrid }: TestDescriptionProp
     series: donutData.map((item) => ({ name: item.name, color: item.color })),
   });
   const qualitySegments = 24;
-  const filledSegments = Math.round((data.passRate / 100) * qualitySegments);
+  const filledSegments = Math.round((passed / 100) * qualitySegments);
   const qualityData = Array.from({ length: qualitySegments }, (_, index) => ({
     name: `segment-${index + 1}`,
     value: 1,
@@ -41,13 +49,17 @@ export const TestDescription = ({ data = mockData, isGrid }: TestDescriptionProp
     series: qualityData.map((item) => ({ name: item.name, color: item.color })),
   });
 
+  const mockDataPast = {
+    passRate: 73,
+    passRateDelta: 3,
+  };
   if (isGrid) {
     return (
       <Flex direction="column" gap={3} w="full">
-        <Stats stats={data.stats} columns={3} />
+        <Stats stats={stats} columns={3} />
         <SimpleGrid columns={{ base: 1, xl: 2 }} gap={3} w="full">
-          <DonutChart data={data} title={data.title} passed={passed} failed={failed} donutChart={donutChart} />
-          <QualityChart qualityChart={qualityChart} data={data} w="full" />
+          <DonutChart title="Test runs" passed={passed} failed={failed} donutChart={donutChart} totalRuns={totalRuns} />
+          <QualityChart qualityChart={qualityChart} data={mockDataPast} w="full" />
         </SimpleGrid>
       </Flex>
     );
@@ -55,9 +67,9 @@ export const TestDescription = ({ data = mockData, isGrid }: TestDescriptionProp
 
   return (
     <Box display="flex" flexDirection="column" gap={3}>
-      <Stats stats={data.stats} />
-      <DonutChart data={data} title={data.title} passed={passed} failed={failed} donutChart={donutChart} />
-      <QualityChart qualityChart={qualityChart} data={data} />
+      <Stats stats={stats} />
+      <DonutChart title="Test runs" passed={passed} failed={failed} donutChart={donutChart} totalRuns={totalRuns} />
+      <QualityChart qualityChart={qualityChart} data={mockDataPast} />
     </Box>
   );
 };

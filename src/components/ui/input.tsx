@@ -17,24 +17,22 @@ export interface InputProps extends ChakraInputProps {
 
 export const Input = forwardRef(function Input(props: InputProps, ref: Ref<HTMLInputElement>) {
   const { label, error, startElement, endElement, groupProps, fieldProps, ...rest } = props;
-  const { surfaces, borders, text } = useSurfaceColors();
+  const { borders, text } = useSurfaceColors();
 
-  const inputBg = surfaces.card;
-  const inputBorder = borders.subtle;
-  const inputHoverBorder = borders.subtle;
   const inputFocusBorder = borders.focus;
   const placeholderColor = text.muted;
 
   const sharedStyles: ChakraInputProps = {
-    bg: rest.bg ?? inputBg,
-    borderColor: rest.borderColor ?? inputBorder,
+    bg: rest.bg ?? 'bg.input',
+    color: rest.color ?? 'text.primary',
+    borderColor: rest.borderColor ?? 'border.main',
     _hover: {
       ...rest._hover,
-      borderColor: rest._hover?.borderColor ?? inputHoverBorder,
+      borderColor: rest._hover?.borderColor ?? 'border.subtle',
     },
     _focusVisible: {
       ...rest._focusVisible,
-      borderColor: rest._focusVisible?.borderColor ?? inputFocusBorder,
+      borderColor: rest._focusVisible?.borderColor ?? 'border.active',
       boxShadow: rest._focusVisible?.boxShadow ?? `0 0 0 1px ${inputFocusBorder}`,
     },
     _placeholder: {

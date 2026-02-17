@@ -1,0 +1,1 @@
+export { getStatusStyle } from './statusStyle';

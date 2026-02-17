@@ -1,12 +1,10 @@
-import { act } from 'react';
-
 export const button = {
   primary: {
     bg: {
-      default: { value: { _light: '#3054FE', _dark: '#3054FE' } },
+      default: { value: { _light: '#3054FE', _dark: '#53ABFC' } },
       hover: { value: { _light: '#4565FE', _dark: '#4565FE' } },
       focus: { value: { _light: '#2745CF', _dark: '#2745CF' } },
-      disabled: { value: { _light: '#8398FE', _dark: '#8398FE' } },
+      disabled: { value: { _light: '#8398FE', _dark: '#4583BD' } },
     },
     color: {
       value: {

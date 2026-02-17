@@ -11,7 +11,7 @@ export const Filter = ({ showFilters = true }) => {
       transition="all 0.3s ease-in-out"
       flexShrink={0}
     >
-      <IssuesFilters as="aside" width="360px" />
+      {/* <IssuesFilters as="aside" width="360px" /> */}
     </Box>
   );
 };

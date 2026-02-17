@@ -1,10 +1,9 @@
 import { Box, Grid, GridItem, HStack } from '@chakra-ui/react';
 import { useState } from 'react';
 
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { Breadcrumb } from '@/components/ui';
 import { useFilterContext } from '@/contexts/FilterContext';
-import { FilterToggleButton } from '@/components/filters';
+import { FilterToggleButton } from '@/components/ui/components/Filter/components';
 
 import { Sidebar } from '../Sidebar/Sidebar';
 import { Header } from '../Header/Header';
@@ -53,22 +52,18 @@ export const MainTemplate = ({
         templateColumns={`${collapsed ? '64px' : '250px'} 1fr`}
         flex="1"
         transition="grid-template-columns 0.2s ease-in-out"
-        h="100vh"
-        overflow="hidden"
       >
         <GridItem>
           <Sidebar collapsed={collapsed} setCollapsed={handleSetCollapsed} />
         </GridItem>
 
-        <GridItem display="flex" flexDirection="column" h="100%" overflow="hidden">
+        <GridItem>
           <Header title={pageHeader} actionButton={headerAction} isIncludeBreadcrumb={isIncludeBreadcrumb} />
 
-          <Box flex="1" overflowY="auto">
-            <BasicWrapper>
-              {isIncludeBreadcrumb && <Breadcrumb ml={6} />}
-              {children}
-            </BasicWrapper>
-          </Box>
+          <BasicWrapper>
+            {isIncludeBreadcrumb && <Breadcrumb ml={6} />}
+            {children}
+          </BasicWrapper>
         </GridItem>
       </Grid>
       {/* </Box> */}

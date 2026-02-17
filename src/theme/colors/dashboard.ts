@@ -1,7 +1,7 @@
 export const dashboard = {
   green: {
     value: {
-      _light: '#5AFB7A',
+      _light: '#35D47F',
       _dark: '#3CFF8F',
     },
   },
@@ -13,7 +13,7 @@ export const dashboard = {
   },
   yellow: {
     value: {
-      _light: '#D0FC53',
+      _light: '#B5D600',
       _dark: '#C6FF2E',
     },
   },

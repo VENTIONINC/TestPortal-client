@@ -9,6 +9,7 @@ const config = defineConfig({
   globalCss: {
     'html, body': {
       bg: 'bg.page',
+      fontFamily: 'body',
     },
   },
   theme: {

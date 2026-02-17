@@ -65,3 +65,50 @@ export const adjustDateToWeekRange = (anchorDate: string, isFromField: boolean):
   }
   return formatDate(adjusted);
 };
+
+export const parseDateString = (dateString: string): Date => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+export type DateRangePreset = 'today' | 'yesterday' | 'this-week' | 'last-week' | 'this-month' | 'last-month';
+
+export const getPresetDateRange = (preset: DateRangePreset): { from: string; to: string } => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  switch (preset) {
+    case 'today':
+      return { from: formatDate(today), to: formatDate(today) };
+    case 'yesterday': {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      return { from: formatDate(yesterday), to: formatDate(yesterday) };
+    }
+    case 'this-week': {
+      const dayOfWeek = today.getDay();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      return { from: formatDate(monday), to: formatDate(today) };
+    }
+    case 'last-week': {
+      const dayOfWeek = today.getDay();
+      const thisMonday = new Date(today);
+      thisMonday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      const lastMonday = new Date(thisMonday);
+      lastMonday.setDate(thisMonday.getDate() - 7);
+      const lastSunday = new Date(thisMonday);
+      lastSunday.setDate(thisMonday.getDate() - 1);
+      return { from: formatDate(lastMonday), to: formatDate(lastSunday) };
+    }
+    case 'this-month': {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { from: formatDate(firstDay), to: formatDate(today) };
+    }
+    case 'last-month': {
+      const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { from: formatDate(firstDay), to: formatDate(lastDay) };
+    }
+  }
+};

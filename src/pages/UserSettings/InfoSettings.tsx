@@ -1,6 +1,6 @@
 import { Box, Button, Heading, VStack, Table, Spinner, Text } from '@chakra-ui/react';
 
-import { useResultsAnalysisExportDialog } from '@/components/dialogs';
+import { useResultsAnalysisExportDialog } from '@/components/ui/components/Dialogs';
 import { useGetApiV2StatusQuery } from '@/redux/apis/generatedApi';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
 

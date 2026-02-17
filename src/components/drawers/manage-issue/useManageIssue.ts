@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { useConfirmIssueDeletionDialog } from '@/components/dialogs';
+import { useConfirmIssueDeletionDialog } from '@/components/ui/components/Dialogs';
 import { useCreateAssumptionMutation } from '@/redux/apis/extendedApi';
 import {
   useDeleteApiV2IssuesByIssueIdMutation,

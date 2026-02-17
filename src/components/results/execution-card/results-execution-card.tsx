@@ -4,7 +4,7 @@ import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { useSurfaceColors } from '@/theme';
 import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
-import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/dialogs';
+import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/ui/components/Dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
 import { getAnalysisCategoryStyle, getConfidenceLabel, getResultStatusStyle } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';

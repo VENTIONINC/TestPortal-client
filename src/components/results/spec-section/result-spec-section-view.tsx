@@ -1,12 +1,12 @@
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuFileText, LuTag } from 'react-icons/lu';
 
-import { ClipboardCopyText } from '@/components/ui';
+import { ClipboardCopyText, DateToggle } from '@/components/ui';
 import { ResultsExecutionCard } from '@/components/results';
 import { toCleanTitle } from '@/utils/date-time.converter';
 import { useSurfaceColors } from '@/theme';
 
-import { DateToggle } from './date-toggle';
+// import { DateToggle } from './date-toggle';
 import { ResultSpecSectionViewProps } from './types';
 
 export const ResultSpecSectionView = ({
@@ -27,9 +27,7 @@ export const ResultSpecSectionView = ({
   return (
     <VStack align="stretch" p={2} bg={surfaces.panel} shadow="md" borderRadius="md">
       <HStack overflowX="auto" pb={2}>
-        {dateFilters.map((day) => (
-          <DateToggle key={day.yyyy_mm_dd} day={day} toggleHandler={onDateToggle} />
-        ))}
+        <DateToggle days={dateFilters} toggleHandler={onDateToggle} variant="stats" />
       </HStack>
 
       <VStack

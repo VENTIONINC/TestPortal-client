@@ -1,37 +1,50 @@
 import { useMemo } from 'react';
 import { HStack, Mark, Spinner, Text, VStack, Box, Stack, Heading } from '@chakra-ui/react';
+import { FormProvider } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 
-import { Checkbox, Wrap } from '@/components/ui';
-import { ResultsFilters, ResultSpecSection, ResultsStats } from '@/components/results';
+import { Checkbox, Wrap, Filter, DateToggle } from '@/components/ui';
+import { ResultSpecSection, ResultsStats } from '@/components/results';
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
-import { useResultsActions, useSelectedDates, useResultsFilters } from '@/redux/slices/results';
+import { initialFilters, useResultsActions, useSelectedDates, useResultsFilters } from '@/redux/slices/results';
 import { getDatesBetween, getDateDisplayName } from '@/utils/dateUtils';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { BulkActions } from '@/components/BulkActions';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
+import { useFiltersWithUrl } from '@/hooks';
 
 import { DateList } from './date-list';
-import { useFixedOnScroll } from './useFixedOnScroll';
+import { filterConfig } from '../configs';
 
 const ResultsContent = ({ showFilters = true }: { showFilters?: boolean }) => {
   const filters = useResultsFilters();
+  const { updateFilters } = useResultsActions();
   const selectedDates = useSelectedDates();
   const selectedProjectId = useSelectedProjectId();
 
+  const { formMethods: filterFormMethods, filterProps } = useFiltersWithUrl({
+    currentFilters: filters,
+    initialFilters,
+    onUpdateFilters: updateFilters,
+  });
+
+  const effectiveFilters = useMemo(() => ({ ...filters, ...filterProps.filters }), [filters, filterProps.filters]);
+
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
-  const [debouncedFilters] = useDebounce(filters, 500);
+  const [debouncedFilters] = useDebounce(effectiveFilters, 500);
   const { data, isFetching } = useGetResultsQuery({
     from: debouncedFilters.from,
     to: debouncedFilters.to,
+    status: debouncedFilters.status || undefined,
+    page: filters.page,
     projectId: selectedProjectId!,
   });
 
   const { toggleDate } = useResultsActions();
-  const { controlsBg, controlsBorder, toolbarBorder } = useResultsSurfaceColors();
+  // const { controlsBg, controlsBorder } = useResultsSurfaceColors();
 
   const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates } = useMemo(() => {
     const allResults = data?.results || [];
@@ -211,7 +224,7 @@ const ResultsContent = ({ showFilters = true }: { showFilters?: boolean }) => {
       activeIds.push(result.id);
     });
 
-    const dates = getDatesBetween(filters.from, filters.to);
+    const dates = getDatesBetween(effectiveFilters.from, effectiveFilters.to);
     const dateItems = dates.map((date) => ({
       date,
       name: getDateDisplayName(date),
@@ -224,7 +237,7 @@ const ResultsContent = ({ showFilters = true }: { showFilters?: boolean }) => {
       activeDaysResultsIds: activeIds,
       availableDates: dateItems,
     };
-  }, [data?.results, selectedDates, filters.from, filters.to, debouncedFilters]);
+  }, [data?.results, selectedDates, effectiveFilters.from, effectiveFilters.to, debouncedFilters]);
 
   const handleSelectAll = () => {
     selectAll(activeDaysResultsIds);
@@ -236,133 +249,75 @@ const ResultsContent = ({ showFilters = true }: { showFilters?: boolean }) => {
     [data?.results, getSelectedIds],
   );
 
-  const {
-    sectionRef,
-    containerRef: dateListContainerRef,
-    placeholderMinHeight,
-    position: dateListPosition,
-    top: dateListTop,
-    left: dateListLeft,
-    width: dateListWidth,
-    zIndex: dateListZIndex,
-    transform: dateListTransform,
-  } = useFixedOnScroll({
-    topOffset: 5,
-    bottomOffset: 24,
-    deps: [showFilters, availableDates.length],
-  });
-
   return (
-    <HStack gap={4} w="100%" display="grid" alignItems="start" gridTemplateColumns="auto 1fr">
-      <Box
-        width={showFilters ? '360px' : '0px'}
-        opacity={showFilters ? 1 : 0}
-        overflow="hidden"
-        transition="all 0.3s ease-in-out"
-        flexShrink={0}
-      >
-        <ResultsFilters as="aside" zIndex={10} width="360px" />
-      </Box>
+    <FormProvider {...filterFormMethods}>
+      <HStack gap={4} w="100%" display="grid" alignItems="start" gridTemplateColumns="auto 1fr">
+        <Filter showFilters={showFilters} config={filterConfig} {...filterProps} />
 
-      <VStack
-        as="section"
-        ref={sectionRef}
-        align="stretch"
-        flex={1}
-        minW={0}
-        h="100%"
-        overflow="visible"
-        position="relative"
-      >
-        <Box ref={dateListContainerRef} minH={placeholderMinHeight}>
-          <VStack
-            align="stretch"
-            p={2}
-            bg={controlsBg}
-            borderRadius="md"
-            border="1px solid"
-            borderColor={controlsBorder}
-            flexShrink={0}
-            position={dateListPosition}
-            top={dateListTop}
-            left={dateListLeft}
-            width={dateListWidth}
-            zIndex={dateListZIndex}
-            transform={dateListTransform}
-          >
-            <DateList dateConfigs={availableDates} toggleDateConfig={toggleDate} />
-          </VStack>
-        </Box>
-        <ResultsStats />
-
-        <Wrap>
-          <Stack>
-            <Box
-            // gap={4}
-            // p={2}
-            // border="1px solid"
-            // borderColor={toolbarBorder}
-            // borderRadius="md"
-            // minH={12}
-            // flexShrink={0}
-            >
-              <Heading>Results</Heading>
-              <Checkbox
-                checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
-                onCheckedChange={handleSelectAll}
-              >
-                Select all
-              </Checkbox>
-              <Text textStyle="sm">
-                Shown <Mark fontWeight={600}>{activeDaysResultsIds.length}</Mark>. Selected{' '}
-                <Mark fontWeight={600}>{selectedCount}</Mark>
-              </Text>
-              <BulkActions selectedResults={selectedResults} />
-              {isFetching && <Spinner />}
-            </Box>
-            <Box>
-              <Stack
-                align="stretch"
-                gap={4}
-                flex={1}
-                overflowY="auto"
-                overflowX="hidden"
-                css={{
-                  '&::-webkit-scrollbar': {
-                    width: '8px',
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    background: 'var(--chakra-colors-gray-100)',
-                    borderRadius: '4px',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    background: 'var(--chakra-colors-gray-300)',
-                    borderRadius: '4px',
-                    '&:hover': {
-                      background: 'var(--chakra-colors-gray-400)',
+        <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="visible" position="relative">
+          <DateToggle days={availableDates} toggleHandler={toggleDate} />
+          <ResultsStats />
+          <Wrap>
+            <Stack>
+              <Box>
+                <Heading>Results</Heading>
+                <Checkbox
+                  checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
+                  onCheckedChange={handleSelectAll}
+                >
+                  Select all
+                </Checkbox>
+                <Text textStyle="sm">
+                  Shown <Mark fontWeight={600}>{activeDaysResultsIds.length}</Mark>. Selected{' '}
+                  <Mark fontWeight={600}>{selectedCount}</Mark>
+                </Text>
+                <BulkActions selectedResults={selectedResults} />
+                {isFetching && <Spinner />}
+              </Box>
+              <Box>
+                <Stack
+                  align="stretch"
+                  gap={4}
+                  flex={1}
+                  overflowY="auto"
+                  overflowX="hidden"
+                  css={{
+                    '&::-webkit-scrollbar': {
+                      width: '8px',
                     },
-                  },
-                }}
-              >
-                <>
-                  {Array.from(results.entries()).map(([specKey, { spec, executions }]) => {
-                    const unfilteredExecutions = unfilteredResultsMap.get(specKey)?.executions || [];
-                    return (
-                      <ResultSpecSection
-                        key={spec.id}
-                        spec={spec}
-                        executions={executions}
-                        allExecutions={unfilteredExecutions}
-                      />
-                    );
-                  })}
-                </>
-              </Stack>
-            </Box>
-          </Stack>
-        </Wrap>
-      </VStack>
-    </HStack>
+                    '&::-webkit-scrollbar-track': {
+                      background: 'var(--chakra-colors-gray-100)',
+                      borderRadius: '4px',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: 'var(--chakra-colors-gray-300)',
+                      borderRadius: '4px',
+                      '&:hover': {
+                        background: 'var(--chakra-colors-gray-400)',
+                      },
+                    },
+                  }}
+                >
+                  <>
+                    {Array.from(results.entries()).map(([specKey, { spec, executions }]) => {
+                      const unfilteredExecutions = unfilteredResultsMap.get(specKey)?.executions || [];
+                      return (
+                        <ResultSpecSection
+                          key={spec.id}
+                          spec={spec}
+                          executions={executions}
+                          allExecutions={unfilteredExecutions}
+                        />
+                      );
+                    })}
+                  </>
+                </Stack>
+              </Box>
+            </Stack>
+          </Wrap>
+        </VStack>
+      </HStack>
+    </FormProvider>
   );
 };
 

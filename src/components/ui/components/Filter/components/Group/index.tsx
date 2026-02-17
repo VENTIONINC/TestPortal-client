@@ -1,0 +1,38 @@
+import { Box, HStack, StackProps, Text, VStack, Button } from '@chakra-ui/react';
+
+import { useSurfaceColors } from '@/theme';
+
+interface FiltersGroupProps extends StackProps {
+  title: string;
+  handleSearch: () => void;
+}
+
+export const FiltersGroup = ({ title, children, handleSearch, ...props }: FiltersGroupProps) => {
+  const { text } = useSurfaceColors();
+
+  return (
+    <VStack
+      w="100%"
+      align="stretch"
+      border="1px solid"
+      bg="bg.card"
+      p="15px 7px"
+      mb="8px"
+      borderColor="border.secondary"
+      borderRadius="lg"
+      {...props}
+    >
+      <HStack justify="space-between" pl="8px">
+        <Text fontSize="md" fontWeight={700} whiteSpace="nowrap" color={text.primary}>
+          {title}
+        </Text>
+      </HStack>
+      <Box mt={4} px={2} mb={1}>
+        {children}
+      </Box>
+      <Button mx={2} variant="tertiary" onClick={handleSearch} _focusVisible={{ outline: 'none', boxShadow: 'none' }}>
+        Apply
+      </Button>
+    </VStack>
+  );
+};

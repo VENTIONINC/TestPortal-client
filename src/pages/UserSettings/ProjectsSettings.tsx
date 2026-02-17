@@ -3,7 +3,7 @@ import { LuPlus } from 'react-icons/lu';
 
 import { useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
 import { ProjectCard } from '@/components/ProjectCard';
-import { useCreateProjectDialog } from '@/components/dialogs';
+import { useCreateProjectDialog } from '@/components/ui/components/Dialogs';
 import { useProjectContextMenu } from '@/hooks';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { Alert } from '@/components/ui';

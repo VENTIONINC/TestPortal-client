@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 import { useColorModeValue } from '@/components/ui';
 import {
@@ -7,7 +7,7 @@ import {
   CategorySeries,
   CategoriesChartDatum,
   MetricsBarChart,
-} from '@/components/charts/MetricsBarChart';
+} from '@/components/ui/components/Charts/MetricsBarChart';
 
 const mockData: CategoriesChartDatum[] = [
   { date: 'nighty 1', passed: 500, failed: 200, skipped: 50 },
@@ -19,7 +19,7 @@ const mockData: CategoriesChartDatum[] = [
   { date: 'nighty 7', passed: 430, failed: 260, skipped: 100 },
 ];
 
-export const HistoryRegressionRunChart = () => {
+export const HistoryRegressionRunChart = ({ data }) => {
   const [view, setView] = useState<BarChartView>('multiple');
   const [valueMode, setValueMode] = useState<BarChartValueMode>('count');
   const series: CategorySeries[] = [
@@ -28,9 +28,29 @@ export const HistoryRegressionRunChart = () => {
     { name: 'skipped', label: 'skipped', color: 'dashboard.gray' },
   ];
 
+  const { chartData: mapToDataToChart, maxValue } = useMemo(
+    () =>
+      (data ?? []).reduce(
+        (acc, { date, metrics }) => {
+          const passed = metrics?.passed ?? 0;
+          const total = metrics?.total ?? 0;
+          const skipped = metrics.skipped ?? 0;
+          const failed = total - passed - skipped;
+
+          acc.chartData.push({ date, passed, failed, skipped });
+          acc.maxValue = Math.max(acc.maxValue, passed, failed, skipped);
+
+          return acc;
+        },
+        { chartData: [] as CategoriesChartDatum[], maxValue: 0 },
+      ),
+    [data],
+  );
+
   return (
     <MetricsBarChart
-      data={mockData}
+      title="History of regression run (API+UI)"
+      data={mapToDataToChart}
       series={series}
       view={view}
       showValueToggle={true}
@@ -39,7 +59,7 @@ export const HistoryRegressionRunChart = () => {
       onValueModeChange={setValueMode}
       stackedBarSize={52}
       multipleBarSize={10}
-      yDomain={[0, 700]}
+      yDomain={[0, maxValue]}
     />
   );
 };

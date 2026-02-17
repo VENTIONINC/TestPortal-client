@@ -19,14 +19,14 @@ export const DashboardChart = ({ data, isLoading, showFilters }: any) => {
        */}
       <SimpleGrid columns={columns} gap={6}>
         <Box minW={0}>
-          <PassRateChart />
+          <PassRateChart data={data} />
         </Box>
         <Box minW={0}>
-          <IssuesCategoriesChart />
+          <IssuesCategoriesChart data={data} />
         </Box>
       </SimpleGrid>
       <Box minW={0}>
-        <HistoryRegressionRunChart />
+        <HistoryRegressionRunChart data={data} />
       </Box>
     </VStack>
   );

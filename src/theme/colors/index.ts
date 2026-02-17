@@ -5,7 +5,7 @@ import { text } from './text';
 import { status } from './status';
 import { dashboard } from './dashboard';
 import { tabs } from './tabs';
-
+import { category } from './category';
 export const semanticColors = {
   bg,
   border,
@@ -14,4 +14,5 @@ export const semanticColors = {
   tabs,
   dashboard,
   button,
+  category,
 };

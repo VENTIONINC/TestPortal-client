@@ -9,7 +9,7 @@ export interface ProjectsState {
 }
 
 const initialState: ProjectsState = {
-  selectedProjectId: '',
+  selectedProjectId: localStorage.getItem('selectedProjectId') || '',
   isInitialized: false,
 };
 
@@ -19,6 +19,7 @@ export const projectsSlice = createSlice({
   reducers: {
     setSelectedProjectId: (state, action: PayloadAction<string>) => {
       state.selectedProjectId = action.payload;
+      localStorage.setItem('selectedProjectId', action.payload);
     },
     setIsInitialized: (state, action: PayloadAction<boolean>) => {
       state.isInitialized = action.payload;

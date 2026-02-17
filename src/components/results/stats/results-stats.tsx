@@ -1,5 +1,17 @@
 import { memo, useState } from 'react';
-import { Collapsible, HStack, Spinner, Flex, Text, VStack, Box, Separator, Tag } from '@chakra-ui/react';
+import {
+  Collapsible,
+  HStack,
+  Spinner,
+  Grid,
+  GridItem,
+  Flex,
+  Text,
+  VStack,
+  Box,
+  Separator,
+  Tag,
+} from '@chakra-ui/react';
 import { LuArrowBigRight } from 'react-icons/lu';
 import { useDebounce } from 'use-debounce';
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io';
@@ -103,9 +115,11 @@ export const ResultsStats = memo(() => {
           ))}
         </HStack>
       </Wrap>
-      <Wrap>
-        <Box bg="bg.cardSecondary" w="50%" p={1} border="1px solid" borderColor={stats.cardBorder} borderRadius="md">
-          {/* <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
+
+      <Grid bg="bg.section" p={4} borderRadius="xl" templateColumns="repeat(2, minmax(0, 1fr))" gap={4} mt={2}>
+        <GridItem colSpan={1}>
+          <Box bg="bg.cardSecondary" p={1} border="1px solid" borderColor={stats.cardBorder} borderRadius="md">
+            {/* <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
         <Collapsible.Trigger asChild>
           <HStack flex={1} w="100%" cursor="pointer" _hover={{ bg: stats.triggerHover }} borderRadius="sm">
             <LuArrowBigRight
@@ -177,46 +191,51 @@ export const ResultsStats = memo(() => {
         </Collapsible.Content>
       </Collapsible.Root> */}
 
-          {statistics.topErrors.length > 0 && (
-            <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
-              <Collapsible.Trigger asChild>
-                <Flex align="center" minH="27px" pl="2px">
-                  {isStatsOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                  <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
-                    Top {statistics.topErrors.length} errors
-                  </Text>
-                </Flex>
-              </Collapsible.Trigger>
-              <Collapsible.Content>
-                <TopSection
-                  results={statistics.topErrors}
-                  label="errors"
-                  onClick={(message) => handleFilterChange('errorMessage', message)}
-                />
-              </Collapsible.Content>
-            </Collapsible.Root>
-          )}
-          {statistics.topIssues.length > 0 && (
-            <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
-              <Collapsible.Trigger asChild>
-                <Flex align="center" minH="27px" pl="2px">
-                  {isStatsOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                  <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
-                    Top {statistics.topIssues.length} issues
-                  </Text>
-                </Flex>
-              </Collapsible.Trigger>
-              <Collapsible.Content>
-                <TopSection
-                  results={statistics.topIssues}
-                  label="issues"
-                  onClick={(message) => handleFilterChange('issueName', message)}
-                />
-              </Collapsible.Content>
-            </Collapsible.Root>
-          )}
-        </Box>
-      </Wrap>
+            {statistics.topErrors.length > 0 && (
+              <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
+                <Collapsible.Trigger asChild>
+                  <Flex align="center" minH="27px" pl="2px">
+                    {isStatsOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                    <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
+                      Top {statistics.topErrors.length} errors
+                    </Text>
+                  </Flex>
+                </Collapsible.Trigger>
+                <Collapsible.Content>
+                  <TopSection
+                    results={statistics.topErrors}
+                    label="errors"
+                    onClick={(message) => handleFilterChange('errorMessage', message)}
+                  />
+                </Collapsible.Content>
+              </Collapsible.Root>
+            )}
+          </Box>
+        </GridItem>
+        <GridItem colSpan={1}>
+          <Box bg="bg.cardSecondary" p={1} border="1px solid" borderColor={stats.cardBorder} borderRadius="md">
+            {statistics.topIssues.length > 0 && (
+              <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
+                <Collapsible.Trigger asChild>
+                  <Flex align="center" minH="27px" pl="2px">
+                    {isStatsOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                    <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
+                      Top {statistics.topIssues.length} issues
+                    </Text>
+                  </Flex>
+                </Collapsible.Trigger>
+                <Collapsible.Content>
+                  <TopSection
+                    results={statistics.topIssues}
+                    label="issues"
+                    onClick={(message) => handleFilterChange('issueName', message)}
+                  />
+                </Collapsible.Content>
+              </Collapsible.Root>
+            )}
+          </Box>
+        </GridItem>
+      </Grid>
     </>
   );
 });

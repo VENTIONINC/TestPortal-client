@@ -109,32 +109,32 @@ export const buttonRecipe = defineRecipe({
         },
       },
     },
-    // size: {
-    //   xs: {
-    //     h: '6',
-    //     minW: '6',
-    //     fontSize: 'xs',
-    //     px: '2',
-    //   },
-    //   sm: {
-    //     h: '8',
-    //     minW: '8',
-    //     fontSize: 'sm',
-    //     px: '3',
-    //   },
-    //   md: {
-    //     h: '10',
-    //     minW: '10',
-    //     fontSize: 'md',
-    //     px: '4',
-    //   },
-    //   lg: {
-    //     h: '12',
-    //     minW: '12',
-    //     fontSize: 'lg',
-    //     px: '6',
-    //   },
-    // },
+    size: {
+      xs: {
+        h: '6',
+        minW: '6',
+        fontSize: 'xs',
+        px: '2',
+      },
+      sm: {
+        h: '8',
+        minW: '8',
+        fontSize: 'sm',
+        px: '3',
+      },
+      md: {
+        h: '10',
+        minW: '10',
+        fontSize: 'md',
+        px: '4',
+      },
+      lg: {
+        h: '12',
+        minW: '12',
+        fontSize: 'lg',
+        px: '6',
+      },
+    },
   },
   //   defaultVariants: {
   //     variant: 'solid',
