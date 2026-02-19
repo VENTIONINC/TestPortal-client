@@ -75,12 +75,12 @@ export const ResultsExecutionCard = memo(
     };
 
     return (
-      <VStack align="stretch" pt={3} mt={3} borderTop="1px solid" borderColor="border.main">
-        <HStack gap={6} pl={2} bg={surfaces.panel} borderRadius="sm" textStyle="sm" minH={8}>
+      <VStack align="stretch" pt="16px" mt="7px" borderTop="1px solid" borderColor="border.main">
+        <HStack gap={4} pl={2} bg={surfaces.panel} borderRadius="sm" textStyle="sm" minH="47px">
           <Checkbox
             checked={results.every(({ id }) => isSelected(id))}
             onCheckedChange={toggleSelectAll}
-            size="sm"
+            size="md"
             controlProps={{ borderColor: borders.subtle }}
           />
           <Tooltip content="Environment">
@@ -118,14 +118,14 @@ export const ResultsExecutionCard = memo(
           const hasAnalysis = Boolean(analysisConfidence);
 
           return (
-            <HStack key={id} align="center" ps={2} textStyle="sm" position="relative">
-              <HStack align="center" gap={4} flex={1}>
+            <HStack key={id} align="center" ps={2} textStyle="sm" position="relative" minH="40px">
+              <HStack align="center" gap={5} flex={1}>
                 <Checkbox
                   checked={isSelected(id)}
                   onCheckedChange={() => {
                     toggleSelection(id);
                   }}
-                  size="sm"
+                  size="md"
                   controlProps={{ borderColor: borders.subtle }}
                 />
                 <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(status).color} />
@@ -149,7 +149,6 @@ export const ResultsExecutionCard = memo(
                 <Tooltip content="Duration">
                   <Text>{toDuration(duration)}</Text>
                 </Tooltip>
-
                 {errors.length > 0 &&
                   (hasAnalysis ? (
                     <HStack
@@ -174,11 +173,10 @@ export const ResultsExecutionCard = memo(
                       isLoading={analyzingResultId === String(id)}
                     />
                   ))}
-
                 {errors.map((resultError) => {
                   return (
                     <Fragment key={resultError.id}>
-                      <Text onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
+                      <Text fontSize="sm" onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
                         {resultError.message}
                       </Text>
                       <InlineIssue resultError={resultError} />

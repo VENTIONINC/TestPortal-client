@@ -62,11 +62,13 @@ export const ResultsList = ({
   }, [hasMore, allEntries.length]);
 
   return (
-    <Box bg="bg.section" borderRadius="md">
+    <Box bg="bg.section" borderRadius="xl">
       <Stack>
-        <Box m={4} borderBottom="1px solid" borderColor="border.main">
-          <Heading>Results</Heading>
-          <Flex>
+        <Box mx={4} mt={4} mb="8px" borderBottom="1px solid" borderColor="border.main">
+          <Heading fontSize="lg" mb={4}>
+            Results
+          </Heading>
+          <Flex p="3px 16px 1px" mb={4}>
             <Box mr={2}>
               <Checkbox
                 checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
@@ -84,45 +86,44 @@ export const ResultsList = ({
 
           {isFetching && <Spinner />}
         </Box>
-        <Box>
-          <Stack
-            align="stretch"
-            gap={4}
-            flex={1}
-            overflowY="auto"
-            overflowX="hidden"
-            // css={{
-            //   '&::-webkit-scrollbar': { width: '8px' },
-            //   '&::-webkit-scrollbar-track': {
-            //     // background: 'var(--chakra-colors-gray-100)',
-            //     borderRadius: '4px',
-            //   },
-            //   '&::-webkit-scrollbar-thumb': {
-            //     // background: 'var(--chakra-colors-gray-300)',
-            //     borderRadius: '4px',
-            //     '&:hover': { background: 'var(--chakra-colors-gray-400)' },
-            //   },
-            // }}
-          >
-            {visibleEntries.map(([specKey, { spec, executions }]) => {
-              const unfilteredExecutions = unfilteredResultsMap.get(specKey)?.executions || [];
-              return (
-                <ResultSpecSection
-                  key={spec.id}
-                  spec={spec}
-                  executions={executions}
-                  allExecutions={unfilteredExecutions}
-                />
-              );
-            })}
+        {/* <Box> */}
+        <Stack
+          align="stretch"
+          gap={6}
+          flex={1}
+          overflowY="auto"
+          overflowX="hidden"
+          // css={{
+          //   '&::-webkit-scrollbar': { width: '8px' },
+          //   '&::-webkit-scrollbar-track': {
+          //     // background: 'var(--chakra-colors-gray-100)',
+          //     borderRadius: '4px',
+          //   },
+          //   '&::-webkit-scrollbar-thumb': {
+          //     // background: 'var(--chakra-colors-gray-300)',
+          //     borderRadius: '4px',
+          //     '&:hover': { background: 'var(--chakra-colors-gray-400)' },
+          //   },
+          // }}
+        >
+          {visibleEntries.map(([specKey, { spec, executions }]) => {
+            const unfilteredExecutions = unfilteredResultsMap.get(specKey)?.executions || [];
+            return (
+              <ResultSpecSection
+                key={spec.id}
+                spec={spec}
+                executions={executions}
+                allExecutions={unfilteredExecutions}
+              />
+            );
+          })}
 
-            {hasMore && (
-              <Box ref={sentinelRef} display="flex" justifyContent="center" py={4}>
-                <Spinner size="sm" />
-              </Box>
-            )}
-          </Stack>
-        </Box>
+          {hasMore && (
+            <Box ref={sentinelRef} display="flex" justifyContent="center" py={4}>
+              <Spinner size="sm" />
+            </Box>
+          )}
+        </Stack>
       </Stack>
     </Box>
   );

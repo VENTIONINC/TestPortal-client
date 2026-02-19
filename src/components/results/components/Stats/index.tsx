@@ -86,7 +86,7 @@ export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
           ))}
         </HStack>
       </Wrap>
-      <Box bg="bg.section" p={4} borderRadius="xl" gap={4} mt={2}>
+      <Box bg="bg.section" p={4} borderRadius="xl" gap={4} mt={2} mb={2}>
         <Box bg="bg.cardSecondary" p={1} border="1px solid" borderColor={stats.cardBorder} borderRadius="md" mb={3}>
           {statistics.topErrors.length > 0 && (
             <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
