@@ -1,4 +1,4 @@
-import { ResultsList } from '@/components/results';
+import { ResultContainer } from '@/components/results';
 import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
 import { useFilterContext, FilterProvider } from '@/contexts/FilterContext';
 
@@ -7,7 +7,7 @@ const ResultsPageContent = () => {
 
   return (
     <MainTemplate pageHeader="Results" isFilterVisible>
-      <ResultsList showFilters={showFilters} />
+      <ResultContainer showFilters={showFilters} />
     </MainTemplate>
   );
 };

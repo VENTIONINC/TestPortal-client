@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuFileText, LuTag } from 'react-icons/lu';
 
 import { ClipboardCopyText, DateToggle } from '@/components/ui';
-import { ResultsExecutionCard } from '@/components/results';
 import { toCleanTitle } from '@/utils/date-time.converter';
 import { useSurfaceColors } from '@/theme';
+
+import { ResultsExecutionCard } from '../ExecutionCard';
 
 // import { DateToggle } from './date-toggle';
 import { ResultSpecSectionViewProps } from './types';
@@ -14,7 +16,8 @@ export const ResultSpecSectionView = ({
   specFile,
   specTitle,
   specTags,
-  dateFilters,
+  sectionDays,
+  handleDateToggle,
   filteredExecutions,
   projectId,
   onDateToggle,
@@ -24,10 +27,11 @@ export const ResultSpecSectionView = ({
 }: ResultSpecSectionViewProps) => {
   const { surfaces, borders, text, states } = useSurfaceColors();
 
+  console.log('sectionDays', sectionDays);
   return (
     <VStack align="stretch" p={2} bg={surfaces.panel} shadow="md" borderRadius="md">
       <HStack overflowX="auto" pb={2}>
-        <DateToggle days={dateFilters} toggleHandler={onDateToggle} variant="stats" />
+        <DateToggle days={sectionDays} toggleHandler={handleDateToggle} variant="stats" />
       </HStack>
 
       <VStack
@@ -73,23 +77,26 @@ export const ResultSpecSectionView = ({
         </div>
       </VStack>
 
-      {filteredExecutions.map(({ execution, results, serialized }) => (
-        <ResultsExecutionCard
-          key={execution.id}
-          results={results}
-          specName={specTitle}
-          projectId={projectId}
-          onContextMenu={(evt) =>
-            onExecutionContextMenu(evt, {
-              id: execution.id,
-              name: execution.name,
-              projectId: projectId,
-            })
-          }
-          onResultContextMenu={onResultContextMenu}
-          {...serialized}
-        />
-      ))}
+      {sectionDays.map(
+        ({ execution, results, serialized, isActive }) =>
+          isActive && (
+            <ResultsExecutionCard
+              key={execution.id}
+              results={results}
+              specName={specTitle}
+              projectId={projectId}
+              onContextMenu={(evt) =>
+                onExecutionContextMenu(evt, {
+                  id: execution.id,
+                  name: execution.name,
+                  projectId: projectId,
+                })
+              }
+              onResultContextMenu={onResultContextMenu}
+              {...serialized}
+            />
+          ),
+      )}
     </VStack>
   );
 };

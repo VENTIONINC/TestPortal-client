@@ -1,21 +1,19 @@
 import { useMemo } from 'react';
-import { HStack, Mark, Spinner, Text, VStack, Box, Stack, Heading } from '@chakra-ui/react';
+import { HStack, VStack } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 
-import { Checkbox, Wrap, Filter, DateToggle } from '@/components/ui';
-import { ResultSpecSection, ResultsStats } from '@/components/results';
+import { Filter, DateToggle } from '@/components/ui';
+// import { ResultsStats } from '@/components/results';
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
 import { initialFilters, useResultsActions, useSelectedDates, useResultsFilters } from '@/redux/slices/results';
 import { getDatesBetween, getDateDisplayName } from '@/utils/dateUtils';
 import { AnalysisCategory, BaseResult, ResultExecution, ResultSpec } from '@/types';
-import { BulkActions } from '@/components/BulkActions';
 import { useSelectedProjectId } from '@/redux/slices/projects';
-import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
 import { useFiltersWithUrl } from '@/hooks';
 
-import { DateList } from './date-list';
+import { ResultsList, ResultsStats } from '../components';
 import { filterConfig } from '../configs';
 
 const toAnalysisCategory = (value?: string): AnalysisCategory | undefined => {
@@ -26,7 +24,7 @@ const toAnalysisCategory = (value?: string): AnalysisCategory | undefined => {
   return Object.values(AnalysisCategory).includes(value as AnalysisCategory) ? (value as AnalysisCategory) : undefined;
 };
 
-const ResultsContent = ({ showFilters = true }: { showFilters?: boolean }) => {
+export const ResultContainerInner = ({ showFilters = true }: { showFilters?: boolean }) => {
   const filters = useResultsFilters();
   const { updateFilters } = useResultsActions();
   const selectedDates = useSelectedDates();
@@ -52,6 +50,7 @@ const ResultsContent = ({ showFilters = true }: { showFilters?: boolean }) => {
   });
 
   const { toggleDate } = useResultsActions();
+
   // const { controlsBg, controlsBorder } = useResultsSurfaceColors();
 
   const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates } = useMemo(() => {
@@ -106,7 +105,14 @@ const ResultsContent = ({ showFilters = true }: { showFilters?: boolean }) => {
     });
 
     // Apply all filters EXCEPT date selection (for showing spec cards with all dates)
-    const allDatesResults = allResults.filter((result) => {
+    const filteredResults = allResults.filter((result) => {
+      const resultDate = result.startTime.split('T')[0];
+      const isActiveDate = selectedDates.includes(resultDate);
+
+      if (!isActiveDate) {
+        return true;
+      }
+
       // Apply spec filters
       if (debouncedFilters.tag && !result.spec.tags.includes(debouncedFilters.tag)) {
         return false;
@@ -174,18 +180,18 @@ const ResultsContent = ({ showFilters = true }: { showFilters?: boolean }) => {
       return true;
     });
 
-    // Apply date selection filter to get final results
-    const filteredResults = allDatesResults.filter((result) => {
-      const resultDate = result.startTime.split('T')[0];
-      const isActiveDate = selectedDates.includes(resultDate);
+    // // Apply date selection filter to get final results
+    // const filteredResults = allDatesResults.filter((result) => {
+    //   const resultDate = result.startTime.split('T')[0];
+    //   const isActiveDate = selectedDates.includes(resultDate);
 
-      // Only show results from selected dates
-      if (!isActiveDate) {
-        return false;
-      }
+    //   // Only show results from selected dates
+    //   // if (!isActiveDate) {
+    //   //   return false;
+    //   // }
 
-      return true;
-    });
+    //   return true;
+    // });
 
     const resultsMap = new Map<
       string,
@@ -264,81 +270,34 @@ const ResultsContent = ({ showFilters = true }: { showFilters?: boolean }) => {
   );
 
   return (
-    <FormProvider {...filterFormMethods}>
-      <HStack gap={4} w="100%" display="grid" alignItems="start" gridTemplateColumns="auto 1fr">
-        <Filter showFilters={showFilters} config={filterConfig} {...filterProps} />
+    <ResultsSelectionProvider>
+      <FormProvider {...filterFormMethods}>
+        <HStack gap={4} w="100%" display="grid" alignItems="start" gridTemplateColumns="auto 1fr">
+          <Filter showFilters={showFilters} config={filterConfig} {...filterProps} />
 
-        <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="visible" position="relative">
-          <DateToggle days={availableDates} toggleHandler={toggleDate} />
-          <ResultsStats />
-          <Wrap>
-            <Stack>
-              <Box>
-                <Heading>Results</Heading>
-                <Checkbox
-                  checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
-                  onCheckedChange={handleSelectAll}
-                >
-                  Select all
-                </Checkbox>
-                <Text textStyle="sm">
-                  Shown <Mark fontWeight={600}>{activeDaysResultsIds.length}</Mark>. Selected{' '}
-                  <Mark fontWeight={600}>{selectedCount}</Mark>
-                </Text>
-                <BulkActions selectedResults={selectedResults} />
-                {isFetching && <Spinner />}
-              </Box>
-              <Box>
-                <Stack
-                  align="stretch"
-                  gap={4}
-                  flex={1}
-                  overflowY="auto"
-                  overflowX="hidden"
-                  css={{
-                    '&::-webkit-scrollbar': {
-                      width: '8px',
-                    },
-                    '&::-webkit-scrollbar-track': {
-                      background: 'var(--chakra-colors-gray-100)',
-                      borderRadius: '4px',
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                      background: 'var(--chakra-colors-gray-300)',
-                      borderRadius: '4px',
-                      '&:hover': {
-                        background: 'var(--chakra-colors-gray-400)',
-                      },
-                    },
-                  }}
-                >
-                  <>
-                    {Array.from(results.entries()).map(([specKey, { spec, executions }]) => {
-                      const unfilteredExecutions = unfilteredResultsMap.get(specKey)?.executions || [];
-                      return (
-                        <ResultSpecSection
-                          key={spec.id}
-                          spec={spec}
-                          executions={executions}
-                          allExecutions={unfilteredExecutions}
-                        />
-                      );
-                    })}
-                  </>
-                </Stack>
-              </Box>
-            </Stack>
-          </Wrap>
-        </VStack>
-      </HStack>
-    </FormProvider>
+          <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="visible" position="relative">
+            <DateToggle days={availableDates} toggleHandler={toggleDate} />
+            <ResultsStats filter={effectiveFilters} />
+            <ResultsList
+              activeDaysResultsIds={activeDaysResultsIds}
+              handleSelectAll={handleSelectAll}
+              selectedCount={selectedCount}
+              selectedResults={selectedResults}
+              isFetching={isFetching}
+              results={results}
+              unfilteredResultsMap={unfilteredResultsMap}
+            />
+          </VStack>
+        </HStack>
+      </FormProvider>
+    </ResultsSelectionProvider>
   );
 };
 
-export const ResultsList = ({ showFilters = true }: { showFilters?: boolean }) => {
+export const ResultContainer = ({ showFilters = true }: { showFilters?: boolean }) => {
   return (
     <ResultsSelectionProvider>
-      <ResultsContent showFilters={showFilters} />
+      <ResultContainerInner showFilters={showFilters} />
     </ResultsSelectionProvider>
   );
 };

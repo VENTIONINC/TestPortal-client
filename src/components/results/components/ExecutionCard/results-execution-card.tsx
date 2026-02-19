@@ -9,8 +9,8 @@ import { useResultsSelection } from '@/contexts/results-selection';
 import { getAnalysisCategoryStyle, getConfidenceLabel, getResultStatusStyle } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { usePostApiV2ResultErrorsAnalyzeMutation } from '@/redux/apis/generatedApi';
+import { BulkActions } from '@/components/BulkActions';
 
-import { BulkActions } from '../../BulkActions';
 import { ResultsExecutionCardProps } from './types';
 import { IntegrationLinks } from './integration-links';
 import { AnalyzeCategoryButton } from './analyze-category-button';
