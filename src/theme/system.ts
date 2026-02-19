@@ -2,6 +2,7 @@ import { createSystem, defaultConfig, defineConfig } from '@chakra-ui/react';
 
 import { buttonRecipe, badgeRecipe, cardRecipe, tabsRecipe, linkRecipe } from './base';
 import { semanticColors } from './colors';
+import { shadows } from './shadows';
 import { fontSizes, lineHeights, letterSpacings } from './typography';
 import { fonts } from './fonts';
 
@@ -21,6 +22,7 @@ const config = defineConfig({
     },
     semanticTokens: {
       colors: semanticColors,
+      shadows,
     },
     recipes: {
       button: buttonRecipe,

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuFileText, LuTag } from 'react-icons/lu';
 
@@ -7,8 +6,6 @@ import { toCleanTitle } from '@/utils/date-time.converter';
 import { useSurfaceColors } from '@/theme';
 
 import { ResultsExecutionCard } from '../ExecutionCard';
-
-// import { DateToggle } from './date-toggle';
 import { ResultSpecSectionViewProps } from './types';
 
 export const ResultSpecSectionView = ({
@@ -18,32 +15,20 @@ export const ResultSpecSectionView = ({
   specTags,
   sectionDays,
   handleDateToggle,
-  filteredExecutions,
   projectId,
-  onDateToggle,
   onTagClick,
   onExecutionContextMenu,
   onResultContextMenu,
 }: ResultSpecSectionViewProps) => {
   const { surfaces, borders, text, states } = useSurfaceColors();
 
-  console.log('sectionDays', sectionDays);
   return (
-    <VStack align="stretch" p={2} bg={surfaces.panel} shadow="md" borderRadius="md">
+    <VStack align="stretch" m={4} p={2} shadow="card" bg="bg.cardSecondary" borderRadius="md">
       <HStack overflowX="auto" pb={2}>
         <DateToggle days={sectionDays} toggleHandler={handleDateToggle} variant="stats" />
       </HStack>
 
-      <VStack
-        gap={1}
-        align="stretch"
-        bg={surfaces.card}
-        py={2}
-        px={4}
-        border="1px solid"
-        borderColor={borders.subtle}
-        borderRadius="md"
-      >
+      <VStack gap={1} align="stretch" py={1} px={1}>
         <Flex gap={4} textStyle="sm">
           <ClipboardCopyText value={specKey}>{specKey}</ClipboardCopyText>
           <ClipboardCopyText value={specFile}>{specFile}</ClipboardCopyText>
@@ -79,7 +64,9 @@ export const ResultSpecSectionView = ({
 
       {sectionDays.map(
         ({ execution, results, serialized, isActive }) =>
-          isActive && (
+          isActive &&
+          execution &&
+          serialized && (
             <ResultsExecutionCard
               key={execution.id}
               results={results}

@@ -4,6 +4,12 @@ export const bg = {
   card: { value: { _light: '#FFFFFF', _dark: '#26262B' } },
   cardSecondary: { value: { _light: '#FFFFFF', _dark: '#2D2D32' } },
   input: { value: { _light: '#F9FAFB', _dark: '#333337' } },
+  backdrop: {
+    value: {
+      _light: 'rgba(235, 235, 236, 0.6)',
+      _dark: 'rgba(33, 33, 38, 0.6)',
+    },
+  },
   modal_glass: {
     value: {
       _light: 'rgba(255, 255, 255, 0.8)',

@@ -9,12 +9,13 @@ export interface DrawerProps extends ChakraDrawer.RootProps {
   title: string;
   onClose: () => void;
   contentProps?: DrawerContentProps;
+  backdropProps?: ChakraDrawer.BackdropProps;
 }
 
-export const Drawer = ({ title, onClose, contentProps, children, ...props }: DrawerProps) => {
+export const Drawer = ({ title, onClose, contentProps, backdropProps, children, ...props }: DrawerProps) => {
   return (
     <ChakraDrawer.Root open onOpenChange={onClose} {...props}>
-      <ChakraDrawer.Backdrop />
+      <ChakraDrawer.Backdrop {...backdropProps} />
       <DrawerContent {...contentProps}>
         <ChakraDrawer.Header>
           <ChakraDrawer.Title>{title}</ChakraDrawer.Title>

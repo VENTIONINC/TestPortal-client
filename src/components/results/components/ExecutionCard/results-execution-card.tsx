@@ -75,14 +75,7 @@ export const ResultsExecutionCard = memo(
     };
 
     return (
-      <VStack
-        align="stretch"
-        p={2}
-        bg={surfaces.card}
-        border="1px solid"
-        borderColor={borders.subtle}
-        borderRadius="md"
-      >
+      <VStack align="stretch" pt={3} mt={3} borderTop="1px solid" borderColor="border.main">
         <HStack gap={6} pl={2} bg={surfaces.panel} borderRadius="sm" textStyle="sm" minH={8}>
           <Checkbox
             checked={results.every(({ id }) => isSelected(id))}
@@ -138,7 +131,7 @@ export const ResultsExecutionCard = memo(
                 <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(status).color} />
                 <Tooltip content="Retry">
                   <Text whiteSpace="nowrap" minW={6}>
-                    # {retry}
+                    #{retry}
                   </Text>
                 </Tooltip>
                 <IntegrationLinks

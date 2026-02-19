@@ -1,0 +1,14 @@
+export const shadows = {
+  card: {
+    value: {
+      _light: '0px 4px 8px 0px #0000001A',
+      _dark: '0px 4px 8px 0px #FFFFFF1A',
+    },
+  },
+  drawer: {
+    value: {
+      _light: '0px 0px 12px 8px #0000001F',
+      _dark: '0px 0px 12px 8px #FFFFFF1F',
+    },
+  },
+};

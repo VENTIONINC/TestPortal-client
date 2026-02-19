@@ -3,9 +3,9 @@ import { DateWithStats, DateList } from './components';
 interface DateToggleProps {
   days: {
     yyyy_mm_dd: string;
-    stats: string[];
-    isActive: boolean;
     display: string;
+    isActive: boolean;
+    stats?: string[];
   }[];
   toggleHandler: (day: { yyyy_mm_dd: string }) => void;
   variant?: 'default' | 'stats';
@@ -17,7 +17,13 @@ export const DateToggle = ({ days, toggleHandler, variant = 'default' }: DateTog
   }
 
   if (variant === 'stats') {
-    return days.map((day) => <DateWithStats key={day.yyyy_mm_dd} day={day} toggleHandler={toggleHandler} />);
+    return days.map((day) => (
+      <DateWithStats
+        key={day.yyyy_mm_dd}
+        day={{ ...day, stats: day.stats ?? [] }}
+        toggleHandler={toggleHandler}
+      />
+    ));
   }
 
   return <DateList days={days} toggleHandler={toggleHandler} />;

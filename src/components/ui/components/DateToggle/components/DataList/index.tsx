@@ -3,8 +3,8 @@ import { HStack, ButtonGroup, Button, Box } from '@chakra-ui/react';
 import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
 
 interface DateListProps {
-  days: { date: string; name: string; isActive: boolean }[];
-  toggleHandler: (date: string) => void;
+  days: { yyyy_mm_dd: string; display: string; isActive: boolean }[];
+  toggleHandler: (day: { yyyy_mm_dd: string }) => void;
 }
 
 export const DateList = ({ days, toggleHandler }: DateListProps) => {
@@ -16,8 +16,8 @@ export const DateList = ({ days, toggleHandler }: DateListProps) => {
         <ButtonGroup size="sm" variant="outline" gap={0} w="100%">
           {days.map((day) => (
             <Button
-              key={day.date}
-              onClick={() => toggleHandler(day.date)}
+              key={day.yyyy_mm_dd}
+              onClick={() => toggleHandler({ yyyy_mm_dd: day.yyyy_mm_dd })}
               flex={1}
               justifyContent="center"
               bg={day.isActive ? 'button.primary.bg.focus' : chips.inactiveBg}
@@ -28,7 +28,7 @@ export const DateList = ({ days, toggleHandler }: DateListProps) => {
               whiteSpace="nowrap"
               _hover={{ bg: day.isActive ? chips.hoverActiveBg : chips.hoverInactiveBg }}
             >
-              {day.name}
+              {day.display}
             </Button>
           ))}
         </ButtonGroup>

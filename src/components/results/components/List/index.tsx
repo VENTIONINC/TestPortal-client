@@ -62,28 +62,25 @@ export const ResultsList = ({
   }, [hasMore, allEntries.length]);
 
   return (
-    <Wrap>
+    <Box bg="bg.section" borderRadius="md">
       <Stack>
-        <Box>
+        <Box m={4} borderBottom="1px solid" borderColor="border.main">
           <Heading>Results</Heading>
-          <Flex aline="center">
+          <Flex>
             <Box mr={2}>
               <Checkbox
                 checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
                 onCheckedChange={handleSelectAll}
               >
-                Select all
+                Selected <Mark fontWeight={600}>{selectedCount}</Mark>
+                <span>/</span>
+                <Mark fontWeight={600}>{activeDaysResultsIds.length}</Mark>
               </Checkbox>
             </Box>
             <Box>
               <BulkActions selectedResults={selectedResults} />
             </Box>
           </Flex>
-
-          <Text textStyle="sm">
-            Shown <Mark fontWeight={600}>{activeDaysResultsIds.length}</Mark>. Selected{' '}
-            <Mark fontWeight={600}>{selectedCount}</Mark>
-          </Text>
 
           {isFetching && <Spinner />}
         </Box>
@@ -94,18 +91,18 @@ export const ResultsList = ({
             flex={1}
             overflowY="auto"
             overflowX="hidden"
-            css={{
-              '&::-webkit-scrollbar': { width: '8px' },
-              '&::-webkit-scrollbar-track': {
-                background: 'var(--chakra-colors-gray-100)',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: 'var(--chakra-colors-gray-300)',
-                borderRadius: '4px',
-                '&:hover': { background: 'var(--chakra-colors-gray-400)' },
-              },
-            }}
+            // css={{
+            //   '&::-webkit-scrollbar': { width: '8px' },
+            //   '&::-webkit-scrollbar-track': {
+            //     // background: 'var(--chakra-colors-gray-100)',
+            //     borderRadius: '4px',
+            //   },
+            //   '&::-webkit-scrollbar-thumb': {
+            //     // background: 'var(--chakra-colors-gray-300)',
+            //     borderRadius: '4px',
+            //     '&:hover': { background: 'var(--chakra-colors-gray-400)' },
+            //   },
+            // }}
           >
             {visibleEntries.map(([specKey, { spec, executions }]) => {
               const unfilteredExecutions = unfilteredResultsMap.get(specKey)?.executions || [];
@@ -127,6 +124,6 @@ export const ResultsList = ({
           </Stack>
         </Box>
       </Stack>
-    </Wrap>
+    </Box>
   );
 };

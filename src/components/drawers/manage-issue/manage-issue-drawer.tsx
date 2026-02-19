@@ -35,6 +35,8 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
     <Drawer
       title={`${initialIssue ? 'Edit' : 'Assign'} Issue${resultError ? ` to Result ${resultError.id}` : ''}`}
       onClose={closeDrawer}
+      contentProps={{ bg: 'bg.modal_glass', shadow: 'drawer' }}
+      backdropProps={{ bg: 'bg.backdrop' }}
     >
       <DrawerBody display="flex" flexDir="column" gap={4}>
         <VStack align="flex-start" gap={0}>

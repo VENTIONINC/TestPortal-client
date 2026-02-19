@@ -1,12 +1,5 @@
 import { BaseResult, ResultExecution } from '@/types';
 
-export interface DateFilterConfig {
-  yyyy_mm_dd: string;
-  stats: string[];
-  isActive: boolean;
-  display: string;
-}
-
 export interface SerializedExecution {
   id: string;
   createdAt: string;
@@ -21,26 +14,31 @@ export interface SerializedExecution {
   monitoringPortalEnabled: boolean;
 }
 
+export interface SectionDay {
+  yyyy_mm_dd: string;
+  stats: string[];
+  isActive: boolean;
+  display: string;
+  results: BaseResult[];
+  execution: ResultExecution | undefined;
+  serialized: SerializedExecution | undefined;
+}
+
 export interface ResultSpecSectionViewProps {
   specKey: string;
   specFile: string;
   specTitle: string;
   specTags?: string[];
-  dateFilters: DateFilterConfig[];
-  filteredExecutions: {
-    execution: ResultExecution;
-    results: BaseResult[];
-    serialized: SerializedExecution;
-  }[];
+  sectionDays: SectionDay[];
   projectId: string;
-  onDateToggle: (day: { yyyy_mm_dd: string }) => void;
+  handleDateToggle: (day: { yyyy_mm_dd: string }) => void;
   onTagClick: (tag: string) => void;
   onExecutionContextMenu: (
     evt: React.MouseEvent<HTMLButtonElement>,
-    execution: { id: string; name: string; projectId: string }
+    execution: { id: string; name: string; projectId: string },
   ) => void;
   onResultContextMenu: (
     evt: React.MouseEvent<HTMLButtonElement>,
-    result: { id: string; retry: number; specName: string; projectId: string }
+    result: { id: string; retry: number; specName: string; projectId: string },
   ) => void;
 }
