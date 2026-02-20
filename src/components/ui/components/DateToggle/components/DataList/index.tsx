@@ -11,8 +11,8 @@ export const DateList = ({ days, toggleHandler }: DateListProps) => {
   const { chips } = useResultsSurfaceColors();
 
   return (
-    <HStack overflowX="auto">
-      <Box border="1px solid" borderColor={chips.border} borderRadius="sm" shadow="sm" overflow="hidden" w="100%">
+    <HStack overflowX="auto" p="8px" borderRadius="xl" bg="bg.section">
+      <Box borderRadius="lg" shadow="sm" overflow="hidden" w="100%">
         <ButtonGroup size="sm" variant="outline" gap={0} w="100%">
           {days.map((day) => (
             <Button
@@ -20,10 +20,12 @@ export const DateList = ({ days, toggleHandler }: DateListProps) => {
               onClick={() => toggleHandler({ yyyy_mm_dd: day.yyyy_mm_dd })}
               flex={1}
               justifyContent="center"
-              bg={day.isActive ? 'button.primary.bg.focus' : chips.inactiveBg}
+              bg={day.isActive ? 'button.primary.bg.focus' : 'transparent'}
               color={day.isActive ? chips.activeText : chips.inactiveText}
               borderRadius="0"
               border="none"
+              minH="42px"
+              variant="secondary"
               textAlign="center"
               whiteSpace="nowrap"
               _hover={{ bg: day.isActive ? chips.hoverActiveBg : chips.hoverInactiveBg }}

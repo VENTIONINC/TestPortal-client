@@ -50,7 +50,8 @@ export const useResultsData = ({
       // For active (selected) dates: apply filters. For other dates: show all.
       const resultDate = result.startTime.split('T')[0];
       const isActiveDate = selectedDates.includes(resultDate);
-      const shouldInclude = !isActiveDate || matchesFilters(result, debouncedFilters);
+      const matchesFilter = matchesFilters(result, debouncedFilters);
+      const shouldInclude = !isActiveDate || matchesFilter;
 
       if (shouldInclude) {
         addToSpecGroup(resultsMap, result, baseResult);

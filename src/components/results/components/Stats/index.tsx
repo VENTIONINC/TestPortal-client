@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { Collapsible, HStack, Flex, Text, VStack, Box, Separator, Tag } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io';

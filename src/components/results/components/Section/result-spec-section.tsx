@@ -1,6 +1,6 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
-import { useResultsActions, useResultsFilters } from '@/redux/slices/results';
+import { useResultsActions, useResultsFilters, useSelectedDates } from '@/redux/slices/results';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { getDateDisplayName, getDatesBetween } from '@/utils/dateUtils';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
@@ -18,6 +18,7 @@ interface ResultSpecSectionProps {
 
 export const ResultSpecSection = memo(({ spec, executions, allExecutions }: ResultSpecSectionProps) => {
   const filters = useResultsFilters();
+  const selectedDates = useSelectedDates();
   const user = useCurrentUser();
   const projectId = useSelectedProjectId();
   const handleExecutionContextMenu = useExecutionContextMenu();
@@ -25,38 +26,52 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
 
   const { updateFilters } = useResultsActions();
 
-  // Track which dates the user has explicitly collapsed (toggled off) in this spec section.
-  // All dates with data are expanded by default.
-  const [collapsedDates, setCollapsedDates] = useState<Set<string>>(new Set());
+  // Track dates that user manually toggled locally
+  // For dates in selectedDates: toggled = hidden (inverted)
+  // For dates not in selectedDates: toggled = shown
+  const [locallyToggledDates, setLocallyToggledDates] = useState<Set<string>>(new Set());
 
-  // Compute section days from all executions (unfiltered data) for the date range.
-  // isActive = true by default (all dates expanded), unless explicitly collapsed.
+  // Compute section days: use filtered data for selected dates, all data for other dates
   const sectionDays = useMemo(() => {
     const allDates = getDatesBetween(filters.from, filters.to);
     return allDates
       .map((date) => {
-        const execsForDate = allExecutions.filter(({ results }) =>
+        const isInSelectedDates = selectedDates.includes(date);
+        const isLocallyToggled = locallyToggledDates.has(date);
+
+        const isActive = isInSelectedDates ? !isLocallyToggled : isLocallyToggled;
+
+        const executionsToUse = isInSelectedDates ? executions : allExecutions;
+
+        const execsForDate = executionsToUse.filter(({ results }) =>
           results.some((result) => result.startTime.split('T')[0] === date),
         );
-        const statuses = execsForDate.flatMap(({ results }) => results.map((r) => r.status));
+
+        // Filter results to only include those from the current date
+        const resultsForDate = execsForDate.flatMap(({ results }) =>
+          results.filter((r) => r.startTime.split('T')[0] === date),
+        );
+
+        const statuses = resultsForDate.map((r) => r.status);
         const firstExec = execsForDate[0];
 
         return {
           yyyy_mm_dd: date,
           stats: statuses,
           display: getDateDisplayName(date),
-          results: firstExec?.results ?? [],
+          results: resultsForDate,
           execution: firstExec?.execution,
           serialized: firstExec?.execution ? serializeExecution(firstExec.execution, user) : undefined,
-          isActive: !collapsedDates.has(date),
+          isActive,
         };
       })
       .filter((day) => day.results.length > 0);
-  }, [filters.from, filters.to, allExecutions, user, collapsedDates]);
+  }, [filters.from, filters.to, selectedDates, locallyToggledDates, executions, allExecutions, user]);
 
   const handleDateToggle = ({ yyyy_mm_dd }: { yyyy_mm_dd: string }) => {
-    setCollapsedDates((prev) => {
+    setLocallyToggledDates((prev) => {
       const next = new Set(prev);
+      // Toggle local state for any date
       if (next.has(yyyy_mm_dd)) {
         next.delete(yyyy_mm_dd);
       } else {
@@ -66,11 +81,20 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
     });
   };
 
+  useEffect(() => {
+    // Clear local toggles when selectedDates change to reset to default state
+    setLocallyToggledDates(new Set());
+  }, [selectedDates]);
   const handleTagClick = (tag: string) => {
     updateFilters({ tag });
   };
 
-  if (executions.length === 0) {
+  // Show spec if there are any executions (filtered or unfiltered)
+  if (allExecutions.length === 0) {
+    return null;
+  }
+
+  if (sectionDays.length === 0) {
     return null;
   }
 

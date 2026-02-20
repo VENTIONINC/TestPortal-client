@@ -36,13 +36,13 @@ export const ResultsList = ({
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const allEntries = Array.from(results.entries());
+  const allEntries = Array.from(unfilteredResultsMap.entries());
   const visibleEntries = allEntries.slice(0, visibleCount);
   const hasMore = visibleCount < allEntries.length;
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [results]);
+  }, [unfilteredResultsMap]);
 
   useEffect(() => {
     if (!sentinelRef.current || !hasMore) return;
@@ -106,13 +106,13 @@ export const ResultsList = ({
           //   },
           // }}
         >
-          {visibleEntries.map(([specKey, { spec, executions }]) => {
-            const unfilteredExecutions = unfilteredResultsMap.get(specKey)?.executions || [];
+          {visibleEntries.map(([specKey, { spec, executions: unfilteredExecutions }]) => {
+            const filteredExecutions = results.get(specKey)?.executions || [];
             return (
               <ResultSpecSection
                 key={spec.id}
                 spec={spec}
-                executions={executions}
+                executions={filteredExecutions}
                 allExecutions={unfilteredExecutions}
               />
             );
