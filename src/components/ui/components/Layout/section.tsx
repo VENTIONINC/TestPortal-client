@@ -16,11 +16,8 @@ const Description = ({ children }: { children: React.ReactNode }) => (
     {children}
   </Box>
 );
-
 const Body = ({ children }: { children: React.ReactNode }) => <Box>{children}</Box>;
-
 const Footer = ({ children }: { children: React.ReactNode }) => <Box mt={6}>{children}</Box>;
-
 const Card = ({ children, p }: { children: React.ReactNode; p?: string | number }) => (
   <Box bg="bg.cardSecondary" borderRadius="md" border="1px" borderColor="borders.subtle" p={p || 4} w="100%">
     {children}

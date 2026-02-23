@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Button, Text, Box, VStack, Circle, Flex, Icon } from '@chakra-ui/react';
 import { LuChevronsUpDown } from 'react-icons/lu';
 
-import { useColorModeValue } from '@/components/ui';
 import { useAuth } from '@/hooks';
 import { useSurfaceColors } from '@/theme';
 
@@ -31,7 +30,7 @@ export const UserMenu = ({ collapsed }: UserMenuProps) => {
     };
   }, [isOpen]);
 
-  const { surfaces, borders, text, states, userCard, menu } = useSurfaceColors();
+  const { text, states, userCard, menu } = useSurfaceColors();
   const avatarBg = userCard.avatarBg;
 
   if (!user) return null;
@@ -42,7 +41,6 @@ export const UserMenu = ({ collapsed }: UserMenuProps) => {
   };
 
   const hoverBg = states.hoverSubtle;
-  const buttonColor = text.primary;
 
   const initials = user.name
     ? user.name
@@ -106,7 +104,7 @@ export const UserMenu = ({ collapsed }: UserMenuProps) => {
           shadow={menu.shadow}
           zIndex={1000}
           animation="scale-fade-in 0.2s ease-out forwards"
-          sx={{
+          css={{
             '@keyframes scale-fade-in': {
               '0%': { opacity: 0, transform: 'scale(0.95)' },
               '100%': { opacity: 1, transform: 'scale(1)' },

@@ -6,6 +6,8 @@ import { status } from './status';
 import { dashboard } from './dashboard';
 import { tabs } from './tabs';
 import { category } from './category';
+import { logo } from './logo';
+
 export const semanticColors = {
   bg,
   border,
@@ -15,4 +17,5 @@ export const semanticColors = {
   dashboard,
   button,
   category,
+  logo,
 };

@@ -1,4 +1,4 @@
-import { FiGrid, FiFileText, FiAlertTriangle, FiMessageSquare, FiSettings, FiPieChart } from 'react-icons/fi';
+import { FiGrid, FiFileText, FiAlertTriangle, FiMessageSquare, FiSettings } from 'react-icons/fi';
 
 import { PATHS } from '@/types/paths';
 

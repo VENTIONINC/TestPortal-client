@@ -20,7 +20,7 @@ export const ResultSpecSectionView = ({
   onExecutionContextMenu,
   onResultContextMenu,
 }: ResultSpecSectionViewProps) => {
-  const { surfaces, borders, text, states } = useSurfaceColors();
+  const { borders, text, states } = useSurfaceColors();
 
   return (
     <VStack

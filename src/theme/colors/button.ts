@@ -82,11 +82,11 @@ export const button = {
   borderLess: {
     color: {
       value: {
-        _light: '#3054FE',
-        _dark: '#3054FE',
+        _light: '#333333',
+        _dark: '#EAEAEA',
       },
     },
-    default: { value: { _light: '#3054FE', _dark: '#3054FE' } },
+    default: { value: { _light: '#3054FE', _dark: '#53ABFC' } },
     hover: {
       value: {
         _light: 'rgba (20, 113, 235, 0.2)',
@@ -164,6 +164,82 @@ export const button = {
       value: {
         _light: 'rgba(234, 125, 125, 0.05)',
         _dark: 'rgba(234, 125, 125, 0.05)',
+      },
+    },
+  },
+  groupButton: {
+    default: {
+      color: {
+        value: {
+          _light: '#333333',
+          _dark: '#EAEAEA',
+        },
+      },
+      borderColor: {
+        value: {
+          _light: '#E0E0E0',
+          _dark: '#3D3D3F',
+        },
+      },
+      bg: {
+        value: {
+          _light: 'transparent',
+          _dark: 'transparent',
+        },
+      },
+    },
+    hover: {
+      color: {
+        value: {
+          _light: '#333333',
+          _dark: '#EAEAEA',
+        },
+      },
+      bg: {
+        value: {
+          _light: 'rgba(20, 113, 235, 0.2)',
+          _dark: 'rgba(90, 139, 255, 0.2)',
+        },
+      },
+      borderColor: {
+        value: {
+          _light: '#1471EB',
+          _dark: '#3D3D3F',
+        },
+      },
+    },
+    selected: {
+      color: {
+        value: {
+          _light: '#333333',
+          _dark: '#EAEAEA',
+        },
+      },
+      bg: {
+        value: {
+          _light: 'rgba(20, 113, 235, 0.15)',
+          _dark: 'rgba(90, 139, 255, 0.15)',
+        },
+      },
+      borderColor: {
+        value: {
+          _light: '#1471EB',
+          _dark: '#5A88FF',
+        },
+      },
+    },
+    disabled: {
+      color: {
+        value: {
+          _light: '#B2B2B2',
+          _dark: '#7A7A7A',
+        },
+      },
+      bg: {
+        value: {
+          _light: 'transparent',
+          _dark: 'transparent',
+        },
       },
     },
   },

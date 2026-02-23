@@ -12,15 +12,15 @@ export const NavigationMenu = ({ collapsed }: { collapsed: boolean }) => {
   const location = useLocation();
 
   return (
-    <VStack align="stretch" spacing="4" px="2" mt="2">
+    <VStack align="stretch" mt="4">
       {navigationMenuConfig.map((group) => (
-        <Box key={group.id}>
+        <Box key={group.id} mb="6">
           {group.title && !collapsed && (
-            <Text px="2" mb="2" fontSize="xs" fontWeight="bold" color={text.secondary} textTransform="uppercase">
+            <Text px="6" mb="3" fontSize="md" fontWeight={500} color={text.secondary}>
               {group.title}
             </Text>
           )}
-          <VStack align="stretch" spacing="1">
+          <VStack align="stretch" gap="4">
             {group.items.map((item) => {
               const isActive = item.path
                 ? location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)

@@ -1,4 +1,4 @@
-import { Box, Grid, GridItem, HStack } from '@chakra-ui/react';
+import { Grid, GridItem, HStack } from '@chakra-ui/react';
 import { useState } from 'react';
 
 import { Breadcrumb } from '@/components/ui';
@@ -46,27 +46,23 @@ export const MainTemplate = ({
   );
 
   return (
-    // <Box minH="100vh" maxH="100%" bg={surfaces.page} display="flex" flexDirection="column">
-    <>
-      <Grid
-        templateColumns={`${collapsed ? '64px' : '250px'} 1fr`}
-        flex="1"
-        transition="grid-template-columns 0.2s ease-in-out"
-      >
-        <GridItem>
-          <Sidebar collapsed={collapsed} setCollapsed={handleSetCollapsed} />
-        </GridItem>
+    <Grid
+      templateColumns={`${collapsed ? '64px' : '250px'} 1fr`}
+      flex="1"
+      transition="grid-template-columns 0.2s ease-in-out"
+    >
+      <GridItem>
+        <Sidebar collapsed={collapsed} setCollapsed={handleSetCollapsed} />
+      </GridItem>
 
-        <GridItem>
-          <Header title={pageHeader} actionButton={headerAction} isIncludeBreadcrumb={isIncludeBreadcrumb} />
+      <GridItem>
+        <Header title={pageHeader} actionButton={headerAction} />
 
-          <BasicWrapper>
-            {isIncludeBreadcrumb && <Breadcrumb ml={6} />}
-            {children}
-          </BasicWrapper>
-        </GridItem>
-      </Grid>
-      {/* </Box> */}
-    </>
+        <BasicWrapper>
+          {isIncludeBreadcrumb && <Breadcrumb ml={6} />}
+          {children}
+        </BasicWrapper>
+      </GridItem>
+    </Grid>
   );
 };

@@ -6,19 +6,6 @@ export const category = {
         _dark: '#C6FF2E',
       },
     },
-    // borderColor: {
-    //   value: {
-    //     _light: '#D0FC53',
-    //     _dark: '#C6FF2E',
-    //   },
-    // },
-
-    // hover: {
-    //   value: {
-    //     _light: 'rgba(90, 251, 122, 0.2)',
-    //     _dark: 'rgba(60, 255, 143, 0.2)',
-    //   },
-    // },
   },
   environment: {
     color: {

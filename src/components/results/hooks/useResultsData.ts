@@ -47,11 +47,11 @@ export const useResultsData = ({
 
       addToSpecGroup(unfilteredMap, result, baseResult);
 
-      // For active (selected) dates: apply filters. For other dates: show all.
+      // Show only results for selected dates that match filters
       const resultDate = result.startTime.split('T')[0];
       const isActiveDate = selectedDates.includes(resultDate);
       const matchesFilter = matchesFilters(result, debouncedFilters);
-      const shouldInclude = !isActiveDate || matchesFilter;
+      const shouldInclude = isActiveDate && matchesFilter;
 
       if (shouldInclude) {
         addToSpecGroup(resultsMap, result, baseResult);

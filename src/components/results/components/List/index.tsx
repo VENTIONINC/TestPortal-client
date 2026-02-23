@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Mark, Spinner, Text, Box, Stack, Heading, Flex } from '@chakra-ui/react';
+import { Mark, Spinner, Box, Stack, Heading, Flex } from '@chakra-ui/react';
 
-import { Checkbox, Wrap } from '@/components/ui';
+import { Checkbox } from '@/components/ui';
 import { BulkActions } from '@/components/BulkActions';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
@@ -86,26 +86,8 @@ export const ResultsList = ({
 
           {isFetching && <Spinner />}
         </Box>
-        {/* <Box> */}
-        <Stack
-          align="stretch"
-          gap={6}
-          flex={1}
-          overflowY="auto"
-          overflowX="hidden"
-          // css={{
-          //   '&::-webkit-scrollbar': { width: '8px' },
-          //   '&::-webkit-scrollbar-track': {
-          //     // background: 'var(--chakra-colors-gray-100)',
-          //     borderRadius: '4px',
-          //   },
-          //   '&::-webkit-scrollbar-thumb': {
-          //     // background: 'var(--chakra-colors-gray-300)',
-          //     borderRadius: '4px',
-          //     '&:hover': { background: 'var(--chakra-colors-gray-400)' },
-          //   },
-          // }}
-        >
+
+        <Stack align="stretch" gap={6} flex={1} overflowY="auto" overflowX="hidden">
           {visibleEntries.map(([specKey, { spec, executions: unfilteredExecutions }]) => {
             const filteredExecutions = results.get(specKey)?.executions || [];
             return (

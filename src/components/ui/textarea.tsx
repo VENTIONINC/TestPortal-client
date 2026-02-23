@@ -13,25 +13,23 @@ export interface TextareaProps extends ChakraTextareaProps {
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(props, ref) {
   const { label, error, fieldProps, ...rest } = props;
-  const { surfaces, borders, text } = useSurfaceColors();
+  const { borders, text } = useSurfaceColors();
 
-  const textareaBg = surfaces.card;
-  const textareaBorder = borders.subtle;
-  const textareaHoverBorder = borders.subtle;
-  const textareaFocusBorder = borders.focus;
   const placeholderColor = text.muted;
+  const inputFocusBorder = borders.focus;
 
   const sharedStyles: ChakraTextareaProps = {
-    bg: rest.bg ?? textareaBg,
-    borderColor: rest.borderColor ?? textareaBorder,
+    bg: rest.bg ?? 'bg.input',
+    color: rest.color ?? 'text.primary',
+    borderColor: rest.borderColor ?? 'border.main',
     _hover: {
       ...rest._hover,
-      borderColor: rest._hover?.borderColor ?? textareaHoverBorder,
+      borderColor: rest._hover?.borderColor ?? 'border.main',
     },
     _focusVisible: {
       ...rest._focusVisible,
-      borderColor: rest._focusVisible?.borderColor ?? textareaFocusBorder,
-      boxShadow: rest._focusVisible?.boxShadow ?? `0 0 0 1px ${textareaFocusBorder}`,
+      borderColor: rest._focusVisible?.borderColor ?? 'border.focus',
+      boxShadow: rest._focusVisible?.boxShadow ?? `0 0 0 1px ${inputFocusBorder}`,
     },
     _placeholder: {
       ...rest._placeholder,

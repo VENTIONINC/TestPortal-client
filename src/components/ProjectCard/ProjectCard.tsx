@@ -93,7 +93,7 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
     <Card.Root
       position="relative"
       overflow="hidden"
-      bg="bg.card"
+      bg="bg.cardSecondary"
       borderRadius="xl"
       borderColor="border.secondary"
       boxShadow="0px 1px 2px rgba(0, 0, 0, 0.08)"

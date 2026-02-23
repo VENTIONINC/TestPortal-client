@@ -1,4 +1,4 @@
-import { Box, Flex, Text, Icon } from '@chakra-ui/react';
+import { Box, Flex, Text } from '@chakra-ui/react';
 
 import { Tooltip } from '@/components/ui';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
@@ -17,10 +17,10 @@ export const NavItem = ({ icon: IconComp, label, collapsed, active }: NavItemPro
     <Flex
       align="center"
       justify={collapsed ? 'center' : 'flex-start'}
-      p="2"
-      borderRadius="md"
-      bg={active ? nav.item.activeBg : 'transparent'}
-      color={active ? nav.item.activeText : nav.item.inactiveText}
+      py="2"
+      px="6"
+      bg={active ? 'bg.active' : 'transparent'}
+      color={active ? 'logo.icon' : nav.item.inactiveText}
       _hover={{ bg: nav.item.hoverBg }}
     >
       <IconComp style={{ fontSize: '18px' }} />
@@ -32,7 +32,7 @@ export const NavItem = ({ icon: IconComp, label, collapsed, active }: NavItemPro
         opacity={collapsed ? 0 : 1}
         transition="all 0.2s ease-in-out"
       >
-        <Text fontSize="sm" fontWeight="500">
+        <Text fontSize="md" fontWeight="500">
           {label}
         </Text>
       </Box>
