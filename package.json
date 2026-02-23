@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run typegen && tsc -b && vite build",
     "eslint": "eslint .",
     "tsc": "tsc --noEmit",
     "lint": "yarn eslint && yarn tsc",
