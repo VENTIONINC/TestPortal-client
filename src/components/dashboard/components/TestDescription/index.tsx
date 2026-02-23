@@ -6,18 +6,6 @@ import { FaCircleCheck, FaRegCircleXmark } from 'react-icons/fa6';
 import { TestDescriptionProps } from '../../types';
 import { Stats, DonutChart, QualityChart } from './components';
 
-// const mockData: TestDescriptionData = {
-//   title: 'Test runs',
-//   stats: [
-//     { label: 'Test runs', value: 68, status: 'runs', icon: PiDotsNineBold, color: 'dashboard.base' },
-//     { label: 'Test passed', value: 50, status: 'passed', icon: FaCircleCheck, color: 'dashboard.green' },
-//     { label: 'Test failed', value: 18, status: 'failed', icon: FaRegCircleXmark, color: 'dashboard.red' },
-//   ],
-//   totalRuns: 68,
-//   passRate: 73,
-//   passRateDelta: 3,
-// };
-
 export const TestDescription = ({ summary, isGrid }: TestDescriptionProps) => {
   const { totalRuns = 0, passRate } = summary || {};
 
