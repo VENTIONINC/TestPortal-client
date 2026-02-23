@@ -1,5 +1,4 @@
 import { Heading, HStack, Text, VStack, Button, Card } from '@chakra-ui/react';
-import { LuArrowRight } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
 
 import { PromptConfig } from '@/redux/apis/generatedApi';
@@ -16,7 +15,13 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
   const navigate = useNavigate();
   const { text } = useSurfaceColors();
   const { icon: CategoryIcon, color: iconColor } = getCategoryIcon(prompt.category);
-  const badgeColor = getCategoryColor(prompt.category);
+  const badgeColor = getCategoryColor(prompt.category) as
+    | 'default'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'attention';
 
   const parameterCount = Object.keys(prompt.parameters).length;
   const requiredParameterCount = Object.values(prompt.parameters).filter((p) => p.required).length;

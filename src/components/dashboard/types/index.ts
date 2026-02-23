@@ -8,15 +8,13 @@ export interface TestStat {
   color: string;
 }
 
-export interface TestDescriptionData {
-  title: string;
-  stats: TestStat[];
+export interface TestDescriptionSummary {
   totalRuns: number;
   passRate: number;
-  passRateDelta: number;
+  passRateTrend?: number;
 }
 
 export interface TestDescriptionProps {
-  data?: TestDescriptionData;
+  summary?: TestDescriptionSummary;
   isGrid?: boolean;
 }

@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
 
-import {
-  BarChartView,
-  BarChartValueMode,
-  CategorySeries,
-  CategoriesChartDatum,
-  MetricsBarChart,
-} from '@/components/ui/components/Charts/MetricsBarChart';
+import { MetricsBarChart } from '@/components/ui/components/Charts/MetricsBarChart';
+import { BarChartView, BarChartValueMode, CategorySeries, CategoriesChartDatum } from '@/types/charts';
 
-export const IssuesCategoriesChart = ({ data }) => {
+export const IssuesCategoriesChart = ({
+  data,
+}: {
+  data: {
+    date: string;
+    metrics: { issues: { bug: number; environment: number; script: number; performance: number; other: number } };
+  }[];
+}) => {
   const [view, setView] = useState<BarChartView>('multiple');
   const [valueMode, setValueMode] = useState<BarChartValueMode>('count');
   const series: CategorySeries[] = [

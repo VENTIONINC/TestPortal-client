@@ -9,7 +9,8 @@ export type CategorySeries = {
 
 export type CategoriesChartDatum = {
   date: string;
-} & Record<string, number>;
+  [key: string]: number | string;
+};
 
 export type MetricsBarChartProps = {
   title?: string;

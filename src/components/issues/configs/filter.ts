@@ -1,5 +1,6 @@
 import { IssueCategory } from '@/types';
 import { ISSUE_CATEGORY_LABELS } from '@/utils';
+import { FilterConfigSection } from '@/types/filter';
 
 export const filterConfig = [
   {
@@ -71,7 +72,7 @@ export const filterConfig = [
         label: 'Date range:',
         name: 'dateRange',
         type: 'dateRange',
-        options: [
+        fields: [
           {
             label: 'From:',
             name: 'from',
@@ -86,4 +87,4 @@ export const filterConfig = [
       },
     ],
   },
-];
+] satisfies FilterConfigSection[];

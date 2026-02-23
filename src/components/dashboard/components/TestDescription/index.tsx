@@ -3,7 +3,7 @@ import { useChart } from '@chakra-ui/charts';
 import { PiDotsNineBold } from 'react-icons/pi';
 import { FaCircleCheck, FaRegCircleXmark } from 'react-icons/fa6';
 
-import { TestDescriptionData, TestDescriptionProps } from '../../types';
+import { TestDescriptionProps } from '../../types';
 import { Stats, DonutChart, QualityChart } from './components';
 
 // const mockData: TestDescriptionData = {
@@ -19,14 +19,14 @@ import { Stats, DonutChart, QualityChart } from './components';
 // };
 
 export const TestDescription = ({ summary, isGrid }: TestDescriptionProps) => {
-  const { totalRuns, passRate } = summary || {};
+  const { totalRuns = 0, passRate } = summary || {};
 
   const passed = passRate ?? 0;
   const failed = totalRuns && passRate ? totalRuns - passRate : 0;
   const stats = [
-    { label: 'Test runs', value: totalRuns, status: 'runs', icon: PiDotsNineBold, color: 'dashboard.base' },
-    { label: 'Test passed', value: passed, status: 'passed', icon: FaCircleCheck, color: 'dashboard.green' },
-    { label: 'Test failed', value: failed, status: 'failed', icon: FaRegCircleXmark, color: 'dashboard.red' },
+    { label: 'Test runs', value: totalRuns, status: 'runs' as const, icon: PiDotsNineBold, color: 'dashboard.base' },
+    { label: 'Test passed', value: passed, status: 'passed' as const, icon: FaCircleCheck, color: 'dashboard.green' },
+    { label: 'Test failed', value: failed, status: 'failed' as const, icon: FaRegCircleXmark, color: 'dashboard.red' },
   ];
 
   const donutData = [
@@ -35,7 +35,7 @@ export const TestDescription = ({ summary, isGrid }: TestDescriptionProps) => {
   ];
   const donutChart = useChart({
     data: donutData,
-    series: donutData.map((item) => ({ name: item.name, color: item.color })),
+    series: donutData.map((item) => ({ color: item.color })),
   });
   const qualitySegments = 24;
   const filledSegments = Math.round((passed / 100) * qualitySegments);
@@ -46,7 +46,7 @@ export const TestDescription = ({ summary, isGrid }: TestDescriptionProps) => {
   }));
   const qualityChart = useChart({
     data: qualityData,
-    series: qualityData.map((item) => ({ name: item.name, color: item.color })),
+    series: qualityData.map((item) => ({ color: item.color })),
   });
 
   const mockDataPast = {

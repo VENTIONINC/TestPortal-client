@@ -50,6 +50,7 @@ export const DonutChart = ({ title, passed, failed, donutChart, totalRuns }: Don
                     outerRadius={86}
                     startAngle={90}
                     endAngle={-270}
+                    // @ts-expect-error activeIndex is a valid Recharts Pie prop at runtime
                     activeIndex={activeIndex}
                     activeShape={renderActiveShape}
                     stroke="none"

@@ -15,8 +15,10 @@ const BreadcrumbSeparator = () => {
   const { text } = useSurfaceColors();
 
   return (
-    <Box as="svg" width="6px" height="10px" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M1 9L5 5L1 1" stroke={text.primary} strokeLinecap="round" strokeLinejoin="round" />
+    <Box asChild>
+      <svg width="6px" height="10px" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 9L5 5L1 1" stroke={text.primary} strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
     </Box>
   );
 };

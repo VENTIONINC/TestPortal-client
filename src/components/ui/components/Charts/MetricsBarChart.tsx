@@ -56,10 +56,7 @@ export const MetricsBarChart = ({
     });
   }, [data, valueMode, series]);
 
-  const chartSeries = useMemo(
-    () => series.map((item) => ({ name: item.name, color: item.color })),
-    [series]
-  );
+  const chartSeries = useMemo(() => series.map((item) => ({ name: item.name, color: item.color })), [series]);
 
   const chart = useChart({
     data: normalizedData,
@@ -68,7 +65,7 @@ export const MetricsBarChart = ({
 
   const resolvedYDomain = useMemo(
     () => (valueMode === 'percent' ? [0, 100] : (yDomain ?? [0, 50])),
-    [valueMode, yDomain]
+    [valueMode, yDomain],
   );
 
   const valueSuffix = useMemo(() => (valueMode === 'percent' ? '%' : ''), [valueMode]);
@@ -122,7 +119,7 @@ export const MetricsBarChart = ({
         </Box>
       );
     },
-    [valueSuffix]
+    [valueSuffix],
   );
 
   const tooltipContent = useCallback(
@@ -136,7 +133,7 @@ export const MetricsBarChart = ({
         border: tooltipBorder,
         text: tooltipText,
       }),
-    [renderTooltip, series, tooltipBg, tooltipBorder, tooltipText]
+    [renderTooltip, series, tooltipBg, tooltipBorder, tooltipText],
   );
 
   const tooltipCursor = useMemo(() => ({ fill: cursorFill }), [cursorFill]);
@@ -240,11 +237,7 @@ export const MetricsBarChart = ({
                       ticks={customTicks}
                       interval={0} // allowDecimals={false}
                     />
-                    <Tooltip
-                      cursor={tooltipCursor}
-                      wrapperStyle={tooltipWrapperStyle}
-                      content={tooltipContent}
-                    />
+                    <Tooltip cursor={tooltipCursor} wrapperStyle={tooltipWrapperStyle} content={tooltipContent} />
                     {series.map((item) => (
                       <Bar
                         key={item.name}
