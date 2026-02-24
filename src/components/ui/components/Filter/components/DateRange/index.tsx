@@ -17,6 +17,7 @@ export const DateRangeField = ({ field }: DateRangeFieldProps) => {
       fromName={fromField.name}
       toName={toField.name}
       label={field.label}
+      maxRangeDays={7}
     />
   );
 };

@@ -81,7 +81,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
     showPresets = true,
     fieldProps,
   } = props;
-  const { menu, borders, text, surfaces } = useSurfaceColors();
+  const { menu, borders, text } = useSurfaceColors();
   const [open, setOpen] = useState(false);
 
   const selectedRange = useMemo<DateRange | undefined>(() => {
@@ -142,9 +142,21 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
     setLeftMonth(from);
   }, []);
 
-  const handleRangeSelect = useCallback((range: DateRange | undefined) => {
-    setPendingRange(range);
-  }, []);
+  const handleRangeSelect = useCallback(
+    (range: DateRange | undefined) => {
+      if (maxRangeDays && range?.from && range?.to && range.from.getTime() !== range.to.getTime()) {
+        const diffDays = Math.round((range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays >= maxRangeDays) {
+          const clippedTo = new Date(range.from);
+          clippedTo.setDate(range.from.getDate() + maxRangeDays - 1);
+          setPendingRange({ from: range.from, to: clippedTo });
+          return;
+        }
+      }
+      setPendingRange(range);
+    },
+    [maxRangeDays],
+  );
 
   const handleLeftMonthChange = useCallback((newMonth: string) => {
     setLeftMonth((prev) => new Date(prev.getFullYear(), Number(newMonth), 1));
@@ -168,18 +180,25 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
     });
   }, []);
 
-  // When maxRangeDays is set and user has picked the start date (from exists, to doesn't),
-  // disable dates that are beyond maxRangeDays from the anchor.
+  // Always disable future dates (after today).
+  // When maxRangeDays is set and user has picked the start date (from exists, to doesn't or equals from),
+  // also disable dates that are beyond maxRangeDays from the anchor.
   const disabledDays = useMemo<Matcher[]>(() => {
-    if (!maxRangeDays || !pendingRange?.from || pendingRange?.to) return [];
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    const futureDisabled: Matcher = { after: today };
+
+    if (!maxRangeDays || !pendingRange?.from) return [futureDisabled];
+    // Deactivate range restriction once user has completed the selection (to is set and differs from from)
+    if (pendingRange.to && pendingRange.from.getTime() !== pendingRange.to.getTime()) return [futureDisabled];
 
     const anchor = pendingRange.from;
     const minDate = new Date(anchor);
-    minDate.setDate(anchor.getDate() - maxRangeDays);
+    minDate.setDate(anchor.getDate() - (maxRangeDays - 1));
     const maxDate = new Date(anchor);
-    maxDate.setDate(anchor.getDate() + maxRangeDays);
+    maxDate.setDate(anchor.getDate() + (maxRangeDays - 1));
 
-    return [{ before: minDate }, { after: maxDate }];
+    return [{ before: minDate }, { after: maxDate < today ? maxDate : today }];
   }, [maxRangeDays, pendingRange]);
 
   const calendarCss = useMemo(

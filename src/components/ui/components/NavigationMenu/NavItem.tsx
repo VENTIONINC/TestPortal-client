@@ -22,6 +22,7 @@ export const NavItem = ({ icon: IconComp, label, collapsed, active }: NavItemPro
       bg={active ? 'bg.active' : 'transparent'}
       color={active ? 'logo.icon' : nav.item.inactiveText}
       _hover={{ bg: nav.item.hoverBg }}
+      cursor="pointer"
     >
       <IconComp style={{ fontSize: '18px' }} />
       <Box

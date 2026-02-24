@@ -1,5 +1,6 @@
-import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
+import { Button, Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuFileText, LuTag } from 'react-icons/lu';
+import { useFormContext } from 'react-hook-form';
 
 import { ClipboardCopyText, DateToggle, Tooltip } from '@/components/ui';
 import { toCleanTitle } from '@/utils/date-time.converter';
@@ -16,11 +17,15 @@ export const ResultSpecSectionView = ({
   sectionDays,
   handleDateToggle,
   projectId,
-  onTagClick,
   onExecutionContextMenu,
   onResultContextMenu,
 }: ResultSpecSectionViewProps) => {
-  const { borders, text, states } = useSurfaceColors();
+  const { text } = useSurfaceColors();
+  const methods = useFormContext();
+
+  const handleClickTag = (tag: string) => {
+    methods.setValue('tag', tag);
+  };
 
   return (
     <VStack
@@ -56,21 +61,19 @@ export const ResultSpecSectionView = ({
 
           <Flex ms="auto" flexWrap="wrap" gap={2}>
             {specTags?.map((tag) => (
-              <HStack
+              <Button
                 key={tag}
-                px={2}
-                border="1px solid"
-                borderColor={borders.subtle}
-                borderRadius="sm"
-                onClick={() => onTagClick(tag)}
-                cursor="pointer"
-                _hover={{ bg: states.hoverSubtle }}
+                variant="tertiary"
+                color="text.tertiary"
+                size="xs"
+                borderRadius="full"
+                onClick={() => handleClickTag(tag)}
               >
                 <LuTag size={12} />
-                <Text textStyle="sm" color={text.primary}>
+                <Text textStyle="xs" color={text.primary}>
                   {tag}
                 </Text>
-              </HStack>
+              </Button>
             ))}
           </Flex>
         </Flex>

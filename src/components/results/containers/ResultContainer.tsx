@@ -27,6 +27,11 @@ export const ResultContainerInner = ({ showFilters = true }: { showFilters?: boo
       selectedProjectId: selectedProjectId!,
     });
 
+  const statsFilter = useMemo(
+    () => ({ from: effectiveFilters.from, to: effectiveFilters.to }),
+    [effectiveFilters.from, effectiveFilters.to],
+  );
+
   const handleSelectAll = () => selectAll(activeDaysResultsIds);
 
   const selectedCount = getSelectedCount();
@@ -42,7 +47,7 @@ export const ResultContainerInner = ({ showFilters = true }: { showFilters?: boo
 
         <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="visible" position="relative">
           <DateToggle days={availableDates} toggleHandler={(day) => toggleDate(day.yyyy_mm_dd)} />
-          <ResultsStats filter={effectiveFilters} />
+          <ResultsStats filter={statsFilter} />
           <ResultsList
             activeDaysResultsIds={activeDaysResultsIds}
             handleSelectAll={handleSelectAll}

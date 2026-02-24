@@ -1,11 +1,12 @@
-import { memo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { Collapsible, HStack, Flex, Text, VStack, Box, Separator, Tag } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io';
+import { useFormContext } from 'react-hook-form';
 
 import { Wrap } from '@/components/ui';
 import { useGetApiV2ResultsStatsQuery } from '@/redux/apis/generatedApi';
-import { useResultsActions, useSelectedDates } from '@/redux/slices/results';
+import { useSelectedDates } from '@/redux/slices/results';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
 import { getResultStatusStyle } from '@/utils';
@@ -20,14 +21,13 @@ interface ResultsStatsProps {
 
 export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const methods = useFormContext();
 
-  const dateRange = getDatesBetween(filter.from, filter.to);
   const selectedDates = useSelectedDates();
   const selectedProjectId = useSelectedProjectId();
 
-  const { updateFilters } = useResultsActions();
-
-  const activeDates = selectedDates.length > 0 ? selectedDates : dateRange;
+  const dateRange = useMemo(() => getDatesBetween(filter.from, filter.to), [filter.from, filter.to]);
+  const activeDates = useMemo(() => (selectedDates.length > 0 ? selectedDates : dateRange), [selectedDates, dateRange]);
 
   const [debouncedDates] = useDebounce(activeDates, 200);
   const { data: statisticsData } = useGetApiV2ResultsStatsQuery(
@@ -36,9 +36,7 @@ export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
   );
 
   const statistics = debouncedDates.length === 0 ? undefined : statisticsData;
-  const handleFilterChange = (name: string, value: string) => {
-    updateFilters({ [name]: value });
-  };
+
   const { stats } = useResultsSurfaceColors();
 
   if (!statistics || statistics.byStatusTotal === 0) {
@@ -48,6 +46,13 @@ export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
       </Text>
     );
   }
+
+  const handleClickTopError = (message: string) => {
+    methods.setValue('errorMessage', message);
+  };
+  const handleClickTopIssue = (message: string) => {
+    methods.setValue('issueName', message);
+  };
 
   return (
     <>
@@ -99,11 +104,7 @@ export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
                 </Flex>
               </Collapsible.Trigger>
               <Collapsible.Content>
-                <TopSection
-                  results={statistics.topErrors}
-                  label="errors"
-                  onClick={(message) => handleFilterChange('errorMessage', message)}
-                />
+                <TopSection results={statistics.topErrors} label="errors" onClick={handleClickTopError} />
               </Collapsible.Content>
             </Collapsible.Root>
           )}
@@ -121,11 +122,7 @@ export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
                 </Flex>
               </Collapsible.Trigger>
               <Collapsible.Content>
-                <TopSection
-                  results={statistics.topIssues}
-                  label="issues"
-                  onClick={(message) => handleFilterChange('issueName', message)}
-                />
+                <TopSection results={statistics.topIssues} label="issues" onClick={handleClickTopIssue} />
               </Collapsible.Content>
             </Collapsible.Root>
           )}

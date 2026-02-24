@@ -32,7 +32,6 @@ export interface ResultSpecSectionViewProps {
   sectionDays: SectionDay[];
   projectId: string;
   handleDateToggle: (day: { yyyy_mm_dd: string }) => void;
-  onTagClick: (tag: string) => void;
   onExecutionContextMenu: (
     evt: React.MouseEvent<HTMLButtonElement>,
     execution: { id: string; name: string; projectId: string },

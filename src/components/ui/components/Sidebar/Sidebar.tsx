@@ -1,4 +1,5 @@
 import { Box, Flex, IconButton } from '@chakra-ui/react';
+import { Link } from 'react-router';
 
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
@@ -8,15 +9,11 @@ import { Logo, FullLogo, CloseNav } from './components';
 
 interface SidebarProps {
   collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
+  handleSetCollapsed: () => void;
 }
 
-export const Sidebar = ({ collapsed, setCollapsed }: SidebarProps) => {
+export const Sidebar = ({ collapsed, handleSetCollapsed }: SidebarProps) => {
   const { surfaces, borders, text } = useSurfaceColors();
-
-  const handleCollapseToggle = () => {
-    setCollapsed(!collapsed);
-  };
 
   return (
     <Flex
@@ -45,13 +42,15 @@ export const Sidebar = ({ collapsed, setCollapsed }: SidebarProps) => {
           mx="6px"
           variant="ghost"
           aria-label="Toggle sidebar"
-          onClick={handleCollapseToggle}
+          onClick={handleSetCollapsed}
           transition="all 0.2s"
+          cursor="pointer"
           transform={collapsed ? 'rotate(0deg)' : 'rotate(180deg)'}
         >
           <CloseNav />
         </IconButton>
-        {collapsed ? <Logo /> : <FullLogo />}
+
+        <Link to="/dashboard">{collapsed ? <Logo /> : <FullLogo />}</Link>
       </Flex>
 
       {/* Navigation */}

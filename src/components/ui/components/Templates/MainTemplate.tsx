@@ -34,7 +34,12 @@ export const MainTemplate = ({
   isFilterVisible,
 }: MainTemplateProps) => {
   const [collapsed, setCollapsed] = useState(() => getInitialCollapsedState());
-  const handleSetCollapsed = () => setCollapsed((prev: boolean) => setCollapsedState(prev));
+  const handleSetCollapsed = () =>
+    setCollapsed((prev: boolean) => {
+      const newState = !prev;
+      setCollapsedState(newState);
+      return newState;
+    });
 
   const { toggleFilters } = useFilterContext();
 
@@ -52,7 +57,7 @@ export const MainTemplate = ({
       transition="grid-template-columns 0.2s ease-in-out"
     >
       <GridItem>
-        <Sidebar collapsed={collapsed} setCollapsed={handleSetCollapsed} />
+        <Sidebar collapsed={collapsed} handleSetCollapsed={handleSetCollapsed} />
       </GridItem>
 
       <GridItem>

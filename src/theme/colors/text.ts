@@ -4,4 +4,5 @@ export const text = {
   muted: { value: { _light: '#B2B2B2', _dark: '#7A7A7A' } },
   onAccent: { value: { _light: '#FFFFFF', _dark: '#FFFFFF' } },
   mainHover: { value: { _light: '#EAEAEA', _dark: '#333333' } },
+  tertiary: { value: { _light: '#B2B2B2', _dark: '#7D7D7F' } },
 };

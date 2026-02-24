@@ -24,8 +24,6 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
   const handleExecutionContextMenu = useExecutionContextMenu();
   const handleResultContextMenu = useResultContextMenu();
 
-  const { updateFilters } = useResultsActions();
-
   // Track dates that user manually toggled locally
   // For dates in selectedDates: toggled = hidden (inverted)
   // For dates not in selectedDates: toggled = shown
@@ -85,9 +83,6 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
     // Clear local toggles when selectedDates change to reset to default state
     setLocallyToggledDates(new Set());
   }, [selectedDates]);
-  const handleTagClick = (tag: string) => {
-    updateFilters({ tag });
-  };
 
   // Show spec if there are any executions (filtered or unfiltered)
   if (allExecutions.length === 0) {
@@ -107,7 +102,6 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
       sectionDays={sectionDays}
       projectId={projectId}
       handleDateToggle={handleDateToggle}
-      onTagClick={handleTagClick}
       onExecutionContextMenu={handleExecutionContextMenu}
       onResultContextMenu={handleResultContextMenu}
     />
