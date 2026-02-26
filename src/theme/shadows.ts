@@ -11,4 +11,10 @@ export const shadows = {
       _dark: '0px 0px 12px 8px #FFFFFF1F',
     },
   },
+  dialog: {
+    value: {
+      _light: '0px 0px 12px 8px #0000001F',
+      _dark: '0px 0px 12px 8px #FFFFFF1F',
+    },
+  },
 };

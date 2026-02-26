@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Flex, useMediaQuery } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';
 
 import { useGetApiV2ProjectsByProjectIdDashboardQuery } from '@/redux/apis/generatedApi';
@@ -9,8 +9,8 @@ import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate'
 import { Alert, Filter } from '@/components/ui';
 import { useFilterContext, FilterProvider } from '@/contexts/FilterContext';
 
-import { TestDescription, DashboardChart } from '../components';
 import { filterConfig } from '../configs';
+import { DashboardGrid } from './DashboardGrid';
 
 const initialDashboardFilters: Record<string, string> = {
   execution: '',
@@ -19,7 +19,6 @@ const initialDashboardFilters: Record<string, string> = {
 
 const DashboardContent = () => {
   const selectedProjectId = useSelectedProjectId();
-  const [isLargeScreen] = useMediaQuery(['(min-width: 1300px)'], { ssr: false, fallback: [true] });
   const [filters, setFilters] = useState(initialDashboardFilters);
 
   const { formMethods, filterProps } = useFiltersWithUrl({
@@ -41,8 +40,6 @@ const DashboardContent = () => {
 
   const { showFilters } = useFilterContext();
 
-  const isGrid = showFilters && !isLargeScreen;
-
   if (error) {
     return (
       <MainTemplate pageHeader="Dashboard">
@@ -61,14 +58,7 @@ const DashboardContent = () => {
       <FormProvider {...formMethods}>
         <Flex align="stretch" gap={6}>
           <Filter showFilters={showFilters} config={filterConfig} {...filterProps} />
-          <Flex direction={isGrid ? 'column' : 'row'} flex="1" gap={6} minW={0}>
-            <Box flex={isGrid ? 'none' : '0 0 auto'} width={isGrid ? '100%' : 'auto'}>
-              <TestDescription isGrid={isGrid} summary={summary} />
-            </Box>
-            <Box flex="1" minW={0} overflow="hidden">
-              <DashboardChart data={history} isLoading={isLoading} showFilters={showFilters} />
-            </Box>
-          </Flex>
+          <DashboardGrid summary={summary} history={history} isLoading={isLoading} showFilters={showFilters} />
         </Flex>
       </FormProvider>
     </MainTemplate>

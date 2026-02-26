@@ -7,6 +7,7 @@ import { dashboard } from './dashboard';
 import { tabs } from './tabs';
 import { category } from './category';
 import { logo } from './logo';
+import { accent } from './accent';
 
 export const semanticColors = {
   bg,
@@ -18,4 +19,5 @@ export const semanticColors = {
   button,
   category,
   logo,
+  accent,
 };

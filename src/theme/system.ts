@@ -1,6 +1,6 @@
 import { createSystem, defaultConfig, defineConfig } from '@chakra-ui/react';
 
-import { buttonRecipe, badgeRecipe, cardRecipe, tabsRecipe, linkRecipe } from './base';
+import { buttonRecipe, sliderRecipe, badgeRecipe, cardRecipe, tabsRecipe, linkRecipe } from './base';
 import { semanticColors } from './colors';
 import { shadows } from './shadows';
 import { fontSizes, lineHeights, letterSpacings } from './typography';
@@ -32,6 +32,7 @@ const config = defineConfig({
     slotRecipes: {
       card: cardRecipe,
       tabs: tabsRecipe,
+      slider: sliderRecipe,
     },
   },
 });

@@ -1,9 +1,9 @@
-import { Button } from '@chakra-ui/react';
+import { Button, Text, Box } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { Dialog, DialogBody, DialogFooter, Field, NativeSelect, Slider, Textarea, toaster } from '@/components/ui';
+import { Dialog, DialogBody, DialogFooter, NativeSelect, Slider, Textarea, toaster } from '@/components/ui';
 import { usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation } from '@/redux/apis/generatedApi';
 import { resultAnalysisSchema } from '@/schemas';
 import { AnalysisCategory, BaseResult, DefaultDialogProps } from '@/types';
@@ -62,7 +62,7 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
   };
 
   return (
-    <Dialog title="Result Analysis" onClose={closeDialog} size="lg">
+    <Dialog title="Result analysis" onClose={closeDialog} size="md">
       <DialogBody display="flex" flexDir="column" gap={5}>
         <Textarea
           {...register('analysisConclusion')}
@@ -104,13 +104,28 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
           marks={[1, 2, 3, 4, 5]}
           readOnly
         />
-        <Field label="Error Quality Conclusion:" readOnly>
-          {result.analysisErrorQualityConclusion || 'N/A'}
-        </Field>
+
+        <Box>
+          <Text mb={1} fontWeight={400} fontSize="sm" color="text.main">
+            Error quality conclusion:
+          </Text>
+          <Text fontWeight={400} fontSize="sm" color="text.secondary" lineHeight="md">
+            {result.analysisErrorQualityConclusion || 'N/A'}
+          </Text>
+        </Box>
       </DialogBody>
 
-      <DialogFooter>
-        <Button onClick={handleSubmit(onSubmit)} loading={isSubmitting} disabled={!isDirty || isSubmitting}>
+      <DialogFooter pb={4} pt={0} px={6}>
+        <Button variant="outline" onClick={closeDialog} disabled={isSubmitting}>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit(onSubmit)}
+          variant="primary"
+          px={4}
+          loading={isSubmitting}
+          disabled={!isDirty || isSubmitting}
+        >
           Save
         </Button>
       </DialogFooter>

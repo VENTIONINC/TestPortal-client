@@ -20,11 +20,20 @@ export const Dialog = ({ title, onClose, titleProps, children, ...props }: Dialo
       scrollBehavior="inside"
       {...props}
     >
-      <DialogContent>
+      <DialogContent
+        bg="bg.modalGlass"
+        borderColor="border.main"
+        borderWidth="1px"
+        borderRadius="lg"
+        backdropFilter="blur(20px)"
+        shadow="dialog"
+      >
         <DialogCloseTrigger />
 
         <ChakraDialog.Header>
-          <ChakraDialog.Title {...titleProps}>{title}</ChakraDialog.Title>
+          <ChakraDialog.Title color="text.main" fontWeight={500} fontSize="lg" {...titleProps}>
+            {title}
+          </ChakraDialog.Title>
         </ChakraDialog.Header>
         {children}
       </DialogContent>
@@ -53,18 +62,17 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(function Di
   );
 });
 
-const DialogCloseTrigger = forwardRef<HTMLButtonElement, ChakraDialog.CloseTriggerProps>(function DialogCloseTrigger(
-  props,
-  ref,
-) {
-  return (
-    <ChakraDialog.CloseTrigger position="absolute" top="2" insetEnd="2" {...props} asChild>
-      <CloseButton size="sm" ref={ref}>
-        {props.children}
-      </CloseButton>
-    </ChakraDialog.CloseTrigger>
-  );
-});
+const DialogCloseTrigger = forwardRef<HTMLButtonElement, ChakraDialog.CloseTriggerProps>(
+  function DialogCloseTrigger(props, ref) {
+    return (
+      <ChakraDialog.CloseTrigger position="absolute" top="2" insetEnd="2" {...props} asChild>
+        <CloseButton size="sm" ref={ref}>
+          {props.children}
+        </CloseButton>
+      </ChakraDialog.CloseTrigger>
+    );
+  },
+);
 
 export const DialogBody = ChakraDialog.Body;
 export const DialogFooter = ChakraDialog.Footer;

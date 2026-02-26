@@ -1,8 +1,9 @@
-import { Box, Container, Heading, Flex, IconButton } from '@chakra-ui/react';
+import { Box, Container, Heading, Flex, IconButton, Button } from '@chakra-ui/react';
 import { FiSun, FiMoon, FiMonitor } from 'react-icons/fi';
+import { LuUpload } from 'react-icons/lu';
 
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
-import { useColorMode } from '@/components/ui';
+import { useColorMode, useResultsFileUploadDialog } from '@/components/ui';
 
 import { ProjectSelect } from './components';
 
@@ -14,6 +15,7 @@ interface HeaderProps {
 export const Header = ({ title, actionButton }: HeaderProps) => {
   const { surfaces, borders, text } = useSurfaceColors();
   const { toggleColorMode, colorMode, theme } = useColorMode();
+  const openUploadDialog = useResultsFileUploadDialog();
 
   return (
     <Box bg={surfaces.sidebar} shadow="sm" borderBottom="1px solid" borderColor={borders.subtle}>
@@ -27,10 +29,10 @@ export const Header = ({ title, actionButton }: HeaderProps) => {
             {actionButton && actionButton}
             <ProjectSelect />
 
-            {/* <Button variant="outline" size="sm" onClick={openUploadDialog}>
+            <Button variant="outline" size="sm" onClick={openUploadDialog}>
               <LuUpload size={16} />
               Upload
-            </Button> */}
+            </Button>
           </Flex>
           <IconButton
             aria-label="Toggle theme"

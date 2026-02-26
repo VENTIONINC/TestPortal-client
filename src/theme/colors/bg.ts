@@ -3,6 +3,7 @@ export const bg = {
   section: { value: { _light: '#F6F6F7', _dark: '#26262B' } },
   card: { value: { _light: '#FFFFFF', _dark: '#26262B' } },
   cardSecondary: { value: { _light: '#FFFFFF', _dark: '#2D2D32' } },
+  modalGlass: { value: { _light: 'rgba(255, 255, 255, 0.8)', _dark: 'rgba(33, 33, 38, 0.9)' } },
   input: { value: { _light: '#F9FAFB', _dark: '#333337' } },
   backdrop: {
     value: {
