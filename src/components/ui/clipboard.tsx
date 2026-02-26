@@ -21,7 +21,7 @@ export const ClipboardCopyText = forwardRef<HTMLDivElement, ClipboardCopyTextPro
       ref={ref}
     >
       <ClipBoardTrigger asChild>
-        <Text cursor="copy" _hover={{ textDecoration: 'underline' }} {...props}>
+        <Text as="span" cursor="copy" _hover={{ textDecoration: 'underline' }} {...props}>
           {children}
         </Text>
       </ClipBoardTrigger>

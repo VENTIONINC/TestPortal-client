@@ -14,14 +14,44 @@ export const getIssueCategoryStyle = (category: IssueCategory) => {
 
   switch (category) {
     case IssueCategory.Bug:
-      return { Icon: LuBug, color: 'category.bug.color', hoverBgColor: 'category.bug.color', name };
+      return {
+        Icon: LuBug,
+        color: 'category.bug.color',
+        hoverBgColor: 'category.bug.color',
+        hoverColor: 'category.bug.hover.color',
+        name,
+      };
     case IssueCategory.Script:
-      return { Icon: LuCode, color: 'category.script.color', hoverBgColor: 'category.script.color', name };
+      return {
+        Icon: LuCode,
+        color: 'category.script.color',
+        hoverBgColor: 'category.script.color',
+        hoverColor: 'category.script.hover.color',
+        name,
+      };
     case IssueCategory.Infra:
-      return { Icon: LuServer, color: 'category.environment.color', hoverBgColor: 'category.environment.color', name };
+      return {
+        Icon: LuServer,
+        color: 'category.environment.color',
+        hoverBgColor: 'category.environment.color',
+        hoverColor: 'category.environment.hover.color',
+        name,
+      };
     case IssueCategory.Performance:
-      return { Icon: LuCpu, color: 'category.performance.color', hoverBgColor: 'category.performance.color', name };
+      return {
+        Icon: LuCpu,
+        color: 'category.performance.color',
+        hoverBgColor: 'category.performance.color',
+        hoverColor: 'category.performance.hover.color',
+        name,
+      };
     default:
-      return { Icon: LuCircleHelp, color: 'category.default.color', hoverBgColor: 'category.default.color', name };
+      return {
+        Icon: LuCircleHelp,
+        color: 'category.default.color',
+        hoverBgColor: 'category.default.color',
+        hoverColor: 'category.default.hover.color',
+        name,
+      };
   }
 };

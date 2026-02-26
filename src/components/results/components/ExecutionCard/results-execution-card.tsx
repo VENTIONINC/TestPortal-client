@@ -1,5 +1,6 @@
 import { Fragment, memo, useState } from 'react';
 import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
+import { IoCloseCircleOutline } from 'react-icons/io5';
 
 import { useSurfaceColors } from '@/theme';
 import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip, toaster } from '@/components/ui';
@@ -10,6 +11,7 @@ import { getAnalysisCategoryStyle, getConfidenceLabel, getResultStatusStyle } fr
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { usePostApiV2ResultErrorsAnalyzeMutation } from '@/redux/apis/generatedApi';
 import { BulkActions } from '@/components/BulkActions';
+import { ResultStatus } from '@/types';
 
 import { ResultsExecutionCardProps } from './types';
 import { IntegrationLinks } from './integration-links';
@@ -114,7 +116,7 @@ export const ResultsExecutionCard = memo(
             analysisConfidence,
           } = result;
 
-          const { Icon, color, hoverBgColor } = getAnalysisCategoryStyle(analysisCategory);
+          const { Icon, color, hoverBgColor, hoverColor } = getAnalysisCategoryStyle(analysisCategory);
           const hasAnalysis = Boolean(analysisConfidence);
 
           return (
@@ -128,7 +130,14 @@ export const ResultsExecutionCard = memo(
                   size="md"
                   controlProps={{ borderColor: borders.subtle }}
                 />
-                <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(status).color} />
+                {status === ResultStatus.Failed ? (
+                  <Flex color={getResultStatusStyle(status).color}>
+                    <IoCloseCircleOutline size={16} />
+                  </Flex>
+                ) : (
+                  <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(status).color} />
+                )}
+
                 <Tooltip content="Retry">
                   <Text whiteSpace="nowrap" minW={6}>
                     #{retry}
@@ -157,7 +166,7 @@ export const ResultsExecutionCard = memo(
                       px={1}
                       borderRadius="sm"
                       cursor="pointer"
-                      _hover={{ bg: hoverBgColor ?? states.hoverSubtle }}
+                      _hover={{ bg: hoverBgColor ?? states.hoverSubtle, color: hoverColor ?? color }}
                     >
                       <Icon size={16} color="currentColor" />
                       <Text>{getConfidenceLabel(analysisConfidence)}</Text>
