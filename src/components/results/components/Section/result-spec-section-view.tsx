@@ -53,7 +53,7 @@ export const ResultSpecSectionView = ({
           </ClipboardCopyText>
           <ClipboardCopyText value={specFile} mr={6}>
             <Tooltip content={specFile}>
-              <Text maxW="300px" truncate>
+              <Text maxW="300px" truncate direction="rtl" textAlign="left">
                 {specFile}
               </Text>
             </Tooltip>
