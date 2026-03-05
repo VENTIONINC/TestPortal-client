@@ -38,8 +38,7 @@ export const initialFilters: ResultsFilters = {
 
 const initialState: ResultsState = {
   filters: initialFilters,
-  // selectedDates: [formatDate(today)],
-  selectedDates: [],
+  selectedDates: [initialFilters.to],
 };
 
 export const resultsSlice = createSlice({

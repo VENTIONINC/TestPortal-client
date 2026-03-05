@@ -14,8 +14,8 @@ export const sliderRecipe = defineSlotRecipe({
     range: {
       borderRadius: 'full',
       bg: {
-        base: '#3054FE!',
-        _dark: '#53ABFC!',
+        base: '#3054FE',
+        _dark: '#53ABFC',
       },
     },
     thumb: {
@@ -25,8 +25,8 @@ export const sliderRecipe = defineSlotRecipe({
       outline: 'none',
       boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
       bg: {
-        base: 'white!',
-        _dark: '#2D2D32!',
+        base: '#FFFFFF',
+        _dark: '#2D2D32',
       },
       _focus: {
         outline: 'none',

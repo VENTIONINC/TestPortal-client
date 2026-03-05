@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Mark, Spinner, Box, Stack, Heading, Flex } from '@chakra-ui/react';
 
 import { Checkbox } from '@/components/ui';
@@ -36,7 +36,7 @@ export const ResultsList = ({
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const allEntries = Array.from(unfilteredResultsMap.entries());
+  const allEntries = useMemo(() => Array.from(unfilteredResultsMap.entries()), [unfilteredResultsMap]);
   const visibleEntries = allEntries.slice(0, visibleCount);
   const hasMore = visibleCount < allEntries.length;
 

@@ -37,7 +37,11 @@ export const useFiltersWithUrl = <TFilters extends Record<string, any>>({
     [initialFilters],
   );
 
-  const { updateFilters: updateUrlFilters, filters: urlFiltersRaw } = useFilterQueryParams({
+  const {
+    updateFilters: updateUrlFilters,
+    filters: urlFiltersRaw,
+    searchParams,
+  } = useFilterQueryParams({
     defaultFilters: stringInitialFilters,
     onFiltersChange: (newFilters) => {
       onUpdateFilters({ ...currentFilters, ...newFilters } as TFilters);
@@ -45,9 +49,12 @@ export const useFiltersWithUrl = <TFilters extends Record<string, any>>({
   });
 
   const urlFilters = useMemo(() => {
-    const entries = Object.entries(urlFiltersRaw).map(([key, value]) => [key, String(value ?? '')]);
+    const entries = Object.entries(urlFiltersRaw)
+      .filter(([key]) => searchParams.has(key))
+      .map(([key, value]) => [key, String(value ?? '')]);
+
     return Object.fromEntries(entries) as FilterValues;
-  }, [urlFiltersRaw]);
+  }, [urlFiltersRaw, searchParams]);
 
   const mergedFilters = useMemo(() => ({ ...stringFilters, ...urlFilters }), [stringFilters, urlFilters]);
 

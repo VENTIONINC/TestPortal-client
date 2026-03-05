@@ -9,5 +9,5 @@ export { Breadcrumb } from './Breadcrumb';
 export { Filter } from './Filter';
 export { FormInput, FormSelect, FormDateInput, FormDatePicker, FormDateRangePicker } from './Form';
 export { DateToggle } from './DateToggle';
-
+export { StatusIcon } from './StatusIcon';
 export * from './Dialogs';

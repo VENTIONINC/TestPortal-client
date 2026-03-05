@@ -97,8 +97,8 @@ export const ResultSpecSectionView = ({
       </VStack>
 
       {sectionDays.map(
-        ({ execution, results, serialized, isActive }) =>
-          isActive &&
+        ({ execution, results, serialized, isVisible }) =>
+          isVisible &&
           execution &&
           serialized && (
             <ResultsExecutionCard

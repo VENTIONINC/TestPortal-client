@@ -2,7 +2,7 @@ import { ResultStatus } from '@/types';
 
 export const getStatusOptions = () => {
   return [
-    { value: 'all', label: 'All' },
+    { value: '', label: 'All' },
     ...Object.values(ResultStatus).map((status) => ({
       value: status,
       label: status.charAt(0).toUpperCase() + status.slice(1),

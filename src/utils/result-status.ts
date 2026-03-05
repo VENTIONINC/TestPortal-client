@@ -9,7 +9,7 @@ export const getResultStatusStyle = (status: ResultStatus) => {
     case ResultStatus.Failed:
       return { Icon: LuX, title: 'Failed', color: 'status.error' };
     case ResultStatus.Skipped:
-      return { Icon: LuSkipForward, title: 'Skipped', color: 'status.textColor' };
+      return { Icon: LuSkipForward, title: 'Skipped', color: 'status.neutral' };
     case ResultStatus.TimedOut:
       return { Icon: LuClock, title: 'Timed Out', color: 'status.warning' };
     default:

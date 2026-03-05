@@ -18,6 +18,7 @@ export interface SectionDay {
   yyyy_mm_dd: string;
   stats: string[];
   isActive: boolean;
+  isVisible: boolean;
   display: string;
   results: BaseResult[];
   execution: ResultExecution | undefined;

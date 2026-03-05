@@ -19,9 +19,9 @@ export const Header = ({ title, actionButton }: HeaderProps) => {
 
   return (
     <Box bg={surfaces.sidebar} shadow="sm" borderBottom="1px solid" borderColor={borders.subtle}>
-      <Container py={4} maxW="full" h="65px">
+      <Container py={3} px={6} maxW="full" h="65px">
         <Flex justify="space-between" align="center">
-          <Heading size="lg" color={text.primary}>
+          <Heading size="xl" color={text.primary}>
             {title}
           </Heading>
 
@@ -41,6 +41,7 @@ export const Header = ({ title, actionButton }: HeaderProps) => {
             color={colorMode === 'light' ? 'black' : 'white'}
             borderWidth="1px"
             borderStyle="solid"
+            size="sm"
             borderColor={borders.subtle}
           >
             {theme === 'system' ? <FiSun /> : theme === 'light' ? <FiMoon /> : <FiMonitor />}

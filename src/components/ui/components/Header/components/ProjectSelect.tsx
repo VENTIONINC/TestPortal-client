@@ -20,5 +20,5 @@ export const ProjectSelect = () => {
       label: project.name,
     }));
 
-  return <NativeSelect value={selectedProjectId} onChange={handleProjectChange} items={projectItems} />;
+  return <NativeSelect maxH={8} value={selectedProjectId} onChange={handleProjectChange} items={projectItems} />;
 };

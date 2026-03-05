@@ -226,6 +226,9 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
       '& .rdp-weekdays': {
         width: '100%',
       },
+      '& .rdp-week:nth-of-type(n+6)': {
+        display: 'none',
+      },
       '& .rdp-week': {
         width: '280px',
         height: '30px',

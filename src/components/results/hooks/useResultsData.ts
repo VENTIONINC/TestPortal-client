@@ -38,6 +38,7 @@ export const useResultsData = ({
 
   const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates } = useMemo(() => {
     const allResults = data?.results || [];
+    const hasSelectedDates = selectedDates.length > 0;
     const unfilteredMap = new Map<string, SpecGroup>();
     const resultsMap = new Map<string, SpecGroup>();
     const activeIds: string[] = [];
@@ -47,9 +48,9 @@ export const useResultsData = ({
 
       addToSpecGroup(unfilteredMap, result, baseResult);
 
-      // Show only results for selected dates that match filters
+      // When no dates are selected in the main panel, do not apply date filtering
       const resultDate = result.startTime.split('T')[0];
-      const isActiveDate = selectedDates.includes(resultDate);
+      const isActiveDate = !hasSelectedDates || selectedDates.includes(resultDate);
       const matchesFilter = matchesFilters(result, debouncedFilters);
       const shouldInclude = isActiveDate && matchesFilter;
 

@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react';
-import { Collapsible, HStack, Flex, Text, VStack, Box, Separator, Tag } from '@chakra-ui/react';
+import { Collapsible, HStack, Flex, Text, VStack, Separator, Tag, Grid } from '@chakra-ui/react';
 import { useDebounce } from 'use-debounce';
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io';
 import { useFormContext } from 'react-hook-form';
@@ -10,7 +10,6 @@ import { useSelectedDates } from '@/redux/slices/results';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
 import { getResultStatusStyle } from '@/utils';
-import { getDatesBetween } from '@/utils/dateUtils';
 import { ResultStatus } from '@/types';
 
 import { configInfo } from '../../configs';
@@ -26,8 +25,10 @@ export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
   const selectedDates = useSelectedDates();
   const selectedProjectId = useSelectedProjectId();
 
-  const dateRange = useMemo(() => getDatesBetween(filter.from, filter.to), [filter.from, filter.to]);
-  const activeDates = useMemo(() => (selectedDates.length > 0 ? selectedDates : dateRange), [selectedDates, dateRange]);
+  const activeDates = useMemo(
+    () => selectedDates.filter((date) => date >= filter.from && date <= filter.to),
+    [selectedDates, filter.from, filter.to],
+  );
 
   const [debouncedDates] = useDebounce(activeDates, 200);
   const { data: statisticsData } = useGetApiV2ResultsStatsQuery(
@@ -91,43 +92,48 @@ export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
           ))}
         </HStack>
       </Wrap>
-      <Box bg="bg.section" p={4} borderRadius="xl" gap={4} mt={2} mb={2}>
-        <Box bg="bg.cardSecondary" p={1} border="1px solid" borderColor={stats.cardBorder} borderRadius="md" mb={3}>
-          {statistics.topErrors.length > 0 && (
-            <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
-              <Collapsible.Trigger asChild>
-                <Flex align="center" minH="27px" pl="2px">
-                  {isStatsOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                  <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
-                    Top {statistics.topErrors.length} errors
-                  </Text>
-                </Flex>
-              </Collapsible.Trigger>
-              <Collapsible.Content>
-                <TopSection results={statistics.topErrors} label="errors" onClick={handleClickTopError} />
-              </Collapsible.Content>
-            </Collapsible.Root>
-          )}
-        </Box>
 
-        <Box bg="bg.cardSecondary" p={1} border="1px solid" borderColor={stats.cardBorder} borderRadius="md">
-          {statistics.topIssues.length > 0 && (
-            <Collapsible.Root onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
-              <Collapsible.Trigger asChild>
-                <Flex align="center" minH="27px" pl="2px">
-                  {isStatsOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                  <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
-                    Top {statistics.topIssues.length} issues
-                  </Text>
-                </Flex>
-              </Collapsible.Trigger>
-              <Collapsible.Content>
-                <TopSection results={statistics.topIssues} label="issues" onClick={handleClickTopIssue} />
-              </Collapsible.Content>
-            </Collapsible.Root>
-          )}
-        </Box>
-      </Box>
+      <Grid templateColumns={{ base: '1fr 1fr' }} bg="bg.section" p={4} borderRadius="xl" gap={4} mt={2} mb={2}>
+        {statistics.topErrors.length > 0 && (
+          // <Box p={1} border="1px solid" borderColor={stats.cardBorder} borderRadius="md">
+          <Collapsible.Root bg="bg.cardSecondary" onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
+            <Collapsible.Trigger asChild>
+              <Flex align="center" minH="27px" pl="2px">
+                {isStatsOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
+                  Top {statistics.topErrors.length} errors
+                </Text>
+              </Flex>
+            </Collapsible.Trigger>
+            <Collapsible.Content>
+              <TopSection results={statistics.topErrors} label="errors" onClick={handleClickTopError} />
+            </Collapsible.Content>
+          </Collapsible.Root>
+          // </Box>
+        )}
+        {statistics.topIssues.length > 0 && (
+          // <Box bg="bg.cardSecondary" p={1}  >
+          <Collapsible.Root
+            border="1px solid"
+            borderColor={stats.cardBorder}
+            borderRadius="md"
+            onOpenChange={() => setIsStatsOpen(!isStatsOpen)}
+          >
+            <Collapsible.Trigger asChild bg="bg.cardSecondary">
+              <Flex align="center" minH="27px" pl="2px">
+                {isStatsOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
+                <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
+                  Top {statistics.topIssues.length} issues
+                </Text>
+              </Flex>
+            </Collapsible.Trigger>
+            <Collapsible.Content bg="bg.cardSecondary">
+              <TopSection results={statistics.topIssues} label="issues" onClick={handleClickTopIssue} />
+            </Collapsible.Content>
+          </Collapsible.Root>
+          // </Box>
+        )}
+      </Grid>
     </>
   );
 });

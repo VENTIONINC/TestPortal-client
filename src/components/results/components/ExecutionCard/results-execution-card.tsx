@@ -1,17 +1,15 @@
 import { Fragment, memo, useState } from 'react';
-import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
-import { IoCloseCircleOutline } from 'react-icons/io5';
+import { HStack, Text, VStack } from '@chakra-ui/react';
 
 import { useSurfaceColors } from '@/theme';
-import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip, toaster } from '@/components/ui';
+import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip, toaster, StatusIcon } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/ui/components/Dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
-import { getAnalysisCategoryStyle, getConfidenceLabel, getResultStatusStyle } from '@/utils';
+import { getAnalysisCategoryStyle, getConfidenceLabel } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
 import { usePostApiV2ResultErrorsAnalyzeMutation } from '@/redux/apis/generatedApi';
 import { BulkActions } from '@/components/BulkActions';
-import { ResultStatus } from '@/types';
 
 import { ResultsExecutionCardProps } from './types';
 import { IntegrationLinks } from './integration-links';
@@ -130,13 +128,8 @@ export const ResultsExecutionCard = memo(
                   size="md"
                   controlProps={{ borderColor: borders.subtle }}
                 />
-                {status === ResultStatus.Failed ? (
-                  <Flex color={getResultStatusStyle(status).color}>
-                    <IoCloseCircleOutline size={16} />
-                  </Flex>
-                ) : (
-                  <Flex w={2} h={4} borderRadius="xs" bg={getResultStatusStyle(status).color} />
-                )}
+
+                <StatusIcon status={status} type="circle" />
 
                 <Tooltip content="Retry">
                   <Text whiteSpace="nowrap" minW={6}>
