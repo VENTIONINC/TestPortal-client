@@ -1,43 +1,19 @@
-import { memo, useMemo, useState } from 'react';
-import { Collapsible, HStack, Flex, Text, VStack, Separator, Tag, Grid } from '@chakra-ui/react';
-import { useDebounce } from 'use-debounce';
-import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io';
-import { useFormContext } from 'react-hook-form';
+import { memo } from 'react';
+import { HStack, Text, Separator, Tag } from '@chakra-ui/react';
 
 import { Wrap } from '@/components/ui';
-import { useGetApiV2ResultsStatsQuery } from '@/redux/apis/generatedApi';
-import { useSelectedDates } from '@/redux/slices/results';
-import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
+import { type ResultsStats as ResultsStatsResponse } from '@/redux/apis/generatedApi';
 import { getResultStatusStyle } from '@/utils';
 import { ResultStatus } from '@/types';
 
 import { configInfo } from '../../configs';
 
 interface ResultsStatsProps {
-  filter: { from: string; to: string };
+  statistics?: ResultsStatsResponse;
 }
 
-export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
-  const [isStatsOpen, setIsStatsOpen] = useState(false);
-  const methods = useFormContext();
-
-  const selectedDates = useSelectedDates();
-  const selectedProjectId = useSelectedProjectId();
-
-  const activeDates = useMemo(
-    () => selectedDates.filter((date) => date >= filter.from && date <= filter.to),
-    [selectedDates, filter.from, filter.to],
-  );
-
-  const [debouncedDates] = useDebounce(activeDates, 200);
-  const { data: statisticsData } = useGetApiV2ResultsStatsQuery(
-    { dates: debouncedDates, projectId: selectedProjectId! },
-    { skip: debouncedDates.length === 0 },
-  );
-
-  const statistics = debouncedDates.length === 0 ? undefined : statisticsData;
-
+export const ResultsStats = memo(({ statistics }: ResultsStatsProps) => {
   const { stats } = useResultsSurfaceColors();
 
   if (!statistics || statistics.byStatusTotal === 0) {
@@ -47,13 +23,6 @@ export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
       </Text>
     );
   }
-
-  const handleClickTopError = (message: string) => {
-    methods.setValue('errorMessage', message);
-  };
-  const handleClickTopIssue = (message: string) => {
-    methods.setValue('issueName', message);
-  };
 
   return (
     <>
@@ -84,7 +53,7 @@ export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
             <Tag.Root size="md" key={key} bg="transparent">
               <Tag.Label whiteSpace="normal">
                 <Text as="span" color="text.secondary">
-                  {label}:{' '}
+                  {label}:
                 </Text>
                 {statistics.entityCounts[key as keyof typeof statistics.entityCounts]}
               </Tag.Label>
@@ -92,91 +61,6 @@ export const ResultsStats = memo(({ filter }: ResultsStatsProps) => {
           ))}
         </HStack>
       </Wrap>
-
-      <Grid templateColumns={{ base: '1fr 1fr' }} bg="bg.section" p={4} borderRadius="xl" gap={4} mt={2} mb={2}>
-        {statistics.topErrors.length > 0 && (
-          // <Box p={1} border="1px solid" borderColor={stats.cardBorder} borderRadius="md">
-          <Collapsible.Root bg="bg.cardSecondary" onOpenChange={() => setIsStatsOpen(!isStatsOpen)}>
-            <Collapsible.Trigger asChild>
-              <Flex align="center" minH="27px" pl="2px">
-                {isStatsOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
-                  Top {statistics.topErrors.length} errors
-                </Text>
-              </Flex>
-            </Collapsible.Trigger>
-            <Collapsible.Content>
-              <TopSection results={statistics.topErrors} label="errors" onClick={handleClickTopError} />
-            </Collapsible.Content>
-          </Collapsible.Root>
-          // </Box>
-        )}
-        {statistics.topIssues.length > 0 && (
-          // <Box bg="bg.cardSecondary" p={1}  >
-          <Collapsible.Root
-            border="1px solid"
-            borderColor={stats.cardBorder}
-            borderRadius="md"
-            onOpenChange={() => setIsStatsOpen(!isStatsOpen)}
-          >
-            <Collapsible.Trigger asChild bg="bg.cardSecondary">
-              <Flex align="center" minH="27px" pl="2px">
-                {isStatsOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
-                <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
-                  Top {statistics.topIssues.length} issues
-                </Text>
-              </Flex>
-            </Collapsible.Trigger>
-            <Collapsible.Content bg="bg.cardSecondary">
-              <TopSection results={statistics.topIssues} label="issues" onClick={handleClickTopIssue} />
-            </Collapsible.Content>
-          </Collapsible.Root>
-          // </Box>
-        )}
-      </Grid>
     </>
   );
 });
-
-interface TopSectionProps {
-  results: { title: string; count: number }[];
-  label: string;
-  onClick: (message: string) => void;
-}
-
-const TopSection = ({ results, label, onClick }: TopSectionProps) => {
-  const { stats } = useResultsSurfaceColors();
-
-  return (
-    <VStack align="stretch" flex={1} mt={4} px="3px" aria-label={label}>
-      {results.map(({ title, count }, index) => (
-        <HStack key={`${title}-${index}-${count}`} textStyle="md">
-          <Text
-            fontWeight={700}
-            color={stats.countText}
-            borderRadius="40px"
-            border="1px solid"
-            fontSize="xs"
-            borderColor="status.error"
-            px="7px"
-            // py={1}
-            bg="bg.card"
-          >
-            {count}x
-          </Text>
-          <Text
-            onClick={() => onClick(title)}
-            lineClamp={1}
-            fontWeight={400}
-            cursor="pointer"
-            _hover={{ textDecoration: 'underline' }}
-            fontSize="sm"
-            color={stats.strongText}
-          >
-            {title}
-          </Text>
-        </HStack>
-      ))}
-    </VStack>
-  );
-};

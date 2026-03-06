@@ -86,9 +86,10 @@ const GridCard = ({ title, children }: { title: string; children: ReactNode }) =
 );
 
 const StatsWidget = ({ summary }: { summary?: TestDescriptionSummary }) => {
-  const { totalRuns = 0, passRate } = summary || {};
-  const passed = passRate ?? 0;
-  const failed = totalRuns && passRate ? totalRuns - passRate : 0;
+  const { failures = 0, totalRuns = 0 } = summary || {};
+  const passed = totalRuns - failures || 0;
+  const failed = failures || 0;
+
   const stats: TestStat[] = [
     { label: 'Test runs', value: totalRuns, status: 'runs', icon: PiDotsNineBold, color: 'dashboard.base' },
     { label: 'Test passed', value: passed, status: 'passed', icon: FaCircleCheck, color: 'dashboard.green' },
@@ -98,9 +99,9 @@ const StatsWidget = ({ summary }: { summary?: TestDescriptionSummary }) => {
 };
 
 const DonutChartWidget = ({ summary }: { summary?: TestDescriptionSummary }) => {
-  const { totalRuns = 0, passRate } = summary || {};
-  const passed = passRate ?? 0;
-  const failed = totalRuns && passRate ? totalRuns - passRate : 0;
+  const { totalRuns = 0, failures = 0 } = summary || {};
+  const passed = totalRuns - failures || 0;
+  const failed = failures || 0;
   const donutData = [
     { name: 'passed', value: passed, color: 'dashboard.green' },
     { name: 'failed', value: failed, color: 'dashboard.red' },

@@ -10,6 +10,7 @@ export interface TestStat {
 
 export interface TestDescriptionSummary {
   totalRuns: number;
+  failures: number;
   passRate: number;
   passRateTrend?: number;
 }

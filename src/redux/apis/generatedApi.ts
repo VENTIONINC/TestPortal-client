@@ -636,6 +636,17 @@ const injectedRtkApi = api
         }),
         providesTags: ["Exports"],
       }),
+      postApiV2ReportsPdfExport: build.mutation<
+        PostApiV2ReportsPdfExportApiResponse,
+        PostApiV2ReportsPdfExportApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/reports/pdf-export`,
+          method: "POST",
+          body: queryArg.pdfExportRequest,
+        }),
+        invalidatesTags: ["Reports", "Exports"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1031,6 +1042,11 @@ export type GetApiV2AnalysisExportApiArg = {
   /** End date/time (ISO) */
   dateTo: string;
 };
+export type PostApiV2ReportsPdfExportApiResponse =
+  /** status 200 PDF export stream. When includeAiInsights is true, the PDF may include an AI Insights section embedded in the document. */ Blob;
+export type PostApiV2ReportsPdfExportApiArg = {
+  pdfExportRequest: PdfExportRequest;
+};
 export type StatusResponse = {
   status: string;
   version: string;
@@ -1418,6 +1434,8 @@ export type DashboardResponse = {
   summary: {
     /** Total number of test runs in the period */
     totalRuns: number;
+    /** Total number of failed test results in the period */
+    failures: number;
     /** Pass rate percentage (0-100) */
     passRate: number;
     /** Pass rate trend indicator (percentage change) */
@@ -1475,6 +1493,41 @@ export type RevokeApiKeyResponse = {
   success: boolean;
   message: string;
 };
+export type PdfExportInvalidParamsResponse = {
+  error: "INVALID_PARAMS";
+  details: any[];
+};
+export type PdfExportPeriodTooLargeResponse = {
+  error: "PERIOD_TOO_LARGE";
+  message: "Export period cannot exceed 365 days";
+};
+export type PdfExportNotFoundResponse = {
+  error: "NOT_FOUND";
+};
+export type PdfExportServerErrorResponse = {
+  /** Internal export failure code: DATA_FETCH_FAILED | CHART_RENDER_FAILED | PDF_BUILD_FAILED */
+  error: "DATA_FETCH_FAILED" | "CHART_RENDER_FAILED" | "PDF_BUILD_FAILED";
+};
+export type PdfExportTimeoutResponse = {
+  /** PDF export exceeded server timeout window */
+  error: "EXPORT_TIMEOUT";
+};
+export type PdfExportRequest = {
+  /** Project UUID or project name */
+  project: string;
+  /** Execution environment filter */
+  environment: string;
+  /** Execution type filter, use 'all' to include all types */
+  executionType: string;
+  /** Accepts YYYY-MM-DD or ISO datetime; backend normalizes to YYYY-MM-DD */
+  periodStart: string;
+  /** Accepts YYYY-MM-DD or ISO datetime; backend normalizes to YYYY-MM-DD */
+  periodEnd: string;
+  /** Time-bucket aggregation level: daily = by day, weekly = ISO week, monthly = year-month */
+  granularity: "daily" | "weekly" | "monthly";
+  /** When true, the export includes an AI-generated insights section in the PDF. Defaults to false when omitted. */
+  includeAiInsights?: boolean;
+};
 export const {
   useGetApiV2StatusQuery,
   useGetApiV2IssuesQuery,
@@ -1529,4 +1582,5 @@ export const {
   useGetApiV2UploadKeysQuery,
   useDeleteApiV2UploadKeysByIdMutation,
   useGetApiV2AnalysisExportQuery,
+  usePostApiV2ReportsPdfExportMutation,
 } = injectedRtkApi;
