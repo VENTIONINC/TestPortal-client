@@ -3,7 +3,12 @@ import { useForm } from 'react-hook-form';
 
 import { useFilterQueryParams } from './useFilterQueryParams';
 
+type FilterValue = string | number | boolean | null | undefined;
 type FilterValues = Record<string, string>;
+
+const toStringFilters = (filters: Record<string, FilterValue>): FilterValues => {
+  return Object.fromEntries(Object.entries(filters).filter(([, value]) => typeof value === 'string')) as FilterValues;
+};
 
 interface UseFiltersWithUrlParams<TFilters> {
   currentFilters: TFilters;
@@ -11,6 +16,8 @@ interface UseFiltersWithUrlParams<TFilters> {
   initialFilters: TFilters;
 
   onUpdateFilters: (filters: TFilters) => void;
+
+  normalizeFilters?: (filters: FilterValues) => FilterValues;
 }
 
 interface UseFiltersWithUrlReturn {
@@ -22,20 +29,15 @@ interface UseFiltersWithUrlReturn {
   };
 }
 
-export const useFiltersWithUrl = <TFilters extends Record<string, any>>({
+export const useFiltersWithUrl = <TFilters extends Record<string, FilterValue>>({
   currentFilters,
   initialFilters,
   onUpdateFilters,
+  normalizeFilters,
 }: UseFiltersWithUrlParams<TFilters>): UseFiltersWithUrlReturn => {
-  const stringFilters = useMemo(
-    () => Object.fromEntries(Object.entries(currentFilters).filter(([, value]) => typeof value === 'string')),
-    [currentFilters],
-  );
+  const stringFilters = useMemo(() => toStringFilters(currentFilters), [currentFilters]);
 
-  const stringInitialFilters = useMemo(
-    () => Object.fromEntries(Object.entries(initialFilters).filter(([, value]) => typeof value === 'string')),
-    [initialFilters],
-  );
+  const stringInitialFilters = useMemo(() => toStringFilters(initialFilters), [initialFilters]);
 
   const {
     updateFilters: updateUrlFilters,
@@ -44,7 +46,8 @@ export const useFiltersWithUrl = <TFilters extends Record<string, any>>({
   } = useFilterQueryParams({
     defaultFilters: stringInitialFilters,
     onFiltersChange: (newFilters) => {
-      onUpdateFilters({ ...currentFilters, ...newFilters } as TFilters);
+      const normalizedFilters = normalizeFilters?.(newFilters as FilterValues) ?? (newFilters as FilterValues);
+      onUpdateFilters({ ...currentFilters, ...normalizedFilters } as TFilters);
     },
   });
 
@@ -56,7 +59,10 @@ export const useFiltersWithUrl = <TFilters extends Record<string, any>>({
     return Object.fromEntries(entries) as FilterValues;
   }, [urlFiltersRaw, searchParams]);
 
-  const mergedFilters = useMemo(() => ({ ...stringFilters, ...urlFilters }), [stringFilters, urlFilters]);
+  const mergedFilters = useMemo(
+    () => normalizeFilters?.({ ...stringFilters, ...urlFilters }) ?? { ...stringFilters, ...urlFilters },
+    [normalizeFilters, stringFilters, urlFilters],
+  );
 
   const formMethods = useForm<FilterValues>({
     defaultValues: mergedFilters,
@@ -68,8 +74,9 @@ export const useFiltersWithUrl = <TFilters extends Record<string, any>>({
   }, [mergedFilters]);
 
   const handleApplyFilters = (newFilters: FilterValues) => {
-    updateUrlFilters(newFilters);
-    onUpdateFilters({ ...currentFilters, ...newFilters } as TFilters);
+    const normalizedFilters = normalizeFilters?.(newFilters) ?? newFilters;
+    updateUrlFilters(normalizedFilters);
+    onUpdateFilters({ ...currentFilters, ...normalizedFilters } as TFilters);
   };
 
   return {

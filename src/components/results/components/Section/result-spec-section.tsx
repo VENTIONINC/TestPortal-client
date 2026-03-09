@@ -25,33 +25,16 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
   const handleExecutionContextMenu = useExecutionContextMenu();
   const handleResultContextMenu = useResultContextMenu();
 
-  // Track dates selected locally in section chips
+  // Track per-date local overrides relative to the global date selection.
   const [locallyToggledDates, setLocallyToggledDates] = useState<Set<string>>(new Set());
-  const hasLocalSelections = locallyToggledDates.size > 0;
 
-  // Compute section days:
-  // - with selected dates in main panel: show selected dates by default
-  //   and switch to local selections after user toggles dates in section
-  // - without selected dates in main panel: cards are shown only for locally selected dates
   const sectionDays = useMemo(() => {
     const allDates = getDatesBetween(filters.from, filters.to);
     const sectionDays = allDates.map((date) => {
-      const isInSelectedDates = selectedDates.includes(date);
-      const isLocallyToggled = locallyToggledDates.has(date);
-
-      const isActive = hasSelectedDates
-        ? hasLocalSelections
-          ? isLocallyToggled
-          : isInSelectedDates
-        : isLocallyToggled;
-
-      const isVisible = hasSelectedDates
-        ? hasLocalSelections
-          ? isLocallyToggled
-          : isInSelectedDates
-        : isLocallyToggled;
-
-      const executionsToUse = hasSelectedDates ? (isInSelectedDates ? executions : allExecutions) : executions;
+      const isGloballyActive = hasSelectedDates ? selectedDates.includes(date) : true;
+      const hasLocalOverride = locallyToggledDates.has(date);
+      const isActive = hasLocalOverride ? !isGloballyActive : isGloballyActive;
+      const executionsToUse = isGloballyActive ? executions : allExecutions;
 
       const execsForDate = executionsToUse.filter(({ results }) =>
         results.some((result) => result.startTime.split('T')[0] === date),
@@ -73,22 +56,12 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
         execution: firstExec?.execution,
         serialized: firstExec?.execution ? serializeExecution(firstExec.execution, user) : undefined,
         isActive,
-        isVisible,
+        isVisible: isActive,
       };
     });
 
     return sectionDays;
-  }, [
-    filters.from,
-    filters.to,
-    hasSelectedDates,
-    hasLocalSelections,
-    selectedDates,
-    locallyToggledDates,
-    executions,
-    allExecutions,
-    user,
-  ]);
+  }, [filters.from, filters.to, hasSelectedDates, selectedDates, locallyToggledDates, executions, allExecutions, user]);
 
   const handleDateToggle = ({ yyyy_mm_dd }: { yyyy_mm_dd: string }) => {
     setLocallyToggledDates((prev) => {
@@ -104,9 +77,9 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
   };
 
   useEffect(() => {
-    // Clear local toggles when selectedDates change to reset to default state
+    // Reset section overrides when the global date selection or date range changes.
     setLocallyToggledDates(new Set());
-  }, [selectedDates]);
+  }, [selectedDates, filters.from, filters.to]);
 
   // Show spec if there are any executions (filtered or unfiltered)
   if (allExecutions.length === 0) {

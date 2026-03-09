@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 interface UseFixedOnScrollOptions {
   top?: number;
@@ -17,7 +17,7 @@ export const useFixedOnScroll = ({ top = 0 }: UseFixedOnScrollOptions = {}) => {
   const [isFixed, setIsFixed] = useState(false);
   const [fixedMetrics, setFixedMetrics] = useState<FixedMetrics>({ left: 0, width: 0, height: 0 });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let metricsAnimationFrameId = 0;
 
     const syncMetrics = () => {
@@ -29,19 +29,16 @@ export const useFixedOnScroll = ({ top = 0 }: UseFixedOnScrollOptions = {}) => {
       }
 
       const wrapperRect = wrapperElement.getBoundingClientRect();
-      const contentHeight = Math.round(contentElement.getBoundingClientRect().height);
-      const left = Math.round(wrapperRect.left);
-      const width = Math.round(wrapperRect.width);
+      const contentHeight = contentElement.getBoundingClientRect().height;
+      const left = wrapperRect.left;
+      const width = wrapperRect.width;
 
       setFixedMetrics((prev) => {
-        const nextLeft = isFixedRef.current ? left : prev.left;
-        const nextWidth = isFixedRef.current ? width : prev.width;
-
-        if (prev.left === nextLeft && prev.width === nextWidth && prev.height === contentHeight) {
+        if (prev.left === left && prev.width === width && prev.height === contentHeight) {
           return prev;
         }
 
-        return { left: nextLeft, width: nextWidth, height: contentHeight };
+        return { left, width, height: contentHeight };
       });
     };
 
@@ -52,44 +49,38 @@ export const useFixedOnScroll = ({ top = 0 }: UseFixedOnScrollOptions = {}) => {
         return;
       }
 
-      const wrapperTop = wrapperElement.getBoundingClientRect().top;
-      const shouldBeFixed = wrapperTop <= top;
+      const nextIsFixed = wrapperElement.getBoundingClientRect().top <= top;
 
-      if (isFixedRef.current === shouldBeFixed) {
+      if (isFixedRef.current === nextIsFixed) {
         return;
       }
 
-      isFixedRef.current = shouldBeFixed;
-      setIsFixed(shouldBeFixed);
+      isFixedRef.current = nextIsFixed;
+      setIsFixed(nextIsFixed);
 
-      if (shouldBeFixed) {
+      if (nextIsFixed) {
         syncMetrics();
       }
     };
 
-    const scheduleMetricsSync = (includeStateEvaluation = false) => {
+    const scheduleMetricsSync = () => {
       if (metricsAnimationFrameId !== 0) {
         return;
       }
 
       metricsAnimationFrameId = requestAnimationFrame(() => {
         metricsAnimationFrameId = 0;
-
-        if (includeStateEvaluation) {
-          evaluateFixedState();
-        }
-
         syncMetrics();
       });
     };
 
     const handleScroll = () => {
-      // Scroll direction can change quickly; update fixed state in the same tick to avoid visual snap.
       evaluateFixedState();
     };
 
     const handleResize = () => {
-      scheduleMetricsSync(true);
+      evaluateFixedState();
+      scheduleMetricsSync();
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -99,7 +90,8 @@ export const useFixedOnScroll = ({ top = 0 }: UseFixedOnScrollOptions = {}) => {
       typeof ResizeObserver === 'undefined'
         ? undefined
         : new ResizeObserver(() => {
-            scheduleMetricsSync(true);
+            evaluateFixedState();
+            scheduleMetricsSync();
           });
 
     if (resizeObserver) {
@@ -112,14 +104,14 @@ export const useFixedOnScroll = ({ top = 0 }: UseFixedOnScrollOptions = {}) => {
       }
     }
 
-    scheduleMetricsSync(true);
+    syncMetrics();
+    evaluateFixedState();
 
     return () => {
       cancelAnimationFrame(metricsAnimationFrameId);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
       resizeObserver?.disconnect();
-      isFixedRef.current = false;
     };
   }, [top]);
 

@@ -12,8 +12,8 @@ const formatDate = (date: Date): string => {
 };
 
 const today = new Date();
-const weekAgo = new Date();
-weekAgo.setDate(today.getDate() - 7);
+const last7DaysStart = new Date(today);
+last7DaysStart.setDate(today.getDate() - 6);
 
 export interface ResultsState {
   filters: ResultsFilters;
@@ -31,7 +31,7 @@ export const initialFilters: ResultsFilters = {
   reviewStatus: '',
   errorMessage: '',
   issueName: '',
-  from: formatDate(weekAgo),
+  from: formatDate(last7DaysStart),
   to: formatDate(today),
   page: 1,
 };
