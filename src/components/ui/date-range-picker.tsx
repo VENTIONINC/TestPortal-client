@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Box, Button, Flex, Popover, Portal, Text } from '@chakra-ui/react';
-import { DateRange, DayPicker, Matcher } from 'react-day-picker';
-import { LuCalendar } from 'react-icons/lu';
+import { differenceInCalendarDays, startOfDay } from 'date-fns';
+import { DateRange, DayButton as DayPickerDayButton, DayButtonProps, DayPicker, Matcher } from 'react-day-picker';
+import { LuCalendar, LuX } from 'react-icons/lu';
 
-import { Field, FieldProps, NativeSelect } from '@/components/ui';
+import { Field, FieldProps, NativeSelect, Tooltip } from '@/components/ui';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { formatDate, parseDateString, getPresetDateRange, type DateRangePreset } from '@/utils/dateUtils';
 
@@ -14,6 +15,7 @@ export interface DateRangePickerProps {
   toValue?: string;
   onChangeFrom: (value: string) => void;
   onChangeTo: (value: string) => void;
+  onClear?: () => void;
   onBlur?: () => void;
   error?: string;
   placeholder?: string;
@@ -58,12 +60,56 @@ const PRESET_LABELS: { key: DateRangePreset; label: string }[] = [
   { key: 'last-month', label: 'Last month' },
 ];
 
+const PHASE_LABELS: Record<SelectionPhase, string | null> = {
+  start: 'Select start date',
+  end: 'Select end date',
+  done: null,
+};
+
+type SelectionPhase = 'start' | 'end' | 'done';
+
 const formatWeekdayName = (date: Date): string => date.toLocaleDateString('en-US', { weekday: 'short' });
 
 const formatDisplayDate = (dateStr?: string): string => {
   if (!dateStr) return '';
   const d = parseDateString(dateStr);
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(d);
+};
+
+const formatDisplayDateValue = (date?: Date): string => {
+  if (!date) return '';
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+};
+
+const getBoundedRangeFromAnchor = (anchor: Date, target: Date, maxRangeDays?: number): DateRange => {
+  const normalizedAnchor = startOfDay(anchor);
+  const normalizedTarget = startOfDay(target);
+
+  if (normalizedTarget.getTime() >= normalizedAnchor.getTime()) {
+    if (maxRangeDays && differenceInCalendarDays(normalizedTarget, normalizedAnchor) + 1 > maxRangeDays) {
+      const clippedTo = new Date(normalizedAnchor);
+      clippedTo.setDate(normalizedAnchor.getDate() + maxRangeDays - 1);
+      return { from: normalizedAnchor, to: clippedTo };
+    }
+
+    return { from: normalizedAnchor, to: normalizedTarget };
+  }
+
+  if (maxRangeDays && differenceInCalendarDays(normalizedAnchor, normalizedTarget) + 1 > maxRangeDays) {
+    const clippedFrom = new Date(normalizedAnchor);
+    clippedFrom.setDate(normalizedAnchor.getDate() - (maxRangeDays - 1));
+    return { from: clippedFrom, to: normalizedAnchor };
+  }
+
+  return { from: normalizedTarget, to: normalizedAnchor };
+};
+
+const getPreviewRange = (anchor: Date, hovered: Date): DateRange => {
+  if (hovered.getTime() >= anchor.getTime()) {
+    return { from: anchor, to: hovered };
+  }
+
+  return { from: hovered, to: anchor };
 };
 
 export const DateRangePicker = (props: DateRangePickerProps) => {
@@ -73,6 +119,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
     toValue,
     onChangeFrom,
     onChangeTo,
+    onClear,
     onBlur,
     error,
     placeholder = 'Select date range',
@@ -83,6 +130,8 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
   } = props;
   const { menu, borders, text } = useSurfaceColors();
   const [open, setOpen] = useState(false);
+  const [hoverDate, setHoverDate] = useState<Date | undefined>();
+  const [isSelectingEnd, setIsSelectingEnd] = useState(false);
 
   const selectedRange = useMemo<DateRange | undefined>(() => {
     if (!fromValue && !toValue) return undefined;
@@ -115,8 +164,19 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
   const handleOpen = useCallback(() => {
     setPendingRange(selectedRange);
     setLeftMonth(fromValue ? parseDateString(fromValue) : new Date());
+    setHoverDate(undefined);
+    setIsSelectingEnd(Boolean(selectedRange?.from && !selectedRange.to));
     setOpen(true);
-  }, [selectedRange, fromValue]);
+  }, [fromValue, selectedRange]);
+
+  const handleOpenChange = useCallback((details: { open: boolean }) => {
+    setOpen(details.open);
+
+    if (!details.open) {
+      setHoverDate(undefined);
+      setIsSelectingEnd(false);
+    }
+  }, []);
 
   const handleConfirm = useCallback(() => {
     if (pendingRange?.from) {
@@ -131,32 +191,127 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
   }, [pendingRange, onChangeFrom, onChangeTo]);
 
   const handleCancel = useCallback(() => {
+    setHoverDate(undefined);
+    setIsSelectingEnd(false);
     setOpen(false);
   }, []);
+
+  const handleClear = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setPendingRange(undefined);
+      setHoverDate(undefined);
+      setIsSelectingEnd(false);
+      setOpen(false);
+      onClear?.();
+    },
+    [onClear],
+  );
 
   const handlePreset = useCallback((preset: DateRangePreset) => {
     const range = getPresetDateRange(preset);
     const from = parseDateString(range.from);
     const to = parseDateString(range.to);
-    setPendingRange({ from, to });
+    const nextRange = { from, to };
+    setPendingRange(nextRange);
     setLeftMonth(from);
+    setHoverDate(undefined);
+    setIsSelectingEnd(false);
   }, []);
 
-  const handleRangeSelect = useCallback(
-    (range: DateRange | undefined) => {
-      if (maxRangeDays && range?.from && range?.to && range.from.getTime() !== range.to.getTime()) {
-        const diffDays = Math.round((range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24));
-        if (diffDays >= maxRangeDays) {
-          const clippedTo = new Date(range.from);
-          clippedTo.setDate(range.from.getDate() + maxRangeDays - 1);
-          setPendingRange({ from: range.from, to: clippedTo });
-          return;
-        }
+  const selectionPhase = useMemo<SelectionPhase>(() => {
+    if (!pendingRange?.from) {
+      return 'start';
+    }
+
+    return isSelectingEnd ? 'end' : 'done';
+  }, [isSelectingEnd, pendingRange]);
+
+  const activePreset = useMemo<DateRangePreset | null>(() => {
+    if (!pendingRange?.from || !pendingRange?.to) return null;
+
+    for (const { key } of PRESET_LABELS) {
+      const presetRange = getPresetDateRange(key);
+
+      if (formatDate(pendingRange.from) === presetRange.from && formatDate(pendingRange.to) === presetRange.to) {
+        return key;
       }
-      setPendingRange(range);
+    }
+
+    return null;
+  }, [pendingRange]);
+
+  const displayRange = useMemo<DateRange | undefined>(() => {
+    if (selectionPhase === 'end' && hoverDate && pendingRange?.from) {
+      return getPreviewRange(pendingRange.from, hoverDate);
+    }
+
+    return pendingRange;
+  }, [hoverDate, pendingRange, selectionPhase]);
+
+  const pendingRangeLabel = useMemo(() => {
+    if (!pendingRange?.from) {
+      return '';
+    }
+
+    if (selectionPhase === 'end' && !hoverDate) {
+      return `${formatDisplayDateValue(pendingRange.from)} - ...`;
+    }
+
+    const rangeForLabel = displayRange ?? pendingRange;
+
+    if (!rangeForLabel?.from) {
+      return '';
+    }
+
+    return `${formatDisplayDateValue(rangeForLabel.from)} - ${formatDisplayDateValue(rangeForLabel.to)}`;
+  }, [displayRange, hoverDate, pendingRange, selectionPhase]);
+
+  const handleRangeSelect = useCallback(
+    (_range: DateRange | undefined, triggerDate: Date, modifiers: Record<string, boolean>) => {
+      if (modifiers.disabled) {
+        return;
+      }
+
+      setHoverDate(undefined);
+      const clickedDay = startOfDay(triggerDate);
+
+      if (!pendingRange?.from || !isSelectingEnd) {
+        setPendingRange({ from: clickedDay, to: clickedDay });
+        setIsSelectingEnd(true);
+        return;
+      }
+
+      const anchor = startOfDay(pendingRange.from);
+
+      if (clickedDay.getTime() === anchor.getTime()) {
+        setPendingRange(undefined);
+        setIsSelectingEnd(false);
+        return;
+      }
+
+      const nextRange = getBoundedRangeFromAnchor(anchor, clickedDay, maxRangeDays);
+      setPendingRange(nextRange);
+      setIsSelectingEnd(false);
     },
-    [maxRangeDays],
+    [isSelectingEnd, maxRangeDays, pendingRange],
   );
+
+  const handleDayMouseEnter = useCallback(
+    (day: Date, modifiers: Record<string, boolean>) => {
+      if (!isSelectingEnd || !pendingRange?.from || modifiers.disabled) {
+        return;
+      }
+
+      setHoverDate(day);
+    },
+    [isSelectingEnd, pendingRange],
+  );
+
+  const handleCalendarMouseLeave = useCallback(() => {
+    setHoverDate(undefined);
+  }, []);
 
   const handleLeftMonthChange = useCallback((newMonth: string) => {
     setLeftMonth((prev) => new Date(prev.getFullYear(), Number(newMonth), 1));
@@ -166,40 +321,102 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
     setLeftMonth((prev) => new Date(Number(newYear), prev.getMonth(), 1));
   }, []);
 
-  const handleRightMonthChange = useCallback((newMonth: string) => {
-    const m = Number(newMonth);
-    // Right month is leftMonth + 1, so set leftMonth to m - 1
-    setLeftMonth((prev) => new Date(prev.getFullYear(), m - 1, 1));
-  }, []);
+  const handleRightMonthChange = useCallback(
+    (newMonth: string) => {
+      setLeftMonth(new Date(rightMonth.getFullYear(), Number(newMonth) - 1, 1));
+    },
+    [rightMonth],
+  );
 
-  const handleRightYearChange = useCallback((newYear: string) => {
-    // Keep the right month's month index, set leftMonth accordingly
-    setLeftMonth((prev) => {
-      const rightMonthIndex = (prev.getMonth() + 1) % 12;
-      return new Date(Number(newYear), rightMonthIndex - 1, 1);
-    });
+  const handleRightYearChange = useCallback(
+    (newYear: string) => {
+      setLeftMonth(new Date(Number(newYear), rightMonth.getMonth() - 1, 1));
+    },
+    [rightMonth],
+  );
+
+  const handleGoToToday = useCallback(() => {
+    const today = new Date();
+    setLeftMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    setHoverDate(undefined);
   }, []);
 
   // Always disable future dates (after today).
-  // When maxRangeDays is set and user has picked the start date (from exists, to doesn't or equals from),
-  // also disable dates that are beyond maxRangeDays from the anchor.
+  // When maxRangeDays is set and the user is choosing the end date,
+  // disable dates that exceed the allowed distance from the anchor.
   const disabledDays = useMemo<Matcher[]>(() => {
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
+    const today = startOfDay(new Date());
     const futureDisabled: Matcher = { after: today };
 
-    if (!maxRangeDays || !pendingRange?.from) return [futureDisabled];
-    // Deactivate range restriction once user has completed the selection (to is set and differs from from)
-    if (pendingRange.to && pendingRange.from.getTime() !== pendingRange.to.getTime()) return [futureDisabled];
+    if (!maxRangeDays || !isSelectingEnd || !pendingRange?.from) {
+      return [futureDisabled];
+    }
 
     const anchor = pendingRange.from;
     const minDate = new Date(anchor);
     minDate.setDate(anchor.getDate() - (maxRangeDays - 1));
     const maxDate = new Date(anchor);
     maxDate.setDate(anchor.getDate() + (maxRangeDays - 1));
+    const maxSelectableDate = maxDate.getTime() < today.getTime() ? maxDate : today;
 
-    return [{ before: minDate }, { after: maxDate < today ? maxDate : today }];
-  }, [maxRangeDays, pendingRange]);
+    return [{ before: minDate }, { after: maxSelectableDate }];
+  }, [isSelectingEnd, maxRangeDays, pendingRange]);
+
+  const getDisabledDayReason = useCallback(
+    (day: Date): string => {
+      const normalizedDay = startOfDay(day);
+      const today = startOfDay(new Date());
+
+      if (normalizedDay.getTime() > today.getTime()) {
+        return 'Future dates not available';
+      }
+
+      if (maxRangeDays && isSelectingEnd && pendingRange?.from) {
+        const anchor = startOfDay(pendingRange.from);
+        const minDate = new Date(anchor);
+        minDate.setDate(anchor.getDate() - (maxRangeDays - 1));
+        const maxDate = new Date(anchor);
+        maxDate.setDate(anchor.getDate() + (maxRangeDays - 1));
+        const maxSelectableDate = maxDate.getTime() < today.getTime() ? maxDate : today;
+
+        if (normalizedDay.getTime() < minDate.getTime() || normalizedDay.getTime() > maxSelectableDate.getTime()) {
+          return `Max range: ${maxRangeDays} days`;
+        }
+      }
+
+      return 'Date not available';
+    },
+    [isSelectingEnd, maxRangeDays, pendingRange],
+  );
+
+  const CalendarDayButton = useCallback(
+    (buttonProps: DayButtonProps) => {
+      if (!buttonProps.modifiers.disabled) {
+        return <DayPickerDayButton {...buttonProps} />;
+      }
+
+      return (
+        <Tooltip
+          content={getDisabledDayReason(buttonProps.day.date)}
+          contentProps={{ maxW: '220px', textAlign: 'center' }}
+        >
+          <Box as="span" display="block" w="full" h="full">
+            <DayPickerDayButton {...buttonProps} />
+          </Box>
+        </Tooltip>
+      );
+    },
+    [getDisabledDayReason],
+  );
+
+  const dayPickerComponents = useMemo(
+    () => ({
+      DayButton: CalendarDayButton,
+    }),
+    [CalendarDayButton],
+  );
+  const isConfirmDisabled = !pendingRange?.from;
+  const showClearButton = Boolean((fromValue || toValue) && onClear && !disabled);
 
   const calendarCss = useMemo(
     () => ({
@@ -281,38 +498,74 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
 
   return (
     <Field label={label} errorText={error} invalid={Boolean(error)} {...fieldProps}>
-      <Popover.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
-        <Popover.Trigger asChild>
-          <button
-            type="button"
-            style={{ width: '100%', background: 'none', border: 'none', padding: 0 }}
-            onClick={handleOpen}
-            onBlur={onBlur}
-            disabled={disabled}
-          >
-            <Flex
-              w="full"
-              align="center"
-              gap={2}
-              px={3}
-              py={2}
-              bg="bg.input"
-              borderWidth="1px"
-              borderColor="border.main"
-              borderRadius="md"
-              cursor={disabled ? 'not-allowed' : 'pointer'}
-              opacity={disabled ? 0.5 : 1}
-              _hover={{ borderColor: 'border.active' }}
+      <Popover.Root open={open} onOpenChange={handleOpenChange}>
+        <Box position="relative" w="full">
+          <Popover.Trigger asChild>
+            <button
+              type="button"
+              style={{ width: '100%', background: 'none', border: 'none', padding: 0 }}
+              onClick={handleOpen}
+              onBlur={onBlur}
+              disabled={disabled}
             >
-              <Box flex="1" textAlign="left" color={fromValue ? text.primary : text.muted} fontSize="sm">
-                {displayValue || placeholder}
-              </Box>
-              <Box color={text.secondary}>
-                <LuCalendar size={16} />
-              </Box>
-            </Flex>
-          </button>
-        </Popover.Trigger>
+              <Flex
+                w="full"
+                align="center"
+                gap={2}
+                px={3}
+                py={2}
+                bg="bg.input"
+                borderWidth="1px"
+                borderColor="border.main"
+                borderRadius="md"
+                cursor={disabled ? 'not-allowed' : 'pointer'}
+                opacity={disabled ? 0.5 : 1}
+                _hover={{ borderColor: 'border.active' }}
+              >
+                <Box
+                  flex="1"
+                  textAlign="left"
+                  color={fromValue ? text.primary : text.muted}
+                  fontSize="sm"
+                  pr={showClearButton ? 6 : 0}
+                >
+                  {displayValue || placeholder}
+                </Box>
+                <Box color={text.secondary}>
+                  <LuCalendar size={16} />
+                </Box>
+              </Flex>
+            </button>
+          </Popover.Trigger>
+
+          {showClearButton && (
+            <button
+              type="button"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={handleClear}
+              aria-label="Clear date range"
+              style={{
+                position: 'absolute',
+                top: '50%',
+                right: '38px',
+                transform: 'translateY(-50%)',
+                color: text.secondary,
+                background: 'none',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '20px',
+                height: '20px',
+                padding: 0,
+                cursor: 'pointer',
+                zIndex: 1,
+              }}
+            >
+              <LuX size={14} />
+            </button>
+          )}
+        </Box>
 
         <Portal>
           <Popover.Positioner>
@@ -332,11 +585,11 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                     <Flex direction="column" mt="15px">
                       {PRESET_LABELS.map(({ key, label: presetLabel }) => {
                         const presetRange = getPresetDateRange(key);
-                        const presetDays = Math.ceil(
-                          (parseDateString(presetRange.to).getTime() - parseDateString(presetRange.from).getTime()) /
-                            (1000 * 60 * 60 * 24),
-                        );
+                        const presetDays =
+                          differenceInCalendarDays(parseDateString(presetRange.to), parseDateString(presetRange.from)) +
+                          1;
                         const isExceedsMax = maxRangeDays !== undefined && presetDays > maxRangeDays;
+                        const isActive = activePreset === key;
 
                         return (
                           <Button
@@ -345,9 +598,10 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                             size="xs"
                             h="20px"
                             mb="7px"
-                            fontWeight={400}
+                            fontWeight={isActive ? 600 : 400}
                             justifyContent="flex-start"
-                            color={isExceedsMax ? menu.textSecondary : text.secondary}
+                            bg={isActive ? menu.itemHoverBg : 'transparent'}
+                            color={isExceedsMax ? menu.textSecondary : isActive ? text.primary : text.secondary}
                             opacity={isExceedsMax ? 0.5 : 1}
                             disabled={isExceedsMax}
                             _hover={isExceedsMax ? {} : { bg: menu.itemHoverBg, color: text.primary }}
@@ -362,6 +616,12 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                 )}
 
                 <Box p="11px 8px 8px 13px" flex="1" minWidth="605px">
+                  {PHASE_LABELS[selectionPhase] && (
+                    <Text fontSize="12px" color={text.secondary} mb={4}>
+                      {PHASE_LABELS[selectionPhase]}
+                    </Text>
+                  )}
+
                   <Flex>
                     {/* Left calendar */}
                     <Box flex="1" mr="25px">
@@ -385,17 +645,19 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                           items={yearOptions}
                         />
                       </Flex>
-                      <Box css={calendarCss}>
+                      <Box css={calendarCss} onMouseLeave={handleCalendarMouseLeave}>
                         <DayPicker
                           mode="range"
-                          selected={pendingRange}
+                          selected={displayRange}
                           onSelect={handleRangeSelect}
+                          onDayMouseEnter={handleDayMouseEnter}
                           month={leftMonth}
                           onMonthChange={setLeftMonth}
                           weekStartsOn={1}
                           showOutsideDays
                           disabled={disabledDays}
                           formatters={{ formatWeekdayName }}
+                          components={dayPickerComponents}
                         />
                       </Box>
                     </Box>
@@ -422,27 +684,30 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                           items={yearOptions}
                         />
                       </Flex>
-                      <Box css={calendarCss}>
+                      <Box css={calendarCss} onMouseLeave={handleCalendarMouseLeave}>
                         <DayPicker
                           mode="range"
-                          selected={pendingRange}
+                          selected={displayRange}
                           onSelect={handleRangeSelect}
+                          onDayMouseEnter={handleDayMouseEnter}
                           month={rightMonth}
                           weekStartsOn={1}
                           showOutsideDays
                           disabled={disabledDays}
                           formatters={{ formatWeekdayName }}
+                          components={dayPickerComponents}
                         />
                       </Box>
                     </Box>
                   </Flex>
 
                   <Flex mt="29px" gap={2} justify="flex-end" borderTopWidth="1px" borderColor={borders.subtle} pt={3}>
+                    <Button size="sm" variant="ghost" color={text.secondary} onClick={handleGoToToday} mr="auto">
+                      Today
+                    </Button>
                     <Flex alignItems="center">
                       <Text fontSize="14px" color={text.primary} fontWeight="400">
-                        {pendingRange
-                          ? `${pendingRange.from?.toLocaleDateString()} - ${pendingRange.to?.toLocaleDateString()}`
-                          : ''}
+                        {pendingRangeLabel}
                       </Text>
                     </Flex>
                     <Button
@@ -454,7 +719,14 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                     >
                       Cancel
                     </Button>
-                    <Button size="sm" bg="#53ABFC" color="white" _hover={{ bg: '#3A9AEB' }} onClick={handleConfirm}>
+                    <Button
+                      size="sm"
+                      bg="#53ABFC"
+                      color="white"
+                      _hover={{ bg: '#3A9AEB' }}
+                      onClick={handleConfirm}
+                      disabled={isConfirmDisabled}
+                    >
                       Confirm
                     </Button>
                   </Flex>
