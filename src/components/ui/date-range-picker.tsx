@@ -278,7 +278,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
       const clickedDay = startOfDay(triggerDate);
 
       if (!pendingRange?.from || !isSelectingEnd) {
-        setPendingRange({ from: clickedDay, to: clickedDay });
+        setPendingRange({ from: clickedDay, to: undefined });
         setIsSelectingEnd(true);
         return;
       }

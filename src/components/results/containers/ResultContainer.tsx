@@ -1,4 +1,4 @@
-import { type ComponentProps, useMemo } from 'react';
+import { type ComponentProps, useEffect, useMemo, useRef } from 'react';
 import { Box, HStack, VStack } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
@@ -73,8 +73,9 @@ const ResultsFloatingHeader = ({ availableDates, statistics, toggleDate }: Resul
 export const ResultContainerInner = ({ showFilters = true }: { showFilters?: boolean }) => {
   const selectedDates = useSelectedDates();
   const selectedProjectId = useSelectedProjectId();
-  const { toggleDate } = useResultsActions();
+  const { setSelectedDates, toggleDate } = useResultsActions();
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
+  const hasInitializedDateSelectionRef = useRef(false);
 
   const { effectiveFilters, debouncedFilters, filterFormMethods, filterProps } = useResultsEffectiveFilters();
 
@@ -111,6 +112,26 @@ export const ResultContainerInner = ({ showFilters = true }: { showFilters?: boo
   );
 
   const statistics = debouncedDates.length === 0 ? undefined : statisticsData;
+
+  useEffect(() => {
+    if (hasInitializedDateSelectionRef.current) {
+      return;
+    }
+
+    if (selectedDates.length > 0) {
+      hasInitializedDateSelectionRef.current = true;
+      return;
+    }
+
+    const lastAvailableDate = availableDates.at(-1)?.yyyy_mm_dd;
+
+    if (!lastAvailableDate) {
+      return;
+    }
+
+    setSelectedDates([lastAvailableDate]);
+    hasInitializedDateSelectionRef.current = true;
+  }, [availableDates, selectedDates, setSelectedDates]);
 
   return (
     <FormProvider {...filterFormMethods}>
