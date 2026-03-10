@@ -26,6 +26,7 @@ export const TopSectionContainer = ({ statistics }: TopSectionContainerProps) =>
   if (topErrors.length === 0 && topIssues.length === 0) {
     return null;
   }
+
   return (
     <Grid templateColumns={{ base: '1fr 1fr' }} bg="bg.section" p={4} borderRadius="xl" gap={4} mt={2} mb={2}>
       {topErrors.length > 0 && (

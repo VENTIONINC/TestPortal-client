@@ -7,18 +7,16 @@ import { IssueCard } from '@/components/issues';
 import { useGetIssuesWithStatsQuery } from '@/redux/apis/extendedApi';
 import { initialFilters, useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
 import { useSelectedProjectId } from '@/redux/slices/projects';
+import { useFilterContext } from '@/contexts/FilterContext';
 import { IssueWithStats } from '@/types';
 import { Filter } from '@/components/ui';
 
 import { filterConfig } from '../configs';
 
-interface IssuesListProps {
-  showFilters?: boolean;
-}
-
-export const IssuesList = ({ showFilters = true }: IssuesListProps) => {
+export const IssuesList = () => {
   const filters = useIssuesFilters();
   const { setFilters } = useIssuesActions();
+  const { showFilters } = useFilterContext();
 
   const selectedProjectId = useSelectedProjectId();
   const [isWideScreen] = useMediaQuery(['(min-width: 1920px)']);
@@ -46,7 +44,7 @@ export const IssuesList = ({ showFilters = true }: IssuesListProps) => {
   return (
     <FormProvider {...formMethods}>
       <HStack align="flex-start" gap={4} w="100%">
-        <Filter showFilters={showFilters} config={filterConfig} {...filterProps} />
+        <Filter config={filterConfig} {...filterProps} />
         <VStack flex={1} align="stretch" minW={0}>
           {isFetching && (
             <HStack ps={2}>

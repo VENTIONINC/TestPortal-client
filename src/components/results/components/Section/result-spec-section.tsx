@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useResultsFilters, useSelectedDates } from '@/redux/slices/results';
 import { useSelectedProjectId } from '@/redux/slices/projects';
-import { getDateDisplayName, getDatesBetween } from '@/utils/dateUtils';
+import { getDateDisplayName, getDatesBetween, getEffectiveDatesInRange } from '@/utils/dateUtils';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useExecutionContextMenu, useResultContextMenu } from '@/hooks';
@@ -15,8 +15,6 @@ interface ResultSpecSectionProps {
   executions: { execution: ResultExecution; results: BaseResult[] }[];
   allExecutions: { execution: ResultExecution; results: BaseResult[] }[];
 }
-
-const isDateGloballyActive = (date: string, selectedDates: string[]) => selectedDates.includes(date);
 
 export const ResultSpecSection = memo(({ spec, executions, allExecutions }: ResultSpecSectionProps) => {
   const filters = useResultsFilters();
@@ -31,13 +29,19 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
   const previousGlobalStateRef = useRef<{
     from: string;
     to: string;
-    selectedDates: string[];
+    activeDates: string[];
   } | null>(null);
 
+  const allDates = useMemo(() => getDatesBetween(filters.from, filters.to), [filters.from, filters.to]);
+  const activeDates = useMemo(
+    () => getEffectiveDatesInRange(selectedDates, filters.from, filters.to),
+    [selectedDates, filters.from, filters.to],
+  );
+  const activeDatesSet = useMemo(() => new Set(activeDates), [activeDates]);
+
   const sectionDays = useMemo(() => {
-    const allDates = getDatesBetween(filters.from, filters.to);
     const sectionDays = allDates.map((date) => {
-      const isGloballyActive = selectedDates.includes(date);
+      const isGloballyActive = activeDatesSet.has(date);
       const hasLocalOverride = locallyToggledDates.has(date);
       const isActive = hasLocalOverride ? !isGloballyActive : isGloballyActive;
       const executionsToUse = isGloballyActive ? executions : allExecutions;
@@ -67,7 +71,7 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
     });
 
     return sectionDays;
-  }, [filters.from, filters.to, selectedDates, locallyToggledDates, executions, allExecutions, user]);
+  }, [allDates, activeDatesSet, locallyToggledDates, executions, allExecutions, user]);
 
   const handleDateToggle = ({ yyyy_mm_dd }: { yyyy_mm_dd: string }) => {
     setLocallyToggledDates((prev) => {
@@ -89,7 +93,7 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
       previousGlobalStateRef.current = {
         from: filters.from,
         to: filters.to,
-        selectedDates,
+        activeDates,
       };
       return;
     }
@@ -112,8 +116,8 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
           continue;
         }
 
-        const previousIsActive = isDateGloballyActive(date, previousGlobalState.selectedDates);
-        const currentIsActive = isDateGloballyActive(date, selectedDates);
+        const previousIsActive = previousGlobalState.activeDates.includes(date);
+        const currentIsActive = activeDatesSet.has(date);
 
         if (previousIsActive !== currentIsActive && prev.has(date)) {
           next ??= new Set(prev);
@@ -127,9 +131,9 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
     previousGlobalStateRef.current = {
       from: filters.from,
       to: filters.to,
-      selectedDates,
+      activeDates,
     };
-  }, [selectedDates, filters.from, filters.to]);
+  }, [activeDates, activeDatesSet, filters.from, filters.to]);
 
   // Show spec if there are any executions (filtered or unfiltered)
   if (allExecutions.length === 0) {

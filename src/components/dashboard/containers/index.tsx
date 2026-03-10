@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { Button, Flex, HStack } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';
 import { saveAs } from 'file-saver';
 
@@ -11,10 +11,11 @@ import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useFiltersWithUrl } from '@/hooks';
 import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
 import { Alert, Filter, toaster } from '@/components/ui';
-import { useFilterContext, FilterProvider } from '@/contexts/FilterContext';
+import { FilterProvider } from '@/contexts/FilterContext';
 import { extractApiError } from '@/utils/apiErrors';
 
 import { filterConfig } from '../configs';
+import { DashboardExportSelect, type DashboardExportMode } from './DashboardExportSelect';
 import { DashboardGrid } from './DashboardGrid';
 
 const DEFAULT_ENVIRONMENT = 'staging';
@@ -24,8 +25,6 @@ const initialDashboardFilters: Record<string, string> = {
   execution: '',
   period: '',
 };
-
-type DashboardExportMode = 'standard' | 'ai';
 
 const formatLocalDate = (date: Date) => {
   const year = date.getFullYear();
@@ -121,8 +120,6 @@ const DashboardContent = () => {
 
   const { summary, history } = data || {};
 
-  const { showFilters } = useFilterContext();
-
   const handleExportPdf = async (includeAiInsights: boolean) => {
     if (!selectedProjectId) {
       toaster.create({
@@ -181,26 +178,11 @@ const DashboardContent = () => {
   };
 
   const actionButton = (
-    <HStack gap={2}>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => void handleExportPdf(false)}
-        loading={exportMode === 'standard'}
-        disabled={!selectedProjectId || exportMode !== null}
-      >
-        Export PDF
-      </Button>
-      <Button
-        size="sm"
-        variant="primary"
-        onClick={() => void handleExportPdf(true)}
-        loading={exportMode === 'ai'}
-        disabled={!selectedProjectId || exportMode !== null}
-      >
-        Export PDF + AI
-      </Button>
-    </HStack>
+    <DashboardExportSelect
+      disabled={!selectedProjectId || exportMode !== null}
+      exportMode={exportMode}
+      onSelect={(mode) => void handleExportPdf(mode === 'ai')}
+    />
   );
 
   if (error) {
@@ -217,11 +199,11 @@ const DashboardContent = () => {
   }
 
   return (
-    <MainTemplate pageHeader="Dashboard" actionButton={actionButton} isFilterVisible>
+    <MainTemplate pageHeader="Dashboard" actionButton={actionButton}>
       <FormProvider {...formMethods}>
         <Flex align="stretch" gap={6}>
-          <Filter showFilters={showFilters} config={filterConfig} {...filterProps} />
-          <DashboardGrid summary={summary} history={history} isLoading={isLoading} showFilters={showFilters} />
+          <Filter config={filterConfig} {...filterProps} />
+          <DashboardGrid summary={summary} history={history} isLoading={isLoading} />
         </Flex>
       </FormProvider>
     </MainTemplate>

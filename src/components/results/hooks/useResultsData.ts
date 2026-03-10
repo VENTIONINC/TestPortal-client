@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
-import { getDatesBetween, getDateDisplayName } from '@/utils/dateUtils';
+import { getDatesBetween, getDateDisplayName, getEffectiveDatesInRange } from '@/utils/dateUtils';
 import { Result, ResultsFilters } from '@/types';
 
 import { SpecGroup, addToSpecGroup, matchesFilters, toBaseResult } from '../utils';
@@ -38,7 +38,10 @@ export const useResultsData = ({
 
   const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates } = useMemo(() => {
     const allResults = data?.results || [];
-    const hasSelectedDates = selectedDates.length > 0;
+    const allDates = getDatesBetween(effectiveFilters.from, effectiveFilters.to);
+    const activeDates = getEffectiveDatesInRange(selectedDates, effectiveFilters.from, effectiveFilters.to);
+    const selectedDatesSet = new Set(selectedDates);
+    const activeDatesSet = new Set(activeDates);
     const unfilteredMap = new Map<string, SpecGroup>();
     const resultsMap = new Map<string, SpecGroup>();
     const activeIds: string[] = [];
@@ -48,9 +51,8 @@ export const useResultsData = ({
 
       addToSpecGroup(unfilteredMap, result, baseResult);
 
-      // When no dates are selected in the main panel, do not apply date filtering
       const resultDate = result.startTime.split('T')[0];
-      const isActiveDate = !hasSelectedDates || selectedDates.includes(resultDate);
+      const isActiveDate = activeDatesSet.has(resultDate);
       const matchesFilter = matchesFilters(result, debouncedFilters);
       const shouldInclude = isActiveDate && matchesFilter;
 
@@ -60,11 +62,10 @@ export const useResultsData = ({
       }
     }
 
-    const dates = getDatesBetween(effectiveFilters.from, effectiveFilters.to);
-    const dateItems = dates.map((date) => ({
+    const dateItems = allDates.map((date) => ({
       yyyy_mm_dd: date,
       display: getDateDisplayName(date),
-      isActive: selectedDates.includes(date),
+      isActive: selectedDatesSet.has(date),
     }));
 
     return {

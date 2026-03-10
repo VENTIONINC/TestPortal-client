@@ -1,30 +1,29 @@
 import { useCallback, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Box } from '@chakra-ui/react';
+import { Box, IconButton } from '@chakra-ui/react';
+import { FiFilter } from 'react-icons/fi';
+import { LuPanelLeftClose } from 'react-icons/lu';
 
+import { useFilterContext } from '@/contexts/FilterContext';
 import { FilterConfigSection } from '@/types/filter';
 
 import { Fields, FiltersHeader, FiltersContainer } from '../components';
 
 const FILTER_PANEL_WIDTH = '360px';
+const FILTER_COLLAPSED_WIDTH = '72px';
+const PANEL_TRANSITION = '0.32s cubic-bezier(0.22, 1, 0.36, 1)';
 
 type FilterValues = Record<string, string>;
 
 interface FilterContainerProps {
-  showFilters: boolean;
   config: FilterConfigSection[];
   filters: FilterValues;
   initialFilters: FilterValues;
   onApplyFilters: (filters: FilterValues) => void;
 }
 
-export const FilterContainer = ({
-  showFilters,
-  config,
-  filters,
-  initialFilters,
-  onApplyFilters,
-}: FilterContainerProps) => {
+export const FilterContainer = ({ config, filters, initialFilters, onApplyFilters }: FilterContainerProps) => {
+  const { showFilters, toggleFilters } = useFilterContext();
   const { handleSubmit, reset } = useFormContext<FilterValues>();
 
   const isClearable = useMemo(() => {
@@ -45,16 +44,50 @@ export const FilterContainer = ({
 
   return (
     <Box
-      width={showFilters ? FILTER_PANEL_WIDTH : '0px'}
-      opacity={showFilters ? 1 : 0}
+      width={showFilters ? FILTER_PANEL_WIDTH : FILTER_COLLAPSED_WIDTH}
+      transition={`width ${PANEL_TRANSITION}`}
       overflow="hidden"
-      transition="all 0.3s ease-in-out"
       flexShrink={0}
     >
-      <FiltersContainer as="aside" width={FILTER_PANEL_WIDTH}>
-        <FiltersHeader title="Filters" clearable={isClearable} onClear={handleClear} />
-        <Fields config={config} onApply={handleSubmit(onSubmit)} />
-      </FiltersContainer>
+      <Box display="grid" width={FILTER_PANEL_WIDTH} h="100%">
+        <Box
+          gridArea="1 / 1"
+          opacity={showFilters ? 0 : 1}
+          pointerEvents={showFilters ? 'none' : 'auto'}
+          transform={showFilters ? 'translateX(-12px)' : 'translateX(0px)'}
+          transition={`opacity 0.18s ease, transform ${PANEL_TRANSITION}`}
+        >
+          <FiltersContainer as="aside" width={FILTER_COLLAPSED_WIDTH}>
+            <Box w="100%" pt={1} display="flex" justifyContent="center">
+              <IconButton aria-label="Open filters" variant="ghost" size="sm" onClick={toggleFilters}>
+                <FiFilter size={16} />
+              </IconButton>
+            </Box>
+          </FiltersContainer>
+        </Box>
+
+        <Box
+          gridArea="1 / 1"
+          opacity={showFilters ? 1 : 0}
+          pointerEvents={showFilters ? 'auto' : 'none'}
+          transform={showFilters ? 'translateX(0px)' : 'translateX(-24px)'}
+          transition={`opacity 0.2s ease, transform ${PANEL_TRANSITION}`}
+        >
+          <FiltersContainer as="aside" width={FILTER_PANEL_WIDTH}>
+            <FiltersHeader
+              title="Filters"
+              clearable={isClearable}
+              onClear={handleClear}
+              leadingAction={
+                <IconButton aria-label="Close filters" variant="ghost" size="sm" onClick={toggleFilters}>
+                  <LuPanelLeftClose size={16} />
+                </IconButton>
+              }
+            />
+            <Fields config={config} onApply={handleSubmit(onSubmit)} />
+          </FiltersContainer>
+        </Box>
+      </Box>
     </Box>
   );
 };

@@ -1,9 +1,7 @@
-import { Grid, GridItem, HStack } from '@chakra-ui/react';
+import { Grid, GridItem } from '@chakra-ui/react';
 import { useState } from 'react';
 
 import { Breadcrumb } from '@/components/ui';
-import { useFilterContext } from '@/contexts/FilterContext';
-import { FilterToggleButton } from '@/components/ui/components/Filter/components';
 
 import { Sidebar } from '../Sidebar/Sidebar';
 import { Header } from '../Header/Header';
@@ -13,7 +11,6 @@ interface MainTemplateProps {
   pageHeader: string;
   actionButton?: React.ReactNode;
   isIncludeBreadcrumb?: boolean;
-  isFilterVisible?: boolean;
 }
 
 const getInitialCollapsedState = () => {
@@ -26,13 +23,7 @@ const setCollapsedState = (collapsed: boolean) => {
   return !collapsed;
 };
 
-export const MainTemplate = ({
-  children,
-  pageHeader,
-  actionButton,
-  isIncludeBreadcrumb,
-  isFilterVisible,
-}: MainTemplateProps) => {
+export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBreadcrumb }: MainTemplateProps) => {
   const [collapsed, setCollapsed] = useState(() => getInitialCollapsedState());
   const handleSetCollapsed = () =>
     setCollapsed((prev: boolean) => {
@@ -40,15 +31,6 @@ export const MainTemplate = ({
       setCollapsedState(newState);
       return newState;
     });
-
-  const { toggleFilters } = useFilterContext();
-
-  const headerAction = (
-    <HStack gap={2}>
-      {isFilterVisible && <FilterToggleButton onClick={toggleFilters} />}
-      {actionButton}
-    </HStack>
-  );
 
   return (
     <Grid
@@ -61,7 +43,7 @@ export const MainTemplate = ({
       </GridItem>
 
       <GridItem>
-        <Header title={pageHeader} actionButton={headerAction} />
+        <Header title={pageHeader} actionButton={actionButton} />
 
         <BasicWrapper>
           {isIncludeBreadcrumb && <Breadcrumb ml={6} />}

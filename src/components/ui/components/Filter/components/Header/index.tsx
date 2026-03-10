@@ -7,14 +7,17 @@ interface FiltersHeaderProps extends StackProps {
   title: string;
   clearable?: boolean;
   onClear?: () => void;
+  leadingAction?: React.ReactNode;
   actions?: React.ReactNode;
 }
 
-export const FiltersHeader = ({ title, clearable, onClear, actions }: FiltersHeaderProps) => {
+export const FiltersHeader = ({ title, clearable, onClear, leadingAction, actions }: FiltersHeaderProps) => {
   const { text } = useSurfaceColors();
 
   return (
-    <Stack direction="row" w="100%" p="1px 0 0 16px" mb={2} align="center">
+    <Stack direction="row" w="100%" p="1px 0 0 8px" mb={2} align="center" gap={1}>
+      {leadingAction}
+
       <Text fontSize="lg" fontWeight={700} whiteSpace="nowrap" color={text.primary} mr="auto">
         {title}
       </Text>

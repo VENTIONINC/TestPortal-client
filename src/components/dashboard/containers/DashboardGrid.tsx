@@ -48,7 +48,6 @@ interface DashboardGridProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   history?: any;
   isLoading?: boolean;
-  showFilters?: boolean;
 }
 
 const GridCard = ({ title, children }: { title: string; children: ReactNode }) => (

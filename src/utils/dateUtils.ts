@@ -22,6 +22,14 @@ export const getDatesBetween = (fromDate: string, toDate: string): string[] => {
   return dates.reverse();
 };
 
+export const getEffectiveDatesInRange = (selectedDates: string[], fromDate: string, toDate: string): string[] => {
+  const datesInRange = getDatesBetween(fromDate, toDate);
+  const selectedDatesSet = new Set(selectedDates);
+  const selectedDatesInRange = datesInRange.filter((date) => selectedDatesSet.has(date));
+
+  return selectedDatesInRange.length > 0 ? selectedDatesInRange : datesInRange;
+};
+
 export const getDateDisplayName = (date: string): string => {
   const dateObj = new Date(date);
   const today = new Date();

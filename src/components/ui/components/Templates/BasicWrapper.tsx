@@ -6,7 +6,7 @@ export const BasicWrapper = ({ children }: { children: React.ReactNode }) => {
   const bg = useColorModeValue('#EBEBEC', '#212126');
 
   return (
-    <Box minH="100vh" bg={bg} padding="25px 23px">
+    <Box minH="100vh" bg={bg}>
       {children}
     </Box>
   );

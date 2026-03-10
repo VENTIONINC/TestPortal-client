@@ -26,7 +26,7 @@ export const List = ({ results, label, onClick }: TopSectionProps) => {
             // py={1}
             bg="bg.card"
           >
-            {count}x
+            {count}
           </Text>
           <Text
             onClick={() => onClick(title)}

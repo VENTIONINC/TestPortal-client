@@ -1,16 +1,12 @@
 import { IssuesList } from '@/components/issues';
 import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
-import { useFilterContext, FilterProvider } from '@/contexts/FilterContext';
+import { FilterProvider } from '@/contexts/FilterContext';
 
-const IssuesPageContent = () => {
-  const { showFilters } = useFilterContext();
-
-  return (
-    <MainTemplate pageHeader="Issues" isFilterVisible>
-      <IssuesList showFilters={showFilters} />
-    </MainTemplate>
-  );
-};
+const IssuesPageContent = () => (
+  <MainTemplate pageHeader="Issues">
+    <IssuesList />
+  </MainTemplate>
+);
 
 export const IssuesPage = () => (
   <FilterProvider storageKey="issues">

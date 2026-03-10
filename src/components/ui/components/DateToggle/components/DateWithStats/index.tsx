@@ -27,11 +27,17 @@ export const DateWithStats = ({
       border="1px solid"
       borderColor="border.main"
       borderTopWidth={day.isActive ? '3px' : '1px'}
-      borderTopColor={day.isActive ? 'border.activeSecondary' : 'bg.cardSecondary'}
+      borderTopColor={day.isActive ? 'border.active' : 'bg.cardSecondary'}
       cursor="pointer"
       minH="40px"
     >
-      <Text whiteSpace="nowrap" color="text.main" fontSize="13px" fontWeight={500} mr={2}>
+      <Text
+        whiteSpace="nowrap"
+        color={day.isActive ? 'text.active' : 'text.main'}
+        fontSize="13px"
+        fontWeight={500}
+        mr={2}
+      >
         {day.display}
       </Text>
       {day.stats?.length > 0 && (
