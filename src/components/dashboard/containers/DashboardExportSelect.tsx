@@ -110,7 +110,6 @@ export const DashboardExportSelect = ({ disabled, exportMode, onSelect }: Dashbo
     <Box position="relative" ref={containerRef}>
       <Flex
         as="button"
-        type="button"
         align="center"
         justify="space-between"
         gap={3}
@@ -168,7 +167,6 @@ export const DashboardExportSelect = ({ disabled, exportMode, onSelect }: Dashbo
               <Box
                 as="button"
                 key={option.value}
-                type="button"
                 textAlign="left"
                 px={3}
                 py={2}

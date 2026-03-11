@@ -1,9 +1,9 @@
-import { type ComponentProps, useMemo } from 'react';
+import { type ComponentProps, useEffect, useMemo } from 'react';
 import { Box, HStack, VStack } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
 
-import { Filter, DateToggle } from '@/components/ui';
+import { Filter, DateToggle, LoaderOverlay } from '@/components/ui';
 import { ResultsSelectionProvider, useResultsSelection } from '@/contexts/results-selection';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { type ResultsStats as ResultsStatsResponse, useGetApiV2ResultsStatsQuery } from '@/redux/apis/generatedApi';
@@ -18,18 +18,19 @@ interface ResultsFloatingHeaderProps {
   availableDates: ComponentProps<typeof DateToggle>['days'];
   statistics?: ResultsStatsResponse;
   toggleDate: (day: string) => void;
+  isFetching?: boolean;
 }
 
-const ResultsFloatingHeaderContent = ({ availableDates, statistics, toggleDate }: ResultsFloatingHeaderProps) => {
+const ResultsFloatingHeaderContent = ({ availableDates, statistics, toggleDate, isFetching }: ResultsFloatingHeaderProps) => {
   return (
     <>
       <DateToggle days={availableDates} toggleHandler={(day) => toggleDate(day.yyyy_mm_dd)} />
-      <ResultsStats statistics={statistics} />
+      <ResultsStats statistics={statistics} isFetching={isFetching} />
     </>
   );
 };
 
-const ResultsFloatingHeader = ({ availableDates, statistics, toggleDate }: ResultsFloatingHeaderProps) => {
+const ResultsFloatingHeader = ({ availableDates, statistics, toggleDate, isFetching }: ResultsFloatingHeaderProps) => {
   const {
     wrapperRef: fixedBlockWrapperRef,
     contentRef: fixedBlockContentRef,
@@ -47,7 +48,7 @@ const ResultsFloatingHeader = ({ availableDates, statistics, toggleDate }: Resul
         visibility={isFixed ? 'hidden' : 'visible'}
         pointerEvents={isFixed ? 'none' : 'auto'}
       >
-        <ResultsFloatingHeaderContent availableDates={availableDates} statistics={statistics} toggleDate={toggleDate} />
+        <ResultsFloatingHeaderContent availableDates={availableDates} statistics={statistics} toggleDate={toggleDate} isFetching={isFetching} />
       </Box>
 
       {isFixed && isMeasured && (
@@ -64,6 +65,7 @@ const ResultsFloatingHeader = ({ availableDates, statistics, toggleDate }: Resul
             availableDates={availableDates}
             statistics={statistics}
             toggleDate={toggleDate}
+            isFetching={isFetching}
           />
         </Box>
       )}
@@ -74,10 +76,15 @@ const ResultsFloatingHeader = ({ availableDates, statistics, toggleDate }: Resul
 export const ResultContainerInner = () => {
   const selectedDates = useSelectedDates();
   const selectedProjectId = useSelectedProjectId();
-  const { toggleDate } = useResultsActions();
+  const { toggleDate, setSelectedDates } = useResultsActions();
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
   const { effectiveFilters, debouncedFilters, filterFormMethods, filterProps } = useResultsEffectiveFilters();
+
+  useEffect(() => {
+    setSelectedDates([effectiveFilters.to]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveFilters.to]);
 
   const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates, rawResults, isFetching } =
     useResultsData({
@@ -101,7 +108,7 @@ export const ResultContainerInner = () => {
   );
 
   const [debouncedDates] = useDebounce(activeDates, 200);
-  const { data: statisticsData } = useGetApiV2ResultsStatsQuery(
+  const { data: statisticsData, isFetching: isStatsFetching } = useGetApiV2ResultsStatsQuery(
     { dates: debouncedDates, projectId: selectedProjectId! },
     { skip: debouncedDates.length === 0 },
   );
@@ -114,9 +121,10 @@ export const ResultContainerInner = () => {
         <Filter config={filterConfig} {...filterProps} />
 
         <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="visible" position="relative">
-          <ResultsFloatingHeader availableDates={availableDates} statistics={statistics} toggleDate={toggleDate} />
+          <LoaderOverlay isLoading={isFetching || isStatsFetching} />
+          <ResultsFloatingHeader availableDates={availableDates} statistics={statistics} toggleDate={toggleDate} isFetching={isStatsFetching} />
           <Box position="relative">
-            <TopSectionContainer statistics={statistics} />
+            <TopSectionContainer statistics={statistics} isFetching={isStatsFetching} />
 
             <ResultsList
               activeDaysResultsIds={activeDaysResultsIds}

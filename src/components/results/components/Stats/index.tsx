@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { Grid, Text, VStack } from '@chakra-ui/react';
+import { Grid, Text, VStack, Skeleton } from '@chakra-ui/react';
 
 import { useColorModeValue } from '@/components/ui';
 import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
@@ -10,7 +10,7 @@ import { StatsConfigInfo } from './StatsConfigInfo';
 import { STATUS_META, STATUS_ORDER } from './constants';
 import { type ResultsStatsProps, type StatPalette, type StatPaletteKey, type StatusCountKey } from './types';
 
-export const ResultsStats = memo(({ statistics }: ResultsStatsProps) => {
+export const ResultsStats = memo(({ statistics, isFetching }: ResultsStatsProps) => {
   const { stats } = useResultsSurfaceColors();
   const cardShadow = useColorModeValue('0px 1px 2px rgba(0, 0, 0, 0.08)', '0px 1px 2px rgba(0, 0, 0, 0.32)');
   const labelTextColor = useColorModeValue('#666666', stats.countText);
@@ -39,13 +39,21 @@ export const ResultsStats = memo(({ statistics }: ResultsStatsProps) => {
     },
   };
 
-  if (!statistics || statistics.byStatusTotal === 0) {
+  const isInitialLoading = !statistics && isFetching;
+
+  if (!statistics && !isFetching) {
     return (
       <Text alignSelf="center" color={stats.emptyText}>
         No statistics to display.
       </Text>
     );
   }
+
+  const effStats = statistics || {
+    byStatusTotal: 0,
+    byStatus: { passed: 0, failed: 0, skipped: 0, timedOut: 0 } as any,
+    entityCounts: {},
+  };
 
   return (
     <VStack w="100%" align="stretch" gap={1} bg="bg.cardSecondary" p={2} mt={2} borderRadius="sm">
@@ -58,38 +66,41 @@ export const ResultsStats = memo(({ statistics }: ResultsStatsProps) => {
           lg: 'repeat(5, minmax(0, 1fr))',
         }}
       >
-        <ResultsStatCard
-          title="Total"
-          count={statistics.byStatusTotal}
-          accent={palettes.total.accent}
-          background={palettes.total.background}
-          labelColor={labelTextColor}
-          valueColor={valueTextColor}
-          shadow={cardShadow}
-        />
+        <Skeleton loading={isFetching} minH={isInitialLoading ? '68px' : 'auto'} borderRadius="md" w="100%">
+          <ResultsStatCard
+            title="Total"
+            count={effStats.byStatusTotal || 0}
+            accent={palettes.total.accent}
+            background={palettes.total.background}
+            labelColor={labelTextColor}
+            valueColor={valueTextColor}
+            shadow={cardShadow}
+          />
+        </Skeleton>
 
         {STATUS_ORDER.map((status) => {
           const { Icon, title } = STATUS_META[status];
-          const count = statistics.byStatus[status as StatusCountKey];
+          const count = effStats.byStatus[status as StatusCountKey] || 0;
           const palette = palettes[status];
 
           return (
-            <ResultsStatCard
-              key={status}
-              title={title}
-              count={count}
-              accent={palette.accent}
-              background={palette.background}
-              labelColor={labelTextColor}
-              valueColor={valueTextColor}
-              shadow={cardShadow}
-              IconComponent={Icon}
-            />
+            <Skeleton key={status} loading={isFetching} minH={isInitialLoading ? '68px' : 'auto'} borderRadius="md" w="100%">
+              <ResultsStatCard
+                title={title}
+                count={count}
+                accent={palette.accent}
+                background={palette.background}
+                labelColor={labelTextColor}
+                valueColor={valueTextColor}
+                shadow={cardShadow}
+                IconComponent={Icon}
+              />
+            </Skeleton>
           );
         })}
       </Grid>
 
-      <StatsConfigInfo entityCounts={statistics.entityCounts} labelColor={labelTextColor} valueColor={valueTextColor} />
+      <StatsConfigInfo entityCounts={effStats.entityCounts as any} labelColor={labelTextColor} valueColor={valueTextColor} />
     </VStack>
   );
 });

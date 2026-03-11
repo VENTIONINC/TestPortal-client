@@ -2,9 +2,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { Box, Button, Flex, Popover, Portal, Text } from '@chakra-ui/react';
 import { differenceInCalendarDays, startOfDay } from 'date-fns';
 import { DateRange, DayButton as DayPickerDayButton, DayButtonProps, DayPicker, Matcher } from 'react-day-picker';
-import { LuCalendar, LuX } from 'react-icons/lu';
+import { LuCalendar, LuX, LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 
-import { Field, FieldProps, NativeSelect, Tooltip } from '@/components/ui';
+import { Field, FieldProps, Tooltip, Input } from '@/components/ui';
 import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { formatDate, parseDateString, getPresetDateRange, type DateRangePreset } from '@/utils/dateUtils';
 
@@ -40,17 +40,6 @@ const MONTH_NAMES = [
   'December',
 ];
 
-const MONTH_OPTIONS = MONTH_NAMES.map((name, i) => ({ value: String(i), label: name }));
-
-const getYearOptions = () => {
-  const currentYear = new Date().getFullYear();
-  const years = [];
-  for (let y = currentYear - 10; y <= currentYear + 5; y++) {
-    years.push({ value: String(y), label: String(y) });
-  }
-  return years;
-};
-
 const PRESET_LABELS: { key: DateRangePreset; label: string }[] = [
   { key: 'today', label: 'Today' },
   { key: 'yesterday', label: 'Yesterday' },
@@ -60,10 +49,9 @@ const PRESET_LABELS: { key: DateRangePreset; label: string }[] = [
   { key: 'last-month', label: 'Last month' },
 ];
 
-const PHASE_LABELS: Record<SelectionPhase, string | null> = {
-  start: 'Select start date',
-  end: 'Select end date',
-  done: null,
+const isValidDateString = (dateString: string) => {
+  const d = new Date(dateString);
+  return !isNaN(d.getTime());
 };
 
 type SelectionPhase = 'start' | 'end' | 'done';
@@ -144,13 +132,15 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
   const [pendingRange, setPendingRange] = useState<DateRange | undefined>(selectedRange);
   const [leftMonth, setLeftMonth] = useState<Date>(fromValue ? parseDateString(fromValue) : new Date());
 
+  const [startInputText, setStartInputText] = useState(fromValue ? formatDisplayDateValue(parseDateString(fromValue)) : '');
+  const [endInputText, setEndInputText] = useState(toValue ? formatDisplayDateValue(parseDateString(toValue)) : '');
+  const [activeInput, setActiveInput] = useState<'start' | 'end' | 'done'>('start');
+
   const rightMonth = useMemo(() => {
     const d = new Date(leftMonth);
     d.setMonth(d.getMonth() + 1);
     return d;
   }, [leftMonth]);
-
-  const yearOptions = useMemo(() => getYearOptions(), []);
 
   const displayValue = useMemo(() => {
     if (!fromValue && !toValue) return '';
@@ -172,11 +162,17 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
   const handleOpenChange = useCallback((details: { open: boolean }) => {
     setOpen(details.open);
 
+    if (details.open) {
+      setStartInputText(fromValue ? formatDisplayDateValue(parseDateString(fromValue)) : '');
+      setEndInputText(toValue ? formatDisplayDateValue(parseDateString(toValue)) : '');
+      setActiveInput('start');
+    }
+
     if (!details.open) {
       setHoverDate(undefined);
       setIsSelectingEnd(false);
     }
-  }, []);
+  }, [fromValue, toValue]);
 
   const handleConfirm = useCallback(() => {
     if (pendingRange?.from) {
@@ -216,8 +212,11 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
     const nextRange = { from, to };
     setPendingRange(nextRange);
     setLeftMonth(from);
+    setStartInputText(formatDisplayDateValue(from));
+    setEndInputText(formatDisplayDateValue(to));
     setHoverDate(undefined);
     setIsSelectingEnd(false);
+    setActiveInput('done');
   }, []);
 
   const selectionPhase = useMemo<SelectionPhase>(() => {
@@ -277,25 +276,36 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
       setHoverDate(undefined);
       const clickedDay = startOfDay(triggerDate);
 
-      if (!pendingRange?.from || !isSelectingEnd) {
+      if (!pendingRange?.from || !isSelectingEnd && activeInput === 'start') {
         setPendingRange({ from: clickedDay, to: undefined });
+        setStartInputText(formatDisplayDateValue(clickedDay));
+        setEndInputText('');
         setIsSelectingEnd(true);
+        setActiveInput('end');
         return;
       }
 
-      const anchor = startOfDay(pendingRange.from);
+      if (activeInput === 'end' && pendingRange?.from) {
+        const anchor = startOfDay(pendingRange.from);
 
-      if (clickedDay.getTime() === anchor.getTime()) {
-        setPendingRange(undefined);
+        if (clickedDay.getTime() === anchor.getTime()) {
+          setPendingRange(undefined);
+          setStartInputText('');
+          setEndInputText('');
+          setIsSelectingEnd(false);
+          setActiveInput('start');
+          return;
+        }
+
+        const nextRange = getBoundedRangeFromAnchor(anchor, clickedDay, maxRangeDays);
+        setPendingRange(nextRange);
+        setStartInputText(formatDisplayDateValue(nextRange.from));
+        setEndInputText(formatDisplayDateValue(nextRange.to));
         setIsSelectingEnd(false);
-        return;
+        setActiveInput('done');
       }
-
-      const nextRange = getBoundedRangeFromAnchor(anchor, clickedDay, maxRangeDays);
-      setPendingRange(nextRange);
-      setIsSelectingEnd(false);
     },
-    [isSelectingEnd, maxRangeDays, pendingRange],
+    [isSelectingEnd, maxRangeDays, pendingRange, activeInput],
   );
 
   const handleDayMouseEnter = useCallback(
@@ -313,27 +323,32 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
     setHoverDate(undefined);
   }, []);
 
-  const handleLeftMonthChange = useCallback((newMonth: string) => {
-    setLeftMonth((prev) => new Date(prev.getFullYear(), Number(newMonth), 1));
+  const handlePrevMonth = useCallback(() => {
+    setLeftMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
   }, []);
 
-  const handleLeftYearChange = useCallback((newYear: string) => {
-    setLeftMonth((prev) => new Date(Number(newYear), prev.getMonth(), 1));
+  const handleNextMonth = useCallback(() => {
+    setLeftMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   }, []);
 
-  const handleRightMonthChange = useCallback(
-    (newMonth: string) => {
-      setLeftMonth(new Date(rightMonth.getFullYear(), Number(newMonth) - 1, 1));
-    },
-    [rightMonth],
-  );
+  const handleStartInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setStartInputText(val);
+    if (isValidDateString(val)) {
+      const d = new Date(val);
+      setPendingRange((prev) => ({ from: d, to: prev?.to }));
+      setLeftMonth(d);
+    }
+  };
 
-  const handleRightYearChange = useCallback(
-    (newYear: string) => {
-      setLeftMonth(new Date(Number(newYear), rightMonth.getMonth() - 1, 1));
-    },
-    [rightMonth],
-  );
+  const handleEndInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setEndInputText(val);
+    if (isValidDateString(val)) {
+      const d = new Date(val);
+      setPendingRange((prev) => ({ from: prev?.from, to: d }));
+    }
+  };
 
   const handleGoToToday = useCallback(() => {
     const today = new Date();
@@ -616,34 +631,51 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                 )}
 
                 <Box p="11px 8px 8px 13px" flex="1" minWidth="605px">
-                  {PHASE_LABELS[selectionPhase] && (
-                    <Text fontSize="12px" color={text.secondary} mb={4}>
-                      {PHASE_LABELS[selectionPhase]}
-                    </Text>
-                  )}
+                  <Flex mb="20px" gap={4} alignItems="center">
+                    <Field label="Start date" flex="1">
+                      <Input
+                        name="startDate"
+                        value={startInputText}
+                        onChange={handleStartInputChange}
+                        onFocus={() => {
+                          setActiveInput('start');
+                          setIsSelectingEnd(false);
+                        }}
+                        placeholder="MM/DD/YYYY"
+                        bg="bg.input"
+                        borderColor={activeInput === 'start' ? '#53ABFC' : borders.subtle}
+                        _focus={{ borderColor: '#53ABFC', boxShadow: '0 0 0 1px #53ABFC' }}
+                      />
+                    </Field>
+                    <Box mt="20px">—</Box>
+                    <Field label="End date" flex="1">
+                      <Input
+                        name="endDate"
+                        value={endInputText}
+                        onChange={handleEndInputChange}
+                        onFocus={() => {
+                          setActiveInput('end');
+                          setIsSelectingEnd(true);
+                        }}
+                        placeholder="MM/DD/YYYY"
+                        bg="bg.input"
+                        borderColor={activeInput === 'end' ? '#53ABFC' : borders.subtle}
+                        _focus={{ borderColor: '#53ABFC', boxShadow: '0 0 0 1px #53ABFC' }}
+                      />
+                    </Field>
+                  </Flex>
 
                   <Flex>
                     {/* Left calendar */}
                     <Box flex="1" mr="25px">
-                      <Flex mb={5}>
-                        <NativeSelect
-                          name="left-month"
-                          h="32px"
-                          minW="140px"
-                          mr="15px"
-                          value={String(leftMonth.getMonth())}
-                          onChange={(e) => handleLeftMonthChange(e.target.value)}
-                          items={MONTH_OPTIONS}
-                        />
-
-                        <NativeSelect
-                          name="left-year"
-                          h="32px"
-                          w="125px"
-                          value={String(leftMonth.getFullYear())}
-                          onChange={(e) => handleLeftYearChange(e.target.value)}
-                          items={yearOptions}
-                        />
+                      <Flex mb={5} alignItems="center" justifyContent="space-between">
+                        <Button variant="ghost" size="sm" onClick={handlePrevMonth} p={0} minW="32px">
+                          <LuChevronLeft size={20} />
+                        </Button>
+                        <Text fontWeight="bold">
+                          {MONTH_NAMES[leftMonth.getMonth()]} {leftMonth.getFullYear()}
+                        </Text>
+                        <Box w="32px" /> {/* Placeholder for balance */}
                       </Flex>
                       <Box css={calendarCss} onMouseLeave={handleCalendarMouseLeave}>
                         <DayPicker
@@ -664,25 +696,14 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
 
                     {/* Right calendar */}
                     <Box flex="1">
-                      <Flex mb={5} maxW="140px">
-                        <NativeSelect
-                          name="right-month"
-                          h="32px"
-                          minW="140px"
-                          mr="15px"
-                          value={String(rightMonth.getMonth())}
-                          onChange={(e) => handleRightMonthChange(e.target.value)}
-                          items={MONTH_OPTIONS}
-                        />
-
-                        <NativeSelect
-                          name="right-year"
-                          h="32px"
-                          w="125px"
-                          value={String(rightMonth.getFullYear())}
-                          onChange={(e) => handleRightYearChange(e.target.value)}
-                          items={yearOptions}
-                        />
+                      <Flex mb={5} alignItems="center" justifyContent="space-between">
+                        <Box w="32px" /> {/* Placeholder for balance */}
+                        <Text fontWeight="bold">
+                          {MONTH_NAMES[rightMonth.getMonth()]} {rightMonth.getFullYear()}
+                        </Text>
+                        <Button variant="ghost" size="sm" onClick={handleNextMonth} p={0} minW="32px">
+                          <LuChevronRight size={20} />
+                        </Button>
                       </Flex>
                       <Box css={calendarCss} onMouseLeave={handleCalendarMouseLeave}>
                         <DayPicker

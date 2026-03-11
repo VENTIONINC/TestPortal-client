@@ -5,6 +5,7 @@ import { ResultStatus } from '@/types';
 
 export interface ResultsStatsProps {
   statistics?: ResultsStatsResponse;
+  isFetching?: boolean;
 }
 
 export interface ResultsStatCardProps {

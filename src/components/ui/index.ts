@@ -28,3 +28,4 @@ export { Alert } from './components/Feedback';
 export { Wrap } from './components/Layout';
 
 export * from './components';
+export * from './loader';

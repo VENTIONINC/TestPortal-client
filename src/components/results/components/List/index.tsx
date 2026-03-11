@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Mark, Spinner, Box, Stack, Heading, Flex } from '@chakra-ui/react';
+import { Mark, Spinner, Box, Stack, Heading, Flex, Skeleton } from '@chakra-ui/react';
 
 import { Checkbox } from '@/components/ui';
 import { BulkActions } from '@/components/BulkActions';
@@ -83,20 +83,27 @@ export const ResultsList = ({
               <BulkActions selectedResults={selectedResults} />
             </Box>
           </Flex>
-
-          {isFetching && <Spinner />}
         </Box>
 
         <Stack align="stretch" gap={6} flex={1} overflowY="auto" overflowX="hidden">
+          {visibleEntries.length === 0 && isFetching && (
+            <>
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} loading={isFetching} minH="120px" borderRadius="xl" />
+              ))}
+            </>
+          )}
+
           {visibleEntries.map(([specKey, { spec, executions: unfilteredExecutions }]) => {
             const filteredExecutions = results.get(specKey)?.executions || [];
             return (
-              <ResultSpecSection
-                key={spec.id}
-                spec={spec}
-                executions={filteredExecutions}
-                allExecutions={unfilteredExecutions}
-              />
+              <Skeleton key={spec.id} loading={isFetching} minH="120px" borderRadius="xl">
+                <ResultSpecSection
+                  spec={spec}
+                  executions={filteredExecutions}
+                  allExecutions={unfilteredExecutions}
+                />
+              </Skeleton>
             );
           })}
 
