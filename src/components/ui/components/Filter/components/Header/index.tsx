@@ -23,7 +23,7 @@ export const FiltersHeader = ({ title, clearable, onClear, leadingAction, action
 
       {clearable && (
         <Button cursor="pointer" variant="ghost" size="sm" onClick={onClear}>
-          <LuX size={16} pr={2} />
+          <LuX size={16} />
           Clear all
         </Button>
       )}
