@@ -108,6 +108,39 @@ export const buttonRecipe = defineRecipe({
           width: '52px',
         },
       },
+      primaryError: {
+        bg: 'button.primaryError.default',
+        p: '10px',
+        color: 'button.primary.color',
+        _hover: {
+          bg: 'button.primaryError.hover',
+        },
+        _active: {
+          bg: 'button.primaryError.focus',
+        },
+        _disabled: {
+          bg: 'button.primaryError.disabled',
+          opacity: 1,
+        },
+      },
+      secondaryError: {
+        bg: 'button.secondaryError.bgDefault',
+        borderWidth: '1px',
+        borderColor: 'button.secondaryError.titleDefault',
+        color: 'button.secondaryError.titleDefault',
+        _hover: {
+          bg: 'button.secondaryError.bgHoverDefault',
+        },
+        _active: {
+          bg: 'button.secondaryError.focus',
+        },
+        _disabled: {
+          opacity: 1,
+          bg: 'button.secondaryError.bgDisable',
+          color: 'button.secondaryError.titleDisabled',
+          borderColor: 'button.secondaryError.titleDisabled',
+        },
+      },
     },
     size: {
       xs: {

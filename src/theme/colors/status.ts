@@ -1,39 +1,33 @@
 export const status = {
   success: {
-    value: {
-      _light: '#1FE647',
-      _dark: '#2CD958',
-    },
+    bg: { value: { _light: '#E6F4EA', _dark: 'rgba(30, 142, 62, 0.2)' } },
+    text: { value: { _light: '#1E8E3E', _dark: '#4CAF50' } },
+    icon: { value: { _light: '#1E8E3E', _dark: '#2CD958' } }
   },
   attention: {
-    value: {
-      _light: '#C3F532',
-      _dark: '#BBEF4E',
-    },
+    bg: { value: { _light: '#FEF7E0', _dark: 'rgba(227, 116, 0, 0.2)' } },
+    text: { value: { _light: '#E37400', _dark: '#FFB74D' } },
+    icon: { value: { _light: '#E37400', _dark: '#FFB74D' } }
   },
   warning: {
-    value: {
-      _light: '#FF874D',
-      _dark: '#E69A2D',
-    },
+    bg: { value: { _light: '#FEF7E0', _dark: 'rgba(227, 116, 0, 0.2)' } },
+    text: { value: { _light: '#E37400', _dark: '#FFB74D' } },
+    icon: { value: { _light: '#E37400', _dark: '#FFB74D' } }
   },
   error: {
-    value: {
-      _light: '#FF4245',
-      _dark: '#E03538',
-    },
+    bg: { value: { _light: '#FCE8E8', _dark: 'rgba(217, 48, 37, 0.2)' } },
+    text: { value: { _light: '#D93025', _dark: '#EF5350' } },
+    icon: { value: { _light: '#D93025', _dark: '#E03538' } }
   },
   info: {
-    value: {
-      _light: '#6EC8FF',
-      _dark: '#3AA9FF',
-    },
+    bg: { value: { _light: '#E8F0FE', _dark: 'rgba(26, 115, 232, 0.2)' } },
+    text: { value: { _light: '#1A73E8', _dark: '#64B5F6' } },
+    icon: { value: { _light: '#1A73E8', _dark: '#3AA9FF' } }
   },
   neutral: {
-    value: {
-      _light: '#B2B2B2',
-      _dark: '#7D7D7F',
-    },
+    bg: { value: { _light: '#F1F3F4', _dark: 'rgba(112, 117, 122, 0.2)' } },
+    text: { value: { _light: '#70757A', _dark: '#9E9E9E' } },
+    icon: { value: { _light: '#70757A', _dark: '#7D7D7F' } }
   },
   textColor: {
     value: {
@@ -42,3 +36,4 @@ export const status = {
     },
   },
 };
+

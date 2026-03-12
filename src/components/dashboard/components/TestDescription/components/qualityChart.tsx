@@ -72,7 +72,7 @@ export const QualityChart = ({
               <Text fontSize="3xl" fontWeight="bold">
                 {data.passRate}%
               </Text>
-              <Box ml="-5px" fontSize="xs" bg="status.success" colorPalette="green" borderRadius="full" px={2} py={1}>
+              <Box ml="-5px" fontSize="xs" bg="status.success.bg" color="status.success.text" borderRadius="full" px={2} py={1}>
                 +{data.passRateDelta}%
               </Box>
             </HStack>

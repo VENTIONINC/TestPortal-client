@@ -5,7 +5,6 @@ import { DateRange, DayButton as DayPickerDayButton, DayButtonProps, DayPicker, 
 import { LuCalendar, LuX, LuChevronLeft, LuChevronRight } from 'react-icons/lu';
 
 import { Field, FieldProps, Tooltip, Input } from '@/components/ui';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { formatDate, parseDateString, getPresetDateRange, type DateRangePreset } from '@/utils/dateUtils';
 
 export interface DateRangePickerProps {
@@ -116,7 +115,6 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
     showPresets = true,
     fieldProps,
   } = props;
-  const { menu, borders, text } = useSurfaceColors();
   const [open, setOpen] = useState(false);
   const [hoverDate, setHoverDate] = useState<Date | undefined>();
   const [isSelectingEnd, setIsSelectingEnd] = useState(false);
@@ -436,15 +434,15 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
   const calendarCss = useMemo(
     () => ({
       '& .rdp-root': {
-        '--rdp-accent-color': '#53ABFC',
-        '--rdp-accent-background-color': '#53ABFC',
+        '--rdp-accent-color': 'var(--chakra-colors-accent-solid)',
+        '--rdp-accent-background-color': 'var(--chakra-colors-accent-solid)',
         '--rdp-day-width': '40px',
         '--rdp-day-height': '40px',
         '--rdp-day_button-width': '40px',
         '--rdp-day_button-height': '40px',
         '--rdp-selected-font': 'bold',
         '--rdp-outside-opacity': '1',
-        '--rdp-today-color': '#53ABFC',
+        '--rdp-today-color': 'var(--chakra-colors-accent-solid)',
 
         width: '100%',
       },
@@ -467,16 +465,16 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
         textAlign: 'center',
       },
       '& .rdp-day': {
-        color: text.primary,
+        color: 'text.main',
       },
       '& .rdp-day:hover:not(.rdp-selected):not(.rdp-range_middle):not(.rdp-disabled)': {
-        backgroundColor: menu.itemHoverBg,
+        backgroundColor: 'bg.hover',
       },
       '& .rdp-outside': {
-        color: menu.textSecondary,
+        color: 'text.muted',
       },
       '& .rdp-disabled': {
-        color: menu.textSecondary,
+        color: 'text.muted',
         opacity: 0.35,
         cursor: 'not-allowed',
       },
@@ -485,18 +483,18 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
         height: '100%',
       },
       '& .rdp-range_start .rdp-day_button, & .rdp-range_end .rdp-day_button': {
-        backgroundColor: '#53ABFC',
+        backgroundColor: 'accent.solid',
         color: 'white',
       },
       '& .rdp-range_middle': {
-        backgroundColor: 'rgba(83, 171, 252, 0.15)',
-        color: text.primary,
+        backgroundColor: 'bg.active',
+        color: 'text.main',
       },
-      '& .rdp-today:not(.rdp-selected):not(.rdp-range_start):not(.rdp-range_end) .rdp-day_button': {
-        border: `1px solid ${borders.focus}`,
+      '& .rdp-today:not(.rdp-selected):not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button': {
+        border: `1px solid var(--chakra-colors-border-active)`,
       },
       '& .rdp-weekday': {
-        color: text.secondary,
+        color: 'text.secondary',
         fontSize: '12px',
         fontWeight: 'normal',
         paddingBottom: '12px',
@@ -508,7 +506,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
         display: 'none',
       },
     }),
-    [text, menu, borders],
+    [],
   );
 
   return (
@@ -540,13 +538,13 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                 <Box
                   flex="1"
                   textAlign="left"
-                  color={fromValue ? text.primary : text.muted}
+                  color={fromValue ? 'text.main' : 'text.muted'}
                   fontSize="sm"
                   pr={showClearButton ? 6 : 0}
                 >
                   {displayValue || placeholder}
                 </Box>
-                <Box color={text.secondary}>
+                <Box color="text.secondary">
                   <LuCalendar size={16} />
                 </Box>
               </Flex>
@@ -564,7 +562,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                 top: '50%',
                 right: '38px',
                 transform: 'translateY(-50%)',
-                color: text.secondary,
+                color: 'text.secondary',
                 background: 'none',
                 border: 'none',
                 display: 'flex',
@@ -585,18 +583,18 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
         <Portal>
           <Popover.Positioner>
             <Popover.Content
-              bg={menu.bg}
-              borderColor={borders.subtle}
+              bg="bg.panel"
+              borderColor="border.main"
               borderWidth="1px"
               borderRadius="lg"
-              boxShadow={menu.shadow}
+              boxShadow="sm"
               p={0}
               w="100%"
               _focusVisible={{ outline: 'none' }}
             >
               <Flex>
                 {showPresets && (
-                  <Box borderRightWidth="1px" borderColor={borders.subtle} minW="119px">
+                  <Box borderRightWidth="1px" borderColor="border.main" minW="119px">
                     <Flex direction="column" mt="15px">
                       {PRESET_LABELS.map(({ key, label: presetLabel }) => {
                         const presetRange = getPresetDateRange(key);
@@ -615,11 +613,11 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                             mb="7px"
                             fontWeight={isActive ? 600 : 400}
                             justifyContent="flex-start"
-                            bg={isActive ? menu.itemHoverBg : 'transparent'}
-                            color={isExceedsMax ? menu.textSecondary : isActive ? text.primary : text.secondary}
+                            bg={isActive ? 'bg.hover' : 'transparent'}
+                            color={isExceedsMax ? 'text.muted' : isActive ? 'text.main' : 'text.secondary'}
                             opacity={isExceedsMax ? 0.5 : 1}
                             disabled={isExceedsMax}
-                            _hover={isExceedsMax ? {} : { bg: menu.itemHoverBg, color: text.primary }}
+                            _hover={isExceedsMax ? {} : { bg: 'bg.hover', color: 'text.main' }}
                             onClick={() => handlePreset(key)}
                           >
                             {presetLabel}
@@ -643,8 +641,8 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                         }}
                         placeholder="MM/DD/YYYY"
                         bg="bg.input"
-                        borderColor={activeInput === 'start' ? '#53ABFC' : borders.subtle}
-                        _focus={{ borderColor: '#53ABFC', boxShadow: '0 0 0 1px #53ABFC' }}
+                        borderColor={activeInput === 'start' ? 'border.active' : 'border.main'}
+                        _focus={{ borderColor: 'border.active', boxShadow: '0 0 0 1px var(--chakra-colors-border-active)' }}
                       />
                     </Field>
                     <Box mt="20px">—</Box>
@@ -659,8 +657,8 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                         }}
                         placeholder="MM/DD/YYYY"
                         bg="bg.input"
-                        borderColor={activeInput === 'end' ? '#53ABFC' : borders.subtle}
-                        _focus={{ borderColor: '#53ABFC', boxShadow: '0 0 0 1px #53ABFC' }}
+                        borderColor={activeInput === 'end' ? 'border.active' : 'border.main'}
+                        _focus={{ borderColor: 'border.active', boxShadow: '0 0 0 1px var(--chakra-colors-border-active)' }}
                       />
                     </Field>
                   </Flex>
@@ -722,30 +720,30 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                     </Box>
                   </Flex>
 
-                  <Flex mt="29px" gap={2} justify="flex-end" borderTopWidth="1px" borderColor={borders.subtle} pt={3}>
-                    <Button size="sm" variant="ghost" color={text.secondary} onClick={handleGoToToday} mr="auto">
+                  <Flex mt="29px" gap={2} justify="flex-end" borderTopWidth="1px" borderColor="border.main" pt={3}>
+                    <Button size="sm" variant="ghost" color="text.secondary" onClick={handleGoToToday} mr="auto">
                       Today
                     </Button>
                     <Flex alignItems="center">
-                      <Text fontSize="14px" color={text.primary} fontWeight="400">
+                      <Text fontSize="14px" color="text.main" fontWeight="400">
                         {pendingRangeLabel}
                       </Text>
                     </Flex>
                     <Button
                       size="sm"
                       variant="outline"
-                      borderColor={borders.subtle}
-                      color={text.primary}
+                      borderColor="border.main"
+                      color="text.main"
                       onClick={handleCancel}
                     >
                       Cancel
                     </Button>
-                    <Button
-                      size="sm"
-                      bg="#53ABFC"
-                      color="white"
-                      _hover={{ bg: '#3A9AEB' }}
-                      onClick={handleConfirm}
+                      <Button
+                        size="sm"
+                        bg="accent.solid"
+                        color="white"
+                        _hover={{ bg: 'blue.600' }}
+                        onClick={handleConfirm}
                       disabled={isConfirmDisabled}
                     >
                       Confirm

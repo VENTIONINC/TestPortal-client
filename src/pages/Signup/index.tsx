@@ -4,35 +4,26 @@ import { Box, Button, Heading, Text, Container } from '@chakra-ui/react';
 import { PATHS } from '@/types/paths';
 import { FormField } from '@/components/forms';
 import { useSignup } from '@/hooks';
-import { useColorModeValue } from '@/components/ui';
-
 export function SignupPage() {
   const { register, handleSubmit, errors, loading, errorMessage } = useSignup();
 
-  const pageBg = useColorModeValue('gray.50', 'gray.900');
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const errorBg = useColorModeValue('red.50', 'red.900');
-  const errorText = useColorModeValue('red.700', 'red.100');
-  const errorBorder = useColorModeValue('red.200', 'red.700');
-  const linkColor = useColorModeValue('blue.500', 'blue.300');
-
   return (
-    <Box minH="100vh" bg={pageBg} py={12} px={4}>
+    <Box minH="100vh" bg="bg.page" py={12} px={4}>
       <Container maxW="md" centerContent>
-        <Box bg={cardBg} p={8} borderRadius="lg" boxShadow="lg" w="100%">
-          <Heading size="lg" textAlign="center" mb={6}>
+        <Box bg="bg.card" p={8} borderRadius="lg" boxShadow="lg" w="100%">
+          <Heading size="lg" textAlign="center" mb={6} color="text.main">
             Create your account
           </Heading>
 
           {errorMessage && (
             <Box
-              bg={errorBg}
-              color={errorText}
+              bg="status.error.bg"
+              color="status.error.text"
               p={3}
               mb={4}
               borderRadius="md"
               border="1px solid"
-              borderColor={errorBorder}
+              borderColor="status.error.text"
             >
               {errorMessage}
             </Box>
@@ -84,10 +75,10 @@ export function SignupPage() {
             </Button>
           </Box>
 
-          <Text textAlign="center">
+          <Text textAlign="center" color="text.secondary">
             Already have an account?{' '}
             <Link to={PATHS.LOGIN}>
-              <Text as="span" color={linkColor} textDecoration="underline">
+              <Text as="span" color="bg.accent" textDecoration="underline">
                 Sign in
               </Text>
             </Link>

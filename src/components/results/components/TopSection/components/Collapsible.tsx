@@ -19,13 +19,13 @@ export const CollapsibleWrapper = ({
   results,
   handleClickToResult,
 }: CollapsibleWrapperProps) => (
-  <Collapsible.Root bg="bg.cardSecondary" onOpenChange={() => setIsOpen(!isOpen)}>
+  <Collapsible.Root bg="bg.card" p={4} borderRadius="xl" border="1px solid" borderColor="border.subtle" onOpenChange={() => setIsOpen(!isOpen)}>
     <Collapsible.Trigger asChild>
-      <Flex align="center" minH="27px" pl="2px">
-        {isOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
-        <Text fontWeight={500} cursor="pointer" whiteSpace="nowrap" pl="9px" fontSize="lg">
+      <Flex align="center" minH="27px" pl="2px" justify="space-between">
+        <Text fontWeight={600} cursor="pointer" whiteSpace="nowrap" fontSize="lg">
           {title}
         </Text>
+        {isOpen ? <IoIosArrowUp /> : <IoIosArrowDown />}
       </Flex>
     </Collapsible.Trigger>
     <Collapsible.Content>

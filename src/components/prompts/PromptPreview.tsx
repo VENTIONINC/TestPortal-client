@@ -1,7 +1,5 @@
 import { Box, Code, Heading, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
 
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
-
 import { CopyButton } from './CopyButton';
 
 interface PromptPreviewProps {
@@ -11,12 +9,11 @@ interface PromptPreviewProps {
 }
 
 export const PromptPreview = ({ prompt, isGenerating, error }: PromptPreviewProps) => {
-  const { surfaces, borders, text } = useSurfaceColors();
 
   return (
     <VStack align="stretch" gap={4}>
       <HStack justify="space-between" align="center">
-        <Heading size="md" color={text.primary}>
+        <Heading size="md" color="text.main">
           Generated Prompt
         </Heading>
         {prompt && !isGenerating && <CopyButton text={prompt} />}
@@ -24,9 +21,9 @@ export const PromptPreview = ({ prompt, isGenerating, error }: PromptPreviewProp
 
       <Box
         border="1px solid"
-        borderColor={borders.subtle}
+        borderColor="border.main"
         borderRadius="md"
-        bg={surfaces.panel}
+        bg="bg.panel"
         p={4}
         minHeight="200px"
         position="relative"
@@ -34,13 +31,13 @@ export const PromptPreview = ({ prompt, isGenerating, error }: PromptPreviewProp
         {isGenerating && (
           <VStack justify="center" align="center" height="100%" minHeight="150px">
             <Spinner size="lg" />
-            <Text color={text.muted}>Generating prompt...</Text>
+            <Text color="text.muted">Generating prompt...</Text>
           </VStack>
         )}
 
         {error && (
           <VStack justify="center" align="center" height="100%" minHeight="150px">
-            <Text color="red.500" textAlign="center">
+            <Text color="status.error.text" textAlign="center">
               {error}
             </Text>
           </VStack>
@@ -54,7 +51,7 @@ export const PromptPreview = ({ prompt, isGenerating, error }: PromptPreviewProp
             fontSize="sm"
             lineHeight="relaxed"
             bg="transparent"
-            color={text.primary}
+            color="text.main"
             p={0}
             border="none"
           >
@@ -64,7 +61,7 @@ export const PromptPreview = ({ prompt, isGenerating, error }: PromptPreviewProp
 
         {!prompt && !isGenerating && !error && (
           <VStack justify="center" align="center" height="100%" minHeight="150px">
-            <Text color={text.muted} textAlign="center">
+            <Text color="text.muted" textAlign="center">
               Fill in the parameters above to generate your prompt
             </Text>
           </VStack>
@@ -72,8 +69,8 @@ export const PromptPreview = ({ prompt, isGenerating, error }: PromptPreviewProp
       </Box>
 
       {prompt && !isGenerating && (
-        <VStack align="start" gap={2} fontSize="sm" color={text.muted}>
-          <Text fontWeight="medium" color={text.primary}>
+        <VStack align="start" gap={2} fontSize="sm" color="text.muted">
+          <Text fontWeight="medium" color="text.main">
             Usage Instructions:
           </Text>
           <Text>

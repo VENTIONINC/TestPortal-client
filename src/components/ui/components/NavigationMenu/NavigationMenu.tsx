@@ -1,13 +1,11 @@
 import { useNavigate, useLocation } from 'react-router';
 import { Box, Text, VStack } from '@chakra-ui/react';
 
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 import { navigationMenuConfig } from './config';
 import { NavItem } from './NavItem';
 
 export const NavigationMenu = ({ collapsed }: { collapsed: boolean }) => {
-  const { text } = useSurfaceColors();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -16,7 +14,7 @@ export const NavigationMenu = ({ collapsed }: { collapsed: boolean }) => {
       {navigationMenuConfig.map((group) => (
         <Box key={group.id} mb="6">
           {group.title && !collapsed && (
-            <Text px="6" mb="3" fontSize="md" fontWeight={500} color={text.secondary}>
+            <Text px="6" mb="3" fontSize="md" fontWeight={500} color="text.secondary">
               {group.title}
             </Text>
           )}

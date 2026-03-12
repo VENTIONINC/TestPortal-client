@@ -1,21 +1,19 @@
 import { Grid, Heading, Spinner, Text, VStack } from '@chakra-ui/react';
 
 import { useGetApiV2PromptsQuery } from '@/redux/apis/generatedApi';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { Wrap } from '@/components/ui';
 
 import { PromptCard } from './PromptCard';
 
 export const PromptGallery = () => {
   const { data, isFetching, error } = useGetApiV2PromptsQuery();
-  const { text } = useSurfaceColors();
 
   return (
     <Wrap>
       <VStack align="stretch" gap={6} w="100%">
         <VStack align="start" gap={2}>
           <Heading>MCP Assistant Prompts</Heading>
-          <Text color={text.secondary}>
+          <Text color="text.secondary">
             Select an assistant prompt to configure parameters and generate prompts for your agentic IDE
           </Text>
         </VStack>
@@ -23,13 +21,13 @@ export const PromptGallery = () => {
         {isFetching && (
           <VStack py={8}>
             <Spinner size="lg" />
-            <Text color={text.muted}>Loading prompts...</Text>
+            <Text color="text.muted">Loading prompts...</Text>
           </VStack>
         )}
 
         {error && (
           <VStack py={8}>
-            <Text color="red.500">Failed to load prompts. Please try again.</Text>
+            <Text color="status.error.text">Failed to load prompts. Please try again.</Text>
           </VStack>
         )}
 
@@ -43,7 +41,7 @@ export const PromptGallery = () => {
 
         {data?.prompts?.length === 0 && (
           <VStack py={8}>
-            <Text color={text.muted}>No prompts available.</Text>
+            <Text color="text.muted">No prompts available.</Text>
           </VStack>
         )}
       </VStack>

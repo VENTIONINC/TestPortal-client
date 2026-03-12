@@ -2,7 +2,6 @@ import { Box, Container, Heading, Flex, IconButton, Button } from '@chakra-ui/re
 import { FiSun, FiMoon, FiMonitor } from 'react-icons/fi';
 import { LuUpload } from 'react-icons/lu';
 
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { useColorMode, useResultsFileUploadDialog } from '@/components/ui';
 
 import { ProjectSelect } from './components';
@@ -13,15 +12,14 @@ interface HeaderProps {
 }
 
 export const Header = ({ title, actionButton }: HeaderProps) => {
-  const { surfaces, borders, text } = useSurfaceColors();
   const { toggleColorMode, colorMode, theme } = useColorMode();
   const openUploadDialog = useResultsFileUploadDialog();
 
   return (
-    <Box bg={surfaces.sidebar} shadow="sm" borderBottom="1px solid" borderColor={borders.subtle}>
-      <Container py={3} px={6} maxW="full" h="65px">
-        <Flex justify="space-between" align="center">
-          <Heading size="xl" color={text.primary}>
+    <Box bg="bg.section"  borderBottom="1px solid" borderColor="border.main">
+      <Container px={6} maxW="full" >
+        <Flex justify="space-between" align="center" h="65px">
+          <Heading size="xl" color="text.primary" >
             {title}
           </Heading>
 
@@ -42,7 +40,7 @@ export const Header = ({ title, actionButton }: HeaderProps) => {
             borderWidth="1px"
             borderStyle="solid"
             size="sm"
-            borderColor={borders.subtle}
+            borderColor="border.subtle"
           >
             {theme === 'system' ? <FiSun /> : theme === 'light' ? <FiMoon /> : <FiMonitor />}
           </IconButton>

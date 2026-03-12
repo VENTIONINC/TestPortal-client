@@ -31,7 +31,7 @@ export const TopSectionContainer = ({ statistics, isFetching }: TopSectionContai
   }
 
   return (
-    <Grid templateColumns={{ base: '1fr 1fr' }} bg="bg.section" p={4} borderRadius="xl" gap={4} mt={2} mb={2}>
+    <Grid templateColumns={{ base: '1fr 1fr' }} gap={4} mt={4} mb={4}>
       {topErrors.length > 0 && (
         <Skeleton loading={isFetching} minH={isInitialLoading ? '50px' : 'auto'} borderRadius="xl" w="100%">
           <CollapsibleWrapper

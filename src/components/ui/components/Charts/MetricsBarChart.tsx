@@ -4,7 +4,6 @@ import { Chart, useChart } from '@chakra-ui/charts';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { FiBarChart2, FiLayers } from 'react-icons/fi';
 
-import { useColorModeValue } from '@/components/ui';
 import type { CategoriesChartDatum, CategorySeries, MetricsBarChartProps } from '@/types';
 
 type TooltipProps = {
@@ -33,10 +32,10 @@ export const MetricsBarChart = ({
   showToggle = true,
   showValueToggle = false,
 }: MetricsBarChartProps) => {
-  const tooltipBg = useColorModeValue('white', 'gray.800');
-  const tooltipBorder = useColorModeValue('gray.200', 'gray.700');
-  const tooltipText = useColorModeValue('gray.900', 'gray.100');
-  const cursorFill = useColorModeValue('rgba(0,0,0,0.05)', 'rgba(255,255,255,0.05)');
+  const tooltipBg = 'bg.panel';
+  const tooltipBorder = 'border.subtle';
+  const tooltipText = 'text.main';
+  const cursorFill = 'rgba(0,0,0,0.05)'; // Keep as is if no theme token for cursor
 
   const normalizedData: CategoriesChartDatum[] = useMemo(() => {
     return data.map((row) => {
@@ -219,7 +218,7 @@ export const MetricsBarChart = ({
                     barGap={view === 'stacked' ? 0 : 8}
                     barCategoryGap={20}
                   >
-                    <CartesianGrid stroke="red" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} horizontal />
+                    <CartesianGrid stroke="var(--chakra-colors-border-subtle)" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} horizontal />
                     <XAxis
                       dataKey={chart.key('date')}
                       axisLine={false}

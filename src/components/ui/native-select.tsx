@@ -2,7 +2,6 @@ import { forwardRef, ReactNode, useMemo } from 'react';
 import { NativeSelect as Select } from '@chakra-ui/react';
 
 import { Field } from '@/components/ui';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 export interface NativeSelectProps extends NativeSelectField {
   label?: string;
@@ -47,10 +46,8 @@ interface NativeSelectField extends Select.FieldProps {
 
 const NativeSelectField = forwardRef<HTMLSelectElement, NativeSelectField>(function NativeSelectField(props, ref) {
   const { items: itemsProp, children, placeholder, ...rest } = props;
-  const { borders, text } = useSurfaceColors();
-
-  const selectFocusBorder = borders.focus;
-  const placeholderColor = text.muted;
+  const selectFocusBorder = 'border.focus';
+  const placeholderColor = 'text.muted';
 
   const sharedStyles: Select.FieldProps = {
     bg: rest.bg ?? 'bg.input',

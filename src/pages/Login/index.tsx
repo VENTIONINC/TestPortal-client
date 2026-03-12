@@ -4,38 +4,26 @@ import { Box, Button, Heading, Text, Container } from '@chakra-ui/react';
 import { PATHS } from '@/types/paths';
 import { FormField } from '@/components/forms';
 import { useLogin } from '@/hooks';
-import { useColorModeValue } from '@/components/ui';
-
 export function LoginPage() {
   const { register, handleSubmit, errors, loading, successMessage, errorMessage } = useLogin();
 
-  const pageBg = useColorModeValue('gray.50', 'gray.900');
-  const cardBg = useColorModeValue('white', 'gray.800');
-  const successBg = useColorModeValue('green.50', 'green.900');
-  const successText = useColorModeValue('green.700', 'green.100');
-  const successBorder = useColorModeValue('green.200', 'green.700');
-  const errorBg = useColorModeValue('red.50', 'red.900');
-  const errorText = useColorModeValue('red.700', 'red.100');
-  const errorBorder = useColorModeValue('red.200', 'red.700');
-  const linkColor = useColorModeValue('blue.500', 'blue.300');
-
   return (
-    <Box minH="100vh" bg={pageBg} py={12} px={4}>
+    <Box minH="100vh" bg="bg.page" py={12} px={4}>
       <Container maxW="md" centerContent>
-        <Box bg={cardBg} p={8} borderRadius="lg" boxShadow="lg" w="100%">
-          <Heading size="lg" textAlign="center" mb={6}>
+        <Box bg="bg.card" p={8} borderRadius="lg" boxShadow="lg" w="100%">
+          <Heading size="lg" textAlign="center" mb={6} color="text.main">
             Sign in to your account
           </Heading>
 
           {successMessage && (
             <Box
-              bg={successBg}
-              color={successText}
+              bg="status.success.bg"
+              color="status.success.text"
               p={3}
               mb={4}
               borderRadius="md"
               border="1px solid"
-              borderColor={successBorder}
+              borderColor="status.success.text"
             >
               {successMessage}
             </Box>
@@ -43,13 +31,13 @@ export function LoginPage() {
 
           {errorMessage && (
             <Box
-              bg={errorBg}
-              color={errorText}
+              bg="status.error.bg"
+              color="status.error.text"
               p={3}
               mb={4}
               borderRadius="md"
               border="1px solid"
-              borderColor={errorBorder}
+              borderColor="status.error.text"
             >
               {errorMessage}
             </Box>
@@ -81,10 +69,10 @@ export function LoginPage() {
             </Button>
           </Box>
 
-          <Text textAlign="center">
+          <Text textAlign="center" color="text.secondary">
             Don't have an account?{' '}
             <Link to={PATHS.SIGNUP}>
-              <Text as="span" color={linkColor} textDecoration="underline">
+              <Text as="span" color="bg.accent" textDecoration="underline">
                 Sign up
               </Text>
             </Link>

@@ -1,8 +1,6 @@
 import { forwardRef, ReactNode, type ComponentPropsWithoutRef } from 'react';
 import { Tooltip as ChakraTooltip } from '@chakra-ui/react';
 
-import { useColorModeValue } from './color-mode';
-
 type TooltipContentProps = ComponentPropsWithoutRef<typeof ChakraTooltip.Content>;
 
 export interface TooltipProps extends ChakraTooltip.RootProps {
@@ -15,9 +13,9 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(function Tooltip
   { content, children, contentProps, ...props },
   ref,
 ) {
-  const contentBg = useColorModeValue('gray.100', '#2C2C2E');
-  const contentColor = useColorModeValue('#333333', '#EAEAEA');
-  const contentBorder = useColorModeValue('#E0E0E0', '#3D3D3F');
+  const contentBg = 'bg.panel';
+  const contentColor = 'text.primary';
+  const contentBorder = 'border.subtle';
   const mergedContentProps: TooltipContentProps = {
     bg: contentBg,
     color: contentColor,

@@ -3,8 +3,6 @@ import { Button, Text, Box, VStack, Circle, Flex, Icon } from '@chakra-ui/react'
 import { LuChevronsUpDown } from 'react-icons/lu';
 
 import { useAuth } from '@/hooks';
-import { useSurfaceColors } from '@/theme';
-
 interface UserMenuProps {
   collapsed?: boolean;
 }
@@ -30,8 +28,7 @@ export const UserMenu = ({ collapsed }: UserMenuProps) => {
     };
   }, [isOpen]);
 
-  const { text, states, userCard, menu } = useSurfaceColors();
-  const avatarBg = userCard.avatarBg;
+  const avatarBg = 'bg.active';
 
   if (!user) return null;
 
@@ -40,7 +37,7 @@ export const UserMenu = ({ collapsed }: UserMenuProps) => {
     setIsOpen(false);
   };
 
-  const hoverBg = states.hoverSubtle;
+  const hoverBg = 'bg.hover';
 
   const initials = user.name
     ? user.name
@@ -58,8 +55,8 @@ export const UserMenu = ({ collapsed }: UserMenuProps) => {
         align="center"
         w="100%"
         p={2}
-        bg={isOpen ? hoverBg : userCard.bg}
-        shadow={userCard.shadow}
+        bg={isOpen ? hoverBg : 'bg.cardSecondary'}
+        shadow="sm"
         borderRadius="md"
         onClick={() => setIsOpen(!isOpen)}
         _hover={{ bg: hoverBg }}
@@ -68,7 +65,7 @@ export const UserMenu = ({ collapsed }: UserMenuProps) => {
         transition="all 0.2s"
       >
         <Flex align="center" gap={3}>
-          <Circle size="8" bg={avatarBg} color={text.primary} flexShrink={0}>
+          <Circle size="8" bg={avatarBg} color="text.primary" flexShrink={0}>
             <Text fontSize="xs" fontWeight="bold">
               {initials}
             </Text>
@@ -76,17 +73,17 @@ export const UserMenu = ({ collapsed }: UserMenuProps) => {
 
           {!collapsed && (
             <VStack align="start" gap={0} overflow="hidden">
-              <Text fontSize="sm" fontWeight="medium" color={text.primary} truncate maxW="120px">
+              <Text fontSize="sm" fontWeight="medium" color="text.primary" truncate maxW="120px">
                 {user.name}
               </Text>
-              <Text fontSize="xs" color={text.secondary} truncate maxW="120px">
+              <Text fontSize="xs" color="text.secondary" truncate maxW="120px">
                 {user.email || 'user@example.com'}
               </Text>
             </VStack>
           )}
         </Flex>
 
-        {!collapsed && <Icon as={LuChevronsUpDown} color={text.primary} size="sm" />}
+        {!collapsed && <Icon as={LuChevronsUpDown} color="text.primary" size="sm" />}
       </Flex>
 
       {isOpen && (
@@ -97,11 +94,11 @@ export const UserMenu = ({ collapsed }: UserMenuProps) => {
           right={0}
           mb={2}
           mx={2}
-          bg={menu.bg}
+          bg="bg.menu"
           border="1px"
-          borderColor={menu.border}
+          borderColor="border.subtle"
           borderRadius="md"
-          shadow={menu.shadow}
+          shadow="dialog"
           zIndex={1000}
           animation="scale-fade-in 0.2s ease-out forwards"
           css={{
@@ -119,9 +116,9 @@ export const UserMenu = ({ collapsed }: UserMenuProps) => {
               justifyContent="flex-start"
               onClick={handleLogout}
               borderRadius={0}
-              color={menu.textPrimary}
+              color="text.primary"
               fontWeight="normal"
-              _hover={{ bg: menu.itemHoverBg }}
+              _hover={{ bg: 'bg.hover' }}
               px={3}
             >
               Sign Out

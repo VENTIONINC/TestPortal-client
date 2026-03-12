@@ -9,7 +9,8 @@ interface StatusIconProps {
 }
 
 export const StatusIcon = ({ status, type }: StatusIconProps) => {
-  const { color, Icon, title } = getResultStatusStyle(status as ResultStatus);
+  const { tokenBase, Icon, title } = getResultStatusStyle(status as ResultStatus);
+  const color = `${tokenBase}.icon`;
 
   return (
     <Flex

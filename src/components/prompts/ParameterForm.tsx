@@ -4,7 +4,6 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { PromptConfig, PromptParameter } from '@/redux/apis/generatedApi';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 interface ParameterFormProps {
   prompt: PromptConfig;
@@ -16,7 +15,6 @@ interface ParameterFormProps {
 }
 
 export const ParameterForm = ({ prompt, values, onChange, errors = {}, requiredFieldsEmpty }: ParameterFormProps) => {
-  const { text } = useSurfaceColors();
 
   const renderField = (name: string, parameter: PromptParameter) => {
     const value = values[name] || '';
@@ -38,11 +36,11 @@ export const ParameterForm = ({ prompt, values, onChange, errors = {}, requiredF
         key={name}
         label={
           <HStack>
-            <Text fontWeight="medium" color={text.primary}>
+            <Text fontWeight="medium" color="text.main">
               {name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
             </Text>
             {isRequired && (
-              <Text color="red.500" fontSize="sm">
+              <Text color="status.error.text" fontSize="sm">
                 *
               </Text>
             )}
@@ -74,7 +72,7 @@ export const ParameterForm = ({ prompt, values, onChange, errors = {}, requiredF
 
   return (
     <VStack align="stretch" gap={4}>
-      <Text fontSize="sm" color={text.muted}>
+      <Text fontSize="sm" color="text.muted">
         Configure the parameters below to customize your prompt
       </Text>
 
@@ -82,7 +80,7 @@ export const ParameterForm = ({ prompt, values, onChange, errors = {}, requiredF
         {Object.entries(prompt.parameters).map(([name, parameter]) => renderField(name, parameter))}
       </SimpleGrid>
       {requiredFieldsEmpty && (
-        <Text fontSize="sm" color="red.500" textAlign="center">
+        <Text fontSize="sm" color="status.error.text" textAlign="center">
           Please fill in all required fields (marked with *)
         </Text>
       )}

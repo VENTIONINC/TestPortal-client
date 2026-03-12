@@ -1,7 +1,6 @@
 import { Fragment, memo, useState } from 'react';
 import { HStack, Text, VStack } from '@chakra-ui/react';
 
-import { useSurfaceColors } from '@/theme';
 import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip, toaster, StatusIcon } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/ui/components/Dialogs';
@@ -32,7 +31,6 @@ export const ResultsExecutionCard = memo(
     projectId,
   }: ResultsExecutionCardProps) => {
     const { isSelected, toggleSelection, toggleMultiple, getSelectedIds } = useResultsSelection();
-    const { surfaces, borders, states } = useSurfaceColors();
 
     const openResultsErrorDialog = useResultsErrorDialog();
     const openResultAnalysisDialog = useResultAnalysisDialog();
@@ -76,12 +74,12 @@ export const ResultsExecutionCard = memo(
 
     return (
       <VStack align="stretch" pt="16px" mt="7px" borderTop="1px solid" borderColor="border.main">
-        <HStack gap={4} pl={2} bg={surfaces.panel} borderRadius="sm" textStyle="sm" minH="47px">
+        <HStack gap={4} pl={2} bg="bg.panel" borderRadius="sm" textStyle="sm" minH="47px">
           <Checkbox
             checked={results.every(({ id }) => isSelected(id))}
             onCheckedChange={toggleSelectAll}
             size="md"
-            controlProps={{ borderColor: borders.subtle }}
+            controlProps={{ borderColor: "border.main" }}
           />
           <Tooltip content="Environment">
             <ClipboardCopyText value={environment}>{environment}</ClipboardCopyText>
@@ -118,7 +116,7 @@ export const ResultsExecutionCard = memo(
           const hasAnalysis = Boolean(analysisConfidence);
 
           return (
-            <HStack key={id} align="center" ps={2} textStyle="sm" position="relative" minH="40px">
+            <HStack key={id} align="center" ps={2} textStyle="sm" position="relative" minH="48px">
               <HStack align="center" gap={5} flex={1}>
                 <Checkbox
                   checked={isSelected(id)}
@@ -126,7 +124,7 @@ export const ResultsExecutionCard = memo(
                     toggleSelection(id);
                   }}
                   size="md"
-                  controlProps={{ borderColor: borders.subtle }}
+                  controlProps={{ borderColor: "border.main" }}
                 />
 
                 <StatusIcon status={status} type="circle" />
@@ -159,7 +157,7 @@ export const ResultsExecutionCard = memo(
                       px={1}
                       borderRadius="sm"
                       cursor="pointer"
-                      _hover={{ bg: hoverBgColor ?? states.hoverSubtle, color: hoverColor ?? color }}
+                      _hover={{ bg: hoverBgColor ?? 'bg.hover', color: hoverColor ?? color }}
                     >
                       <Icon size={16} color="currentColor" />
                       <Text>{getConfidenceLabel(analysisConfidence)}</Text>

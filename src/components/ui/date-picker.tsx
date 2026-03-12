@@ -4,7 +4,6 @@ import { DayPicker } from 'react-day-picker';
 import { LuCalendar } from 'react-icons/lu';
 
 import { Field, FieldProps, NativeSelect } from '@/components/ui';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { formatDate, parseDateString } from '@/utils/dateUtils';
 
 export interface DatePickerProps {
@@ -50,7 +49,6 @@ export const DatePicker = ({
   maxDate,
   fieldProps,
 }: DatePickerProps) => {
-  const { menu, borders, text, surfaces } = useSurfaceColors();
   const [open, setOpen] = useState(false);
 
   const selectedDate = useMemo(() => (value ? parseDateString(value) : undefined), [value]);
@@ -92,15 +90,15 @@ export const DatePicker = ({
 
   const calendarStyles = useMemo(
     () => ({
-      '--rdp-accent-color': '#53ABFC',
-      '--rdp-accent-background-color': '#53ABFC',
+      '--rdp-accent-color': 'var(--chakra-colors-accent-solid)',
+      '--rdp-accent-background-color': 'var(--chakra-colors-accent-solid)',
       '--rdp-day-width': '40px',
       '--rdp-day-height': '40px',
       '--rdp-day_button-width': '40px',
       '--rdp-day_button-height': '40px',
       '--rdp-selected-font': 'bold',
       '--rdp-outside-opacity': '1',
-      '--rdp-today-color': '#53ABFC',
+      '--rdp-today-color': 'var(--chakra-colors-accent-solid)',
     }) as React.CSSProperties,
     [],
   );
@@ -122,18 +120,18 @@ export const DatePicker = ({
               gap={2}
               px={3}
               py={2}
-              bg={surfaces.card}
+              bg="bg.card"
               borderWidth="1px"
-              borderColor={borders.subtle}
+              borderColor="border.subtle"
               borderRadius="md"
               cursor={disabled ? 'not-allowed' : 'pointer'}
               opacity={disabled ? 0.5 : 1}
-              _hover={{ borderColor: borders.focus }}
+              _hover={{ borderColor: 'border.focus' }}
             >
-              <Box flex="1" textAlign="left" color={value ? text.primary : text.muted} fontSize="sm">
+              <Box flex="1" textAlign="left" color={value ? 'text.primary' : 'text.muted'} fontSize="sm">
                 {displayValue || placeholder}
               </Box>
-              <Box color={text.secondary}>
+              <Box color="text.secondary">
                 <LuCalendar size={16} />
               </Box>
             </Flex>
@@ -143,11 +141,11 @@ export const DatePicker = ({
         <Portal>
           <Popover.Positioner>
             <Popover.Content
-              bg={menu.bg}
-              borderColor={borders.subtle}
+              bg="bg.menu"
+              borderColor="border.subtle"
               borderWidth="1px"
               borderRadius="lg"
-              boxShadow={menu.shadow}
+              boxShadow="dialog"
               p={4}
               w="auto"
               _focusVisible={{ outline: 'none' }}
@@ -177,26 +175,26 @@ export const DatePicker = ({
                     ...calendarStyles,
                   },
                   '& .rdp-day': {
-                    color: text.primary,
+                    color: 'text.primary',
                     borderRadius: '6px',
                   },
                   '& .rdp-day:hover:not(.rdp-selected)': {
-                    backgroundColor: menu.itemHoverBg,
+                    backgroundColor: 'bg.hover',
                   },
                   '& .rdp-outside': {
-                    color: menu.textSecondary,
+                    color: 'text.muted',
                   },
                   '& .rdp-selected .rdp-day_button': {
-                    backgroundColor: '#53ABFC',
+                    backgroundColor: 'var(--chakra-colors-accent-solid)',
                     color: 'white',
                     borderRadius: '6px',
                   },
                   '& .rdp-today:not(.rdp-selected) .rdp-day_button': {
-                    border: `1px solid ${borders.focus}`,
+                    border: '1px solid var(--chakra-colors-border-focus)',
                     borderRadius: '6px',
                   },
                   '& .rdp-weekday': {
-                    color: text.secondary,
+                    color: 'text.secondary',
                     fontSize: '12px',
                     fontWeight: 'normal',
                   },
@@ -223,21 +221,21 @@ export const DatePicker = ({
                 />
               </Box>
 
-              <Flex mt={3} gap={2} justify="flex-end" borderTopWidth="1px" borderColor={borders.subtle} pt={3}>
+              <Flex mt={3} gap={2} justify="flex-end" borderTopWidth="1px" borderColor="border.subtle" pt={3}>
                 <Button
                   size="sm"
                   variant="outline"
-                  borderColor={borders.subtle}
-                  color={text.primary}
+                  borderColor="border.subtle"
+                  color="text.primary"
                   onClick={handleCancel}
                 >
                   Cancel
                 </Button>
                 <Button
                   size="sm"
-                  bg="#53ABFC"
+                  bg="accent.solid"
                   color="white"
-                  _hover={{ bg: '#3A9AEB' }}
+                  _hover={{ bg: 'blue.600' }}
                   onClick={handleConfirm}
                 >
                   Confirm

@@ -2,7 +2,6 @@ import { Heading, HStack, Text, VStack, Button, Card } from '@chakra-ui/react';
 import { useNavigate } from 'react-router';
 
 import { PromptConfig } from '@/redux/apis/generatedApi';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { Badge } from '@/components/ui';
 
 import { getCategoryIcon, getCategoryColor } from './promptUtils';
@@ -13,7 +12,6 @@ interface PromptCardProps {
 
 export const PromptCard = ({ prompt }: PromptCardProps) => {
   const navigate = useNavigate();
-  const { text } = useSurfaceColors();
   const { icon: CategoryIcon, color: iconColor } = getCategoryIcon(prompt.category);
   const badgeColor = getCategoryColor(prompt.category) as
     | 'default'
@@ -36,7 +34,7 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
       bg="bg.cardSecondary"
       _hover={{
         transform: 'translateY(-2px)',
-        shadow: 'lg',
+        shadow: 'card',
       }}
       transition="all 0.2s"
       cursor="pointer"
@@ -51,18 +49,18 @@ export const PromptCard = ({ prompt }: PromptCardProps) => {
                 {prompt.category}
               </Badge>
             </HStack>
-            <Heading size="md" lineHeight="short" color={text.primary}>
+            <Heading size="md" lineHeight="short" color="text.main">
               {prompt.title}
             </Heading>
           </VStack>
         </HStack>
 
-        <Text fontSize="sm" color={text.muted} lineHeight="base" minHeight="48px">
+        <Text fontSize="sm" color="text.muted" lineHeight="base" minHeight="48px">
           {prompt.description}
         </Text>
 
         <VStack align="start" gap={2} mt="auto">
-          <Text fontSize="xs" color={text.muted}>
+          <Text fontSize="xs" color="text.muted">
             {parameterCount} parameters ({requiredParameterCount} required)
           </Text>
 

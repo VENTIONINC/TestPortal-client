@@ -1,7 +1,6 @@
 import { Box, Flex, Text } from '@chakra-ui/react';
 
 import { Tooltip } from '@/components/ui';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 type NavItemProps = {
   icon: React.ElementType;
@@ -11,7 +10,6 @@ type NavItemProps = {
 };
 
 export const NavItem = ({ icon: IconComp, label, collapsed, active }: NavItemProps) => {
-  const { nav } = useSurfaceColors();
 
   const content = (
     <Flex
@@ -20,8 +18,8 @@ export const NavItem = ({ icon: IconComp, label, collapsed, active }: NavItemPro
       py="2"
       px="6"
       bg={active ? 'bg.active' : 'transparent'}
-      color={active ? 'logo.icon' : nav.item.inactiveText}
-      _hover={{ bg: nav.item.hoverBg }}
+      color={active ? 'logo.icon' : 'text.secondary'}
+      _hover={{ bg: 'bg.hover' }}
       cursor="pointer"
     >
       <IconComp style={{ fontSize: '18px' }} />

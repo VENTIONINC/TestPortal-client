@@ -1,4 +1,4 @@
-import { Box, Button, Input, VStack, Text, Switch, HStack, Flex, Card } from '@chakra-ui/react';
+import { Box, Button, Input, VStack, Text, Switch, HStack, Flex } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { CiFloppyDisk } from 'react-icons/ci';
 import { z } from 'zod';
@@ -7,7 +7,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { usePatchApiV2UsersByUserIdIntegrationsMutation } from '@/redux/apis/generatedApi';
 import { toaster, Section } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 const portalSettingsSchema = z.object({
   analyzeEnabled: z.boolean(),
@@ -22,7 +21,6 @@ type PortalSettingsFormData = z.infer<typeof portalSettingsSchema>;
 export function Configuration() {
   const user = useCurrentUser();
   const [updateUserIntegrations, { isLoading: isUpdating }] = usePatchApiV2UsersByUserIdIntegrationsMutation();
-  const { text } = useSurfaceColors();
 
   const { register, handleSubmit, watch, setValue } = useForm<PortalSettingsFormData>({
     resolver: zodResolver(portalSettingsSchema),
@@ -88,7 +86,7 @@ export function Configuration() {
           <VStack gap={6} align="stretch">
             <Box>
               <HStack justify="space-between" align="center" mb={3}>
-                <Text fontWeight="medium" color={text.primary}>
+                <Text fontWeight="medium" color="text.main">
                   Enable Analysis
                 </Text>
                 <Switch.Root size="sm" checked={watch('analyzeEnabled')} onChange={handleCheckChange('analyzeEnabled')}>
@@ -100,7 +98,7 @@ export function Configuration() {
 
             <Box>
               <HStack justify="space-between" align="center" mb={3}>
-                <Text fontWeight="medium" color={text.primary}>
+                <Text fontWeight="medium" color="text.main">
                   Reportal Portal URL
                 </Text>
                 <Switch.Root
@@ -118,7 +116,7 @@ export function Configuration() {
 
             <Box>
               <HStack justify="space-between" align="center" mb={3}>
-                <Text fontWeight="medium" color={text.primary}>
+                <Text fontWeight="medium" color="text.main">
                   Monitoring Portal URL
                 </Text>
                 <Switch.Root

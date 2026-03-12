@@ -5,14 +5,14 @@ import { ResultStatus } from '@/types';
 export const getResultStatusStyle = (status: ResultStatus) => {
   switch (status) {
     case ResultStatus.Passed:
-      return { Icon: LuCheck, title: 'Passed', color: 'status.success' };
+      return { Icon: LuCheck, title: 'Passed', tokenBase: 'status.success' };
     case ResultStatus.Failed:
-      return { Icon: LuX, title: 'Failed', color: 'status.error' };
+      return { Icon: LuX, title: 'Failed', tokenBase: 'status.error' };
     case ResultStatus.Skipped:
-      return { Icon: LuSkipForward, title: 'Skipped', color: 'status.neutral' };
+      return { Icon: LuSkipForward, title: 'Skipped', tokenBase: 'status.neutral' };
     case ResultStatus.TimedOut:
-      return { Icon: LuClock, title: 'Timed Out', color: 'status.warning' };
+      return { Icon: LuClock, title: 'Timed Out', tokenBase: 'status.attention' };
     default:
-      return { Icon: LuCircleHelp, title: 'Unknown', color: 'status.unknown' };
+      return { Icon: LuCircleHelp, title: 'Unknown', tokenBase: 'status.neutral' };
   }
 };

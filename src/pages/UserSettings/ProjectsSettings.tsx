@@ -1,18 +1,15 @@
-import { Box, SimpleGrid, Text, Heading, Button, Flex, HStack } from '@chakra-ui/react';
+import { Box, SimpleGrid, Text, Button, Flex, HStack } from '@chakra-ui/react';
 import { LuPlus } from 'react-icons/lu';
 
 import { useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
 import { ProjectCard } from '@/components/ProjectCard';
 import { useCreateProjectDialog } from '@/components/ui/components/Dialogs';
 import { useProjectContextMenu } from '@/hooks';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { Alert } from '@/components/ui';
-
 export function ProjectsSettings() {
   const { data: projects } = useGetApiV2ProjectsQuery({});
   const openCreateProjectDialog = useCreateProjectDialog();
   const handleProjectContextMenu = useProjectContextMenu();
-  const { text } = useSurfaceColors();
 
   if (!projects) {
     return (
@@ -28,7 +25,7 @@ export function ProjectsSettings() {
   if (!projects.length) {
     return (
       <Box textAlign="center" py={8}>
-        <Text color={text.muted}>Create a new project to get started</Text>
+        <Text color="text.muted">Create a new project to get started</Text>
         <Button mt={4} onClick={openCreateProjectDialog} variant="primary">
           <LuPlus /> Create Project
         </Button>

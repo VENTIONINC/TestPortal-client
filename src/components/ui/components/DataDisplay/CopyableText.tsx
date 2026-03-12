@@ -1,7 +1,6 @@
 import { Box, Flex, Button, IconButton } from '@chakra-ui/react';
 import { LuCheck, LuCopy } from 'react-icons/lu';
 
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 export interface CopyableTextProps {
   value: string;
@@ -18,7 +17,6 @@ export function CopyableText({
   onCopy,
   copyAriaLabel = 'Copy value',
 }: CopyableTextProps) {
-  const { surfaces, borders, text } = useSurfaceColors();
 
   if (variant === 'single') {
     return (
@@ -27,13 +25,13 @@ export function CopyableText({
           flex="1"
           px={3}
           py={2}
-          bg={surfaces.card}
+          bg="bg.card"
           border="1px solid"
-          borderColor={borders.default}
+          borderColor="border.main"
           borderRadius="md"
           fontSize="sm"
           fontFamily="mono"
-          color={text.primary}
+          color="text.main"
           whiteSpace="nowrap"
           overflow="hidden"
           textOverflow="ellipsis"
@@ -46,8 +44,8 @@ export function CopyableText({
           variant="ghost"
           size="xs"
           onClick={onCopy}
-          color={text.muted}
-          _hover={{ color: text.primary, bg: surfaces.card }}
+          color="text.muted"
+          _hover={{ color: "text.main", bg: "bg.card" }}
         >
           {copied ? <LuCheck /> : <LuCopy />}
         </IconButton>
@@ -57,7 +55,7 @@ export function CopyableText({
 
   return (
     <Flex flexDir="row" align="start" w="100%">
-      <Box as="pre" fontSize="xs" fontFamily="mono" whiteSpace="pre-wrap" color={text.primary}>
+      <Box as="pre" fontSize="xs" fontFamily="mono" whiteSpace="pre-wrap" color="text.main">
         {value}
       </Box>
       <Flex justify="space-between" align="center" mb={2}>
@@ -66,8 +64,8 @@ export function CopyableText({
           variant="ghost"
           size="xs"
           onClick={onCopy}
-          color={text.muted}
-          _hover={{ color: text.primary, bg: surfaces.card }}
+          color="text.muted"
+          _hover={{ color: "text.main", bg: "bg.card" }}
         >
           {copied ? <LuCheck /> : <LuCopy />}
           Copy

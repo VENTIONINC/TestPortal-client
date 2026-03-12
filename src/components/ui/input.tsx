@@ -2,7 +2,6 @@ import { forwardRef, ReactNode, Ref } from 'react';
 import { Input as ChakraInput, InputProps as ChakraInputProps } from '@chakra-ui/react';
 
 import { Field, FieldProps, InputGroup, InputGroupProps } from '@/components/ui';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 export interface InputProps extends ChakraInputProps {
   label?: string;
@@ -17,10 +16,8 @@ export interface InputProps extends ChakraInputProps {
 
 export const Input = forwardRef(function Input(props: InputProps, ref: Ref<HTMLInputElement>) {
   const { label, error, startElement, endElement, groupProps, fieldProps, ...rest } = props;
-  const { borders, text } = useSurfaceColors();
-
-  const inputFocusBorder = borders.focus;
-  const placeholderColor = text.muted;
+  const inputFocusBorder = 'border.focus';
+  const placeholderColor = 'text.muted';
 
   const sharedStyles: ChakraInputProps = {
     bg: rest.bg ?? 'bg.input',

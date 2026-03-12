@@ -1,7 +1,6 @@
 import { Box, Flex, IconButton } from '@chakra-ui/react';
 import { Link } from 'react-router';
 
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 import { NavigationMenu } from '../NavigationMenu';
 import { UserMenu } from '../UserMenu';
@@ -13,17 +12,16 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ collapsed, handleSetCollapsed }: SidebarProps) => {
-  const { surfaces, borders, text } = useSurfaceColors();
 
   return (
     <Flex
       h="100%"
       transition="width 0.2s"
       borderRight="1px solid"
-      borderColor={borders.subtle}
+      borderColor="border.main"
       flexDir="column"
-      bg={surfaces.sidebar}
-      color={text.primary}
+      bg="bg.section"
+      color="text.primary"
       shadow="sm"
       overflow="hidden"
       whiteSpace="nowrap"
@@ -32,14 +30,14 @@ export const Sidebar = ({ collapsed, handleSetCollapsed }: SidebarProps) => {
       <Flex
         align="center"
         h="66px"
-        px="3"
+        px={3}
         borderBottom="1px solid"
-        borderColor={borders.subtle}
+        borderColor="border.main"
         gap={collapsed ? 2 : 0}
       >
         <IconButton
           size="sm"
-          mx="6px"
+          mx={2}
           variant="ghost"
           aria-label="Toggle sidebar"
           onClick={handleSetCollapsed}

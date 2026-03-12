@@ -1,6 +1,6 @@
 import { Box, HStack, StackProps, Text, VStack, Button } from '@chakra-ui/react';
 
-import { useSurfaceColors } from '@/theme';
+
 
 interface FiltersGroupProps extends StackProps {
   title: string;
@@ -8,7 +8,6 @@ interface FiltersGroupProps extends StackProps {
 }
 
 export const FiltersGroup = ({ title, children, handleSearch, ...props }: FiltersGroupProps) => {
-  const { text } = useSurfaceColors();
 
   return (
     <VStack
@@ -23,7 +22,7 @@ export const FiltersGroup = ({ title, children, handleSearch, ...props }: Filter
       {...props}
     >
       <HStack justify="space-between" pl="8px">
-        <Text fontSize="md" fontWeight={700} whiteSpace="nowrap" color={text.primary}>
+        <Text fontSize="md" fontWeight={700} whiteSpace="nowrap" color="text.main">
           {title}
         </Text>
       </HStack>

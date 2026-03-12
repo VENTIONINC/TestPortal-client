@@ -4,7 +4,6 @@ import { useFormContext } from 'react-hook-form';
 
 import { ClipboardCopyText, DateToggle, Tooltip } from '@/components/ui';
 import { toCleanTitle } from '@/utils/date-time.converter';
-import { useSurfaceColors } from '@/theme';
 
 import { ResultsExecutionCard } from '../ExecutionCard';
 import { ResultSpecSectionViewProps } from './types';
@@ -20,7 +19,6 @@ export const ResultSpecSectionView = ({
   onExecutionContextMenu,
   onResultContextMenu,
 }: ResultSpecSectionViewProps) => {
-  const { text } = useSurfaceColors();
   const methods = useFormContext();
 
   const handleClickTag = (tag: string) => {
@@ -33,10 +31,10 @@ export const ResultSpecSectionView = ({
       shadow="card"
       bg="bg.cardSecondary"
       mx={4}
-      p="7px 7px 12px"
+      p={4}
       border="1px solid"
       borderColor="border.main"
-      borderRadius="lg"
+      borderRadius="md"
     >
       <HStack overflowX="auto" pb={2}>
         <DateToggle days={sectionDays} toggleHandler={handleDateToggle} variant="stats" />
@@ -70,7 +68,7 @@ export const ResultSpecSectionView = ({
                 onClick={() => handleClickTag(tag)}
               >
                 <LuTag size={12} />
-                <Text textStyle="xs" color={text.primary}>
+                <Text textStyle="xs" color="text.main">
                   {tag}
                 </Text>
               </Button>

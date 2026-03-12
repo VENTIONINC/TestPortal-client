@@ -27,6 +27,7 @@ export const filterConfig: FilterConfigSection[] = [
       },
       {
         type: 'dateRange',
+        label: 'Period:',
         fields: [
           {
             label: 'From',

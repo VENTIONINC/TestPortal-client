@@ -1,7 +1,7 @@
 import { Button, Stack, StackProps, Text } from '@chakra-ui/react';
 import { LuX } from 'react-icons/lu';
 
-import { useSurfaceColors } from '@/theme';
+
 
 interface FiltersHeaderProps extends StackProps {
   title: string;
@@ -12,19 +12,18 @@ interface FiltersHeaderProps extends StackProps {
 }
 
 export const FiltersHeader = ({ title, clearable, onClear, leadingAction, actions }: FiltersHeaderProps) => {
-  const { text } = useSurfaceColors();
 
   return (
-    <Stack direction="row" w="100%" p="1px 0 0 8px" mb={2} align="center" gap={1}>
+    <Stack direction="row" w="100%" mb={1} align="center" gap={1}>
       {leadingAction}
 
-      <Text fontSize="lg" fontWeight={700} whiteSpace="nowrap" color={text.primary} mr="auto">
+      <Text fontSize="lg" fontWeight={700} whiteSpace="nowrap" color="text.main" mr="auto">
         {title}
       </Text>
 
       {clearable && (
         <Button cursor="pointer" variant="ghost" size="sm" onClick={onClear}>
-          <LuX size={16} />
+          <LuX size={16} pr={2} />
           Clear all
         </Button>
       )}

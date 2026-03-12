@@ -1,7 +1,5 @@
 import { Text, VStack, HStack } from '@chakra-ui/react';
 
-import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
-
 interface TopSectionProps {
   results: { title: string; count: number }[];
   label: string;
@@ -9,7 +7,6 @@ interface TopSectionProps {
 }
 
 export const List = ({ results, label, onClick }: TopSectionProps) => {
-  const { stats } = useResultsSurfaceColors();
 
   return (
     <VStack align="stretch" flex={1} mt={4} px="3px" aria-label={label}>
@@ -17,14 +14,11 @@ export const List = ({ results, label, onClick }: TopSectionProps) => {
         <HStack key={`${title}-${index}-${count}`} textStyle="md">
           <Text
             fontWeight={700}
-            color={stats.countText}
+            color={label === 'errors' ? 'status.error.text' : 'status.attention.text'}
             borderRadius="40px"
-            border="1px solid"
             fontSize="xs"
-            borderColor="status.error"
             px="7px"
-            // py={1}
-            bg="bg.card"
+            bg={label === 'errors' ? 'status.error.bg' : 'status.attention.bg'}
           >
             {count}
           </Text>
@@ -35,7 +29,8 @@ export const List = ({ results, label, onClick }: TopSectionProps) => {
             cursor="pointer"
             _hover={{ textDecoration: 'underline' }}
             fontSize="sm"
-            color={stats.strongText}
+            color="text.main"
+            ml={2}
           >
             {title}
           </Text>

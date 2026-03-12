@@ -2,13 +2,10 @@ import { Box, Container, Tabs } from '@chakra-ui/react';
 import { Outlet, useLocation } from 'react-router';
 
 import { Link } from '@/components/ui/link';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { PATHS } from '@/types/paths';
 import { MainTemplate } from '@/components/ui/components';
-
 export function UserSettingsPage() {
   const location = useLocation();
-  // const { surfaces } = useSurfaceColors();
 
   const getActiveTab = () => {
     if (location.pathname === PATHS.USER_SETTINGS_MCP) return 'mcp';

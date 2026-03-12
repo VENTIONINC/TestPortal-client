@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Text, HStack, Portal, Card } from '@chakra-ui/react';
 
-import { useSurfaceColors } from '@/theme';
 import { useCloseContextMenu, useContextMenuState } from '@/redux/slices/contextMenu';
 
 interface AdjustedPosition {
@@ -66,14 +65,13 @@ export const ContextMenu = () => {
   const closeContextMenu = useCloseContextMenu();
   const menuRef = useRef<HTMLDivElement>(null);
   const [adjustedPosition, setAdjustedPosition] = useState<AdjustedPosition | null>(null);
-  const { surfaces, borders, text, states } = useSurfaceColors();
-  const bgColor = surfaces.card;
-  const borderColor = borders.subtle;
-  const textColor = text.primary;
-  const secondaryTextColor = text.muted;
-  const hoverBgColor = states.hoverSubtle;
-  const disabledTextColor = text.muted;
-  const shadowColor = useSurfaceColors().surfaces.shadow;
+  const bgColor = 'bg.card';
+  const borderColor = 'border.subtle';
+  const textColor = 'text.primary';
+  const secondaryTextColor = 'text.muted';
+  const hoverBgColor = 'bg.hover';
+  const disabledTextColor = 'text.muted';
+  const shadowColor = 'dialog';
 
   useEffect(() => {
     if (show && menuRef.current) {

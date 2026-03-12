@@ -24,6 +24,7 @@ export type StatPaletteKey = 'total' | ResultStatus;
 export type StatPalette = {
   accent: string;
   background: string;
+  text?: string;
 };
 
 export type StatusMeta = {

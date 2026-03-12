@@ -1,7 +1,7 @@
 import { forwardRef, ReactNode } from 'react';
 import { Slider as ChakraSlider, HStack, Text } from '@chakra-ui/react';
 
-import { useColorModeValue } from './color-mode';
+
 
 export interface SliderProps extends ChakraSlider.RootProps {
   marks?: Array<number | { value: number; label: React.ReactNode }>;
@@ -13,7 +13,7 @@ export interface SliderProps extends ChakraSlider.RootProps {
 export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(props, ref) {
   const { marks: marksProp, label, showValue, formatValue, ...rest } = props;
   const value = props.value ?? props.defaultValue;
-  const rangeBg = useColorModeValue('#3054FE', '#53ABFC');
+  const rangeBg = 'bg.accent';
 
   const marks = marksProp?.map((mark) => {
     if (typeof mark === 'number') return { value: mark, label: undefined };

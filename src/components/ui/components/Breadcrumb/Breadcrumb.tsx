@@ -2,7 +2,6 @@ import { Breadcrumb as ChakraBreadcrumb, Box, type SystemStyleObject } from '@ch
 import * as React from 'react';
 import { useLocation, Link as RouterLink } from 'react-router';
 
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 import { routerConfig } from './config';
 
@@ -12,12 +11,11 @@ export interface BreadcrumbProps extends ChakraBreadcrumb.RootProps {
 }
 
 const BreadcrumbSeparator = () => {
-  const { text } = useSurfaceColors();
 
   return (
-    <Box asChild>
+    <Box asChild color="text.primary">
       <svg width="6px" height="10px" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M1 9L5 5L1 1" stroke={text.primary} strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M1 9L5 5L1 1" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </Box>
   );
@@ -30,8 +28,6 @@ export const Breadcrumb = React.forwardRef<HTMLDivElement, BreadcrumbProps>(func
     location.pathname
   ];
 
-  const { text } = useSurfaceColors();
-
   return (
     <ChakraBreadcrumb.Root ref={ref} {...rest}>
       <ChakraBreadcrumb.List gap={separatorGap}>
@@ -41,11 +37,11 @@ export const Breadcrumb = React.forwardRef<HTMLDivElement, BreadcrumbProps>(func
             <React.Fragment key={index}>
               <ChakraBreadcrumb.Item>
                 {last ? (
-                  <ChakraBreadcrumb.CurrentLink color={text.primary} fontWeight="normal">
+                  <ChakraBreadcrumb.CurrentLink color="text.primary" fontWeight="normal">
                     {title}
                   </ChakraBreadcrumb.CurrentLink>
                 ) : (
-                  <ChakraBreadcrumb.Link asChild color={text.secondary} fontWeight="normal">
+                  <ChakraBreadcrumb.Link asChild color="text.secondary" fontWeight="normal">
                     <RouterLink to={url || '#'}>{title}</RouterLink>
                   </ChakraBreadcrumb.Link>
                 )}

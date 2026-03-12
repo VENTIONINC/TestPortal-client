@@ -1,41 +1,42 @@
 import { memo } from 'react';
 import { Grid, Text, VStack, Skeleton } from '@chakra-ui/react';
 
-import { useColorModeValue } from '@/components/ui';
-import { useResultsSurfaceColors } from '@/components/results/useResultsSurfaceColors';
+import { STATUS_META, STATUS_ORDER } from './constants';
 import { ResultStatus } from '@/types';
-
 import { ResultsStatCard } from './ResultsStatCard';
 import { StatsConfigInfo } from './StatsConfigInfo';
-import { STATUS_META, STATUS_ORDER } from './constants';
 import { type ResultsStatsProps, type StatPalette, type StatPaletteKey, type StatusCountKey } from './types';
 
 export const ResultsStats = memo(({ statistics, isFetching }: ResultsStatsProps) => {
-  const { stats } = useResultsSurfaceColors();
-  const cardShadow = useColorModeValue('0px 1px 2px rgba(0, 0, 0, 0.08)', '0px 1px 2px rgba(0, 0, 0, 0.32)');
-  const labelTextColor = useColorModeValue('#666666', stats.countText);
-  const valueTextColor = useColorModeValue('#333333', stats.strongText);
+  const cardShadow = 'shadow.sm';
+  const labelTextColor = 'text.muted';
+  const valueTextColor = 'text.main';
 
   const palettes: Record<StatPaletteKey, StatPalette> = {
     total: {
-      accent: useColorModeValue('#6EC8FF', '#5BB1E3'),
-      background: useColorModeValue('#F1FAFF', 'rgba(110, 200, 255, 0.16)'),
+      accent: 'status.neutral.icon',
+      background: 'status.neutral.bg',
+      text: 'status.neutral.text',
     },
     [ResultStatus.Passed]: {
-      accent: useColorModeValue('#1FE647', '#35C75D'),
-      background: useColorModeValue('#EFFFF2', 'rgba(31, 230, 71, 0.16)'),
+      accent: 'status.success.icon',
+      background: 'status.success.bg',
+      text: 'status.success.text',
     },
     [ResultStatus.Failed]: {
-      accent: useColorModeValue('#FF4545', '#FF6767'),
-      background: useColorModeValue('#FFEDED', 'rgba(255, 69, 69, 0.16)'),
+      accent: 'status.error.icon',
+      background: 'status.error.bg',
+      text: 'status.error.text',
     },
     [ResultStatus.Skipped]: {
-      accent: useColorModeValue('#B2B2B2', '#8D8D93'),
-      background: useColorModeValue('#F8F8F8', 'rgba(178, 178, 178, 0.14)'),
+      accent: 'status.neutral.icon',
+      background: 'status.neutral.bg',
+      text: 'status.neutral.text',
     },
     [ResultStatus.TimedOut]: {
-      accent: useColorModeValue('#FF874D', '#FF9C6B'),
-      background: useColorModeValue('#FFF3EE', 'rgba(255, 135, 77, 0.16)'),
+      accent: 'status.attention.icon',
+      background: 'status.attention.bg',
+      text: 'status.attention.text',
     },
   };
 
@@ -43,7 +44,7 @@ export const ResultsStats = memo(({ statistics, isFetching }: ResultsStatsProps)
 
   if (!statistics && !isFetching) {
     return (
-      <Text alignSelf="center" color={stats.emptyText}>
+      <Text alignSelf="center" color="text.muted">
         No statistics to display.
       </Text>
     );
@@ -56,7 +57,7 @@ export const ResultsStats = memo(({ statistics, isFetching }: ResultsStatsProps)
   };
 
   return (
-    <VStack w="100%" align="stretch" gap={1} bg="bg.cardSecondary" p={2} mt={2} borderRadius="sm">
+    <VStack w="100%" align="stretch" gap={1} bg="bg.card" p={4} mt={2} borderRadius="md" shadow="sm">
       <Grid
         gap={1}
         templateColumns={{
@@ -72,9 +73,9 @@ export const ResultsStats = memo(({ statistics, isFetching }: ResultsStatsProps)
             count={effStats.byStatusTotal || 0}
             accent={palettes.total.accent}
             background={palettes.total.background}
-            labelColor={labelTextColor}
-            valueColor={valueTextColor}
-            shadow={cardShadow}
+            labelColor="text.secondary"
+            valueColor={(palettes.total as any).text || valueTextColor}
+            shadow="none"
           />
         </Skeleton>
 
@@ -90,9 +91,9 @@ export const ResultsStats = memo(({ statistics, isFetching }: ResultsStatsProps)
                 count={count}
                 accent={palette.accent}
                 background={palette.background}
-                labelColor={labelTextColor}
-                valueColor={valueTextColor}
-                shadow={cardShadow}
+                labelColor="text.secondary"
+                valueColor={(palette as any).text || valueTextColor}
+                shadow="none"
                 IconComponent={Icon}
               />
             </Skeleton>

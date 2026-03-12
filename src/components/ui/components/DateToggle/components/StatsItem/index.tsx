@@ -17,7 +17,7 @@ const formatCount = (count: number) => {
 };
 
 export const StatsItem = ({ status, count }: { status: string; count: number }) => {
-  const { color } = getResultStatusStyle(status as ResultStatus);
+  const { tokenBase } = getResultStatusStyle(status as ResultStatus);
   const safeCount = Math.max(0, count);
   const renderCount = formatCount(safeCount);
 
@@ -31,8 +31,8 @@ export const StatsItem = ({ status, count }: { status: string; count: number }) 
       justifyContent="center"
       gap={1}
       borderRadius="full"
-      bg={color}
-      color="text.blackAndWhite"
+      bg={`${tokenBase}.bg`}
+      color={`${tokenBase}.text`}
       fontWeight={500}
       title={`${safeCount}`}
     >

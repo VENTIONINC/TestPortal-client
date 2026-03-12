@@ -2,14 +2,14 @@ import { useCallback, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Box, IconButton } from '@chakra-ui/react';
 import { FiFilter } from 'react-icons/fi';
-import { LuPanelLeftClose } from 'react-icons/lu';
+import { LuArrowLeftToLine } from 'react-icons/lu';
 
 import { useFilterContext } from '@/contexts/FilterContext';
 import { FilterConfigSection } from '@/types/filter';
 
 import { Fields, FiltersHeader, FiltersContainer } from '../components';
 
-const FILTER_PANEL_WIDTH = '360px';
+const FILTER_PANEL_WIDTH = '357px';
 const FILTER_COLLAPSED_WIDTH = '72px';
 const PANEL_TRANSITION = '0.32s cubic-bezier(0.22, 1, 0.36, 1)';
 
@@ -42,12 +42,16 @@ export const FilterContainer = ({ config, filters, initialFilters, onApplyFilter
     [onApplyFilters],
   );
 
+  console.log('isClearable, ', isClearable)
   return (
     <Box
       width={showFilters ? FILTER_PANEL_WIDTH : FILTER_COLLAPSED_WIDTH}
       transition={`width ${PANEL_TRANSITION}`}
       overflow="hidden"
       flexShrink={0}
+      borderRight="1px solid"
+      
+      borderColor="border.main"
     >
       <Box display="grid" width={FILTER_PANEL_WIDTH} h="100%">
         <Box
@@ -58,7 +62,7 @@ export const FilterContainer = ({ config, filters, initialFilters, onApplyFilter
           transition={`opacity 0.18s ease, transform ${PANEL_TRANSITION}`}
         >
           <FiltersContainer as="aside" width={FILTER_COLLAPSED_WIDTH}>
-            <Box w="100%" pt={1} display="flex" justifyContent="center">
+            <Box w="100%"  display="flex" justifyContent="center">
               <IconButton aria-label="Open filters" variant="ghost" size="sm" onClick={toggleFilters}>
                 <FiFilter size={16} />
               </IconButton>
@@ -73,14 +77,14 @@ export const FilterContainer = ({ config, filters, initialFilters, onApplyFilter
           transform={showFilters ? 'translateX(0px)' : 'translateX(-24px)'}
           transition={`opacity 0.2s ease, transform ${PANEL_TRANSITION}`}
         >
-          <FiltersContainer as="aside" width={FILTER_PANEL_WIDTH}>
+          <FiltersContainer as="aside" width={FILTER_PANEL_WIDTH} >
             <FiltersHeader
               title="Filters"
               clearable={isClearable}
               onClear={handleClear}
               leadingAction={
-                <IconButton aria-label="Close filters" variant="ghost" size="sm" onClick={toggleFilters}>
-                  <LuPanelLeftClose size={16} />
+                <IconButton aria-label="Close filters" variant="ghost" size="md" ml={2} onClick={toggleFilters}>
+                  <LuArrowLeftToLine size={20} />
                 </IconButton>
               }
             />

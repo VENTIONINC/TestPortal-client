@@ -8,7 +8,6 @@ import { Tooltip, Wrap } from '@/components/ui';
 import { useManageIssueDrawer } from '@/components/drawers';
 import { getIssueCategoryStyle, ISSUE_CATEGORY_LABELS } from '@/utils';
 import { IssueWithStats } from '@/types';
-import { useSurfaceColors } from '@/theme';
 
 interface IssueCardProps {
   issue: IssueWithStats;
@@ -16,7 +15,6 @@ interface IssueCardProps {
 
 export const IssueCard = memo(({ issue }: IssueCardProps) => {
   const { Icon, color } = getIssueCategoryStyle(issue.category);
-  const { text } = useSurfaceColors();
 
   const openManageIssueDrawer = useManageIssueDrawer();
 
@@ -40,7 +38,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
           <Text as="span" fontWeight={500} color="text.secondary">
             Occurrence count
           </Text>
-          <Text as="span" fontWeight={400} color="text.primary">
+          <Text as="span" fontWeight={400} color="text.main">
             {occurrenceCount}
           </Text>
         </Box>
@@ -48,7 +46,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
           <Text as="span" fontWeight={500} color="text.secondary">
             First seen
           </Text>
-          <Text as="span" fontWeight={400} color="text.primary">
+          <Text as="span" fontWeight={400} color="text.main">
             {formatOccurrence(firstOccurrence)}
           </Text>
         </Box>
@@ -56,7 +54,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
           <Text as="span" fontWeight={500} color="text.secondary">
             Last seen
           </Text>
-          <Text as="span" fontWeight={400} color="text.primary">
+          <Text as="span" fontWeight={400} color="text.main">
             {formatOccurrence(lastOccurrence)}
           </Text>
         </Box>
@@ -64,7 +62,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
           <Text as="span" fontWeight={500} color="text.secondary">
             Impacted tests
           </Text>
-          <Text as="span" fontWeight={400} color="text.primary">
+          <Text as="span" fontWeight={400} color="text.main">
             {impactedTestsCount}
           </Text>
         </Box>
@@ -78,7 +76,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
       <Card.Header p="2px 8px 7px 7px">
         <HStack align="stretch" w="100%" minH="37px" alignItems="center" justifyContent="space-between">
           <Flex>
-            <Text fontWeight={600} color={text.primary} pr={2}>
+            <Text fontWeight={600} color="text.main" pr={2}>
               {issue.name}
             </Text>
             <IconButton

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { LuRefreshCcw } from 'react-icons/lu';
 
 import { useGetApiV2PromptsByNameQuery, usePostApiV2PromptsByNameGenerateMutation } from '@/redux/apis/generatedApi';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 import { Wrap } from '@/components/ui';
 
 import { ParameterForm } from './ParameterForm';
@@ -17,7 +16,6 @@ export const PromptBuilder = () => {
   const [parameterValues, setParameterValues] = useState<Record<string, string>>({});
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
-  const { text } = useSurfaceColors();
 
   const {
     data: prompt,
@@ -105,7 +103,7 @@ export const PromptBuilder = () => {
     return (
       <VStack justify="center" align="center" minHeight="400px">
         <Spinner size="lg" />
-        <Text color={text.muted}>Loading prompt configuration...</Text>
+        <Text color="text.muted">Loading prompt configuration...</Text>
       </VStack>
     );
   }
@@ -113,7 +111,7 @@ export const PromptBuilder = () => {
   if (error) {
     return (
       <VStack justify="center" align="center" minHeight="400px" gap={4}>
-        <Text color="red.500" fontSize="lg">
+        <Text color="status.error.text" fontSize="lg">
           Failed to load prompt configuration
         </Text>
       </VStack>
@@ -123,7 +121,7 @@ export const PromptBuilder = () => {
   if (!prompt) {
     return (
       <VStack justify="center" align="center" minHeight="400px" gap={4}>
-        <Text fontSize="lg" color={text.primary}>
+        <Text fontSize="lg" color="text.main">
           Prompt not found
         </Text>
       </VStack>
@@ -142,7 +140,7 @@ export const PromptBuilder = () => {
         {/* Parameter Form */}
         <Wrap>
           <VStack align="stretch" gap={4} w="100%">
-            <Heading size="md" color={text.primary}>
+            <Heading size="md" color="text.main">
               <Flex>
                 Configure Parameters
                 <Spacer />
@@ -150,7 +148,7 @@ export const PromptBuilder = () => {
                   onClick={handleGenerate}
                   disabled={isGenerating || requiredFieldsEmpty}
                   loading={isGenerating}
-                  colorPalette="blue"
+                  variant="primary"
                   size="sm"
                   alignSelf="center"
                   w="fit-content"

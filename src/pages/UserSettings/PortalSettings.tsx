@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { usePatchApiV2UsersByUserIdIntegrationsMutation } from '@/redux/apis/generatedApi';
 import { toaster } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
 
 const portalSettingsSchema = z.object({
   reportalPortalUrl: z.string().optional(),
@@ -20,7 +19,6 @@ type PortalSettingsFormData = z.infer<typeof portalSettingsSchema>;
 export function PortalSettings() {
   const user = useCurrentUser();
   const [updateUserIntegrations, { isLoading: isUpdating }] = usePatchApiV2UsersByUserIdIntegrationsMutation();
-  const { surfaces, borders, text } = useSurfaceColors();
 
   const { register, handleSubmit, watch, setValue } = useForm<PortalSettingsFormData>({
     resolver: zodResolver(portalSettingsSchema),
@@ -65,21 +63,21 @@ export function PortalSettings() {
   };
 
   return (
-    <Box bg={surfaces.card} border="1px" borderColor={borders.subtle} borderRadius="md" shadow="md" p={6}>
+    <Box bg="bg.card" border="1px" borderColor="border.main" borderRadius="md" shadow="sm" p={6}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <VStack gap={6} align="stretch">
           <Box>
-            <Text fontSize="lg" fontWeight="semibold" mb={4} color={text.primary}>
+            <Text fontSize="lg" fontWeight="semibold" mb={4} color="text.main">
               Portal URLs
             </Text>
-            <Text color={text.muted} fontSize="sm" mb={6}>
+            <Text color="text.muted" fontSize="sm" mb={6}>
               Configure the URLs for your portal integrations.
             </Text>
           </Box>
 
           <Box>
             <HStack justify="space-between" align="center" mb={3}>
-              <Text fontWeight="medium" color={text.primary}>
+              <Text fontWeight="medium" color="text.main">
                 Reportal Portal URL
               </Text>
               <Switch.Root
@@ -97,7 +95,7 @@ export function PortalSettings() {
 
           <Box>
             <HStack justify="space-between" align="center" mb={3}>
-              <Text fontWeight="medium" color={text.primary}>
+              <Text fontWeight="medium" color="text.main">
                 Monitoring Portal URL
               </Text>
               <Switch.Root

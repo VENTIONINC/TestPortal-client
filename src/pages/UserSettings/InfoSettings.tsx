@@ -2,18 +2,15 @@ import { Box, Button, Heading, VStack, Table, Spinner, Text } from '@chakra-ui/r
 
 import { useResultsAnalysisExportDialog } from '@/components/ui/components/Dialogs';
 import { useGetApiV2StatusQuery } from '@/redux/apis/generatedApi';
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
-
 export function InfoSettings() {
   const { data: status, isLoading } = useGetApiV2StatusQuery();
-  const { surfaces, borders, text } = useSurfaceColors();
   const openAnalysisExportDialog = useResultsAnalysisExportDialog();
 
   return (
     <VStack gap={6} align="stretch">
-      <Box bg={surfaces.card} border="1px solid" borderColor={borders.subtle} borderRadius="md" shadow="sm">
-        <Box p={6} borderBottom="1px solid" borderColor={borders.subtle}>
-          <Heading size="md" color={text.primary}>
+      <Box bg="bg.card" border="1px solid" borderColor="border.main" borderRadius="md" shadow="sm">
+        <Box p={6} borderBottom="1px solid" borderColor="border.main">
+          <Heading size="md" color="text.main">
             System Information
           </Heading>
         </Box>
@@ -21,16 +18,16 @@ export function InfoSettings() {
           <Table.Root size="sm" variant="outline">
             <Table.Body>
               <Table.Row>
-                <Table.Cell fontWeight="semibold" w="200px" color={text.primary}>
+                <Table.Cell fontWeight="semibold" w="200px" color="text.main">
                   Client Version
                 </Table.Cell>
-                <Table.Cell color={text.secondary}>{__APP_VERSION__}</Table.Cell>
+                <Table.Cell color="text.secondary">{__APP_VERSION__}</Table.Cell>
               </Table.Row>
               <Table.Row>
-                <Table.Cell fontWeight="semibold" color={text.primary}>
+                <Table.Cell fontWeight="semibold" color="text.main">
                   Server Version
                 </Table.Cell>
-                <Table.Cell color={text.secondary}>
+                <Table.Cell color="text.secondary">
                   {isLoading ? <Spinner size="xs" /> : status?.version || 'Unknown'}
                 </Table.Cell>
               </Table.Row>
@@ -39,12 +36,12 @@ export function InfoSettings() {
         </Box>
       </Box>
 
-      <Box bg="white" border="1px" borderColor="gray.200" borderRadius="md" shadow="md">
-        <Box p={6} borderBottom="1px" borderColor="gray.200">
-          <Heading size="md">Human Feedback Export</Heading>
+      <Box bg="bg.card" border="1px solid" borderColor="border.main" borderRadius="md" shadow="sm">
+        <Box p={6} borderBottom="1px solid" borderColor="border.main">
+          <Heading size="md" color="text.main">Human Feedback Export</Heading>
         </Box>
         <Box p={6}>
-          <Text color="gray.600" fontSize="sm">
+          <Text color="text.secondary" fontSize="sm">
             Export human feedback data for a project and date range as a JSONL file.
           </Text>
           <Button mt={4} onClick={openAnalysisExportDialog}>

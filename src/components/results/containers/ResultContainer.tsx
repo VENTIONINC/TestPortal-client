@@ -44,7 +44,7 @@ const ResultsFloatingHeader = ({ availableDates, statistics, toggleDate, isFetch
     <Box ref={fixedBlockWrapperRef} w="100%" position="relative">
       <Box
         ref={fixedBlockContentRef}
-        bg="bg.page"
+        bg="bg.section"
         visibility={isFixed ? 'hidden' : 'visible'}
         pointerEvents={isFixed ? 'none' : 'auto'}
       >
@@ -58,7 +58,7 @@ const ResultsFloatingHeader = ({ availableDates, statistics, toggleDate, isFetch
           top="0px"
           left={`${fixedMetrics.left}px`}
           zIndex={10}
-          bg="bg.page"
+          bg="bg.section"
           boxShadow="sm"
         >
           <ResultsFloatingHeaderContent
@@ -117,10 +117,10 @@ export const ResultContainerInner = () => {
 
   return (
     <FormProvider {...filterFormMethods}>
-      <HStack gap={4} w="100%" display="grid" alignItems="start" gridTemplateColumns="auto 1fr">
+      <HStack  w="100%" display="grid" alignItems="start" gridTemplateColumns="auto 1fr">
         <Filter config={filterConfig} {...filterProps} />
 
-        <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="visible" position="relative">
+        <VStack as="section" align="stretch" flex={1} minW={0} h="100%" overflow="visible" position="relative" ml={5} mr={6} mt={5}>
           <LoaderOverlay isLoading={isFetching || isStatsFetching} />
           <ResultsFloatingHeader availableDates={availableDates} statistics={statistics} toggleDate={toggleDate} isFetching={isStatsFetching} />
           <Box position="relative">
