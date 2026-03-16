@@ -6,6 +6,8 @@ import { ResultStatus } from '@/types';
 export interface ResultsStatsProps {
   statistics?: ResultsStatsResponse;
   isFetching?: boolean;
+  size?: 'small' | 'default';
+  typeView?: 'tag' | 'badge';
 }
 
 export interface ResultsStatCardProps {

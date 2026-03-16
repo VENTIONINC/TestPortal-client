@@ -15,7 +15,12 @@ export const Sidebar = ({ collapsed, handleSetCollapsed }: SidebarProps) => {
 
   return (
     <Flex
-      h="100%"
+      h="100vh"
+      w={collapsed ? '64px' : '250px'}
+      position="fixed"
+      left="0"
+      top="0"
+      zIndex="100"
       transition="width 0.2s"
       borderRight="1px solid"
       borderColor="border.main"
@@ -51,12 +56,22 @@ export const Sidebar = ({ collapsed, handleSetCollapsed }: SidebarProps) => {
         <Link to="/dashboard">{collapsed ? <Logo /> : <FullLogo />}</Link>
       </Flex>
 
-      {/* Navigation */}
-      <Box flex="1" overflowY="auto" overflowX="hidden">
+      <Box
+        flex="1"
+        overflowY="auto"
+        overflowX="hidden"
+        css={{
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+        }}
+      >
         <NavigationMenu collapsed={collapsed} />
       </Box>
 
-      <Box position="fixed" width={collapsed ? 'auto' : '250px'} bottom={0} transition="left 0.2s">
+      <Box mt="auto" transition="left 0.2s">
         <UserMenu collapsed={collapsed} />
       </Box>
     </Flex>

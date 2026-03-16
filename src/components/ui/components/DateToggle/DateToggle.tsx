@@ -9,9 +9,11 @@ interface DateToggleProps {
   }[];
   toggleHandler: (day: { yyyy_mm_dd: string }) => void;
   variant?: 'default' | 'stats';
+  size?: 'default' | 'small';
+  isBorder?: boolean;
 }
 
-export const DateToggle = ({ days, toggleHandler, variant = 'default' }: DateToggleProps) => {
+export const DateToggle = ({ days, toggleHandler, variant = 'default', size = 'default', isBorder = true }: DateToggleProps) => {
   if (!days || days.length === 0) {
     return null;
   }
@@ -22,9 +24,10 @@ export const DateToggle = ({ days, toggleHandler, variant = 'default' }: DateTog
         key={day.yyyy_mm_dd}
         day={{ ...day, stats: day.stats ?? [] }}
         toggleHandler={toggleHandler}
+        size={size}
       />
     ));
   }
 
-  return <DateList days={days} toggleHandler={toggleHandler} />;
+  return <DateList days={days} toggleHandler={toggleHandler} size={size} isBorder={isBorder} />;
 };

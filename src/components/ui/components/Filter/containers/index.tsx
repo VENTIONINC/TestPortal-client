@@ -42,18 +42,24 @@ export const FilterContainer = ({ config, filters, initialFilters, onApplyFilter
     [onApplyFilters],
   );
 
-  console.log('isClearable, ', isClearable)
   return (
     <Box
       width={showFilters ? FILTER_PANEL_WIDTH : FILTER_COLLAPSED_WIDTH}
       transition={`width ${PANEL_TRANSITION}`}
-      overflow="hidden"
       flexShrink={0}
       borderRight="1px solid"
-      
       borderColor="border.main"
+      position="sticky"
+      top="66px"
+      h="calc(100vh - 66px)"
+      zIndex={10}
+      bg="bg.section"
+      display="flex"
+      flexDirection="column"
+       
     >
-      <Box display="grid" width={FILTER_PANEL_WIDTH} h="100%">
+      <Box flex="1" minH="0" display="grid" width={showFilters ? FILTER_PANEL_WIDTH : FILTER_COLLAPSED_WIDTH}>
+        {/* Collapsed View */}
         <Box
           gridArea="1 / 1"
           opacity={showFilters ? 0 : 1}
@@ -62,7 +68,7 @@ export const FilterContainer = ({ config, filters, initialFilters, onApplyFilter
           transition={`opacity 0.18s ease, transform ${PANEL_TRANSITION}`}
         >
           <FiltersContainer as="aside" width={FILTER_COLLAPSED_WIDTH}>
-            <Box w="100%"  display="flex" justifyContent="center">
+            <Box display="flex" justifyContent="center">
               <IconButton aria-label="Open filters" variant="ghost" size="sm" onClick={toggleFilters}>
                 <FiFilter size={16} />
               </IconButton>
@@ -70,26 +76,44 @@ export const FilterContainer = ({ config, filters, initialFilters, onApplyFilter
           </FiltersContainer>
         </Box>
 
+        {/* Expanded View */}
         <Box
           gridArea="1 / 1"
           opacity={showFilters ? 1 : 0}
           pointerEvents={showFilters ? 'auto' : 'none'}
           transform={showFilters ? 'translateX(0px)' : 'translateX(-24px)'}
           transition={`opacity 0.2s ease, transform ${PANEL_TRANSITION}`}
+          display="flex"
+          flexDirection="column"
+          h="100%"
+          minH="0"
+          position={showFilters ? 'sticky' : 'absolute'}
+          
         >
-          <FiltersContainer as="aside" width={FILTER_PANEL_WIDTH} >
-            <FiltersHeader
-              title="Filters"
-              clearable={isClearable}
-              onClear={handleClear}
-              leadingAction={
-                <IconButton aria-label="Close filters" variant="ghost" size="md" ml={2} onClick={toggleFilters}>
-                  <LuArrowLeftToLine size={20} />
-                </IconButton>
-              }
-            />
+          <FiltersHeader
+            title="Filters"
+            clearable={isClearable}
+            onClear={handleClear}
+            leadingAction={
+              <IconButton aria-label="Close filters" variant="ghost" size="md" ml={2} onClick={toggleFilters}>
+                <LuArrowLeftToLine size={20} />
+              </IconButton>
+            }
+          />
+          <Box
+            flex="1"
+            overflowY="auto"
+            px="4"
+            css={{
+              '&::-webkit-scrollbar': {
+                display: 'none',
+              },
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
+            }}
+          >
             <Fields config={config} onApply={handleSubmit(onSubmit)} />
-          </FiltersContainer>
+          </Box>
         </Box>
       </Box>
     </Box>

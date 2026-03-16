@@ -5,9 +5,11 @@ import { StatsItem } from '../StatsItem';
 export const DateWithStats = ({
   day,
   toggleHandler,
+  size
 }: {
   day: { yyyy_mm_dd: string; stats: string[]; isActive: boolean; display: string };
   toggleHandler: (day: { yyyy_mm_dd: string }) => void;
+  size?: 'default' | 'small';
 }) => {
   const statsData = day.stats?.reduce((acc: Record<string, number>, status) => {
     acc[status] = (acc[status] || 0) + 1;
