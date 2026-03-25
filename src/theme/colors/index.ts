@@ -8,6 +8,7 @@ import { tabs } from './tabs';
 import { category } from './category';
 import { logo } from './logo';
 import { accent } from './accent';
+import { badge } from './badge';
 
 export const semanticColors = {
   bg,
@@ -20,4 +21,5 @@ export const semanticColors = {
   category,
   logo,
   accent,
+  badge,
 };

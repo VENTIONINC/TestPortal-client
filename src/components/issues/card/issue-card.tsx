@@ -1,7 +1,8 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState, useEffect } from 'react';
 import { HStack, Text, Flex, Card, Box, IconButton, Tag } from '@chakra-ui/react';
 import { LuPencil, LuDot } from 'react-icons/lu';
 import dayjs from 'dayjs';
+import { useIntersectionObserver } from 'usehooks-ts';
 
 import { IssueTimeDiscributionChart } from '@/components/ui/components/Charts';
 import { Tooltip, Wrap } from '@/components/ui';
@@ -105,7 +106,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
               <Tag.StartElement>
                 <Icon size={16} />
               </Tag.StartElement>
-              <Tag.Label>{ISSUE_CATEGORY_LABELS[issue.category]}</Tag.Label>
+              <Tag.Label fontWeight={500} color="category.text">{ISSUE_CATEGORY_LABELS[issue.category]}</Tag.Label>
             </Tag.Root>
 
             <LuDot size={16} color="text.secondary" />
@@ -133,15 +134,37 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
             {renderInfoSection}
           </Wrap>
           {occurrenceCount > 0 && (
-            <Box w="100%" h="100%" minW={0} bg="bg.cardSecondary" p="4px 7px 6px 3px" borderRadius="xl">
-              <IssueTimeDiscributionChart data={issue.statistics.timeDistribution} color={color} />
-            </Box>
+            <IssueChartWrapper issue={issue} color={color} />
           )}
         </Box>
       </Card.Body>
     </Card.Root>
   );
 });
+
+// A wrapper component to defer rendering of the heavy chart
+const IssueChartWrapper = memo(({ issue, color }: { issue: IssueWithStats; color: string }) => {
+  const [hasRendered, setHasRendered] = useState(false);
+  const { isIntersecting, ref } = useIntersectionObserver({
+    threshold: 0,
+    rootMargin: '200px', // Render slightly before coming into view
+  });
+
+  useEffect(() => {
+    if (isIntersecting && !hasRendered) {
+      setHasRendered(true);
+    }
+  }, [isIntersecting, hasRendered]);
+
+  return (
+    <Box ref={ref} w="100%" h="100%" minW={0} bg="bg.cardSecondary" p="4px 7px 6px 3px" borderRadius="xl">
+      {hasRendered ? (
+        <IssueTimeDiscributionChart data={issue.statistics.timeDistribution} color={color} />
+      ) : null}
+    </Box>
+  );
+});
+
 
 const formatOccurrence = (date: string | null) => {
   if (!date) return 'N/A';

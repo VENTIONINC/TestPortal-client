@@ -12,7 +12,10 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
       <ChakraBadge
         ref={ref}
         variant={variant}
-        status={status}
+        bg={variant === 'surface' ? `badge.${status}.bg` : variant === 'solid' ? `badge.${status}.text` : 'transparent'}
+        color={variant === 'solid' ? 'bg.page' : `badge.${status}.text`}
+        borderColor={variant === 'outline' ? `badge.${status}.text` : 'transparent'}
+        borderWidth={variant === 'outline' ? '1px' : undefined}
         borderRadius="full"
         px="8px"
         py="4px"

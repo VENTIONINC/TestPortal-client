@@ -1,39 +1,134 @@
+import * as palette from './palette';
+
 export const status = {
   success: {
-    bg: { value: { _light: '#E6F4EA', _dark: 'rgba(30, 142, 62, 0.2)' } },
-    text: { value: { _light: '#1E8E3E', _dark: '#4CAF50' } },
-    icon: { value: { _light: '#1E8E3E', _dark: '#2CD958' } }
-  },
+  bg: { value: {
+  _light: palette.green_100,
+  _dark: palette.green_alpha_1100,
+} },
+  text: { value: {
+  _light: palette.green_700,
+  _dark: palette.green_800,
+} },
+  count: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  icon: { value: {
+  _light: palette.green_700,
+  _dark: palette.green_800,
+} },
+},
   attention: {
-    bg: { value: { _light: '#FEF7E0', _dark: 'rgba(227, 116, 0, 0.2)' } },
-    text: { value: { _light: '#E37400', _dark: '#FFB74D' } },
-    icon: { value: { _light: '#E37400', _dark: '#FFB74D' } }
-  },
+  bg: { value: {
+  _light: palette.yellow_100,
+  _dark: palette.orange_alpha_500,
+} },
+  text: { value: {
+  _light: palette.green_500,
+  _dark: palette.green_200,
+} },
+  count: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  icon: { value: {
+  _light: palette.green_500,
+  _dark: palette.green_200,
+} },
+},
   warning: {
-    bg: { value: { _light: '#FEF7E0', _dark: 'rgba(227, 116, 0, 0.2)' } },
-    text: { value: { _light: '#E37400', _dark: '#FFB74D' } },
-    icon: { value: { _light: '#E37400', _dark: '#FFB74D' } }
-  },
+  bg: { value: {
+  _light: palette.yellow_100,
+  _dark: palette.orange_alpha_500,
+} },
+  text: { value: {
+  _light: palette.orange_100,
+  _dark: palette.orange_200,
+} },
+  count: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  icon: { value: {
+  _light: palette.orange_100,
+  _dark: palette.orange_200,
+} },
+},
   error: {
-    bg: { value: { _light: '#FCE8E8', _dark: 'rgba(217, 48, 37, 0.2)' } },
-    text: { value: { _light: '#D93025', _dark: '#EF5350' } },
-    icon: { value: { _light: '#D93025', _dark: '#E03538' } }
-  },
+  bg: { value: {
+  _light: palette.red_100,
+  _dark: palette.red_alpha_1400,
+} },
+  text: { value: {
+  _light: palette.red_500,
+  _dark: palette.red_700,
+} },
+  count: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  icon: { value: {
+  _light: palette.red_500,
+  _dark: palette.red_700,
+} },
+},
   info: {
-    bg: { value: { _light: '#E8F0FE', _dark: 'rgba(26, 115, 232, 0.2)' } },
-    text: { value: { _light: '#1A73E8', _dark: '#64B5F6' } },
-    icon: { value: { _light: '#1A73E8', _dark: '#3AA9FF' } }
-  },
+  bg: { value: {
+  _light: palette.grey_800,
+  _dark: palette.blue_alpha_2300,
+} },
+  text: { value: {
+  _light: palette.blue_300,
+  _dark: palette.blue_800,
+} },
+  count: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  icon: { value: {
+  _light: palette.blue_300,
+  _dark: palette.blue_800,
+} },
+},
   neutral: {
-    bg: { value: { _light: '#F1F3F4', _dark: 'rgba(112, 117, 122, 0.2)' } },
-    text: { value: { _light: '#70757A', _dark: '#9E9E9E' } },
-    icon: { value: { _light: '#70757A', _dark: '#7D7D7F' } }
-  },
-  textColor: {
-    value: {
-      _light: '#333333',
-      _dark: '#333333',
-    },
-  },
+  bg: { value: {
+  _light: palette.grey_900,
+  _dark: palette.grey_alpha_3800,
+} },
+  text: { value: {
+  _light: palette.grey_1700,
+  _dark: palette.grey_1900,
+} },
+  count: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  icon: { value: {
+  _light: palette.grey_1700,
+  _dark: palette.grey_1900,
+} },
+},
+  total: {
+  bg: { value: {
+  _light: palette.blue_alpha_1600,
+  _dark: palette.grey_alpha_3800,
+} },
+  text: { value: {
+  _light: palette.grey_2100,
+  _dark: palette.grey_1800,
+} },
+  count: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  icon: { value: {
+  _light: palette.blue_300,
+  _dark: palette.grey_1900,
+} },
+},
+  textColor: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_2500,
+} },
 };
-

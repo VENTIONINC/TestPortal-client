@@ -11,3 +11,4 @@ export { FormInput, FormSelect, FormDateInput, FormDatePicker, FormDateRangePick
 export { DateToggle } from './DateToggle';
 export { StatusIcon } from './StatusIcon';
 export * from './Dialogs';
+export * from './Pagination';

@@ -1,51 +1,36 @@
-export const dashboard = {
-  green: {
-    value: {
-      _light: '#35D47F',
-      _dark: '#3CFF8F',
-    },
-  },
-  blue: {
-    value: {
-      _light: '#53ABFC',
-      _dark: '#4DB8FF',
-    },
-  },
-  yellow: {
-    value: {
-      _light: '#B5D600',
-      _dark: '#C6FF2E',
-    },
-  },
-  pink: {
-    value: {
-      _light: '#FF6FFF',
-      _dark: '#FF5CFF',
-    },
-  },
-  purple: {
-    value: {
-      _light: '#61457C',
-      _dark: '#7A5B9E',
-    },
-  },
+import * as palette from './palette';
 
-  red: {
-    value: {
-      _light: '#FF6A47',
-      _dark: '#FF6B3D',
-    },
-  },
-  gray: {
-    value: {
-      _light: '#D2D2D5',
-      _dark: '#E6E6EB',
-    },
-  },
-  base: {
-    value: {
-      _light: '#333333',
-      _dark: '#EAEAEA',
-    },
-  },
+export const dashboard = {
+  green: { value: {
+  _light: palette.green_600,
+  _dark: palette.green_300,
+} },
+  blue: { value: {
+  _light: palette.blue_500,
+  _dark: palette.blue_600,
+} },
+  yellow: { value: {
+  _light: palette.yellow_200,
+  _dark: palette.green_400,
+} },
+  pink: { value: {
+  _light: palette.purple_100,
+  _dark: palette.purple_200,
+} },
+  purple: { value: {
+  _light: palette.purple_400,
+  _dark: palette.purple_300,
+} },
+  red: { value: {
+  _light: palette.red_300,
+  _dark: palette.red_600,
+} },
+  gray: { value: {
+  _light: palette.grey_1600,
+  _dark: palette.blue_100,
+} },
+  base: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
 };

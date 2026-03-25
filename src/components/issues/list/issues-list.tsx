@@ -9,7 +9,7 @@ import { initialFilters, useIssuesActions, useIssuesFilters } from '@/redux/slic
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useFilterContext } from '@/contexts/FilterContext';
 import { IssueWithStats } from '@/types';
-import { Filter } from '@/components/ui';
+import { Filter, Pagination } from '@/components/ui';
 
 import { filterConfig } from '../configs';
 
@@ -45,7 +45,7 @@ export const IssuesList = () => {
     <FormProvider {...formMethods}>
       <HStack align="flex-start" gap={4} w="100%">
         <Filter config={filterConfig} {...filterProps} />
-        <VStack flex={1} align="stretch" minW={0}>
+        <VStack flex={1} align="stretch" minW={0} py={6} pr={4}>
           {isFetching && (
             <HStack ps={2}>
               <Spinner />
@@ -67,16 +67,14 @@ export const IssuesList = () => {
           </Box>
 
           {data && data.totalPages > 1 && (
-            <HStack alignSelf="center">
-              <Button variant="ghost" onClick={prevPage} disabled={filters.page === 1}>
-                Previous
-              </Button>
-              <Text>
-                Page {filters.page} of {data.totalPages}
-              </Text>
-              <Button variant="ghost" onClick={nextPage} disabled={filters.page === data.totalPages}>
-                Next
-              </Button>
+            <HStack alignSelf="center" py={2}>
+              <Pagination
+                currentPage={filters.page}
+                totalPages={data.totalPages}
+                onPageChange={(page) => setFilters({ page })}
+                variant={showFilters && !isWideScreen ? 'simple' : 'full'}
+                size="sm"
+              />
             </HStack>
           )}
         </VStack>

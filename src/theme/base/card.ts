@@ -19,7 +19,7 @@ export const cardRecipe = defineSlotRecipe({
       pl: '15px',
     },
     body: {
-      p: '15px 16px',
+      // p: '15px 16px',
       // flex: '1',
     },
     // footer: {

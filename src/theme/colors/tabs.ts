@@ -1,4 +1,12 @@
+import * as palette from './palette';
+
 export const tabs = {
-  main: { value: { _light: '#666666', _dark: '#B2B2B2' } },
-  active: { value: { _light: '#3054FE', _dark: '#3054FE' } },
+  main: { value: {
+  _light: palette.grey_2100,
+  _dark: palette.grey_1700,
+} },
+  active: { value: {
+  _light: palette.blue_900,
+  _dark: palette.blue_900,
+} },
 };

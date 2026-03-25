@@ -47,7 +47,7 @@ export const StatsBadgeView = ({ statistics, isFetching, size = 'default' }: Res
             accent={STAT_PALETTES.total.accent}
             background={STAT_PALETTES.total.background}
             labelColor="text.secondary"
-            valueColor={STAT_PALETTES.total.text || valueTextColor}
+            valueColor={STAT_PALETTES.total.count || valueTextColor}
             shadow="none"
           />
         </Skeleton>
@@ -65,7 +65,7 @@ export const StatsBadgeView = ({ statistics, isFetching, size = 'default' }: Res
                 accent={palette.accent}
                 background={palette.background}
                 labelColor="text.secondary"
-                valueColor={palette.text || valueTextColor}
+                valueColor={palette.count || valueTextColor}
                 shadow="none"
                 IconComponent={Icon}
               />

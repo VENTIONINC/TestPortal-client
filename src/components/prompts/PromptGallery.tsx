@@ -1,18 +1,18 @@
 import { Grid, Heading, Spinner, Text, VStack } from '@chakra-ui/react';
 
-import { useGetApiV2PromptsQuery } from '@/redux/apis/generatedApi';
 import { Wrap } from '@/components/ui';
 
-import { PromptCard } from './PromptCard';
+import { usePromptGallery } from './hooks';
+import { PromptCard } from './components';
 
 export const PromptGallery = () => {
-  const { data, isFetching, error } = useGetApiV2PromptsQuery();
+  const { data, isFetching, error } = usePromptGallery();
 
   return (
-    <Wrap>
-      <VStack align="stretch" gap={6} w="100%">
+    <Wrap my={4} mx={6} p={4}>
+      <VStack align="stretch" gap={4} w="100%">
         <VStack align="start" gap={2}>
-          <Heading>MCP Assistant Prompts</Heading>
+          <Heading fontSize="lg">MCP Assistant Prompts</Heading>
           <Text color="text.secondary">
             Select an assistant prompt to configure parameters and generate prompts for your agentic IDE
           </Text>

@@ -1,246 +1,232 @@
+import * as palette from './palette';
+
 export const button = {
   primary: {
-    bg: {
-      default: { value: { _light: '#3054FE', _dark: '#53ABFC' } },
-      hover: { value: { _light: '#4565FE', _dark: '#4565FE' } },
-      focus: { value: { _light: '#2745CF', _dark: '#2745CF' } },
-      disabled: { value: { _light: '#8398FE', _dark: '#4583BD' } },
-    },
-    color: {
-      value: {
-        _light: '#EAEAEA',
-        _dark: '#FFFFFF',
-      },
-    },
-  },
+  bg: {
+  default: { value: {
+  _light: palette.blue_900,
+  _dark: palette.blue_500,
+} },
+  hover: { value: {
+  _light: palette.blue_700,
+  _dark: palette.blue_700,
+} },
+  focus: { value: {
+  _light: palette.blue_1200,
+  _dark: palette.blue_1200,
+} },
+  disabled: { value: {
+  _light: palette.blue_200,
+  _dark: palette.blue_1000,
+} },
+},
+  color: { value: {
+  _light: palette.grey_1300,
+  _dark: palette.white,
+} },
+},
   secondary: {
-    bg: {
-      default: { value: { _light: '#F4F4F5', _dark: '#18181B' } },
-      hover: { value: { _light: '#E4E4E7', _dark: '#19191D' } },
-      focus: { value: { _light: '#F4F4F5', _dark: '#18181B' } },
-      disabled: { value: { _light: '#F0F0F0', _dark: '#2A2A2D' } },
-      active: { value: { _light: 'rgba(20, 113, 235, 0.15)', _dark: 'rgba(20, 113, 235, 0.15)' } },
-    },
-    color: {
-      value: {
-        _light: '#333333',
-        _dark: '#FFFFFF',
-      },
-    },
-    disabledColor: {
-      value: {
-        _light: '#B2B2B2',
-        _dark: '#7A7A7A',
-      },
-    },
-    borderActiveColor: {
-      value: {
-        _light: '#1471EB',
-        _dark: '#5A88FF',
-      },
-    },
-  },
+  bg: {
+  default: { value: {
+  _light: palette.grey_600,
+  _dark: palette.grey_3300,
+} },
+  hover: { value: {
+  _light: palette.grey_1400,
+  _dark: palette.grey_3200,
+} },
+  focus: { value: {
+  _light: palette.grey_600,
+  _dark: palette.grey_3300,
+} },
+  disabled: { value: {
+  _light: palette.grey_1100,
+  _dark: palette.grey_2800,
+} },
+  active: { value: {
+  _light: palette.blue_alpha_2400,
+  _dark: palette.blue_alpha_2400,
+} },
+},
+  color: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.white,
+} },
+  disabledColor: { value: {
+  _light: palette.grey_1700,
+  _dark: palette.grey_2000,
+} },
+  borderActiveColor: { value: {
+  _light: palette.blue_1100,
+  _dark: palette.blue_400,
+} },
+},
   tertiary: {
-    color: {
-      value: {
-        _light: '#333333',
-        _dark: '#EAEAEA',
-      },
-    },
-    borderColor: {
-      value: {
-        _light: '#E0E0E0',
-        _dark: '#3D3D3F',
-      },
-    },
-
-    default: { value: { _light: 'transparent', _dark: 'transparent' } },
-    bg: {
-      default: { value: 'transparent' },
-      hover: {
-        value: {
-          _light: 'rgba(20, 113, 235, 0.2)',
-          _dark: 'rgba(90, 139, 255, 0.2)',
-        },
-      },
-      focus: {
-        value: {
-          _light: 'rgba(20, 113, 235, 0.15)',
-          _dark: 'rgba(90, 139, 255, 0.15)',
-        },
-      },
-      disabled: { value: 'transparent' },
-    },
-    borderColorFocus: {
-      value: {
-        _light: '#1471EB',
-        _dark: '#5A88FF',
-      },
-    },
-  },
-
+  color: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  borderColor: { value: {
+  _light: palette.grey_1500,
+  _dark: palette.grey_2200,
+} },
+  default: { value: {
+  _light: palette.transparent,
+  _dark: palette.transparent,
+} },
+  bg: {
+  default: { value: palette.transparent },
+  hover: { value: {
+  _light: palette.blue_alpha_2500,
+  _dark: palette.blue_alpha_1800,
+} },
+  focus: { value: {
+  _light: palette.blue_alpha_2400,
+  _dark: palette.blue_alpha_1700,
+} },
+  disabled: { value: palette.transparent },
+},
+  borderColorFocus: { value: {
+  _light: palette.blue_1100,
+  _dark: palette.blue_400,
+} },
+},
   borderLess: {
-    color: {
-      value: {
-        _light: '#333333',
-        _dark: '#EAEAEA',
-      },
-    },
-    default: { value: { _light: '#3054FE', _dark: '#53ABFC' } },
-    hover: {
-      value: {
-        _light: 'rgba (20, 113, 235, 0.2)',
-        _dark: 'rgba (90, 139, 255, 0.2)',
-      },
-    },
-    focus: { value: { _light: '#1471EB', _dark: '#5A88FF' } },
-    disabled: { value: { _light: '#8398FE', _dark: '#8398FE' } },
-  },
+  color: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  default: { value: {
+  _light: palette.blue_900,
+  _dark: palette.blue_500,
+} },
+  hover: { value: {
+  _light: palette.blue_alpha_2500,
+  _dark: palette.blue_alpha_1800,
+} },
+  focus: { value: {
+  _light: palette.blue_1100,
+  _dark: palette.blue_400,
+} },
+  disabled: { value: {
+  _light: palette.blue_200,
+  _dark: palette.blue_200,
+} },
+},
   primaryError: {
-    default: { value: { _light: '#DC2626', _dark: '#DC2626' } },
-    hover: { value: { _light: '#FF4545', _dark: '#FF4545' } },
-    focus: { value: { _light: '#CC2829', _dark: '#CC2829' } },
-    disabled: { value: { _light: '#EA7D7D', _dark: '#EA7D7D' } },
-  },
+  default: { value: {
+  _light: palette.red_800,
+  _dark: palette.red_800,
+} },
+  hover: { value: {
+  _light: palette.red_400,
+  _dark: palette.red_400,
+} },
+  focus: { value: {
+  _light: palette.red_900,
+  _dark: palette.red_900,
+} },
+  disabled: { value: {
+  _light: palette.red_200,
+  _dark: palette.red_200,
+} },
+},
   secondaryError: {
-    bgDefault: {
-      value: {
-        _light: 'rgba (187, 37, 26, 0.05)',
-        _dark: 'rgba (187, 37, 26, 0.05)',
-      },
-    },
-    titleDefault: {
-      value: {
-        _light: '#DC2626',
-        _dark: '#DC2626',
-      },
-    },
-    bgHoverDefault: {
-      value: {
-        _light: 'rgba (255, 69, 69, 0.2)',
-        _dark: 'rgba (255, 69, 69, 0.2)',
-      },
-    },
-    titleHover: {
-      value: {
-        _light: '#DC2626',
-        _dark: '#DC2626',
-      },
-    },
-    focus: {
-      value: {
-        _light: 'rgba (187, 37, 26, 0.15)',
-        _dark: 'rgba (187, 37, 26, 0.15)',
-      },
-    },
-    titleDisabled: {
-      value: {
-        _light: '#EA7D7D',
-        _dark: '#EA7D7D',
-      },
-    },
-    bgDisable: {
-      value: {
-        _light: 'rgba (234, 125, 125, 0.05)',
-        _dark: 'rgba (234, 125, 125, 0.05)',
-      },
-    },
-  },
-
+  bgDefault: { value: {
+  _light: palette.red_alpha_1500,
+  _dark: palette.red_alpha_1500,
+} },
+  titleDefault: { value: {
+  _light: palette.red_800,
+  _dark: palette.red_800,
+} },
+  bgHoverDefault: { value: {
+  _light: palette.red_alpha_1200,
+  _dark: palette.red_alpha_1200,
+} },
+  titleHover: { value: {
+  _light: palette.red_800,
+  _dark: palette.red_800,
+} },
+  focus: { value: {
+  _light: palette.red_alpha_1600,
+  _dark: palette.red_alpha_1600,
+} },
+  titleDisabled: { value: {
+  _light: palette.red_200,
+  _dark: palette.red_200,
+} },
+  bgDisable: { value: {
+  _light: palette.red_alpha_1000,
+  _dark: palette.red_alpha_1000,
+} },
+},
   bgFocusDefault: {
-    hover: {
-      value: {
-        _light: 'rgba(255, 69, 69, 0.2)',
-        _dark: 'rgba(255, 69, 69, 0.2)',
-      },
-    },
-    focus: {
-      value: {
-        _light: 'rgba(187, 37, 26, 0.15)',
-        _dark: 'rgba(187, 37, 26, 0.15)',
-      },
-    },
-    disabled: {
-      value: {
-        _light: 'rgba(234, 125, 125, 0.05)',
-        _dark: 'rgba(234, 125, 125, 0.05)',
-      },
-    },
-  },
+  hover: { value: {
+  _light: palette.red_alpha_1200,
+  _dark: palette.red_alpha_1200,
+} },
+  focus: { value: {
+  _light: palette.red_alpha_1600,
+  _dark: palette.red_alpha_1600,
+} },
+  disabled: { value: {
+  _light: palette.red_alpha_1000,
+  _dark: palette.red_alpha_1000,
+} },
+},
   groupButton: {
-    default: {
-      color: {
-        value: {
-          _light: '#333333',
-          _dark: '#EAEAEA',
-        },
-      },
-      borderColor: {
-        value: {
-          _light: '#E0E0E0',
-          _dark: '#3D3D3F',
-        },
-      },
-      bg: {
-        value: {
-          _light: 'transparent',
-          _dark: 'transparent',
-        },
-      },
-    },
-    hover: {
-      color: {
-        value: {
-          _light: '#333333',
-          _dark: '#EAEAEA',
-        },
-      },
-      bg: {
-        value: {
-          _light: 'rgba(20, 113, 235, 0.2)',
-          _dark: 'rgba(90, 139, 255, 0.2)',
-        },
-      },
-      borderColor: {
-        value: {
-          _light: '#1471EB',
-          _dark: '#3D3D3F',
-        },
-      },
-    },
-    selected: {
-      color: {
-        value: {
-          _light: '#333333',
-          _dark: '#EAEAEA',
-        },
-      },
-      bg: {
-        value: {
-          _light: 'rgba(20, 113, 235, 0.15)',
-          _dark: 'rgba(90, 139, 255, 0.15)',
-        },
-      },
-      borderColor: {
-        value: {
-          _light: '#1471EB',
-          _dark: '#5A88FF',
-        },
-      },
-    },
-    disabled: {
-      color: {
-        value: {
-          _light: '#B2B2B2',
-          _dark: '#7A7A7A',
-        },
-      },
-      bg: {
-        value: {
-          _light: 'transparent',
-          _dark: 'transparent',
-        },
-      },
-    },
-  },
+  default: {
+  color: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  borderColor: { value: {
+  _light: palette.grey_1500,
+  _dark: palette.grey_2200,
+} },
+  bg: { value: {
+  _light: palette.transparent,
+  _dark: palette.transparent,
+} },
+},
+  hover: {
+  color: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  bg: { value: {
+  _light: palette.blue_alpha_2500,
+  _dark: palette.blue_alpha_1800,
+} },
+  borderColor: { value: {
+  _light: palette.blue_1100,
+  _dark: palette.grey_2200,
+} },
+},
+  selected: {
+  color: { value: {
+  _light: palette.grey_2500,
+  _dark: palette.grey_1300,
+} },
+  bg: { value: {
+  _light: palette.blue_alpha_2400,
+  _dark: palette.blue_alpha_1700,
+} },
+  borderColor: { value: {
+  _light: palette.blue_1100,
+  _dark: palette.blue_400,
+} },
+},
+  disabled: {
+  color: { value: {
+  _light: palette.grey_1700,
+  _dark: palette.grey_2000,
+} },
+  bg: { value: {
+  _light: palette.transparent,
+  _dark: palette.transparent,
+} },
+},
+},
 };
