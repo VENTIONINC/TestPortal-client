@@ -1,9 +1,9 @@
 import { Button, HStack, Spinner, Text, VStack, Box, useMediaQuery } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';
-import { useDebounce } from 'use-debounce';
+
 
 import { useFiltersWithUrl } from '@/hooks';
-import { IssueCard } from '@/components/issues';
+import { IssueCard, IssueCardSkeleton } from '@/components/issues';
 import { useGetIssuesWithStatsQuery } from '@/redux/apis/extendedApi';
 import { initialFilters, useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
 import { useSelectedProjectId } from '@/redux/slices/projects';
@@ -21,8 +21,7 @@ export const IssuesList = () => {
   const selectedProjectId = useSelectedProjectId();
   const [isWideScreen] = useMediaQuery(['(min-width: 1920px)']);
 
-  const [debouncedFilters] = useDebounce(filters, 500);
-  const { data, isFetching } = useGetIssuesWithStatsQuery({ ...debouncedFilters, projectId: selectedProjectId });
+  const { data, isFetching } = useGetIssuesWithStatsQuery({ ...filters, projectId: selectedProjectId });
 
   const nextPage = () => {
     if (data && filters.page < data.totalPages) {
@@ -46,11 +45,7 @@ export const IssuesList = () => {
       <HStack align="flex-start" gap={4} w="100%">
         <Filter config={filterConfig} {...filterProps} />
         <VStack flex={1} align="stretch" minW={0} py={6} pr={4}>
-          {isFetching && (
-            <HStack ps={2}>
-              <Spinner />
-            </HStack>
-          )}
+
           <Box
             display="grid"
             gridTemplateColumns={{ base: '1fr', lg: showFilters && !isWideScreen ? '1fr' : '1fr 1fr' }}
@@ -59,7 +54,9 @@ export const IssuesList = () => {
             w="100%"
             minW={0}
           >
-            {data && data.issues?.length > 0 ? (
+            {isFetching ? (
+              Array.from({ length: 10 }).map((_, index) => <IssueCardSkeleton key={index} />)
+            ) : data && data.issues?.length > 0 ? (
               data.issues.map((issue, index) => <IssueCard key={index} issue={issue as IssueWithStats} />)
             ) : (
               <Text>No issues found.</Text>

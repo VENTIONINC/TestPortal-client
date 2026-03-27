@@ -2,6 +2,7 @@ import { Box, Grid, GridItem } from '@chakra-ui/react';
 import { useState } from 'react';
 
 import { Breadcrumb } from '@/components/ui';
+import { useFilterContext } from '@/contexts/FilterContext';
 
 import { Sidebar } from '../Sidebar/Sidebar';
 import { Header } from '../Header/Header';
@@ -25,12 +26,18 @@ const setCollapsedState = (collapsed: boolean) => {
 
 export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBreadcrumb }: MainTemplateProps) => {
   const [collapsed, setCollapsed] = useState(() => getInitialCollapsedState());
-  const handleSetCollapsed = () =>
+  const { setShowFilters } = useFilterContext();
+
+  const handleSetCollapsed = () => {
+    // Trigger isTransitioning in the filter context to hide charts
+    setShowFilters((prev: boolean) => prev); 
+
     setCollapsed((prev: boolean) => {
       const newState = !prev;
       setCollapsedState(newState);
       return newState;
     });
+  };
 
   return (
     <Grid

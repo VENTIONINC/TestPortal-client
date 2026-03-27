@@ -1,11 +1,12 @@
-import { Grid, Heading, Spinner, Text, VStack } from '@chakra-ui/react';
+import { memo } from 'react';
+import { Grid, Heading, Text, VStack } from '@chakra-ui/react';
 
-import { Wrap } from '@/components/ui';
+import { Wrap, Skeleton } from '@/components/ui';
 
-import { usePromptGallery } from './hooks';
-import { PromptCard } from './components';
+import { usePromptGallery } from '../../hooks';
+import { PromptCard } from '../../components';
 
-export const PromptGallery = () => {
+export const PromptGalleryView = memo(() => {
   const { data, isFetching, error } = usePromptGallery();
 
   return (
@@ -18,11 +19,12 @@ export const PromptGallery = () => {
           </Text>
         </VStack>
 
-        {isFetching && (
-          <VStack py={8}>
-            <Spinner size="lg" />
-            <Text color="text.muted">Loading prompts...</Text>
-          </VStack>
+        {isFetching && !data?.prompts && (
+          <Grid templateColumns="repeat(auto-fit, minmax(376px, 1fr))" gap={6} justifyContent="center" py={4}>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Skeleton key={i} minH="176px" borderRadius="xl" loading={true} />
+            ))}
+          </Grid>
         )}
 
         {error && (
@@ -34,12 +36,14 @@ export const PromptGallery = () => {
         {data?.prompts && (
           <Grid templateColumns="repeat(auto-fit, minmax(376px, 1fr))" gap={6} justifyContent="center">
             {data.prompts.map((prompt) => (
-              <PromptCard key={prompt.name} prompt={prompt} />
+              <Skeleton key={prompt.name} loading={isFetching} minH="176px" borderRadius="xl">
+                <PromptCard prompt={prompt} />
+              </Skeleton>
             ))}
           </Grid>
         )}
 
-        {data?.prompts?.length === 0 && (
+        {data?.prompts?.length === 0 && !isFetching && (
           <VStack py={8}>
             <Text color="text.muted">No prompts available.</Text>
           </VStack>
@@ -47,4 +51,4 @@ export const PromptGallery = () => {
       </VStack>
     </Wrap>
   );
-};
+});

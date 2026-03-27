@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Mark, Spinner, Box, Stack, Heading, Flex, Skeleton } from '@chakra-ui/react';
+import { Mark, Spinner, Box, Stack, Heading, Flex } from '@chakra-ui/react';
 
-import { Checkbox } from '@/components/ui';
+import { Checkbox, Skeleton } from '@/components/ui';
 import { BulkActions } from '@/components/BulkActions';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 

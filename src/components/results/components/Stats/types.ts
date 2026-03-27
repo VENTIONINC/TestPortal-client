@@ -27,6 +27,8 @@ export type StatPalette = {
   accent: string;
   background: string;
   text?: string;
+  count?: string;
+  icon?: string;
 };
 
 export type StatusMeta = {

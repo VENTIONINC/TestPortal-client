@@ -3,32 +3,32 @@ import * as palette from './palette';
 export const badge = {
   info: {
   bg: { value: {
-  _light: palette.blue_alpha_2000,
-  _dark: palette.blue_alpha_2200,
+  _light: palette.blue_300,
+  _dark: palette.blue_300,
 } },
   text: { value: {
-  _light: palette.blue_500,
-  _dark: palette.blue_600,
+  _light: palette.grey_2500,
+  _dark: palette.grey_2500,
 } },
 },
   success: {
   bg: { value: {
-  _light: palette.green_alpha_1000,
-  _dark: palette.green_alpha_900,
+  _light: palette.green_700,
+  _dark: palette.green_700,
 } },
   text: { value: {
-  _light: palette.green_600,
-  _dark: palette.green_300,
+  _light: palette.grey_2500,
+  _dark: palette.grey_2500,
 } },
 },
   attention: {
   bg: { value: {
-  _light: palette.purple_alpha_500,
-  _dark: palette.purple_alpha_600,
+  _light: palette.green_500,
+  _dark: palette.green_500,
 } },
   text: { value: {
-  _light: palette.purple_100,
-  _dark: palette.purple_200,
+  _light: palette.grey_2500,
+  _dark: palette.grey_2500,
 } },
 },
   error: {
@@ -37,18 +37,18 @@ export const badge = {
   _dark: palette.purple_alpha_700,
 } },
   text: { value: {
-  _light: palette.purple_400,
-  _dark: palette.purple_300,
+  _light: palette.grey_2500,
+  _dark: palette.grey_2500,
 } },
 },
   warning: {
   bg: { value: {
-  _light: palette.orange_alpha_300,
-  _dark: palette.orange_alpha_400,
+  _light: palette.orange_100,
+  _dark: palette.orange_100,
 } },
   text: { value: {
-  _light: palette.orange_100,
-  _dark: palette.orange_200,
+  _light: palette.grey_2500,
+  _dark: palette.grey_2500,
 } },
 },
   default: {
@@ -58,7 +58,7 @@ export const badge = {
 } },
   text: { value: {
   _light: palette.grey_2500,
-  _dark: palette.grey_1300,
+  _dark: palette.grey_2500,
 } },
 },
 };

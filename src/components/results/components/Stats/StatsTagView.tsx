@@ -3,11 +3,11 @@ import { Box, HStack, Separator, Skeleton, Text, VStack } from '@chakra-ui/react
 import { STATUS_META, STATUS_ORDER } from './constants';
 import { StatsConfigInfo } from './StatsConfigInfo';
 import { type ResultsStatsProps, type StatusCountKey } from './types';
-import { STAT_PALETTES } from './palettes';
+import { STAT_PALETTES_TAG_VIEW } from './palettes';
 
 export const StatsTagView = ({ statistics, isFetching }: ResultsStatsProps) => {
   const isInitialLoading = !statistics && isFetching;
-  const labelTextColor = 'text.muted';
+  const labelTextColor = 'text.main';
   const valueTextColor = 'text.main';
 
   if (!statistics && !isFetching) {
@@ -32,25 +32,35 @@ export const StatsTagView = ({ statistics, isFetching }: ResultsStatsProps) => {
             px={3}
             h={7}
             borderRadius="full"
-            bg={STAT_PALETTES.total.accent}
-            color="white"
+            bg={STAT_PALETTES_TAG_VIEW.total.background}
+            color={STAT_PALETTES_TAG_VIEW.total.text}
             fontSize="12px"
             fontWeight={600}
             lineHeight="1"
             whiteSpace="nowrap"
           >
-            <Text as="span" opacity={0.85}>Total</Text>
-            <Text as="span">{effStats.byStatusTotal || 0}</Text>
+            <Text as="span" opacity={0.85}>
+              Total
+            </Text>
+            <Text as="span" color={STAT_PALETTES_TAG_VIEW.total.count}>
+              {effStats.byStatusTotal || 0}
+            </Text>
           </Box>
         </Skeleton>
 
         {STATUS_ORDER.map((status) => {
           const { Icon, title } = STATUS_META[status];
           const count = effStats.byStatus[status as StatusCountKey] || 0;
-          const palette = STAT_PALETTES[status];
+          const palette = STAT_PALETTES_TAG_VIEW[status];
 
           return (
-            <Skeleton key={status} loading={isFetching} borderRadius="full" minW={isInitialLoading ? '60px' : 'auto'} h={7}>
+            <Skeleton
+              key={status}
+              loading={isFetching}
+              borderRadius="full"
+              minW={isInitialLoading ? '60px' : 'auto'}
+              h={7}
+            >
               <Box
                 display="inline-flex"
                 alignItems="center"
@@ -58,16 +68,22 @@ export const StatsTagView = ({ statistics, isFetching }: ResultsStatsProps) => {
                 px={3}
                 h={7}
                 borderRadius="full"
-                bg={palette.accent}
-                color="white"
+                bg={palette.background}
+                color={palette.text}
                 fontSize="12px"
                 fontWeight={600}
                 lineHeight="1"
                 whiteSpace="nowrap"
               >
-                <Icon size={12} />
-                <Text as="span" opacity={0.85}>{title}</Text>
-                <Text as="span">{count}</Text>
+                <Box color={palette.icon}>
+                  <Icon size={12} />
+                </Box>
+                <Text as="span" opacity={0.85}>
+                  {title}:
+                </Text>
+                <Text as="span" color={palette.count}>
+                  {count}
+                </Text>
               </Box>
             </Skeleton>
           );
@@ -76,7 +92,11 @@ export const StatsTagView = ({ statistics, isFetching }: ResultsStatsProps) => {
 
       <Box mx={3} w="1px" my="auto" h={5} bg="border.secondary" />
 
-      <StatsConfigInfo entityCounts={effStats.entityCounts as any} labelColor={labelTextColor} valueColor={valueTextColor} />
+      <StatsConfigInfo
+        entityCounts={effStats.entityCounts as any}
+        labelColor={labelTextColor}
+        valueColor={valueTextColor}
+      />
     </HStack>
   );
 };

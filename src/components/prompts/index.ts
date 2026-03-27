@@ -1,4 +1,4 @@
 export * from './components';
-export { PromptBuilder } from './PromptBuilder';
-export { PromptGallery } from './PromptGallery';
+export { PromptBuilderView as PromptBuilder } from './containers/PromptBuilderView';
+export { PromptGalleryView as PromptGallery } from './containers/PromptGalleryView';
 export * from './utils';

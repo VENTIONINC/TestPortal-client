@@ -45,8 +45,8 @@ export const PromptCard = memo(function PromptCard({ prompt }: PromptCardProps) 
         <HStack justify="space-between" align="start">
           <VStack align="start" flex={1}>
             <HStack mb={2}>
-              <Badge status={badgeColor}>
-                <CategoryIcon size={20} color={iconColor} />
+              <Badge status={badgeColor} minH={6} >
+                <CategoryIcon size={12} color={iconColor} />
                 {prompt.category}
               </Badge>
             </HStack>
@@ -56,12 +56,12 @@ export const PromptCard = memo(function PromptCard({ prompt }: PromptCardProps) 
           </VStack>
         </HStack>
 
-        <Text fontSize="xs" mb={1} color="text.muted" lineHeight="base" minHeight="48px">
+        <Text fontSize="xs" mb={1} color="text.secondary" lineHeight="base" minHeight="48px">
           {prompt.description}
         </Text>
 
         <VStack align="start" mt="auto">
-          <Text fontSize="xs" color="text.muted" mb={2}>
+          <Text fontSize="xs" color="text.secondary" mb={2}>
             {parameterCount} parameters ({requiredParameterCount} required)
           </Text>
 

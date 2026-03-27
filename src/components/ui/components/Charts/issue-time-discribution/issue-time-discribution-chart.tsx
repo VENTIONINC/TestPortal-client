@@ -33,7 +33,7 @@ export const IssueTimeDiscributionChart = memo(({ data, color }: IssueTimeDiscri
       }}
     >
       <Box position="absolute" inset={0}>
-        <ResponsiveContainer width="100%" height="100%" debounce={400}>
+        <ResponsiveContainer width="100%" height="100%">
           <Chart.Root chart={chart}>
             <AreaChart data={chart.data} margin={{ top: 6, right: 6, left: 28, bottom: 0 }}>
               <defs>
@@ -72,7 +72,8 @@ export const IssueTimeDiscributionChart = memo(({ data, color }: IssueTimeDiscri
               {chart.series.map((item) => (
                 <Area
                   key={item.name}
-                  isAnimationActive={false}
+                  isAnimationActive={true}
+                  animationDuration={300}
                   dataKey={chart.key('count')}
                   stroke={chart.color(item.color)}
                   strokeWidth={2}

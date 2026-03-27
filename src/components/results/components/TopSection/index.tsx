@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Grid, Skeleton } from '@chakra-ui/react';
+import { Grid } from '@chakra-ui/react';
 import { useFormContext } from 'react-hook-form';
 
+import { Skeleton } from '@/components/ui';
 import { type ResultsStats as ResultsStatsResponse } from '@/redux/apis/generatedApi';
 
 import { CollapsibleWrapper } from './components';
@@ -14,7 +15,14 @@ interface TopSectionContainerProps {
 export const TopSectionContainer = ({ statistics, isFetching }: TopSectionContainerProps) => {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const methods = useFormContext();
-  const topErrors = statistics?.topErrors ?? (isFetching && !statistics ? [{ message: 'Loading', count: 0 }, { message: '...', count: 0 }] : []);
+  const topErrors =
+    statistics?.topErrors ??
+    (isFetching && !statistics
+      ? [
+          { message: 'Loading', count: 0 },
+          { message: '...', count: 0 },
+        ]
+      : []);
   const topIssues = statistics?.topIssues ?? [];
 
   const handleClickTopError = (message: string) => {
@@ -31,7 +39,16 @@ export const TopSectionContainer = ({ statistics, isFetching }: TopSectionContai
   }
 
   return (
-    <Grid templateColumns={{ base: '1fr 1fr' }} gap={4} mt={4} mb={4}>
+    <Grid
+      templateColumns={{ base: '1fr 1fr' }}
+      gap={4}
+      mt={4}
+      mb={4}
+      bg="bg.section"
+      p={4}
+      borderRadius="xl"
+      shadow="cardSecondary"
+    >
       {topErrors.length > 0 && (
         <Skeleton loading={isFetching} minH={isInitialLoading ? '50px' : 'auto'} borderRadius="xl" w="100%">
           <CollapsibleWrapper

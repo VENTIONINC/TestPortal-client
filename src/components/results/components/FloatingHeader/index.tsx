@@ -15,7 +15,13 @@ interface ResultsFloatingHeaderProps {
   isStuck?: boolean;
 }
 
-const ResultsFloatingHeaderContent = ({ availableDates, statistics, toggleDate, isFetching, isStuck }: ResultsFloatingHeaderProps) => {
+const ResultsFloatingHeaderContent = ({
+  availableDates,
+  statistics,
+  toggleDate,
+  isFetching,
+  isStuck,
+}: ResultsFloatingHeaderProps) => {
   return (
     <>
       <Box
@@ -23,10 +29,15 @@ const ResultsFloatingHeaderContent = ({ availableDates, statistics, toggleDate, 
         mt={isStuck ? 1 : 0}
         bg="bg.section"
         borderRadius="lg"
-        shadow="card"
+        shadow="cardSecondary"
         transition="padding 0.25s ease, margin 0.25s ease"
       >
-        <DateToggle days={availableDates} toggleHandler={(day) => toggleDate(day.yyyy_mm_dd)} size={isStuck ? 'small' : 'default'} isBorder={!isStuck}/>
+        <DateToggle
+          days={availableDates}
+          toggleHandler={(day) => toggleDate(day.yyyy_mm_dd)}
+          size={isStuck ? 'small' : 'default'}
+          isBorder={!isStuck}
+        />
       </Box>
       <Box display="grid" mt={isStuck ? 1 : 0}>
         {/* Badge view — visible when NOT stuck */}
@@ -55,7 +66,12 @@ const ResultsFloatingHeaderContent = ({ availableDates, statistics, toggleDate, 
   );
 };
 
-export const ResultsFloatingHeader = ({ availableDates, statistics, toggleDate, isFetching }: ResultsFloatingHeaderProps) => {
+export const ResultsFloatingHeader = ({
+  availableDates,
+  statistics,
+  toggleDate,
+  isFetching,
+}: ResultsFloatingHeaderProps) => {
   const { sentinelRef, isStuck } = useStickyObserver(66);
 
   return (
@@ -80,7 +96,6 @@ export const ResultsFloatingHeader = ({ availableDates, statistics, toggleDate, 
           opacity: isStuck ? 1 : 0,
           transition: 'opacity 0.2s',
           pointerEvents: 'none',
-          
         }}
         _after={{
           content: '""',

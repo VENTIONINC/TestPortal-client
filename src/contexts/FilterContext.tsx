@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useState, ReactNode } from 'rea
 
 interface FilterContextType {
   showFilters: boolean;
+  isTransitioning: boolean;
   toggleFilters: () => void;
   setShowFilters: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
@@ -21,10 +22,19 @@ export const FilterProvider = ({ children, storageKey = 'common' }: { children: 
   const key = `show_filters_${storageKey}`;
 
   const [showFilters, setShowFiltersState] = useState(() => getFilterState(key));
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const triggerTransition = useCallback(() => {
+    setIsTransitioning(true);
+    setTimeout(() => setIsTransitioning(false), 400);
+  }, []);
 
   const handleSetShowFilters = useCallback(
-    () => setShowFiltersState((prev: boolean) => setFilterState(key, !prev)),
-    [key],
+    () => {
+      triggerTransition();
+      setShowFiltersState((prev: boolean) => setFilterState(key, !prev));
+    },
+    [key, triggerTransition],
   );
 
   const toggleFilters = useCallback(() => {
@@ -35,6 +45,7 @@ export const FilterProvider = ({ children, storageKey = 'common' }: { children: 
     <FilterContext.Provider
       value={{
         showFilters,
+        isTransitioning,
         toggleFilters,
         setShowFilters: handleSetShowFilters,
       }}
@@ -51,6 +62,7 @@ export const useFilterContext = () => {
     // that are used outside of a FilterProvider but conditionally render filter UI.
     return {
       showFilters: true,
+      isTransitioning: false,
       toggleFilters: () => {},
       setShowFilters: () => {},
     };

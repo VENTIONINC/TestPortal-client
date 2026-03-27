@@ -29,7 +29,7 @@ export const Breadcrumb = React.forwardRef<HTMLDivElement, BreadcrumbProps>(func
   ];
 
   return (
-    <ChakraBreadcrumb.Root ref={ref} {...rest}>
+    <ChakraBreadcrumb.Root ref={ref} {...rest} mt={6} mb={2}>
       <ChakraBreadcrumb.List gap={separatorGap}>
         {currentRoute?.map(({ title, url }, index) => {
           const last = index === currentRoute.length - 1;

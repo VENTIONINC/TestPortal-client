@@ -26,9 +26,9 @@ export const blue_alpha_2300 = 'rgba(26, 115, 232, 0.2)';
 export const blue_alpha_2400 = 'rgba(20, 113, 235, 0.15)'; // bg/active || tertiary/focused || borderless/hovered
 export const blue_alpha_2500 = 'rgba(20, 113, 235, 0.2)'; // bg/hover || tertiary/hovered
 export const blue_alpha_2600 = 'rgba(20, 113, 235, 0.4)';
-
+export const blue_alpha_2700 = 'rgba(58, 169, 255, 0.1)'; // dark status/info
 // Green
-export const green_100 = '#E6F4EA';
+
 export const green_200 = '#BBEF4E'; // status/attention
 export const green_300 = '#3CFF8F'; // dashboard/green
 export const green_400 = '#C6FF2E'; // dashboard/yellow
@@ -39,7 +39,9 @@ export const green_800 = '#2CD95B'; // status/success
 export const green_alpha_900 = 'rgba(60, 255, 143, 0.15)';
 export const green_alpha_1000 = 'rgba(53, 212, 127, 0.15)';
 export const green_alpha_1100 = 'rgba(30, 142, 62, 0.2)';
-
+export const green_alpha_1200 = 'rgba(44, 217, 88, 0.1)'; // dark status/success
+export const green_alpha_1300 = 'rgba(31, 230, 71, 0.1)';
+export const green_alpha_1400 = 'rgba(90, 248, 122, 0.1)';
 // Grey
 export const white = '#FFFFFF'; // bg/card || logo/text || text/on-accent
 export const grey_300 = '#F9FAFB'; // bg/input
@@ -48,7 +50,7 @@ export const grey_500 = '#F5F5F5';
 export const grey_600 = '#F4F4F5'; // secondary/default || secondary/focused
 export const grey_700 = '#E8ECFF';
 export const grey_800 = '#E8F0FE';
-export const grey_900 = '#F1F3F4';
+
 export const grey_1000 = '#F2F2F2'; // border/secondary
 export const grey_1100 = '#F0F0F0'; // bg/disabled || secondary/disabled
 export const grey_1200 = '#EDEDED';
@@ -82,7 +84,8 @@ export const grey_alpha_3800 = 'rgba(112, 117, 122, 0.2)';
 export const grey_alpha_3900 = 'rgba(33, 33, 38, 0.6)';
 export const grey_alpha_4000 = 'rgba(33, 33, 38, 0.8)';
 export const grey_alpha_4100 = 'rgba(33, 33, 38, 0.9)'; // bg/modal_glass
-
+export const grey_alpha_4200 = 'rgba(125, 125, 127, 0.1)'; // status/neutral
+export const grey_alpha_4300 = 'rgba(178, 178, 178, 0.1)';
 
 // Orange
 export const orange_100 = '#FF874D'; // status/warning
@@ -90,6 +93,7 @@ export const orange_200 = '#E69A2D'; // status/warning
 export const orange_alpha_300 = 'rgba(255, 135, 77, 0.15)';
 export const orange_alpha_400 = 'rgba(230, 154, 45, 0.15)';
 export const orange_alpha_500 = 'rgba(227, 116, 0, 0.2)';
+export const orange_alpha_600 = 'rgba(255, 135, 77, 0.1)';
 
 // Other
 export const transparent = 'transparent'; // tertiary/default || tertiary/disabled
@@ -105,7 +109,7 @@ export const purple_alpha_700 = 'rgba(122, 91, 158, 0.15)';
 export const purple_alpha_800 = 'rgba(97, 69, 124, 0.15)';
 
 // Red
-export const red_100 = '#FCE8E8';
+
 export const red_200 = '#EA7D7D'; // primary-error/disabled || secondary-error/title-disabled
 export const red_300 = '#FF6A47'; // dashboard/red
 export const red_400 = '#FF4545'; // primary-error/hovered
@@ -115,13 +119,12 @@ export const red_700 = '#E03538'; // status/error
 export const red_800 = '#DC2626'; // primary-error/defeault || secondary-error/title-default || secondary-error/title-hovered
 export const red_900 = '#CC2829'; // primary-error/focused
 export const red_alpha_1000 = 'rgba(234, 125, 125, 0.05)'; // secondary-error/bg-disabled
-
 export const red_alpha_1200 = 'rgba(255, 69, 69, 0.2)'; // secondary-error/bg-hovered
-
 export const red_alpha_1400 = 'rgba(217, 48, 37, 0.2)';
 export const red_alpha_1500 = 'rgba(187, 37, 26, 0.05)'; // secondary-error/bg-default || secondary-error/focused
 export const red_alpha_1600 = 'rgba(187, 37, 26, 0.15)';
-
+export const red_alpha_1700 = 'rgba(224, 53, 56, 0.1)'; // status/error
+export const red_alpha_1800 = 'rgba(255, 69, 69, 0.1)';
 // Yellow
 export const yellow_100 = '#FEF7E0';
 export const yellow_200 = '#B5D600'; // dashboard/yellow

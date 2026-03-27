@@ -1,9 +1,11 @@
-import { Grid, Skeleton, Text, VStack } from '@chakra-ui/react';
+import { Grid, Text, VStack } from '@chakra-ui/react';
+
+import { Skeleton } from '@/components/ui';
 
 import { STATUS_META, STATUS_ORDER } from './constants';
 import { ResultsStatCard } from './ResultsStatCard';
 import { StatsConfigInfo } from './StatsConfigInfo';
-import { type ResultsStatsProps, type StatPalette, type StatPaletteKey, type StatusCountKey } from './types';
+import { type ResultsStatsProps, type StatusCountKey } from './types';
 import { STAT_PALETTES } from './palettes';
 
 export const StatsBadgeView = ({ statistics, isFetching, size = 'default' }: ResultsStatsProps) => {
@@ -30,7 +32,16 @@ export const StatsBadgeView = ({ statistics, isFetching, size = 'default' }: Res
   const vStackMarginTop = size === 'small' ? 0 : 4;
 
   return (
-    <VStack w="100%" align="stretch" gap={1} bg="bg.card" p={vStackPadding} mt={vStackMarginTop} borderRadius="md" shadow="sm">
+    <VStack
+      w="100%"
+      align="stretch"
+      gap={1}
+      bg="bg.section"
+      p={vStackPadding}
+      mt={vStackMarginTop}
+      borderRadius="md"
+      shadow="cardSecondary"
+    >
       <Grid
         gap={1}
         templateColumns={{
@@ -58,7 +69,13 @@ export const StatsBadgeView = ({ statistics, isFetching, size = 'default' }: Res
           const palette = STAT_PALETTES[status];
 
           return (
-            <Skeleton key={status} loading={isFetching} minH={isInitialLoading ? '68px' : 'auto'} borderRadius="md" w="100%">
+            <Skeleton
+              key={status}
+              loading={isFetching}
+              minH={isInitialLoading ? '68px' : 'auto'}
+              borderRadius="md"
+              w="100%"
+            >
               <ResultsStatCard
                 title={title}
                 count={count}
@@ -74,7 +91,11 @@ export const StatsBadgeView = ({ statistics, isFetching, size = 'default' }: Res
         })}
       </Grid>
 
-      <StatsConfigInfo entityCounts={effStats.entityCounts as any} labelColor={labelTextColor} valueColor={valueTextColor} />
+      <StatsConfigInfo
+        entityCounts={effStats.entityCounts as any}
+        labelColor={labelTextColor}
+        valueColor={valueTextColor}
+      />
     </VStack>
   );
 };

@@ -5,7 +5,8 @@ import dayjs from 'dayjs';
 import { useIntersectionObserver } from 'usehooks-ts';
 
 import { IssueTimeDiscributionChart } from '@/components/ui/components/Charts';
-import { Tooltip, Wrap } from '@/components/ui';
+import { Tooltip, Wrap, Skeleton } from '@/components/ui';
+import { useFilterContext } from '@/contexts/FilterContext';
 import { useManageIssueDrawer } from '@/components/drawers';
 import { getIssueCategoryStyle, ISSUE_CATEGORY_LABELS } from '@/utils';
 import { IssueWithStats } from '@/types';
@@ -144,6 +145,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
 
 // A wrapper component to defer rendering of the heavy chart
 const IssueChartWrapper = memo(({ issue, color }: { issue: IssueWithStats; color: string }) => {
+  const { isTransitioning } = useFilterContext();
   const [hasRendered, setHasRendered] = useState(false);
   const { isIntersecting, ref } = useIntersectionObserver({
     threshold: 0,
@@ -158,9 +160,11 @@ const IssueChartWrapper = memo(({ issue, color }: { issue: IssueWithStats; color
 
   return (
     <Box ref={ref} w="100%" h="100%" minW={0} bg="bg.cardSecondary" p="4px 7px 6px 3px" borderRadius="xl">
-      {hasRendered ? (
+      {hasRendered && !isTransitioning ? (
         <IssueTimeDiscributionChart data={issue.statistics.timeDistribution} color={color} />
-      ) : null}
+      ) : (
+        <Skeleton w="100%" h="100%" minH="120px" borderRadius="md" />
+      )}
     </Box>
   );
 });
