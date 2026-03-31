@@ -5,11 +5,9 @@ import { StatsItem } from '../StatsItem';
 export const DateWithStats = ({
   day,
   toggleHandler,
-  size
 }: {
   day: { yyyy_mm_dd: string; stats: string[]; isActive: boolean; display: string };
   toggleHandler: (day: { yyyy_mm_dd: string }) => void;
-  size?: 'default' | 'small';
 }) => {
   const statsData = day.stats?.reduce((acc: Record<string, number>, status) => {
     acc[status] = (acc[status] || 0) + 1;
@@ -24,14 +22,15 @@ export const DateWithStats = ({
       justify="space-between"
       py={1}
       px={2}
-      bg={day.isActive ? 'bg.activeSecondary' : 'bg.cardSecondary'}
+      bg="bg.cardSecondary"
       borderRadius="sm"
       border="1px solid"
-      borderColor="border.main"
-      borderTopWidth={day.isActive ? '3px' : '1px'}
-      borderTopColor={day.isActive ? 'border.active' : 'bg.cardSecondary'}
+      borderColor="border.secondary"
+      borderTopWidth="3px"
+      borderTopColor={day.isActive ? 'border.active' : 'border.notActive'}
       cursor="pointer"
       minH="40px"
+      shadow={day.isActive ? 'cardSecondary' : 'none'}
     >
       <Text
         whiteSpace="nowrap"

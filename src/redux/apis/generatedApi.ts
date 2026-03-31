@@ -1143,6 +1143,8 @@ export type ResultsStats = {
   topIssues: {
     title: string;
     count: number;
+    /** Failure category (bug, infra, script, performance, other) */
+    category: string;
   }[];
 };
 export type UpdateResultAnalysisRequest = {

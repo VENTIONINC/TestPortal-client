@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Grid } from '@chakra-ui/react';
 import { useFormContext } from 'react-hook-form';
 
@@ -13,14 +12,13 @@ interface TopSectionContainerProps {
 }
 
 export const TopSectionContainer = ({ statistics, isFetching }: TopSectionContainerProps) => {
-  const [isStatsOpen, setIsStatsOpen] = useState(false);
   const methods = useFormContext();
   const topErrors =
     statistics?.topErrors ??
     (isFetching && !statistics
       ? [
-          { message: 'Loading', count: 0 },
-          { message: '...', count: 0 },
+          { title: 'Loading', count: 0 },
+          { title: '...', count: 0 },
         ]
       : []);
   const topIssues = statistics?.topIssues ?? [];
@@ -53,10 +51,9 @@ export const TopSectionContainer = ({ statistics, isFetching }: TopSectionContai
         <Skeleton loading={isFetching} minH={isInitialLoading ? '50px' : 'auto'} borderRadius="xl" w="100%">
           <CollapsibleWrapper
             title={`Top ${topErrors.length} errors`}
-            setIsOpen={setIsStatsOpen}
-            isOpen={isStatsOpen}
-            results={topErrors as any}
+            results={topErrors}
             handleClickToResult={handleClickTopError}
+            hideIconList={true}
           />
         </Skeleton>
       )}
@@ -64,9 +61,7 @@ export const TopSectionContainer = ({ statistics, isFetching }: TopSectionContai
         <Skeleton loading={isFetching} minH={isInitialLoading ? '50px' : 'auto'} borderRadius="xl" w="100%">
           <CollapsibleWrapper
             title={`Top ${topIssues.length} issues`}
-            setIsOpen={setIsStatsOpen}
-            isOpen={isStatsOpen}
-            results={topIssues as any}
+            results={topIssues}
             handleClickToResult={handleClickTopIssue}
           />
         </Skeleton>

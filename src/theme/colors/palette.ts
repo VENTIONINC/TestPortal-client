@@ -15,6 +15,7 @@ export const blue_1100 = '#1471EB'; // border/active || borderless/focused
 export const blue_1200 = '#2745CF'; // primary/focused
 export const blue_1300 = '#101C57'; // logo/text
 export const blue_1400 = '#1A2147';
+export const blue_1500 = '#5988FF';
 export const blue_alpha_1500 = 'rgba(230, 230, 235, 0.15)';
 export const blue_alpha_1600 = 'rgba(110, 200, 255, 0.1)';
 export const blue_alpha_1700 = 'rgba(90, 139, 255, 0.15)'; // tertiary/focused
@@ -36,12 +37,14 @@ export const green_500 = '#C3F532'; // status/attention
 export const green_600 = '#35D47F'; // dashboard/green
 export const green_700 = '#1FE647'; // status/success
 export const green_800 = '#2CD95B'; // status/success
+export const green_900 = '#89A200';
 export const green_alpha_900 = 'rgba(60, 255, 143, 0.15)';
 export const green_alpha_1000 = 'rgba(53, 212, 127, 0.15)';
 export const green_alpha_1100 = 'rgba(30, 142, 62, 0.2)';
 export const green_alpha_1200 = 'rgba(44, 217, 88, 0.1)'; // dark status/success
 export const green_alpha_1300 = 'rgba(31, 230, 71, 0.1)';
 export const green_alpha_1400 = 'rgba(90, 248, 122, 0.1)';
+export const green_alpha_1500 = 'rgba(137, 162, 0, 0.1)';
 // Grey
 export const white = '#FFFFFF'; // bg/card || logo/text || text/on-accent
 export const grey_300 = '#F9FAFB'; // bg/input
@@ -107,6 +110,8 @@ export const purple_alpha_500 = 'rgba(255, 111, 255, 0.15)';
 export const purple_alpha_600 = 'rgba(255, 92, 255, 0.15)';
 export const purple_alpha_700 = 'rgba(122, 91, 158, 0.15)';
 export const purple_alpha_800 = 'rgba(97, 69, 124, 0.15)';
+export const purple_alpha_900 = 'rgba(97, 69, 124, 0.1)';
+export const purple_alpha_1000 = 'rgba(122, 91, 158, 0.1)';
 
 // Red
 
