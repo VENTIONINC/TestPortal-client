@@ -13,19 +13,20 @@ interface DateToggleProps {
   isBorder?: boolean;
 }
 
-export const DateToggle = ({ days, toggleHandler, variant = 'default', size = 'default', isBorder = true }: DateToggleProps) => {
+export const DateToggle = ({
+  days,
+  toggleHandler,
+  variant = 'default',
+  size = 'default',
+  isBorder = true,
+}: DateToggleProps) => {
   if (!days || days.length === 0) {
     return null;
   }
 
   if (variant === 'stats') {
     return days.map((day) => (
-      <DateWithStats
-        key={day.yyyy_mm_dd}
-        day={{ ...day, stats: day.stats ?? [] }}
-        toggleHandler={toggleHandler}
-        size={size}
-      />
+      <DateWithStats key={day.yyyy_mm_dd} day={{ ...day, stats: day.stats ?? [] }} toggleHandler={toggleHandler} />
     ));
   }
 

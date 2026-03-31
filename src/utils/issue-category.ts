@@ -7,6 +7,7 @@ export const ISSUE_CATEGORY_LABELS: Record<IssueCategory, string> = {
   [IssueCategory.Script]: 'Script',
   [IssueCategory.Infra]: 'Environment',
   [IssueCategory.Performance]: 'Performance',
+  [IssueCategory.Other]: '',
 };
 
 export const getIssueCategoryStyle = (category: IssueCategory) => {
