@@ -111,7 +111,7 @@ export type ResultGroup = Map<
 >;
 
 export interface ResultsFilters {
-  tag: string;
+  tags: string[];
   specId: string;
   specFile: string;
   specName: string;

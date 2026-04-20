@@ -34,7 +34,10 @@ export const toBaseResult = (result: Result): BaseResult => ({
 });
 
 export const matchesFilters = (result: Result, filters: ResultsFilters): boolean => {
-  if (filters.tag && !result.spec.tags.includes(filters.tag)) return false;
+  if (filters.tags && filters.tags.length > 0) {
+    const hasMatchingTag = filters.tags.some((tag) => result.spec.tags.includes(tag));
+    if (!hasMatchingTag) return false;
+  }
   if (filters.specId && result.spec.id !== filters.specId) return false;
   if (filters.specFile && !result.spec.file.toLowerCase().includes(filters.specFile.toLowerCase())) return false;
   if (filters.specName && !result.spec.title.toLowerCase().includes(filters.specName.toLowerCase())) return false;

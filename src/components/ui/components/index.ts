@@ -7,7 +7,8 @@ export { Badge, CopyableText } from './DataDisplay';
 
 export { Breadcrumb } from './Breadcrumb';
 export { Filter } from './Filter';
-export { FormInput, FormSelect, FormDateInput, FormDatePicker, FormDateRangePicker } from './Form';
+export { FilterTag } from './FilterTag';
+export { FormInput, FormSelect, FormMultiSelect, FormDateInput, FormDatePicker, FormDateRangePicker } from './Form';
 export { DateToggle } from './DateToggle';
 export { StatusIcon } from './StatusIcon';
 export * from './Dialogs';

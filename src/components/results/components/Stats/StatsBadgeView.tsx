@@ -28,22 +28,9 @@ export const StatsBadgeView = ({ statistics, isFetching, size = 'default' }: Res
     entityCounts: {},
   };
 
-  const vStackPadding = size === 'small' ? 0 : 2;
-  const vStackMarginTop = size === 'small' ? 0 : 4;
-
   return (
-    <VStack
-      w="100%"
-      align="stretch"
-      gap={1}
-      bg="bg.section"
-      p={vStackPadding}
-      mt={vStackMarginTop}
-      borderRadius="md"
-      shadow="cardSecondary"
-    >
+    <VStack w="100%" align="stretch" gap={1} p={0} mt={0}>
       <Grid
-        gap={1}
         templateColumns={{
           base: '1fr',
           sm: 'repeat(2, minmax(0, 1fr))',

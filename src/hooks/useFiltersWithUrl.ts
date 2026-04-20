@@ -3,11 +3,15 @@ import { useForm } from 'react-hook-form';
 
 import { useFilterQueryParams } from './useFilterQueryParams';
 
-type FilterValue = string | number | boolean | null | undefined;
+type FilterValue = string | number | boolean | null | undefined | string[];
 type FilterValues = Record<string, string>;
 
 const toStringFilters = (filters: Record<string, FilterValue>): FilterValues => {
-  return Object.fromEntries(Object.entries(filters).filter(([, value]) => typeof value === 'string')) as FilterValues;
+  return Object.fromEntries(
+    Object.entries(filters)
+      .filter(([, value]) => typeof value === 'string' || Array.isArray(value))
+      .map(([key, value]) => [key, Array.isArray(value) ? value.join(',') : String(value)]),
+  ) as FilterValues;
 };
 
 interface UseFiltersWithUrlParams<TFilters> {

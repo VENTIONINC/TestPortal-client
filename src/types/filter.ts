@@ -6,7 +6,7 @@ export interface FilterFieldOption {
 export interface FilterField {
   label?: string;
   name?: string;
-  type: 'select' | 'input' | 'dateRange' | 'date';
+  type: 'select' | 'input' | 'dateRange' | 'date' | 'multiSelect';
   options?: FilterFieldOption[];
   value?: string | number;
   fields?: FilterField[]; // For dateRange type

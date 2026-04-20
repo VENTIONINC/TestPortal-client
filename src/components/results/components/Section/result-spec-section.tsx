@@ -1,6 +1,6 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useResultsFilters, useSelectedDates } from '@/redux/slices/results';
+import { useResultsFilterDateRange, useSelectedDates } from '@/redux/slices/results';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { getDateDisplayName, getDatesBetween } from '@/utils/dateUtils';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
@@ -17,7 +17,7 @@ interface ResultSpecSectionProps {
 }
 
 export const ResultSpecSection = memo(({ spec, executions, allExecutions }: ResultSpecSectionProps) => {
-  const filters = useResultsFilters();
+  const dateRange = useResultsFilterDateRange();
   const selectedDates = useSelectedDates();
   const user = useCurrentUser();
   const projectId = useSelectedProjectId();
@@ -32,7 +32,7 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
     selectedDates: string[];
   } | null>(null);
 
-  const allDates = useMemo(() => getDatesBetween(filters.from, filters.to), [filters.from, filters.to]);
+  const allDates = useMemo(() => getDatesBetween(dateRange.from, dateRange.to), [dateRange.from, dateRange.to]);
   const activeDatesSet = useMemo(() => new Set(selectedDates), [selectedDates]);
 
   const sectionDays = useMemo(() => {
@@ -87,14 +87,14 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
 
     if (!previousGlobalState) {
       previousGlobalStateRef.current = {
-        from: filters.from,
-        to: filters.to,
+        from: dateRange.from,
+        to: dateRange.to,
         selectedDates,
       };
       return;
     }
 
-    const currentDates = new Set(getDatesBetween(filters.from, filters.to));
+    const currentDates = new Set(getDatesBetween(dateRange.from, dateRange.to));
     const previousDates = new Set(getDatesBetween(previousGlobalState.from, previousGlobalState.to));
 
     setLocallyToggledDates((prev) => {
@@ -125,11 +125,11 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
     });
 
     previousGlobalStateRef.current = {
-      from: filters.from,
-      to: filters.to,
+      from: dateRange.from,
+      to: dateRange.to,
       selectedDates,
     };
-  }, [selectedDates, activeDatesSet, filters.from, filters.to]);
+  }, [selectedDates, activeDatesSet, dateRange.from, dateRange.to]);
 
   // Show spec if there are any executions (filtered or unfiltered)
   if (allExecutions.length === 0) {

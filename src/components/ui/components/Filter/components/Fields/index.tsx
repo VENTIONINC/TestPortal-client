@@ -1,6 +1,6 @@
 import { Path } from 'react-hook-form';
 
-import { FormInput, FormSelect } from '@/components/ui';
+import { FormInput, FormSelect, FormMultiSelect } from '@/components/ui';
 import { FilterConfigSection, FilterField } from '@/types/filter';
 
 import { DateRangeField } from '../DateRange';
@@ -25,6 +25,18 @@ export const Fields = ({ config, onApply }: FieldsProps) => {
           return (
             <FiltersRow key={fieldKey}>
               <FormSelect
+                name={fieldName}
+                label={field.label}
+                items={(field.options ?? []).map((option) => ({ value: option.value, label: option.label }))}
+              />
+            </FiltersRow>
+          );
+        case 'multiSelect':
+          if (!fieldName) return null;
+
+          return (
+            <FiltersRow key={fieldKey}>
+              <FormMultiSelect
                 name={fieldName}
                 label={field.label}
                 items={(field.options ?? []).map((option) => ({ value: option.value, label: option.label }))}

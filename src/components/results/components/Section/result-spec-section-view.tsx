@@ -1,14 +1,16 @@
+import { memo, useCallback } from 'react';
 import { Button, Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuFileText, LuTag } from 'react-icons/lu';
 import { useFormContext } from 'react-hook-form';
 
 import { ClipboardCopyText, DateToggle, Tooltip } from '@/components/ui';
+import { FilterTag } from '@/components/ui/components';
 import { toCleanTitle } from '@/utils/date-time.converter';
 
 import { ResultsExecutionCard } from '../ExecutionCard';
 import { ResultSpecSectionViewProps } from './types';
 
-export const ResultSpecSectionView = ({
+export const ResultSpecSectionView = memo(({
   specKey,
   specFile,
   specTitle,
@@ -19,11 +21,13 @@ export const ResultSpecSectionView = ({
   onExecutionContextMenu,
   onResultContextMenu,
 }: ResultSpecSectionViewProps) => {
-  const methods = useFormContext();
+  const { setValue, watch } = useFormContext();
+  const tagsValue = watch('tags') || [];
 
-  const handleClickTag = (tag: string) => {
-    methods.setValue('tag', tag);
-  };
+  const handleClickTag = useCallback((tag: string) => {
+    const newValue = tagsValue.includes(tag) ? tagsValue.filter((t: string) => t !== tag) : [...tagsValue, tag];
+    setValue('tags', newValue);
+  }, [setValue, tagsValue]);
 
   return (
     <VStack
@@ -58,21 +62,18 @@ export const ResultSpecSectionView = ({
           </ClipboardCopyText>
 
           <Flex ms="auto" flexWrap="wrap" gap={2}>
-            {specTags?.map((tag) => (
-              <Button
-                key={tag}
-                variant="tertiary"
-                color="text.tertiary"
-                size="xs"
-                borderRadius="full"
-                onClick={() => handleClickTag(tag)}
-              >
-                <LuTag size={12} />
-                <Text textStyle="xs" color="text.main">
-                  {tag}
-                </Text>
-              </Button>
-            ))}
+            {specTags?.map((tag) => {
+              const isSelected = tagsValue.includes(tag);
+
+              return (
+                <FilterTag
+                  key={tag}
+                  tag={tag}
+                  isSelected={isSelected}
+                  onClick={() => handleClickTag(tag)}
+                />
+              );
+            })}
           </Flex>
         </Flex>
 
@@ -118,4 +119,4 @@ export const ResultSpecSectionView = ({
       )}
     </VStack>
   );
-};
+});

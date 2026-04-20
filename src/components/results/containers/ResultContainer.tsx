@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Box, HStack, VStack } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
@@ -35,7 +35,7 @@ export const ResultContainerInner = () => {
       selectedProjectId: selectedProjectId!,
     });
 
-  const handleSelectAll = () => selectAll(activeDaysResultsIds);
+  const handleSelectAll = useCallback(() => selectAll(activeDaysResultsIds), [selectAll, activeDaysResultsIds]);
 
   const selectedCount = getSelectedCount();
   const selectedResults = useMemo(
@@ -56,14 +56,44 @@ export const ResultContainerInner = () => {
 
   const statistics = debouncedDates.length === 0 ? undefined : statisticsData;
 
+  const availableTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    rawResults.forEach(result => {
+      if (result.spec?.tags) {
+        result.spec.tags.forEach(tag => tagsSet.add(tag));
+      }
+    });
+    return Array.from(tagsSet).sort();
+  }, [rawResults]);
+
+  const dynamicFilterConfig = useMemo(() => {
+    return filterConfig.map((section) => {
+      if (section.title === 'Spec') {
+        return {
+          ...section,
+          fields: section.fields.map((field) => {
+            if (field.name === 'tags') {
+              return {
+                ...field,
+                options: availableTags.map((tag) => ({ value: tag, label: tag })),
+              };
+            }
+            return field;
+          }),
+        };
+      }
+      return section;
+    });
+  }, [availableTags]);
+
   return (
     <FormProvider {...filterFormMethods}>
-      <HStack  w="100%" display="grid" alignItems="start" gap={0} gridTemplateColumns="auto 1fr">
-        <Filter config={filterConfig} {...filterProps} />
+      <HStack w="100%" display="grid" alignItems="start" gap={0} gridTemplateColumns="auto 1fr">
+        <Filter config={dynamicFilterConfig} {...filterProps} />
 
         <VStack as="section" align="stretch" flex={1} minW={0} overflow="visible" position="relative" ml={6} mr={6} mt={4}>
           <LoaderOverlay isLoading={isFetching || isStatsFetching} />
-          <ResultsFloatingHeader availableDates={availableDates} statistics={statistics} toggleDate={toggleDate} isFetching={isStatsFetching} />
+          <ResultsFloatingHeader availableDates={availableDates} statistics={statistics} toggleDate={toggleDate} isFetching={isStatsFetching} availableTags={availableTags} />
           <Box position="relative">
             <TopSectionContainer statistics={statistics} isFetching={isStatsFetching} />
 

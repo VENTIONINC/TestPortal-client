@@ -5,7 +5,7 @@ import { REVIEW_STATUS_OPTIONS } from './constants';
 
 export const filterConfig: FilterConfigSection[] = [
   {
-    title: 'Result Filters',
+    title: 'Result',
     fields: [
       {
         label: 'Status:',
@@ -44,7 +44,7 @@ export const filterConfig: FilterConfigSection[] = [
     ],
   },
   {
-    title: 'Issue Filters',
+    title: 'Issue',
     fields: [
       {
         label: 'Issue name:',
@@ -54,12 +54,12 @@ export const filterConfig: FilterConfigSection[] = [
     ],
   },
   {
-    title: 'Spec Filters',
+    title: 'Spec',
     fields: [
       {
-        label: 'Tag:',
-        name: 'tag',
-        type: 'input',
+        label: 'Tags:',
+        name: 'tags',
+        type: 'multiSelect',
       },
       {
         label: 'Spec ID:',
@@ -79,13 +79,8 @@ export const filterConfig: FilterConfigSection[] = [
     ],
   },
   {
-    title: 'Execution Filters',
+    title: 'Execution',
     fields: [
-      {
-        label: 'Environment:',
-        name: 'environment',
-        type: 'input',
-      },
       {
         label: 'Type:',
         name: 'type',

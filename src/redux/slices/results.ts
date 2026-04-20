@@ -21,7 +21,7 @@ export interface ResultsState {
 }
 
 export const initialFilters: ResultsFilters = {
-  tag: '',
+  tags: [],
   specId: '',
   specFile: '',
   specName: '',
@@ -100,6 +100,8 @@ export const useResultsActions = () => {
 };
 
 export const useResultsFilters = () => useAppSelector((state) => state.results.filters);
+export const useResultsFilterDateRange = () =>
+  useAppSelector((state) => ({ from: state.results.filters.from, to: state.results.filters.to }));
 export const useSelectedDates = () => useAppSelector((state) => state.results.selectedDates);
 
 export default resultsSlice.reducer;

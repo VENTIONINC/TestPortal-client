@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react';
 import { Grid } from '@chakra-ui/react';
 import { useFormContext } from 'react-hook-form';
 
@@ -11,8 +12,8 @@ interface TopSectionContainerProps {
   isFetching?: boolean;
 }
 
-export const TopSectionContainer = ({ statistics, isFetching }: TopSectionContainerProps) => {
-  const methods = useFormContext();
+export const TopSectionContainer = memo(({ statistics, isFetching }: TopSectionContainerProps) => {
+  const { setValue } = useFormContext();
   const topErrors =
     statistics?.topErrors ??
     (isFetching && !statistics
@@ -23,12 +24,13 @@ export const TopSectionContainer = ({ statistics, isFetching }: TopSectionContai
       : []);
   const topIssues = statistics?.topIssues ?? [];
 
-  const handleClickTopError = (message: string) => {
-    methods.setValue('errorMessage', message);
-  };
-  const handleClickTopIssue = (message: string) => {
-    methods.setValue('issueName', message);
-  };
+  const handleClickTopError = useCallback((message: string) => {
+    setValue('errorMessage', message);
+  }, [setValue]);
+
+  const handleClickTopIssue = useCallback((message: string) => {
+    setValue('issueName', message);
+  }, [setValue]);
 
   const isInitialLoading = !statistics && isFetching;
 
@@ -68,4 +70,4 @@ export const TopSectionContainer = ({ statistics, isFetching }: TopSectionContai
       )}
     </Grid>
   );
-};
+});

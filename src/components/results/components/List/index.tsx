@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Mark, Spinner, Box, Stack, Heading, Flex } from '@chakra-ui/react';
 
 import { Checkbox, Skeleton } from '@/components/ui';
@@ -24,7 +24,7 @@ interface ResultsListProps {
   unfilteredResultsMap: Map<string, ResultEntry>;
 }
 
-export const ResultsList = ({
+export const ResultsList = memo(({
   activeDaysResultsIds,
   handleSelectAll,
   selectedCount,
@@ -116,4 +116,4 @@ export const ResultsList = ({
       </Stack>
     </Box>
   );
-};
+});
