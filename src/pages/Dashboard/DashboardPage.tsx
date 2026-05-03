@@ -12,7 +12,7 @@ export const DashboardPage = () => {
   // Fetch dashboard data for the last 30 days
   const { data, isLoading, error } = useGetApiV2ProjectsByProjectIdDashboardQuery({
     projectId: selectedProjectId,
-    environment: 'staging',
+    environment: 'development',
     period: '30',
   });
 
