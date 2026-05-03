@@ -32,3 +32,7 @@ The application will be available at `http://localhost:5173`
 ## Docker Deployment
 
 For instructions on how to build, publish, and run the application using Docker, please refer to the [Docker Deployment Guide](docs/DOCKER.md).
+
+## Release Process
+
+For instructions on how to create a release, please refer to the [Release Guide](docs/RELEASE.md).
