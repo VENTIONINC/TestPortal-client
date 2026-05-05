@@ -9,6 +9,8 @@ export interface ResultsFloatingHeaderProps {
   isFetching?: boolean;
   isStuck?: boolean;
   availableTags?: string[];
+  activeTags?: string[];
+  onToggleTag?: (tag: string) => void;
 }
 
 export interface TagListProps {

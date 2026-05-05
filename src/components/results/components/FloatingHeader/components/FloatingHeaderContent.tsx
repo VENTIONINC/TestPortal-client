@@ -8,18 +8,8 @@ import { ResultsFloatingHeaderProps } from '../types';
 import { TagList } from './TagList';
 
 export const ResultsFloatingHeaderContent = memo(
-  ({ availableDates, statistics, toggleDate, isFetching, isStuck, availableTags = [] }: ResultsFloatingHeaderProps) => {
-    const { setValue, watch } = useFormContext();
-    const tagsValue = watch('tags') || [];
+  ({ availableDates, statistics, toggleDate, isFetching, isStuck, availableTags = [], activeTags = [], onToggleTag }: ResultsFloatingHeaderProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
-
-    const handleTagClick = useCallback(
-      (tag: string) => {
-        const newValue = tagsValue.includes(tag) ? tagsValue.filter((t: string) => t !== tag) : [...tagsValue, tag];
-        setValue('tags', newValue);
-      },
-      [setValue, tagsValue],
-    );
 
     return (
       <>
@@ -58,8 +48,8 @@ export const ResultsFloatingHeaderContent = memo(
 
           <TagList
             availableTags={availableTags}
-            tagsValue={tagsValue}
-            handleTagClick={handleTagClick}
+            tagsValue={activeTags}
+            handleTagClick={onToggleTag || (() => {})}
             isExpanded={isExpanded}
             onToggleExpand={() => setIsExpanded(!isExpanded)}
             isStuck={isStuck}

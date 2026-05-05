@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Box, Button, Flex, Popover, Portal, Stack, Text, Badge, HStack, IconButton } from '@chakra-ui/react';
+import { Box, Flex, Popover, Portal, Stack, Text, HStack } from '@chakra-ui/react';
 import { LuChevronDown, LuX, LuCheck } from 'react-icons/lu';
 
-import { Checkbox, Field, FieldProps } from '@/components/ui';
+import { Checkbox, Field, FieldProps, Badge } from '@/components/ui';
 
 export interface MultiSelectItem {
   value: string;
@@ -35,25 +35,33 @@ export const MultiSelect = ({
   fieldProps,
 }: MultiSelectProps) => {
   const [open, setOpen] = useState(false);
+  const [localValue, setLocalValue] = useState<string[]>(value);
+
+  // Sync local state when external value changes
+  useMemo(() => {
+    setLocalValue(value);
+  }, [value]);
 
   const selectedItems = useMemo(
-    () => items.filter((item) => value.includes(item.value)),
-    [items, value]
+    () => items.filter((item) => localValue.includes(item.value)),
+    [items, localValue]
   );
 
   const handleToggle = useCallback(
     (itemValue: string) => {
-      const newValue = value.includes(itemValue)
-        ? value.filter((v) => v !== itemValue)
-        : [...value, itemValue];
+      const newValue = localValue.includes(itemValue)
+        ? localValue.filter((v) => v !== itemValue)
+        : [...localValue, itemValue];
+      setLocalValue(newValue); // Instant UI update
       onChange(newValue);
     },
-    [value, onChange]
+    [localValue, onChange]
   );
 
   const handleClear = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
+      setLocalValue([]);
       onChange([]);
     },
     [onChange]
@@ -63,11 +71,19 @@ export const MultiSelect = ({
     <Field label={label} errorText={error} invalid={Boolean(error)} {...fieldProps}>
       <Popover.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
         <Popover.Trigger asChild>
-          <button
+          <Box
+            as="button"
             type="button"
-            style={{ width: '100%', background: 'none', border: 'none', padding: 0 }}
+            w="full"
+            outline="none"
             onBlur={onBlur}
             disabled={disabled}
+            css={{
+              '&:focus-visible > div': {
+                borderColor: 'var(--chakra-colors-border-focus)',
+                boxShadow: '0 0 0 1px var(--chakra-colors-border-focus)',
+              }
+            }}
           >
             <Flex
               w="full"
@@ -76,6 +92,7 @@ export const MultiSelect = ({
               px={3}
               py={2}
               bg="bg.input"
+              color="text.primary"
               borderWidth="1px"
               borderColor="border.main"
               borderRadius="md"
@@ -86,22 +103,17 @@ export const MultiSelect = ({
               transition="all 0.2s"
               position="relative"
             >
-              <HStack flex="1" overflow="hidden" flexWrap="wrap" gap={1}>
+              <HStack flex="1" overflow="hidden" flexWrap="wrap" gap={1} minW={0}>
                 {selectedItems.length > 0 ? (
                   selectedItems.map((item) => (
                     <Badge
                       key={item.value}
-                      variant="solid"
-                      bg="blue.500"
-                      color="white"
-                      size="sm"
-                      borderRadius="sm"
-                      px={1}
-                      display="flex"
-                      alignItems="center"
-                      gap={1}
+                      variant="surface"
+                      status="info"
+                      isCapitalize={false}
+                      maxW="100%"
                     >
-                      {item.label}
+                      <Text truncate maxW="full" display="block">{item.label}</Text>
                     </Badge>
                   ))
                 ) : (
@@ -111,7 +123,7 @@ export const MultiSelect = ({
                 )}
               </HStack>
               <HStack gap={1}>
-                {value.length > 0 && !disabled && (
+                {localValue.length > 0 && !disabled && (
                   <Box
                     as="span"
                     onClick={handleClear}
@@ -128,7 +140,7 @@ export const MultiSelect = ({
                 </Box>
               </HStack>
             </Flex>
-          </button>
+          </Box>
         </Popover.Trigger>
 
         <Portal>
@@ -141,15 +153,17 @@ export const MultiSelect = ({
               boxShadow="dialog"
               p={1}
               minW="200px"
+              maxW="340px"
               maxH="300px"
               overflowY="auto"
+              overflowX="hidden"
               zIndex="popover"
               _focusVisible={{ outline: 'none' }}
             >
               <Stack gap={0}>
                 {items.length > 0 ? (
                   items.map((item) => {
-                    const isSelected = value.includes(item.value);
+                    const isSelected = localValue.includes(item.value);
                     return (
                       <Box
                         key={item.value}
@@ -163,14 +177,16 @@ export const MultiSelect = ({
                         alignItems="center"
                         justifyContent="space-between"
                       >
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => handleToggle(item.value)}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Text fontSize="sm">{item.label}</Text>
-                        </Checkbox>
-                        {isSelected && <LuCheck size={14} color="var(--chakra-colors-blue-500)" />}
+                        <Box pointerEvents="none" display="flex" alignItems="center" flex="1" minW={0}>
+                          <Checkbox
+                            checked={isSelected}
+                            tabIndex={-1}
+                            w="full"
+                          >
+                            <Text fontSize="sm" truncate maxW="full" display="block">{item.label}</Text>
+                          </Checkbox>
+                        </Box>
+                        {isSelected && <LuCheck size={14} color="var(--chakra-colors-blue-500)" flexShrink={0} />}
                       </Box>
                     );
                   })

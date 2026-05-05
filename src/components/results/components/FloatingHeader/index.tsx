@@ -6,7 +6,7 @@ import { ResultsFloatingHeaderContent } from './components';
 import { ResultsFloatingHeaderProps } from './types';
 
 export const ResultsFloatingHeader = memo(
-  ({ availableDates, statistics, toggleDate, isFetching, availableTags }: ResultsFloatingHeaderProps) => {
+  ({ availableDates, statistics, toggleDate, isFetching, availableTags, activeTags, onToggleTag }: ResultsFloatingHeaderProps) => {
     const { sentinelRef, isStuck } = useStickyObserver(66);
 
     return (
@@ -52,6 +52,8 @@ export const ResultsFloatingHeader = memo(
             isFetching={isFetching}
             isStuck={isStuck}
             availableTags={availableTags}
+            activeTags={activeTags}
+            onToggleTag={onToggleTag}
           />
         </Box>
       </>

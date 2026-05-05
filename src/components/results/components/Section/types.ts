@@ -41,4 +41,6 @@ export interface ResultSpecSectionViewProps {
     evt: React.MouseEvent<HTMLButtonElement>,
     result: { id: string; retry: number; specName: string; projectId: string },
   ) => void;
+  activeTags: string[];
+  onToggleTag: (tag: string) => void;
 }

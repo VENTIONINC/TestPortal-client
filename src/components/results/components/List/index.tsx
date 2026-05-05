@@ -22,6 +22,8 @@ interface ResultsListProps {
   isFetching: boolean;
   results: Map<string, ResultEntry>;
   unfilteredResultsMap: Map<string, ResultEntry>;
+  activeTags: string[];
+  onToggleTag: (tag: string) => void;
 }
 
 export const ResultsList = memo(({
@@ -32,6 +34,8 @@ export const ResultsList = memo(({
   isFetching,
   results,
   unfilteredResultsMap,
+  activeTags,
+  onToggleTag,
 }: ResultsListProps) => {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -102,6 +106,8 @@ export const ResultsList = memo(({
                   spec={spec}
                   executions={filteredExecutions}
                   allExecutions={unfilteredExecutions}
+                  activeTags={activeTags}
+                  onToggleTag={onToggleTag}
                 />
               </Skeleton>
             );

@@ -1,7 +1,6 @@
 import { memo, useCallback } from 'react';
 import { Button, Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuFileText, LuTag } from 'react-icons/lu';
-import { useFormContext } from 'react-hook-form';
 
 import { ClipboardCopyText, DateToggle, Tooltip } from '@/components/ui';
 import { FilterTag } from '@/components/ui/components';
@@ -21,17 +20,9 @@ export const ResultSpecSectionView = memo(
     projectId,
     onExecutionContextMenu,
     onResultContextMenu,
+    activeTags,
+    onToggleTag,
   }: ResultSpecSectionViewProps) => {
-    const { setValue, watch } = useFormContext();
-    const tagsValue = watch('tags') || [];
-
-    const handleClickTag = useCallback(
-      (tag: string) => {
-        const newValue = tagsValue.includes(tag) ? tagsValue.filter((t: string) => t !== tag) : [...tagsValue, tag];
-        setValue('tags', newValue);
-      },
-      [setValue, tagsValue],
-    );
 
     return (
       <VStack
@@ -67,9 +58,9 @@ export const ResultSpecSectionView = memo(
 
             <Flex ms={{ base: '0', md: 'auto' }} flexWrap="wrap" gap={2}>
               {specTags?.map((tag) => {
-                const isSelected = tagsValue.includes(tag);
+                const isSelected = activeTags.includes(tag);
 
-                return <FilterTag key={tag} tag={tag} isSelected={isSelected} onClick={() => handleClickTag(tag)} />;
+                return <FilterTag key={tag} tag={tag} isSelected={isSelected} onClick={() => onToggleTag(tag)} />;
               })}
             </Flex>
           </Flex>

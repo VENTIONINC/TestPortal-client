@@ -14,9 +14,11 @@ interface ResultSpecSectionProps {
   spec: ResultSpec;
   executions: { execution: ResultExecution; results: BaseResult[] }[];
   allExecutions: { execution: ResultExecution; results: BaseResult[] }[];
+  activeTags: string[];
+  onToggleTag: (tag: string) => void;
 }
 
-export const ResultSpecSection = memo(({ spec, executions, allExecutions }: ResultSpecSectionProps) => {
+export const ResultSpecSection = memo(({ spec, executions, allExecutions, activeTags, onToggleTag }: ResultSpecSectionProps) => {
   const dateRange = useResultsFilterDateRange();
   const selectedDates = useSelectedDates();
   const user = useCurrentUser();
@@ -151,6 +153,8 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }: Resu
       handleDateToggle={handleDateToggle}
       onExecutionContextMenu={handleExecutionContextMenu}
       onResultContextMenu={handleResultContextMenu}
+      activeTags={activeTags}
+      onToggleTag={onToggleTag}
     />
   );
 });

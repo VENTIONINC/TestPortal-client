@@ -13,15 +13,23 @@ export const FormMultiSelect = <T extends FieldValues>({ name, ...rest }: FormMu
     <Controller
       name={name}
       control={control}
-      render={({ field: { value, onChange, onBlur } }) => (
-        <MultiSelect
-          name={name}
-          value={Array.isArray(value) ? value : []}
-          onChange={onChange}
-          onBlur={onBlur}
-          {...rest}
-        />
-      )}
+      render={({ field: { value, onChange, onBlur } }) => {
+        const arrayValue = typeof value === 'string' && value.length > 0
+          ? value.split(',')
+          : Array.isArray(value)
+            ? value
+            : [];
+
+        return (
+          <MultiSelect
+            name={name}
+            value={arrayValue}
+            onChange={(newValue) => onChange(newValue.join(','))}
+            onBlur={onBlur}
+            {...rest}
+          />
+        );
+      }}
     />
   );
 };

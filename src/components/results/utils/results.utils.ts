@@ -35,7 +35,8 @@ export const toBaseResult = (result: Result): BaseResult => ({
 
 export const matchesFilters = (result: Result, filters: ResultsFilters): boolean => {
   if (filters.tags && filters.tags.length > 0) {
-    const hasMatchingTag = filters.tags.some((tag) => result.spec.tags.includes(tag));
+    const tagsArray = typeof filters.tags === 'string' ? (filters.tags as string).split(',') : filters.tags;
+    const hasMatchingTag = tagsArray.some((tag) => result.spec.tags.includes(tag));
     if (!hasMatchingTag) return false;
   }
   if (filters.specId && result.spec.id !== filters.specId) return false;
