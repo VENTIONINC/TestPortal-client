@@ -27,7 +27,7 @@ export const getEffectiveDatesInRange = (selectedDates: string[], fromDate: stri
   const selectedDatesSet = new Set(selectedDates);
   const selectedDatesInRange = datesInRange.filter((date) => selectedDatesSet.has(date));
 
-  return selectedDatesInRange.length > 0 ? selectedDatesInRange : datesInRange;
+  return selectedDatesInRange.length > 0 ? selectedDatesInRange : [toDate];
 };
 
 export const getDateDisplayName = (date: string): string => {

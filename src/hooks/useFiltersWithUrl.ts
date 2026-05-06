@@ -70,7 +70,7 @@ export const useFiltersWithUrl = <TFilters extends Record<string, FilterValue>>(
   }, [urlFiltersRaw, searchParams]);
 
   const mergedFilters = useMemo(
-    () => normalizeFilters?.({ ...urlFilters, ...stringFilters }) ?? { ...urlFilters, ...stringFilters },
+    () => normalizeFilters?.({ ...stringFilters, ...urlFilters }) ?? { ...stringFilters, ...urlFilters },
     [normalizeFilters, stringFilters, urlFilters],
   );
 

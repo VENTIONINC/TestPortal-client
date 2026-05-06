@@ -34,11 +34,13 @@ export const filterConfig = [
       {
         label: 'Environment:',
         name: 'environment',
+        disabled: true,
         type: 'input',
       },
       {
         label: 'Type:',
         name: 'type',
+        disabled: true,
         type: 'input',
       },
     ],

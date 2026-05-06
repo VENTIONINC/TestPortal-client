@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { HStack, Text, VStack, Box, useMediaQuery } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';
 
@@ -7,10 +8,15 @@ import { useGetIssuesWithStatsQuery } from '@/redux/apis/extendedApi';
 import { initialFilters, useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useFilterContext } from '@/contexts/FilterContext';
-import { IssueWithStats } from '@/types';
+import { IssueCategory, IssueWithStats } from '@/types';
 import { Filter, Pagination } from '@/components/ui';
 
 import { filterConfig } from '../configs';
+
+const toIssueCategory = (value?: string): IssueCategory | undefined => {
+  if (!value) return undefined;
+  return Object.values(IssueCategory).includes(value as IssueCategory) ? (value as IssueCategory) : undefined;
+};
 
 export const IssuesList = () => {
   const filters = useIssuesFilters();
@@ -20,13 +26,32 @@ export const IssuesList = () => {
   const selectedProjectId = useSelectedProjectId();
   const [isWideScreen] = useMediaQuery(['(min-width: 1920px)']);
 
-  const { data, isFetching } = useGetIssuesWithStatsQuery({ ...filters, projectId: selectedProjectId });
-
   const { formMethods, filterProps } = useFiltersWithUrl({
     currentFilters: filters,
     initialFilters,
     onUpdateFilters: setFilters,
   });
+
+  const issuesQueryParams = useMemo(
+    () => ({
+      projectId: selectedProjectId,
+      page: Number(filterProps.filters.page) || 1,
+      category: toIssueCategory(filterProps.filters.category),
+      name: filterProps.filters.name || undefined,
+      statFrom: filterProps.filters.statFrom || undefined,
+      statTo: filterProps.filters.statTo || undefined,
+    }),
+    [
+      selectedProjectId,
+      filterProps.filters.page,
+      filterProps.filters.category,
+      filterProps.filters.name,
+      filterProps.filters.statFrom,
+      filterProps.filters.statTo,
+    ],
+  );
+
+  const { data, isFetching } = useGetIssuesWithStatsQuery(issuesQueryParams);
 
   return (
     <FormProvider {...formMethods}>
@@ -53,7 +78,7 @@ export const IssuesList = () => {
           {data && data.totalPages > 1 && (
             <HStack alignSelf="center" py={2}>
               <Pagination
-                currentPage={filters.page}
+                currentPage={Number(filters.page) || 1}
                 totalPages={data.totalPages}
                 onPageChange={(page) => setFilters({ page })}
                 variant={showFilters && !isWideScreen ? 'simple' : 'full'}
