@@ -13,7 +13,6 @@ import { FaCircleCheck, FaRegCircleXmark } from 'react-icons/fa6';
 import { TestDescriptionSummary, TestStat } from '../types';
 import { Stats } from '../components/TestDescription/components/stats';
 import { DonutChart } from '../components/TestDescription/components/donutChart';
-import { QualityChart } from '../components/TestDescription/components/qualityChart';
 import { PassRateChart } from '../components/DashboardChart/components/PassRateChart';
 import { IssuesCategoriesChart } from '../components/DashboardChart/components/IssuesCategoriesChart';
 import { HistoryRegressionRunChart } from '../components/DashboardChart/components/HistoryRegressionRunChart';
@@ -25,7 +24,6 @@ const STORAGE_KEY = 'dashboard_grid_layout_v1';
 const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: 'stats', x: 0, y: 0, w: 12, h: 3, minH: 2, minW: 6 },
   { i: 'donut', x: 0, y: 3, w: 4, h: 7, minH: 4, minW: 3 },
-  { i: 'quality', x: 0, y: 3, w: 4, h: 6, minH: 4, minW: 3 },
   { i: 'passRate', x: 5, y: 12, w: 6, h: 9, minH: 4, minW: 3 },
   { i: 'issues', x: 6, y: 12, w: 6, h: 9, minH: 4, minW: 3 },
   { i: 'regression', x: 0, y: 21, w: 12, h: 9, minH: 4, minW: 6 },
@@ -112,22 +110,7 @@ const DonutChartWidget = ({ summary }: { summary?: TestDescriptionSummary }) => 
   return <DonutChart title="Test runs" passed={passed} failed={failed} donutChart={donutChart} totalRuns={totalRuns} />;
 };
 
-const QualityChartWidget = ({ summary }: { summary?: TestDescriptionSummary }) => {
-  const { passRate } = summary || {};
-  const qualitySegments = 24;
-  const filledSegments = Math.round(((passRate ?? 0) / 100) * qualitySegments);
-  const qualityData = Array.from({ length: qualitySegments }, (_, index) => ({
-    name: `segment-${index + 1}`,
-    value: 1,
-    color: index < filledSegments ? 'dashboard.green' : 'dashboard.gray',
-  }));
-  const qualityChart = useChart({
-    data: qualityData,
-    series: qualityData.map((item) => ({ color: item.color })),
-  });
-  const mockDataPast = { passRate: 73, passRateDelta: 3 };
-  return <QualityChart qualityChart={qualityChart} data={mockDataPast} w="full" />;
-};
+
 
 export const DashboardGrid = ({ summary, history }: DashboardGridProps) => {
   const [layouts, setLayouts] = useState<ResponsiveLayouts>(loadLayouts);
@@ -168,11 +151,7 @@ export const DashboardGrid = ({ summary, history }: DashboardGridProps) => {
             <DonutChartWidget summary={summary} />
           </GridCard>
         </div>
-        <div key="quality">
-          <GridCard title="Quality overtime">
-            <QualityChartWidget summary={summary} />
-          </GridCard>
-        </div>
+
         <div key="passRate">
           <GridCard title="Pass rate">
             <PassRateChart data={history} />

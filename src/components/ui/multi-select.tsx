@@ -73,11 +73,10 @@ export const MultiSelect = ({
         <Popover.Trigger asChild>
           <Box
             as="button"
-            type="button"
             w="full"
             outline="none"
             onBlur={onBlur}
-            disabled={disabled}
+            {...({ disabled } as any)}
             css={{
               '&:focus-visible > div': {
                 borderColor: 'var(--chakra-colors-border-focus)',
@@ -186,7 +185,7 @@ export const MultiSelect = ({
                             <Text fontSize="sm" truncate maxW="full" display="block">{item.label}</Text>
                           </Checkbox>
                         </Box>
-                        {isSelected && <LuCheck size={14} color="var(--chakra-colors-blue-500)" flexShrink={0} />}
+                        {isSelected && <LuCheck size={14} color="var(--chakra-colors-blue-500)" style={{ flexShrink: 0 }} />}
                       </Box>
                     );
                   })
