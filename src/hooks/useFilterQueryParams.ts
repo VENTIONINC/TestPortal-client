@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 
 type FilterValue = string | number | boolean | null | undefined;
@@ -64,12 +64,17 @@ export const useFilterQueryParams = (options: UseFilterQueryParamsOptions = {}) 
     onFiltersChange?.(defaultFilters);
   }, [setSearchParams, onFiltersChange, defaultFilters]);
 
+  const lastSyncedFiltersRef = import.meta.env.SSR ? { current: null } : React.useRef<Filters | null>(null);
+
   useEffect(() => {
-    if (searchParams.toString() && onFiltersChange) {
-      onFiltersChange(filters);
+    if (onFiltersChange) {
+      const filtersChanged = JSON.stringify(filters) !== JSON.stringify(lastSyncedFiltersRef.current);
+      if (filtersChanged) {
+        onFiltersChange(filters);
+        lastSyncedFiltersRef.current = filters;
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filters, onFiltersChange]);
 
   return {
     filters,

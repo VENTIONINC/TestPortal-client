@@ -3,6 +3,7 @@ import { Box } from '@chakra-ui/react';
 import { useFormContext } from 'react-hook-form';
 
 import { DateToggle } from '@/components/ui';
+
 import { ResultsStats } from '../../Stats';
 import { ResultsFloatingHeaderProps } from '../types';
 import { TagList } from './TagList';

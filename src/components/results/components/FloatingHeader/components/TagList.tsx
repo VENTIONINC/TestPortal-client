@@ -1,5 +1,7 @@
 import { Box, Wrap } from '@chakra-ui/react';
+
 import { FilterTag } from '@/components/ui/components';
+
 import { TagListProps } from '../types';
 
 export const TagList = ({

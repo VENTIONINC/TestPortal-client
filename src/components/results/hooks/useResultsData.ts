@@ -34,6 +34,15 @@ export const useResultsData = ({
     status: debouncedFilters.status || undefined,
     page: effectiveFilters.page,
     projectId: selectedProjectId,
+    tag: debouncedFilters.tags.join(',') || undefined,
+    specId: debouncedFilters.specId || undefined,
+    specFile: debouncedFilters.specFile || undefined,
+    specName: debouncedFilters.specName || undefined,
+    environment: debouncedFilters.environment || undefined,
+    type: debouncedFilters.type || undefined,
+    reviewStatus: debouncedFilters.reviewStatus || undefined,
+    errorMessage: debouncedFilters.errorMessage || undefined,
+    issueName: debouncedFilters.issueName || undefined,
   });
 
   const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates } = useMemo(() => {

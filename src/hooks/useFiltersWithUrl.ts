@@ -9,8 +9,14 @@ type FilterValues = Record<string, string>;
 const toStringFilters = (filters: Record<string, FilterValue>): FilterValues => {
   return Object.fromEntries(
     Object.entries(filters)
-      .filter(([, value]) => typeof value === 'string' || Array.isArray(value))
-      .map(([key, value]) => [key, Array.isArray(value) ? value.join(',') : String(value)]),
+      .map(([key, value]) => [
+        key,
+        value === null || value === undefined
+          ? ''
+          : Array.isArray(value)
+            ? value.join(',')
+            : String(value)
+      ]),
   ) as FilterValues;
 };
 
@@ -64,7 +70,7 @@ export const useFiltersWithUrl = <TFilters extends Record<string, FilterValue>>(
   }, [urlFiltersRaw, searchParams]);
 
   const mergedFilters = useMemo(
-    () => normalizeFilters?.({ ...stringFilters, ...urlFilters }) ?? { ...stringFilters, ...urlFilters },
+    () => normalizeFilters?.({ ...urlFilters, ...stringFilters }) ?? { ...urlFilters, ...stringFilters },
     [normalizeFilters, stringFilters, urlFilters],
   );
 
@@ -80,7 +86,6 @@ export const useFiltersWithUrl = <TFilters extends Record<string, FilterValue>>(
   const handleApplyFilters = (newFilters: FilterValues) => {
     const normalizedFilters = normalizeFilters?.(newFilters) ?? newFilters;
     updateUrlFilters(normalizedFilters);
-    onUpdateFilters({ ...currentFilters, ...normalizedFilters } as TFilters);
   };
 
   return {

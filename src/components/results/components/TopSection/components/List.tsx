@@ -1,4 +1,5 @@
 import { Text, VStack, HStack } from '@chakra-ui/react';
+
 import { categoriesConfig } from '../configs/categories';
 
 interface ListProps {

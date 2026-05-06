@@ -6,6 +6,15 @@ export interface GetResultsRequest {
   status?: string;
   page?: number;
   projectId: string;
+  tag?: string;
+  specId?: string;
+  specFile?: string;
+  specName?: string;
+  environment?: string;
+  type?: string;
+  reviewStatus?: string;
+  errorMessage?: string;
+  issueName?: string;
 }
 
 export interface GetResultsResponse {

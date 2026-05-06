@@ -57,7 +57,16 @@ export const useResultsEffectiveFilters = (): UseResultsEffectiveFiltersReturn =
     normalizeFilters: normalizeResultsDateRange,
   });
 
-  const effectiveFilters = useMemo(() => ({ ...filters, ...filterProps.filters }), [filters, filterProps.filters]);
+  const effectiveFilters = useMemo(() => {
+    const merged = { ...filters, ...filterProps.filters };
+    return {
+      ...merged,
+      tags: typeof merged.tags === 'string'
+        ? (merged.tags as string).split(',').filter(Boolean)
+        : merged.tags,
+      page: Number(merged.page) || 1,
+    } as ResultsFilters;
+  }, [filters, filterProps.filters]);
 
   const [debouncedFilters] = useDebounce(effectiveFilters, 500);
 

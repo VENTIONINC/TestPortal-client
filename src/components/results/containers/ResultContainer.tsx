@@ -58,9 +58,9 @@ export const ResultContainerInner = () => {
 
   const availableTags = useMemo(() => {
     const tagsSet = new Set<string>();
-    rawResults.forEach(result => {
+    rawResults.forEach((result) => {
       if (result.spec?.tags) {
-        result.spec.tags.forEach(tag => tagsSet.add(tag));
+        result.spec.tags.forEach((tag) => tagsSet.add(tag));
       }
     });
     return Array.from(tagsSet).sort();
@@ -90,23 +90,44 @@ export const ResultContainerInner = () => {
     return typeof effectiveFilters.tags === 'string' && effectiveFilters.tags
       ? (effectiveFilters.tags as string).split(',')
       : Array.isArray(effectiveFilters.tags)
-      ? effectiveFilters.tags
-      : [];
+        ? effectiveFilters.tags
+        : [];
   }, [effectiveFilters.tags]);
 
-  const handleToggleTag = useCallback((tag: string) => {
-    const newTags = activeTags.includes(tag) ? activeTags.filter((t) => t !== tag) : [...activeTags, tag];
-    filterProps.onApplyFilters({ ...(effectiveFilters as Record<string, string>), tags: newTags.join(',') });
-  }, [activeTags, effectiveFilters, filterProps]);
+  const handleToggleTag = useCallback(
+    (tag: string) => {
+      const newTags = activeTags.includes(tag) ? activeTags.filter((t) => t !== tag) : [...activeTags, tag];
+      filterProps.onApplyFilters({ ...(effectiveFilters as Record<string, string>), tags: newTags.join(',') });
+    },
+    [activeTags, effectiveFilters, filterProps],
+  );
 
   return (
     <FormProvider {...filterFormMethods}>
       <HStack w="100%" display="grid" alignItems="start" gap={0} gridTemplateColumns="auto 1fr">
         <Filter config={dynamicFilterConfig} {...filterProps} />
 
-        <VStack as="section" align="stretch" flex={1} minW={0} overflow="visible" position="relative" ml={6} mr={6} mt={4}>
+        <VStack
+          as="section"
+          align="stretch"
+          flex={1}
+          minW={0}
+          overflow="visible"
+          position="relative"
+          ml={6}
+          mr={6}
+          mt={4}
+        >
           <LoaderOverlay isLoading={isFetching || isStatsFetching} />
-          <ResultsFloatingHeader availableDates={availableDates} statistics={statistics} toggleDate={toggleDate} isFetching={isStatsFetching} availableTags={availableTags} activeTags={activeTags} onToggleTag={handleToggleTag} />
+          <ResultsFloatingHeader
+            availableDates={availableDates}
+            statistics={statistics}
+            toggleDate={toggleDate}
+            isFetching={isStatsFetching}
+            availableTags={availableTags}
+            activeTags={activeTags}
+            onToggleTag={handleToggleTag}
+          />
           <Box position="relative">
             <TopSectionContainer statistics={statistics} isFetching={isStatsFetching} />
 

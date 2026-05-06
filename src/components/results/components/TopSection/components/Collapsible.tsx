@@ -1,9 +1,11 @@
 import { Collapsible, Flex, Text } from '@chakra-ui/react';
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io';
 import { useState } from 'react';
+
+import { Tooltip } from '@/components/ui';
+
 import { categoriesConfig } from '../configs/categories';
 import { List } from './List';
-import { Tooltip } from '@/components/ui';
 
 interface CollapsibleWrapperProps {
   title: string;

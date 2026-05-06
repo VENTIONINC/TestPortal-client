@@ -1,4 +1,5 @@
 import { type ComponentProps } from 'react';
+
 import { DateToggle } from '@/components/ui';
 import { type ResultsStats as ResultsStatsResponse } from '@/redux/apis/generatedApi';
 

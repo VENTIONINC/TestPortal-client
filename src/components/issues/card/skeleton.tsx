@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { HStack, Flex, Card, Box } from '@chakra-ui/react';
+
 import { Skeleton, SkeletonCircle, SkeletonText } from '@/components/ui';
 
 export const IssueCardSkeleton = memo(() => {

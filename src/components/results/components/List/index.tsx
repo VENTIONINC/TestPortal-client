@@ -40,13 +40,13 @@ export const ResultsList = memo(({
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const allEntries = useMemo(() => Array.from(unfilteredResultsMap.entries()), [unfilteredResultsMap]);
+  const allEntries = useMemo(() => Array.from(results.entries()), [results]);
   const visibleEntries = allEntries.slice(0, visibleCount);
   const hasMore = visibleCount < allEntries.length;
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [unfilteredResultsMap]);
+  }, [results]);
 
   useEffect(() => {
     if (!sentinelRef.current || !hasMore) return;
@@ -66,7 +66,7 @@ export const ResultsList = memo(({
   }, [hasMore, allEntries.length]);
 
   return (
-    <Box bg="bg.section" borderRadius="xl">
+    <Box bg="bg.section" borderRadius="xl" minH="calc(100vh - 200px)">
       <Stack>
         <Box mx={4} mt={4} mb="8px" borderBottom="1px solid" borderColor="border.main">
           <Heading fontSize="lg" mb={4}>
@@ -89,7 +89,7 @@ export const ResultsList = memo(({
           </Flex>
         </Box>
 
-        <Stack align="stretch" gap={6} flex={1} overflowY="auto" overflowX="hidden">
+        <Stack align="stretch" gap={6} pb={6}>
           {visibleEntries.length === 0 && isFetching && (
             <>
               {[1, 2, 3].map((i) => (
@@ -98,8 +98,8 @@ export const ResultsList = memo(({
             </>
           )}
 
-          {visibleEntries.map(([specKey, { spec, executions: unfilteredExecutions }]) => {
-            const filteredExecutions = results.get(specKey)?.executions || [];
+          {visibleEntries.map(([specKey, { spec, executions: filteredExecutions }]) => {
+            const unfilteredExecutions = unfilteredResultsMap.get(specKey)?.executions || [];
             return (
               <Skeleton key={spec.id} loading={isFetching} minH="120px" borderRadius="xl">
                 <ResultSpecSection

@@ -2,7 +2,6 @@ import { IoCode } from 'react-icons/io5';
 import { IoFlashOutline } from 'react-icons/io5';
 import { LuBug } from 'react-icons/lu';
 import { IoWarningOutline } from 'react-icons/io5';
-
 import { TbServerCog } from 'react-icons/tb';
 
 import { IssueCategory } from '@/types';
