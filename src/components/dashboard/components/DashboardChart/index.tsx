@@ -1,10 +1,15 @@
-import { Box, SimpleGrid, Text, VStack, useMediaQuery } from '@chakra-ui/react';
+import { Box, SimpleGrid, VStack, useMediaQuery } from '@chakra-ui/react';
 
-import { LoadingFallback } from '@/components/LoadingFallback';
+import { type DashboardResponse } from '@/redux/apis/generatedApi';
 
 import { PassRateChart, IssuesCategoriesChart, HistoryRegressionRunChart } from './components';
 
-export const DashboardChart = ({ data, isLoading, showFilters }: any) => {
+type DashboardChartProps = {
+  data: DashboardResponse['history'] | [];
+  showFilters: boolean;
+};
+
+export const DashboardChart = ({ data, showFilters }: DashboardChartProps) => {
   const [isWideScreen] = useMediaQuery(['(min-width: 1920px)']);
   const columns = showFilters || !isWideScreen ? 1 : 2;
 

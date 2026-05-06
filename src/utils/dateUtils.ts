@@ -120,3 +120,29 @@ export const getPresetDateRange = (preset: DateRangePreset): { from: string; to:
     }
   }
 };
+
+export const formatChartLabel = (label: string): string => {
+  if (!label) return label;
+
+  // Handle YYYY-Www format (Weekly)
+  const weekMatch = label.match(/^(\d{4})-W(\d{2})$/);
+  if (weekMatch) {
+    const [, year, week] = weekMatch;
+    return `Week ${Number.parseInt(week, 10)}, ${year}`;
+  }
+
+  // Handle YYYY-MM format (Monthly)
+  const monthMatch = label.match(/^(\d{4})-(\d{2})$/);
+  if (monthMatch && label.length === 7) {
+    const [, year, month] = monthMatch;
+    const date = new Date(Number.parseInt(year, 10), Number.parseInt(month, 10) - 1);
+    return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(date);
+  }
+
+  // Handle standard YYYY-MM-DD format (Daily)
+  if (label.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return getDateDisplayName(label);
+  }
+
+  return label;
+};

@@ -1,4 +1,6 @@
-import { Box, HStack, Separator, Skeleton, Text, VStack } from '@chakra-ui/react';
+import { Box, HStack, Skeleton, Text } from '@chakra-ui/react';
+
+import { type ResultsStats as ResultsStatsResponse } from '@/redux/apis/generatedApi';
 
 import { STATUS_META, STATUS_ORDER } from './constants';
 import { StatsConfigInfo } from './StatsConfigInfo';
@@ -14,10 +16,12 @@ export const StatsTagView = ({ statistics, isFetching }: ResultsStatsProps) => {
     return null;
   }
 
-  const effStats = statistics || {
+  const effStats: ResultsStatsResponse = statistics || {
     byStatusTotal: 0,
-    byStatus: { passed: 0, failed: 0, skipped: 0, timedOut: 0 } as any,
-    entityCounts: {},
+    byStatus: { passed: 0, failed: 0, skipped: 0, timedOut: 0 },
+    entityCounts: { specs: 0, results: 0, executions: 0, issues: 0, errors: 0, assumptions: 0 },
+    topErrors: [],
+    topIssues: [],
   };
 
   return (
@@ -93,7 +97,7 @@ export const StatsTagView = ({ statistics, isFetching }: ResultsStatsProps) => {
       <Box mx={3} w="1px" my="auto" h={5} bg="border.secondary" />
 
       <StatsConfigInfo
-        entityCounts={effStats.entityCounts as any}
+        entityCounts={effStats.entityCounts}
         labelColor={labelTextColor}
         valueColor={valueTextColor}
       />

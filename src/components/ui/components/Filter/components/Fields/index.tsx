@@ -27,6 +27,7 @@ export const Fields = ({ config, onApply }: FieldsProps) => {
               <FormSelect
                 name={fieldName}
                 label={field.label}
+                disabled={field.disabled}
                 items={(field.options ?? []).map((option) => ({ value: option.value, label: option.label }))}
               />
             </FiltersRow>
@@ -39,6 +40,7 @@ export const Fields = ({ config, onApply }: FieldsProps) => {
               <FormMultiSelect
                 name={fieldName}
                 label={field.label}
+                disabled={field.disabled}
                 items={(field.options ?? []).map((option) => ({ value: option.value, label: option.label }))}
               />
             </FiltersRow>
@@ -48,7 +50,7 @@ export const Fields = ({ config, onApply }: FieldsProps) => {
 
           return (
             <FiltersRow key={fieldKey}>
-              <FormInput name={fieldName} label={field.label} />
+              <FormInput name={fieldName} label={field.label} disabled={field.disabled} />
             </FiltersRow>
           );
         case 'dateRange':

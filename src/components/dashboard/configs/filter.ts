@@ -7,6 +7,7 @@ export const filterConfig: FilterConfigSection[] = [
         label: 'Execution',
         name: 'execution',
         type: 'select',
+        disabled: true,
         options: [
           {
             label: 'Nightly',

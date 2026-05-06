@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { useIntersectionObserver } from 'usehooks-ts';
 
 import { IssueTimeDiscributionChart } from '@/components/ui/components/Charts';
-import { Tooltip, Wrap, Skeleton } from '@/components/ui';
+import { Wrap, Skeleton } from '@/components/ui';
 import { useFilterContext } from '@/contexts/FilterContext';
 import { useManageIssueDrawer } from '@/components/drawers';
 import { getIssueCategoryStyle, ISSUE_CATEGORY_LABELS } from '@/utils';
@@ -107,7 +107,9 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
               <Tag.StartElement>
                 <Icon size={16} />
               </Tag.StartElement>
-              <Tag.Label fontWeight={500} color="category.text">{ISSUE_CATEGORY_LABELS[issue.category]}</Tag.Label>
+              <Tag.Label fontWeight={500} color="category.text">
+                {ISSUE_CATEGORY_LABELS[issue.category]}
+              </Tag.Label>
             </Tag.Root>
 
             <LuDot size={16} color="text.secondary" />
@@ -134,9 +136,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
           <Wrap w="100%" bg="bg.cardSecondary" borderRadius="xl" p="13px 7px 11px 7px" boxShadow="none">
             {renderInfoSection}
           </Wrap>
-          {occurrenceCount > 0 && (
-            <IssueChartWrapper issue={issue} color={color} />
-          )}
+          {occurrenceCount > 0 && <IssueChartWrapper issue={issue} color={color} />}
         </Box>
       </Card.Body>
     </Card.Root>
@@ -168,7 +168,6 @@ const IssueChartWrapper = memo(({ issue, color }: { issue: IssueWithStats; color
     </Box>
   );
 });
-
 
 const formatOccurrence = (date: string | null) => {
   if (!date) return 'N/A';

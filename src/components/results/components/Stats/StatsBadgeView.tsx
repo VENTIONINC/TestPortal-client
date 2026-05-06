@@ -1,14 +1,15 @@
 import { Grid, Text, VStack } from '@chakra-ui/react';
 
+import { type ResultsStats as ResultsStatsResponse } from '@/redux/apis/generatedApi';
 import { Skeleton } from '@/components/ui';
 
 import { STATUS_META, STATUS_ORDER } from './constants';
 import { ResultsStatCard } from './ResultsStatCard';
+import { STAT_PALETTES } from './palettes';
 import { StatsConfigInfo } from './StatsConfigInfo';
 import { type ResultsStatsProps, type StatusCountKey } from './types';
-import { STAT_PALETTES } from './palettes';
 
-export const StatsBadgeView = ({ statistics, isFetching, size = 'default' }: ResultsStatsProps) => {
+export const StatsBadgeView = ({ statistics, isFetching }: ResultsStatsProps) => {
   const valueTextColor = 'text.main';
   const labelTextColor = 'text.muted';
 
@@ -22,10 +23,12 @@ export const StatsBadgeView = ({ statistics, isFetching, size = 'default' }: Res
     );
   }
 
-  const effStats = statistics || {
+  const effStats: ResultsStatsResponse = statistics || {
     byStatusTotal: 0,
-    byStatus: { passed: 0, failed: 0, skipped: 0, timedOut: 0 } as any,
-    entityCounts: {},
+    byStatus: { passed: 0, failed: 0, skipped: 0, timedOut: 0 },
+    entityCounts: { specs: 0, results: 0, executions: 0, issues: 0, errors: 0, assumptions: 0 },
+    topErrors: [],
+    topIssues: [],
   };
 
   return (
@@ -79,7 +82,7 @@ export const StatsBadgeView = ({ statistics, isFetching, size = 'default' }: Res
       </Grid>
 
       <StatsConfigInfo
-        entityCounts={effStats.entityCounts as any}
+        entityCounts={effStats.entityCounts}
         labelColor={labelTextColor}
         valueColor={valueTextColor}
       />

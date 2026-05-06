@@ -108,13 +108,12 @@ const DashboardContent = () => {
   });
 
   const effectiveFilters = filterProps.filters;
-  const environment = effectiveFilters.execution || DEFAULT_ENVIRONMENT;
   const period = effectiveFilters.period || DEFAULT_PERIOD;
 
   // Fetch dashboard data for the last 30 days
   const { data, isLoading, error } = useGetApiV2ProjectsByProjectIdDashboardQuery({
     projectId: selectedProjectId,
-    environment,
+    environment: DEFAULT_ENVIRONMENT,
     period,
   });
 
@@ -137,7 +136,7 @@ const DashboardContent = () => {
     try {
       const pdfExportRequest = buildDashboardPdfExportRequest({
         projectId: selectedProjectId,
-        environment,
+        environment: DEFAULT_ENVIRONMENT,
         period,
         includeAiInsights,
       });
@@ -147,7 +146,7 @@ const DashboardContent = () => {
         pdfBlob,
         buildDashboardPdfFileName({
           projectId: selectedProjectId,
-          environment,
+          environment: DEFAULT_ENVIRONMENT,
           periodStart: pdfExportRequest.periodStart,
           periodEnd: pdfExportRequest.periodEnd,
           includeAiInsights,

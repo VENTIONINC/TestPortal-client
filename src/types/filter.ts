@@ -10,6 +10,7 @@ export interface FilterField {
   options?: FilterFieldOption[];
   value?: string | number;
   fields?: FilterField[]; // For dateRange type
+  disabled?: boolean;
 }
 
 export interface FilterConfigSection {

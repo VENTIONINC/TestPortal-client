@@ -1,6 +1,5 @@
-import { Button, HStack, Spinner, Text, VStack, Box, useMediaQuery } from '@chakra-ui/react';
+import { HStack, Text, VStack, Box, useMediaQuery } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';
-
 
 import { useFiltersWithUrl } from '@/hooks';
 import { IssueCard, IssueCardSkeleton } from '@/components/issues';
@@ -23,17 +22,6 @@ export const IssuesList = () => {
 
   const { data, isFetching } = useGetIssuesWithStatsQuery({ ...filters, projectId: selectedProjectId });
 
-  const nextPage = () => {
-    if (data && filters.page < data.totalPages) {
-      setFilters({ page: filters.page + 1 });
-    }
-  };
-
-  const prevPage = () => {
-    if (data && filters.page > 1) {
-      setFilters({ page: filters.page - 1 });
-    }
-  };
   const { formMethods, filterProps } = useFiltersWithUrl({
     currentFilters: filters,
     initialFilters,
@@ -45,7 +33,6 @@ export const IssuesList = () => {
       <HStack align="flex-start" gap={4} w="100%">
         <Filter config={filterConfig} {...filterProps} />
         <VStack flex={1} align="stretch" minW={0} py={6} pr={4}>
-
           <Box
             display="grid"
             gridTemplateColumns={{ base: '1fr', lg: showFilters && !isWideScreen ? '1fr' : '1fr 1fr' }}

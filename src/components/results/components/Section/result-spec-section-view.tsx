@@ -1,6 +1,6 @@
-import { memo, useCallback } from 'react';
-import { Button, Flex, HStack, Text, VStack } from '@chakra-ui/react';
-import { LuFileText, LuTag } from 'react-icons/lu';
+import { memo } from 'react';
+import { Flex, HStack, Text, VStack } from '@chakra-ui/react';
+import { LuFileText } from 'react-icons/lu';
 
 import { ClipboardCopyText, DateToggle, Tooltip } from '@/components/ui';
 import { FilterTag } from '@/components/ui/components';
@@ -23,7 +23,6 @@ export const ResultSpecSectionView = memo(
     activeTags,
     onToggleTag,
   }: ResultSpecSectionViewProps) => {
-
     return (
       <VStack
         align="stretch"

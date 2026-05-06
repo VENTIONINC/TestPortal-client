@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 
+import { formatChartLabel } from '@/utils/dateUtils';
 import { MetricsBarChart } from '@/components/ui/components/Charts/MetricsBarChart';
 import { BarChartView, BarChartValueMode, CategorySeries, CategoriesChartDatum } from '@/types/charts';
 
@@ -25,7 +26,7 @@ export const HistoryRegressionRunChart = ({
           const skipped = metrics.skipped ?? 0;
           const failed = total - passed - skipped;
 
-          acc.chartData.push({ date, passed, failed, skipped });
+          acc.chartData.push({ date: formatChartLabel(date), passed, failed, skipped });
           acc.maxValue = Math.max(acc.maxValue, passed, failed, skipped);
 
           return acc;

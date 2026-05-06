@@ -36,7 +36,9 @@ export const DashboardTrendChart = ({ data }: DashboardTrendChartProps) => {
             axisLine={false}
           />
           <Tooltip
-            formatter={(value: number | undefined) => (value !== undefined ? [`${value}%`, 'Pass Rate'] : null)}
+            formatter={(value: string | number | readonly (string | number)[] | undefined) =>
+              value !== undefined ? [`${value}%`, 'Pass Rate'] : null
+            }
             labelFormatter={(label) => format(parseISO(label), 'MMM d, yyyy')}
             contentStyle={{
               borderRadius: '4px',

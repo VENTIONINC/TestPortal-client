@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Box, Flex, Popover, Portal, Stack, Text, HStack } from '@chakra-ui/react';
+import { Box, Flex, Popover, Portal, Stack, Text, HStack, Button } from '@chakra-ui/react';
 import { LuChevronDown, LuX, LuCheck } from 'react-icons/lu';
 
 import { Checkbox, Field, FieldProps, Badge } from '@/components/ui';
@@ -24,7 +24,6 @@ export interface MultiSelectProps {
 
 export const MultiSelect = ({
   label,
-  name,
   items,
   value,
   onChange,
@@ -42,10 +41,7 @@ export const MultiSelect = ({
     setLocalValue(value);
   }, [value]);
 
-  const selectedItems = useMemo(
-    () => items.filter((item) => localValue.includes(item.value)),
-    [items, localValue]
-  );
+  const selectedItems = useMemo(() => items.filter((item) => localValue.includes(item.value)), [items, localValue]);
 
   const handleToggle = useCallback(
     (itemValue: string) => {
@@ -55,7 +51,7 @@ export const MultiSelect = ({
       setLocalValue(newValue); // Instant UI update
       onChange(newValue);
     },
-    [localValue, onChange]
+    [localValue, onChange],
   );
 
   const handleClear = useCallback(
@@ -64,24 +60,27 @@ export const MultiSelect = ({
       setLocalValue([]);
       onChange([]);
     },
-    [onChange]
+    [onChange],
   );
 
   return (
     <Field label={label} errorText={error} invalid={Boolean(error)} {...fieldProps}>
       <Popover.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
         <Popover.Trigger asChild>
-          <Box
-            as="button"
+          <Button
+            variant="ghost"
             w="full"
             outline="none"
             onBlur={onBlur}
-            {...({ disabled } as any)}
+            disabled={disabled}
+            p={0}
+            h="auto"
+            display="block"
             css={{
               '&:focus-visible > div': {
                 borderColor: 'var(--chakra-colors-border-focus)',
                 boxShadow: '0 0 0 1px var(--chakra-colors-border-focus)',
-              }
+              },
             }}
           >
             <Flex
@@ -105,14 +104,10 @@ export const MultiSelect = ({
               <HStack flex="1" overflow="hidden" flexWrap="wrap" gap={1} minW={0}>
                 {selectedItems.length > 0 ? (
                   selectedItems.map((item) => (
-                    <Badge
-                      key={item.value}
-                      variant="surface"
-                      status="info"
-                      isCapitalize={false}
-                      maxW="100%"
-                    >
-                      <Text truncate maxW="full" display="block">{item.label}</Text>
+                    <Badge key={item.value} variant="surface" status="info" isCapitalize={false} maxW="100%">
+                      <Text truncate maxW="full" display="block">
+                        {item.label}
+                      </Text>
                     </Badge>
                   ))
                 ) : (
@@ -139,7 +134,7 @@ export const MultiSelect = ({
                 </Box>
               </HStack>
             </Flex>
-          </Box>
+          </Button>
         </Popover.Trigger>
 
         <Portal>
@@ -177,15 +172,15 @@ export const MultiSelect = ({
                         justifyContent="space-between"
                       >
                         <Box pointerEvents="none" display="flex" alignItems="center" flex="1" minW={0}>
-                          <Checkbox
-                            checked={isSelected}
-                            tabIndex={-1}
-                            w="full"
-                          >
-                            <Text fontSize="sm" truncate maxW="full" display="block">{item.label}</Text>
+                          <Checkbox checked={isSelected} tabIndex={-1} w="full">
+                            <Text fontSize="sm" truncate maxW="full" display="block">
+                              {item.label}
+                            </Text>
                           </Checkbox>
                         </Box>
-                        {isSelected && <LuCheck size={14} color="var(--chakra-colors-blue-500)" style={{ flexShrink: 0 }} />}
+                        {isSelected && (
+                          <LuCheck size={14} color="var(--chakra-colors-blue-500)" style={{ flexShrink: 0 }} />
+                        )}
                       </Box>
                     );
                   })

@@ -97,7 +97,7 @@ export const ResultContainerInner = () => {
   const handleToggleTag = useCallback(
     (tag: string) => {
       const newTags = activeTags.includes(tag) ? activeTags.filter((t) => t !== tag) : [...activeTags, tag];
-      filterProps.onApplyFilters({ ...(effectiveFilters as Record<string, string>), tags: newTags.join(',') });
+      filterProps.onApplyFilters({ ...(effectiveFilters as unknown as Record<string, string>), tags: newTags.join(',') });
     },
     [activeTags, effectiveFilters, filterProps],
   );

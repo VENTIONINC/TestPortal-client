@@ -1,4 +1,4 @@
-import { Box, Card, HStack, Tag, Text } from '@chakra-ui/react';
+import { Box, Card, HStack, Text } from '@chakra-ui/react';
 import { Chart } from '@chakra-ui/charts';
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 
@@ -72,7 +72,15 @@ export const QualityChart = ({
               <Text fontSize="3xl" fontWeight="bold">
                 {data.passRate}%
               </Text>
-              <Box ml="-5px" fontSize="xs" bg="status.success.bg" color="status.success.text" borderRadius="full" px={2} py={1}>
+              <Box
+                ml="-5px"
+                fontSize="xs"
+                bg="status.success.bg"
+                color="status.success.text"
+                borderRadius="full"
+                px={2}
+                py={1}
+              >
                 +{data.passRateDelta}%
               </Box>
             </HStack>

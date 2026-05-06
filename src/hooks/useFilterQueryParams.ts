@@ -64,7 +64,7 @@ export const useFilterQueryParams = (options: UseFilterQueryParamsOptions = {}) 
     onFiltersChange?.(defaultFilters);
   }, [setSearchParams, onFiltersChange, defaultFilters]);
 
-  const lastSyncedFiltersRef = import.meta.env.SSR ? { current: null } : React.useRef<Filters | null>(null);
+  const lastSyncedFiltersRef = React.useRef<Filters | null>(null);
 
   useEffect(() => {
     if (onFiltersChange) {
@@ -74,7 +74,7 @@ export const useFilterQueryParams = (options: UseFilterQueryParamsOptions = {}) 
         lastSyncedFiltersRef.current = filters;
       }
     }
-  }, [filters, onFiltersChange]);
+  }, [filters, onFiltersChange, lastSyncedFiltersRef]);
 
   return {
     filters,

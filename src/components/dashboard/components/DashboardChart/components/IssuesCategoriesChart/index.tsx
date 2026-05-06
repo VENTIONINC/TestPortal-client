@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 
+import { formatChartLabel } from '@/utils/dateUtils';
 import { MetricsBarChart } from '@/components/ui/components/Charts/MetricsBarChart';
 import { BarChartView, BarChartValueMode, CategorySeries, CategoriesChartDatum } from '@/types/charts';
 
@@ -31,7 +32,7 @@ export const IssuesCategoriesChart = ({
           const performance = issues?.performance ?? 0;
           const other = issues?.other ?? 0;
 
-          acc.chartData.push({ date, bug, environment, script, performance, other });
+          acc.chartData.push({ date: formatChartLabel(date), bug, environment, script, performance, other });
           acc.maxValue = Math.max(acc.maxValue, bug, environment, script, performance, other);
 
           return acc;

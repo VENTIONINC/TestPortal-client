@@ -6,9 +6,9 @@ import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
 import type { Layout, LayoutItem, ResponsiveLayouts } from 'react-grid-layout/legacy';
 import { Box, Button, Flex, Icon, Text } from '@chakra-ui/react';
 import { useChart } from '@chakra-ui/charts';
-import { MdDragIndicator } from 'react-icons/md';
 import { PiDotsNineBold } from 'react-icons/pi';
 import { FaCircleCheck, FaRegCircleXmark } from 'react-icons/fa6';
+import { LuRotateCcw } from 'react-icons/lu';
 
 import { TestDescriptionSummary, TestStat } from '../types';
 import { Stats } from '../components/TestDescription/components/stats';
@@ -22,11 +22,11 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 const STORAGE_KEY = 'dashboard_grid_layout_v1';
 
 const DEFAULT_LAYOUT: LayoutItem[] = [
-  { i: 'stats', x: 0, y: 0, w: 12, h: 3, minH: 2, minW: 6 },
-  { i: 'donut', x: 0, y: 3, w: 4, h: 7, minH: 4, minW: 3 },
-  { i: 'passRate', x: 5, y: 12, w: 6, h: 9, minH: 4, minW: 3 },
-  { i: 'issues', x: 6, y: 12, w: 6, h: 9, minH: 4, minW: 3 },
-  { i: 'regression', x: 0, y: 21, w: 12, h: 9, minH: 4, minW: 6 },
+  { i: 'stats', x: 0, y: 0, w: 4, h: 6, minH: 6, maxH: 6, minW: 3, isResizable: false },
+  { i: 'donut', x: 0, y: 6, w: 4, h: 7, minH: 3, minW: 3, isResizable: false },
+  { i: 'passRate', x: 4, y: 0, w: 8, h: 9, minH: 4, minW: 3 },
+  { i: 'issues', x: 8, y: 9, w: 8, h: 9, minH: 4, minW: 3 },
+  { i: 'regression', x: 4, y: 18, w: 8, h: 9, minH: 4, minW: 6 },
 ];
 
 const DEFAULT_LAYOUTS: ResponsiveLayouts = { lg: DEFAULT_LAYOUT };
@@ -51,32 +51,23 @@ interface DashboardGridProps {
 const GridCard = ({ title, children }: { title: string; children: ReactNode }) => (
   <Box
     h="100%"
-    borderRadius="lg"
+    borderRadius="xl"
     border="1px solid"
     borderColor="border.muted"
     overflow="hidden"
     display="flex"
     flexDirection="column"
     bg="bg"
+    transition="all 0.2s"
+    _hover={{ boxShadow: 'sm', borderColor: 'border.main' }}
   >
-    <Flex
-      className="drag-handle"
-      cursor="grab"
-      px={3}
-      py="6px"
-      align="center"
-      borderBottom="1px solid"
-      borderColor="border.muted"
-      bg="bg.subtle"
-      userSelect="none"
-      flexShrink={0}
-    >
-      <Icon as={MdDragIndicator} color="fg.muted" mr={2} />
-      <Text fontSize="sm" color="fg.muted" fontWeight="medium">
+    <Flex className="drag-handle" cursor="grab" px={4} pt={4} pb={2} align="center" userSelect="none" flexShrink={0}>
+      <Icon as={PiDotsNineBold} color="fg.muted" mr={2} boxSize="18px" />
+      <Text fontSize="md" color="fg" fontWeight="semibold" letterSpacing="tight">
         {title}
       </Text>
     </Flex>
-    <Box flex="1" overflow="auto" p={3}>
+    <Box flex="1" overflow="auto" px={4} pb={4}>
       {children}
     </Box>
   </Box>
@@ -92,7 +83,7 @@ const StatsWidget = ({ summary }: { summary?: TestDescriptionSummary }) => {
     { label: 'Test passed', value: passed, status: 'passed', icon: FaCircleCheck, color: 'dashboard.green' },
     { label: 'Test failed', value: failed, status: 'failed', icon: FaRegCircleXmark, color: 'dashboard.red' },
   ];
-  return <Stats stats={stats} columns={3} />;
+  return <Stats stats={stats} columns={1} />;
 };
 
 const DonutChartWidget = ({ summary }: { summary?: TestDescriptionSummary }) => {
@@ -110,8 +101,6 @@ const DonutChartWidget = ({ summary }: { summary?: TestDescriptionSummary }) => 
   return <DonutChart title="Test runs" passed={passed} failed={failed} donutChart={donutChart} totalRuns={totalRuns} />;
 };
 
-
-
 export const DashboardGrid = ({ summary, history }: DashboardGridProps) => {
   const [layouts, setLayouts] = useState<ResponsiveLayouts>(loadLayouts);
 
@@ -127,9 +116,19 @@ export const DashboardGrid = ({ summary, history }: DashboardGridProps) => {
 
   return (
     <Box position="relative" w="full">
-      <Flex justify="flex-end" mb={2}>
-        <Button size="sm" variant="ghost" onClick={handleReset}>
-          Reset layout
+      <Flex justify="flex-end" mb={4}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleReset}
+          borderColor="border.muted"
+          color="fg.muted"
+          fontWeight="medium"
+          fontSize="xs"
+          _hover={{ bg: 'bg.subtle', color: 'fg', borderColor: 'border.main' }}
+        >
+          <Icon as={LuRotateCcw} />
+          Reset Layout
         </Button>
       </Flex>
       <ResponsiveGridLayout

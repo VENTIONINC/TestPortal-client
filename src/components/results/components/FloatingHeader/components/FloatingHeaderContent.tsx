@@ -1,6 +1,5 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useState } from 'react';
 import { Box } from '@chakra-ui/react';
-import { useFormContext } from 'react-hook-form';
 
 import { DateToggle } from '@/components/ui';
 
@@ -9,7 +8,16 @@ import { ResultsFloatingHeaderProps } from '../types';
 import { TagList } from './TagList';
 
 export const ResultsFloatingHeaderContent = memo(
-  ({ availableDates, statistics, toggleDate, isFetching, isStuck, availableTags = [], activeTags = [], onToggleTag }: ResultsFloatingHeaderProps) => {
+  ({
+    availableDates,
+    statistics,
+    toggleDate,
+    isFetching,
+    isStuck,
+    availableTags = [],
+    activeTags = [],
+    onToggleTag,
+  }: ResultsFloatingHeaderProps) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (

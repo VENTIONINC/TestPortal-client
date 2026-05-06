@@ -8,8 +8,8 @@ import type { CategoriesChartDatum, CategorySeries, MetricsBarChartProps } from 
 
 type TooltipProps = {
   active?: boolean;
-  payload?: Array<{ payload: CategoriesChartDatum }>;
-  label?: string;
+  payload?: ReadonlyArray<{ payload?: CategoriesChartDatum }>;
+  label?: string | number;
   series: CategorySeries[];
   bg: string;
   border: string;
@@ -97,6 +97,9 @@ export const MetricsBarChart = ({
       }
 
       const row = payload[0].payload;
+      if (!row) {
+        return null;
+      }
 
       return (
         <Box bg={bg} borderWidth="1px" borderColor={border} borderRadius="md" px={3} py={2} color={text}>
@@ -122,7 +125,7 @@ export const MetricsBarChart = ({
   );
 
   const tooltipContent = useCallback(
-    ({ active, payload, label }: any) =>
+    ({ active, payload, label }: Pick<TooltipProps, 'active' | 'payload' | 'label'>) =>
       renderTooltip({
         active,
         payload,
@@ -218,7 +221,13 @@ export const MetricsBarChart = ({
                     barGap={view === 'stacked' ? 0 : 8}
                     barCategoryGap={20}
                   >
-                    <CartesianGrid stroke="var(--chakra-colors-border-subtle)" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} horizontal />
+                    <CartesianGrid
+                      stroke="var(--chakra-colors-border-subtle)"
+                      strokeDasharray="3 3"
+                      strokeOpacity={0.6}
+                      vertical={false}
+                      horizontal
+                    />
                     <XAxis
                       dataKey={chart.key('date')}
                       axisLine={false}

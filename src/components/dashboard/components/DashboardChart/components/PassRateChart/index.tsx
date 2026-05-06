@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 
+import { formatChartLabel } from '@/utils/dateUtils';
 import { MetricsBarChart } from '@/components/ui/components/Charts/MetricsBarChart';
 import { BarChartView, BarChartValueMode, CategorySeries, CategoriesChartDatum } from '@/types/charts';
 
@@ -21,7 +22,7 @@ export const PassRateChart = ({
           const passed = metrics?.passed ?? 0;
           const failed = metrics?.failed ?? 0;
 
-          acc.chartData.push({ date, passed, failed });
+          acc.chartData.push({ date: formatChartLabel(date), passed, failed });
           acc.maxValue = Math.max(acc.maxValue, passed, failed);
 
           return acc;
