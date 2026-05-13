@@ -79,7 +79,7 @@ export const ResultsExecutionCard = memo(
             checked={results.every(({ id }) => isSelected(id))}
             onCheckedChange={toggleSelectAll}
             size="md"
-            controlProps={{ borderColor: "border.main" }}
+            controlProps={{ borderColor: 'border.main' }}
           />
           <Tooltip content="Environment">
             <ClipboardCopyText value={environment}>{environment}</ClipboardCopyText>
@@ -124,7 +124,7 @@ export const ResultsExecutionCard = memo(
                     toggleSelection(id);
                   }}
                   size="md"
-                  controlProps={{ borderColor: "border.main" }}
+                  controlProps={{ borderColor: 'border.main' }}
                 />
 
                 <StatusIcon status={status} type="circle" />
@@ -176,7 +176,12 @@ export const ResultsExecutionCard = memo(
                 {errors.map((resultError) => {
                   return (
                     <Fragment key={resultError.id}>
-                      <Text fontSize="sm" onClick={() => openResultsErrorDialog(resultError)} cursor="pointer">
+                      <Text
+                        fontSize="sm"
+                        onClick={() => openResultsErrorDialog(resultError)}
+                        cursor="pointer"
+                        wordBreak="break-word"
+                      >
                         {resultError.message}
                       </Text>
                       <InlineIssue resultError={resultError} />
