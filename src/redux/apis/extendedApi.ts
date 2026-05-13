@@ -28,15 +28,8 @@ export const extendedApi = generatedApi
     endpoints: (build) => ({
       getResults: build.query<GetResultsResponse, GetResultsRequest>({
         query: (params) => {
-          const allowedParams = {
-            from: params.from,
-            to: params.to,
-            page: 1,
-            projectId: params.projectId,
-          };
-
           const filteredParams = Object.fromEntries(
-            Object.entries(allowedParams)
+            Object.entries(params)
               .map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value])
               .filter(([, value]) => value !== '' && value !== null && value !== undefined),
           );

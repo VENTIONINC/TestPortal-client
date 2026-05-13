@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router';
 
 type FilterValue = string | number | boolean | null | undefined;
@@ -41,30 +41,34 @@ export const useFilterQueryParams = (options: UseFilterQueryParamsOptions = {}) 
   const updateFilters = useCallback(
     (newFilters: Partial<Filters>, replace = false) => {
       const updatedFilters = { ...filters, ...newFilters };
-
-      const newSearchParams = new URLSearchParams();
+      const newSearchParams = new URLSearchParams(searchParams);
 
       keysToSync.forEach((key) => {
         const value = updatedFilters[key];
 
         if (value !== null && value !== undefined && value !== defaultFilters[key]) {
           newSearchParams.set(key, String(value));
+        } else {
+          newSearchParams.delete(key);
         }
       });
 
       setSearchParams(newSearchParams, { replace });
-
-      onFiltersChange?.(updatedFilters);
     },
-    [filters, keysToSync, defaultFilters, setSearchParams, onFiltersChange],
+    [filters, keysToSync, defaultFilters, searchParams, setSearchParams],
   );
 
   const resetFilters = useCallback(() => {
-    setSearchParams(new URLSearchParams(), { replace: true });
-    onFiltersChange?.(defaultFilters);
-  }, [setSearchParams, onFiltersChange, defaultFilters]);
+    const newSearchParams = new URLSearchParams(searchParams);
 
-  const lastSyncedFiltersRef = React.useRef<Filters | null>(null);
+    keysToSync.forEach((key) => {
+      newSearchParams.delete(key);
+    });
+
+    setSearchParams(newSearchParams, { replace: true });
+  }, [keysToSync, searchParams, setSearchParams]);
+
+  const lastSyncedFiltersRef = useRef<Filters | null>(null);
 
   useEffect(() => {
     if (onFiltersChange) {
@@ -74,7 +78,7 @@ export const useFilterQueryParams = (options: UseFilterQueryParamsOptions = {}) 
         lastSyncedFiltersRef.current = filters;
       }
     }
-  }, [filters, onFiltersChange, lastSyncedFiltersRef]);
+  }, [filters, onFiltersChange]);
 
   return {
     filters,
