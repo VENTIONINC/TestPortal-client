@@ -110,37 +110,37 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # - name: Trigger ECS deployment
-      #   shell: bash
-      #   run: |
-      #     set -euo pipefail
-      #     aws ecs update-service \
-      #       --cluster "${{ steps.vars.outputs.ecs_cluster }}" \
-      #       --service "${{ steps.vars.outputs.ecs_service }}" \
-      #       --force-new-deployment >/dev/null
+      - name: Trigger ECS deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ecs update-service \
+            --cluster "${{ steps.vars.outputs.ecs_cluster }}" \
+            --service "${{ steps.vars.outputs.ecs_service }}" \
+            --force-new-deployment >/dev/null
 
-      # - name: Wait for service to stabilize
-      #   shell: bash
-      #   run: |
-      #     set -euo pipefail
-      #     aws ecs wait services-stable \
-      #       --cluster "${{ steps.vars.outputs.ecs_cluster }}" \
-      #       --services "${{ steps.vars.outputs.ecs_service }}"
+      - name: Wait for service to stabilize
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ecs wait services-stable \
+            --cluster "${{ steps.vars.outputs.ecs_cluster }}" \
+            --services "${{ steps.vars.outputs.ecs_service }}"
 
-      # - name: Deployment summary
-      #   if: always()
-      #   shell: bash
-      #   run: |
-      #     set -euo pipefail
-      #     {
-      #       echo "### Deploy result: ${{ job.status }}"
-      #       echo ""
-      #       echo "| Field | Value |"
-      #       echo "| --- | --- |"
-      #       echo "| Environment | \`${{ inputs.environment }}\` |"
-      #       echo "| Image       | \`${{ steps.vars.outputs.image_uri }}\` |"
-      #       echo "| API URL     | \`${{ steps.vars.outputs.api_url }}\` |"
-      #       echo "| Cluster     | \`${{ steps.vars.outputs.ecs_cluster }}\` |"
-      #       echo "| Service     | \`${{ steps.vars.outputs.ecs_service }}\` |"
-      #       echo "| Commit      | \`${GITHUB_SHA}\` |"
-      #     } >> "$GITHUB_STEP_SUMMARY"
+      - name: Deployment summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "### Deploy result: ${{ job.status }}"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Environment | \`${{ inputs.environment }}\` |"
+            echo "| Image       | \`${{ steps.vars.outputs.image_uri }}\` |"
+            echo "| API URL     | \`${{ steps.vars.outputs.api_url }}\` |"
+            echo "| Cluster     | \`${{ steps.vars.outputs.ecs_cluster }}\` |"
+            echo "| Service     | \`${{ steps.vars.outputs.ecs_service }}\` |"
+            echo "| Commit      | \`${GITHUB_SHA}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
