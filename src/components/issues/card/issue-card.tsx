@@ -88,7 +88,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
               mt={1}
               size="xs"
               variant="ghost"
-              onClick={() => openManageIssueDrawer()}
+              onClick={() => openManageIssueDrawer({ issue })}
               aria-label="Manage issue"
             >
               <LuPencil size={16} />

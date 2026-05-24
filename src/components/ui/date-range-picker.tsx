@@ -581,7 +581,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
         </Box>
 
         <Portal>
-          <Popover.Positioner>
+          <Popover.Positioner px={{ base: 2, md: 3 }}>
             <Popover.Content
               bg="bg.panel"
               borderColor="border.main"
@@ -589,13 +589,28 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
               borderRadius="lg"
               boxShadow="sm"
               p={0}
-              w="100%"
+              w={{ base: 'calc(100vw - 16px)', md: 'auto' }}
+              maxW="calc(100vw - 16px)"
+              overflowX="hidden"
               _focusVisible={{ outline: 'none' }}
             >
-              <Flex>
+              <Flex direction={{ base: 'column', lg: 'row' }}>
                 {showPresets && (
-                  <Box borderRightWidth="1px" borderColor="border.main" minW="119px">
-                    <Flex direction="column" mt="15px">
+                  <Box
+                    borderRightWidth={{ base: '0', lg: '1px' }}
+                    borderBottomWidth={{ base: '1px', lg: '0' }}
+                    borderColor="border.main"
+                    minW={{ base: '0', lg: '119px' }}
+                    w="100%"
+                    px={{ base: 2, lg: 0 }}
+                  >
+                    <Flex
+                      direction={{ base: 'row', lg: 'column' }}
+                      wrap={{ base: 'wrap', lg: 'nowrap' }}
+                      mt={{ base: 2, lg: '15px' }}
+                      mb={{ base: 2, md: 0 }}
+                      gap={{ base: 2, md: 0 }}
+                    >
                       {PRESET_LABELS.map(({ key, label: presetLabel }) => {
                         const presetRange = getPresetDateRange(key);
                         const presetDays =
@@ -609,8 +624,10 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                             key={key}
                             variant="ghost"
                             size="xs"
-                            h="20px"
-                            mb="7px"
+                            h={{ base: '28px', lg: '20px' }}
+                            mb={{ base: 0, lg: '7px' }}
+                            minW={{ base: 'fit-content', lg: 'auto' }}
+                            whiteSpace="nowrap"
                             fontWeight={isActive ? 600 : 400}
                             justifyContent="flex-start"
                             bg={isActive ? 'bg.hover' : 'transparent'}
@@ -628,8 +645,8 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                   </Box>
                 )}
 
-                <Box p="11px 8px 8px 13px" flex="1" minWidth="605px">
-                  <Flex mb="20px" gap={4} alignItems="center">
+                <Box p={{ base: '10px', md: '11px 8px 8px 13px' }} flex="1" minWidth={{ base: '0', lg: '605px' }}>
+                  <Flex mb="20px" gap={4} alignItems="center" direction={{ base: 'column', sm: 'row' }}>
                     <Field label="Start date" flex="1">
                       <Input
                         name="startDate"
@@ -645,7 +662,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                         _focus={{ borderColor: 'border.active', boxShadow: '0 0 0 1px var(--chakra-colors-border-active)' }}
                       />
                     </Field>
-                    <Box mt="20px">—</Box>
+                    <Box mt={{ base: 0, sm: '20px' }}>—</Box>
                     <Field label="End date" flex="1">
                       <Input
                         name="endDate"
@@ -663,9 +680,9 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                     </Field>
                   </Flex>
 
-                  <Flex>
+                  <Flex direction={{ base: 'column', lg: 'row' }}>
                     {/* Left calendar */}
-                    <Box flex="1" mr="25px">
+                    <Box flex="1" mr={{ base: 0, lg: '25px' }} mb={{ base: 4, lg: 0 }}>
                       <Flex mb={5} alignItems="center" justifyContent="space-between">
                         <Button variant="ghost" size="sm" onClick={handlePrevMonth} p={0} minW="32px">
                           <LuChevronLeft size={20} />
@@ -720,11 +737,28 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                     </Box>
                   </Flex>
 
-                  <Flex mt="29px" gap={2} justify="flex-end" borderTopWidth="1px" borderColor="border.main" pt={3}>
-                    <Button size="sm" variant="ghost" color="text.secondary" onClick={handleGoToToday} mr="auto">
+                  <Flex
+                    mt="29px"
+                    gap={2}
+                    justify="flex-end"
+                    alignItems={{ base: 'stretch', sm: 'center' }}
+                    direction={{ base: 'column', sm: 'row' }}
+                    wrap="wrap"
+                    borderTopWidth="1px"
+                    borderColor="border.main"
+                    pt={3}
+                  >
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      color="text.secondary"
+                      onClick={handleGoToToday}
+                      mr={{ base: 0, sm: 'auto' }}
+                      w={{ base: '100%', sm: 'auto' }}
+                    >
                       Today
                     </Button>
-                    <Flex alignItems="center">
+                    <Flex alignItems="center" w={{ base: '100%', sm: 'auto' }}>
                       <Text fontSize="14px" color="text.main" fontWeight="400">
                         {pendingRangeLabel}
                       </Text>
@@ -735,16 +769,18 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                       borderColor="border.main"
                       color="text.main"
                       onClick={handleCancel}
+                      w={{ base: '100%', sm: 'auto' }}
                     >
                       Cancel
                     </Button>
-                      <Button
-                        size="sm"
-                        bg="accent.solid"
-                        color="white"
-                        _hover={{ bg: 'blue.600' }}
-                        onClick={handleConfirm}
+                    <Button
+                      size="sm"
+                      bg="accent.solid"
+                      color="white"
+                      _hover={{ bg: 'blue.600' }}
+                      onClick={handleConfirm}
                       disabled={isConfirmDisabled}
+                      w={{ base: '100%', sm: 'auto' }}
                     >
                       Confirm
                     </Button>
