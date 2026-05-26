@@ -1,7 +1,7 @@
 import { Box, Container, Tabs } from '@chakra-ui/react';
 import { Outlet, useLocation } from 'react-router';
 
-import { AppHeader } from '@/components/AppHeader';
+import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
 import { Link } from '@/components/ui/link';
 import { PATHS } from '@/types/paths';
 
@@ -15,9 +15,7 @@ export function ReportGeneratorPage() {
   };
 
   return (
-    <Box minH="100vh">
-      <AppHeader />
-
+    <MainTemplate pageHeader="Prompts">
       <Container maxW="6xl" py={4}>
         <Tabs.Root value={getActiveTab()}>
           <Tabs.List>
@@ -34,6 +32,6 @@ export function ReportGeneratorPage() {
           </Box>
         </Tabs.Root>
       </Container>
-    </Box>
+    </MainTemplate>
   );
 }

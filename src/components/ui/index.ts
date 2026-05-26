@@ -18,7 +18,16 @@ export { Link } from './link';
 export { NativeSelect, type NativeSelectProps } from './native-select';
 export { ProgressBar, ProgressLabel, ProgressRoot, ProgressValueText } from './progress';
 export { ChakraProvider } from './provider';
+export { Skeleton, SkeletonCircle, SkeletonText } from './skeleton';
 export { Slider, type SliderProps } from './slider';
 export { Textarea, type TextareaProps } from './textarea';
 export { Toaster, toaster } from './toaster';
 export { Tooltip, type TooltipProps } from './tooltip';
+export { MultiSelect, type MultiSelectProps } from './multi-select';
+export { DatePicker, type DatePickerProps } from './date-picker';
+export { DateRangePicker, type DateRangePickerProps } from './date-range-picker';
+export { Alert } from './components/Feedback';
+export { Wrap } from './components/Layout';
+
+export * from './components';
+export * from './loader';

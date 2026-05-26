@@ -188,6 +188,17 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Results"],
       }),
+      patchApiV2ResultsByResultIdAnalysisFeedback: build.mutation<
+        PatchApiV2ResultsByResultIdAnalysisFeedbackApiResponse,
+        PatchApiV2ResultsByResultIdAnalysisFeedbackApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/results/${queryArg.resultId}/analysis-feedback`,
+          method: "PATCH",
+          body: queryArg.updateResultAnalysisFeedbackRequest,
+        }),
+        invalidatesTags: ["Results"],
+      }),
       getApiV2SpecsBySpecId: build.query<
         GetApiV2SpecsBySpecIdApiResponse,
         GetApiV2SpecsBySpecIdApiArg
@@ -625,6 +636,17 @@ const injectedRtkApi = api
         }),
         providesTags: ["Exports"],
       }),
+      postApiV2ReportsPdfExport: build.mutation<
+        PostApiV2ReportsPdfExportApiResponse,
+        PostApiV2ReportsPdfExportApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/reports/pdf-export`,
+          method: "POST",
+          body: queryArg.pdfExportRequest,
+        }),
+        invalidatesTags: ["Reports", "Exports"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -713,7 +735,7 @@ export type GetApiV2IssuesWithStatsApiArg = {
   statTo?: string;
 };
 export type GetApiV2ResultsApiResponse =
-  /** status 200 List of results */ Result[];
+  /** status 200 List of results */ ResultsListResponse;
 export type GetApiV2ResultsApiArg = {
   projectId: string;
   tag?: string;
@@ -756,6 +778,12 @@ export type PatchApiV2ResultsByResultIdAnalysisApiResponse =
 export type PatchApiV2ResultsByResultIdAnalysisApiArg = {
   resultId: string;
   updateResultAnalysisRequest: UpdateResultAnalysisRequest;
+};
+export type PatchApiV2ResultsByResultIdAnalysisFeedbackApiResponse =
+  /** status 200 Result analysis feedback updated successfully */ Result;
+export type PatchApiV2ResultsByResultIdAnalysisFeedbackApiArg = {
+  resultId: string;
+  updateResultAnalysisFeedbackRequest: UpdateResultAnalysisFeedbackRequest;
 };
 export type GetApiV2SpecsBySpecIdApiResponse =
   /** status 200 Spec details */ Spec;
@@ -988,8 +1016,6 @@ export type PostApiV2UploadCtrfReportApiKeyApiArg = {
   body: {
     /** CTRF report JSON file to upload */
     report?: Blob;
-    /** Project ID to associate the report with */
-    projectId: string;
   };
 };
 export type PostApiV2UploadGenerateKeyApiResponse =
@@ -1015,6 +1041,11 @@ export type GetApiV2AnalysisExportApiArg = {
   dateFrom: string;
   /** End date/time (ISO) */
   dateTo: string;
+};
+export type PostApiV2ReportsPdfExportApiResponse =
+  /** status 200 PDF export stream. When includeAiInsights is true, the PDF may include an AI Insights section embedded in the document. */ Blob;
+export type PostApiV2ReportsPdfExportApiArg = {
+  pdfExportRequest: PdfExportRequest;
 };
 export type StatusResponse = {
   status: string;
@@ -1083,6 +1114,12 @@ export type Result = {
   createdAt: string;
   updatedAt: string;
 };
+export type ResultsListResponse = {
+  results: Result[];
+  total: number;
+  page: number;
+  totalPages: number;
+};
 export type ResultsStats = {
   byStatus: {
     passed: number;
@@ -1106,6 +1143,8 @@ export type ResultsStats = {
   topIssues: {
     title: string;
     count: number;
+    /** Failure category (bug, infra, script, performance, other) */
+    category: string;
   }[];
 };
 export type UpdateResultAnalysisRequest = {
@@ -1117,6 +1156,19 @@ export type UpdateResultAnalysisRequest = {
   analysisConfidence?: number;
   /** Explanation for the categorization decision */
   analysisConclusion?: string;
+};
+export type UpdateResultAnalysisFeedbackRequest = {
+  /** Manual reviewer category */
+  analysisFeedbackCategory?:
+    | "bug"
+    | "infra"
+    | "performance"
+    | "script"
+    | "other";
+  /** Manual reviewer confidence (1-5 scale) */
+  analysisFeedbackConfidence?: number;
+  /** Manual reviewer conclusion */
+  analysisFeedbackConclusion?: string;
 };
 export type Spec = {
   id: string;
@@ -1384,6 +1436,8 @@ export type DashboardResponse = {
   summary: {
     /** Total number of test runs in the period */
     totalRuns: number;
+    /** Total number of failed test results in the period */
+    failures: number;
     /** Pass rate percentage (0-100) */
     passRate: number;
     /** Pass rate trend indicator (percentage change) */
@@ -1441,6 +1495,41 @@ export type RevokeApiKeyResponse = {
   success: boolean;
   message: string;
 };
+export type PdfExportInvalidParamsResponse = {
+  error: "INVALID_PARAMS";
+  details: any[];
+};
+export type PdfExportPeriodTooLargeResponse = {
+  error: "PERIOD_TOO_LARGE";
+  message: "Export period cannot exceed 365 days";
+};
+export type PdfExportNotFoundResponse = {
+  error: "NOT_FOUND";
+};
+export type PdfExportServerErrorResponse = {
+  /** Internal export failure code: DATA_FETCH_FAILED | CHART_RENDER_FAILED | PDF_BUILD_FAILED */
+  error: "DATA_FETCH_FAILED" | "CHART_RENDER_FAILED" | "PDF_BUILD_FAILED";
+};
+export type PdfExportTimeoutResponse = {
+  /** PDF export exceeded server timeout window */
+  error: "EXPORT_TIMEOUT";
+};
+export type PdfExportRequest = {
+  /** Project UUID or project name */
+  project: string;
+  /** Execution environment filter */
+  environment: string;
+  /** Execution type filter, use 'all' to include all types */
+  executionType: string;
+  /** Accepts YYYY-MM-DD or ISO datetime; backend normalizes to YYYY-MM-DD */
+  periodStart: string;
+  /** Accepts YYYY-MM-DD or ISO datetime; backend normalizes to YYYY-MM-DD */
+  periodEnd: string;
+  /** Time-bucket aggregation level: daily = by day, weekly = ISO week, monthly = year-month */
+  granularity: "daily" | "weekly" | "monthly";
+  /** When true, the export includes an AI-generated insights section in the PDF. Defaults to false when omitted. */
+  includeAiInsights?: boolean;
+};
 export const {
   useGetApiV2StatusQuery,
   useGetApiV2IssuesQuery,
@@ -1454,6 +1543,7 @@ export const {
   useDeleteApiV2ResultsByResultIdMutation,
   useGetApiV2ResultsStatsQuery,
   usePatchApiV2ResultsByResultIdAnalysisMutation,
+  usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation,
   useGetApiV2SpecsBySpecIdQuery,
   useDeleteApiV2SpecsBySpecIdMutation,
   usePostApiV2AssumptionsMutation,
@@ -1494,4 +1584,5 @@ export const {
   useGetApiV2UploadKeysQuery,
   useDeleteApiV2UploadKeysByIdMutation,
   useGetApiV2AnalysisExportQuery,
+  usePostApiV2ReportsPdfExportMutation,
 } = injectedRtkApi;

@@ -1,0 +1,146 @@
+name: Deploy FE to ECS (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [dev, stg, prod]
+        default: dev
+      image_tag:
+        description: "Docker tag override (optional). Default = short SHA"
+        required: false
+        type: string
+      api_url:
+        description: "API_URL build arg (overrides repo variable VITE_API_URL)"
+        required: false
+        type: string
+
+permissions:
+  id-token: write   # требуется для OIDC в AWS
+  contents: read
+
+concurrency:
+  group: deploy-fe-${{ inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-central-1
+
+jobs:
+  deploy:
+    name: Build & deploy frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Debug OIDC claims
+        run: |
+          IDTOKEN=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r .value)
+          echo "$IDTOKEN" | cut -d. -f2 | base64 -d 2>/dev/null | jq .
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          role-session-name: gha-ecs-deploy-fe-${{ inputs.environment }}
+
+      - name: Resolve variables
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ENV="${{ inputs.environment }}"
+          TAG="${{ inputs.image_tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="${GITHUB_SHA::7}"
+          fi
+
+          API_URL_INPUT="${{ inputs.api_url }}"
+          API_URL_VAR="${{ vars.VITE_API_URL }}"
+          API_URL="${API_URL_INPUT:-$API_URL_VAR}"
+          if [ -z "$API_URL" ]; then
+            echo "::error::Neither workflow input 'api_url' nor repo variable VITE_API_URL is set"
+            exit 1
+          fi
+
+          ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+          REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+          ECR_REPO="${ENV}-testportal-fe"
+          ECS_CLUSTER="${ENV}-cluster"
+          ECS_SERVICE="${ENV}-fe-service"
+
+          {
+            echo "image_tag=${TAG}"
+            echo "image_uri=${REGISTRY}/${ECR_REPO}:${TAG}"
+            echo "image_uri_latest=${REGISTRY}/${ECR_REPO}:latest"
+            echo "ecs_cluster=${ECS_CLUSTER}"
+            echo "ecs_service=${ECS_SERVICE}"
+            echo "api_url=${API_URL}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          pull: true
+          provenance: false
+          build-args: |
+            API_URL=${{ steps.vars.outputs.api_url }}
+          tags: |
+            ${{ steps.vars.outputs.image_uri }}
+            ${{ steps.vars.outputs.image_uri_latest }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trigger ECS deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ecs update-service \
+            --cluster "${{ steps.vars.outputs.ecs_cluster }}" \
+            --service "${{ steps.vars.outputs.ecs_service }}" \
+            --force-new-deployment >/dev/null
+
+      - name: Wait for service to stabilize
+        shell: bash
+        run: |
+          set -euo pipefail
+          aws ecs wait services-stable \
+            --cluster "${{ steps.vars.outputs.ecs_cluster }}" \
+            --services "${{ steps.vars.outputs.ecs_service }}"
+
+      - name: Deployment summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "### Deploy result: ${{ job.status }}"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Environment | \`${{ inputs.environment }}\` |"
+            echo "| Image       | \`${{ steps.vars.outputs.image_uri }}\` |"
+            echo "| API URL     | \`${{ steps.vars.outputs.api_url }}\` |"
+            echo "| Cluster     | \`${{ steps.vars.outputs.ecs_cluster }}\` |"
+            echo "| Service     | \`${{ steps.vars.outputs.ecs_service }}\` |"
+            echo "| Commit      | \`${GITHUB_SHA}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"

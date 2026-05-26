@@ -2,8 +2,6 @@ import { forwardRef } from 'react';
 import { ButtonProps, IconButton as ChakraIconButton } from '@chakra-ui/react';
 import { LuEllipsisVertical } from 'react-icons/lu';
 
-import { useSurfaceColors } from '@/theme/useSurfaceColors';
-
 export interface ContextMenuButtonProps extends Omit<ButtonProps, 'onClick'> {
   onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
@@ -12,23 +10,19 @@ export const ContextMenuButton = forwardRef<HTMLButtonElement, ContextMenuButton
   { onClick, ...props },
   ref,
 ) {
-  const { states, text } = useSurfaceColors();
-  const hoverBgColor = states.hoverSubtle;
-  const activeBgColor = states.selected;
-  const iconColor = text.muted;
-
   return (
     <ChakraIconButton
       variant="ghost"
       size="sm"
       aria-label="More options"
-      color={iconColor}
+      color="bg.primary.default"
+      bg="bg.primary.default"
       _hover={{
-        bg: hoverBgColor,
-        color: text.primary,
+        bg: 'bg.primary.hover',
+        color: 'bg.primary.focus',
       }}
       _active={{
-        bg: activeBgColor,
+        bg: 'bg.primary.active',
         transform: 'scale(0.95)',
       }}
       transition="all 0.2s"

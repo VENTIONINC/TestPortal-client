@@ -1,8 +1,4 @@
-export { CopyButton } from './CopyButton';
-export { ParameterForm } from './ParameterForm';
-export { PromptBuilder } from './PromptBuilder';
-export { PromptCard } from './PromptCard';
-export { PromptGallery } from './PromptGallery';
-export { PromptPreview } from './PromptPreview';
-export { getCategoryIcon, getCategoryColor } from './promptUtils';
-export type { CategoryIconConfig } from './promptUtils';
+export * from './components';
+export { PromptBuilderView as PromptBuilder } from './containers/PromptBuilderView';
+export { PromptGalleryView as PromptGallery } from './containers/PromptGalleryView';
+export * from './utils';

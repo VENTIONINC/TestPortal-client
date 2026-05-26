@@ -9,7 +9,6 @@ export function LoadingFallback() {
         alignItems: 'center',
         justifyContent: 'center',
         gap: '16px',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
     >
       <div

@@ -97,7 +97,7 @@ export const BulkActions = memo(({ selectedResults }: BulkActionsProps) => {
   }
 
   return (
-    <HStack border="1px solid" borderColor="purple.700" borderRadius="md" p={1} bg="white">
+    <HStack borderColor="purple.700" p={1}>
       <Text textStyle="sm" color="purple.700">
         Bulk actions
       </Text>

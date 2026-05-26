@@ -5,3 +5,5 @@ export { useProjectContextMenu } from './useProjectContextMenu';
 export { useExecutionContextMenu } from './useExecutionContextMenu';
 export { useResultContextMenu } from './useResultContextMenu';
 export { useResetState } from './useResetState';
+export { useFilterQueryParams } from './useFilterQueryParams';
+export { useFiltersWithUrl } from './useFiltersWithUrl';

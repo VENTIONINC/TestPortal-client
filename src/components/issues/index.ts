@@ -1,4 +1,3 @@
-export { IssueCard } from './card';
-export { IssuesFilters } from './filters';
+export { IssueCard, IssueCardSkeleton } from './card';
 export { InlineIssue } from './inline';
 export { IssuesList } from './list';

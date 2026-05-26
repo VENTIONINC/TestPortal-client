@@ -13,9 +13,9 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field(props
   const { label, children, helperText, errorText, optionalText, labelProps, ...rest } = props;
 
   return (
-    <ChakraField.Root ref={ref} {...rest}>
+    <ChakraField.Root ref={ref} gap={1} {...rest}>
       {label && (
-        <ChakraField.Label {...labelProps}>
+        <ChakraField.Label fontSize="12px" {...labelProps}>
           {label}
           <ChakraField.RequiredIndicator fallback={optionalText} />
         </ChakraField.Label>

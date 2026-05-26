@@ -35,6 +35,8 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
     <Drawer
       title={`${initialIssue ? 'Edit' : 'Assign'} Issue${resultError ? ` to Result ${resultError.id}` : ''}`}
       onClose={closeDrawer}
+      contentProps={{ bg: 'bg.modal_glass', shadow: 'drawer' }}
+      backdropProps={{ bg: 'bg.backdrop' }}
     >
       <DrawerBody display="flex" flexDir="column" gap={4}>
         <VStack align="flex-start" gap={0}>
@@ -45,15 +47,29 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
             error={errors.name?.message}
           />
           {watchedName && existingIssues.length > 0 && (
-            <VStack align="stretch" bg="gray.100" borderRadius="sm">
+            <VStack
+              align="stretch"
+              w="100%"
+              mt={2}
+              bg="bg.panel"
+              borderWidth="1px"
+              borderColor="border.main"
+              borderRadius="md"
+              maxH="180px"
+              overflowY="auto"
+            >
               {existingIssues.map((suggestion, index) => (
                 <Text
                   key={suggestion.id || index}
                   onClick={() => handleIssueSelected(suggestion)}
-                  px={2}
-                  fontWeight={600}
+                  px={3}
+                  py={2}
+                  fontWeight={500}
+                  color="text.main"
+                  borderBottomWidth={index === existingIssues.length - 1 ? 0 : '1px'}
+                  borderColor="border.main"
                   cursor="pointer"
-                  _hover={{ bg: 'gray.200' }}
+                  _hover={{ bg: 'bg.hover' }}
                 >
                   {suggestion.name}
                 </Text>
@@ -74,12 +90,12 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
         />
         <Textarea {...register('description')} label="Description:" autoresize error={errors.description?.message} />
 
-        <Button onClick={handleFormatMessage} loading={isFormattingMessage} variant="outline">
+        <Button onClick={handleFormatMessage} loading={isFormattingMessage} variant="secondary">
           Format message
         </Button>
 
         {!initialIssue && resultError && (
-          <Button onClick={handleFormatFromResult} loading={isFormattingFromResult} variant="outline">
+          <Button onClick={handleFormatFromResult} loading={isFormattingFromResult} variant="secondary">
             Format from result
           </Button>
         )}
@@ -94,7 +110,7 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
         {initialIssue && (
           <Button
             onClick={openConfirmIssueDeletionDialog}
-            bg="red.500"
+            variant="secondaryError"
             mt="auto"
             loading={isDeletingIssue}
             disabled={isDeletingIssue}

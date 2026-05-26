@@ -12,8 +12,8 @@ const formatDate = (date: Date): string => {
 };
 
 const today = new Date();
-const weekAgo = new Date();
-weekAgo.setDate(today.getDate() - 7);
+const last7DaysStart = new Date(today);
+last7DaysStart.setDate(today.getDate() - 6);
 
 export interface ResultsState {
   filters: ResultsFilters;
@@ -21,7 +21,7 @@ export interface ResultsState {
 }
 
 export const initialFilters: ResultsFilters = {
-  tag: '',
+  tags: [],
   specId: '',
   specFile: '',
   specName: '',
@@ -31,14 +31,14 @@ export const initialFilters: ResultsFilters = {
   reviewStatus: '',
   errorMessage: '',
   issueName: '',
-  from: formatDate(weekAgo),
+  from: formatDate(last7DaysStart),
   to: formatDate(today),
   page: 1,
 };
 
 const initialState: ResultsState = {
   filters: initialFilters,
-  selectedDates: [formatDate(today)],
+  selectedDates: [initialFilters.to],
 };
 
 export const resultsSlice = createSlice({
@@ -100,6 +100,8 @@ export const useResultsActions = () => {
 };
 
 export const useResultsFilters = () => useAppSelector((state) => state.results.filters);
+export const useResultsFilterDateRange = () =>
+  useAppSelector((state) => ({ from: state.results.filters.from, to: state.results.filters.to }));
 export const useSelectedDates = () => useAppSelector((state) => state.results.selectedDates);
 
 export default resultsSlice.reducer;

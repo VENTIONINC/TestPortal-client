@@ -45,6 +45,7 @@ export const getAnalysisCategoryStyle = (category?: AnalysisCategory) => {
       Icon: LuCircleHelp,
       color: 'gray.500',
       hoverBgColor: 'gray.100',
+      hoverColor: 'gray.600',
       name: category ? ANALYSIS_CATEGORY_LABELS[category] : 'Unknown',
     };
   }
