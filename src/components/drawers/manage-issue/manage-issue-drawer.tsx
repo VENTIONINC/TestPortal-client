@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button, Text, VStack } from '@chakra-ui/react';
 
 import { Drawer, DrawerBody, Input, NativeSelect, Textarea } from '@/components/ui';

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Mark, Spinner, Box, Stack, Heading, Flex } from '@chakra-ui/react';
 

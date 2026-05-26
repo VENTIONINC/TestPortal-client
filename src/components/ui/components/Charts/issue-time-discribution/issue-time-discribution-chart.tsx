@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo, useId } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import { Chart, useChart } from '@chakra-ui/charts';

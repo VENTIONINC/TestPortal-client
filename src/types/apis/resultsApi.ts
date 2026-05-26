@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Result, ResultErrorAssumption } from '@/types';
 
 export interface GetResultsRequest {

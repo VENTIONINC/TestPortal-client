@@ -1,14 +1,17 @@
 {
   "name": "test-portal-client-react-ts",
   "private": true,
-  "version": "0.7.0",
+  "version": "1.0.0",
   "type": "module",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
     "build": "npm run typegen && tsc -b && vite build",
+    "headers:add": "node scripts/add-license-headers.js",
     "eslint": "eslint .",
     "tsc": "tsc --noEmit",
     "lint": "yarn eslint && yarn tsc",
+    "new:file": "node scripts/new-file.js",
     "preview": "vite preview",
     "prepare": "husky",
     "generate-api": "npx @rtk-query/codegen-openapi rtk-query-codegen.config.cjs",

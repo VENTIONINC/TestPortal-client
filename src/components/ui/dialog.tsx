@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { forwardRef, RefObject } from 'react';
 import { Dialog as ChakraDialog, DialogRootProps, Portal } from '@chakra-ui/react';
 

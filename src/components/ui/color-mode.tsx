@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { ThemeProvider, ThemeProviderProps, useTheme } from 'next-themes';
 
 export function ColorModeProvider(props: ThemeProviderProps) {

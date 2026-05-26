@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { MouseEvent } from 'react';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 

@@ -2,6 +2,11 @@
 
 An application for viewing and managing test execution results and issues.
 
+## Contributing
+
+Contribution workflow, validation commands, and file header guidance live in
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Getting Started
 
 ### 1. Clone the repository
@@ -36,3 +41,13 @@ For instructions on how to build, publish, and run the application using Docker,
 ## Release Process
 
 For instructions on how to create a release, please refer to the [Release Guide](docs/RELEASE.md).
+
+## License
+
+This project is licensed under the Apache License 2.0. See
+[LICENSE](LICENSE) for the full terms.
+
+Supported JavaScript and TypeScript source files can be created with
+`yarn new:file -- <path>` so the standard repository header is added
+automatically. To backfill missing headers across existing supported files in
+`src`, run `yarn headers:add`.

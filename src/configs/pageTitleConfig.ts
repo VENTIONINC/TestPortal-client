@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 export const configHeaderPageTitles: Record<string, string> = {
   'developer-code-assistant': 'Developer Code Analysis Assistant',
   'test-portal-assistant': 'Test Portal Report Generator',

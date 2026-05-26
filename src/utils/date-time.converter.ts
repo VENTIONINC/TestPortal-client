@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 export const toStartTime = (date: string | Date): string => {
   if (!date) {
     throw new Error('Unable to convert toStartTime: missing date');
