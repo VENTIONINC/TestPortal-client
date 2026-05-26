@@ -22,6 +22,14 @@ export const getDatesBetween = (fromDate: string, toDate: string): string[] => {
   return dates.reverse();
 };
 
+export const getEffectiveDatesInRange = (selectedDates: string[], fromDate: string, toDate: string): string[] => {
+  const datesInRange = getDatesBetween(fromDate, toDate);
+  const selectedDatesSet = new Set(selectedDates);
+  const selectedDatesInRange = datesInRange.filter((date) => selectedDatesSet.has(date));
+
+  return selectedDatesInRange.length > 0 ? selectedDatesInRange : [toDate];
+};
+
 export const getDateDisplayName = (date: string): string => {
   const dateObj = new Date(date);
   const today = new Date();
@@ -64,4 +72,77 @@ export const adjustDateToWeekRange = (anchorDate: string, isFromField: boolean):
     adjusted.setDate(anchor.getDate() - 7);
   }
   return formatDate(adjusted);
+};
+
+export const parseDateString = (dateString: string): Date => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+export type DateRangePreset = 'today' | 'yesterday' | 'this-week' | 'last-week' | 'this-month' | 'last-month';
+
+export const getPresetDateRange = (preset: DateRangePreset): { from: string; to: string } => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  switch (preset) {
+    case 'today':
+      return { from: formatDate(today), to: formatDate(today) };
+    case 'yesterday': {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      return { from: formatDate(yesterday), to: formatDate(yesterday) };
+    }
+    case 'this-week': {
+      const dayOfWeek = today.getDay();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      return { from: formatDate(monday), to: formatDate(today) };
+    }
+    case 'last-week': {
+      const dayOfWeek = today.getDay();
+      const thisMonday = new Date(today);
+      thisMonday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      const lastMonday = new Date(thisMonday);
+      lastMonday.setDate(thisMonday.getDate() - 7);
+      const lastSunday = new Date(thisMonday);
+      lastSunday.setDate(thisMonday.getDate() - 1);
+      return { from: formatDate(lastMonday), to: formatDate(lastSunday) };
+    }
+    case 'this-month': {
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      return { from: formatDate(firstDay), to: formatDate(today) };
+    }
+    case 'last-month': {
+      const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+      return { from: formatDate(firstDay), to: formatDate(lastDay) };
+    }
+  }
+};
+
+export const formatChartLabel = (label: string): string => {
+  if (!label) return label;
+
+  // Handle YYYY-Www format (Weekly)
+  const weekMatch = label.match(/^(\d{4})-W(\d{2})$/);
+  if (weekMatch) {
+    const [, year, week] = weekMatch;
+    return `Week ${Number.parseInt(week, 10)}, ${year}`;
+  }
+
+  // Handle YYYY-MM format (Monthly)
+  const monthMatch = label.match(/^(\d{4})-(\d{2})$/);
+  if (monthMatch && label.length === 7) {
+    const [, year, month] = monthMatch;
+    const date = new Date(Number.parseInt(year, 10), Number.parseInt(month, 10) - 1);
+    return new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(date);
+  }
+
+  // Handle standard YYYY-MM-DD format (Daily)
+  if (label.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return getDateDisplayName(label);
+  }
+
+  return label;
 };

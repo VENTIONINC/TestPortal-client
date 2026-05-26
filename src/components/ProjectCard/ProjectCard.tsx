@@ -1,6 +1,7 @@
 import { Badge, Card, Text, Heading, Flex, Box, Icon } from '@chakra-ui/react';
 import { MouseEvent } from 'react';
-import { FiCode, FiAlertCircle, FiPlay, FiLayers, FiCheckCircle } from 'react-icons/fi';
+import { FiCode, FiAlertCircle, FiPlay } from 'react-icons/fi';
+import { FaRegFolder } from 'react-icons/fa6';
 
 import { ContextMenuButton, ClipboardCopyText } from '@/components/ui';
 import type { Project } from '@/redux/apis/generatedApi';
@@ -12,37 +13,91 @@ interface ProjectCardProps {
   onContextMenu: (evt: MouseEvent, project: { id: string; isActive: boolean }) => void;
 }
 
+const colorSet = {
+  activeIssues: {
+    _light: 'rgba(255, 69, 69, 0.1)',
+    _dark: 'rgba(224, 53, 56, 0.1)',
+  },
+  activeIssuesColor: {
+    _light: '#FF4545',
+    _dark: '#E03538 ',
+  },
+  activeResults: {
+    _light: 'rgba(31, 230, 71, 0.1)',
+    _dark: 'rgba(44, 217, 88, 0.1)',
+  },
+  activeResultsColor: {
+    _light: '#1FE647',
+    _dark: '#2CD958',
+  },
+  activeSpecs: {
+    _light: 'rgba(110, 200, 255, 0.1)',
+    _dark: 'rgba(110, 200, 255, 0.1)',
+  },
+  activeSpecsColor: {
+    _light: '#6EC8FF',
+    _dark: '#3AA9FF',
+  },
+  defaultBgColor: {
+    _light: '#F9FAFB',
+    _dark: '#333337',
+  },
+  defaultColor: {
+    _light: '#11181C',
+    _dark: '#E1E1E6',
+  },
+  counterColor: {
+    _light: '#333333',
+    _dark: '#EAEAEA',
+  },
+  color: {
+    _light: '#666666',
+    _dark: '#B2B2B2',
+  },
+};
+
 export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
   const { _count, name, description, id, isActive } = project;
   const { executions, issues, specs } = _count || {};
 
-  const {
-    cardBg,
-    cardBorder,
-    textColor,
-    descriptionColor,
-    mutedTextColor,
-    cardHoverOrderColor,
-    hoverShadow,
-    gradientBg,
-    issueColor,
-    executionColor,
-    specColor,
-    activeOrderColor,
-    activeIconColor,
-    dividerColor,
-  } = useProjectCardColors(isActive);
+  const { textColor, descriptionColor, cardHoverOrderColor, hoverShadow, gradientBg } = useProjectCardColors(isActive);
+
+  const infoPanel = [
+    {
+      label: 'Issues',
+      value: issues || 0,
+      icon: FiAlertCircle,
+      color: isActive ? colorSet.activeIssuesColor : colorSet.defaultColor,
+      bg: isActive ? colorSet.activeIssues : colorSet.defaultBgColor,
+      colorCounter: colorSet.counterColor,
+    },
+    {
+      label: 'Results',
+      value: executions || 0,
+      icon: FiPlay,
+      color: isActive ? colorSet.activeResultsColor : colorSet.defaultColor,
+      bg: isActive ? colorSet.activeResults : colorSet.defaultBgColor,
+      colorCounter: colorSet.counterColor,
+    },
+    {
+      label: 'Specs',
+      value: specs || 0,
+      icon: FiCode,
+      color: isActive ? colorSet.activeSpecsColor : colorSet.defaultColor,
+      bg: isActive ? colorSet.activeSpecs : colorSet.defaultBgColor,
+      colorCounter: colorSet.counterColor,
+    },
+  ];
 
   return (
     <Card.Root
       position="relative"
       overflow="hidden"
+      bg="bg.cardSecondary"
       borderRadius="xl"
-      border="1px solid"
-      borderColor={cardBorder}
-      bg={cardBg}
-      transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-      cursor="pointer"
+      borderColor="border.secondary"
+      boxShadow="0px 1px 2px rgba(0, 0, 0, 0.08)"
+      minH="233px"
       _hover={
         isActive
           ? {
@@ -70,41 +125,54 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
         />
       )}
 
-      <Card.Body p={6} position="relative">
-        <Flex justifyContent="space-between" alignItems="flex-start" mb={4}>
-          <Flex direction="column" align="start" flex={1} gap={2}>
-            <Flex gap={3} align="center" w="full">
-              <Box p={2} borderRadius="lg" bg={isActive ? activeOrderColor : 'transparent'}>
-                <Icon as={FiLayers} color={isActive ? activeIconColor : mutedTextColor} boxSize={5} />
+      <Card.Body position="relative" p={0}>
+        <Flex justifyContent="space-between" alignItems="center" p="8px 6px 15px 8px">
+          <Flex direction="column" align="start" flex={1}>
+            <Flex align="center" w="full">
+              <Box
+                borderRadius="lg"
+                bg="bg.page"
+                w="36px"
+                h="36px"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                mr="16px"
+              >
+                {/* <Icon as={FiLayers} color={isActive ? activeIconColor : mutedTextColor} boxSize={5} /> */}
+                <FaRegFolder />
               </Box>
-              <Flex direction="column" align="start" gap={1} flex={1}>
-                <Flex gap={2} align="center" wrap="wrap">
-                  <Heading size="md" fontWeight="bold" color={textColor} lineHeight="shorter">
+              <Flex direction="column" align="start" flex={1}>
+                <Flex flexDirection="column">
+                  <Heading size="md" fontWeight="bold" color={textColor} lineHeight="shorter" mb="5px">
                     {name}
                   </Heading>
-                  {isActive ? (
-                    <Badge
-                      colorScheme="green"
-                      size="sm"
-                      variant="subtle"
+
+                  <Badge
+                    colorScheme="green"
+                    variant="subtle"
+                    borderRadius="full"
+                    fontSize="12px"
+                    h="22px"
+                    maxW="fit-content"
+                    px="5px"
+                    borderWidth="1px"
+                    borderStyle="solid"
+                    borderColor="border.secondary"
+                    bg="bg.section"
+                  >
+                    <Box
+                      w={2}
+                      h={2}
+                      bg={isActive ? 'status.success' : 'status.neutral'}
                       borderRadius="full"
-                      px={2}
-                      display="flex"
-                      alignItems="center"
-                      gap={1}
-                    >
-                      <Icon as={FiCheckCircle} boxSize={3} />
-                      Active
-                    </Badge>
-                  ) : (
-                    <Badge colorScheme="gray" size="sm" variant="subtle" borderRadius="full" px={2}>
-                      Inactive
-                    </Badge>
-                  )}
+                      mr="3px"
+                      mb="1px"
+                    />
+                    {/* {isActive ? 'Active' : 'Inactive'} */}
+                    Inactive
+                  </Badge>
                 </Flex>
-                <ClipboardCopyText value={id} fontSize="xs" color={mutedTextColor}>
-                  ID: {id}
-                </ClipboardCopyText>
               </Flex>
             </Flex>
           </Flex>
@@ -113,7 +181,7 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
         </Flex>
 
         {description && (
-          <Box mb={4}>
+          <Box mx="8px" mb="13px">
             <Text
               color={descriptionColor}
               fontSize="sm"
@@ -131,64 +199,53 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
           </Box>
         )}
 
+        <ClipboardCopyText
+          value={id}
+          fontSize="xs"
+          color={colorSet.color}
+          bg={colorSet.defaultBgColor}
+          p="0 4px"
+          borderRadius="md"
+          w="fit-content"
+          mx="8px"
+        >
+          ID: {id}
+        </ClipboardCopyText>
+
         {_count && (
           <>
-            <Box height="1px" bg={dividerColor} opacity={isActive ? 1 : 0.5} mb={4} />
+            {/* <Box height="1px" bg={dividerColor} opacity={isActive ? 1 : 0.5} mb={4} mt="auto" /> */}
 
-            <Flex justify="space-between" gap={6}>
-              <Flex direction="column" align="center" flex={1} gap={1}>
-                <Flex gap={2} align="center">
-                  <Icon as={FiAlertCircle} color={isActive ? issueColor : mutedTextColor} boxSize={4} />
-                  <Text fontSize="lg" fontWeight="bold" color={isActive ? issueColor : mutedTextColor}>
-                    {issues || 0}
+            <Flex
+              justify="space-between"
+              mt="auto"
+              mb="10px"
+              borderTop="1px solid border.secondary"
+              p="15px 7px 0 8px"
+              gap={3}
+            >
+              {infoPanel.map((info) => (
+                <Flex key={info.label} direction="column" align="center" flex={1} gap={1} bg={info.bg}>
+                  <Box>
+                    <Flex gap={2} align="center">
+                      <Icon as={info.icon} color={info.color} boxSize={4} />
+                      <Text
+                        fontSize="xs"
+                        color={info.color}
+                        textTransform="uppercase"
+                        letterSpacing="wide"
+                        fontWeight="medium"
+                      >
+                        {info.label}
+                      </Text>
+                    </Flex>
+                  </Box>
+
+                  <Text fontSize="lg" fontWeight="bold" color={info.colorCounter}>
+                    {info.value}
                   </Text>
                 </Flex>
-                <Text
-                  fontSize="xs"
-                  color={mutedTextColor}
-                  textTransform="uppercase"
-                  letterSpacing="wide"
-                  fontWeight="medium"
-                >
-                  Issues
-                </Text>
-              </Flex>
-
-              <Flex direction="column" align="center" flex={1} gap={1}>
-                <Flex gap={2} align="center">
-                  <Icon as={FiPlay} color={isActive ? executionColor : mutedTextColor} boxSize={4} />
-                  <Text fontSize="lg" fontWeight="bold" color={isActive ? executionColor : mutedTextColor}>
-                    {executions || 0}
-                  </Text>
-                </Flex>
-                <Text
-                  fontSize="xs"
-                  color={mutedTextColor}
-                  textTransform="uppercase"
-                  letterSpacing="wide"
-                  fontWeight="medium"
-                >
-                  Results
-                </Text>
-              </Flex>
-
-              <Flex direction="column" align="center" flex={1} gap={1}>
-                <Flex gap={2} align="center">
-                  <Icon as={FiCode} color={isActive ? specColor : mutedTextColor} boxSize={4} />
-                  <Text fontSize="lg" fontWeight="bold" color={isActive ? specColor : mutedTextColor}>
-                    {specs || 0}
-                  </Text>
-                </Flex>
-                <Text
-                  fontSize="xs"
-                  color={mutedTextColor}
-                  textTransform="uppercase"
-                  letterSpacing="wide"
-                  fontWeight="medium"
-                >
-                  Specs
-                </Text>
-              </Flex>
+              ))}
             </Flex>
           </>
         )}

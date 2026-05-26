@@ -1,6 +1,10 @@
 import { BulkReviewRequest, BulkReviewResponse, GetResultsRequest, GetResultsResponse } from '@/types/apis';
 
-import { generatedApi } from './generatedApi';
+import {
+  generatedApi,
+  type PostApiV2ReportsPdfExportApiArg,
+  type PostApiV2ReportsPdfExportApiResponse,
+} from './generatedApi';
 import { TAGS } from './tags';
 
 export const extendedApi = generatedApi
@@ -46,6 +50,15 @@ export const extendedApi = generatedApi
           responseHandler: 'text',
         }),
       }),
+      exportDashboardPdf: build.mutation<PostApiV2ReportsPdfExportApiResponse, PostApiV2ReportsPdfExportApiArg>({
+        query: ({ pdfExportRequest }) => ({
+          url: '/api/v2/reports/pdf-export',
+          method: 'POST',
+          body: pdfExportRequest,
+          responseHandler: (response) => response.blob(),
+        }),
+        invalidatesTags: ['Reports', 'Exports'],
+      }),
       bulkReview: build.mutation<BulkReviewResponse, BulkReviewRequest>({
         query: ({ errorIds }) => ({
           url: '/api/v2/result-errors/bulk-review',
@@ -66,5 +79,6 @@ export const {
   // Custom hooks (from extendedApi)
   useGetResultsQuery,
   useLazyGetAnalysisExportQuery,
+  useExportDashboardPdfMutation,
   useBulkReviewMutation,
 } = extendedApi;

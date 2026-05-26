@@ -1,64 +1,93 @@
-import { Button, Heading, HStack, Spinner, Text, VStack } from '@chakra-ui/react';
-import { useDebounce } from 'use-debounce';
+import { useMemo } from 'react';
+import { HStack, Text, VStack, Box, useMediaQuery } from '@chakra-ui/react';
+import { FormProvider } from 'react-hook-form';
 
-import { IssueCard, IssuesFilters } from '@/components/issues';
+import { useFiltersWithUrl } from '@/hooks';
+import { IssueCard, IssueCardSkeleton } from '@/components/issues';
 import { useGetIssuesWithStatsQuery } from '@/redux/apis/extendedApi';
-import { useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
+import { initialFilters, useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
 import { useSelectedProjectId } from '@/redux/slices/projects';
-import { IssueWithStats } from '@/types';
+import { useFilterContext } from '@/contexts/FilterContext';
+import { IssueCategory, IssueWithStats } from '@/types';
+import { Filter, Pagination } from '@/components/ui';
+
+import { filterConfig } from '../configs';
+
+const toIssueCategory = (value?: string): IssueCategory | undefined => {
+  if (!value) return undefined;
+  return Object.values(IssueCategory).includes(value as IssueCategory) ? (value as IssueCategory) : undefined;
+};
 
 export const IssuesList = () => {
   const filters = useIssuesFilters();
-  const selectedProjectId = useSelectedProjectId();
-
   const { setFilters } = useIssuesActions();
+  const { showFilters } = useFilterContext();
 
-  const [debouncedFilters] = useDebounce(filters, 500);
-  const { data, isFetching } = useGetIssuesWithStatsQuery({ ...debouncedFilters, projectId: selectedProjectId });
+  const selectedProjectId = useSelectedProjectId();
+  const [isWideScreen] = useMediaQuery(['(min-width: 1920px)']);
 
-  const nextPage = () => {
-    if (data && filters.page < data.totalPages) {
-      setFilters({ page: filters.page + 1 });
-    }
-  };
+  const { formMethods, filterProps } = useFiltersWithUrl({
+    currentFilters: filters,
+    initialFilters,
+    onUpdateFilters: setFilters,
+  });
 
-  const prevPage = () => {
-    if (data && filters.page > 1) {
-      setFilters({ page: filters.page - 1 });
-    }
-  };
+  const issuesQueryParams = useMemo(
+    () => ({
+      projectId: selectedProjectId,
+      page: Number(filterProps.filters.page) || 1,
+      category: toIssueCategory(filterProps.filters.category),
+      name: filterProps.filters.name || undefined,
+      statFrom: filterProps.filters.statFrom || undefined,
+      statTo: filterProps.filters.statTo || undefined,
+    }),
+    [
+      selectedProjectId,
+      filterProps.filters.page,
+      filterProps.filters.category,
+      filterProps.filters.name,
+      filterProps.filters.statFrom,
+      filterProps.filters.statTo,
+    ],
+  );
+
+  const { data, isFetching } = useGetIssuesWithStatsQuery(issuesQueryParams);
 
   return (
-    <HStack align="flex-start" gap={4} w="100%" px={4}>
-      <IssuesFilters as="aside" />
+    <FormProvider {...formMethods}>
+      <HStack align="flex-start" gap={4} w="100%">
+        <Filter config={filterConfig} {...filterProps} />
+        <VStack flex={1} align="stretch" minW={0} py={6} pr={4}>
+          <Box
+            display="grid"
+            gridTemplateColumns={{ base: '1fr', lg: showFilters && !isWideScreen ? '1fr' : '1fr 1fr' }}
+            gap={4}
+            flex={1}
+            w="100%"
+            minW={0}
+          >
+            {isFetching ? (
+              Array.from({ length: 10 }).map((_, index) => <IssueCardSkeleton key={index} />)
+            ) : data && data.issues?.length > 0 ? (
+              data.issues.map((issue, index) => <IssueCard key={index} issue={issue as IssueWithStats} />)
+            ) : (
+              <Text>No issues found.</Text>
+            )}
+          </Box>
 
-      <VStack flex={1} align="stretch">
-        <HStack ps={2}>
-          <Heading textStyle="3xl">Issues</Heading>
-          {isFetching && <Spinner />}
-        </HStack>
-        <VStack flex={1} gap={4}>
-          {data && data.issues?.length > 0 ? (
-            data.issues.map((issue, index) => <IssueCard key={index} issue={issue as IssueWithStats} />)
-          ) : (
-            <Text>No issues found.</Text>
+          {data && data.totalPages > 1 && (
+            <HStack alignSelf="center" py={2}>
+              <Pagination
+                currentPage={Number(filters.page) || 1}
+                totalPages={data.totalPages}
+                onPageChange={(page) => setFilters({ page })}
+                variant={showFilters && !isWideScreen ? 'simple' : 'full'}
+                size="sm"
+              />
+            </HStack>
           )}
         </VStack>
-
-        {data && data.totalPages > 1 && (
-          <HStack alignSelf="center">
-            <Button variant="ghost" onClick={prevPage} disabled={filters.page === 1}>
-              Previous
-            </Button>
-            <Text>
-              Page {filters.page} of {data.totalPages}
-            </Text>
-            <Button variant="ghost" onClick={nextPage} disabled={filters.page === data.totalPages}>
-              Next
-            </Button>
-          </HStack>
-        )}
-      </VStack>
-    </HStack>
+      </HStack>
+    </FormProvider>
   );
 };

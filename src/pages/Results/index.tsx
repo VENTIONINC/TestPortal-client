@@ -1,13 +1,15 @@
-import { VStack } from '@chakra-ui/react';
+import { ResultContainer } from '@/components/results';
+import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
+import { FilterProvider } from '@/contexts/FilterContext';
 
-import { AppHeader } from '@/components/AppHeader';
-import { ResultsList } from '@/components/results';
+const ResultsPageContent = () => (
+  <MainTemplate pageHeader="Results">
+    <ResultContainer />
+  </MainTemplate>
+);
 
-export const ResultsPage = () => {
-  return (
-    <VStack gap={4} align="stretch" mb={4} overflowX="auto" w="100%">
-      <AppHeader />
-      <ResultsList />
-    </VStack>
-  );
-};
+export const ResultsPage = () => (
+  <FilterProvider storageKey="results">
+    <ResultsPageContent />
+  </FilterProvider>
+);

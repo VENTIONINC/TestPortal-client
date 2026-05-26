@@ -1,0 +1,64 @@
+/*
+ * Подключение кастомных шрифтов (Aeonik Pro)
+ * Файлы должны лежать в /public/fonts/
+ */
+
+@font-face {
+  font-family: 'Aeonik Pro';
+  src:
+    url('/fonts/aeonikpro-light-webfont.woff2') format('woff2'),
+    url('/fonts/aeonikpro-light-webfont.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aeonik Pro';
+  src:
+    url('/fonts/aeonikpro-lightitalic-webfont.woff2') format('woff2'),
+    url('/fonts/aeonikpro-lightitalic-webfont.woff') format('woff');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aeonik Pro';
+  src:
+    url('/fonts/aeonikpro-regular-webfont.woff2') format('woff2'),
+    url('/fonts/aeonikpro-regular-webfont.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aeonik Pro';
+  src:
+    url('/fonts/aeonikpro-regularitalic-webfont.woff2') format('woff2'),
+    url('/fonts/aeonikpro-regularitalic-webfont.woff') format('woff');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aeonik Pro';
+  src:
+    url('/fonts/aeonikpro-medium-webfont.woff2') format('woff2'),
+    url('/fonts/aeonikpro-medium-webfont.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aeonik Pro';
+  src:
+    url('/fonts/aeonikpro-mediumitalic-webfont.woff2') format('woff2'),
+    url('/fonts/aeonikpro-mediumitalic-webfont.woff') format('woff');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}

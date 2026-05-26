@@ -2,8 +2,7 @@ import { MouseEvent } from 'react';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 
 import { useOpenContextMenu } from '@/redux/slices/contextMenu';
-import { useUpdateProjectDialog } from '@/components/dialogs/update-project';
-import { useArchiveProjectDialog } from '@/components/dialogs/archive-project';
+import { useUpdateProjectDialog, useArchiveProjectDialog } from '@/components/ui/components';
 
 type UseProjectContextMenuType = () => (evt: MouseEvent, project: { id: string; isActive: boolean }) => void;
 

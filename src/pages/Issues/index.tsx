@@ -1,13 +1,15 @@
-import { VStack } from '@chakra-ui/react';
-
-import { AppHeader } from '@/components/AppHeader';
 import { IssuesList } from '@/components/issues';
+import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
+import { FilterProvider } from '@/contexts/FilterContext';
 
-export const IssuesPage = () => {
-  return (
-    <VStack gap={4} align="stretch" mb={4}>
-      <AppHeader />
-      <IssuesList />
-    </VStack>
-  );
-};
+const IssuesPageContent = () => (
+  <MainTemplate pageHeader="Issues">
+    <IssuesList />
+  </MainTemplate>
+);
+
+export const IssuesPage = () => (
+  <FilterProvider storageKey="issues">
+    <IssuesPageContent />
+  </FilterProvider>
+);

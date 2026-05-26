@@ -2,7 +2,7 @@ import { MouseEvent } from 'react';
 import { FiTrash2 } from 'react-icons/fi';
 
 import { useOpenContextMenu } from '@/redux/slices/contextMenu';
-import { useConfirmExecutionDeletionDialog } from '@/components/dialogs/confirm-execution-deletion';
+import { useConfirmExecutionDeletionDialog } from '@/components/ui';
 
 type UseExecutionContextMenuType = () => (
   evt: MouseEvent,

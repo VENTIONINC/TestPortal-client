@@ -1,0 +1,21 @@
+export type TestStatus = 'passed' | 'failed' | 'runs';
+
+export interface TestStat {
+  label: string;
+  value: number;
+  status: TestStatus;
+  icon: React.ElementType;
+  color: string;
+}
+
+export interface TestDescriptionSummary {
+  totalRuns: number;
+  failures: number;
+  passRate: number;
+  passRateTrend?: number;
+}
+
+export interface TestDescriptionProps {
+  summary?: TestDescriptionSummary;
+  isGrid?: boolean;
+}

@@ -1,1 +1,2 @@
-export { IssueCard } from './issue-card';
+export * from './issue-card';
+export * from './skeleton';

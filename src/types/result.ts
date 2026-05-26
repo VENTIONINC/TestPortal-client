@@ -36,6 +36,9 @@ export interface BaseResult {
   analysisConfidence?: number;
   analysisStatus?: AnalysisStatus;
   analysisConclusion?: string;
+  analysisFeedbackCategory?: string;
+  analysisFeedbackConfidence?: number;
+  analysisFeedbackConclusion?: string;
   analysisErrorQuality?: number;
   analysisErrorQualityConclusion?: string;
 }
@@ -108,7 +111,7 @@ export type ResultGroup = Map<
 >;
 
 export interface ResultsFilters {
-  tag: string;
+  tags: string[];
   specId: string;
   specFile: string;
   specName: string;

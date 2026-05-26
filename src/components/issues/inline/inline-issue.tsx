@@ -37,26 +37,30 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
               key={index}
               border="1px solid"
               borderColor={color}
-              borderRadius="md"
+              borderRadius="xl"
               ml="auto"
               px={2}
+              minH="26px"
               color={color}
               {...(isConfirmed && {
                 onClick: () => openManageIssueDrawer({ issue: assumption.issue }),
                 cursor: 'pointer',
-                _hover: { bg: hoverBgColor },
+
+                _hover: { bg: hoverBgColor, color: 'text.mainHover' },
               })}
             >
               {assumption.issue && (
                 <>
                   <Icon size={16} color="currentColor" />
-                  <Text color="black">{assumption.issue.name}</Text>
+                  <Text fontSize="xs">{assumption.issue.name}</Text>
                 </>
               )}
 
               {!isConfirmed && (
                 <>
-                  <Text color="black">{Math.round(assumption.score * 100)}%</Text>
+                  <Text color="text.main" fontSize="xs">
+                    {Math.round(assumption.score * 100)}%
+                  </Text>
                   <LuCheck
                     color="green"
                     size={16}
