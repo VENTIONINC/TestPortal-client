@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 export { Checkbox, type CheckboxProps } from './checkbox';
 export { ClipboardCopyText } from './clipboard';
 export { ColorModeProvider, useColorMode, useColorModeValue } from './color-mode';

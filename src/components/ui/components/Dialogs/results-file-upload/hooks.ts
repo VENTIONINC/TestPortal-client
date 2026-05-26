@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { useState } from 'react';
 import { useFileUpload } from '@chakra-ui/react';
 

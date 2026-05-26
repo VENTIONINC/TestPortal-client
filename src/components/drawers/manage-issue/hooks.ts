@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { useDrawerActions } from '@/redux/slices/drawer';
 import { Issue, ResultError } from '@/types';
 

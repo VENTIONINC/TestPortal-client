@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 export { useArchiveProjectDialog } from './archive-project';
 export { useConfirmApiKeyDeletionDialog } from './confirm-api-key-deletion';
 export { useConfirmExecutionDeletionDialog } from './confirm-execution-deletion';

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { useState } from 'react';
 import { VStack, Box, Button, Input, Text, Flex, Grid, Textarea, Heading } from '@chakra-ui/react';
 

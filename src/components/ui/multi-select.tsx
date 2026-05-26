@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { useCallback, useMemo, useState } from 'react';
 import { Box, Flex, Popover, Portal, Stack, Text, HStack, Button } from '@chakra-ui/react';
 import { LuChevronDown, LuX, LuCheck } from 'react-icons/lu';

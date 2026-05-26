@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { useEffect, useRef, useState } from 'react';
 import { Box, Flex, Icon, Spinner, Text, VStack } from '@chakra-ui/react';
 

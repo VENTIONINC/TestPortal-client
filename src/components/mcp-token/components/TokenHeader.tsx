@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo } from 'react';
 import { Box, Heading, Flex, Button, HStack } from '@chakra-ui/react';
 import { LuRefreshCw } from 'react-icons/lu';

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo } from 'react';
 import { Text, HStack, Box } from '@chakra-ui/react';
 

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Text, VStack, HStack } from '@chakra-ui/react';
 
 import { categoriesConfig } from '../configs/categories';

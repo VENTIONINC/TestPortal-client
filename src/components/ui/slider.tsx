@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { forwardRef, ReactNode } from 'react';
 import { Slider as ChakraSlider, HStack, Text } from '@chakra-ui/react';
 

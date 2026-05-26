@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { forwardRef, ReactNode, type ComponentPropsWithoutRef } from 'react';
 import { Tooltip as ChakraTooltip } from '@chakra-ui/react';
 

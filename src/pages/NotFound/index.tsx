@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { useNavigate } from 'react-router';
 import { Box, Container, Heading, Text, Button, VStack, Flex } from '@chakra-ui/react';
 

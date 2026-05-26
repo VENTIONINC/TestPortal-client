@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { createBrowserRouter, Navigate } from 'react-router';
 
 import { ProtectedRoute, ProjectGuard, RouterErrorFallback } from '@/components';

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { ReactNode, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 

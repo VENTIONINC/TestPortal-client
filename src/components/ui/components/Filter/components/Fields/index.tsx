@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Path } from 'react-hook-form';
 
 import { FormInput, FormSelect, FormMultiSelect } from '@/components/ui';

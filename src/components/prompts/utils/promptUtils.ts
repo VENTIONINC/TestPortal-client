@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { LuCode, LuFileText, LuTrendingUp, LuZap } from 'react-icons/lu';
 import { IconType } from 'react-icons';
 

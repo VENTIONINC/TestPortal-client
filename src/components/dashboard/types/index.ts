@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 export type TestStatus = 'passed' | 'failed' | 'runs';
 
 export interface TestStat {

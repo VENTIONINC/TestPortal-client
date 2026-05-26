@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Flex, Text, Box, Icon } from '@chakra-ui/react';
 import { LuTag, LuX } from 'react-icons/lu';
 

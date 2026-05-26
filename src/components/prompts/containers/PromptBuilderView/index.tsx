@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo } from 'react';
 import { Button, Grid, Flex, Heading, Spacer, Text, VStack } from '@chakra-ui/react';
 import { useParams } from 'react-router';
