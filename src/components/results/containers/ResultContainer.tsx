@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { useCallback, useEffect, useMemo } from 'react';
 import { Box, HStack, VStack } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';

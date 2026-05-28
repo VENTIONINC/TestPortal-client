@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { LuCheck, LuCircleHelp, LuClock, LuSkipForward, LuX } from 'react-icons/lu';
 
 import { ResultStatus } from '@/types';

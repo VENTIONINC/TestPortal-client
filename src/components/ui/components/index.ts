@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 export { Sidebar } from './Sidebar/Sidebar';
 export { MainTemplate } from './Templates/MainTemplate';
 export { Header } from './Header/Header';

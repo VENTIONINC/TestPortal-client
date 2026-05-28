@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { button } from './button';
 import { bg } from './bg';
 import { border } from './border';

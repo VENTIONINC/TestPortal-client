@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { FiGrid, FiFileText, FiAlertTriangle, FiMessageSquare, FiSettings } from 'react-icons/fi';
 
 import { PATHS } from '@/types/paths';

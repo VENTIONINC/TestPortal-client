@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { LuCircleHelp, LuClock, LuSkipForward } from 'react-icons/lu';
 import { AiOutlineCloseCircle, AiOutlineCheckCircle } from 'react-icons/ai';
 

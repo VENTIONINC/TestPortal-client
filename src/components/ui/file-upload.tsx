@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { forwardRef, InputHTMLAttributes, ReactNode } from 'react';
 import { FileUpload as ChakraFileUpload, Icon, Text } from '@chakra-ui/react';
 import { LuUpload } from 'react-icons/lu';

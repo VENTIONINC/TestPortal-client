@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo, useState, useEffect, useRef } from 'react';
 import { Button, IconButton } from '@chakra-ui/react';
 import { LuCheck, LuCopy } from 'react-icons/lu';

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Text, HStack } from '@chakra-ui/react';
 
 import { StatsItem } from '../StatsItem';

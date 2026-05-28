@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo } from 'react';
 import { HStack, Text, VStack, SimpleGrid } from '@chakra-ui/react';
 

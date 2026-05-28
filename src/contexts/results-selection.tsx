@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { createContext, useContext, useState, useCallback, PropsWithChildren } from 'react';
 
 interface ResultsSelectionContextType {

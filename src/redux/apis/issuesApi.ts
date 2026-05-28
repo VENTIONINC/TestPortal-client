@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { IssueFilters } from '@/types';
 import { GetIssuesResponse } from '@/types/apis';
 

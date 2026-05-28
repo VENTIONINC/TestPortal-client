@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, Grid, GridItem } from '@chakra-ui/react';
 import { useState } from 'react';
 

@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Wrap as ChakraWrap, WrapProps } from '@chakra-ui/react';
 
 export const Wrap = (props: WrapProps) => {

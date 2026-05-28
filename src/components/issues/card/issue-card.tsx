@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo, useMemo, useState, useEffect } from 'react';
 import { HStack, Text, Flex, Card, Box, IconButton, Tag } from '@chakra-ui/react';
 import { LuPencil, LuDot } from 'react-icons/lu';

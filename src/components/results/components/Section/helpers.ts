@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { User } from '@/redux/apis/generatedApi';
 import { ResultExecution } from '@/types';
 

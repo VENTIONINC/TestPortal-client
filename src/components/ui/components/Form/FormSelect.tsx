@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Controller, FieldValues, Path, useFormContext } from 'react-hook-form';
 
 import { NativeSelect, NativeSelectProps } from '@/components/ui';

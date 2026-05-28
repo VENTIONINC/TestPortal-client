@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Breadcrumb as ChakraBreadcrumb, Box, type SystemStyleObject } from '@chakra-ui/react';
 import * as React from 'react';
 import { useLocation, Link as RouterLink } from 'react-router';

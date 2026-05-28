@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, Flex, HStack, Text } from '@chakra-ui/react';
 
 import { type ResultsStatCardProps } from './types';

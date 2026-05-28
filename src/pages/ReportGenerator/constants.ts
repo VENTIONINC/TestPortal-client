@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 export const ENVIRONMENTS = ['prod', 'staging', 'qa', 'dev'];
 export const SERVICES = ['web-app', 'api', 'mobile', 'checkout', 'auth', 'payment'];
 export const BUILDS = ['nightly', 'release', 'hotfix', 'regression', 'smoke'];

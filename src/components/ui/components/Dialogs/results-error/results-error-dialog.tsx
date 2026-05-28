@@ -1,3 +1,6 @@
+// Copyright 2026 Vention
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, Code } from '@chakra-ui/react';
 
 import { Dialog, DialogBody, DialogFooter } from '@/components/ui';
