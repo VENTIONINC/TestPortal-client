@@ -9,6 +9,7 @@ export enum PATHS {
   LOGIN = '/login',
   SIGNUP = '/signup',
   USER_SETTINGS = '/settings',
+  USER_SETTINGS_USERS = '/settings/users',
   USER_SETTINGS_MCP = '/settings/mcp',
   USER_SETTINGS_CONFIGURATION = '/settings/configuration',
   USER_SETTINGS_PROJECTS = '/settings/projects',

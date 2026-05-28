@@ -6,13 +6,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { PATHS } from '@/types/paths';
-import { usePostApiV2UsersSignupMutation } from '@/redux/apis/generatedApi';
+import { usePostApiV2AuthSignupMutation } from '@/redux/apis/generatedApi';
 import { signupSchema, type SignupFormData } from '@/schemas/authSchemas';
 import { extractApiError } from '@/utils/apiErrors';
 
 export function useSignup() {
   const navigate = useNavigate();
-  const [postApiUsersSignup, { isLoading: isApiLoading, error: apiError }] = usePostApiV2UsersSignupMutation();
+  const [postApiUsersSignup, { isLoading: isApiLoading, error: apiError }] = usePostApiV2AuthSignupMutation();
 
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),

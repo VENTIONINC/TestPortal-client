@@ -11,6 +11,7 @@ export function UserSettingsPage() {
   const location = useLocation();
 
   const getActiveTab = () => {
+    if (location.pathname === PATHS.USER_SETTINGS_USERS) return 'users';
     if (location.pathname === PATHS.USER_SETTINGS_MCP) return 'mcp';
     if (location.pathname === PATHS.USER_SETTINGS_CONFIGURATION) return 'configuration';
     if (location.pathname === PATHS.USER_SETTINGS_PROJECTS) return 'projects';
@@ -24,6 +25,9 @@ export function UserSettingsPage() {
       <Container maxW="800px" centerContent={false} ml={0} px={0}>
         <Tabs.Root value={getActiveTab()}>
           <Tabs.List>
+            <Link href={PATHS.USER_SETTINGS_USERS}>
+              <Tabs.Trigger value="users">Users</Tabs.Trigger>
+            </Link>
             <Link href={PATHS.USER_SETTINGS_MCP}>
               <Tabs.Trigger value="mcp">MCP</Tabs.Trigger>
             </Link>

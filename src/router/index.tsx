@@ -21,6 +21,7 @@ import { Configuration } from '@/pages/UserSettings/Configuration';
 import { ProjectsSettings } from '@/pages/UserSettings/ProjectsSettings';
 import { UploadApiSettings } from '@/pages/UserSettings/UploadApiSettings';
 import { InfoSettings } from '@/pages/UserSettings/InfoSettings';
+import { UsersSettings } from '@/pages/UserSettings/UsersSettings';
 import { PlaywrightReportGenerator } from '@/pages/ReportGenerator/PlaywrightReportGenerator';
 import { CTRFReportGenerator } from '@/pages/ReportGenerator/CTRFReportGenerator';
 import { PATHS } from '@/types/paths';
@@ -114,7 +115,11 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to={PATHS.USER_SETTINGS_MCP} replace />,
+        element: <Navigate to={PATHS.USER_SETTINGS_USERS} replace />,
+      },
+      {
+        path: PATHS.USER_SETTINGS_USERS,
+        element: <UsersSettings />,
       },
       {
         path: PATHS.USER_SETTINGS_MCP,
