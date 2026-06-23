@@ -1365,6 +1365,13 @@ export type GeneratePromptResponse = {
 export type GeneratePromptRequest = {
   [key: string]: any;
 };
+export type ProjectCategoryWeights = {
+  bug: number;
+  infra: number;
+  other: number;
+  performance: number;
+  script: number;
+};
 export type Project = {
   id: string;
   name: string;
@@ -1373,6 +1380,7 @@ export type Project = {
   ownerId: string;
   createdAt: string;
   updatedAt: string;
+  categoryWeights?: ProjectCategoryWeights;
   _count?: {
     executions: number;
     specs: number;

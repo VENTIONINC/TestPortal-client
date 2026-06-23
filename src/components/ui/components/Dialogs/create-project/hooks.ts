@@ -19,6 +19,13 @@ export const useCreateProject = (closeDialog: () => void) => {
     defaultValues: {
       name: '',
       description: '',
+      categoryWeights: {
+        bug: 100,
+        infra: 100,
+        script: 100,
+        performance: 100,
+        other: 100,
+      },
     },
   });
 

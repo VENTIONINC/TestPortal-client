@@ -5,6 +5,8 @@ import { FaRegFolder } from 'react-icons/fa6';
 
 import { ContextMenuButton, ClipboardCopyText } from '@/components/ui';
 import type { Project } from '@/redux/apis/generatedApi';
+import { getIssueCategoryStyle } from '@/utils';
+import { IssueCategory } from '@/types';
 
 import { useProjectCardColors } from './hooks';
 
@@ -211,6 +213,45 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
         >
           ID: {id}
         </ClipboardCopyText>
+
+        <Box mx="8px" mt="12px" mb="4px">
+          <Text fontSize="xs" fontWeight="semibold" color={descriptionColor} mb="6px">
+            Category weights:
+          </Text>
+          <Flex gap={2} wrap="wrap">
+            {[
+              { key: 'bug', type: IssueCategory.Bug },
+              { key: 'infra', type: IssueCategory.Infra },
+              { key: 'script', type: IssueCategory.Script },
+              { key: 'performance', type: IssueCategory.Performance },
+              { key: 'other', type: IssueCategory.Other },
+            ].map((cat) => {
+              const weight = project.categoryWeights?.[cat.key as keyof typeof project.categoryWeights] ?? 100;
+              const style = getIssueCategoryStyle(cat.type);
+              const IconComponent = style.Icon;
+
+              return (
+                <Flex
+                  key={cat.key}
+                  align="center"
+                  gap={1.5}
+                  px="6px"
+                  py="3px"
+                  borderRadius="md"
+                  bg="bg.subtle"
+                  border="1px solid"
+                  borderColor="border.muted"
+                  title={`${style.name || 'Other'}: ${weight}`}
+                >
+                  <Icon as={IconComponent} color={style.color} boxSize="12px" />
+                  <Text fontSize="10px" fontWeight="bold" color="fg.muted">
+                    {weight}
+                  </Text>
+                </Flex>
+              );
+            })}
+          </Flex>
+        </Box>
 
         {_count && (
           <>

@@ -7,3 +7,5 @@ export { useResultContextMenu } from './useResultContextMenu';
 export { useResetState } from './useResetState';
 export { useFilterQueryParams } from './useFilterQueryParams';
 export { useFiltersWithUrl } from './useFiltersWithUrl';
+export { useSelectedProject } from './useSelectedProject';
+

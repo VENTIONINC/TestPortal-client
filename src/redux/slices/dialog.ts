@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { createSlice } from '@reduxjs/toolkit';
 
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -47,9 +47,9 @@ export const dialogSlice = createSlice({
 export const useDialogActions = () => {
   const dispatch = useAppDispatch();
 
-  return {
-    openDialog: useCallback(
-      <T>(Component: DialogComponent<T>, props?: T) => {
+  return useMemo(
+    () => ({
+      openDialog: <T>(Component: DialogComponent<T>, props?: T) => {
         dispatch(
           dialogSlice.actions.openDialog({
             Component,
@@ -59,15 +59,15 @@ export const useDialogActions = () => {
           }),
         );
       },
-      [dispatch],
-    ),
-    closeDialog: () => {
-      dispatch(dialogSlice.actions.closeDialog());
-    },
-    closeAllDialogs: () => {
-      dispatch(dialogSlice.actions.closeAllDialogs());
-    },
-  };
+      closeDialog: () => {
+        dispatch(dialogSlice.actions.closeDialog());
+      },
+      closeAllDialogs: () => {
+        dispatch(dialogSlice.actions.closeAllDialogs());
+      },
+    }),
+    [dispatch],
+  );
 };
 
 export const useDialog = () => useAppSelector((state) => state.dialog.dialogs);
