@@ -57,7 +57,7 @@ Alternatives considered:
 The first implementation should support `.ts`, `.tsx`, `.js`, `.jsx`, `.mjs`, and `.cjs` using:
 
 ```text
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 ```
 

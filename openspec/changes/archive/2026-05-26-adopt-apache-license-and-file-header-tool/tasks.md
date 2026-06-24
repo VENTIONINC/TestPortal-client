@@ -7,7 +7,7 @@
 
 ## 2. Header Tooling
 
-- [x] 2.1 Add a shared license header utility with the standard Vention Apache 2.0 header and supported code extensions
+- [x] 2.1 Add a shared license header utility with the standard VENSOLUTIONSGROUP LTD Apache 2.0 header and supported code extensions
 - [x] 2.2 Add a package `new:file` script that creates supported files with the standard header and refuses missing, existing, or unsupported targets
 - [x] 2.3 Add a package `headers:add` script that backfills missing headers across configured source directories
 - [x] 2.4 Implement explicit generated-source handling for `src/redux/apis/generatedApi.ts`

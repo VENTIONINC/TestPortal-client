@@ -8,7 +8,7 @@ The client repository currently has no canonical repository license declaration,
 - Update package metadata and top-level documentation so Apache 2.0 is discoverable through `package.json`, README, and contributor guidance.
 - Add lightweight Yarn-accessible scripts for creating supported new files with the standard Apache 2.0 header and for backfilling supported existing files.
 - Standardize the source header for supported TypeScript and JavaScript-family files as:
-  - `// Copyright 2026 Vention`
+  - `// Copyright 2026 VENSOLUTIONSGROUP LTD`
   - `// SPDX-License-Identifier: Apache-2.0`
 - Document how generated RTK Query API output is handled so license headers do not silently drift after code generation.
 

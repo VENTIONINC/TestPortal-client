@@ -28,7 +28,7 @@ For supported TypeScript and JavaScript-family source file extensions, repositor
 
 #### Scenario: Supported code file is created
 - **WHEN** a developer creates a supported TypeScript or JavaScript-family file with the package `new:file` command
-- **THEN** the new file SHALL begin with `Copyright 2026 Vention`
+- **THEN** the new file SHALL begin with `Copyright 2026 VENSOLUTIONSGROUP LTD`
 - **AND** the new file SHALL include the SPDX identifier `Apache-2.0` in the file header
 
 #### Scenario: Supported extension list is inspected

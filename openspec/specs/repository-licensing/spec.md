@@ -9,6 +9,7 @@ The repository SHALL declare Apache 2.0 as its active license consistently acros
 #### Scenario: Root license artifacts are present
 - **WHEN** a contributor inspects the repository root
 - **THEN** the repository SHALL include a `LICENSE` file containing the Apache License 2.0 text
+- **AND** the repository SHALL include a `NOTICE` file identifying `Test Portal Client` and `Copyright 2026 VENSOLUTIONSGROUP LTD`
 - **AND** the repository SHALL expose Apache 2.0 as the canonical license in its top-level metadata and documentation
 
 #### Scenario: Package metadata is inspected
@@ -22,4 +23,4 @@ The repository SHALL include contributor-facing documentation that identifies Ap
 - **WHEN** a contributor reads the repository README
 - **THEN** the README SHALL identify Apache 2.0 as the project license
 - **AND** the README SHALL direct contributors to the root `LICENSE` file for the full terms
-
+- **AND** the README SHALL direct contributors to the root `NOTICE` file for copyright attribution

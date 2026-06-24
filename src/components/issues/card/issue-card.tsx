@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo, useMemo, useState, useEffect } from 'react';
