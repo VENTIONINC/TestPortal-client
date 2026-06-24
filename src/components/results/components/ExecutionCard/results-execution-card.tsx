@@ -1,18 +1,201 @@
 import { memo, useState } from 'react';
-import { HStack, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, Flex, HStack, IconButton, Text, VStack } from '@chakra-ui/react';
+import { LuCheck, LuChevronDown, LuChevronUp, LuCopy, LuMaximize2 } from 'react-icons/lu';
+import { FiAlertCircle } from 'react-icons/fi';
 
 import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip, toaster, StatusIcon } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/ui/components/Dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
-import { getAnalysisCategoryStyle, getConfidenceLabel } from '@/utils';
+import { getAnalysisCategoryStyle, getConfidenceLabel, copyToClipboard } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
+import { ResultError } from '@/types';
 import { usePostApiV2ResultErrorsAnalyzeMutation } from '@/redux/apis/generatedApi';
 import { BulkActions } from '@/components/BulkActions';
 
 import { ResultsExecutionCardProps } from './types';
 import { IntegrationLinks } from './integration-links';
 import { AnalyzeCategoryButton } from './analyze-category-button';
+
+interface ErrorBlockProps {
+  resultError: ResultError;
+  onOpenDialog: (error: ResultError) => void;
+}
+
+const parseError = (message: string) => {
+  if (!message) return { header: '', stack: '' };
+
+  const lines = message.split('\n');
+  const headerLines: string[] = [];
+  const stackLines: string[] = [];
+  let isStackStarted = false;
+
+  for (const line of lines) {
+    // Detect stack trace line: starts with "at " or "File " or matches specific patterns
+    const isStack =
+      /^\s*at\s+/.test(line) ||
+      /^\s*File\s+["']/.test(line) ||
+      line.includes('stackTrace') ||
+      line.includes('node_modules');
+
+    if (isStack) {
+      isStackStarted = true;
+    }
+
+    if (isStackStarted) {
+      stackLines.push(line);
+    } else {
+      headerLines.push(line);
+    }
+  }
+
+  return {
+    header: headerLines.join('\n').trim(),
+    stack: stackLines.join('\n').trim(),
+  };
+};
+
+const ErrorBlock = ({ resultError, onOpenDialog }: ErrorBlockProps) => {
+  const [copied, setCopied] = useState(false);
+  const [isStackExpanded, setIsStackExpanded] = useState(false);
+
+  const { header, stack } = parseError(resultError.message || '');
+
+  const handleCopyAll = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await copyToClipboard(resultError.message || '');
+      setCopied(true);
+      toaster.create({
+        title: 'Copied to clipboard',
+        type: 'success',
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toaster.create({
+        title: 'Failed to copy',
+        type: 'error',
+      });
+    }
+  };
+
+  return (
+    <VStack align="stretch" w="full" gap={2}>
+      {/* Primary Error Banner */}
+      <Flex
+        align="start"
+        justify="space-between"
+        p={3}
+        bg="rgba(239, 68, 68, 0.04)"
+        border="1px solid"
+        borderColor="rgba(239, 68, 68, 0.12)"
+        borderLeft="3px solid"
+        borderLeftColor="red.500"
+        borderRadius="md"
+        gap={3}
+      >
+        <HStack align="start" gap={2.5} flex={1}>
+          <Box mt="2px" color="red.500" flexShrink={0}>
+            <FiAlertCircle size={15} />
+          </Box>
+          <Text
+            fontFamily="mono"
+            fontSize="xs"
+            fontWeight="bold"
+            color="fg"
+            whiteSpace="pre-wrap"
+            wordBreak="break-word"
+            lineHeight="tall"
+            flex={1}
+          >
+            {header || 'Unknown Error'}
+          </Text>
+        </HStack>
+
+        <HStack gap={1} flexShrink={0} mt="-2px">
+          <Tooltip content={copied ? 'Copied!' : 'Copy full error'}>
+            <IconButton
+              aria-label="Copy error message"
+              variant="ghost"
+              size="xs"
+              onClick={handleCopyAll}
+              color="fg.muted"
+              _hover={{ color: 'fg', bg: 'bg.hover' }}
+              h="24px"
+              w="24px"
+            >
+              {copied ? <LuCheck size={14} /> : <LuCopy size={14} />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip content="Open full error details">
+            <IconButton
+              aria-label="Open full error details"
+              variant="ghost"
+              size="xs"
+              onClick={() => onOpenDialog(resultError)}
+              color="fg.muted"
+              _hover={{ color: 'fg', bg: 'bg.hover' }}
+              h="24px"
+              w="24px"
+            >
+              <LuMaximize2 size={14} />
+            </IconButton>
+          </Tooltip>
+        </HStack>
+      </Flex>
+
+      {/* Collapsible Stack Trace */}
+      {stack && (
+        <VStack align="stretch" gap={1.5}>
+          <Flex justify="flex-start">
+            <Button
+              variant="ghost"
+              size="xs"
+              h="24px"
+              px={2}
+              onClick={() => setIsStackExpanded(!isStackExpanded)}
+              color="fg.muted"
+              _hover={{ color: 'fg', bg: 'bg.hover' }}
+              fontSize="11px"
+              fontWeight="semibold"
+            >
+              {isStackExpanded ? (
+                <LuChevronUp size={14} style={{ marginRight: '4px' }} />
+              ) : (
+                <LuChevronDown size={14} style={{ marginRight: '4px' }} />
+              )}
+              {isStackExpanded ? 'Hide Stack Trace' : 'Show Stack Trace'}
+            </Button>
+          </Flex>
+
+          {isStackExpanded && (
+            <Box
+              px={3.5}
+              py={2.5}
+              maxH="250px"
+              overflowY="auto"
+              bg="bg.input"
+              border="1px solid"
+              borderColor="border.muted"
+              borderRadius="md"
+            >
+              <Text
+                fontFamily="mono"
+                fontSize="xs"
+                whiteSpace="pre-wrap"
+                wordBreak="break-word"
+                lineHeight="tall"
+                color="fg.muted"
+              >
+                {stack}
+              </Text>
+            </Box>
+          )}
+        </VStack>
+      )}
+    </VStack>
+  );
+};
 
 export const ResultsExecutionCard = memo(
   ({
@@ -230,27 +413,10 @@ export const ResultsExecutionCard = memo(
                       borderRadius="md"
                       gap={2.5}
                     >
-                      <VStack align="stretch" gap={1}>
-                        <Text
-                          fontSize="10px"
-                          fontWeight="bold"
-                          color="fg.muted"
-                          letterSpacing="wider"
-                          textTransform="uppercase"
-                        >
-                          Error Message
-                        </Text>
-                        <Text
-                          fontSize="sm"
-                          fontWeight="medium"
-                          onClick={() => openResultsErrorDialog(resultError)}
-                          cursor="pointer"
-                          wordBreak="break-word"
-                          lineHeight="tall"
-                        >
-                          {resultError.message}
-                        </Text>
-                      </VStack>
+                      <ErrorBlock
+                        resultError={resultError}
+                        onOpenDialog={openResultsErrorDialog}
+                      />
                       <HStack justify="flex-end" w="full" flexShrink={0}>
                         <InlineIssue resultError={resultError} />
                       </HStack>
