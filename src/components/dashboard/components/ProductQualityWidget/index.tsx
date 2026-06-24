@@ -1,4 +1,3 @@
-// import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { Box, Flex, Icon, Text, Circle } from '@chakra-ui/react';
 import { FiAlertTriangle, FiInfo } from 'react-icons/fi';
@@ -10,10 +9,9 @@ import {
   type GetApiV2IssuesWithStatsApiResponse,
 } from '@/redux/apis/generatedApi';
 import { useSelectedProject } from '@/hooks';
-// import { getIssueCategoryStyle } from '@/utils';
-// import { IssueCategory } from '@/types';
 import { ProgressBar, ProgressRoot } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui';
 
 const DEFAULT_ENVIRONMENT = 'staging';
 
@@ -124,7 +122,7 @@ export const ProductQualityWidget = () => {
 
   if (isLoading) {
     return (
-      <Flex direction="column" justify="center" align="center" h="100%" minH="220px" gap={4}>
+      <Flex direction="column" justify="center" align="center" h="100%" minH="200px" gap={4}>
         <Skeleton w="120px" h="120px" borderRadius="full" />
         <Skeleton w="80px" h="20px" borderRadius="md" />
         <Skeleton w="180px" h="12px" borderRadius="md" />
@@ -136,6 +134,7 @@ export const ProductQualityWidget = () => {
   const history = doubleDashboardData?.history ?? [];
   let totalRuns = 0;
   let totalFailures = 0;
+  let prevRuns = 0;
   let prevFailures = 0;
 
   const nowTime = periodEnd.getTime();
@@ -151,6 +150,7 @@ export const ProductQualityWidget = () => {
       totalRuns += runs;
       totalFailures += failed;
     } else if (rowTime >= startPointTime && rowTime < midPointTime) {
+      prevRuns += runs;
       prevFailures += failed;
     }
   });
@@ -170,13 +170,18 @@ export const ProductQualityWidget = () => {
   // State 4: No runs in period
   if (totalRuns === 0) {
     return (
-      <Flex direction="column" justify="center" align="center" h="100%" minH="220px" textAlign="center" gap={3}>
+      <Flex direction="column" justify="center" align="center" h="100%" minH="200px" textAlign="center" gap={3}>
         <Circle size="48px" bg="bg.subtle" border="1px solid" borderColor="border.muted">
           <Icon as={FiInfo} color="fg.muted" boxSize={5} />
         </Circle>
-        <Text fontSize="sm" fontWeight="bold" color="fg.muted">
-          No test runs in selected period.
-        </Text>
+        <Flex direction="column" align="center" gap={1}>
+          <Text fontSize="md" fontWeight="bold" color="fg" textAlign="center">
+            No test runs
+          </Text>
+          <Text fontSize="xs" color="fg.muted" textAlign="center">
+            No runs found in selected period.
+          </Text>
+        </Flex>
       </Flex>
     );
   }
@@ -188,91 +193,139 @@ export const ProductQualityWidget = () => {
   const linkedRate = totalFailures === 0 ? 100 : (linkedFailures / totalFailures) * 100;
   const unlinkedRate = totalFailures === 0 ? 0 : (unlinkedFailures / totalFailures) * 100;
 
+  // Delta calculation (State 1 vs State 2)
+  const prevLinkedRate = prevFailures === 0 ? 100 : (prevLinkedFailures / prevFailures) * 100;
+  const hasPrevData = prevRuns > 0 && prevLinkedRate >= 80;
+  const delta = hasPrevData ? currentIWQS - prevIWQS : null;
+
+  // Triage indicator pill styling based on unlinked rate
+  let pillBg = 'bg.subtle';
+  let pillTextColor = 'fg.muted';
+  let pillIconColor = 'fg.muted';
+  let isWarningPill = false;
+
+  if (unlinkedRate >= 40) {
+    pillBg = 'rgba(239, 68, 68, 0.1)'; // Light red
+    pillTextColor = 'status.error.text';
+    pillIconColor = 'var(--chakra-colors-status-error-icon)';
+    isWarningPill = true;
+  } else if (unlinkedRate >= 20) {
+    pillBg = 'rgba(245, 158, 11, 0.1)'; // Light amber
+    pillTextColor = 'status.warning.text';
+    pillIconColor = 'var(--chakra-colors-status-warning-icon)';
+    isWarningPill = true;
+  }
+
   // State 3: Triage threshold not met (< 80% linked)
   if (linkedRate < 80) {
     return (
-      <Flex direction="column" justify="center" align="center" h="100%" minH="220px" px={4} gap={4}>
-        <Flex align="center" gap={2} w="full" justify="center">
-          <Icon as={FiAlertTriangle} color="status.warning" boxSize={5} />
-          <Text fontSize="sm" fontWeight="bold" color="fg">
-            Not enough data — {linkedRate.toFixed(1)}% linked.
+      <Flex direction="column" justify="center" align="center" h="100%" minH="200px" px={4} gap={3.5}>
+        <Circle size="48px" bg="rgba(245, 158, 11, 0.1)" border="1px solid" borderColor="orange.200">
+          <Icon as={FiAlertTriangle} color="orange.500" boxSize={5} />
+        </Circle>
+        <Flex direction="column" align="center" gap={1}>
+          <Text fontSize="md" fontWeight="bold" color="fg" textAlign="center">
+            Not enough data
+          </Text>
+          <Text fontSize="xs" color="fg.muted" textAlign="center" lineHeight="1.4">
+            {linkedRate.toFixed(0)}% of failures linked.
+            <br />
+            Need 80%+ to show score.
           </Text>
         </Flex>
-        <Text fontSize="xs" color="fg.muted" textAlign="center" maxW="280px" mb={1}>
-          Need 80%+ linked failures to calculate quality score. Please triage unlinked failures.
-        </Text>
-        <ProgressRoot value={linkedRate} max={100} size="sm" w="full" colorPalette="amber">
-          <ProgressBar bg="bg.subtle" h="8px" borderRadius="full" />
-        </ProgressRoot>
-        <Text fontSize="10px" fontWeight="bold" color="status.warning" alignSelf="flex-end">
-          {linkedFailures} / {totalFailures} linked
-        </Text>
+        <Box w="full" px={4}>
+          <ProgressRoot value={linkedRate} max={100} size="sm" w="full" colorPalette="orange">
+            <ProgressBar bg="bg.subtle" h="6px" borderRadius="full" />
+          </ProgressRoot>
+          <Flex justify="space-between" mt={1.5} px={1}>
+            <Text fontSize="10px" fontWeight="bold" color="fg.muted">
+              {linkedRate.toFixed(0)}% linked
+            </Text>
+            <Text fontSize="10px" fontWeight="bold" color="fg.muted">
+              80% needed
+            </Text>
+          </Flex>
+        </Box>
+
+        {/* Unlinked indicator pill (AC-12) */}
+        <Flex justify="center" w="full">
+          <Box
+            bg={pillBg}
+            borderRadius="full"
+            px={3.5}
+            py={1}
+            display="inline-flex"
+            alignItems="center"
+            gap={2}
+            border={isWarningPill ? 'none' : '1px solid'}
+            borderColor={isWarningPill ? 'transparent' : 'border.muted'}
+          >
+            {isWarningPill ? (
+              <Icon as={FiAlertTriangle} color={pillIconColor} boxSize="12px" />
+            ) : (
+              <Circle size="6px" bg={pillIconColor} />
+            )}
+            <Text fontSize="xs" fontWeight="bold" color={pillTextColor} letterSpacing="tight">
+              {unlinkedRate.toFixed(1)}% failures pending triage
+            </Text>
+          </Box>
+        </Flex>
       </Flex>
     );
   }
 
-  // Delta calculation (State 1 vs State 2)
-  const hasPrevData = prevFailures > 0 && (prevLinkedFailures / prevFailures) * 100 >= 80;
-  const delta = hasPrevData ? currentIWQS - prevIWQS : null;
-
   // Gauge setup
-  const radius = 75;
+  const radius = 100;
   const strokeWidth = 12;
-  const semiCircumference = Math.PI * radius; // 235.62
-  const circumference = 2 * Math.PI * radius; // 471.24
+  const semiCircumference = Math.PI * radius; // 314.16
+  const circumference = 2 * Math.PI * radius; // 628.32
   const strokeDashoffset = semiCircumference - (currentIWQS / 100) * semiCircumference;
 
   const getGaugeColor = (val: number) => {
-    if (val <= 50) return 'var(--chakra-colors-dashboard-red)';
-    if (val <= 75) return 'var(--chakra-colors-dashboard-yellow)';
-    return 'var(--chakra-colors-dashboard-green)';
+    if (val <= 50) return 'var(--chakra-colors-red-500)';
+    if (val <= 75) return 'var(--chakra-colors-orange-500)';
+    return 'var(--chakra-colors-blue-500)';
   };
-
-  const getUnlinkedColor = (rate: number) => {
-    if (rate < 20) return 'fg.muted';
-    if (rate < 40) return 'status.warning';
-    return 'status.danger';
-  };
-
-  const unlinkedColor = getUnlinkedColor(unlinkedRate);
 
   return (
-    <Flex direction="column" align="center" justify="space-between" h="100%" minH="220px" py={1}>
+    <Flex direction="column" align="center" justify="center" h="100%" minH="200px" py={1} gap={5}>
       {/* SVG Arc Gauge */}
-      <Box position="relative" w="200px" h="100px" mb={2}>
-        <svg width="200px" height="110px" viewBox="0 0 200 110">
-          {/* Background Track */}
+      <Box position="relative" w="260px" h="125px" mb={2}>
+        <svg width="260px" height="125px" viewBox="0 0 260 125">
+          {/* Background Track - Rounded single arc */}
           <circle
-            cx="100"
-            cy="100"
+            cx="130"
+            cy="115"
             r={radius}
             fill="transparent"
             stroke="var(--chakra-colors-border-muted)"
             strokeWidth={strokeWidth}
             strokeDasharray={`${semiCircumference} ${circumference}`}
             strokeLinecap="round"
-            transform="rotate(180 100 100)"
+            transform="rotate(180 130 115)"
           />
           {/* Active Filled Arc */}
-          <circle
-            cx="100"
-            cy="100"
-            r={radius}
-            fill="transparent"
-            stroke={getGaugeColor(currentIWQS)}
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${semiCircumference} ${circumference}`}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            transform="rotate(180 100 100)"
-            style={{ transition: 'stroke-dashoffset 0.8s ease-in-out, stroke 0.8s ease' }}
-          />
+          {currentIWQS > 0 && (
+            <circle
+              cx="130"
+              cy="115"
+              r={radius}
+              fill="transparent"
+              stroke={getGaugeColor(currentIWQS)}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${semiCircumference} ${circumference}`}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              transform="rotate(180 130 115)"
+              style={{ transition: 'stroke-dashoffset 0.8s ease-in-out, stroke 0.8s ease' }}
+            />
+          )}
         </svg>
 
         {/* Score & Delta Centered */}
         <Flex
           position="absolute"
-          bottom="0"
+          bottom="10px"
           left="0"
           right="0"
           direction="column"
@@ -280,47 +333,61 @@ export const ProductQualityWidget = () => {
           justify="center"
           pointerEvents="none"
         >
-          <Flex align="baseline" gap={2}>
-            <Text fontSize="4xl" fontWeight="black" color="fg" lineHeight="1">
-              {currentIWQS}%
-            </Text>
-            {delta !== null && (
-              <Box
-                px={1.5}
-                py={0.5}
-                borderRadius="md"
-                fontSize="xs"
-                fontWeight="black"
-                bg={delta > 0 ? 'rgba(31, 230, 71, 0.1)' : delta < 0 ? 'rgba(255, 69, 69, 0.1)' : 'bg.subtle'}
-                color={delta > 0 ? 'status.success' : delta < 0 ? 'status.danger' : 'fg.muted'}
-                border="1px solid"
-                borderColor={
-                  delta > 0 ? 'rgba(31, 230, 71, 0.2)' : delta < 0 ? 'rgba(255, 69, 69, 0.2)' : 'border.muted'
-                }
-              >
-                {delta > 0 ? `+${delta}%` : `${delta}%`}
-              </Box>
+          <Text fontSize="5xl" fontWeight="black" color="fg" lineHeight="1" mb={1}>
+            {currentIWQS}%
+          </Text>
+          <Flex align="center" gap={1.5}>
+            {delta !== null ? (
+              <>
+                <Badge
+                  variant="surface"
+                  status={delta > 0 ? 'success' : delta < 0 ? 'error' : 'default'}
+                  isCapitalize={false}
+                  fontWeight="black"
+                  fontSize="xs"
+                  px="6px"
+                  py="2px"
+                >
+                  {delta > 0 ? `+${delta}%` : `${delta}%`}
+                </Badge>
+                <Text fontSize="xs" fontWeight="bold" color="fg.muted">
+                  vs prev. period
+                </Text>
+              </>
+            ) : (
+              <Text fontSize="xs" fontWeight="bold" color="fg.muted">
+                No previous period data
+              </Text>
             )}
           </Flex>
-          {delta === null && (
-            <Text fontSize="9px" fontWeight="bold" color="fg.muted" mt={1}>
-              No previous period data
-            </Text>
-          )}
         </Flex>
       </Box>
 
-      {/* Triage Failure Indicator */}
-      <Flex direction="column" align="center" gap={1} w="full" mt="auto">
-        <Text fontSize="xs" fontWeight="bold" color={unlinkedColor} textAlign="center">
-          {unlinkedRate.toFixed(1)}% failures pending triage
-        </Text>
-        {unlinkedRate >= 20 && (
-          <Text fontSize="9px" fontWeight="semibold" color="fg.muted" textAlign="center">
-            {unlinkedFailures} unassigned failure errors
+      {/* Triage Failure Indicator Pill */}
+      <Flex justify="center" w="full">
+        <Box
+          bg={pillBg}
+          borderRadius="full"
+          px={3.5}
+          py={1}
+          display="inline-flex"
+          alignItems="center"
+          gap={2}
+          border={isWarningPill ? 'none' : '1px solid'}
+          borderColor={isWarningPill ? 'transparent' : 'border.muted'}
+        >
+          {isWarningPill ? (
+            <Icon as={FiAlertTriangle} color={pillIconColor} boxSize="12px" />
+          ) : (
+            <Circle size="6px" bg={pillIconColor} />
+          )}
+          <Text fontSize="xs" fontWeight="bold" color={pillTextColor} letterSpacing="tight">
+            {unlinkedRate.toFixed(1)}% failures pending triage
           </Text>
-        )}
+        </Box>
       </Flex>
     </Flex>
   );
 };
+
+

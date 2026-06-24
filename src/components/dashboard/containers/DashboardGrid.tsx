@@ -20,13 +20,13 @@ import { CategoryWeightsWidget, ProductQualityWidget } from '../components';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-const STORAGE_KEY = 'dashboard_grid_layout_v3';
+const STORAGE_KEY = 'dashboard_grid_layout_v4';
 
 const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: 'stats', x: 0, y: 0, w: 4, h: 6, minH: 6, maxH: 6, minW: 3, isResizable: false },
-  { i: 'quality', x: 0, y: 6, w: 4, h: 7, minH: 6, minW: 3, isResizable: false },
-  { i: 'donut', x: 0, y: 13, w: 4, h: 7, minH: 3, minW: 3, isResizable: false },
-  { i: 'weights', x: 0, y: 20, w: 4, h: 7, minH: 5, minW: 3, isResizable: false },
+  { i: 'quality', x: 0, y: 6, w: 4, h: 6, minH: 5, minW: 3, isResizable: false },
+  { i: 'donut', x: 0, y: 12, w: 4, h: 7, minH: 3, minW: 3, isResizable: false },
+  { i: 'weights', x: 0, y: 19, w: 4, h: 7, minH: 5, minW: 3, isResizable: false },
   { i: 'passRate', x: 4, y: 0, w: 8, h: 9, minH: 4, minW: 3 },
   { i: 'issues', x: 8, y: 9, w: 8, h: 9, minH: 4, minW: 3 },
   { i: 'regression', x: 4, y: 18, w: 8, h: 9, minH: 4, minW: 6 },
