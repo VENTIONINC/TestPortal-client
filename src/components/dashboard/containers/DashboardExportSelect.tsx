@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Flex, Icon, Spinner, Text, VStack } from '@chakra-ui/react';
+import { IoIosArrowDown } from 'react-icons/io';
 
 import { useColorModeValue } from '@/components/ui';
 
@@ -21,30 +22,11 @@ const loadingLabelByMode: Record<DashboardExportMode, string> = {
   ai: 'Exporting PDF + AI...',
 };
 
-const ExportFileIcon = (props: React.ComponentProps<typeof Icon>) => (
-  <Icon viewBox="0 0 36 32" fill="none" {...props}>
-    <path
-      d="M14 22.6667C13.6464 22.6667 13.3072 22.5262 13.0572 22.2762C12.8071 22.0261 12.6667 21.687 12.6667 21.3334V10.6667C12.6667 10.3131 12.8071 9.97395 13.0572 9.7239C13.3072 9.47385 13.6464 9.33338 14 9.33338H19.3333C19.5444 9.33303 19.7534 9.37444 19.9483 9.45522C20.1433 9.536 20.3204 9.65455 20.4693 9.80404L22.8613 12.196C23.0112 12.345 23.1301 12.5223 23.2111 12.7175C23.2921 12.9127 23.3337 13.122 23.3333 13.3334V21.3334C23.3333 21.687 23.1928 22.0261 22.9428 22.2762C22.6927 22.5262 22.3536 22.6667 22 22.6667H14Z"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M19.3333 9.33337V12.6667C19.3333 12.8435 19.4036 13.0131 19.5286 13.1381C19.6536 13.2631 19.8232 13.3334 20 13.3334H23.3333"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path d="M18 16V20" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M20 18L18 16L16 18" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-  </Icon>
-);
-
-const ExportChevronIcon = (props: React.ComponentProps<typeof Icon>) => (
-  <Icon viewBox="0 0 10 10" fill="none" {...props}>
-    <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-  </Icon>
-);
+// const ExportChevronIcon = (props: React.ComponentProps<typeof Icon>) => (
+//   <Icon viewBox="0 0 10 10" fill="none" {...props}>
+//     <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+//   </Icon>
+// );
 
 export const DashboardExportSelect = ({ disabled, exportMode, onSelect }: DashboardExportSelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -114,7 +96,6 @@ export const DashboardExportSelect = ({ disabled, exportMode, onSelect }: Dashbo
         justify="space-between"
         gap={3}
         h="32px"
-        minW="180px"
         px={3}
         borderRadius="4px"
         border="1px solid"
@@ -132,20 +113,23 @@ export const DashboardExportSelect = ({ disabled, exportMode, onSelect }: Dashbo
         aria-expanded={isOpen}
         aria-label="Export dashboard"
       >
-        <Flex align="center" gap={2} minW={0}>
-          {isBusy ? <Spinner size="xs" color={triggerText} /> : <ExportFileIcon boxSize={4} color={triggerText} />}
+        <Flex align="center" gap={2} minW={20}>
           <Text fontSize="sm" fontWeight="medium" lineHeight="20px" truncate>
             {loadingLabel}
           </Text>
         </Flex>
-
-        <ExportChevronIcon
+        {isBusy ? (
+          <Spinner size="xs" color={triggerText} flexShrink={0} />
+        ) : (
+          <Icon as={IoIosArrowDown} boxSize={4} color={triggerText} flexShrink={0} />
+        )}
+        {/* <ExportChevronIcon
           boxSize={4}
           color={triggerText}
           transform={isOpen ? 'rotate(180deg)' : 'rotate(0deg)'}
           transition="transform 0.2s ease"
           flexShrink={0}
-        />
+        /> */}
       </Flex>
 
       {isOpen && (

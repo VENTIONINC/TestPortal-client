@@ -1,201 +1,18 @@
 import { memo, useState } from 'react';
-import { Box, Button, Flex, HStack, IconButton, Text, VStack } from '@chakra-ui/react';
-import { LuCheck, LuChevronDown, LuChevronUp, LuCopy, LuMaximize2 } from 'react-icons/lu';
-import { FiAlertCircle } from 'react-icons/fi';
+import { Box, Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
 import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip, toaster, StatusIcon } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
 import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/ui/components/Dialogs';
 import { useResultsSelection } from '@/contexts/results-selection';
-import { getAnalysisCategoryStyle, getConfidenceLabel, copyToClipboard } from '@/utils';
+import { getAnalysisCategoryStyle, getConfidenceLabel } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
-import { ResultError } from '@/types';
 import { usePostApiV2ResultErrorsAnalyzeMutation } from '@/redux/apis/generatedApi';
 import { BulkActions } from '@/components/BulkActions';
 
 import { ResultsExecutionCardProps } from './types';
 import { IntegrationLinks } from './integration-links';
 import { AnalyzeCategoryButton } from './analyze-category-button';
-
-interface ErrorBlockProps {
-  resultError: ResultError;
-  onOpenDialog: (error: ResultError) => void;
-}
-
-const parseError = (message: string) => {
-  if (!message) return { header: '', stack: '' };
-
-  const lines = message.split('\n');
-  const headerLines: string[] = [];
-  const stackLines: string[] = [];
-  let isStackStarted = false;
-
-  for (const line of lines) {
-    // Detect stack trace line: starts with "at " or "File " or matches specific patterns
-    const isStack =
-      /^\s*at\s+/.test(line) ||
-      /^\s*File\s+["']/.test(line) ||
-      line.includes('stackTrace') ||
-      line.includes('node_modules');
-
-    if (isStack) {
-      isStackStarted = true;
-    }
-
-    if (isStackStarted) {
-      stackLines.push(line);
-    } else {
-      headerLines.push(line);
-    }
-  }
-
-  return {
-    header: headerLines.join('\n').trim(),
-    stack: stackLines.join('\n').trim(),
-  };
-};
-
-const ErrorBlock = ({ resultError, onOpenDialog }: ErrorBlockProps) => {
-  const [copied, setCopied] = useState(false);
-  const [isStackExpanded, setIsStackExpanded] = useState(false);
-
-  const { header, stack } = parseError(resultError.message || '');
-
-  const handleCopyAll = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await copyToClipboard(resultError.message || '');
-      setCopied(true);
-      toaster.create({
-        title: 'Copied to clipboard',
-        type: 'success',
-      });
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toaster.create({
-        title: 'Failed to copy',
-        type: 'error',
-      });
-    }
-  };
-
-  return (
-    <VStack align="stretch" w="full" gap={2}>
-      {/* Primary Error Banner */}
-      <Flex
-        align="start"
-        justify="space-between"
-        p={3}
-        bg="rgba(239, 68, 68, 0.04)"
-        border="1px solid"
-        borderColor="rgba(239, 68, 68, 0.12)"
-        borderLeft="3px solid"
-        borderLeftColor="red.500"
-        borderRadius="md"
-        gap={3}
-      >
-        <HStack align="start" gap={2.5} flex={1}>
-          <Box mt="2px" color="red.500" flexShrink={0}>
-            <FiAlertCircle size={15} />
-          </Box>
-          <Text
-            fontFamily="mono"
-            fontSize="xs"
-            fontWeight="bold"
-            color="fg"
-            whiteSpace="pre-wrap"
-            wordBreak="break-word"
-            lineHeight="tall"
-            flex={1}
-          >
-            {header || 'Unknown Error'}
-          </Text>
-        </HStack>
-
-        <HStack gap={1} flexShrink={0} mt="-2px">
-          <Tooltip content={copied ? 'Copied!' : 'Copy full error'}>
-            <IconButton
-              aria-label="Copy error message"
-              variant="ghost"
-              size="xs"
-              onClick={handleCopyAll}
-              color="fg.muted"
-              _hover={{ color: 'fg', bg: 'bg.hover' }}
-              h="24px"
-              w="24px"
-            >
-              {copied ? <LuCheck size={14} /> : <LuCopy size={14} />}
-            </IconButton>
-          </Tooltip>
-          <Tooltip content="Open full error details">
-            <IconButton
-              aria-label="Open full error details"
-              variant="ghost"
-              size="xs"
-              onClick={() => onOpenDialog(resultError)}
-              color="fg.muted"
-              _hover={{ color: 'fg', bg: 'bg.hover' }}
-              h="24px"
-              w="24px"
-            >
-              <LuMaximize2 size={14} />
-            </IconButton>
-          </Tooltip>
-        </HStack>
-      </Flex>
-
-      {/* Collapsible Stack Trace */}
-      {stack && (
-        <VStack align="stretch" gap={1.5}>
-          <Flex justify="flex-start">
-            <Button
-              variant="ghost"
-              size="xs"
-              h="24px"
-              px={2}
-              onClick={() => setIsStackExpanded(!isStackExpanded)}
-              color="fg.muted"
-              _hover={{ color: 'fg', bg: 'bg.hover' }}
-              fontSize="11px"
-              fontWeight="semibold"
-            >
-              {isStackExpanded ? (
-                <LuChevronUp size={14} style={{ marginRight: '4px' }} />
-              ) : (
-                <LuChevronDown size={14} style={{ marginRight: '4px' }} />
-              )}
-              {isStackExpanded ? 'Hide Stack Trace' : 'Show Stack Trace'}
-            </Button>
-          </Flex>
-
-          {isStackExpanded && (
-            <Box
-              px={3.5}
-              py={2.5}
-              maxH="250px"
-              overflowY="auto"
-              bg="bg.input"
-              border="1px solid"
-              borderColor="border.muted"
-              borderRadius="md"
-            >
-              <Text
-                fontFamily="mono"
-                fontSize="xs"
-                whiteSpace="pre-wrap"
-                wordBreak="break-word"
-                lineHeight="tall"
-                color="fg.muted"
-              >
-                {stack}
-              </Text>
-            </Box>
-          )}
-        </VStack>
-      )}
-    </VStack>
-  );
-};
 
 export const ResultsExecutionCard = memo(
   ({
@@ -300,131 +117,163 @@ export const ResultsExecutionCard = memo(
           const hasAnalysis = Boolean(analysisConfidence);
           const isConfirmedByUser = Boolean(analysisFeedbackCategory);
 
+          const hasLinks = Boolean(
+            (monitoringPortalUrl && monitoringPortalEnabled) ||
+            ((reportPortalLink || reportPortalUrl) && reportPortalEnabled)
+          );
+
           return (
-            <VStack
+            <Flex
               key={id}
-              align="stretch"
+              direction={{ base: 'column', md: 'row' }}
+              align={{ base: 'stretch', md: 'center' }}
+              justify="space-between"
+              w="full"
+              minH="36px"
               py={2}
               ps={2}
+              pe={{ base: 2, md: 0 }}
               borderBottom="1px solid"
               borderColor="border.main"
               _last={{ borderBottom: 'none' }}
               position="relative"
+              textStyle="sm"
+              gap={{ base: 2, md: 4 }}
             >
-              {/* Row 1: Execution Metadata & Analysis Badge */}
-              <HStack align="center" justify="space-between" w="full" minH="36px">
-                <HStack align="center" gap={5}>
-                  <Checkbox
-                    checked={isSelected(id)}
-                    onCheckedChange={() => {
-                      toggleSelection(id);
-                    }}
-                    size="md"
-                    controlProps={{ borderColor: 'border.main' }}
-                  />
+              {/* Left side: Metadata & Error Message */}
+              <Flex
+                align={{ base: 'start', md: 'center' }}
+                gap={{ base: 2, md: 5 }}
+                flex={1}
+                minW={0}
+                flexWrap="wrap"
+                direction="row"
+              >
+                <Checkbox
+                  checked={isSelected(id)}
+                  onCheckedChange={() => {
+                    toggleSelection(id);
+                  }}
+                  size="md"
+                  controlProps={{ borderColor: 'border.main' }}
+                />
 
-                  <StatusIcon status={status} type="circle" />
+                <StatusIcon status={status} type="circle" />
 
-                  <Tooltip content="Retry">
-                    <Text whiteSpace="nowrap" minW={6} textStyle="sm">
+                <Tooltip content="Retry">
+                  <Box w={{ base: 'auto', md: '45px' }} flexShrink={0}>
+                    <Text whiteSpace="nowrap" textStyle="sm">
                       #{retry}
                     </Text>
-                  </Tooltip>
-                  <IntegrationLinks
-                    monitoringUrl={monitoringPortalUrl}
-                    reportPortalUrl={reportPortalLink || reportPortalUrl}
-                    monitoringPortalEnabled={monitoringPortalEnabled}
-                    reportPortalEnabled={reportPortalEnabled}
-                    duration={duration}
-                    startTime={startTime}
-                    environment={environment}
-                  />
-                  <Tooltip content="Start Time">
-                    <Text textStyle="sm">{toStartTime(startTime)}</Text>
-                  </Tooltip>
-                  <Tooltip content="Duration">
-                    <Text textStyle="sm">{toDuration(duration)}</Text>
-                  </Tooltip>
-                </HStack>
+                  </Box>
+                </Tooltip>
 
-                <HStack align="center" gap={3}>
-                  {errors.length > 0 &&
-                    (hasAnalysis ? (
-                      <HStack
-                        color={isConfirmedByUser ? 'white' : color}
-                        onClick={() => openResultAnalysisDialog(result)}
-                        px={2}
-                        py={0.5}
-                        borderRadius="md"
-                        cursor="pointer"
-                        border={isConfirmedByUser ? '1px solid' : '1px dashed'}
-                        borderColor={isConfirmedByUser ? color : 'border.muted'}
-                        bg={isConfirmedByUser ? color : 'transparent'}
-                        _hover={
-                          isConfirmedByUser
-                            ? { opacity: 0.85 }
-                            : { bg: hoverBgColor ?? 'bg.hover', color: hoverColor ?? color }
-                        }
-                        flexShrink={0}
-                      >
-                        <Icon size={16} color="currentColor" style={{ flexShrink: 0 }} />
-                        <Text fontWeight="bold" fontSize="xs" whiteSpace="nowrap">
-                          {isConfirmedByUser ? 'Confirmed' : 'AI Suggested'}: {getConfidenceLabel(analysisConfidence)}
-                        </Text>
-                      </HStack>
-                    ) : (
-                      <AnalyzeCategoryButton
-                        onClick={() =>
-                          handleAnalyze(
-                            String(id),
-                            errors.map((e) => String(e.id)),
-                          )
-                        }
-                        isLoading={analyzingResultId === String(id)}
-                      />
-                    ))}
+                {hasLinks && (
+                  <HStack w={{ base: 'auto', md: '130px' }} gap={2.5} flexShrink={0}>
+                    <IntegrationLinks
+                      monitoringUrl={monitoringPortalUrl}
+                      reportPortalUrl={reportPortalLink || reportPortalUrl}
+                      monitoringPortalEnabled={monitoringPortalEnabled}
+                      reportPortalEnabled={reportPortalEnabled}
+                      duration={duration}
+                      startTime={startTime}
+                      environment={environment}
+                    />
+                  </HStack>
+                )}
 
-                  <ContextMenuButton
-                    onClick={(evt) =>
-                      onResultContextMenu(evt, {
-                        id,
-                        retry,
-                        specName,
-                        projectId,
-                      })
-                    }
-                  />
-                </HStack>
-              </HStack>
+                <Tooltip content="Start Time">
+                  <Box w={{ base: 'auto', md: '90px' }} flexShrink={0}>
+                    <Text textStyle="sm" whiteSpace="nowrap">{toStartTime(startTime)}</Text>
+                  </Box>
+                </Tooltip>
 
-              {/* Row 2: Error Messages & Inline Issues (if failed) */}
-              {errors.length > 0 && (
-                <VStack align="stretch" pl={12} pr={8} mt={2} gap={3}>
-                  {errors.map((resultError) => (
-                    <VStack
-                      key={resultError.id}
-                      align="stretch"
-                      w="full"
-                      px={4}
-                      py={3}
-                      bg="bg.panel"
-                      border="1px solid"
-                      borderColor="border.main"
+                <Tooltip content="Duration">
+                  <Box w={{ base: 'auto', md: '70px' }} flexShrink={0}>
+                    <Text textStyle="sm" whiteSpace="nowrap">{toDuration(duration)}</Text>
+                  </Box>
+                </Tooltip>
+
+                {/* Inline Error Message - Truncated if it doesn't fit */}
+                {errors.map((resultError) => (
+                  <Text
+                    key={resultError.id}
+                    onClick={() => openResultsErrorDialog(resultError)}
+                    cursor="pointer"
+                    fontWeight="medium"
+                    color="fg"
+                    truncate
+                    flex={{ base: 'none', md: 1 }}
+                    w={{ base: 'full', md: 'auto' }}
+                    minW={{ base: '20px', md: 0 }}
+                    mt={{ base: 1, md: 0 }}
+                    pl={{ base: 10, md: 0 }}
+                  >
+                    {resultError.message}
+                  </Text>
+                ))}
+              </Flex>
+
+              {/* Right side: AI Badge, Inline Issue, Context Menu */}
+              <HStack
+                align="center"
+                gap={3}
+                flexShrink={0}
+                justifyContent={{ base: 'flex-end', md: 'flex-start' }}
+                pl={{ base: 10, md: 0 }}
+              >
+                {errors.length > 0 &&
+                  (hasAnalysis ? (
+                    <HStack
+                      color={isConfirmedByUser ? 'white' : color}
+                      onClick={() => openResultAnalysisDialog(result)}
+                      px={2}
+                      py={0.5}
                       borderRadius="md"
-                      gap={2.5}
+                      cursor="pointer"
+                      border={isConfirmedByUser ? '1px solid' : '1px dashed'}
+                      borderColor={isConfirmedByUser ? color : 'border.muted'}
+                      bg={isConfirmedByUser ? color : 'transparent'}
+                      _hover={
+                        isConfirmedByUser
+                          ? { opacity: 0.85 }
+                          : { bg: hoverBgColor ?? 'bg.hover', color: hoverColor ?? color }
+                      }
+                      flexShrink={0}
                     >
-                      <ErrorBlock
-                        resultError={resultError}
-                        onOpenDialog={openResultsErrorDialog}
-                      />
-                      <HStack justify="flex-end" w="full" flexShrink={0}>
-                        <InlineIssue resultError={resultError} />
-                      </HStack>
-                    </VStack>
+                      <Icon size={16} color="currentColor" style={{ flexShrink: 0 }} />
+                      <Text fontWeight="bold" fontSize="xs" whiteSpace="nowrap">
+                        {isConfirmedByUser ? 'Confirmed' : 'AI Suggested'}: {getConfidenceLabel(analysisConfidence)}
+                      </Text>
+                    </HStack>
+                  ) : (
+                    <AnalyzeCategoryButton
+                      onClick={() =>
+                        handleAnalyze(
+                          String(id),
+                          errors.map((e) => String(e.id)),
+                        )
+                      }
+                      isLoading={analyzingResultId === String(id)}
+                    />
                   ))}
-                </VStack>
-              )}
-            </VStack>
+
+                {errors.map((resultError) => (
+                  <InlineIssue key={resultError.id} resultError={resultError} />
+                ))}
+
+                <ContextMenuButton
+                  onClick={(evt) =>
+                    onResultContextMenu(evt, {
+                      id,
+                      retry,
+                      specName,
+                      projectId,
+                    })
+                  }
+                />
+              </HStack>
+            </Flex>
           );
         })}
       </VStack>

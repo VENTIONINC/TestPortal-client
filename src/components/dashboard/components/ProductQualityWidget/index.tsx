@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router';
 import { Box, Flex, Icon, Text, Circle } from '@chakra-ui/react';
-import { FiAlertTriangle, FiInfo } from 'react-icons/fi';
+import { FiAlertTriangle } from 'react-icons/fi';
+import { CiSquareMinus } from 'react-icons/ci';
 
 import {
   useGetApiV2IssuesWithStatsQuery,
@@ -172,7 +173,7 @@ export const ProductQualityWidget = () => {
     return (
       <Flex direction="column" justify="center" align="center" h="100%" minH="200px" textAlign="center" gap={3}>
         <Circle size="48px" bg="bg.subtle" border="1px solid" borderColor="border.muted">
-          <Icon as={FiInfo} color="fg.muted" boxSize={5} />
+          <Icon as={CiSquareMinus} color="fg.muted" boxSize={5} />
         </Circle>
         <Flex direction="column" align="center" gap={1}>
           <Text fontSize="md" fontWeight="bold" color="fg" textAlign="center">
@@ -248,7 +249,7 @@ export const ProductQualityWidget = () => {
         </Box>
 
         {/* Unlinked indicator pill (AC-12) */}
-        <Flex justify="center" w="full">
+        {/* <Flex justify="center" w="full">
           <Box
             bg={pillBg}
             borderRadius="full"
@@ -269,7 +270,7 @@ export const ProductQualityWidget = () => {
               {unlinkedRate.toFixed(1)}% failures pending triage
             </Text>
           </Box>
-        </Flex>
+        </Flex> */}
       </Flex>
     );
   }
@@ -336,30 +337,30 @@ export const ProductQualityWidget = () => {
           <Text fontSize="5xl" fontWeight="black" color="fg" lineHeight="1" mb={1}>
             {currentIWQS}%
           </Text>
-          <Flex align="center" gap={1.5}>
-            {delta !== null ? (
-              <>
-                <Badge
-                  variant="surface"
-                  status={delta > 0 ? 'success' : delta < 0 ? 'error' : 'default'}
-                  isCapitalize={false}
-                  fontWeight="black"
-                  fontSize="xs"
-                  px="6px"
-                  py="2px"
-                >
-                  {delta > 0 ? `+${delta}%` : `${delta}%`}
-                </Badge>
-                <Text fontSize="xs" fontWeight="bold" color="fg.muted">
-                  vs prev. period
-                </Text>
-              </>
-            ) : (
+        </Flex>
+        <Flex align="center" justifyContent="center">
+          {delta !== null ? (
+            <>
+              <Badge
+                variant="surface"
+                status={delta > 0 ? 'success' : delta < 0 ? 'error' : 'default'}
+                isCapitalize={false}
+                fontWeight="black"
+                fontSize="xs"
+                px="6px"
+                py="2px"
+              >
+                {delta > 0 ? `+${delta}%` : `${delta}%`}
+              </Badge>
               <Text fontSize="xs" fontWeight="bold" color="fg.muted">
-                No previous period data
+                vs prev. period
               </Text>
-            )}
-          </Flex>
+            </>
+          ) : (
+            <Text fontSize="xs" fontWeight="bold" color="fg.muted">
+              No previous period data
+            </Text>
+          )}
         </Flex>
       </Box>
 
@@ -389,5 +390,3 @@ export const ProductQualityWidget = () => {
     </Flex>
   );
 };
-
-
