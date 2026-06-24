@@ -151,7 +151,7 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
                   </Heading>
 
                   <Badge
-                    colorScheme="green"
+                    colorScheme={isActive ? 'green' : 'gray'}
                     variant="subtle"
                     borderRadius="full"
                     fontSize="12px"
@@ -171,8 +171,7 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
                       mr="3px"
                       mb="1px"
                     />
-                    {/* {isActive ? 'Active' : 'Inactive'} */}
-                    Inactive
+                    {isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </Flex>
               </Flex>
@@ -235,16 +234,18 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
                   key={cat.key}
                   align="center"
                   gap={1.5}
-                  px="6px"
+                  px="8px"
                   py="3px"
                   borderRadius="md"
                   bg="bg.subtle"
                   border="1px solid"
                   borderColor="border.muted"
-                  title={`${style.name || 'Other'}: ${weight}`}
                 >
                   <Icon as={IconComponent} color={style.color} boxSize="12px" />
-                  <Text fontSize="10px" fontWeight="bold" color="fg.muted">
+                  <Text fontSize="10px" fontWeight="medium" color="fg.muted">
+                    {style.name || 'Other'}
+                  </Text>
+                  <Text fontSize="10px" fontWeight="bold" color="fg">
                     {weight}
                   </Text>
                 </Flex>

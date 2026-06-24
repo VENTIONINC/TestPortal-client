@@ -22,6 +22,13 @@ export function ProjectsSettings() {
     );
   }
 
+  const sortedProjects = [...projects].sort((a, b) => {
+    if (a.isActive !== b.isActive) {
+      return a.isActive ? -1 : 1;
+    }
+    return a.name.localeCompare(b.name);
+  });
+
   if (!projects.length) {
     return (
       <Box textAlign="center" py={8}>
@@ -49,7 +56,7 @@ export function ProjectsSettings() {
 
       <Box>
         <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-          {projects.map((project) => (
+          {sortedProjects.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}
