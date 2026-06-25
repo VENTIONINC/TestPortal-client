@@ -1,7 +1,6 @@
 import { useSearchParams } from 'react-router';
 import { Box, Flex, Icon, Text, Circle } from '@chakra-ui/react';
-import { FiAlertTriangle } from 'react-icons/fi';
-import { CiSquareMinus } from 'react-icons/ci';
+import { FiAlertTriangle, FiInfo } from 'react-icons/fi';
 
 import {
   useGetApiV2IssuesWithStatsQuery,
@@ -88,6 +87,8 @@ export const ProductQualityWidget = () => {
   periodStart.setDate(periodEnd.getDate() - Math.max(periodDays - 1, 0));
 
   const prevPeriodEnd = new Date(periodStart);
+  prevPeriodEnd.setDate(periodStart.getDate() - 1); // Day before current period starts
+
   const prevPeriodStart = new Date(prevPeriodEnd);
   prevPeriodStart.setDate(prevPeriodEnd.getDate() - Math.max(periodDays - 1, 0));
 
@@ -138,19 +139,14 @@ export const ProductQualityWidget = () => {
   let prevRuns = 0;
   let prevFailures = 0;
 
-  const nowTime = periodEnd.getTime();
-  const midPointTime = periodStart.getTime();
-  const startPointTime = prevPeriodStart.getTime();
-
   history.forEach((row) => {
-    const rowTime = new Date(row.date).getTime();
     const failed = row.metrics?.failed ?? 0;
     const runs = row.metrics?.total ?? 0;
 
-    if (rowTime >= midPointTime && rowTime <= nowTime) {
+    if (row.date >= statFrom && row.date <= statTo) {
       totalRuns += runs;
       totalFailures += failed;
-    } else if (rowTime >= startPointTime && rowTime < midPointTime) {
+    } else if (row.date >= prevStatFrom && row.date <= prevStatTo) {
       prevRuns += runs;
       prevFailures += failed;
     }
@@ -173,7 +169,7 @@ export const ProductQualityWidget = () => {
     return (
       <Flex direction="column" justify="center" align="center" h="100%" minH="200px" textAlign="center" gap={3}>
         <Circle size="48px" bg="bg.subtle" border="1px solid" borderColor="border.muted">
-          <Icon as={CiSquareMinus} color="fg.muted" boxSize={5} />
+          <Icon as={FiInfo} color="fg.muted" boxSize={5} />
         </Circle>
         <Flex direction="column" align="center" gap={1}>
           <Text fontSize="md" fontWeight="bold" color="fg" textAlign="center">

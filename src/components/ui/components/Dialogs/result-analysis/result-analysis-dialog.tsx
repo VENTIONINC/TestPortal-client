@@ -70,7 +70,9 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
           <Alert.Root status="success">
             <Alert.Indicator />
             <Alert.Content>
-              <Alert.Title fontSize="xs" fontWeight="bold">Verified Analysis</Alert.Title>
+              <Alert.Title fontSize="xs" fontWeight="bold">
+                Verified Analysis
+              </Alert.Title>
               <Alert.Description fontSize="xs">
                 This classification has been reviewed and verified by a user.
               </Alert.Description>
@@ -80,9 +82,11 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
           <Alert.Root status="warning">
             <Alert.Indicator />
             <Alert.Content>
-              <Alert.Title fontSize="xs" fontWeight="bold">AI-Generated Proposal</Alert.Title>
+              <Alert.Title fontSize="xs" fontWeight="bold">
+                AI-Generated Proposal
+              </Alert.Title>
               <Alert.Description fontSize="xs">
-                Suggested by AI (GPT-4.1-mini). Review and click "Save" to verify or adjust details.
+                Suggested by AI. Review and click "Save" to verify or adjust details.
               </Alert.Description>
             </Alert.Content>
           </Alert.Root>
