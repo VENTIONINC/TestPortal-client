@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, Container, Heading, Flex, IconButton, Button } from '@chakra-ui/react';
 import { FiSun, FiMoon, FiMonitor } from 'react-icons/fi';
 import { LuUpload } from 'react-icons/lu';

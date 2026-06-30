@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 // export const fonts = {
 //   heading: { value: "'Aeonik Pro', sans-serif" },
 //   body: { value: "'Aeonik Pro', sans-serif" },

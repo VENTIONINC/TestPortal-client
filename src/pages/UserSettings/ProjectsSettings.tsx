@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, SimpleGrid, Text, Button, Flex, HStack } from '@chakra-ui/react';
 import { LuPlus } from 'react-icons/lu';
 
@@ -21,6 +24,13 @@ export function ProjectsSettings() {
       </Alert.Root>
     );
   }
+
+  const sortedProjects = [...projects].sort((a, b) => {
+    if (a.isActive !== b.isActive) {
+      return a.isActive ? -1 : 1;
+    }
+    return a.name.localeCompare(b.name);
+  });
 
   if (!projects.length) {
     return (
@@ -49,7 +59,7 @@ export function ProjectsSettings() {
 
       <Box>
         <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-          {projects.map((project) => (
+          {sortedProjects.map((project) => (
             <ProjectCard
               key={project.id}
               project={project}

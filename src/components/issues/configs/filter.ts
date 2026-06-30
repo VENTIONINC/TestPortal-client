@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { IssueCategory } from '@/types';
 import { ISSUE_CATEGORY_LABELS } from '@/utils';
 import { FilterConfigSection } from '@/types/filter';

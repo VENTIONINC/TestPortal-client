@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useState } from 'react';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
@@ -19,7 +22,7 @@ import { DashboardExportSelect, type DashboardExportMode } from './DashboardExpo
 import { DashboardGrid } from './DashboardGrid';
 
 const DEFAULT_ENVIRONMENT = 'staging';
-const DEFAULT_PERIOD = '30';
+const DEFAULT_PERIOD = '1';
 
 const initialDashboardFilters: Record<string, string> = {
   execution: '',
@@ -202,7 +205,7 @@ const DashboardContent = () => {
       <FormProvider {...formMethods}>
         <Flex align="stretch" gap={6}>
           <Filter config={filterConfig} {...filterProps} />
-          <DashboardGrid summary={summary} history={history} isLoading={isLoading} />
+          <DashboardGrid summary={summary} history={history} isLoading={isLoading} period={period} />
         </Flex>
       </FormProvider>
     </MainTemplate>

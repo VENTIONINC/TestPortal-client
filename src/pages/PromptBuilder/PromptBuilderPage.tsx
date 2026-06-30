@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useParams } from 'react-router';
 
 import { PromptBuilder } from '@/components/prompts';

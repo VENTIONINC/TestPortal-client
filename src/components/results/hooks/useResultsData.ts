@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useMemo } from 'react';
 
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';

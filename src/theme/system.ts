@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { createSystem, defaultConfig, defineConfig } from '@chakra-ui/react';
 
 import { buttonRecipe, sliderRecipe, badgeRecipe, cardRecipe, tabsRecipe, linkRecipe } from './base';

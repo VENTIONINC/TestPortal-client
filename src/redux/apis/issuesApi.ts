@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { IssueFilters } from '@/types';
 import { GetIssuesResponse } from '@/types/apis';
 

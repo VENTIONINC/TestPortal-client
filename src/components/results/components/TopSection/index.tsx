@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo, useCallback } from 'react';
 import { Grid } from '@chakra-ui/react';
 import { useFormContext } from 'react-hook-form';

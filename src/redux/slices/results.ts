@@ -1,5 +1,9 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useCallback } from 'react';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { shallowEqual } from 'react-redux';
 
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { ResultsFilters } from '@/types';
@@ -101,7 +105,10 @@ export const useResultsActions = () => {
 
 export const useResultsFilters = () => useAppSelector((state) => state.results.filters);
 export const useResultsFilterDateRange = () =>
-  useAppSelector((state) => ({ from: state.results.filters.from, to: state.results.filters.to }));
+  useAppSelector(
+    (state) => ({ from: state.results.filters.from, to: state.results.filters.to }),
+    shallowEqual,
+  );
 export const useSelectedDates = () => useAppSelector((state) => state.results.selectedDates);
 
 export default resultsSlice.reducer;

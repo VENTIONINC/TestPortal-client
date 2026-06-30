@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useState, useRef, useEffect } from 'react';
 import { Button, Text, Box, VStack, Circle, Flex, Icon } from '@chakra-ui/react';
 import { LuChevronsUpDown } from 'react-icons/lu';

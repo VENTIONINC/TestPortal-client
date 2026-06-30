@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button, ButtonProps } from '@chakra-ui/react';
 import { FiFilter } from 'react-icons/fi';
 

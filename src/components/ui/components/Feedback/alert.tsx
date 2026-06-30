@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Alert as ChakraAlert, AlertRootProps, Box } from '@chakra-ui/react';
 import { forwardRef } from 'react';
 

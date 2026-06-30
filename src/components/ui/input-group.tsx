@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import React, { cloneElement, forwardRef } from 'react';
 import { BoxProps, Group, InputElement, InputElementProps } from '@chakra-ui/react';
 

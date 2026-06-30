@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, Wrap } from '@chakra-ui/react';
 
 import { FilterTag } from '@/components/ui/components';

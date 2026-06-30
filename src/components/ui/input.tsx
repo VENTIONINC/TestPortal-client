@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { forwardRef, ReactNode, Ref } from 'react';
 import { Input as ChakraInput, InputProps as ChakraInputProps } from '@chakra-ui/react';
 

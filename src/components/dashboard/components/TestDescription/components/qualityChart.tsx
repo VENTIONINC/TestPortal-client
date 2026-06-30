@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, Card, HStack, Text } from '@chakra-ui/react';
 import { Chart } from '@chakra-ui/charts';
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';

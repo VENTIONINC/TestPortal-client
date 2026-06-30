@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, HStack, Skeleton, Text } from '@chakra-ui/react';
 
 import { type ResultsStats as ResultsStatsResponse } from '@/redux/apis/generatedApi';

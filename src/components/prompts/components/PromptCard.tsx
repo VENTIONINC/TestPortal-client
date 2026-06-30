@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo } from 'react';
 import { Heading, HStack, Text, VStack, Button, Card } from '@chakra-ui/react';
 import { useNavigate } from 'react-router';

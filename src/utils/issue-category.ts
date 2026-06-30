@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { LuBug, LuCircleHelp, LuCode, LuCpu, LuServer } from 'react-icons/lu';
 
 import { IssueCategory } from '@/types';

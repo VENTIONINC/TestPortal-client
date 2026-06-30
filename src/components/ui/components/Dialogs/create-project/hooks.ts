@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -19,6 +22,13 @@ export const useCreateProject = (closeDialog: () => void) => {
     defaultValues: {
       name: '',
       description: '',
+      categoryWeights: {
+        bug: 100,
+        infra: 100,
+        script: 100,
+        performance: 100,
+        other: 100,
+      },
     },
   });
 

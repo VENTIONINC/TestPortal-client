@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Collapsible, Flex, Text } from '@chakra-ui/react';
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io';
 import { useState } from 'react';

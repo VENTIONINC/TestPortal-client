@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Badge, Card, Text, Heading, Flex, Box, Icon } from '@chakra-ui/react';
 import { MouseEvent } from 'react';
 import { FiCode, FiAlertCircle, FiPlay } from 'react-icons/fi';
@@ -5,6 +8,8 @@ import { FaRegFolder } from 'react-icons/fa6';
 
 import { ContextMenuButton, ClipboardCopyText } from '@/components/ui';
 import type { Project } from '@/redux/apis/generatedApi';
+import { getIssueCategoryStyle } from '@/utils';
+import { IssueCategory } from '@/types';
 
 import { useProjectCardColors } from './hooks';
 
@@ -149,7 +154,7 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
                   </Heading>
 
                   <Badge
-                    colorScheme="green"
+                    colorScheme={isActive ? 'green' : 'gray'}
                     variant="subtle"
                     borderRadius="full"
                     fontSize="12px"
@@ -169,8 +174,7 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
                       mr="3px"
                       mb="1px"
                     />
-                    {/* {isActive ? 'Active' : 'Inactive'} */}
-                    Inactive
+                    {isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </Flex>
               </Flex>
@@ -211,6 +215,47 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
         >
           ID: {id}
         </ClipboardCopyText>
+
+        <Box mx="8px" mt="12px" mb="4px">
+          <Text fontSize="xs" fontWeight="semibold" color={descriptionColor} mb="6px">
+            Category weights:
+          </Text>
+          <Flex gap={2} wrap="wrap">
+            {[
+              { key: 'bug', type: IssueCategory.Bug },
+              { key: 'infra', type: IssueCategory.Infra },
+              { key: 'script', type: IssueCategory.Script },
+              { key: 'performance', type: IssueCategory.Performance },
+              { key: 'other', type: IssueCategory.Other },
+            ].map((cat) => {
+              const weight = project.categoryWeights?.[cat.key as keyof typeof project.categoryWeights] ?? 100;
+              const style = getIssueCategoryStyle(cat.type);
+              const IconComponent = style.Icon;
+
+              return (
+                <Flex
+                  key={cat.key}
+                  align="center"
+                  gap={1.5}
+                  px="8px"
+                  py="3px"
+                  borderRadius="md"
+                  bg="bg.subtle"
+                  border="1px solid"
+                  borderColor="border.muted"
+                >
+                  <Icon as={IconComponent} color={style.color} boxSize="12px" />
+                  <Text fontSize="10px" fontWeight="medium" color="fg.muted">
+                    {style.name || 'Other'}
+                  </Text>
+                  <Text fontSize="10px" fontWeight="bold" color="fg">
+                    {weight}
+                  </Text>
+                </Flex>
+              );
+            })}
+          </Flex>
+        </Box>
 
         {_count && (
           <>

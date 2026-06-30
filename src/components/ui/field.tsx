@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import React, { forwardRef } from 'react';
 import { Field as ChakraField } from '@chakra-ui/react';
 
