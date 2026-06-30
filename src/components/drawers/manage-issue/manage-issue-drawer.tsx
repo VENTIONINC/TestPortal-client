@@ -3,7 +3,7 @@
 
 import { Button, Text, VStack } from '@chakra-ui/react';
 
-import { Drawer, DrawerBody, Input, NativeSelect, Textarea } from '@/components/ui';
+import { Alert, Drawer, DrawerBody, Input, NativeSelect, Textarea } from '@/components/ui';
 import { DefaultDrawerProps, Issue, IssueCategory, ResultError } from '@/types';
 import { ISSUE_CATEGORY_LABELS } from '@/utils';
 
@@ -20,6 +20,8 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
     watchedName,
     isFormattingMessage,
     isFormattingFromResult,
+    isFormatting,
+    generatedSuggestionSource,
     register,
     errors,
     isCreatingAssumption,
@@ -91,21 +93,57 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
           }))}
           error={errors.category?.message}
         />
-        <Textarea {...register('description')} label="Description:" autoresize error={errors.description?.message} />
+        <Textarea
+          {...register('description')}
+          label="Description:"
+          autoresize
+          minH="96px"
+          maxH="180px"
+          overflowY="auto"
+          disabled={isFormatting}
+          error={errors.description?.message}
+        />
 
-        <Button onClick={handleFormatMessage} loading={isFormattingMessage} variant="secondary">
-          Format message
+        {(isFormatting || generatedSuggestionSource) && (
+          <Alert.Root status={isFormatting ? 'warning' : 'info'}>
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title fontSize="xs" fontWeight="bold">
+                {isFormatting ? 'AI formatting in progress' : 'AI-generated suggestion'}
+              </Alert.Title>
+              <Alert.Description fontSize="xs">
+                {isFormatting
+                  ? 'Generated text is being prepared. Review it before creating the issue.'
+                  : `Generated from ${generatedSuggestionSource === 'result' ? 'the result' : 'your message'}. Review or edit before creating the issue.`}
+              </Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
+        )}
+
+        <Button
+          onClick={handleFormatMessage}
+          loading={isFormattingMessage}
+          disabled={isFormattingFromResult}
+          variant="secondary"
+        >
+          {isFormattingMessage ? 'Formatting...' : 'Format message'}
         </Button>
 
         {!initialIssue && resultError && (
-          <Button onClick={handleFormatFromResult} loading={isFormattingFromResult} variant="secondary">
-            Format from result
+          <Button
+            onClick={handleFormatFromResult}
+            loading={isFormattingFromResult}
+            disabled={isFormattingMessage}
+            variant="secondary"
+          >
+            {isFormattingFromResult ? 'Formatting...' : 'Format from result'}
           </Button>
         )}
 
         <Button
           onClick={initialIssue ? handleUpdateIssue : handleCreateAssumption}
           loading={isCreatingAssumption || isCreatingIssue || isUpdatingIssue}
+          disabled={isFormatting}
         >
           {initialIssue ? 'Update' : 'Create'}
         </Button>

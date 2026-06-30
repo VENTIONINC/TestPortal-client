@@ -19,14 +19,16 @@ import { DonutChart } from '../components/TestDescription/components/donutChart'
 import { PassRateChart } from '../components/DashboardChart/components/PassRateChart';
 import { IssuesCategoriesChart } from '../components/DashboardChart/components/IssuesCategoriesChart';
 import { HistoryRegressionRunChart } from '../components/DashboardChart/components/HistoryRegressionRunChart';
+import { ProductQualityWidget } from '../components';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-const STORAGE_KEY = 'dashboard_grid_layout_v1';
+const STORAGE_KEY = 'dashboard_grid_layout_v5';
 
 const DEFAULT_LAYOUT: LayoutItem[] = [
   { i: 'stats', x: 0, y: 0, w: 4, h: 6, minH: 6, maxH: 6, minW: 3, isResizable: false },
-  { i: 'donut', x: 0, y: 6, w: 4, h: 7, minH: 3, minW: 3, isResizable: false },
+  { i: 'quality', x: 0, y: 6, w: 4, h: 6, minH: 5, minW: 3, isResizable: false },
+  { i: 'donut', x: 0, y: 12, w: 4, h: 7, minH: 3, minW: 3, isResizable: false },
   { i: 'passRate', x: 4, y: 0, w: 8, h: 9, minH: 4, minW: 3 },
   { i: 'issues', x: 8, y: 9, w: 8, h: 9, minH: 4, minW: 3 },
   { i: 'regression', x: 4, y: 18, w: 8, h: 9, minH: 4, minW: 6 },
@@ -49,6 +51,7 @@ interface DashboardGridProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   history?: any;
   isLoading?: boolean;
+  period?: string;
 }
 
 const GridCard = ({ title, children }: { title: string; children: ReactNode }) => (
@@ -104,7 +107,7 @@ const DonutChartWidget = ({ summary }: { summary?: TestDescriptionSummary }) => 
   return <DonutChart title="Test runs" passed={passed} failed={failed} donutChart={donutChart} totalRuns={totalRuns} />;
 };
 
-export const DashboardGrid = ({ summary, history }: DashboardGridProps) => {
+export const DashboardGrid = ({ summary, history, period }: DashboardGridProps) => {
   const [layouts, setLayouts] = useState<ResponsiveLayouts>(loadLayouts);
 
   const handleLayoutChange = useCallback((_layout: Layout, allLayouts: ResponsiveLayouts) => {
@@ -146,6 +149,11 @@ export const DashboardGrid = ({ summary, history }: DashboardGridProps) => {
         <div key="stats">
           <GridCard title="Statistics">
             <StatsWidget summary={summary} />
+          </GridCard>
+        </div>
+        <div key="quality">
+          <GridCard title="Product quality">
+            <ProductQualityWidget period={period} />
           </GridCard>
         </div>
         <div key="donut">

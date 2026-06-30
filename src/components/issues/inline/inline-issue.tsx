@@ -1,6 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import { memo } from 'react';
 import { HStack, Text } from '@chakra-ui/react';
 import { LuCheck, LuTrash, LuCirclePlus } from 'react-icons/lu';
 
@@ -13,7 +14,7 @@ interface InlineIssueProps {
   resultError: ResultError;
 }
 
-export const InlineIssue = ({ resultError }: InlineIssueProps) => {
+export const InlineIssue = memo(({ resultError }: InlineIssueProps) => {
   const [confirmAssumption] = useConfirmAssumptionMutation();
 
   const openManageIssueDrawer = useManageIssueDrawer({ resultError });
@@ -31,49 +32,59 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
         resultError.assumptions.map((assumption, index) => {
           if (!assumption) return null;
 
-          const { Icon, color, hoverBgColor } = getIssueCategoryStyle(assumption.issue.category);
+          const { Icon, color } = getIssueCategoryStyle(assumption.issue.category);
 
           const isConfirmed = assumption.isConfirmed;
 
           return (
             <HStack
               key={index}
-              border="1px solid"
-              borderColor={color}
+              border={isConfirmed ? '1px solid' : '1px dashed'}
+              borderColor={isConfirmed ? color : 'border.muted'}
               borderRadius="xl"
               ml="auto"
               px={2}
               minH="26px"
-              color={color}
+              color={isConfirmed ? 'white' : 'fg.muted'}
+              bg={isConfirmed ? color : 'transparent'}
+              flexShrink={0}
               {...(isConfirmed && {
                 onClick: () => openManageIssueDrawer({ issue: assumption.issue }),
                 cursor: 'pointer',
 
-                _hover: { bg: hoverBgColor, color: 'text.mainHover' },
+                _hover: { opacity: 0.85 },
               })}
             >
               {assumption.issue && (
                 <>
-                  <Icon size={16} color="currentColor" />
-                  <Text fontSize="xs">{assumption.issue.name}</Text>
+                  <Icon size={14} color="currentColor" style={{ flexShrink: 0 }} />
+                  <Text fontSize="xs" fontWeight={isConfirmed ? 'bold' : 'normal'} whiteSpace="nowrap">
+                    {isConfirmed ? '[Confirmed]' : '[Hypothesis]'}: {assumption.issue.name}
+                  </Text>
                 </>
               )}
 
               {!isConfirmed && (
                 <>
-                  <Text color="text.main" fontSize="xs">
-                    {Math.round(assumption.score * 100)}%
+                  <Text color="text.secondary" fontSize="xs" fontWeight="bold">
+                    ({Math.round(assumption.score * 100)}%)
                   </Text>
                   <LuCheck
                     color="green"
-                    size={16}
-                    onClick={() => confirm(assumption, true)}
+                    size={15}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirm(assumption, true);
+                    }}
                     style={{ cursor: 'pointer' }}
                   />
                   <LuTrash
                     color="red"
-                    size={16}
-                    onClick={() => confirm(assumption, false)}
+                    size={15}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirm(assumption, false);
+                    }}
                     style={{ cursor: 'pointer' }}
                   />
                 </>
@@ -92,4 +103,4 @@ export const InlineIssue = ({ resultError }: InlineIssueProps) => {
       )}
     </>
   );
-};
+});

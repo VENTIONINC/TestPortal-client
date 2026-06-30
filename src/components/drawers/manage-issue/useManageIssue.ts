@@ -41,6 +41,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
       } as Issue),
   );
   const [existingIssues, setExistingIssues] = useState<Issue[]>([]);
+  const [generatedSuggestionSource, setGeneratedSuggestionSource] = useState<'message' | 'result' | null>(null);
 
   // React Hook Form for validation
   const {
@@ -68,6 +69,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
   const [deleteIssue, { isLoading: isDeletingIssue }] = useDeleteApiV2IssuesByIssueIdMutation();
   const [formatError, { isLoading: isFormattingError }] = usePostApiV2ErrorFormatterMutation();
   const [formatFromResult, { isLoading: isFormattingFromResult }] = usePostApiV2ErrorFormatterResultMutation();
+  const isFormatting = isFormattingError || isFormattingFromResult;
 
   // Load existing issues for search
   const loadIssues = useCallback(async () => {
@@ -179,6 +181,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
         name: result.formatted.name,
         description: result.formatted.description,
       });
+      setGeneratedSuggestionSource('message');
 
       toaster.create({ title: 'Message formatted successfully', type: 'success' });
     } catch {
@@ -219,6 +222,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
         category: category,
         description: description,
       });
+      setGeneratedSuggestionSource('result');
 
       toaster.create({ title: 'Suggestion applied successfully', type: 'success' });
     } catch {
@@ -241,6 +245,8 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
     watchedName,
     isFormattingMessage: isFormattingError,
     isFormattingFromResult,
+    isFormatting,
+    generatedSuggestionSource,
 
     // Form
     register,

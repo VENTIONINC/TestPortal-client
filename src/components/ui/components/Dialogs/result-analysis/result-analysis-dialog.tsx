@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { Dialog, DialogBody, DialogFooter, NativeSelect, Slider, Textarea, toaster } from '@/components/ui';
+import { Dialog, DialogBody, DialogFooter, NativeSelect, Slider, Textarea, toaster, Alert } from '@/components/ui';
 import { usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation } from '@/redux/apis/generatedApi';
 import { resultAnalysisSchema } from '@/schemas';
 import { AnalysisCategory, BaseResult, DefaultDialogProps } from '@/types';
@@ -64,9 +64,36 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
     }
   };
 
+  const isConfirmed = Boolean(result.analysisFeedbackCategory);
+
   return (
     <Dialog title="Result analysis" onClose={closeDialog} size="md">
       <DialogBody display="flex" flexDir="column" gap={5}>
+        {isConfirmed ? (
+          <Alert.Root status="success">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title fontSize="xs" fontWeight="bold">
+                Verified Analysis
+              </Alert.Title>
+              <Alert.Description fontSize="xs">
+                This classification has been reviewed and verified by a user.
+              </Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
+        ) : (
+          <Alert.Root status="warning">
+            <Alert.Indicator />
+            <Alert.Content>
+              <Alert.Title fontSize="xs" fontWeight="bold">
+                AI-Generated Proposal
+              </Alert.Title>
+              <Alert.Description fontSize="xs">
+                Suggested by AI. Review and click "Save" to verify or adjust details.
+              </Alert.Description>
+            </Alert.Content>
+          </Alert.Root>
+        )}
         <Textarea
           {...register('analysisConclusion')}
           label="Analysis Conclusion:"
