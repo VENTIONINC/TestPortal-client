@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, Flex, Button, IconButton } from '@chakra-ui/react';
 import { LuCheck, LuCopy } from 'react-icons/lu';
 

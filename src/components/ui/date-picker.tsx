@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useCallback, useMemo, useState } from 'react';
 import { Box, Button, Flex, Popover, Portal } from '@chakra-ui/react';
 import { DayPicker } from 'react-day-picker';

@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button, Box, SimpleGrid, Text } from '@chakra-ui/react';
 
 import { Dialog, DialogBody, DialogFooter, Input, Textarea } from '@/components/ui';

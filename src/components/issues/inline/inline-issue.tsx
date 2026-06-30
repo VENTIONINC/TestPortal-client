@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo } from 'react';
 import { HStack, Text } from '@chakra-ui/react';
 import { LuCheck, LuTrash, LuCirclePlus } from 'react-icons/lu';

@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { NativeSelect } from '@/components/ui';
 import { useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
 import { useProjectsActions, useSelectedProjectId } from '@/redux/slices/projects';

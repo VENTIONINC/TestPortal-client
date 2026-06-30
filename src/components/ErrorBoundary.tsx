@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { useRouteError, isRouteErrorResponse } from 'react-router';
 import { Box, Button, Container, Heading, Text, VStack, Code, HStack, Link as ChakraLink } from '@chakra-ui/react';

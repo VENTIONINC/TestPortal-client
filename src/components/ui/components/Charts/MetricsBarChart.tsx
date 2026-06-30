@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useCallback, useMemo } from 'react';
 import { Box, Button, ButtonGroup, Card, HStack, IconButton, Text } from '@chakra-ui/react';
 import { Chart, useChart } from '@chakra-ui/charts';

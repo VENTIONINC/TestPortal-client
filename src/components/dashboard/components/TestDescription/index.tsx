@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, Flex, SimpleGrid } from '@chakra-ui/react';
 import { useChart } from '@chakra-ui/charts';
 import { PiDotsNineBold } from 'react-icons/pi';

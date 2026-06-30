@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Button, Stack, StackProps, Text } from '@chakra-ui/react';
 import { LuX } from 'react-icons/lu';
 

@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Box, SimpleGrid, Text, Button, Flex, HStack } from '@chakra-ui/react';
 import { LuPlus } from 'react-icons/lu';
 

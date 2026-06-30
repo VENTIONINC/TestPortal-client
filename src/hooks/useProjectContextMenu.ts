@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { MouseEvent } from 'react';
 import { FiEdit, FiArchive, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
 

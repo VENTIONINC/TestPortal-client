@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo, useCallback } from 'react';
 import { Box, Text, Button, VStack, Input } from '@chakra-ui/react';
 import { LuCopy } from 'react-icons/lu';

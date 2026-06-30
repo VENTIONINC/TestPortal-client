@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { forwardRef } from 'react';
 import { Checkbox as ChakraCheckbox } from '@chakra-ui/react';
 

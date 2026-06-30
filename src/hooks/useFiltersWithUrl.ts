@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 

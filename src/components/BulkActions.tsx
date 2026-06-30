@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useMemo, useCallback, memo } from 'react';
 import { HStack, Text, useToken } from '@chakra-ui/react';
 import Tippy from '@tippyjs/react';

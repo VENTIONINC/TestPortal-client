@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useState } from 'react';
 import { Box, Flex, IconButton, Text, VStack } from '@chakra-ui/react';
 import { LuCheck, LuCopy } from 'react-icons/lu';
@@ -55,13 +58,7 @@ const DialogCodeSection = ({ title, value }: DialogCodeSectionProps) => {
         borderColor="border.muted"
         userSelect="none"
       >
-        <Text
-          fontSize="10px"
-          fontWeight="bold"
-          color="fg.muted"
-          letterSpacing="wider"
-          textTransform="uppercase"
-        >
+        <Text fontSize="10px" fontWeight="bold" color="fg.muted" letterSpacing="wider" textTransform="uppercase">
           {title}
         </Text>
         <Tooltip content={copied ? 'Copied!' : `Copy ${title.toLowerCase()}`}>
@@ -79,21 +76,8 @@ const DialogCodeSection = ({ title, value }: DialogCodeSectionProps) => {
           </IconButton>
         </Tooltip>
       </Flex>
-      <Box
-        px={4}
-        py={3}
-        maxH="300px"
-        overflowY="auto"
-        bg="bg.input"
-      >
-        <Text
-          fontFamily="mono"
-          fontSize="xs"
-          whiteSpace="pre-wrap"
-          wordBreak="break-word"
-          lineHeight="tall"
-          color="fg"
-        >
+      <Box px={4} py={3} maxH="300px" overflowY="auto" bg="bg.input">
+        <Text fontFamily="mono" fontSize="xs" whiteSpace="pre-wrap" wordBreak="break-word" lineHeight="tall" color="fg">
           {value}
         </Text>
       </Box>
@@ -109,9 +93,7 @@ export const ResultsErrorDialog = ({ resultError, closeDialog }: ResultsErrorDia
   return (
     <Dialog title="Results Error" onClose={closeDialog} size="lg">
       <DialogBody display="flex" flexDir="column" gap={5}>
-        {resultError?.message && (
-          <DialogCodeSection title="Error Message" value={resultError.message} />
-        )}
+        {resultError?.message && <DialogCodeSection title="Error Message" value={resultError.message} />}
 
         {resultError?.callLog && resultError.callLog.length > 0 && (
           <DialogCodeSection title="Call Log" value={resultError.callLog.join('\n')} />

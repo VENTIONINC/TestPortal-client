@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { forwardRef, ReactNode, useMemo } from 'react';
 import { NativeSelect as Select } from '@chakra-ui/react';
 

@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { useSelector } from 'react-redux';
 
 import { useGetApiV2UsersByUserIdQuery } from '@/redux/apis/generatedApi';

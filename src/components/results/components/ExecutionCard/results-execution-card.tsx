@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { memo, useState } from 'react';
 import { Box, Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
@@ -119,7 +122,7 @@ export const ResultsExecutionCard = memo(
 
           const hasLinks = Boolean(
             (monitoringPortalUrl && monitoringPortalEnabled) ||
-            ((reportPortalLink || reportPortalUrl) && reportPortalEnabled)
+            ((reportPortalLink || reportPortalUrl) && reportPortalEnabled),
           );
 
           return (
@@ -184,13 +187,17 @@ export const ResultsExecutionCard = memo(
 
                 <Tooltip content="Start Time">
                   <Box w={{ base: 'auto', md: '90px' }} flexShrink={0}>
-                    <Text textStyle="sm" whiteSpace="nowrap">{toStartTime(startTime)}</Text>
+                    <Text textStyle="sm" whiteSpace="nowrap">
+                      {toStartTime(startTime)}
+                    </Text>
                   </Box>
                 </Tooltip>
 
                 <Tooltip content="Duration">
                   <Box w={{ base: 'auto', md: '70px' }} flexShrink={0}>
-                    <Text textStyle="sm" whiteSpace="nowrap">{toDuration(duration)}</Text>
+                    <Text textStyle="sm" whiteSpace="nowrap">
+                      {toDuration(duration)}
+                    </Text>
                   </Box>
                 </Tooltip>
 

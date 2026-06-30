@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 type GetMonitoringLinkType = (params: { startTime: string; duration: number; env: string; url: string }) => string;
 
 export const getMonitoringLink: GetMonitoringLinkType = ({ env, startTime, duration, url }) => {

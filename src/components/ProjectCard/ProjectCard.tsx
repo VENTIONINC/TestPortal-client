@@ -1,3 +1,6 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
 import { Badge, Card, Text, Heading, Flex, Box, Icon } from '@chakra-ui/react';
 import { MouseEvent } from 'react';
 import { FiCode, FiAlertCircle, FiPlay } from 'react-icons/fi';
