@@ -48,6 +48,7 @@ interface DashboardGridProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   history?: any;
   isLoading?: boolean;
+  period?: string;
 }
 
 const GridCard = ({ title, children }: { title: string; children: ReactNode }) => (
@@ -103,7 +104,7 @@ const DonutChartWidget = ({ summary }: { summary?: TestDescriptionSummary }) => 
   return <DonutChart title="Test runs" passed={passed} failed={failed} donutChart={donutChart} totalRuns={totalRuns} />;
 };
 
-export const DashboardGrid = ({ summary, history }: DashboardGridProps) => {
+export const DashboardGrid = ({ summary, history, period }: DashboardGridProps) => {
   const [layouts, setLayouts] = useState<ResponsiveLayouts>(loadLayouts);
 
   const handleLayoutChange = useCallback((_layout: Layout, allLayouts: ResponsiveLayouts) => {
@@ -149,7 +150,7 @@ export const DashboardGrid = ({ summary, history }: DashboardGridProps) => {
         </div>
         <div key="quality">
           <GridCard title="Product quality">
-            <ProductQualityWidget />
+            <ProductQualityWidget period={period} />
           </GridCard>
         </div>
         <div key="donut">

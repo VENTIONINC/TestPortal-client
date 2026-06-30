@@ -1,4 +1,3 @@
-import { useSearchParams } from 'react-router';
 import { Box, Flex, Icon, Text, Circle } from '@chakra-ui/react';
 import { FiAlertTriangle, FiInfo } from 'react-icons/fi';
 
@@ -14,6 +13,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui';
 
 const DEFAULT_ENVIRONMENT = 'staging';
+const DEFAULT_PERIOD = '1';
+
+interface ProductQualityWidgetProps {
+  period?: string;
+}
 
 const formatLocalDate = (date: Date) => {
   const year = date.getFullYear();
@@ -73,13 +77,11 @@ const calculateIWQS = (
   return { weightedSum, totalLinkedFailures, score };
 };
 
-export const ProductQualityWidget = () => {
+export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQualityWidgetProps) => {
   const { project, selectedProjectId } = useSelectedProject();
-  const [searchParams] = useSearchParams();
-  const period = searchParams.get('period') || '30';
 
   const parsedPeriod = Number.parseInt(period, 10);
-  const periodDays = Number.isFinite(parsedPeriod) && parsedPeriod > 0 ? parsedPeriod : 30;
+  const periodDays = Number.isFinite(parsedPeriod) && parsedPeriod > 0 ? parsedPeriod : Number.parseInt(DEFAULT_PERIOD, 10);
 
   // Date ranges
   const periodEnd = new Date();
@@ -115,7 +117,6 @@ export const ProductQualityWidget = () => {
       projectId: selectedProjectId,
       environment: DEFAULT_ENVIRONMENT,
       period: String(periodDays * 2),
-      granularity: 'daily',
     },
     { skip: !selectedProjectId },
   );
