@@ -2,9 +2,16 @@ import fs from "node:fs";
 import path from "node:path";
 
 export const LICENSE_HEADER = [
-  "// Copyright 2026 Vention",
+  "// Copyright 2026 VENSOLUTIONSGROUP LTD",
   "// SPDX-License-Identifier: Apache-2.0",
 ].join("\n");
+
+export const LEGACY_LICENSE_HEADERS = [
+  [
+    "// Copyright 2026 Vention",
+    "// SPDX-License-Identifier: Apache-2.0",
+  ].join("\n"),
+];
 
 export const HEADER_BY_EXTENSION = new Map([
   [".ts", LICENSE_HEADER],
@@ -39,8 +46,28 @@ export function normalizeHeader(header) {
   return `${header}\n\n`;
 }
 
-export function hasLicenseHeader(content, header) {
-  return content.startsWith(normalizeHeader(header));
+export function normalizeLicenseHeaderContent(content, header) {
+  const normalizedHeader = normalizeHeader(header);
+
+  if (content.startsWith(normalizedHeader)) {
+    return { content, changed: false };
+  }
+
+  const legacyHeader = LEGACY_LICENSE_HEADERS.find((legacyHeader) =>
+    content.startsWith(normalizeHeader(legacyHeader)),
+  );
+
+  if (legacyHeader) {
+    return {
+      content: `${normalizedHeader}${content.slice(normalizeHeader(legacyHeader).length)}`,
+      changed: true,
+    };
+  }
+
+  return {
+    content: `${normalizedHeader}${content}`,
+    changed: true,
+  };
 }
 
 export function isGeneratedSourceExcluded(rootDirectory, filePath) {

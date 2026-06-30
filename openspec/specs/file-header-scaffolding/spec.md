@@ -31,7 +31,7 @@ For supported TypeScript and JavaScript-family source file extensions, repositor
 
 #### Scenario: Supported code file is created
 - **WHEN** a developer creates a supported TypeScript or JavaScript-family file with the package `new:file` command
-- **THEN** the new file SHALL begin with `Copyright 2026 Vention`
+- **THEN** the new file SHALL begin with `Copyright 2026 VENSOLUTIONSGROUP LTD`
 - **AND** the new file SHALL include the SPDX identifier `Apache-2.0` in the file header
 
 #### Scenario: Supported extension list is inspected
@@ -45,6 +45,7 @@ The repository SHALL provide a package script that scans configured source direc
 - **WHEN** a developer runs the repository bulk header command
 - **THEN** the command SHALL scan supported files under the repository's configured source directories
 - **AND** the command SHALL add the standard header only to supported files that do not already contain it
+- **AND** the command SHALL normalize legacy Apache 2.0 source headers to the root `NOTICE` copyright owner
 - **AND** the command SHALL leave already-headered supported files unchanged
 - **AND** the command SHALL ignore unsupported files
 
@@ -55,4 +56,3 @@ The repository SHALL define whether generated source files are excluded from hea
 - **WHEN** the bulk header command processes client source files
 - **THEN** generated RTK Query API output SHALL either be excluded from the scan or receive the standard header through an automated post-generation step
 - **AND** the repository documentation SHALL describe the chosen generated-source behavior
-

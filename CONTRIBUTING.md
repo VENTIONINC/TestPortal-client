@@ -18,7 +18,8 @@ This project is licensed under the Apache License 2.0. By submitting a
 contribution, you agree that your contribution will be licensed under
 Apache-2.0.
 
-See [LICENSE](LICENSE) for the full terms.
+See [LICENSE](LICENSE) for the full terms and [NOTICE](NOTICE) for repository
+copyright attribution.
 
 ## Local Development
 
@@ -30,7 +31,8 @@ See [LICENSE](LICENSE) for the full terms.
 5. Use `yarn new:file -- <path>` when creating a new supported source file so
    the standard Apache 2.0 header is added automatically.
 6. Use `yarn headers:add` to backfill the standard header across supported
-   existing source files in `src`.
+   existing source files in `src`. Existing legacy Apache 2.0 source headers
+   are normalized to the root `NOTICE` copyright owner.
 
 Supported file types for `yarn new:file`:
 - `.ts`

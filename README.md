@@ -45,7 +45,8 @@ For instructions on how to create a release, please refer to the [Release Guide]
 ## License
 
 This project is licensed under the Apache License 2.0. See
-[LICENSE](LICENSE) for the full terms.
+[LICENSE](LICENSE) for the full terms and [NOTICE](NOTICE) for repository
+copyright attribution.
 
 Supported JavaScript and TypeScript source files can be created with
 `yarn new:file -- <path>` so the standard repository header is added
