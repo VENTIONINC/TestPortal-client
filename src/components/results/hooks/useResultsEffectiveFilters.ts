@@ -64,9 +64,7 @@ export const useResultsEffectiveFilters = (): UseResultsEffectiveFiltersReturn =
     const merged = { ...filters, ...filterProps.filters };
     return {
       ...merged,
-      tags: typeof merged.tags === 'string'
-        ? (merged.tags as string).split(',').filter(Boolean)
-        : merged.tags,
+      tags: typeof merged.tags === 'string' ? (merged.tags as string).split(',').filter(Boolean) : merged.tags,
       page: Number(merged.page) || 1,
     } as ResultsFilters;
   }, [filters, filterProps.filters]);

@@ -29,6 +29,7 @@ src/
 ```
 
 ### **Benefits**
+
 - ✅ **Separation of Concerns**: UI components focus only on rendering.
 - ✅ **Reusable Logic**: Business logic can be shared across components.
 - ✅ **Testability**: Hooks and utilities can be unit tested independently.
@@ -37,6 +38,7 @@ src/
 ## 🎯 Implementation Pattern
 
 ### 1. Define Schema
+
 Define the shape and validation rules of your form data.
 
 ```typescript
@@ -52,6 +54,7 @@ export type ExampleFormData = z.infer<typeof exampleSchema>;
 ```
 
 ### 2. Create Custom Hook
+
 Encapsulate form logic, API calls, and navigation.
 
 ```typescript
@@ -75,22 +78,25 @@ export function useExample() {
 ```
 
 ### 3. Clean UI Component
+
 Use the hook and `FormField` to keep the component declarative.
 
 ```tsx
 // src/pages/Example/index.tsx
 export function ExamplePage() {
-  const { register, handleSubmit, formState: { errors }, loading } = useExample();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    loading,
+  } = useExample();
 
   return (
     <form onSubmit={handleSubmit}>
-      <FormField
-        {...register('email')}
-        label="Email"
-        error={errors.email?.message}
-        disabled={loading}
-      />
-      <Button type="submit" loading={loading}>Submit</Button>
+      <FormField {...register('email')} label="Email" error={errors.email?.message} disabled={loading} />
+      <Button type="submit" loading={loading}>
+        Submit
+      </Button>
     </form>
   );
 }
@@ -99,6 +105,7 @@ export function ExamplePage() {
 ## 🧩 Reusable FormField
 
 The `FormField` component (found in `src/components/forms/FormField.tsx`) is a wrapper that handles:
+
 - Label rendering (with required indicator)
 - Input registration (via `ref` forwarding)
 - Error message display
@@ -108,21 +115,25 @@ The `FormField` component (found in `src/components/forms/FormField.tsx`) is a w
 ## 🔥 Advanced Patterns
 
 ### Schema Composition
+
 Reuse validation pieces across different schemas to ensure consistency.
 
 ```typescript
 const passwordRules = z.string().min(8).regex(/[a-z]/).regex(/[A-Z]/);
 
-export const signupSchema = z.object({
-  password: passwordRules,
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+export const signupSchema = z
+  .object({
+    password: passwordRules,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 ```
 
 ### Error Handling
+
 Use utility functions (like `extractApiError`) to transform backend errors into user-friendly messages that can be set via `setError('root', ...)` or displayed in toasts.
 
 ## 📋 Best Practices

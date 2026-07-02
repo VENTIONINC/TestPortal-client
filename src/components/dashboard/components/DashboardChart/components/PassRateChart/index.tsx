@@ -7,11 +7,7 @@ import { formatChartLabel } from '@/utils/dateUtils';
 import { MetricsBarChart } from '@/components/ui/components/Charts/MetricsBarChart';
 import { BarChartView, BarChartValueMode, CategorySeries, CategoriesChartDatum } from '@/types/charts';
 
-export const PassRateChart = ({
-  data,
-}: {
-  data: { date: string; metrics: { passed: number; failed: number } }[];
-}) => {
+export const PassRateChart = ({ data }: { data: { date: string; metrics: { passed: number; failed: number } }[] }) => {
   const [view, setView] = useState<BarChartView>('multiple');
   const [valueMode, setValueMode] = useState<BarChartValueMode>('count');
   const series: CategorySeries[] = [

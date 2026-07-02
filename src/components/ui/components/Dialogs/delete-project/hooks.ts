@@ -10,14 +10,10 @@ import { DeleteProjectDialog } from './delete-project-dialog';
 export const useDeleteProjectDialog = () => {
   const { openDialog } = useDialogActions();
 
-  return (projectId: string) =>
-    openDialog(DeleteProjectDialog, { projectId });
+  return (projectId: string) => openDialog(DeleteProjectDialog, { projectId });
 };
 
-export const useDeleteProjectBusinessLogic = (
-  closeDialog: () => void,
-  projectId: string
-) => {
+export const useDeleteProjectBusinessLogic = (closeDialog: () => void, projectId: string) => {
   const [deleteProject] = useDeleteApiV2ProjectsByIdMutation();
 
   const onConfirm = async () => {

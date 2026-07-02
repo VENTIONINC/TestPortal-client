@@ -13,23 +13,11 @@ interface ArchiveProjectDialogProps extends DefaultDialogProps {
   archive?: boolean;
 }
 
-export const ArchiveProjectDialog = ({
-  closeDialog,
-  projectId,
-  archive = false
-}: ArchiveProjectDialogProps) => {
-  const { onConfirm } = useArchiveProjectBusinessLogic(
-    closeDialog,
-    projectId,
-    archive
-  );
+export const ArchiveProjectDialog = ({ closeDialog, projectId, archive = false }: ArchiveProjectDialogProps) => {
+  const { onConfirm } = useArchiveProjectBusinessLogic(closeDialog, projectId, archive);
 
   return (
-    <Dialog
-      title={archive ? 'Archive Project' : 'Unarchive Project'}
-      onClose={closeDialog}
-      role="alertdialog"
-    >
+    <Dialog title={archive ? 'Archive Project' : 'Unarchive Project'} onClose={closeDialog} role="alertdialog">
       <DialogBody display="flex" flexDir="column" gap={5}>
         <Text>
           {archive

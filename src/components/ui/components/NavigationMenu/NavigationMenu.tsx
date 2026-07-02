@@ -4,7 +4,6 @@
 import { useNavigate, useLocation } from 'react-router';
 import { Box, Text, VStack } from '@chakra-ui/react';
 
-
 import { navigationMenuConfig } from './config';
 import { NavItem } from './NavItem';
 

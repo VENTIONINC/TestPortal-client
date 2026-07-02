@@ -77,7 +77,10 @@ export const usePromptBuilder = (name: string) => {
   const requiredFieldsEmpty = useMemo(() => {
     if (!prompt) return false;
     const hasRequiredFields = Object.entries(prompt.parameters).some(([, param]) => param.required);
-    return hasRequiredFields && Object.entries(prompt.parameters).some(([paramName, param]) => param.required && !parameterValues[paramName]);
+    return (
+      hasRequiredFields &&
+      Object.entries(prompt.parameters).some(([paramName, param]) => param.required && !parameterValues[paramName])
+    );
   }, [prompt, parameterValues]);
 
   // Auto-generate when parameters change (after a short delay)

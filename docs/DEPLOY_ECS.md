@@ -17,12 +17,12 @@ The workflow is triggered manually. On each run it:
 
 Naming convention per environment (`<env>` is one of `dev`, `stg`, `prod`):
 
-| Resource     | Name                       |
-| ------------ | -------------------------- |
-| ECR repo     | `<env>-testportal-fe`      |
-| ECS cluster  | `<env>-cluster`            |
-| ECS service  | `<env>-fe-service`         |
-| AWS region   | `eu-central-1`             |
+| Resource    | Name                  |
+| ----------- | --------------------- |
+| ECR repo    | `<env>-testportal-fe` |
+| ECS cluster | `<env>-cluster`       |
+| ECS service | `<env>-fe-service`    |
+| AWS region  | `eu-central-1`        |
 
 ## Prerequisites
 
@@ -50,11 +50,11 @@ A typical deploy takes ~5–10 minutes (image build + ECS rollout).
 
 ### Inputs
 
-| Input         | Required | Default          | Description                                                                                       |
-| ------------- | -------- | ---------------- | ------------------------------------------------------------------------------------------------- |
-| `environment` | yes      | `dev`            | Target environment: `dev`, `stg`, or `prod`. Drives ECR / ECS resource names.                     |
-| `image_tag`   | no       | short commit SHA | Custom Docker tag for the built image. Leave empty unless you need to pin a specific tag.         |
-| `api_url`     | no       | `vars.VITE_API_URL` | Overrides the backend URL baked into the bundle for this build.                                |
+| Input         | Required | Default             | Description                                                                               |
+| ------------- | -------- | ------------------- | ----------------------------------------------------------------------------------------- |
+| `environment` | yes      | `dev`               | Target environment: `dev`, `stg`, or `prod`. Drives ECR / ECS resource names.             |
+| `image_tag`   | no       | short commit SHA    | Custom Docker tag for the built image. Leave empty unless you need to pin a specific tag. |
+| `api_url`     | no       | `vars.VITE_API_URL` | Overrides the backend URL baked into the bundle for this build.                           |
 
 > `api_url` is **baked into the JS bundle at build time** via `VITE_API_URL`.
 > It cannot be changed at runtime — to switch the backend URL, run the

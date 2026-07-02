@@ -25,14 +25,7 @@ export const TagList = ({
       <Wrap gap="8px">
         {visibleTags.map((tag) => {
           const isSelected = tagsValue.includes(tag);
-          return (
-            <FilterTag
-              key={tag}
-              tag={tag}
-              isSelected={isSelected}
-              onClick={() => handleTagClick(tag)}
-            />
-          );
+          return <FilterTag key={tag} tag={tag} isSelected={isSelected} onClick={() => handleTagClick(tag)} />;
         })}
         {hasMoreTags && (
           <Box

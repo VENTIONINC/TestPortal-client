@@ -35,6 +35,7 @@ copyright attribution.
    are normalized to the root `NOTICE` copyright owner.
 
 Supported file types for `yarn new:file`:
+
 - `.ts`
 - `.tsx`
 - `.js`

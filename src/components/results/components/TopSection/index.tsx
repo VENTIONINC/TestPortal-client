@@ -27,13 +27,19 @@ export const TopSectionContainer = memo(({ statistics, isFetching }: TopSectionC
       : []);
   const topIssues = statistics?.topIssues ?? [];
 
-  const handleClickTopError = useCallback((message: string) => {
-    setValue('errorMessage', message);
-  }, [setValue]);
+  const handleClickTopError = useCallback(
+    (message: string) => {
+      setValue('errorMessage', message);
+    },
+    [setValue],
+  );
 
-  const handleClickTopIssue = useCallback((message: string) => {
-    setValue('issueName', message);
-  }, [setValue]);
+  const handleClickTopIssue = useCallback(
+    (message: string) => {
+      setValue('issueName', message);
+    },
+    [setValue],
+  );
 
   const isInitialLoading = !statistics && isFetching;
 

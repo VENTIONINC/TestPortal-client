@@ -105,10 +105,7 @@ export const useResultsActions = () => {
 
 export const useResultsFilters = () => useAppSelector((state) => state.results.filters);
 export const useResultsFilterDateRange = () =>
-  useAppSelector(
-    (state) => ({ from: state.results.filters.from, to: state.results.filters.to }),
-    shallowEqual,
-  );
+  useAppSelector((state) => ({ from: state.results.filters.from, to: state.results.filters.to }), shallowEqual);
 export const useSelectedDates = () => useAppSelector((state) => state.results.selectedDates);
 
 export default resultsSlice.reducer;

@@ -11,15 +11,10 @@ type FilterValues = Record<string, string>;
 
 const toStringFilters = (filters: Record<string, FilterValue>): FilterValues => {
   return Object.fromEntries(
-    Object.entries(filters)
-      .map(([key, value]) => [
-        key,
-        value === null || value === undefined
-          ? ''
-          : Array.isArray(value)
-            ? value.join(',')
-            : String(value)
-      ]),
+    Object.entries(filters).map(([key, value]) => [
+      key,
+      value === null || value === undefined ? '' : Array.isArray(value) ? value.join(',') : String(value),
+    ]),
   ) as FilterValues;
 };
 

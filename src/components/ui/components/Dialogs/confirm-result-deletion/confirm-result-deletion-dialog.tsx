@@ -28,8 +28,7 @@ export const ConfirmResultDeletionDialog = ({
     <Dialog title="Delete Result" onClose={closeDialog} role="alertdialog">
       <DialogBody display="flex" flexDir="column" gap={5}>
         <Text>
-          Are you sure you want to delete retry <strong>#{resultRetry}</strong> for{' '}
-          <strong>{specName}</strong>?
+          Are you sure you want to delete retry <strong>#{resultRetry}</strong> for <strong>{specName}</strong>?
         </Text>
         <Text>This action cannot be undone.</Text>
       </DialogBody>

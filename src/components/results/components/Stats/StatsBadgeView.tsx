@@ -84,11 +84,7 @@ export const StatsBadgeView = ({ statistics, isFetching }: ResultsStatsProps) =>
         })}
       </Grid>
 
-      <StatsConfigInfo
-        entityCounts={effStats.entityCounts}
-        labelColor={labelTextColor}
-        valueColor={valueTextColor}
-      />
+      <StatsConfigInfo entityCounts={effStats.entityCounts} labelColor={labelTextColor} valueColor={valueTextColor} />
     </VStack>
   );
 };
