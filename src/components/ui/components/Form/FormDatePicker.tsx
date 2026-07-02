@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Controller, FieldValues, Path, useFormContext } from 'react-hook-form';
@@ -17,13 +17,7 @@ export const FormDatePicker = <T extends FieldValues>({ name, ...rest }: FormDat
       name={name}
       control={control}
       render={({ field: { value, onChange, onBlur } }) => (
-        <DatePicker
-          name={name}
-          value={value ?? ''}
-          onChange={onChange}
-          onBlur={onBlur}
-          {...rest}
-        />
+        <DatePicker name={name} value={value ?? ''} onChange={onChange} onBlur={onBlur} {...rest} />
       )}
     />
   );

@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Controller, FieldValues, Path, useFormContext } from 'react-hook-form';
@@ -17,11 +17,8 @@ export const FormMultiSelect = <T extends FieldValues>({ name, ...rest }: FormMu
       name={name}
       control={control}
       render={({ field: { value, onChange, onBlur } }) => {
-        const arrayValue = typeof value === 'string' && value.length > 0
-          ? value.split(',')
-          : Array.isArray(value)
-            ? value
-            : [];
+        const arrayValue =
+          typeof value === 'string' && value.length > 0 ? value.split(',') : Array.isArray(value) ? value : [];
 
         return (
           <MultiSelect

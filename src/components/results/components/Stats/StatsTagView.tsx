@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, HStack, Skeleton, Text } from '@chakra-ui/react';
@@ -99,11 +99,7 @@ export const StatsTagView = ({ statistics, isFetching }: ResultsStatsProps) => {
 
       <Box mx={3} w="1px" my="auto" h={5} bg="border.secondary" />
 
-      <StatsConfigInfo
-        entityCounts={effStats.entityCounts}
-        labelColor={labelTextColor}
-        valueColor={valueTextColor}
-      />
+      <StatsConfigInfo entityCounts={effStats.entityCounts} labelColor={labelTextColor} valueColor={valueTextColor} />
     </HStack>
   );
 };

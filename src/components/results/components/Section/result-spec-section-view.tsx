@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo } from 'react';
@@ -73,12 +73,12 @@ export const ResultSpecSectionView = memo(
                 value={toCleanTitle(specTitle)}
                 display="flex"
                 alignItems="center"
-                gap={1}
+                gap={2.5}
                 borderRadius="sm"
                 _hover={{ bg: 'bg.active' }}
                 p={2}
               >
-                <LuFileText size={16} />
+                <LuFileText size={16} style={{ flexShrink: 0 }} />
                 {toCleanTitle(specTitle)}
               </ClipboardCopyText>
             </HStack>

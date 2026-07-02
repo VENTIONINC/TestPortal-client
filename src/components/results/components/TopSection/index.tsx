@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo, useCallback } from 'react';
@@ -27,13 +27,19 @@ export const TopSectionContainer = memo(({ statistics, isFetching }: TopSectionC
       : []);
   const topIssues = statistics?.topIssues ?? [];
 
-  const handleClickTopError = useCallback((message: string) => {
-    setValue('errorMessage', message);
-  }, [setValue]);
+  const handleClickTopError = useCallback(
+    (message: string) => {
+      setValue('errorMessage', message);
+    },
+    [setValue],
+  );
 
-  const handleClickTopIssue = useCallback((message: string) => {
-    setValue('issueName', message);
-  }, [setValue]);
+  const handleClickTopIssue = useCallback(
+    (message: string) => {
+      setValue('issueName', message);
+    },
+    [setValue],
+  );
 
   const isInitialLoading = !statistics && isFetching;
 

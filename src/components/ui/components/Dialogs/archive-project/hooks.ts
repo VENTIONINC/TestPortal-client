@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { toaster } from '@/components/ui/toaster';
@@ -10,15 +10,10 @@ import { ArchiveProjectDialog } from './archive-project-dialog';
 export const useArchiveProjectDialog = () => {
   const { openDialog } = useDialogActions();
 
-  return (projectId: string, archive = false) =>
-    openDialog(ArchiveProjectDialog, { projectId, archive });
+  return (projectId: string, archive = false) => openDialog(ArchiveProjectDialog, { projectId, archive });
 };
 
-export const useArchiveProjectBusinessLogic = (
-  closeDialog: () => void,
-  projectId: string,
-  archive = false
-) => {
+export const useArchiveProjectBusinessLogic = (closeDialog: () => void, projectId: string, archive = false) => {
   const [updateProject] = usePutApiV2ProjectsByIdMutation();
 
   const onConfirm = async () => {

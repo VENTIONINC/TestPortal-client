@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect } from 'react';
@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useDispatch } from 'react-redux';
 
 import { loginSchema, type LoginFormData } from '@/schemas/authSchemas';
-import { usePostApiV2AuthLoginMutation } from '@/redux/apis/generatedApi';
+import { usePostApiV2UsersLoginMutation } from '@/redux/apis/generatedApi';
 import { setTokens } from '@/redux/slices/auth';
 import { useResetState } from '@/hooks/useResetState';
 import { extractApiError } from '@/utils/apiErrors';
@@ -40,7 +40,7 @@ export function useLogin() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const resetState = useResetState();
-  const [postApiUsersLogin, { isLoading: isApiLoading, error: apiError }] = usePostApiV2AuthLoginMutation();
+  const [postApiUsersLogin, { isLoading: isApiLoading, error: apiError }] = usePostApiV2UsersLoginMutation();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -76,12 +76,11 @@ export function useLogin() {
       if (!('accessToken' in response) || !('refreshToken' in response)) {
         setError('root', {
           type: 'manual',
-          message: response.message || GENERIC_LOGIN_ERROR,
+          message: 'message' in response ? response.message || GENERIC_LOGIN_ERROR : GENERIC_LOGIN_ERROR,
         });
         return;
       }
 
-      // Store authentication tokens in Redux - user data will be fetched by useAuth
       dispatch(
         setTokens({
           accessToken: response.accessToken,
@@ -89,10 +88,7 @@ export function useLogin() {
         }),
       );
 
-      // Reset global state to ensure fresh initialization
       resetState();
-
-      // Navigate to intended destination
       navigate(PATHS.ROOT);
     } catch (error) {
       const errorMessage = getLoginErrorMessage(error as Parameters<typeof extractApiError>[0]);

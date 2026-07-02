@@ -1,7 +1,7 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { createSlice } from '@reduxjs/toolkit';
 
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
@@ -50,9 +50,9 @@ export const drawerSlice = createSlice({
 export const useDrawerActions = () => {
   const dispatch = useAppDispatch();
 
-  return {
-    openDrawer: useCallback(
-      <T>(Component: DrawerComponent<T>, props?: T) => {
+  return useMemo(
+    () => ({
+      openDrawer: <T>(Component: DrawerComponent<T>, props?: T) => {
         dispatch(
           drawerSlice.actions.openDrawer({
             Component,
@@ -62,15 +62,15 @@ export const useDrawerActions = () => {
           }),
         );
       },
-      [dispatch],
-    ),
-    closeDrawer: () => {
-      dispatch(drawerSlice.actions.closeDrawer());
-    },
-    closeAllDrawers: () => {
-      dispatch(drawerSlice.actions.closeAllDrawers());
-    },
-  };
+      closeDrawer: () => {
+        dispatch(drawerSlice.actions.closeDrawer());
+      },
+      closeAllDrawers: () => {
+        dispatch(drawerSlice.actions.closeAllDrawers());
+      },
+    }),
+    [dispatch],
+  );
 };
 
 export const useDrawer = () => useAppSelector((state) => state.drawer.drawers);

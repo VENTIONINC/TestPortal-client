@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Flex, Text } from '@chakra-ui/react';
@@ -13,7 +13,6 @@ type NavItemProps = {
 };
 
 export const NavItem = ({ icon: IconComp, label, collapsed, active }: NavItemProps) => {
-
   const content = (
     <Flex
       align="center"

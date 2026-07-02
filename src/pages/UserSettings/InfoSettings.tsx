@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Button, Heading, VStack, Table, Spinner, Text } from '@chakra-ui/react';
@@ -41,7 +41,9 @@ export function InfoSettings() {
 
       <Box bg="bg.card" border="1px solid" borderColor="border.main" borderRadius="md" shadow="sm">
         <Box p={6} borderBottom="1px solid" borderColor="border.main">
-          <Heading size="md" color="text.main">Human Feedback Export</Heading>
+          <Heading size="md" color="text.main">
+            Human Feedback Export
+          </Heading>
         </Box>
         <Box p={6}>
           <Text color="text.secondary" fontSize="sm">

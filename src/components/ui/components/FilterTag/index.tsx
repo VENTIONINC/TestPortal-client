@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Flex, Text, Box, Icon } from '@chakra-ui/react';
@@ -42,9 +42,7 @@ export const FilterTag = ({ tag, isSelected = false, onClick }: FilterTagProps) 
         {tag}
       </Text>
 
-      {isSelected && (
-        <Icon as={LuX} color={closeIconColor} boxSize="14px" strokeWidth={2.5} ml={1} />
-      )}
+      {isSelected && <Icon as={LuX} color={closeIconColor} boxSize="14px" strokeWidth={2.5} ml={1} />}
     </Flex>
   );
 };

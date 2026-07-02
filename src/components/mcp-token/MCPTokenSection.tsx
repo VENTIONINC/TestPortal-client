@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Section } from '@/components/ui';
@@ -21,11 +21,7 @@ export function MCPTokenSection() {
       />
       <Section.Description>Generate your Model Context Protocol token for Claude desktop</Section.Description>
       <Section.Card p={2}>
-        {mcpToken ? (
-          <TokenReadyCard mcpToken={mcpToken} tokenExpiresAt={tokenExpiresAt} />
-        ) : (
-          <TokenGenerationCard />
-        )}
+        {mcpToken ? <TokenReadyCard mcpToken={mcpToken} tokenExpiresAt={tokenExpiresAt} /> : <TokenGenerationCard />}
       </Section.Card>
     </Section.Root>
   );

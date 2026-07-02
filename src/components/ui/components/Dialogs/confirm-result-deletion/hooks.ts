@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { toaster } from '@/components/ui/toaster';
@@ -19,11 +19,7 @@ export const useConfirmResultDeletionDialog = () => {
     });
 };
 
-export const useConfirmResultDeletionBusinessLogic = (
-  closeDialog: () => void,
-  resultId: string,
-  projectId: string,
-) => {
+export const useConfirmResultDeletionBusinessLogic = (closeDialog: () => void, resultId: string, projectId: string) => {
   const [deleteResult] = useDeleteApiV2ResultsByResultIdMutation();
 
   const onConfirm = async () => {

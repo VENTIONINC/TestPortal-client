@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, Text } from '@chakra-ui/react';
@@ -20,8 +20,8 @@ export const ConfirmApiKeyDeletionDialog = ({ onConfirm, closeDialog }: ConfirmA
     <Dialog title="Delete API Key" onClose={closeDialog} role="alertdialog">
       <DialogBody display="flex" flexDir="column" gap={5}>
         <Text>
-          Are you sure you want to delete this API key? This action cannot be undone and any integrations using this
-          key will stop working immediately.
+          Are you sure you want to delete this API key? This action cannot be undone and any integrations using this key
+          will stop working immediately.
         </Text>
       </DialogBody>
 

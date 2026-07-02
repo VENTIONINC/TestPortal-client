@@ -1,9 +1,8 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Flex, IconButton } from '@chakra-ui/react';
 import { Link } from 'react-router';
-
 
 import { NavigationMenu } from '../NavigationMenu';
 import { UserMenu } from '../UserMenu';
@@ -15,7 +14,6 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ collapsed, handleSetCollapsed }: SidebarProps) => {
-
   return (
     <Flex
       h="100vh"
@@ -35,14 +33,7 @@ export const Sidebar = ({ collapsed, handleSetCollapsed }: SidebarProps) => {
       whiteSpace="nowrap"
     >
       {/* Logo */}
-      <Flex
-        align="center"
-        h="66px"
-        px={3}
-        borderBottom="1px solid"
-        borderColor="border.main"
-        gap={collapsed ? 2 : 0}
-      >
+      <Flex align="center" h="66px" px={3} borderBottom="1px solid" borderColor="border.main" gap={collapsed ? 2 : 0}>
         <IconButton
           size="sm"
           mx={2}

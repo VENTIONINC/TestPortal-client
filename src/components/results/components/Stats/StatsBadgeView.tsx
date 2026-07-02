@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Grid, Text, VStack } from '@chakra-ui/react';
@@ -84,11 +84,7 @@ export const StatsBadgeView = ({ statistics, isFetching }: ResultsStatsProps) =>
         })}
       </Grid>
 
-      <StatsConfigInfo
-        entityCounts={effStats.entityCounts}
-        labelColor={labelTextColor}
-        valueColor={valueTextColor}
-      />
+      <StatsConfigInfo entityCounts={effStats.entityCounts} labelColor={labelTextColor} valueColor={valueTextColor} />
     </VStack>
   );
 };

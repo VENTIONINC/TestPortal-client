@@ -1,9 +1,8 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Flex, Button, IconButton } from '@chakra-ui/react';
 import { LuCheck, LuCopy } from 'react-icons/lu';
-
 
 export interface CopyableTextProps {
   value: string;
@@ -20,7 +19,6 @@ export function CopyableText({
   onCopy,
   copyAriaLabel = 'Copy value',
 }: CopyableTextProps) {
-
   if (variant === 'single') {
     return (
       <Flex align="center" gap={2} w="100%">
@@ -48,7 +46,7 @@ export function CopyableText({
           size="xs"
           onClick={onCopy}
           color="text.muted"
-          _hover={{ color: "text.main", bg: "bg.card" }}
+          _hover={{ color: 'text.main', bg: 'bg.card' }}
         >
           {copied ? <LuCheck /> : <LuCopy />}
         </IconButton>
@@ -68,7 +66,7 @@ export function CopyableText({
           size="xs"
           onClick={onCopy}
           color="text.muted"
-          _hover={{ color: "text.main", bg: "bg.card" }}
+          _hover={{ color: 'text.main', bg: 'bg.card' }}
         >
           {copied ? <LuCheck /> : <LuCopy />}
           Copy

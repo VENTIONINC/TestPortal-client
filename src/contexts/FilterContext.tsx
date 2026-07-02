@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { createContext, useCallback, useContext, useState, ReactNode } from 'react';
@@ -32,13 +32,10 @@ export const FilterProvider = ({ children, storageKey = 'common' }: { children: 
     setTimeout(() => setIsTransitioning(false), 400);
   }, []);
 
-  const handleSetShowFilters = useCallback(
-    () => {
-      triggerTransition();
-      setShowFiltersState((prev: boolean) => setFilterState(key, !prev));
-    },
-    [key, triggerTransition],
-  );
+  const handleSetShowFilters = useCallback(() => {
+    triggerTransition();
+    setShowFiltersState((prev: boolean) => setFilterState(key, !prev));
+  }, [key, triggerTransition]);
 
   const toggleFilters = useCallback(() => {
     handleSetShowFilters();

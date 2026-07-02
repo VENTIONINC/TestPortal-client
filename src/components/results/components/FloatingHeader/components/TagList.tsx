@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Wrap } from '@chakra-ui/react';
@@ -25,14 +25,7 @@ export const TagList = ({
       <Wrap gap="8px">
         {visibleTags.map((tag) => {
           const isSelected = tagsValue.includes(tag);
-          return (
-            <FilterTag
-              key={tag}
-              tag={tag}
-              isSelected={isSelected}
-              onClick={() => handleTagClick(tag)}
-            />
-          );
+          return <FilterTag key={tag} tag={tag} isSelected={isSelected} onClick={() => handleTagClick(tag)} />;
         })}
         {hasMoreTags && (
           <Box

@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { useDialogActions } from '@/redux/slices/dialog';
@@ -12,7 +12,8 @@ interface UseConfirmApiKeyDeletionDialogProps {
 export const useConfirmApiKeyDeletionDialog = (props: UseConfirmApiKeyDeletionDialogProps) => {
   const { openDialog } = useDialogActions();
 
-  return (keyId: string, projectName: string) => openDialog(ConfirmApiKeyDeletionDialog, {
-    onConfirm: () => props.onConfirm(keyId, projectName),
-  });
+  return (keyId: string, projectName: string) =>
+    openDialog(ConfirmApiKeyDeletionDialog, {
+      onConfirm: () => props.onConfirm(keyId, projectName),
+    });
 };

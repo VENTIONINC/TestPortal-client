@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useMemo, useState } from 'react';
@@ -24,8 +24,18 @@ export interface DatePickerProps {
 }
 
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 const MONTH_OPTIONS = MONTH_NAMES.map((name, i) => ({ value: String(i), label: name }));
@@ -92,17 +102,18 @@ export const DatePicker = ({
   const yearOptions = useMemo(() => getYearOptions(), []);
 
   const calendarStyles = useMemo(
-    () => ({
-      '--rdp-accent-color': 'var(--chakra-colors-accent-solid)',
-      '--rdp-accent-background-color': 'var(--chakra-colors-accent-solid)',
-      '--rdp-day-width': '40px',
-      '--rdp-day-height': '40px',
-      '--rdp-day_button-width': '40px',
-      '--rdp-day_button-height': '40px',
-      '--rdp-selected-font': 'bold',
-      '--rdp-outside-opacity': '1',
-      '--rdp-today-color': 'var(--chakra-colors-accent-solid)',
-    }) as React.CSSProperties,
+    () =>
+      ({
+        '--rdp-accent-color': 'var(--chakra-colors-accent-solid)',
+        '--rdp-accent-background-color': 'var(--chakra-colors-accent-solid)',
+        '--rdp-day-width': '40px',
+        '--rdp-day-height': '40px',
+        '--rdp-day_button-width': '40px',
+        '--rdp-day_button-height': '40px',
+        '--rdp-selected-font': 'bold',
+        '--rdp-outside-opacity': '1',
+        '--rdp-today-color': 'var(--chakra-colors-accent-solid)',
+      }) as React.CSSProperties,
     [],
   );
 
@@ -217,10 +228,7 @@ export const DatePicker = ({
                   onMonthChange={setMonth}
                   weekStartsOn={1}
                   showOutsideDays
-                  disabled={[
-                    ...(minDate ? [{ before: minDate }] : []),
-                    ...(maxDate ? [{ after: maxDate }] : []),
-                  ]}
+                  disabled={[...(minDate ? [{ before: minDate }] : []), ...(maxDate ? [{ after: maxDate }] : [])]}
                 />
               </Box>
 
@@ -234,13 +242,7 @@ export const DatePicker = ({
                 >
                   Cancel
                 </Button>
-                <Button
-                  size="sm"
-                  bg="accent.solid"
-                  color="white"
-                  _hover={{ bg: 'blue.600' }}
-                  onClick={handleConfirm}
-                >
+                <Button size="sm" bg="accent.solid" color="white" _hover={{ bg: 'blue.600' }} onClick={handleConfirm}>
                   Confirm
                 </Button>
               </Flex>

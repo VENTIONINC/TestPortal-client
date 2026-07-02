@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo } from 'react';
@@ -38,12 +38,7 @@ export const TokenHeader = memo(function TokenHeader({
               {isRevokingToken ? 'Revoking...' : 'Revoke'}
             </Button>
           )}
-          <Button
-            variant="primary"
-            onClick={onRequest}
-            disabled={isRequestingToken}
-            loading={isRequestingToken}
-          >
+          <Button variant="primary" onClick={onRequest} disabled={isRequestingToken} loading={isRequestingToken}>
             <LuRefreshCw />
             {hasToken ? 'Regenerate Token' : 'Generate MCP Token'}
           </Button>

@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo, useState, useEffect, useRef } from 'react';
@@ -42,11 +42,10 @@ export const CopyButton = memo(function CopyButton({ text, variant = 'button', d
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      
+
       timeoutRef.current = setTimeout(() => {
         setCopied(false);
       }, 2000);
-
     } catch {
       toaster.create({
         title: 'Copy Failed',

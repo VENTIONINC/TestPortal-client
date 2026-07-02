@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useMemo, useState } from 'react';
@@ -133,7 +133,9 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
   const [pendingRange, setPendingRange] = useState<DateRange | undefined>(selectedRange);
   const [leftMonth, setLeftMonth] = useState<Date>(fromValue ? parseDateString(fromValue) : new Date());
 
-  const [startInputText, setStartInputText] = useState(fromValue ? formatDisplayDateValue(parseDateString(fromValue)) : '');
+  const [startInputText, setStartInputText] = useState(
+    fromValue ? formatDisplayDateValue(parseDateString(fromValue)) : '',
+  );
   const [endInputText, setEndInputText] = useState(toValue ? formatDisplayDateValue(parseDateString(toValue)) : '');
   const [activeInput, setActiveInput] = useState<'start' | 'end' | 'done'>('start');
 
@@ -160,20 +162,23 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
     setOpen(true);
   }, [fromValue, selectedRange]);
 
-  const handleOpenChange = useCallback((details: { open: boolean }) => {
-    setOpen(details.open);
+  const handleOpenChange = useCallback(
+    (details: { open: boolean }) => {
+      setOpen(details.open);
 
-    if (details.open) {
-      setStartInputText(fromValue ? formatDisplayDateValue(parseDateString(fromValue)) : '');
-      setEndInputText(toValue ? formatDisplayDateValue(parseDateString(toValue)) : '');
-      setActiveInput('start');
-    }
+      if (details.open) {
+        setStartInputText(fromValue ? formatDisplayDateValue(parseDateString(fromValue)) : '');
+        setEndInputText(toValue ? formatDisplayDateValue(parseDateString(toValue)) : '');
+        setActiveInput('start');
+      }
 
-    if (!details.open) {
-      setHoverDate(undefined);
-      setIsSelectingEnd(false);
-    }
-  }, [fromValue, toValue]);
+      if (!details.open) {
+        setHoverDate(undefined);
+        setIsSelectingEnd(false);
+      }
+    },
+    [fromValue, toValue],
+  );
 
   const handleConfirm = useCallback(() => {
     if (pendingRange?.from) {
@@ -277,7 +282,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
       setHoverDate(undefined);
       const clickedDay = startOfDay(triggerDate);
 
-      if (!pendingRange?.from || !isSelectingEnd && activeInput === 'start') {
+      if (!pendingRange?.from || (!isSelectingEnd && activeInput === 'start')) {
         setPendingRange({ from: clickedDay, to: undefined });
         setStartInputText(formatDisplayDateValue(clickedDay));
         setEndInputText('');
@@ -493,9 +498,10 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
         backgroundColor: 'bg.active',
         color: 'text.main',
       },
-      '& .rdp-today:not(.rdp-selected):not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button': {
-        border: `1px solid var(--chakra-colors-border-active)`,
-      },
+      '& .rdp-today:not(.rdp-selected):not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button':
+        {
+          border: `1px solid var(--chakra-colors-border-active)`,
+        },
       '& .rdp-weekday': {
         color: 'text.secondary',
         fontSize: '12px',
@@ -662,7 +668,10 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                         placeholder="MM/DD/YYYY"
                         bg="bg.input"
                         borderColor={activeInput === 'start' ? 'border.active' : 'border.main'}
-                        _focus={{ borderColor: 'border.active', boxShadow: '0 0 0 1px var(--chakra-colors-border-active)' }}
+                        _focus={{
+                          borderColor: 'border.active',
+                          boxShadow: '0 0 0 1px var(--chakra-colors-border-active)',
+                        }}
                       />
                     </Field>
                     <Box mt={{ base: 0, sm: '20px' }}>—</Box>
@@ -678,7 +687,10 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                         placeholder="MM/DD/YYYY"
                         bg="bg.input"
                         borderColor={activeInput === 'end' ? 'border.active' : 'border.main'}
-                        _focus={{ borderColor: 'border.active', boxShadow: '0 0 0 1px var(--chakra-colors-border-active)' }}
+                        _focus={{
+                          borderColor: 'border.active',
+                          boxShadow: '0 0 0 1px var(--chakra-colors-border-active)',
+                        }}
                       />
                     </Field>
                   </Flex>

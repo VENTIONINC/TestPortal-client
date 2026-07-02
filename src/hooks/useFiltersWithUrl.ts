@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useMemo } from 'react';
@@ -11,15 +11,10 @@ type FilterValues = Record<string, string>;
 
 const toStringFilters = (filters: Record<string, FilterValue>): FilterValues => {
   return Object.fromEntries(
-    Object.entries(filters)
-      .map(([key, value]) => [
-        key,
-        value === null || value === undefined
-          ? ''
-          : Array.isArray(value)
-            ? value.join(',')
-            : String(value)
-      ]),
+    Object.entries(filters).map(([key, value]) => [
+      key,
+      value === null || value === undefined ? '' : Array.isArray(value) ? value.join(',') : String(value),
+    ]),
   ) as FilterValues;
 };
 

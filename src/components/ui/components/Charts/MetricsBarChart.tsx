@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useMemo } from 'react';
@@ -113,7 +113,7 @@ export const MetricsBarChart = ({
             {series.map((item) => (
               <HStack key={item.name} gap={2} align="center">
                 <Box w="8px" h="8px" borderRadius="sm" bg={item.color} />
-                <Text fontSize="sm">{item.label}</Text>
+                <Text fontSize="md">{item.label}</Text>
                 <Text fontSize="sm" fontWeight="semibold">
                   {row[item.name] ?? 0}
                   {valueSuffix}
@@ -207,7 +207,7 @@ export const MetricsBarChart = ({
                 {series.map((item) => (
                   <HStack key={item.name} align="center">
                     <Box w="10px" h="10px" borderRadius="xs" bg={item.color} />
-                    <Text fontSize="2xs">{item.label}</Text>
+                    <Text fontSize="3xs">{item.label}</Text>
                   </HStack>
                 ))}
               </HStack>
@@ -217,7 +217,7 @@ export const MetricsBarChart = ({
           <Box h={`${height}px`} w="calc(100% + 40px)" mx="-36px" minW={0} position="relative">
             <Box position="absolute" inset={0}>
               <ResponsiveContainer width="100%" height="100%">
-                <Chart.Root chart={chart}>
+                <Chart.Root chart={chart} fontSize="3xs">
                   <BarChart
                     data={chart.data}
                     margin={chartMargin}

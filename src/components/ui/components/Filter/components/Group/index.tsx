@@ -1,9 +1,7 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, HStack, StackProps, Text, VStack, Button } from '@chakra-ui/react';
-
-
 
 interface FiltersGroupProps extends StackProps {
   title: string;
@@ -11,7 +9,6 @@ interface FiltersGroupProps extends StackProps {
 }
 
 export const FiltersGroup = ({ title, children, handleSearch, ...props }: FiltersGroupProps) => {
-
   return (
     <VStack
       w="100%"

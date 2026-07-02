@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { z } from 'zod';
@@ -16,14 +16,24 @@ export const formatMessageSchema = z.object({
   }),
 });
 
+const categoryWeightsSchema = z.object({
+  bug: z.number().min(0, 'Weight must be at least 0').max(100, 'Weight cannot exceed 100'),
+  infra: z.number().min(0, 'Weight must be at least 0').max(100, 'Weight cannot exceed 100'),
+  script: z.number().min(0, 'Weight must be at least 0').max(100, 'Weight cannot exceed 100'),
+  performance: z.number().min(0, 'Weight must be at least 0').max(100, 'Weight cannot exceed 100'),
+  other: z.number().min(0, 'Weight must be at least 0').max(100, 'Weight cannot exceed 100'),
+});
+
 export const createProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
   description: z.string().optional(),
+  categoryWeights: categoryWeightsSchema.optional(),
 });
 
 export const updateProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
   description: z.string().optional(),
+  categoryWeights: categoryWeightsSchema.optional(),
 });
 
 export const generateApiKeySchema = z.object({

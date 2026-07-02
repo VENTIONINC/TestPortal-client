@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo } from 'react';
@@ -76,15 +76,9 @@ export const PromptPreview = memo(function PromptPreview({ prompt, isGenerating,
           <Text fontWeight="medium" color="text.main">
             Usage Instructions:
           </Text>
-          <Text>
-            1. Copy the generated prompt above
-          </Text>
-          <Text>
-            2. Paste it into your agentic IDE (Claude Code, Cursor, etc.)
-          </Text>
-          <Text>
-            3. The assistant will use this context to help with your specific needs
-          </Text>
+          <Text>1. Copy the generated prompt above</Text>
+          <Text>2. Paste it into your agentic IDE (Claude Code, Cursor, etc.)</Text>
+          <Text>3. The assistant will use this context to help with your specific needs</Text>
         </VStack>
       )}
     </VStack>

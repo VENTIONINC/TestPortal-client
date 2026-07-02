@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
@@ -77,7 +77,10 @@ export const usePromptBuilder = (name: string) => {
   const requiredFieldsEmpty = useMemo(() => {
     if (!prompt) return false;
     const hasRequiredFields = Object.entries(prompt.parameters).some(([, param]) => param.required);
-    return hasRequiredFields && Object.entries(prompt.parameters).some(([paramName, param]) => param.required && !parameterValues[paramName]);
+    return (
+      hasRequiredFields &&
+      Object.entries(prompt.parameters).some(([paramName, param]) => param.required && !parameterValues[paramName])
+    );
   }, [prompt, parameterValues]);
 
   // Auto-generate when parameters change (after a short delay)

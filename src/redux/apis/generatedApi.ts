@@ -479,44 +479,37 @@ const injectedRtkApi = api
         query: () => ({ url: `/api/v2/auth/config` }),
         providesTags: ["Authentication"],
       }),
-      postApiV2AuthSignup: build.mutation<
-        PostApiV2AuthSignupApiResponse,
-        PostApiV2AuthSignupApiArg
+      postApiV2UsersSignup: build.mutation<
+        PostApiV2UsersSignupApiResponse,
+        PostApiV2UsersSignupApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/auth/signup`,
+          url: `/api/v2/users/signup`,
           method: "POST",
           body: queryArg.userSignupRequest,
         }),
         invalidatesTags: ["Authentication"],
       }),
-      postApiV2AuthLogin: build.mutation<
-        PostApiV2AuthLoginApiResponse,
-        PostApiV2AuthLoginApiArg
+      postApiV2UsersLogin: build.mutation<
+        PostApiV2UsersLoginApiResponse,
+        PostApiV2UsersLoginApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/auth/login`,
+          url: `/api/v2/users/login`,
           method: "POST",
           body: queryArg.userLoginRequest,
         }),
         invalidatesTags: ["Authentication"],
       }),
-      postApiV2AuthRefreshToken: build.mutation<
-        PostApiV2AuthRefreshTokenApiResponse,
-        PostApiV2AuthRefreshTokenApiArg
+      postApiV2UsersRefreshToken: build.mutation<
+        PostApiV2UsersRefreshTokenApiResponse,
+        PostApiV2UsersRefreshTokenApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/auth/refresh-token`,
+          url: `/api/v2/users/refresh-token`,
           method: "POST",
           body: queryArg.refreshTokenRequest,
         }),
-        invalidatesTags: ["Authentication"],
-      }),
-      postApiV2AuthLogout: build.mutation<
-        PostApiV2AuthLogoutApiResponse,
-        PostApiV2AuthLogoutApiArg
-      >({
-        query: () => ({ url: `/api/v2/auth/logout`, method: "POST" }),
         invalidatesTags: ["Authentication"],
       }),
       postApiV2ErrorFormatter: build.mutation<
@@ -1033,28 +1026,23 @@ export type PatchApiV2AdminUsersByUserIdRoleApiArg = {
 export type GetApiV2AuthConfigApiResponse =
   /** status 200 Auth provider configuration */ AuthConfig;
 export type GetApiV2AuthConfigApiArg = void;
-export type PostApiV2AuthSignupApiResponse =
-  /** status 201 User created successfully */ PendingApprovalSignupResponse;
-export type PostApiV2AuthSignupApiArg = {
+export type PostApiV2UsersSignupApiResponse =
+  /** status 201 User created successfully */ User;
+export type PostApiV2UsersSignupApiArg = {
   userSignupRequest: UserSignupRequest;
 };
-export type PostApiV2AuthLoginApiResponse =
+export type PostApiV2UsersLoginApiResponse =
   /** status 200 Login successful or challenge required */
     | UserLoginResponse
     | AuthChallengeResponse;
-export type PostApiV2AuthLoginApiArg = {
+export type PostApiV2UsersLoginApiArg = {
   userLoginRequest: UserLoginRequest;
 };
-export type PostApiV2AuthRefreshTokenApiResponse =
+export type PostApiV2UsersRefreshTokenApiResponse =
   /** status 200 Token refresh successful - returns new access and refresh tokens */ UserLoginResponse;
-export type PostApiV2AuthRefreshTokenApiArg = {
+export type PostApiV2UsersRefreshTokenApiArg = {
   refreshTokenRequest: RefreshTokenRequest;
 };
-export type PostApiV2AuthLogoutApiResponse =
-  /** status 200 Logout completed */ {
-    message: string;
-  };
-export type PostApiV2AuthLogoutApiArg = void;
 export type PostApiV2ErrorFormatterApiResponse =
   /** status 200 Error formatted successfully */ ErrorFormatterResponse;
 export type PostApiV2ErrorFormatterApiArg = {
@@ -1290,11 +1278,9 @@ export type Result = {
   duration: number;
   startTime: string;
   /** Test analysis status */
-  analysisStatus?: ("passed" | "failed") | ("passed" | "failed");
+  analysisStatus?: 'passed' | 'failed';
   /** Failure category from AI analysis */
-  analysisCategory?:
-    | ("bug" | "infra" | "performance" | "script" | "other")
-    | ("bug" | "infra" | "performance" | "script" | "other");
+  analysisCategory?: 'bug' | 'infra' | 'performance' | 'script' | 'other';
   /** Confidence level of analysis (1-5 scale) */
   analysisConfidence?: number | null;
   /** Explanation for the categorization decision */
@@ -1621,9 +1607,9 @@ export type SkillArchiveDownload = Blob;
 export type ProjectCategoryWeights = {
   bug: number;
   infra: number;
+  other: number;
   performance: number;
   script: number;
-  other: number;
 };
 export type Project = {
   id: string;
@@ -1833,10 +1819,9 @@ export const {
   usePostApiV2AdminUsersByUserIdRestoreMutation,
   usePatchApiV2AdminUsersByUserIdRoleMutation,
   useGetApiV2AuthConfigQuery,
-  usePostApiV2AuthSignupMutation,
-  usePostApiV2AuthLoginMutation,
-  usePostApiV2AuthRefreshTokenMutation,
-  usePostApiV2AuthLogoutMutation,
+  usePostApiV2UsersSignupMutation,
+  usePostApiV2UsersLoginMutation,
+  usePostApiV2UsersRefreshTokenMutation,
   usePostApiV2ErrorFormatterMutation,
   usePostApiV2ErrorFormatterResultMutation,
   useGetApiV2PromptsQuery,

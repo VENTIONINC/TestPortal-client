@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo } from 'react';
@@ -48,7 +48,7 @@ export const PromptCard = memo(function PromptCard({ prompt }: PromptCardProps) 
         <HStack justify="space-between" align="start">
           <VStack align="start" flex={1}>
             <HStack mb={2}>
-              <Badge status={badgeColor} minH={6} >
+              <Badge status={badgeColor} minH={6}>
                 <CategoryIcon size={12} color={iconColor} />
                 {prompt.category}
               </Badge>

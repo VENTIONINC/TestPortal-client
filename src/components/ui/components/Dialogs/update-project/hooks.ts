@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { useForm } from 'react-hook-form';
@@ -33,6 +33,13 @@ export const useUpdateProject = (closeDialog: () => void, params: UpdateProjectD
     defaultValues: {
       name: project.name,
       description: project.description || '',
+      categoryWeights: {
+        bug: project.categoryWeights?.bug ?? 100,
+        infra: project.categoryWeights?.infra ?? 100,
+        script: project.categoryWeights?.script ?? 100,
+        performance: project.categoryWeights?.performance ?? 100,
+        other: project.categoryWeights?.other ?? 100,
+      },
     },
   });
 

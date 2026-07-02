@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Text } from '@chakra-ui/react';
@@ -14,4 +14,4 @@ export const TokenGenerationCard = () => {
       </Text>
     </Box>
   );
-}
+};

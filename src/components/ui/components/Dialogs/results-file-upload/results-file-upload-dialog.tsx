@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { Button, HStack, Text, VStack } from '@chakra-ui/react';
@@ -21,7 +21,10 @@ import { useResultsFileUpload } from './hooks';
 
 export const ResultsFileUploadDialog = ({ closeDialog }: DefaultDialogProps) => {
   const [uploadMethod, setUploadMethod] = useState('playwright');
-  const { fileUpload, isUploading, uploadProgress, handleUpload } = useResultsFileUpload(closeDialog, uploadMethod as 'playwright' | 'ctrf');
+  const { fileUpload, isUploading, uploadProgress, handleUpload } = useResultsFileUpload(
+    closeDialog,
+    uploadMethod as 'playwright' | 'ctrf',
+  );
 
   return (
     <Dialog title="Upload Results" onClose={closeDialog} size="lg">

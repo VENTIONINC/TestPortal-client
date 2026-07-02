@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { HStack, Spinner } from '@chakra-ui/react';
@@ -12,7 +12,6 @@ interface AnalyzeCategoryButtonProps {
 }
 
 export const AnalyzeCategoryButton = ({ onClick, isLoading }: AnalyzeCategoryButtonProps) => {
-
   return (
     <Tooltip content="Categorize with AI">
       <HStack

@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useMemo } from 'react';
@@ -59,7 +59,6 @@ export const FilterContainer = ({ config, filters, initialFilters, onApplyFilter
       bg="bg.section"
       display="flex"
       flexDirection="column"
-       
     >
       <Box flex="1" minH="0" display="grid" width={showFilters ? FILTER_PANEL_WIDTH : FILTER_COLLAPSED_WIDTH}>
         {/* Collapsed View */}
@@ -91,7 +90,6 @@ export const FilterContainer = ({ config, filters, initialFilters, onApplyFilter
           h="100%"
           minH="0"
           position={showFilters ? 'sticky' : 'absolute'}
-          
         >
           <FiltersHeader
             title="Filters"

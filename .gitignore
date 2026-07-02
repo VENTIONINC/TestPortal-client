@@ -31,7 +31,7 @@ dist-ssr
 # TypeScript
 *.tsbuildinfo
 
-# Yarn
+# Yarn Berry
 .yarn/*
 !.yarn/patches
 !.yarn/plugins

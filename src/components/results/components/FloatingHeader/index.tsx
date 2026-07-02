@@ -1,4 +1,4 @@
-// Copyright 2026 Vention
+// Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo } from 'react';
@@ -9,7 +9,15 @@ import { ResultsFloatingHeaderContent } from './components';
 import { ResultsFloatingHeaderProps } from './types';
 
 export const ResultsFloatingHeader = memo(
-  ({ availableDates, statistics, toggleDate, isFetching, availableTags, activeTags, onToggleTag }: ResultsFloatingHeaderProps) => {
+  ({
+    availableDates,
+    statistics,
+    toggleDate,
+    isFetching,
+    availableTags,
+    activeTags,
+    onToggleTag,
+  }: ResultsFloatingHeaderProps) => {
     const { sentinelRef, isStuck } = useStickyObserver(66);
 
     return (

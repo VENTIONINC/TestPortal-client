@@ -1,6 +1,6 @@
 ---
 name: container-view-refactoring-agent
-description: "Specialized agent for refactoring React TypeScript components to follow container-view pattern with proper separation of concerns. Use when components mix business logic with presentation and need architectural improvement."
+description: 'Specialized agent for refactoring React TypeScript components to follow container-view pattern with proper separation of concerns. Use when components mix business logic with presentation and need architectural improvement.'
 color: purple
 model: sonnet
 tools: Glob, Grep, Read, TodoWrite, Bash
@@ -44,6 +44,7 @@ src/components/{feature}/{component-name}/
 **Purpose**: Handles ALL business logic and data preparation
 
 **Responsibilities**:
+
 - Import and use React hooks (useState, useEffect, useMemo, useCallback, etc.)
 - Connect to Redux using RTK Query hooks and selectors
 - Call custom hooks for complex logic
@@ -101,6 +102,7 @@ export const ComponentName = memo(({ prop1, prop2 }: ComponentNameProps) => {
 **Purpose**: Pure presentation component with NO business logic
 
 **Responsibilities**:
+
 - Render UI elements using Chakra UI components
 - Display data received via props
 - Call handler functions passed via props
@@ -108,6 +110,7 @@ export const ComponentName = memo(({ prop1, prop2 }: ComponentNameProps) => {
 - Handle user interactions by delegating to props callbacks
 
 **Restrictions**:
+
 - NO React hooks except memo (and potentially useCallback/useMemo for optimization)
 - NO Redux connections (useSelector, useDispatch, RTK Query hooks)
 - NO custom hooks
@@ -117,6 +120,7 @@ export const ComponentName = memo(({ prop1, prop2 }: ComponentNameProps) => {
 - NO direct imports of Redux slices or API endpoints
 
 **Allowed Imports**:
+
 - Chakra UI components
 - UI components from `@/components/ui`
 - Utility functions from `@/utils` (formatters, converters)
@@ -157,6 +161,7 @@ export const ComponentNameView = memo(({
 **Purpose**: Centralized type definitions for the component module
 
 **Contents**:
+
 - Container component props interface
 - View component props interface
 - Internal data structure types
@@ -196,6 +201,7 @@ export interface ComponentNameViewProps {
 **Purpose**: Pure utility functions with no side effects
 
 **Contents**:
+
 - Data transformation functions
 - Serialization functions
 - Formatting functions
@@ -208,10 +214,7 @@ export interface ComponentNameViewProps {
 import { User } from '@/types';
 import { SerializedItem } from './types';
 
-export const serializeItem = (
-  item: RawItem,
-  user: User
-): SerializedItem => {
+export const serializeItem = (item: RawItem, user: User): SerializedItem => {
   return {
     id: item.id,
     label: `${item.name} (${item.status})`,
@@ -230,6 +233,7 @@ const calculateValue = (item: RawItem): number => {
 **Purpose**: Extract complex hook logic from container
 
 **When to Create**:
+
 - Multiple related hooks used together
 - Complex state management logic
 - Reusable hook logic across components
@@ -256,6 +260,7 @@ export const useComponentLogic = (dependency: string) => {
 **Purpose**: Configuration values and constant data
 
 **When to Create**:
+
 - Multiple constants used in the component
 - Configuration objects
 - Enum-like values
@@ -383,6 +388,7 @@ export const FILTER_OPTIONS = [
    - Keep clean public API
 
 2. **Run TypeScript Check**:
+
    ```bash
    yarn tsc
    ```
@@ -435,6 +441,7 @@ export const ResultSpecSection = ({ spec, executions, allExecutions }) => {
 ### After Refactoring (Separated)
 
 **types.ts**:
+
 ```typescript
 export interface DateFilterConfig {
   yyyy_mm_dd: string;
@@ -455,11 +462,9 @@ export interface ResultSpecSectionViewProps {
 ```
 
 **helpers.ts**:
+
 ```typescript
-export const serializeExecution = (
-  execution: ResultExecution,
-  user: User
-): SerializedExecution => {
+export const serializeExecution = (execution: ResultExecution, user: User): SerializedExecution => {
   // Pure serialization logic
   return {
     id: execution.id,
@@ -470,6 +475,7 @@ export const serializeExecution = (
 ```
 
 **result-spec-section.tsx** (Container):
+
 ```typescript
 export const ResultSpecSection = memo(({ spec, executions, allExecutions }) => {
   // Business logic only
@@ -510,6 +516,7 @@ export const ResultSpecSection = memo(({ spec, executions, allExecutions }) => {
 ```
 
 **result-spec-section-view.tsx** (View):
+
 ```typescript
 export const ResultSpecSectionView = memo(({
   spec,
@@ -534,30 +541,35 @@ export const ResultSpecSectionView = memo(({
 ## Key Architectural Principles
 
 ### 1. Single Responsibility
+
 - Container: Business logic and data management
 - View: Pure presentation and user interaction
 - Helpers: Pure utility functions
 - Types: Type definitions and contracts
 
 ### 2. Data Flow
+
 - Container computes/serializes ALL data before passing to view
 - View receives pre-computed data as props
 - No data transformation or business logic in view
 - All handlers passed as callbacks
 
 ### 3. Prop Interface Design
+
 - Explicit TypeScript interface for view props
 - Serialized data types (not raw API types)
 - Clear handler signatures
 - Document complex props
 
 ### 4. Testability
+
 - Container can be tested for business logic
 - View can be tested with mock props
 - Helpers can be unit tested in isolation
 - Clear boundaries make testing easier
 
 ### 5. Maintainability
+
 - Clear separation makes changes predictable
 - Easy to locate logic vs. presentation
 - Reusable helpers across components
@@ -566,6 +578,7 @@ export const ResultSpecSectionView = memo(({
 ## When to Use This Agent
 
 ### Invoke This Agent When:
+
 - Component mixes hooks/Redux with JSX rendering
 - User mentions "refactor", "separate concerns", or "container-view"
 - Component file exceeds 200 lines with mixed concerns
@@ -574,6 +587,7 @@ export const ResultSpecSectionView = memo(({
 - Multiple hooks and computed values mixed with rendering
 
 ### Do NOT Use This Agent When:
+
 - Component is already following container-view pattern
 - Simple presentational component (< 50 lines, no hooks)
 - Pure utility functions or custom hooks
@@ -581,6 +595,7 @@ export const ResultSpecSectionView = memo(({
 - User only wants to add a small feature
 
 ### Ask User for Confirmation If:
+
 - Component is already fairly well-organized
 - Refactoring scope is unclear
 - Multiple components need refactoring (handle one at a time)
@@ -588,24 +603,28 @@ export const ResultSpecSectionView = memo(({
 ## Quality Standards
 
 ### Code Quality
+
 - All TypeScript types must be properly defined
 - No `any` types without justification
 - Proper error handling maintained
 - Performance optimizations preserved (memo, useMemo, useCallback)
 
 ### Architectural Consistency
+
 - Follow exact file naming conventions
 - Maintain consistent import ordering
 - Use project's established patterns
 - Keep view components truly pure
 
 ### Validation Requirements
+
 - TypeScript compilation must pass
 - All imports must resolve correctly
 - No circular dependencies
 - Props interface must be complete and accurate
 
 ### Documentation
+
 - Complex logic should have inline comments
 - Type definitions should be self-documenting
 - Helper functions should be clearly named

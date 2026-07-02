@@ -5,6 +5,7 @@ This project implements a complete authentication system using **RTK Query**, **
 ## 🏗️ Architecture Overview
 
 ### **Authentication State Management**
+
 - **Redux Slice**: `src/redux/slices/auth.ts` - Manages authentication state
 - **Persistence**: Only JWT tokens are persisted (accessToken, refreshToken)
 - **User Data**: Fetched fresh from API on app startup for better security
@@ -12,11 +13,13 @@ This project implements a complete authentication system using **RTK Query**, **
 - **Token Refresh**: Automatic token renewal on 401 responses
 
 ### **Custom Hooks**
+
 - **`useAuth`**: Provides authentication state, fetches user data, and logout functionality
 - **`useLogin`**: Handles login form logic and API integration
 - **`useSignup`**: Handles signup form logic and API integration
 
 ### **Components**
+
 - **`AppHeader`**: Shows authentication status and login/logout buttons
 - **`ProtectedRoute`**: Guards routes that require authentication
 - **`LoadingFallback`**: Shown while Redux Persist restores tokens
@@ -45,6 +48,7 @@ if (isAuthenticated) {
 ## 🔄 Authentication Flow
 
 ### **Login Process**
+
 1. User submits login form
 2. API call to `/api/users/login` endpoint
 3. Tokens and user data stored in Redux state
@@ -52,6 +56,7 @@ if (isAuthenticated) {
 5. User redirected to intended destination
 
 ### **App Startup Process**
+
 1. App loads with `PersistGate` component
 2. Redux Persist restores only tokens from localStorage
 3. `useAuth` hook detects tokens without user data
@@ -59,6 +64,7 @@ if (isAuthenticated) {
 5. User remains authenticated with fresh data
 
 ### **Token Refresh Process**
+
 1. API call receives 401 (Unauthorized) response
 2. Automatic token refresh using stored refresh token
 3. New tokens stored and original request retried
@@ -67,17 +73,20 @@ if (isAuthenticated) {
 ## 🛡️ Security Features
 
 ### **Token-Only Persistence**
+
 - **Minimal Storage**: Only tokens persisted, not sensitive user data
 - **Fresh Data**: User information fetched fresh on each app start
 - **Reduced Attack Surface**: Less user data in localStorage
 - **Cache-First**: User data stored only in memory during session
 
 ### **Dual Token System**
+
 - **Access Token**: Short-lived JWT for API requests
 - **Refresh Token**: Long-lived token for obtaining new access tokens
 - **Automatic Refresh**: Seamless token renewal without user interruption
 
 ### **User Data Management**
+
 - **JWT Decoding**: User ID extracted from access token payload
 - **API Fetching**: User data fetched using RTK Query
 - **Error Handling**: Automatic logout on user data fetch failure
@@ -86,26 +95,29 @@ if (isAuthenticated) {
 
 ```typescript
 interface AuthState {
-  user: User | null;           // In memory only (not persisted)
-  accessToken: string | null;  // Persisted
+  user: User | null; // In memory only (not persisted)
+  accessToken: string | null; // Persisted
   refreshToken: string | null; // Persisted
-  isAuthenticated: boolean;    // Computed from tokens
+  isAuthenticated: boolean; // Computed from tokens
 }
 ```
 
 ## 🔧 API Integration
 
 ### **Login Endpoint**
+
 - **URL**: `POST /api/users/login`
 - **Body**: `{ email: string, password: string }`
 - **Response**: `{ user: User, accessToken: string, refreshToken: string }`
 
 ### **User Data Endpoint**
+
 - **URL**: `GET /api/users/{userId}`
 - **Headers**: `Authorization: Bearer {accessToken}`
 - **Response**: `User`
 
 ### **Token Refresh Endpoint**
+
 - **URL**: `POST /api/users/refresh-token`
 - **Body**: `{ refreshToken: string }`
 - **Response**: `{ user: User, accessToken: string, refreshToken: string }`
@@ -120,4 +132,4 @@ interface AuthState {
 - ✅ **Type Safety** - Full TypeScript support throughout
 - ✅ **Clean Architecture** - Separated token persistence from user data
 
-This authentication system provides a secure, efficient foundation with minimal data persistence! 🔐 
+This authentication system provides a secure, efficient foundation with minimal data persistence! 🔐
