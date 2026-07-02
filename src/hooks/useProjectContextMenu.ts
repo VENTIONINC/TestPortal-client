@@ -7,7 +7,13 @@ import { FiEdit, FiArchive, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
 import { useUpdateProjectDialog, useArchiveProjectDialog, useDeleteProjectDialog } from '@/components/ui';
 import { useOpenContextMenu } from '@/redux/slices/contextMenu';
 
-type UseProjectContextMenuType = () => (evt: MouseEvent, project: { id: string; isActive: boolean }) => void;
+type ProjectContextMenuProject = {
+  id: string;
+  name: string;
+  isActive: boolean;
+};
+
+type UseProjectContextMenuType = () => (evt: MouseEvent, project: ProjectContextMenuProject) => void;
 
 export const useProjectContextMenu: UseProjectContextMenuType = () => {
   const openContextMenu = useOpenContextMenu();
@@ -15,7 +21,7 @@ export const useProjectContextMenu: UseProjectContextMenuType = () => {
   const archiveProjectDialog = useArchiveProjectDialog();
   const deleteProjectDialog = useDeleteProjectDialog();
 
-  const getOptions = (project: { id: string; isActive: boolean }) => [
+  const getOptions = (project: ProjectContextMenuProject) => [
     {
       title: 'Edit Project',
       onClick: () => updateProjectDialog(project.id),
@@ -35,7 +41,7 @@ export const useProjectContextMenu: UseProjectContextMenuType = () => {
         },
     {
       title: 'Delete Project',
-      onClick: () => deleteProjectDialog(project.id),
+      onClick: () => deleteProjectDialog(project.id, project.name),
       icon: FiTrash2,
       disabled: project.isActive,
     },

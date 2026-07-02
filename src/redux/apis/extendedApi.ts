@@ -25,6 +25,12 @@ export const extendedApi = generatedApi
       postApiV2ResultErrorsAnalyze: {
         invalidatesTags: [TAGS.Result],
       },
+      postApiV2UploadCtrfReport: {
+        invalidatesTags: ['Reports', TAGS.Result],
+      },
+      postApiV2UploadCtrfReportApiKey: {
+        invalidatesTags: ['Reports', TAGS.Result, 'Upload'],
+      },
     },
   })
   .injectEndpoints({
@@ -84,4 +90,5 @@ export const {
   useLazyGetAnalysisExportQuery,
   useExportDashboardPdfMutation,
   useBulkReviewMutation,
+  usePostApiV2UploadCtrfReportMutation,
 } = extendedApi;

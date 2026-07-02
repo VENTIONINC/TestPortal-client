@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { useFileUpload } from '@chakra-ui/react';
 
 import { toaster } from '@/components/ui';
-import { usePostApiV2UploadJsonReportMutation, usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/generatedApi';
+import { usePostApiV2UploadJsonReportMutation } from '@/redux/apis/generatedApi';
+import { usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/extendedApi';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useDialogActions } from '@/redux/slices/dialog';
 

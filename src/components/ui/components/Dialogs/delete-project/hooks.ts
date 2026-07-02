@@ -10,7 +10,7 @@ import { DeleteProjectDialog } from './delete-project-dialog';
 export const useDeleteProjectDialog = () => {
   const { openDialog } = useDialogActions();
 
-  return (projectId: string) => openDialog(DeleteProjectDialog, { projectId });
+  return (projectId: string, projectName: string) => openDialog(DeleteProjectDialog, { projectId, projectName });
 };
 
 export const useDeleteProjectBusinessLogic = (closeDialog: () => void, projectId: string) => {

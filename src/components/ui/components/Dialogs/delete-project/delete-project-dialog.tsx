@@ -10,17 +10,20 @@ import { useDeleteProjectBusinessLogic } from './hooks';
 
 interface DeleteProjectDialogProps extends DefaultDialogProps {
   projectId: string;
+  projectName: string;
 }
 
-export const DeleteProjectDialog = ({ closeDialog, projectId }: DeleteProjectDialogProps) => {
+export const DeleteProjectDialog = ({ closeDialog, projectId, projectName }: DeleteProjectDialogProps) => {
   const { onConfirm } = useDeleteProjectBusinessLogic(closeDialog, projectId);
 
   return (
     <Dialog title="Delete Project" onClose={closeDialog} role="alertdialog">
       <DialogBody display="flex" flexDir="column" gap={5}>
         <Text>
-          Are you sure you want to delete this project? This action is permanent and cannot be undone. All associated
-          data will be permanently removed.
+          Are you sure you want to delete the project <strong>{projectName}</strong>?
+        </Text>
+        <Text>
+          This action is permanent and cannot be undone. All associated data will be permanently removed.
         </Text>
       </DialogBody>
 
