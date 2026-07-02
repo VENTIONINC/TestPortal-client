@@ -15,9 +15,7 @@ export const toStartTime = (date: string | Date): string => {
   }).format(value);
 };
 
-export const toDuration = (
-  duration: string | number | null | undefined
-): string => {
+export const toDuration = (duration: string | number | null | undefined): string => {
   if (!duration) {
     // handles null, undefined, empty string, 0
     return '';
@@ -32,10 +30,7 @@ export const toDuration = (
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
 
-  return `${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(
-    2,
-    '0'
-  )}s`;
+  return `${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
 };
 
 export const toCleanTitle = (title: string): string => {
@@ -51,12 +46,7 @@ export const toCleanTitle = (title: string): string => {
 export const getDaysDiff = (from: Date, to: Date): number => {
   const MS_IN_DAY = 86_400_000; // number of milliseconds in a day
   // Ensure 'from' and 'to' are valid Date objects before subtraction
-  if (
-    !(from instanceof Date) ||
-    !(to instanceof Date) ||
-    isNaN(from.getTime()) ||
-    isNaN(to.getTime())
-  ) {
+  if (!(from instanceof Date) || !(to instanceof Date) || isNaN(from.getTime()) || isNaN(to.getTime())) {
     // Or throw error, or return NaN
     return 0;
   }

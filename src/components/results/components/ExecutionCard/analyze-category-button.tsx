@@ -12,7 +12,6 @@ interface AnalyzeCategoryButtonProps {
 }
 
 export const AnalyzeCategoryButton = ({ onClick, isLoading }: AnalyzeCategoryButtonProps) => {
-
   return (
     <Tooltip content="Categorize with AI">
       <HStack

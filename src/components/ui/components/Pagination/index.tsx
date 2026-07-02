@@ -15,7 +15,15 @@ export interface PaginationProps {
 
 const DOTS = '...';
 
-const usePagination = ({ currentPage, totalPages, siblingCount = 1 }: { currentPage: number, totalPages: number, siblingCount?: number }) => {
+const usePagination = ({
+  currentPage,
+  totalPages,
+  siblingCount = 1,
+}: {
+  currentPage: number;
+  totalPages: number;
+  siblingCount?: number;
+}) => {
   return useMemo(() => {
     const totalPageNumbers = siblingCount + 5;
 
@@ -45,7 +53,10 @@ const usePagination = ({ currentPage, totalPages, siblingCount = 1 }: { currentP
     }
 
     if (shouldShowLeftDots && shouldShowRightDots) {
-      const middleRange = Array.from({ length: rightSiblingIndex - leftSiblingIndex + 1 }, (_, i) => leftSiblingIndex + i);
+      const middleRange = Array.from(
+        { length: rightSiblingIndex - leftSiblingIndex + 1 },
+        (_, i) => leftSiblingIndex + i,
+      );
       return [firstPageIndex, DOTS, ...middleRange, DOTS, lastPageIndex];
     }
 
@@ -53,7 +64,13 @@ const usePagination = ({ currentPage, totalPages, siblingCount = 1 }: { currentP
   }, [currentPage, totalPages, siblingCount]);
 };
 
-export const Pagination = ({ currentPage, totalPages, onPageChange, variant = 'full', size = 'md' }: PaginationProps) => {
+export const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  variant = 'full',
+  size = 'md',
+}: PaginationProps) => {
   const paginationRange = usePagination({ currentPage, totalPages });
 
   if (currentPage === 0 || paginationRange.length < 1) {
@@ -73,7 +90,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, variant = 'f
   const btnHeight = isSmall ? 8 : 9;
   const btnMinW = isSmall ? 8 : 9;
   const iconSize = isSmall ? 14 : 16;
-  
+
   const activeBg = 'button.groupButton.selected.bg';
   const defaultBg = 'button.groupButton.default.bg';
   const activeBorderColor = 'button.groupButton.selected.borderColor';
@@ -99,7 +116,9 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, variant = 'f
             if (pageNumber === DOTS) {
               return (
                 <Box key={`dots-${index}`} px={1}>
-                  <Text color="text.secondary" fontSize={isSmall ? 'sm' : 'md'}>&#8230;</Text>
+                  <Text color="text.secondary" fontSize={isSmall ? 'sm' : 'md'}>
+                    &#8230;
+                  </Text>
                 </Box>
               );
             }

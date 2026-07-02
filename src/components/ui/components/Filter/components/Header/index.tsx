@@ -4,8 +4,6 @@
 import { Button, Stack, StackProps, Text } from '@chakra-ui/react';
 import { LuX } from 'react-icons/lu';
 
-
-
 interface FiltersHeaderProps extends StackProps {
   title: string;
   clearable?: boolean;
@@ -15,7 +13,6 @@ interface FiltersHeaderProps extends StackProps {
 }
 
 export const FiltersHeader = ({ title, clearable, onClear, leadingAction, actions }: FiltersHeaderProps) => {
-
   return (
     <Stack direction="row" w="100%" mb={1} align="center" gap={1}>
       {leadingAction}

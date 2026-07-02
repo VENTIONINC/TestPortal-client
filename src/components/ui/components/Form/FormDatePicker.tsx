@@ -17,13 +17,7 @@ export const FormDatePicker = <T extends FieldValues>({ name, ...rest }: FormDat
       name={name}
       control={control}
       render={({ field: { value, onChange, onBlur } }) => (
-        <DatePicker
-          name={name}
-          value={value ?? ''}
-          onChange={onChange}
-          onBlur={onBlur}
-          {...rest}
-        />
+        <DatePicker name={name} value={value ?? ''} onChange={onChange} onBlur={onBlur} {...rest} />
       )}
     />
   );

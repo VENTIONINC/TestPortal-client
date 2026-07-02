@@ -14,4 +14,4 @@ export const TokenGenerationCard = () => {
       </Text>
     </Box>
   );
-}
+};

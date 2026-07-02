@@ -81,7 +81,8 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   const { project, selectedProjectId } = useSelectedProject();
 
   const parsedPeriod = Number.parseInt(period, 10);
-  const periodDays = Number.isFinite(parsedPeriod) && parsedPeriod > 0 ? parsedPeriod : Number.parseInt(DEFAULT_PERIOD, 10);
+  const periodDays =
+    Number.isFinite(parsedPeriod) && parsedPeriod > 0 ? parsedPeriod : Number.parseInt(DEFAULT_PERIOD, 10);
 
   // Date ranges
   const periodEnd = new Date();

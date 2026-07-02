@@ -33,7 +33,7 @@ export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBrea
 
   const handleSetCollapsed = () => {
     // Trigger isTransitioning in the filter context to hide charts
-    setShowFilters((prev: boolean) => prev); 
+    setShowFilters((prev: boolean) => prev);
 
     setCollapsed((prev: boolean) => {
       const newState = !prev;

@@ -5,7 +5,6 @@ import { Breadcrumb as ChakraBreadcrumb, Box, type SystemStyleObject } from '@ch
 import * as React from 'react';
 import { useLocation, Link as RouterLink } from 'react-router';
 
-
 import { routerConfig } from './config';
 
 export interface BreadcrumbProps extends ChakraBreadcrumb.RootProps {
@@ -14,7 +13,6 @@ export interface BreadcrumbProps extends ChakraBreadcrumb.RootProps {
 }
 
 const BreadcrumbSeparator = () => {
-
   return (
     <Box asChild color="text.primary">
       <svg width="6px" height="10px" viewBox="0 0 6 10" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -4,8 +4,6 @@
 import { forwardRef, ReactNode } from 'react';
 import { Slider as ChakraSlider, HStack, Text } from '@chakra-ui/react';
 
-
-
 export interface SliderProps extends ChakraSlider.RootProps {
   marks?: Array<number | { value: number; label: React.ReactNode }>;
   label?: React.ReactNode;

@@ -80,7 +80,10 @@ export const PlaywrightReportGenerator = () => {
                       onChange={(e) => setConfig({ ...config, reportName: e.target.value })}
                       placeholder="e.g., api-prod-nightly-1234-2025-09-03-14-30-15"
                     />
-                    <Button onClick={() => setConfig({ ...config, reportName: generateProductionLikeName() })} size="sm">
+                    <Button
+                      onClick={() => setConfig({ ...config, reportName: generateProductionLikeName() })}
+                      size="sm"
+                    >
                       Gen
                     </Button>
                   </Flex>
@@ -155,7 +158,10 @@ export const PlaywrightReportGenerator = () => {
                     >
                       Firefox
                     </Checkbox>
-                    <Checkbox checked={config.browsers.includes('webkit')} onCheckedChange={() => toggleBrowser('webkit')}>
+                    <Checkbox
+                      checked={config.browsers.includes('webkit')}
+                      onCheckedChange={() => toggleBrowser('webkit')}
+                    >
                       WebKit
                     </Checkbox>
                   </VStack>

@@ -35,14 +35,7 @@ export const CollapsibleWrapper = ({
     >
       <Collapsible.Trigger asChild>
         <Flex align="center" minH="27px" pl="2px" justify="space-between">
-          <Text
-            fontWeight={600}
-            cursor="pointer"
-            fontSize="lg"
-            lineClamp={1}
-            flex={1}
-            mr={2}
-          >
+          <Text fontWeight={600} cursor="pointer" fontSize="lg" lineClamp={1} flex={1} mr={2}>
             {title}
           </Text>
           {availableCategories.length > 0 && (
@@ -65,12 +58,7 @@ export const CollapsibleWrapper = ({
                       minH={6}
                     >
                       <Icon size={12} />
-                      <Text
-                        fontSize="xs"
-                        color={textColor}
-                        fontWeight={600}
-                        display={{ base: 'none', md: 'block' }}
-                      >
+                      <Text fontSize="xs" color={textColor} fontWeight={600} display={{ base: 'none', md: 'block' }}>
                         {text}
                       </Text>
                     </Flex>

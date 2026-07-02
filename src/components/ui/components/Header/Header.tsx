@@ -19,10 +19,10 @@ export const Header = ({ title, actionButton }: HeaderProps) => {
   const openUploadDialog = useResultsFileUploadDialog();
 
   return (
-    <Box bg="bg.section"  borderBottom="1px solid" borderColor="border.main">
-      <Container px={6} maxW="full" >
+    <Box bg="bg.section" borderBottom="1px solid" borderColor="border.main">
+      <Container px={6} maxW="full">
         <Flex justify="space-between" align="center" h="65px">
-          <Heading size="xl" color="text.primary" >
+          <Heading size="xl" color="text.primary">
             {title}
           </Heading>
 
