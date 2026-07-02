@@ -15,7 +15,7 @@ import { useProjectCardColors } from './hooks';
 
 interface ProjectCardProps {
   project: Project;
-  onContextMenu: (evt: MouseEvent, project: { id: string; isActive: boolean }) => void;
+  onContextMenu: (evt: MouseEvent, project: { id: string; name: string; isActive: boolean }) => void;
 }
 
 const colorSet = {
@@ -181,7 +181,7 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
             </Flex>
           </Flex>
 
-          <ContextMenuButton onClick={(evt) => onContextMenu(evt, { id, isActive })} size="sm" />
+          <ContextMenuButton onClick={(evt) => onContextMenu(evt, { id, name, isActive })} size="sm" />
         </Flex>
 
         {description && (
