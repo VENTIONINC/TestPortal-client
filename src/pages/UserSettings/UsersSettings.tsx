@@ -14,7 +14,6 @@ import {
   type User,
   type UserStatus,
 } from '@/redux/apis/generatedApi';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Alert, Badge, Section, toaster } from '@/components/ui';
 import { extractApiError } from '@/utils/apiErrors';
 
@@ -40,7 +39,7 @@ const ACTION_SUCCESS_MESSAGES: Record<UserAction, string> = {
 
 function getDirectoryErrorMessage(error: FetchBaseQueryError | SerializedError) {
   if ('status' in error && error.status === 403) {
-    return 'The server denied access to the user directory. Ask an administrator to confirm your account can view users.';
+    return 'The server denied access to the administrator user directory. Confirm that your account still has administrator access and try again.';
   }
 
   return extractApiError(error);
@@ -60,9 +59,6 @@ function getAvailableAction(status: UserStatus): UserAction | null {
 }
 
 export function UsersSettings() {
-  const currentUser = useCurrentUser();
-  const isAdmin = currentUser.role === 'admin';
-
   const { data: users, isLoading, isFetching, error, refetch } = useGetApiV2AdminUsersQuery();
   const [approveUser] = usePostApiV2AdminUsersByUserIdApproveMutation();
   const [suspendUser] = usePostApiV2AdminUsersByUserIdSuspendMutation();
@@ -160,11 +156,7 @@ export function UsersSettings() {
           ) : null}
         </Flex>
       </Section.Head>
-      <Section.Description>
-        {isAdmin
-          ? 'Review users and manage pending, active, and suspended accounts.'
-          : 'Review the current user directory. Lifecycle actions are available to administrators only.'}
-      </Section.Description>
+      <Section.Description>Review users and manage pending, active, and suspended accounts.</Section.Description>
 
       <Section.Body>
         <VStack align="stretch" gap={4}>
@@ -186,7 +178,7 @@ export function UsersSettings() {
                   <Table.ColumnHeader>Email</Table.ColumnHeader>
                   <Table.ColumnHeader>Role</Table.ColumnHeader>
                   <Table.ColumnHeader>Status</Table.ColumnHeader>
-                  {isAdmin ? <Table.ColumnHeader textAlign="right">Actions</Table.ColumnHeader> : null}
+                  <Table.ColumnHeader textAlign="right">Actions</Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -208,25 +200,23 @@ export function UsersSettings() {
                       <Table.Cell>
                         <Badge status={STATUS_BADGE_STATUS[user.status]}>{user.status}</Badge>
                       </Table.Cell>
-                      {isAdmin ? (
-                        <Table.Cell textAlign="right">
-                          {action ? (
-                            <Button
-                              size="xs"
-                              variant="outline"
-                              loading={isActionPending}
-                              onClick={() => handleAction(user, action)}
-                              disabled={Boolean(pendingAction)}
-                            >
-                              {ACTION_LABELS[action]}
-                            </Button>
-                          ) : (
-                            <Text color="text.secondary" fontSize="sm">
-                              No actions
-                            </Text>
-                          )}
-                        </Table.Cell>
-                      ) : null}
+                      <Table.Cell textAlign="right">
+                        {action ? (
+                          <Button
+                            size="xs"
+                            variant="outline"
+                            loading={isActionPending}
+                            onClick={() => handleAction(user, action)}
+                            disabled={Boolean(pendingAction)}
+                          >
+                            {ACTION_LABELS[action]}
+                          </Button>
+                        ) : (
+                          <Text color="text.secondary" fontSize="sm">
+                            No actions
+                          </Text>
+                        )}
+                      </Table.Cell>
                     </Table.Row>
                   );
                 })}

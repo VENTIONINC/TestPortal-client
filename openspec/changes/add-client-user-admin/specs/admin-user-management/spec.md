@@ -1,41 +1,37 @@
 ## ADDED Requirements
 
-### Requirement: Authenticated users must be able to access a Users settings tab
-The client SHALL provide a Users tab within Settings that every authenticated user can open.
+### Requirement: Only administrators may access the Users settings tab
+The client SHALL provide a Users tab within Settings only for authenticated administrators.
 
-#### Scenario: Authenticated user opens Settings
-- **WHEN** an authenticated user opens the Settings area
+#### Scenario: Administrator opens Settings
+- **WHEN** an authenticated administrator opens the Settings area
 - **THEN** the tab list includes a `Users` tab
 - **THEN** selecting that tab navigates to the user-management settings route
 
-#### Scenario: Non-admin opens Users route
+#### Scenario: Non-admin opens Settings
+- **WHEN** an authenticated non-admin user opens the Settings area
+- **THEN** the tab list does not include a `Users` tab
+
+#### Scenario: Non-admin opens Users route directly
 - **WHEN** an authenticated non-admin user navigates to `/settings/users`
-- **THEN** the client renders the Users experience instead of redirecting away from it
+- **THEN** the client redirects the user to an allowed settings route
+- **THEN** the client does not show an access-denied error screen for the hidden tab
 
-### Requirement: Authenticated users must be able to review the user list
-The client SHALL show the backend user list with each user's lifecycle status and role within the Users tab for authenticated viewers.
-
-#### Scenario: User list loads successfully for non-admin
-- **WHEN** an authenticated non-admin user visits the Users settings route
-- **THEN** the client requests the authorized user-list data from the backend
-- **THEN** the page displays each returned user's name, email, status, and role
+### Requirement: Administrators must be able to review the user list
+The client SHALL show the backend user list with each user's lifecycle status and role within the Users tab for authenticated administrators.
 
 #### Scenario: User list loads successfully for admin
 - **WHEN** an authenticated admin user visits the Users settings route
 - **THEN** the client requests the admin user list from the backend
 - **THEN** the page displays each returned user's name, email, status, and role
 
-#### Scenario: User list request is unauthorized for an authenticated viewer
-- **WHEN** the backend rejects the user-list request with a forbidden response
+#### Scenario: User list request fails for admin
+- **WHEN** the backend rejects the admin user-list request
 - **THEN** the client shows an actionable access error state
 - **THEN** the client does not render misleading empty content as if the request succeeded
 
 ### Requirement: Only administrators may change user lifecycle state
 The client SHALL expose the backend-supported lifecycle actions for pending, active, and suspended users only to administrators.
-
-#### Scenario: Non-admin views Users tab
-- **WHEN** an authenticated non-admin user views the Users tab
-- **THEN** the client does not show approve, suspend, or restore controls
 
 #### Scenario: Approve pending user
 - **WHEN** an admin chooses to approve a pending user
