@@ -11,7 +11,10 @@ import { Box, Button, Flex, Icon, Text } from '@chakra-ui/react';
 import { useChart } from '@chakra-ui/charts';
 import { PiDotsNineBold } from 'react-icons/pi';
 import { FaCircleCheck, FaRegCircleXmark } from 'react-icons/fa6';
-import { LuRotateCcw } from 'react-icons/lu';
+import { LuClock3, LuRotateCcw, LuSkipForward } from 'react-icons/lu';
+
+import { type DashboardResponse } from '@/redux/apis/generatedApi';
+import { aggregateDashboardStatusMetrics } from '@/components/dashboard/utils/statusMetrics';
 
 import { TestDescriptionSummary, TestStat } from '../types';
 import { Stats } from '../components/TestDescription/components/stats';
@@ -48,8 +51,7 @@ const loadLayouts = (): ResponsiveLayouts => {
 
 interface DashboardGridProps {
   summary?: TestDescriptionSummary;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  history?: any;
+  history?: DashboardResponse['history'];
   isLoading?: boolean;
   period?: string;
 }
@@ -79,32 +81,38 @@ const GridCard = ({ title, children }: { title: string; children: ReactNode }) =
   </Box>
 );
 
-const StatsWidget = ({ summary }: { summary?: TestDescriptionSummary }) => {
-  const { failures = 0, totalRuns = 0 } = summary || {};
-  const passed = totalRuns - failures || 0;
-  const failed = failures || 0;
+const StatsWidget = ({ summary, history }: { summary?: TestDescriptionSummary; history?: DashboardResponse['history'] }) => {
+  const metrics = aggregateDashboardStatusMetrics(history, summary);
 
   const stats: TestStat[] = [
-    { label: 'Test runs', value: totalRuns, status: 'runs', icon: PiDotsNineBold, color: 'dashboard.base' },
-    { label: 'Test passed', value: passed, status: 'passed', icon: FaCircleCheck, color: 'dashboard.green' },
-    { label: 'Test failed', value: failed, status: 'failed', icon: FaRegCircleXmark, color: 'dashboard.red' },
+    { label: 'Test runs', value: metrics.total, status: 'runs', icon: PiDotsNineBold, color: 'dashboard.base' },
+    { label: 'Test passed', value: metrics.passed, status: 'passed', icon: FaCircleCheck, color: 'dashboard.green' },
+    { label: 'Test failed', value: metrics.failed, status: 'failed', icon: FaRegCircleXmark, color: 'dashboard.red' },
+    { label: 'Test skipped', value: metrics.skipped, status: 'skipped', icon: LuSkipForward, color: 'dashboard.gray' },
+    { label: 'Timed out', value: metrics.timedOut, status: 'timedOut', icon: LuClock3, color: 'dashboard.yellow' },
   ];
   return <Stats stats={stats} columns={1} />;
 };
 
-const DonutChartWidget = ({ summary }: { summary?: TestDescriptionSummary }) => {
-  const { totalRuns = 0, failures = 0 } = summary || {};
-  const passed = totalRuns - failures || 0;
-  const failed = failures || 0;
+const DonutChartWidget = ({
+  summary,
+  history,
+}: {
+  summary?: TestDescriptionSummary;
+  history?: DashboardResponse['history'];
+}) => {
+  const metrics = aggregateDashboardStatusMetrics(history, summary);
   const donutData = [
-    { name: 'passed', value: passed, color: 'dashboard.green' },
-    { name: 'failed', value: failed, color: 'dashboard.red' },
+    { name: 'passed', value: metrics.passed, color: 'dashboard.green' },
+    { name: 'failed', value: metrics.failed, color: 'dashboard.red' },
+    { name: 'skipped', value: metrics.skipped, color: 'dashboard.gray' },
+    { name: 'timed out', value: metrics.timedOut, color: 'dashboard.yellow' },
   ];
   const donutChart = useChart({
     data: donutData,
     series: donutData.map((item) => ({ color: item.color })),
   });
-  return <DonutChart title="Test runs" passed={passed} failed={failed} donutChart={donutChart} totalRuns={totalRuns} />;
+  return <DonutChart title="Test runs" metrics={metrics} donutChart={donutChart} />;
 };
 
 export const DashboardGrid = ({ summary, history, period }: DashboardGridProps) => {
@@ -148,7 +156,7 @@ export const DashboardGrid = ({ summary, history, period }: DashboardGridProps) 
       >
         <div key="stats">
           <GridCard title="Statistics">
-            <StatsWidget summary={summary} />
+            <StatsWidget summary={summary} history={history} />
           </GridCard>
         </div>
         <div key="quality">
@@ -158,7 +166,7 @@ export const DashboardGrid = ({ summary, history, period }: DashboardGridProps) 
         </div>
         <div key="donut">
           <GridCard title="Test runs">
-            <DonutChartWidget summary={summary} />
+            <DonutChartWidget summary={summary} history={history} />
           </GridCard>
         </div>
 
