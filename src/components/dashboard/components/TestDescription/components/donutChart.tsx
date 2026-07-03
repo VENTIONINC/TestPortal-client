@@ -5,6 +5,8 @@ import { Box, Card, HStack, Text, VStack } from '@chakra-ui/react';
 import { Chart } from '@chakra-ui/charts';
 import { Cell, Pie, PieChart, ResponsiveContainer, Sector, Tooltip } from 'recharts';
 
+import { DashboardStatusMetrics } from '@/components/dashboard/utils/statusMetrics';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const renderActiveShape = (props: any) => {
   const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
@@ -23,15 +25,12 @@ const renderActiveShape = (props: any) => {
 
 interface DonutChartProps {
   title: string;
-  passed: number;
-  failed: number;
+  metrics: DashboardStatusMetrics;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   donutChart: any;
-
-  totalRuns: number;
 }
 
-export const DonutChart = ({ title, passed, failed, donutChart, totalRuns }: DonutChartProps) => {
+export const DonutChart = ({ title, metrics, donutChart }: DonutChartProps) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const activeIndex = donutChart.data.findIndex((item: any) => item.name === 'passed');
 
@@ -80,19 +79,27 @@ export const DonutChart = ({ title, passed, failed, donutChart, totalRuns }: Don
                   Total
                 </Text>
                 <Text fontSize="2xl" fontWeight="bold">
-                  {totalRuns}
+                  {metrics.total}
                 </Text>
               </VStack>
             </Box>
           </Box>
-          <HStack gap={6} fontSize="sm" color="fg.muted" mt={4}>
+          <HStack gap={6} fontSize="sm" color="fg.muted" mt={4} wrap="wrap" justify="center">
             <HStack>
               <Box w="2" h="2" bg="green.400" borderRadius="xs" />
-              <Text>passed {passed}</Text>
+              <Text>passed {metrics.passed}</Text>
             </HStack>
             <HStack>
               <Box w="2" h="2" bg="orange.400" borderRadius="xs" />
-              <Text>failed {failed}</Text>
+              <Text>failed {metrics.failed}</Text>
+            </HStack>
+            <HStack>
+              <Box w="2" h="2" bg="gray.400" borderRadius="xs" />
+              <Text>skipped {metrics.skipped}</Text>
+            </HStack>
+            <HStack>
+              <Box w="2" h="2" bg="yellow.400" borderRadius="xs" />
+              <Text>timed out {metrics.timedOut}</Text>
             </HStack>
           </HStack>
         </VStack>

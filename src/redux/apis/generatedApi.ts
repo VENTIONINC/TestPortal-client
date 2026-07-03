@@ -14,6 +14,7 @@ export const addTagTypes = [
   'Authentication',
   'Error Formatter',
   'Prompts',
+  'Skills',
   'Projects',
   'CTRF',
   'Upload API Keys',
@@ -442,6 +443,32 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ['Prompts'],
       }),
+      getApiV2Skills: build.query<GetApiV2SkillsApiResponse, GetApiV2SkillsApiArg>({
+        query: () => ({ url: `/api/v2/skills` }),
+        providesTags: ['Skills'],
+      }),
+      getApiV2SkillsByName: build.query<GetApiV2SkillsByNameApiResponse, GetApiV2SkillsByNameApiArg>({
+        query: (queryArg) => ({ url: `/api/v2/skills/${queryArg.name}` }),
+        providesTags: ['Skills'],
+      }),
+      getApiV2SkillsByNameDownload: build.query<
+        GetApiV2SkillsByNameDownloadApiResponse,
+        GetApiV2SkillsByNameDownloadApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/skills/${queryArg.name}/download`,
+        }),
+        providesTags: ['Skills'],
+      }),
+      getApiV2SkillsByNameArchive: build.query<
+        GetApiV2SkillsByNameArchiveApiResponse,
+        GetApiV2SkillsByNameArchiveApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/skills/${queryArg.name}/archive`,
+        }),
+        providesTags: ['Skills'],
+      }),
       getApiV2Projects: build.query<GetApiV2ProjectsApiResponse, GetApiV2ProjectsApiArg>({
         query: (queryArg) => ({
           url: `/api/v2/projects`,
@@ -850,6 +877,39 @@ export type PostApiV2PromptsByNameGenerateApiArg = {
     | 'software-documentation-assistant';
   generatePromptRequest: GeneratePromptRequest;
 };
+export type GetApiV2SkillsApiResponse = /** status 200 List of available skills */ SkillsListResponse;
+export type GetApiV2SkillsApiArg = void;
+export type GetApiV2SkillsByNameApiResponse = /** status 200 Skill metadata and Markdown content */ SkillDetailResponse;
+export type GetApiV2SkillsByNameApiArg = {
+  name:
+    | 'developer-code-assistant'
+    | 'definition-of-ready-assistant'
+    | 'test-portal-assistant'
+    | 'issue-analysis-assistant'
+    | 'environment-performance-assistant'
+    | 'software-documentation-assistant';
+};
+export type GetApiV2SkillsByNameDownloadApiResponse = /** status 200 Markdown skill artifact */ SkillMarkdownDownload;
+export type GetApiV2SkillsByNameDownloadApiArg = {
+  name:
+    | 'developer-code-assistant'
+    | 'definition-of-ready-assistant'
+    | 'test-portal-assistant'
+    | 'issue-analysis-assistant'
+    | 'environment-performance-assistant'
+    | 'software-documentation-assistant';
+};
+export type GetApiV2SkillsByNameArchiveApiResponse =
+  /** status 200 Zip archive containing the skill package */ SkillArchiveDownload;
+export type GetApiV2SkillsByNameArchiveApiArg = {
+  name:
+    | 'developer-code-assistant'
+    | 'definition-of-ready-assistant'
+    | 'test-portal-assistant'
+    | 'issue-analysis-assistant'
+    | 'environment-performance-assistant'
+    | 'software-documentation-assistant';
+};
 export type GetApiV2ProjectsApiResponse = /** status 200 List of projects */ Project[];
 export type GetApiV2ProjectsApiArg = {
   ownerId?: string;
@@ -971,31 +1031,67 @@ export type UpdateIssueRequest = {
   service?: string;
   ticket?: string;
 };
+export type ResultSpec = {
+  id: string;
+  key: string;
+  file: string;
+  title: string;
+  tags: string[];
+};
+export type ResultExecution = {
+  id: string;
+  environment: string;
+  type: string;
+  name: string;
+  version: string;
+  startedAt: string;
+  createdAt: string;
+};
+export type ResultNestedError = {
+  id: string;
+  type: string;
+  message: string;
+  callLog: string[];
+  callStack: string[];
+  testAssertion?: string | null;
+  expectedPattern?: string | null;
+  receivedString?: string | null;
+  location: string;
+  resultId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 export type Result = {
   id: string;
-  tag?: string;
-  specId?: string;
-  specFile?: string;
-  specName?: string;
-  environment?: string;
-  type?: string;
-  status?: string;
-  reportPortalLink?: string;
-  retry?: number;
-  duration?: number;
-  startTime?: string;
+  status: string;
+  reportPortalLink?: string | null;
+  retry: number;
+  duration: number;
+  startTime: string;
   /** Test analysis status */
-  analysisStatus?: 'passed' | 'failed';
+  analysisStatus?: ('passed' | 'failed') | ('passed' | 'failed');
   /** Failure category from AI analysis */
-  analysisCategory?: 'bug' | 'infra' | 'performance' | 'script' | 'other';
+  analysisCategory?:
+    | ('bug' | 'infra' | 'performance' | 'script' | 'other')
+    | ('bug' | 'infra' | 'performance' | 'script' | 'other');
   /** Confidence level of analysis (1-5 scale) */
-  analysisConfidence?: number;
+  analysisConfidence?: number | null;
   /** Explanation for the categorization decision */
-  analysisConclusion?: string;
+  analysisConclusion?: string | null;
   /** Quality rating of error messages (1-5 scale, only for failed tests) */
   analysisErrorQuality?: number | null;
   /** Explanation for the error quality rating */
   analysisErrorQualityConclusion?: string | null;
+  analysisReviewedAt?: string | null;
+  analysisReviewedById?: string | null;
+  analysisFeedbackCategory?:
+    | ('bug' | 'infra' | 'performance' | 'script' | 'other')
+    | ('bug' | 'infra' | 'performance' | 'script' | 'other');
+  analysisFeedbackConfidence?: number | null;
+  analysisFeedbackConclusion?: string | null;
+  spec: ResultSpec;
+  execution: ResultExecution;
+  errors: ResultNestedError[];
   createdAt: string;
   updatedAt: string;
 };
@@ -1052,11 +1148,10 @@ export type UpdateResultAnalysisFeedbackRequest = {
 };
 export type Spec = {
   id: string;
+  key: string;
   title: string;
-  custom_id?: string;
-  file?: string;
-  tags?: string[];
-  annotations?: string[];
+  file: string;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -1110,10 +1205,15 @@ export type AnalyzeResultErrorsRequest = {
 };
 export type ResultError = {
   id: string;
-  resultId: string;
-  errorMessage: string;
-  stackTrace?: string;
-  assertionInfo?: string;
+  resultId?: string | null;
+  type: string;
+  message: string;
+  callLog: string[];
+  callStack: string[];
+  testAssertion?: string | null;
+  expectedPattern?: string | null;
+  receivedString?: string | null;
+  location: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -1240,12 +1340,31 @@ export type GeneratePromptResponse = {
 export type GeneratePromptRequest = {
   [key: string]: any;
 };
+export type SkillMetadata = {
+  name: string;
+  title: string;
+  description: string;
+  category: string;
+  version?: string;
+  license?: string;
+  compatibility?: string;
+  downloadUrl: string;
+};
+export type SkillsListResponse = {
+  skills: SkillMetadata[];
+};
+export type SkillDetailResponse = {
+  metadata: SkillMetadata;
+  content: string;
+};
+export type SkillMarkdownDownload = string;
+export type SkillArchiveDownload = Blob;
 export type ProjectCategoryWeights = {
   bug: number;
   infra: number;
-  other: number;
   performance: number;
   script: number;
+  other: number;
 };
 export type Project = {
   id: string;
@@ -1253,9 +1372,9 @@ export type Project = {
   description: string | null;
   isActive: boolean;
   ownerId: string;
+  categoryWeights: ProjectCategoryWeights;
   createdAt: string;
   updatedAt: string;
-  categoryWeights?: ProjectCategoryWeights;
   _count?: {
     executions: number;
     specs: number;
@@ -1265,11 +1384,13 @@ export type Project = {
 export type CreateProjectRequest = {
   name: string;
   description?: string;
+  categoryWeights?: ProjectCategoryWeights;
 };
 export type UpdateProjectRequest = {
   name?: string;
   description?: string;
   isActive?: boolean;
+  categoryWeights?: ProjectCategoryWeights;
 };
 export type DashboardIssueMetrics = {
   bug: number;
@@ -1287,6 +1408,8 @@ export type DailyExecutionMetrics = {
   failed: number;
   /** Number of skipped tests */
   skipped: number;
+  /** Number of timed-out tests */
+  timedOut: number;
   /** Total duration in milliseconds */
   duration: number;
   issues: DashboardIssueMetrics;
@@ -1455,6 +1578,10 @@ export const {
   useGetApiV2PromptsQuery,
   useGetApiV2PromptsByNameQuery,
   usePostApiV2PromptsByNameGenerateMutation,
+  useGetApiV2SkillsQuery,
+  useGetApiV2SkillsByNameQuery,
+  useGetApiV2SkillsByNameDownloadQuery,
+  useGetApiV2SkillsByNameArchiveQuery,
   useGetApiV2ProjectsQuery,
   usePostApiV2ProjectsMutation,
   useGetApiV2ProjectsByIdQuery,

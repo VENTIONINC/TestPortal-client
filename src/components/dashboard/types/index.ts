@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-export type TestStatus = 'passed' | 'failed' | 'runs';
+export type TestStatus = 'passed' | 'failed' | 'skipped' | 'timedOut' | 'runs';
 
 export interface TestStat {
   label: string;
