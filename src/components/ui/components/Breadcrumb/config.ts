@@ -26,6 +26,7 @@ import { PATHS } from '@/types/paths';
 import { configHeaderPageTitles } from '@/configs/pageTitleConfig';
 
 export const routerConfig = {
+  [PATHS.SKILLS]: [{ title: 'Skills' }],
   [PATHS.USER_SETTINGS_MCP]: [{ title: 'Settings', url: PATHS.USER_SETTINGS }, { title: 'MCP' }],
   [PATHS.USER_SETTINGS_CONFIGURATION]: [{ title: 'Settings', url: PATHS.USER_SETTINGS }, { title: 'Configuration' }],
   [PATHS.USER_SETTINGS_PROJECTS]: [{ title: 'Settings', url: PATHS.USER_SETTINGS }, { title: 'Projects' }],
@@ -43,4 +44,33 @@ export const routerConfig = {
     {} as Record<string, Array<{ title: string; url?: string }>>,
   ),
   [PATHS.REPORT_GENERATOR_CTRF]: [{ title: 'Report Generator', url: PATHS.REPORT_GENERATOR }, { title: 'CTRF' }],
+};
+
+const formatRouteTitle = (value: string) =>
+  value
+    .split('-')
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
+
+export const getRouteBreadcrumbs = (pathname: string) => {
+  const staticRoute = (routerConfig as Record<string, Array<{ title: string; url?: string }>>)[pathname];
+
+  if (staticRoute) {
+    return staticRoute;
+  }
+
+  const skillDetailPrefix = PATHS.SKILL_DETAILS.replace(':name', '');
+
+  if (pathname.startsWith(skillDetailPrefix)) {
+    const skillName = pathname.slice(skillDetailPrefix.length).replace(/^\/+/, '');
+
+    if (!skillName) {
+      return [{ title: 'Skills' }];
+    }
+
+    return [{ title: 'Skills', url: PATHS.SKILLS }, { title: formatRouteTitle(decodeURIComponent(skillName)) }];
+  }
+
+  return undefined;
 };
