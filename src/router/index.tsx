@@ -13,6 +13,8 @@ import {
   PromptsPage,
   ReportGeneratorPage,
   ResultsPage,
+  SkillDetailsPage,
+  SkillsPage,
   SignupPage,
   UserSettingsPage,
 } from '@/pages';
@@ -86,6 +88,28 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <ProjectGuard>
           <PromptsPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.SKILLS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <SkillsPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.SKILL_DETAILS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <SkillDetailsPage />
         </ProjectGuard>
       </ProtectedRoute>
     ),

@@ -1,7 +1,10 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type { FetchBaseQueryMeta } from '@reduxjs/toolkit/query';
+
 import { BulkReviewRequest, BulkReviewResponse, GetResultsRequest, GetResultsResponse } from '@/types/apis';
+import { getDownloadFilename } from '@/utils/download';
 
 import {
   generatedApi,
@@ -9,6 +12,16 @@ import {
   type PostApiV2ReportsPdfExportApiResponse,
 } from './generatedApi';
 import { TAGS } from './tags';
+
+export interface SkillMarkdownDownloadResult {
+  fileName: string;
+  content: string;
+}
+
+export interface SkillArchiveDownloadResult {
+  fileName: string;
+  blob: Blob;
+}
 
 export const extendedApi = generatedApi
   .enhanceEndpoints({
@@ -76,6 +89,30 @@ export const extendedApi = generatedApi
         }),
         invalidatesTags: [TAGS.Result],
       }),
+      downloadSkillMarkdown: build.query<SkillMarkdownDownloadResult, { name: string }>({
+        query: ({ name }) => ({
+          url: `/api/v2/skills/${encodeURIComponent(name)}/download`,
+          method: 'GET',
+          responseHandler: 'text',
+        }),
+        transformResponse: (content: string, meta: FetchBaseQueryMeta | undefined, arg) => ({
+          content,
+          fileName: getDownloadFilename(meta?.response?.headers, `${arg.name}-SKILL.md`),
+        }),
+        providesTags: ['Skills'],
+      }),
+      downloadSkillArchive: build.query<SkillArchiveDownloadResult, { name: string }>({
+        query: ({ name }) => ({
+          url: `/api/v2/skills/${encodeURIComponent(name)}/archive`,
+          method: 'GET',
+          responseHandler: (response) => response.blob(),
+        }),
+        transformResponse: (blob: Blob, meta: FetchBaseQueryMeta | undefined, arg) => ({
+          blob,
+          fileName: getDownloadFilename(meta?.response?.headers, `${arg.name}.zip`),
+        }),
+        providesTags: ['Skills'],
+      }),
     }),
     overrideExisting: false,
   });
@@ -90,5 +127,7 @@ export const {
   useLazyGetAnalysisExportQuery,
   useExportDashboardPdfMutation,
   useBulkReviewMutation,
+  useLazyDownloadSkillArchiveQuery,
+  useLazyDownloadSkillMarkdownQuery,
   usePostApiV2UploadCtrfReportMutation,
 } = extendedApi;

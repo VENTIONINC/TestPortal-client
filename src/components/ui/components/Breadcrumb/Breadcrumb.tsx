@@ -5,7 +5,7 @@ import { Breadcrumb as ChakraBreadcrumb, Box, type SystemStyleObject } from '@ch
 import * as React from 'react';
 import { useLocation, Link as RouterLink } from 'react-router';
 
-import { routerConfig } from './config';
+import { getRouteBreadcrumbs } from './config';
 
 export interface BreadcrumbProps extends ChakraBreadcrumb.RootProps {
   separator?: React.ReactNode;
@@ -25,9 +25,7 @@ const BreadcrumbSeparator = () => {
 export const Breadcrumb = React.forwardRef<HTMLDivElement, BreadcrumbProps>(function BreadcrumbRoot(props, ref) {
   const { separator = <BreadcrumbSeparator />, separatorGap, ...rest } = props;
   const location = useLocation();
-  const currentRoute = (routerConfig as Record<string, Array<{ title: React.ReactNode; url?: string }>>)[
-    location.pathname
-  ];
+  const currentRoute = getRouteBreadcrumbs(location.pathname);
 
   return (
     <ChakraBreadcrumb.Root ref={ref} {...rest} mt={6} mb={2}>
