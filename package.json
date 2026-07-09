@@ -9,6 +9,7 @@
     "build": "npm run typegen && tsc -b && vite build",
     "headers:add": "node scripts/add-license-headers.js",
     "eslint": "eslint .",
+    "test": "vitest run",
     "tsc": "tsc --noEmit",
     "lint": "yarn eslint && yarn tsc",
     "new:file": "node scripts/new-file.js",
@@ -52,6 +53,10 @@
     "@eslint/js": "9.25.0",
     "@faker-js/faker": "10.2.0",
     "@rtk-query/codegen-openapi": "2.0.0",
+    "@testing-library/dom": "10.4.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
     "@types/file-saver": "2.0.7",
     "@types/react": "19.1.2",
     "@types/react-dom": "19.1.2",
@@ -64,10 +69,12 @@
     "eslint-plugin-react-refresh": "0.4.19",
     "globals": "16.0.0",
     "husky": "9.1.7",
+    "jsdom": "29.1.1",
     "prettier": "3.8.1",
     "typescript": "5.8.3",
     "typescript-eslint": "8.30.1",
-    "vite": "6.3.5"
+    "vite": "6.3.5",
+    "vitest": "4.1.9"
   },
   "packageManager": "yarn@3.6.4"
 }

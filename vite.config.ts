@@ -14,4 +14,8 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/__tests__/setup.ts',
+  },
 });

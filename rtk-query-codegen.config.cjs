@@ -1,5 +1,5 @@
 module.exports = {
-  schemaFile: 'http://localhost:3001/api/openapi.json',
+  schemaFile: 'http://dev-alb-210489249.eu-central-1.elb.amazonaws.com/api/openapi.json',
   apiFile: './src/redux/apis/baseApi.ts',
   apiImport: 'baseApi',
   outputFiles: {

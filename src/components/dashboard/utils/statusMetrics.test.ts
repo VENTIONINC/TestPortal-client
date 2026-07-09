@@ -1,8 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import { expect, test } from 'vitest';
 
 import {
   aggregateDashboardStatusMetrics,
@@ -19,7 +18,7 @@ test('normalizeDashboardStatusMetrics preserves explicit mixed-status counts', (
     timedOut: 3,
   });
 
-  assert.deepEqual(metrics, {
+  expect(metrics).toEqual({
     total: 6100,
     passed: 3055,
     failed: 3040,
@@ -36,11 +35,11 @@ test('aggregateDashboardStatusMetrics uses explicit history buckets for summary 
     },
   ]);
 
-  assert.equal(metrics.total, 6100);
-  assert.equal(metrics.passed, 3055);
-  assert.equal(metrics.failed, 3040);
-  assert.equal(metrics.skipped, 2);
-  assert.equal(metrics.timedOut, 3);
+  expect(metrics.total).toBe(6100);
+  expect(metrics.passed).toBe(3055);
+  expect(metrics.failed).toBe(3040);
+  expect(metrics.skipped).toBe(2);
+  expect(metrics.timedOut).toBe(3);
 });
 
 test('mapDashboardStatusChartData keeps failed distinct from skipped and timedOut', () => {
@@ -51,7 +50,7 @@ test('mapDashboardStatusChartData keeps failed distinct from skipped and timedOu
     },
   ]);
 
-  assert.deepEqual(mapped.chartData, [
+  expect(mapped.chartData).toEqual([
     {
       date: '2026-07-01',
       total: 6100,
@@ -61,5 +60,5 @@ test('mapDashboardStatusChartData keeps failed distinct from skipped and timedOu
       timedOut: 3,
     },
   ]);
-  assert.equal(mapped.maxValue, 3055);
+  expect(mapped.maxValue).toBe(3055);
 });

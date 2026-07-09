@@ -4,7 +4,7 @@
 import { faker } from '@faker-js/faker';
 import { subDays, format } from 'date-fns';
 
-import { DashboardResponse, DailyExecutionMetrics, ExecutionSummary } from '@/redux/apis/generatedApi';
+import { DashboardResponse, ExecutionSummary } from '@/redux/apis/generatedApi';
 
 export const generateMockDashboardData = (): DashboardResponse => {
   const historyDays = 30;
@@ -42,7 +42,7 @@ export const generateMockDashboardData = (): DashboardResponse => {
         : 0;
     const other = failed - bug - environment - script - performance;
 
-    const metrics: DailyExecutionMetrics = {
+    const metrics = {
       total: totalTests,
       passed,
       failed,

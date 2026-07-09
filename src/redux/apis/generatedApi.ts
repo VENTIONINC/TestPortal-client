@@ -11,6 +11,7 @@ export const addTagTypes = [
   'Upload',
   'Users',
   'MCP',
+  'Admin Users',
   'Authentication',
   'Error Formatter',
   'Prompts',
@@ -378,31 +379,81 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ['MCP'],
       }),
-      postApiV2UsersSignup: build.mutation<PostApiV2UsersSignupApiResponse, PostApiV2UsersSignupApiArg>({
+      getApiV2AdminUsers: build.query<GetApiV2AdminUsersApiResponse, GetApiV2AdminUsersApiArg>({
+        query: () => ({ url: `/api/v2/admin/users` }),
+        providesTags: ['Admin Users'],
+      }),
+      postApiV2AdminUsersByUserIdApprove: build.mutation<
+        PostApiV2AdminUsersByUserIdApproveApiResponse,
+        PostApiV2AdminUsersByUserIdApproveApiArg
+      >({
         query: (queryArg) => ({
-          url: `/api/v2/users/signup`,
+          url: `/api/v2/admin/users/${queryArg.userId}/approve`,
+          method: 'POST',
+        }),
+        invalidatesTags: ['Admin Users'],
+      }),
+      postApiV2AdminUsersByUserIdSuspend: build.mutation<
+        PostApiV2AdminUsersByUserIdSuspendApiResponse,
+        PostApiV2AdminUsersByUserIdSuspendApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/admin/users/${queryArg.userId}/suspend`,
+          method: 'POST',
+        }),
+        invalidatesTags: ['Admin Users'],
+      }),
+      postApiV2AdminUsersByUserIdRestore: build.mutation<
+        PostApiV2AdminUsersByUserIdRestoreApiResponse,
+        PostApiV2AdminUsersByUserIdRestoreApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/admin/users/${queryArg.userId}/restore`,
+          method: 'POST',
+        }),
+        invalidatesTags: ['Admin Users'],
+      }),
+      patchApiV2AdminUsersByUserIdRole: build.mutation<
+        PatchApiV2AdminUsersByUserIdRoleApiResponse,
+        PatchApiV2AdminUsersByUserIdRoleApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/admin/users/${queryArg.userId}/role`,
+          method: 'PATCH',
+          body: queryArg.adminUserRoleUpdateRequest,
+        }),
+        invalidatesTags: ['Admin Users'],
+      }),
+      getApiV2AuthConfig: build.query<GetApiV2AuthConfigApiResponse, GetApiV2AuthConfigApiArg>({
+        query: () => ({ url: `/api/v2/auth/config` }),
+        providesTags: ['Authentication'],
+      }),
+      postApiV2AuthSignup: build.mutation<PostApiV2AuthSignupApiResponse, PostApiV2AuthSignupApiArg>({
+        query: (queryArg) => ({
+          url: `/api/v2/auth/signup`,
           method: 'POST',
           body: queryArg.userSignupRequest,
         }),
         invalidatesTags: ['Authentication'],
       }),
-      postApiV2UsersLogin: build.mutation<PostApiV2UsersLoginApiResponse, PostApiV2UsersLoginApiArg>({
+      postApiV2AuthLogin: build.mutation<PostApiV2AuthLoginApiResponse, PostApiV2AuthLoginApiArg>({
         query: (queryArg) => ({
-          url: `/api/v2/users/login`,
+          url: `/api/v2/auth/login`,
           method: 'POST',
           body: queryArg.userLoginRequest,
         }),
         invalidatesTags: ['Authentication'],
       }),
-      postApiV2UsersRefreshToken: build.mutation<
-        PostApiV2UsersRefreshTokenApiResponse,
-        PostApiV2UsersRefreshTokenApiArg
-      >({
+      postApiV2AuthRefreshToken: build.mutation<PostApiV2AuthRefreshTokenApiResponse, PostApiV2AuthRefreshTokenApiArg>({
         query: (queryArg) => ({
-          url: `/api/v2/users/refresh-token`,
+          url: `/api/v2/auth/refresh-token`,
           method: 'POST',
           body: queryArg.refreshTokenRequest,
         }),
+        invalidatesTags: ['Authentication'],
+      }),
+      postApiV2AuthLogout: build.mutation<PostApiV2AuthLogoutApiResponse, PostApiV2AuthLogoutApiArg>({
+        query: () => ({ url: `/api/v2/auth/logout`, method: 'POST' }),
         invalidatesTags: ['Authentication'],
       }),
       postApiV2ErrorFormatter: build.mutation<PostApiV2ErrorFormatterApiResponse, PostApiV2ErrorFormatterApiArg>({
@@ -833,20 +884,50 @@ export type DeleteApiV2UsersByUserIdMcpTokenApiResponse =
 export type DeleteApiV2UsersByUserIdMcpTokenApiArg = {
   userId: string;
 };
-export type PostApiV2UsersSignupApiResponse = /** status 201 User created successfully */ User;
-export type PostApiV2UsersSignupApiArg = {
+export type GetApiV2AdminUsersApiResponse = /** status 200 User list returned successfully */ AdminManagedUser[];
+export type GetApiV2AdminUsersApiArg = void;
+export type PostApiV2AdminUsersByUserIdApproveApiResponse =
+  /** status 200 User updated successfully */ AdminManagedUser;
+export type PostApiV2AdminUsersByUserIdApproveApiArg = {
+  userId: string;
+};
+export type PostApiV2AdminUsersByUserIdSuspendApiResponse =
+  /** status 200 User updated successfully */ AdminManagedUser;
+export type PostApiV2AdminUsersByUserIdSuspendApiArg = {
+  userId: string;
+};
+export type PostApiV2AdminUsersByUserIdRestoreApiResponse =
+  /** status 200 User updated successfully */ AdminManagedUser;
+export type PostApiV2AdminUsersByUserIdRestoreApiArg = {
+  userId: string;
+};
+export type PatchApiV2AdminUsersByUserIdRoleApiResponse =
+  /** status 200 User role updated successfully */ AdminManagedUser;
+export type PatchApiV2AdminUsersByUserIdRoleApiArg = {
+  userId: string;
+  adminUserRoleUpdateRequest: AdminUserRoleUpdateRequest;
+};
+export type GetApiV2AuthConfigApiResponse = /** status 200 Auth provider configuration */ AuthConfig;
+export type GetApiV2AuthConfigApiArg = void;
+export type PostApiV2AuthSignupApiResponse = /** status 201 User created successfully */ PendingApprovalSignupResponse;
+export type PostApiV2AuthSignupApiArg = {
   userSignupRequest: UserSignupRequest;
 };
-export type PostApiV2UsersLoginApiResponse =
-  /** status 200 Login successful - returns user data, access token, and refresh token */ UserLoginResponse;
-export type PostApiV2UsersLoginApiArg = {
+export type PostApiV2AuthLoginApiResponse =
+  /** status 200 Login successful or challenge required */
+  UserLoginResponse | AuthChallengeResponse;
+export type PostApiV2AuthLoginApiArg = {
   userLoginRequest: UserLoginRequest;
 };
-export type PostApiV2UsersRefreshTokenApiResponse =
+export type PostApiV2AuthRefreshTokenApiResponse =
   /** status 200 Token refresh successful - returns new access and refresh tokens */ UserLoginResponse;
-export type PostApiV2UsersRefreshTokenApiArg = {
+export type PostApiV2AuthRefreshTokenApiArg = {
   refreshTokenRequest: RefreshTokenRequest;
 };
+export type PostApiV2AuthLogoutApiResponse = /** status 200 Logout completed */ {
+  message: string;
+};
+export type PostApiV2AuthLogoutApiArg = void;
 export type PostApiV2ErrorFormatterApiResponse = /** status 200 Error formatted successfully */ ErrorFormatterResponse;
 export type PostApiV2ErrorFormatterApiArg = {
   errorFormatterRequest: ErrorFormatterRequest;
@@ -1241,10 +1322,14 @@ export type JsonReportResponseWithAnalysis = {
   /** Optional AI analysis results for test failures */
   analysis?: any[];
 };
+export type UserStatus = 'pending' | 'active' | 'suspended';
+export type UserRole = 'admin' | 'member';
 export type User = {
   id: string;
   name: string;
   email: string;
+  status: UserStatus;
+  role: UserRole;
   createdAt: string;
   updatedAt: string;
   mcpToken?: string;
@@ -1271,6 +1356,38 @@ export type McpTokenResponse = {
   expiresAt: string;
   message: string;
 };
+export type AdminManagedUser = {
+  id: string;
+  name: string;
+  email: string;
+  status: UserStatus;
+  role: UserRole;
+  createdAt: string;
+  updatedAt: string;
+  reportPortalUrl?: string | null;
+  reportPortalEnabled: boolean;
+  monitoringPortalUrl?: string | null;
+  monitoringPortalEnabled: boolean;
+  analyzeEnabled: boolean;
+};
+export type AdminUserRoleUpdateRequest = {
+  role: UserRole;
+};
+export type AuthProvider = 'local' | 'cognito';
+export type AuthConfig = {
+  provider: AuthProvider;
+  capabilities: {
+    passwordLogin: boolean;
+    passwordSignup: boolean;
+    requiresRedirectLogin: boolean;
+    supportsNewPasswordChallenge: boolean;
+    signupRequiresApproval: boolean;
+  };
+};
+export type PendingApprovalSignupResponse = {
+  user: User;
+  message: string;
+};
 export type UserSignupRequest = {
   name: string;
   email: string;
@@ -1280,10 +1397,16 @@ export type UserLoginResponse = {
   user: User;
   accessToken: string;
   refreshToken: string;
+  cognitoSession?: any;
+};
+export type AuthChallengeResponse = {
+  status: 'NEW_PASSWORD_REQUIRED';
+  message: string;
 };
 export type UserLoginRequest = {
   email: string;
   password: string;
+  newPassword?: string;
 };
 export type RefreshTokenRequest = {
   refreshToken: string;
@@ -1408,8 +1531,6 @@ export type DailyExecutionMetrics = {
   failed: number;
   /** Number of skipped tests */
   skipped: number;
-  /** Number of timed-out tests */
-  timedOut: number;
   /** Total duration in milliseconds */
   duration: number;
   issues: DashboardIssueMetrics;
@@ -1570,9 +1691,16 @@ export const {
   usePatchApiV2UsersByUserIdIntegrationsMutation,
   usePostApiV2UsersByUserIdMcpTokenMutation,
   useDeleteApiV2UsersByUserIdMcpTokenMutation,
-  usePostApiV2UsersSignupMutation,
-  usePostApiV2UsersLoginMutation,
-  usePostApiV2UsersRefreshTokenMutation,
+  useGetApiV2AdminUsersQuery,
+  usePostApiV2AdminUsersByUserIdApproveMutation,
+  usePostApiV2AdminUsersByUserIdSuspendMutation,
+  usePostApiV2AdminUsersByUserIdRestoreMutation,
+  usePatchApiV2AdminUsersByUserIdRoleMutation,
+  useGetApiV2AuthConfigQuery,
+  usePostApiV2AuthSignupMutation,
+  usePostApiV2AuthLoginMutation,
+  usePostApiV2AuthRefreshTokenMutation,
+  usePostApiV2AuthLogoutMutation,
   usePostApiV2ErrorFormatterMutation,
   usePostApiV2ErrorFormatterResultMutation,
   useGetApiV2PromptsQuery,

@@ -13,6 +13,7 @@ yarn build
 
 # Lint code (ESLint + TypeScript check)
 yarn lint
+yarn test
 
 # Individual linting commands
 yarn eslint      # Run ESLint
@@ -58,3 +59,8 @@ The app implements JWT-based authentication with automatic token refresh. The `b
 ### Code Generation
 
 API types and hooks are automatically generated from OpenAPI specs using `@rtk-query/codegen-openapi`. Run generation commands after API schema changes.
+
+### Testing Conventions
+
+- Keep tests under `src/__tests__/` and mirror the source structure there.
+- Name each test file after a real source module, for example `src/hooks/useLogin.ts` -> `src/__tests__/hooks/useLogin.test.ts`.
