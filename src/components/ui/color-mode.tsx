@@ -11,6 +11,8 @@ export const useColorMode = () => {
   const { theme, resolvedTheme, setTheme } = useTheme();
 
   const toggleColorMode = () => {
+    if (!theme || !resolvedTheme) return;
+
     if (theme === 'system') setTheme('light');
     else if (theme === 'light') setTheme('dark');
     else setTheme('system');
