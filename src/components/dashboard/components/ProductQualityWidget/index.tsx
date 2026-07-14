@@ -1,5 +1,5 @@
 import { Box, Flex, Icon, Text, Circle } from '@chakra-ui/react';
-import { FiAlertTriangle, FiInfo } from 'react-icons/fi';
+import { FiAlertTriangle, FiMinusSquare } from 'react-icons/fi';
 
 import {
   useGetApiV2IssuesWithStatsQuery,
@@ -171,7 +171,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
     return (
       <Flex direction="column" justify="center" align="center" h="100%" minH="200px" textAlign="center" gap={3}>
         <Circle size="48px" bg="bg.subtle" border="1px solid" borderColor="border.muted">
-          <Icon as={FiInfo} color="fg.muted" boxSize={5} />
+          <Icon as={FiMinusSquare} color="fg.muted" boxSize={5} />
         </Circle>
         <Flex direction="column" align="center" gap={1}>
           <Text fontSize="md" fontWeight="bold" color="fg" textAlign="center">
