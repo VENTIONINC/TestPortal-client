@@ -17,8 +17,8 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(function Tooltip
   ref,
 ) {
   const contentBg = 'bg.panel';
-  const contentColor = 'text.primary';
-  const contentBorder = 'border.subtle';
+  const contentColor = 'text.main';
+  const contentBorder = 'border.main';
   const mergedContentProps: TooltipContentProps = {
     bg: contentBg,
     color: contentColor,
@@ -27,6 +27,9 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(function Tooltip
     boxShadow: 'sm',
     px: 2,
     py: 1,
+    maxW: '480px',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
     ...contentProps,
   };
 
