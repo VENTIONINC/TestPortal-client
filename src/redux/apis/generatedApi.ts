@@ -612,15 +612,6 @@ const injectedRtkApi = api
         query: (queryArg) => ({ url: `/api/v2/skills/${queryArg.id}` }),
         providesTags: ["Skills"],
       }),
-      getApiV2SkillsByIdDownload: build.query<
-        GetApiV2SkillsByIdDownloadApiResponse,
-        GetApiV2SkillsByIdDownloadApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v2/skills/${queryArg.id}/download`,
-        }),
-        providesTags: ["Skills"],
-      }),
       getApiV2SkillsByIdArchive: build.query<
         GetApiV2SkillsByIdArchiveApiResponse,
         GetApiV2SkillsByIdArchiveApiArg
@@ -1138,17 +1129,12 @@ export type DeleteApiV2SkillsByIdApiArg = {
   id: string;
 };
 export type GetApiV2SkillsByIdApiResponse =
-  /** status 200 Skill metadata and Markdown content */ SkillDetailResponse;
+  /** status 200 Skill metadata and Markdown preview/source content */ SkillDetailResponse;
 export type GetApiV2SkillsByIdApiArg = {
   id: string;
 };
-export type GetApiV2SkillsByIdDownloadApiResponse =
-  /** status 200 Markdown skill artifact */ SkillMarkdownDownload;
-export type GetApiV2SkillsByIdDownloadApiArg = {
-  id: string;
-};
 export type GetApiV2SkillsByIdArchiveApiResponse =
-  /** status 200 Zip archive containing the skill package */ SkillArchiveDownload;
+  /** status 200 Complete portable ZIP skill package */ SkillArchiveDownload;
 export type GetApiV2SkillsByIdArchiveApiArg = {
   id: string;
 };
@@ -1651,6 +1637,7 @@ export type SkillMetadata = {
   version?: string;
   license?: string;
   compatibility?: string;
+  /** URL for the complete portable ZIP skill package. This is the only supported installable download. */
   downloadUrl: string;
 };
 export type SkillPackageUpload = {
@@ -1666,9 +1653,9 @@ export type SkillsListResponse = {
 };
 export type SkillDetailResponse = {
   metadata: SkillMetadata;
+  /** Markdown preview/source content. It is not a complete installable artifact; use metadata.downloadUrl for the ZIP package. */
   content: string;
 };
-export type SkillMarkdownDownload = string;
 export type SkillArchiveDownload = Blob;
 export type ProjectCategoryWeights = {
   bug: number;
@@ -1901,7 +1888,6 @@ export const {
   usePutApiV2SkillsByIdMutation,
   useDeleteApiV2SkillsByIdMutation,
   useGetApiV2SkillsByIdQuery,
-  useGetApiV2SkillsByIdDownloadQuery,
   useGetApiV2SkillsByIdArchiveQuery,
   useGetApiV2ProjectsQuery,
   usePostApiV2ProjectsMutation,

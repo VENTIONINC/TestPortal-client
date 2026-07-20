@@ -12,7 +12,7 @@ export const skillsFixture: SkillMetadata[] = [
     category: 'engineering',
     source: 'system',
     readOnly: true,
-    downloadUrl: '/api/v2/skills/skill-system-testing/download',
+    downloadUrl: '/api/v2/skills/skill-system-testing/archive',
   },
   {
     id: 'skill-custom-renamed',
@@ -22,6 +22,6 @@ export const skillsFixture: SkillMetadata[] = [
     category: 'engineering',
     source: 'custom',
     readOnly: false,
-    downloadUrl: '/api/v2/skills/skill-custom-renamed/download',
+    downloadUrl: '/api/v2/skills/skill-custom-renamed/archive',
   },
 ];

@@ -59,15 +59,27 @@ The system SHALL load a persisted skill by the ID in the `/skills/{id}` route an
 - **THEN** the system uses a human-readable label and does not format or expose the persisted ID as a skill name
 
 ### Requirement: Authenticated Skill Artifact Downloads
-The system SHALL request both raw Markdown and zip archive artifacts using the selected skill's persisted ID while preserving authentication and human-readable download filenames.
-
-#### Scenario: User downloads raw Markdown
-- **WHEN** an authenticated user activates the raw Markdown download action for a loaded skill
-- **THEN** the system requests `/api/v2/skills/{id}/download` with that skill's persisted ID and downloads its `SKILL.md` artifact
+The system SHALL treat the complete ZIP package referenced by the selected skill's `downloadUrl` as the only downloadable/installable artifact and SHALL keep detail Markdown available only as preview/source content.
 
 #### Scenario: User downloads zip archive
 - **WHEN** an authenticated user activates the archive download action for a loaded skill
-- **THEN** the system requests `/api/v2/skills/{id}/archive` with that skill's persisted ID and downloads its zip archive
+- **THEN** the system requests the catalog-provided `downloadUrl` through the authenticated API layer and downloads the complete portable ZIP package
+
+#### Scenario: Download URL identifies the selected skill
+- **WHEN** the backend returns `downloadUrl` for a persisted skill ID
+- **THEN** the system uses that URL for the ZIP action without substituting the skill's human-readable name into the artifact route
+
+#### Scenario: User inspects detail Markdown
+- **WHEN** a skill detail response contains Markdown content
+- **THEN** the system renders that content as readable preview/source information and does not label it as a complete installable artifact
+
+#### Scenario: User views available download actions
+- **WHEN** the skill detail page is rendered
+- **THEN** the system exposes a ZIP package download action and does not expose a standalone raw Markdown download action
+
+#### Scenario: Client prepares skill artifact requests
+- **WHEN** the client prepares available artifact queries for a skill
+- **THEN** the system does not call or expose `GET /api/v2/skills/{id}/download`
 
 #### Scenario: Backend supplies a download filename
 - **WHEN** an artifact response includes a valid content-disposition filename
@@ -75,13 +87,12 @@ The system SHALL request both raw Markdown and zip archive artifacts using the s
 
 #### Scenario: Backend omits a download filename
 - **WHEN** an artifact response does not include a usable content-disposition filename
-- **THEN** the system derives a deterministic human-readable fallback filename from the loaded skill name rather than its persisted ID
+- **THEN** the system derives a deterministic human-readable ZIP filename from the loaded skill name rather than its persisted ID
 
 #### Scenario: Download request fails
-- **WHEN** a raw Markdown or archive download request fails for a non-authentication reason
+- **WHEN** the ZIP archive download request fails for a non-authentication reason
 - **THEN** the system communicates the failure to the user without leaving the page in a broken state
 
 #### Scenario: Download request receives unauthorized response
 - **WHEN** a download request receives an unauthorized response
 - **THEN** the system applies the existing authenticated API session handling behavior
-

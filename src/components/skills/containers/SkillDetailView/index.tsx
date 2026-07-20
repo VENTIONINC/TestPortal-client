@@ -3,7 +3,7 @@
 
 import { memo } from 'react';
 import { Button, Grid, GridItem, Heading, HStack, Separator, Skeleton, Text, VStack } from '@chakra-ui/react';
-import { FiDownload, FiPackage } from 'react-icons/fi';
+import { FiPackage } from 'react-icons/fi';
 
 import { SkillMarkdownPreview, SkillTag } from '@/components/skills/components';
 import { useSkillDetail, useSkillDownloads } from '@/components/skills/hooks';
@@ -19,16 +19,13 @@ const MetadataRow = ({ label, value }: { label: string; value: string }) => (
 );
 
 export const SkillDetailView = memo(() => {
-  const { skillId, metadata, content, isFetching, isInitialLoading, error, isNotFound, hasInvalidSkillId } =
+  const { metadata, content, isFetching, isInitialLoading, error, isNotFound, hasInvalidSkillId } =
     useSkillDetail();
   const {
-    markdownError,
     archiveError,
-    isDownloadingMarkdown,
     isDownloadingArchive,
-    handleMarkdownDownload,
     handleArchiveDownload,
-  } = useSkillDownloads(skillId, metadata?.name);
+  } = useSkillDownloads(metadata?.downloadUrl, metadata?.name);
 
   if (hasInvalidSkillId) {
     return (
@@ -96,27 +93,12 @@ export const SkillDetailView = memo(() => {
                 <VStack align="stretch" gap={3}>
                   <Button
                     variant="primary"
-                    onClick={handleMarkdownDownload}
-                    loading={isDownloadingMarkdown}
-                    disabled={!metadata?.name}
-                  >
-                    <FiDownload />
-                    Download SKILL.md
-                  </Button>
-                  {markdownError && (
-                    <Text color="status.error.text" fontSize="sm">
-                      {markdownError}
-                    </Text>
-                  )}
-
-                  <Button
-                    variant="secondary"
                     onClick={handleArchiveDownload}
                     loading={isDownloadingArchive}
-                    disabled={!metadata?.name}
+                    disabled={!metadata?.name || !metadata.downloadUrl}
                   >
                     <FiPackage />
-                    Download archive
+                    Download ZIP package
                   </Button>
                   {archiveError && (
                     <Text color="status.error.text" fontSize="sm">

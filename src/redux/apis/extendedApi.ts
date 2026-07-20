@@ -13,19 +13,10 @@ import {
 } from './generatedApi';
 import { TAGS } from './tags';
 
-export interface SkillMarkdownDownloadResult {
-  fileName: string;
-  content: string;
-}
-
 export interface SkillArchiveDownloadResult {
   fileName: string;
   blob: Blob;
 }
-
-export const getSkillMarkdownDownloadPath = (id: string) => `/api/v2/skills/${encodeURIComponent(id)}/download`;
-
-export const getSkillArchiveDownloadPath = (id: string) => `/api/v2/skills/${encodeURIComponent(id)}/archive`;
 
 export const extendedApi = generatedApi
   .enhanceEndpoints({
@@ -93,21 +84,9 @@ export const extendedApi = generatedApi
         }),
         invalidatesTags: [TAGS.Result],
       }),
-      downloadSkillMarkdown: build.query<SkillMarkdownDownloadResult, { id: string; name: string }>({
-        query: ({ id }) => ({
-          url: getSkillMarkdownDownloadPath(id),
-          method: 'GET',
-          responseHandler: 'text',
-        }),
-        transformResponse: (content: string, meta: FetchBaseQueryMeta | undefined, arg) => ({
-          content,
-          fileName: getDownloadFilename(meta?.response?.headers, `${arg.name}-SKILL.md`),
-        }),
-        providesTags: ['Skills'],
-      }),
-      downloadSkillArchive: build.query<SkillArchiveDownloadResult, { id: string; name: string }>({
-        query: ({ id }) => ({
-          url: getSkillArchiveDownloadPath(id),
+      downloadSkillArchive: build.query<SkillArchiveDownloadResult, { downloadUrl: string; name: string }>({
+        query: ({ downloadUrl }) => ({
+          url: downloadUrl,
           method: 'GET',
           responseHandler: (response) => response.blob(),
         }),
@@ -132,6 +111,5 @@ export const {
   useExportDashboardPdfMutation,
   useBulkReviewMutation,
   useLazyDownloadSkillArchiveQuery,
-  useLazyDownloadSkillMarkdownQuery,
   usePostApiV2UploadCtrfReportMutation,
 } = extendedApi;

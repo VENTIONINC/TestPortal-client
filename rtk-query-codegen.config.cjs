@@ -1,6 +1,5 @@
 module.exports = {
-  schemaFile:
-    process.env.RTK_QUERY_OPENAPI_URL ?? 'http://dev-alb-210489249.eu-central-1.elb.amazonaws.com/api/openapi.json',
+  schemaFile: 'http://localhost:3001/api/openapi.json', //'http://dev-alb-210489249.eu-central-1.elb.amazonaws.com/api/openapi.json',
   apiFile: './src/redux/apis/baseApi.ts',
   apiImport: 'baseApi',
   outputFiles: {
