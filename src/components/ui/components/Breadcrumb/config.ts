@@ -46,13 +46,6 @@ export const routerConfig = {
   [PATHS.REPORT_GENERATOR_CTRF]: [{ title: 'Report Generator', url: PATHS.REPORT_GENERATOR }, { title: 'CTRF' }],
 };
 
-const formatRouteTitle = (value: string) =>
-  value
-    .split('-')
-    .filter(Boolean)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(' ');
-
 export const getRouteBreadcrumbs = (pathname: string) => {
   const staticRoute = (routerConfig as Record<string, Array<{ title: string; url?: string }>>)[pathname];
 
@@ -60,16 +53,16 @@ export const getRouteBreadcrumbs = (pathname: string) => {
     return staticRoute;
   }
 
-  const skillDetailPrefix = PATHS.SKILL_DETAILS.replace(':name', '');
+  const skillDetailPrefix = PATHS.SKILL_DETAILS.replace(':id', '');
 
   if (pathname.startsWith(skillDetailPrefix)) {
-    const skillName = pathname.slice(skillDetailPrefix.length).replace(/^\/+/, '');
+    const skillId = pathname.slice(skillDetailPrefix.length).replace(/^\/+/, '');
 
-    if (!skillName) {
+    if (!skillId) {
       return [{ title: 'Skills' }];
     }
 
-    return [{ title: 'Skills', url: PATHS.SKILLS }, { title: formatRouteTitle(decodeURIComponent(skillName)) }];
+    return [{ title: 'Skills', url: PATHS.SKILLS }, { title: 'Skill details' }];
   }
 
   return undefined;

@@ -5,7 +5,7 @@ import { skipToken } from '@reduxjs/toolkit/query';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { useParams } from 'react-router';
 
-import { type GetApiV2SkillsByNameApiArg, useGetApiV2SkillsByNameQuery } from '@/redux/apis/generatedApi';
+import { type GetApiV2SkillsByIdApiArg, useGetApiV2SkillsByIdQuery } from '@/redux/apis/generatedApi';
 
 const getErrorStatus = (error: unknown) => {
   if (error && typeof error === 'object' && 'status' in error) {
@@ -16,14 +16,14 @@ const getErrorStatus = (error: unknown) => {
 };
 
 export const useSkillDetail = () => {
-  const { name } = useParams<{ name: string }>();
-  const skillName = name ? decodeURIComponent(name).trim() : '';
-  const queryArg = skillName ? ({ name: skillName as GetApiV2SkillsByNameApiArg['name'] } as const) : skipToken;
-  const { data, isLoading, isFetching, error } = useGetApiV2SkillsByNameQuery(queryArg);
+  const { id } = useParams<{ id: string }>();
+  const skillId = id?.trim() ?? '';
+  const queryArg = skillId ? ({ id: skillId as GetApiV2SkillsByIdApiArg['id'] } as const) : skipToken;
+  const { data, isLoading, isFetching, error } = useGetApiV2SkillsByIdQuery(queryArg);
   const isInitialLoading = isLoading && !data;
 
   return {
-    skillName,
+    skillId,
     skill: data,
     metadata: data?.metadata,
     content: data?.content ?? '',
@@ -33,6 +33,6 @@ export const useSkillDetail = () => {
     isRefetching: isFetching && !isInitialLoading,
     error,
     isNotFound: getErrorStatus(error) === 404,
-    hasInvalidSkillName: !skillName,
+    hasInvalidSkillId: !skillId,
   };
 };

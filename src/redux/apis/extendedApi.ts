@@ -23,6 +23,10 @@ export interface SkillArchiveDownloadResult {
   blob: Blob;
 }
 
+export const getSkillMarkdownDownloadPath = (id: string) => `/api/v2/skills/${encodeURIComponent(id)}/download`;
+
+export const getSkillArchiveDownloadPath = (id: string) => `/api/v2/skills/${encodeURIComponent(id)}/archive`;
+
 export const extendedApi = generatedApi
   .enhanceEndpoints({
     endpoints: {
@@ -89,9 +93,9 @@ export const extendedApi = generatedApi
         }),
         invalidatesTags: [TAGS.Result],
       }),
-      downloadSkillMarkdown: build.query<SkillMarkdownDownloadResult, { name: string }>({
-        query: ({ name }) => ({
-          url: `/api/v2/skills/${encodeURIComponent(name)}/download`,
+      downloadSkillMarkdown: build.query<SkillMarkdownDownloadResult, { id: string; name: string }>({
+        query: ({ id }) => ({
+          url: getSkillMarkdownDownloadPath(id),
           method: 'GET',
           responseHandler: 'text',
         }),
@@ -101,9 +105,9 @@ export const extendedApi = generatedApi
         }),
         providesTags: ['Skills'],
       }),
-      downloadSkillArchive: build.query<SkillArchiveDownloadResult, { name: string }>({
-        query: ({ name }) => ({
-          url: `/api/v2/skills/${encodeURIComponent(name)}/archive`,
+      downloadSkillArchive: build.query<SkillArchiveDownloadResult, { id: string; name: string }>({
+        query: ({ id }) => ({
+          url: getSkillArchiveDownloadPath(id),
           method: 'GET',
           responseHandler: (response) => response.blob(),
         }),

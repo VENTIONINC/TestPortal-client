@@ -16,8 +16,8 @@ export const SkillsCatalogView = memo(() => {
   const { skills, isInitialLoading, error, isEmpty } = useSkillsCatalog();
 
   const handleSelectSkill = useCallback(
-    (skillName: string) => {
-      navigate(PATHS.SKILL_DETAILS.replace(':name', encodeURIComponent(skillName)));
+    (skillId: string) => {
+      navigate(PATHS.SKILL_DETAILS.replace(':id', encodeURIComponent(skillId)));
     },
     [navigate],
   );
@@ -54,7 +54,7 @@ export const SkillsCatalogView = memo(() => {
         {skills.length > 0 && (
           <Grid templateColumns="repeat(auto-fit, minmax(320px, 1fr))" gap={6} justifyContent="center">
             {skills.map((skill) => (
-              <Skeleton key={skill.name} loading={false} minH="224px" borderRadius="xl">
+              <Skeleton key={skill.id} loading={false} minH="224px" borderRadius="xl">
                 <SkillCard skill={skill} onSelect={handleSelectSkill} />
               </Skeleton>
             ))}

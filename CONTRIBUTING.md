@@ -27,7 +27,8 @@ copyright attribution.
 2. Create a local `.env` file based on `.env.example`.
 3. Start the development server with `yarn dev`.
 4. Run `yarn generate-api` or `yarn generate-mcp-api` when API schema changes
-   require regenerated client types.
+   require regenerated client types. To regenerate the main API from the local
+   backend, run `RTK_QUERY_OPENAPI_URL=http://localhost:3001/api/openapi.json yarn generate-api`.
 5. Use `yarn new:file -- <path>` when creating a new supported source file so
    the standard Apache 2.0 header is added automatically.
 6. Use `yarn headers:add` to backfill the standard header across supported

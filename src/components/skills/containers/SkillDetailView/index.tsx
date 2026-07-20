@@ -19,7 +19,7 @@ const MetadataRow = ({ label, value }: { label: string; value: string }) => (
 );
 
 export const SkillDetailView = memo(() => {
-  const { skillName, metadata, content, isFetching, isInitialLoading, error, isNotFound, hasInvalidSkillName } =
+  const { skillId, metadata, content, isFetching, isInitialLoading, error, isNotFound, hasInvalidSkillId } =
     useSkillDetail();
   const {
     markdownError,
@@ -28,9 +28,9 @@ export const SkillDetailView = memo(() => {
     isDownloadingArchive,
     handleMarkdownDownload,
     handleArchiveDownload,
-  } = useSkillDownloads(skillName);
+  } = useSkillDownloads(skillId, metadata?.name);
 
-  if (hasInvalidSkillName) {
+  if (hasInvalidSkillId) {
     return (
       <VStack justify="center" align="center" minHeight="400px" gap={4}>
         <Text fontSize="lg" color="text.main">
@@ -87,7 +87,7 @@ export const SkillDetailView = memo(() => {
                 <Separator />
 
                 <VStack align="stretch" gap={4}>
-                  <MetadataRow label="Skill Name" value={metadata?.name ?? skillName} />
+                  <MetadataRow label="Skill Name" value={metadata?.name ?? 'Unavailable'} />
                   {metadata?.compatibility && <MetadataRow label="Compatibility" value={metadata.compatibility} />}
                 </VStack>
 
@@ -98,7 +98,7 @@ export const SkillDetailView = memo(() => {
                     variant="primary"
                     onClick={handleMarkdownDownload}
                     loading={isDownloadingMarkdown}
-                    disabled={!metadata}
+                    disabled={!metadata?.name}
                   >
                     <FiDownload />
                     Download SKILL.md
@@ -113,7 +113,7 @@ export const SkillDetailView = memo(() => {
                     variant="secondary"
                     onClick={handleArchiveDownload}
                     loading={isDownloadingArchive}
-                    disabled={!metadata}
+                    disabled={!metadata?.name}
                   >
                     <FiPackage />
                     Download archive

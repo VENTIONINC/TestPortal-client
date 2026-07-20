@@ -15,21 +15,21 @@ const getDownloadErrorMessage = (error: unknown) =>
     ? extractApiError(error as FetchBaseQueryError | SerializedError)
     : 'Download failed. Please try again.';
 
-export const useSkillDownloads = (skillName: string) => {
+export const useSkillDownloads = (skillId: string, skillName?: string) => {
   const [markdownError, setMarkdownError] = useState<string>();
   const [archiveError, setArchiveError] = useState<string>();
   const [downloadMarkdown, { isFetching: isDownloadingMarkdown }] = useLazyDownloadSkillMarkdownQuery();
   const [downloadArchive, { isFetching: isDownloadingArchive }] = useLazyDownloadSkillArchiveQuery();
 
   const handleMarkdownDownload = useCallback(async () => {
-    if (!skillName) {
+    if (!skillId || !skillName) {
       return;
     }
 
     setMarkdownError(undefined);
 
     try {
-      const result = await downloadMarkdown({ name: skillName }).unwrap();
+      const result = await downloadMarkdown({ id: skillId, name: skillName }).unwrap();
 
       triggerBrowserDownload({
         file: result.content,
@@ -47,17 +47,17 @@ export const useSkillDownloads = (skillName: string) => {
       setMarkdownError(message);
       toaster.create({ title: 'Markdown download failed', description: message, type: 'error' });
     }
-  }, [downloadMarkdown, skillName]);
+  }, [downloadMarkdown, skillId, skillName]);
 
   const handleArchiveDownload = useCallback(async () => {
-    if (!skillName) {
+    if (!skillId || !skillName) {
       return;
     }
 
     setArchiveError(undefined);
 
     try {
-      const result = await downloadArchive({ name: skillName }).unwrap();
+      const result = await downloadArchive({ id: skillId, name: skillName }).unwrap();
 
       triggerBrowserDownload({
         file: result.blob,
@@ -75,7 +75,7 @@ export const useSkillDownloads = (skillName: string) => {
       setArchiveError(message);
       toaster.create({ title: 'Archive download failed', description: message, type: 'error' });
     }
-  }, [downloadArchive, skillName]);
+  }, [downloadArchive, skillId, skillName]);
 
   return {
     markdownError,
