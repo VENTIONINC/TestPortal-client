@@ -10,7 +10,7 @@ import { SkillTag } from './SkillTag';
 
 interface SkillCardProps {
   skill: SkillMetadata;
-  onSelect: (skillName: string) => void;
+  onSelect: (skillId: string) => void;
 }
 
 export const SkillCard = memo(function SkillCard({ skill, onSelect }: SkillCardProps) {
@@ -24,7 +24,7 @@ export const SkillCard = memo(function SkillCard({ skill, onSelect }: SkillCardP
       }}
       transition="all 0.2s"
       cursor="pointer"
-      onClick={() => onSelect(skill.name)}
+      onClick={() => onSelect(skill.id)}
     >
       <Card.Body p={4} gap={4}>
         <VStack align="start" gap={3}>

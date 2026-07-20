@@ -1,25 +1,25 @@
-import { baseApi as api } from './baseApi';
+import { baseApi as api } from "./baseApi";
 export const addTagTypes = [
-  'System',
-  'Issues',
-  'Results',
-  'Specs',
-  'Assumptions',
-  'Result Errors',
-  'Executions',
-  'Reports',
-  'Upload',
-  'Users',
-  'MCP',
-  'Admin Users',
-  'Authentication',
-  'Error Formatter',
-  'Prompts',
-  'Skills',
-  'Projects',
-  'CTRF',
-  'Upload API Keys',
-  'Exports',
+  "System",
+  "Issues",
+  "Results",
+  "Specs",
+  "Assumptions",
+  "Result Errors",
+  "Executions",
+  "Reports",
+  "Upload",
+  "Users",
+  "MCP",
+  "Admin Users",
+  "Authentication",
+  "Error Formatter",
+  "Prompts",
+  "Skills",
+  "Projects",
+  "CTRF",
+  "Upload API Keys",
+  "Exports",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -27,11 +27,17 @@ const injectedRtkApi = api
   })
   .injectEndpoints({
     endpoints: (build) => ({
-      getApiV2Status: build.query<GetApiV2StatusApiResponse, GetApiV2StatusApiArg>({
+      getApiV2Status: build.query<
+        GetApiV2StatusApiResponse,
+        GetApiV2StatusApiArg
+      >({
         query: () => ({ url: `/api/v2/status` }),
-        providesTags: ['System'],
+        providesTags: ["System"],
       }),
-      getApiV2Issues: build.query<GetApiV2IssuesApiResponse, GetApiV2IssuesApiArg>({
+      getApiV2Issues: build.query<
+        GetApiV2IssuesApiResponse,
+        GetApiV2IssuesApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/issues`,
           params: {
@@ -42,32 +48,41 @@ const injectedRtkApi = api
             limit: queryArg.limit,
           },
         }),
-        providesTags: ['Issues'],
+        providesTags: ["Issues"],
       }),
-      postApiV2Issues: build.mutation<PostApiV2IssuesApiResponse, PostApiV2IssuesApiArg>({
+      postApiV2Issues: build.mutation<
+        PostApiV2IssuesApiResponse,
+        PostApiV2IssuesApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/issues`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.createIssueRequest,
         }),
-        invalidatesTags: ['Issues'],
+        invalidatesTags: ["Issues"],
       }),
-      getApiV2IssuesByIssueId: build.query<GetApiV2IssuesByIssueIdApiResponse, GetApiV2IssuesByIssueIdApiArg>({
+      getApiV2IssuesByIssueId: build.query<
+        GetApiV2IssuesByIssueIdApiResponse,
+        GetApiV2IssuesByIssueIdApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/issues/${queryArg.issueId}`,
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ['Issues'],
+        providesTags: ["Issues"],
       }),
-      patchApiV2IssuesByIssueId: build.mutation<PatchApiV2IssuesByIssueIdApiResponse, PatchApiV2IssuesByIssueIdApiArg>({
+      patchApiV2IssuesByIssueId: build.mutation<
+        PatchApiV2IssuesByIssueIdApiResponse,
+        PatchApiV2IssuesByIssueIdApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/issues/${queryArg.issueId}`,
-          method: 'PATCH',
+          method: "PATCH",
           body: queryArg.updateIssueRequest,
         }),
-        invalidatesTags: ['Issues'],
+        invalidatesTags: ["Issues"],
       }),
       deleteApiV2IssuesByIssueId: build.mutation<
         DeleteApiV2IssuesByIssueIdApiResponse,
@@ -75,14 +90,17 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/issues/${queryArg.issueId}`,
-          method: 'DELETE',
+          method: "DELETE",
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ['Issues', 'Results'],
+        invalidatesTags: ["Issues", "Results"],
       }),
-      getApiV2IssuesWithStats: build.query<GetApiV2IssuesWithStatsApiResponse, GetApiV2IssuesWithStatsApiArg>({
+      getApiV2IssuesWithStats: build.query<
+        GetApiV2IssuesWithStatsApiResponse,
+        GetApiV2IssuesWithStatsApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/issues/with-stats`,
           params: {
@@ -95,9 +113,12 @@ const injectedRtkApi = api
             statTo: queryArg.statTo,
           },
         }),
-        providesTags: ['Issues'],
+        providesTags: ["Issues"],
       }),
-      getApiV2Results: build.query<GetApiV2ResultsApiResponse, GetApiV2ResultsApiArg>({
+      getApiV2Results: build.query<
+        GetApiV2ResultsApiResponse,
+        GetApiV2ResultsApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/results`,
           params: {
@@ -107,27 +128,30 @@ const injectedRtkApi = api
             specFile: queryArg.specFile,
             specName: queryArg.specName,
             environment: queryArg.environment,
-            type: queryArg['type'],
+            type: queryArg["type"],
             status: queryArg.status,
             reviewStatus: queryArg.reviewStatus,
             errorMessage: queryArg.errorMessage,
             issueName: queryArg.issueName,
-            from: queryArg['from'],
+            from: queryArg["from"],
             to: queryArg.to,
             page: queryArg.page,
             limit: queryArg.limit,
           },
         }),
-        providesTags: ['Results'],
+        providesTags: ["Results"],
       }),
-      getApiV2ResultsByResultId: build.query<GetApiV2ResultsByResultIdApiResponse, GetApiV2ResultsByResultIdApiArg>({
+      getApiV2ResultsByResultId: build.query<
+        GetApiV2ResultsByResultIdApiResponse,
+        GetApiV2ResultsByResultIdApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/results/${queryArg.resultId}`,
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ['Results'],
+        providesTags: ["Results"],
       }),
       deleteApiV2ResultsByResultId: build.mutation<
         DeleteApiV2ResultsByResultIdApiResponse,
@@ -135,14 +159,17 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/results/${queryArg.resultId}`,
-          method: 'DELETE',
+          method: "DELETE",
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ['Results'],
+        invalidatesTags: ["Results"],
       }),
-      getApiV2ResultsStats: build.query<GetApiV2ResultsStatsApiResponse, GetApiV2ResultsStatsApiArg>({
+      getApiV2ResultsStats: build.query<
+        GetApiV2ResultsStatsApiResponse,
+        GetApiV2ResultsStatsApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/results-stats`,
           params: {
@@ -150,7 +177,7 @@ const injectedRtkApi = api
             dates: queryArg.dates,
           },
         }),
-        providesTags: ['Results'],
+        providesTags: ["Results"],
       }),
       patchApiV2ResultsByResultIdAnalysis: build.mutation<
         PatchApiV2ResultsByResultIdAnalysisApiResponse,
@@ -158,10 +185,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/results/${queryArg.resultId}/analysis`,
-          method: 'PATCH',
+          method: "PATCH",
           body: queryArg.updateResultAnalysisRequest,
         }),
-        invalidatesTags: ['Results'],
+        invalidatesTags: ["Results"],
       }),
       patchApiV2ResultsByResultIdAnalysisFeedback: build.mutation<
         PatchApiV2ResultsByResultIdAnalysisFeedbackApiResponse,
@@ -169,37 +196,46 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/results/${queryArg.resultId}/analysis-feedback`,
-          method: 'PATCH',
+          method: "PATCH",
           body: queryArg.updateResultAnalysisFeedbackRequest,
         }),
-        invalidatesTags: ['Results'],
+        invalidatesTags: ["Results"],
       }),
-      getApiV2SpecsBySpecId: build.query<GetApiV2SpecsBySpecIdApiResponse, GetApiV2SpecsBySpecIdApiArg>({
+      getApiV2SpecsBySpecId: build.query<
+        GetApiV2SpecsBySpecIdApiResponse,
+        GetApiV2SpecsBySpecIdApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/specs/${queryArg.specId}`,
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ['Specs'],
+        providesTags: ["Specs"],
       }),
-      deleteApiV2SpecsBySpecId: build.mutation<DeleteApiV2SpecsBySpecIdApiResponse, DeleteApiV2SpecsBySpecIdApiArg>({
+      deleteApiV2SpecsBySpecId: build.mutation<
+        DeleteApiV2SpecsBySpecIdApiResponse,
+        DeleteApiV2SpecsBySpecIdApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/specs/${queryArg.specId}`,
-          method: 'DELETE',
+          method: "DELETE",
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ['Specs'],
+        invalidatesTags: ["Specs"],
       }),
-      postApiV2Assumptions: build.mutation<PostApiV2AssumptionsApiResponse, PostApiV2AssumptionsApiArg>({
+      postApiV2Assumptions: build.mutation<
+        PostApiV2AssumptionsApiResponse,
+        PostApiV2AssumptionsApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/assumptions`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.createAssumptionRequest,
         }),
-        invalidatesTags: ['Assumptions'],
+        invalidatesTags: ["Assumptions"],
       }),
       patchApiV2AssumptionsByAssumptionId: build.mutation<
         PatchApiV2AssumptionsByAssumptionIdApiResponse,
@@ -207,10 +243,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/assumptions/${queryArg.assumptionId}`,
-          method: 'PATCH',
+          method: "PATCH",
           body: queryArg.updateAssumptionRequest,
         }),
-        invalidatesTags: ['Assumptions'],
+        invalidatesTags: ["Assumptions"],
       }),
       getApiV2AssumptionsByAssumptionId: build.query<
         GetApiV2AssumptionsByAssumptionIdApiResponse,
@@ -222,7 +258,7 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ['Assumptions'],
+        providesTags: ["Assumptions"],
       }),
       deleteApiV2AssumptionsByAssumptionId: build.mutation<
         DeleteApiV2AssumptionsByAssumptionIdApiResponse,
@@ -230,12 +266,12 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/assumptions/${queryArg.assumptionId}`,
-          method: 'DELETE',
+          method: "DELETE",
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ['Assumptions'],
+        invalidatesTags: ["Assumptions"],
       }),
       patchApiV2ResultErrorsByResultErrorIdAssignIssue: build.mutation<
         PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiResponse,
@@ -243,10 +279,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/result-errors/${queryArg.resultErrorId}/assign-issue`,
-          method: 'PATCH',
+          method: "PATCH",
           body: queryArg.assignIssueRequest,
         }),
-        invalidatesTags: ['Result Errors'],
+        invalidatesTags: ["Result Errors"],
       }),
       patchApiV2ResultErrorsByResultErrorIdReview: build.mutation<
         PatchApiV2ResultErrorsByResultErrorIdReviewApiResponse,
@@ -254,9 +290,9 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/result-errors/${queryArg.resultErrorId}/review`,
-          method: 'PATCH',
+          method: "PATCH",
         }),
-        invalidatesTags: ['Result Errors'],
+        invalidatesTags: ["Result Errors"],
       }),
       patchApiV2ResultErrorsBulkReview: build.mutation<
         PatchApiV2ResultErrorsBulkReviewApiResponse,
@@ -264,10 +300,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/result-errors/bulk-review`,
-          method: 'PATCH',
+          method: "PATCH",
           body: queryArg.bulkReviewRequest,
         }),
-        invalidatesTags: ['Result Errors'],
+        invalidatesTags: ["Result Errors"],
       }),
       postApiV2ResultErrorsAnalyze: build.mutation<
         PostApiV2ResultErrorsAnalyzeApiResponse,
@@ -275,10 +311,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/result-errors/analyze`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.analyzeResultErrorsRequest,
         }),
-        invalidatesTags: ['Result Errors'],
+        invalidatesTags: ["Result Errors"],
       }),
       getApiV2ResultErrorsByResultErrorId: build.query<
         GetApiV2ResultErrorsByResultErrorIdApiResponse,
@@ -290,7 +326,7 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ['Result Errors'],
+        providesTags: ["Result Errors"],
       }),
       getApiV2ExecutionsByExecutionId: build.query<
         GetApiV2ExecutionsByExecutionIdApiResponse,
@@ -302,7 +338,7 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ['Executions'],
+        providesTags: ["Executions"],
       }),
       deleteApiV2ExecutionsByExecutionId: build.mutation<
         DeleteApiV2ExecutionsByExecutionIdApiResponse,
@@ -310,20 +346,23 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/executions/${queryArg.executionId}`,
-          method: 'DELETE',
+          method: "DELETE",
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ['Executions'],
+        invalidatesTags: ["Executions"],
       }),
-      postApiV2UploadJsonReport: build.mutation<PostApiV2UploadJsonReportApiResponse, PostApiV2UploadJsonReportApiArg>({
+      postApiV2UploadJsonReport: build.mutation<
+        PostApiV2UploadJsonReportApiResponse,
+        PostApiV2UploadJsonReportApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/upload-json-report`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.body,
         }),
-        invalidatesTags: ['Reports', 'Results'],
+        invalidatesTags: ["Reports", "Results"],
       }),
       postApiV2UploadJsonReportApiKey: build.mutation<
         PostApiV2UploadJsonReportApiKeyApiResponse,
@@ -331,22 +370,28 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/upload-json-report-api-key`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.body,
         }),
-        invalidatesTags: ['Reports', 'Results', 'Upload'],
+        invalidatesTags: ["Reports", "Results", "Upload"],
       }),
-      getApiV2UsersByUserId: build.query<GetApiV2UsersByUserIdApiResponse, GetApiV2UsersByUserIdApiArg>({
+      getApiV2UsersByUserId: build.query<
+        GetApiV2UsersByUserIdApiResponse,
+        GetApiV2UsersByUserIdApiArg
+      >({
         query: (queryArg) => ({ url: `/api/v2/users/${queryArg.userId}` }),
-        providesTags: ['Users'],
+        providesTags: ["Users"],
       }),
-      patchApiV2UsersByUserId: build.mutation<PatchApiV2UsersByUserIdApiResponse, PatchApiV2UsersByUserIdApiArg>({
+      patchApiV2UsersByUserId: build.mutation<
+        PatchApiV2UsersByUserIdApiResponse,
+        PatchApiV2UsersByUserIdApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/users/${queryArg.userId}`,
-          method: 'PATCH',
+          method: "PATCH",
           body: queryArg.userUpdateRequest,
         }),
-        invalidatesTags: ['Users'],
+        invalidatesTags: ["Users"],
       }),
       patchApiV2UsersByUserIdIntegrations: build.mutation<
         PatchApiV2UsersByUserIdIntegrationsApiResponse,
@@ -354,10 +399,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/users/${queryArg.userId}/integrations`,
-          method: 'PATCH',
+          method: "PATCH",
           body: queryArg.userIntegrationsUpdateRequest,
         }),
-        invalidatesTags: ['Users'],
+        invalidatesTags: ["Users"],
       }),
       postApiV2UsersByUserIdMcpToken: build.mutation<
         PostApiV2UsersByUserIdMcpTokenApiResponse,
@@ -365,9 +410,9 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/users/${queryArg.userId}/mcp-token`,
-          method: 'POST',
+          method: "POST",
         }),
-        invalidatesTags: ['MCP'],
+        invalidatesTags: ["MCP"],
       }),
       deleteApiV2UsersByUserIdMcpToken: build.mutation<
         DeleteApiV2UsersByUserIdMcpTokenApiResponse,
@@ -375,13 +420,16 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/users/${queryArg.userId}/mcp-token`,
-          method: 'DELETE',
+          method: "DELETE",
         }),
-        invalidatesTags: ['MCP'],
+        invalidatesTags: ["MCP"],
       }),
-      getApiV2AdminUsers: build.query<GetApiV2AdminUsersApiResponse, GetApiV2AdminUsersApiArg>({
+      getApiV2AdminUsers: build.query<
+        GetApiV2AdminUsersApiResponse,
+        GetApiV2AdminUsersApiArg
+      >({
         query: () => ({ url: `/api/v2/admin/users` }),
-        providesTags: ['Admin Users'],
+        providesTags: ["Admin Users"],
       }),
       postApiV2AdminUsersByUserIdApprove: build.mutation<
         PostApiV2AdminUsersByUserIdApproveApiResponse,
@@ -389,9 +437,9 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/admin/users/${queryArg.userId}/approve`,
-          method: 'POST',
+          method: "POST",
         }),
-        invalidatesTags: ['Admin Users'],
+        invalidatesTags: ["Admin Users"],
       }),
       postApiV2AdminUsersByUserIdSuspend: build.mutation<
         PostApiV2AdminUsersByUserIdSuspendApiResponse,
@@ -399,9 +447,9 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/admin/users/${queryArg.userId}/suspend`,
-          method: 'POST',
+          method: "POST",
         }),
-        invalidatesTags: ['Admin Users'],
+        invalidatesTags: ["Admin Users"],
       }),
       postApiV2AdminUsersByUserIdRestore: build.mutation<
         PostApiV2AdminUsersByUserIdRestoreApiResponse,
@@ -409,9 +457,9 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/admin/users/${queryArg.userId}/restore`,
-          method: 'POST',
+          method: "POST",
         }),
-        invalidatesTags: ['Admin Users'],
+        invalidatesTags: ["Admin Users"],
       }),
       patchApiV2AdminUsersByUserIdRole: build.mutation<
         PatchApiV2AdminUsersByUserIdRoleApiResponse,
@@ -419,50 +467,68 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/admin/users/${queryArg.userId}/role`,
-          method: 'PATCH',
+          method: "PATCH",
           body: queryArg.adminUserRoleUpdateRequest,
         }),
-        invalidatesTags: ['Admin Users'],
+        invalidatesTags: ["Admin Users"],
       }),
-      getApiV2AuthConfig: build.query<GetApiV2AuthConfigApiResponse, GetApiV2AuthConfigApiArg>({
+      getApiV2AuthConfig: build.query<
+        GetApiV2AuthConfigApiResponse,
+        GetApiV2AuthConfigApiArg
+      >({
         query: () => ({ url: `/api/v2/auth/config` }),
-        providesTags: ['Authentication'],
+        providesTags: ["Authentication"],
       }),
-      postApiV2AuthSignup: build.mutation<PostApiV2AuthSignupApiResponse, PostApiV2AuthSignupApiArg>({
+      postApiV2AuthSignup: build.mutation<
+        PostApiV2AuthSignupApiResponse,
+        PostApiV2AuthSignupApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/auth/signup`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.userSignupRequest,
         }),
-        invalidatesTags: ['Authentication'],
+        invalidatesTags: ["Authentication"],
       }),
-      postApiV2AuthLogin: build.mutation<PostApiV2AuthLoginApiResponse, PostApiV2AuthLoginApiArg>({
+      postApiV2AuthLogin: build.mutation<
+        PostApiV2AuthLoginApiResponse,
+        PostApiV2AuthLoginApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/auth/login`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.userLoginRequest,
         }),
-        invalidatesTags: ['Authentication'],
+        invalidatesTags: ["Authentication"],
       }),
-      postApiV2AuthRefreshToken: build.mutation<PostApiV2AuthRefreshTokenApiResponse, PostApiV2AuthRefreshTokenApiArg>({
+      postApiV2AuthRefreshToken: build.mutation<
+        PostApiV2AuthRefreshTokenApiResponse,
+        PostApiV2AuthRefreshTokenApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/auth/refresh-token`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.refreshTokenRequest,
         }),
-        invalidatesTags: ['Authentication'],
+        invalidatesTags: ["Authentication"],
       }),
-      postApiV2AuthLogout: build.mutation<PostApiV2AuthLogoutApiResponse, PostApiV2AuthLogoutApiArg>({
-        query: () => ({ url: `/api/v2/auth/logout`, method: 'POST' }),
-        invalidatesTags: ['Authentication'],
+      postApiV2AuthLogout: build.mutation<
+        PostApiV2AuthLogoutApiResponse,
+        PostApiV2AuthLogoutApiArg
+      >({
+        query: () => ({ url: `/api/v2/auth/logout`, method: "POST" }),
+        invalidatesTags: ["Authentication"],
       }),
-      postApiV2ErrorFormatter: build.mutation<PostApiV2ErrorFormatterApiResponse, PostApiV2ErrorFormatterApiArg>({
+      postApiV2ErrorFormatter: build.mutation<
+        PostApiV2ErrorFormatterApiResponse,
+        PostApiV2ErrorFormatterApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/error-formatter`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.errorFormatterRequest,
         }),
-        invalidatesTags: ['Error Formatter'],
+        invalidatesTags: ["Error Formatter"],
       }),
       postApiV2ErrorFormatterResult: build.mutation<
         PostApiV2ErrorFormatterResultApiResponse,
@@ -470,18 +536,24 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/error-formatter/result`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.errorSuggestionRequest,
         }),
-        invalidatesTags: ['Error Formatter'],
+        invalidatesTags: ["Error Formatter"],
       }),
-      getApiV2Prompts: build.query<GetApiV2PromptsApiResponse, GetApiV2PromptsApiArg>({
+      getApiV2Prompts: build.query<
+        GetApiV2PromptsApiResponse,
+        GetApiV2PromptsApiArg
+      >({
         query: () => ({ url: `/api/v2/prompts` }),
-        providesTags: ['Prompts'],
+        providesTags: ["Prompts"],
       }),
-      getApiV2PromptsByName: build.query<GetApiV2PromptsByNameApiResponse, GetApiV2PromptsByNameApiArg>({
+      getApiV2PromptsByName: build.query<
+        GetApiV2PromptsByNameApiResponse,
+        GetApiV2PromptsByNameApiArg
+      >({
         query: (queryArg) => ({ url: `/api/v2/prompts/${queryArg.name}` }),
-        providesTags: ['Prompts'],
+        providesTags: ["Prompts"],
       }),
       postApiV2PromptsByNameGenerate: build.mutation<
         PostApiV2PromptsByNameGenerateApiResponse,
@@ -489,38 +561,68 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/prompts/${queryArg.name}/generate`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.generatePromptRequest,
         }),
-        invalidatesTags: ['Prompts'],
+        invalidatesTags: ["Prompts"],
       }),
-      getApiV2Skills: build.query<GetApiV2SkillsApiResponse, GetApiV2SkillsApiArg>({
+      postApiV2Skills: build.mutation<
+        PostApiV2SkillsApiResponse,
+        PostApiV2SkillsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/skills`,
+          method: "POST",
+          body: queryArg.skillPackageUpload,
+        }),
+        invalidatesTags: ["Skills"],
+      }),
+      getApiV2Skills: build.query<
+        GetApiV2SkillsApiResponse,
+        GetApiV2SkillsApiArg
+      >({
         query: () => ({ url: `/api/v2/skills` }),
-        providesTags: ['Skills'],
+        providesTags: ["Skills"],
       }),
-      getApiV2SkillsByName: build.query<GetApiV2SkillsByNameApiResponse, GetApiV2SkillsByNameApiArg>({
-        query: (queryArg) => ({ url: `/api/v2/skills/${queryArg.name}` }),
-        providesTags: ['Skills'],
-      }),
-      getApiV2SkillsByNameDownload: build.query<
-        GetApiV2SkillsByNameDownloadApiResponse,
-        GetApiV2SkillsByNameDownloadApiArg
+      putApiV2SkillsById: build.mutation<
+        PutApiV2SkillsByIdApiResponse,
+        PutApiV2SkillsByIdApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/skills/${queryArg.name}/download`,
+          url: `/api/v2/skills/${queryArg.id}`,
+          method: "PUT",
+          body: queryArg.skillPackageUpload,
         }),
-        providesTags: ['Skills'],
+        invalidatesTags: ["Skills"],
       }),
-      getApiV2SkillsByNameArchive: build.query<
-        GetApiV2SkillsByNameArchiveApiResponse,
-        GetApiV2SkillsByNameArchiveApiArg
+      deleteApiV2SkillsById: build.mutation<
+        DeleteApiV2SkillsByIdApiResponse,
+        DeleteApiV2SkillsByIdApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/skills/${queryArg.name}/archive`,
+          url: `/api/v2/skills/${queryArg.id}`,
+          method: "DELETE",
         }),
-        providesTags: ['Skills'],
+        invalidatesTags: ["Skills"],
       }),
-      getApiV2Projects: build.query<GetApiV2ProjectsApiResponse, GetApiV2ProjectsApiArg>({
+      getApiV2SkillsById: build.query<
+        GetApiV2SkillsByIdApiResponse,
+        GetApiV2SkillsByIdApiArg
+      >({
+        query: (queryArg) => ({ url: `/api/v2/skills/${queryArg.id}` }),
+        providesTags: ["Skills"],
+      }),
+      getApiV2SkillsByIdArchive: build.query<
+        GetApiV2SkillsByIdArchiveApiResponse,
+        GetApiV2SkillsByIdArchiveApiArg
+      >({
+        query: (queryArg) => ({ url: `/api/v2/skills/${queryArg.id}/archive` }),
+        providesTags: ["Skills"],
+      }),
+      getApiV2Projects: build.query<
+        GetApiV2ProjectsApiResponse,
+        GetApiV2ProjectsApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/projects`,
           params: {
@@ -529,34 +631,46 @@ const injectedRtkApi = api
             name: queryArg.name,
           },
         }),
-        providesTags: ['Projects'],
+        providesTags: ["Projects"],
       }),
-      postApiV2Projects: build.mutation<PostApiV2ProjectsApiResponse, PostApiV2ProjectsApiArg>({
+      postApiV2Projects: build.mutation<
+        PostApiV2ProjectsApiResponse,
+        PostApiV2ProjectsApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/projects`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.createProjectRequest,
         }),
-        invalidatesTags: ['Projects'],
+        invalidatesTags: ["Projects"],
       }),
-      getApiV2ProjectsById: build.query<GetApiV2ProjectsByIdApiResponse, GetApiV2ProjectsByIdApiArg>({
+      getApiV2ProjectsById: build.query<
+        GetApiV2ProjectsByIdApiResponse,
+        GetApiV2ProjectsByIdApiArg
+      >({
         query: (queryArg) => ({ url: `/api/v2/projects/${queryArg.id}` }),
-        providesTags: ['Projects'],
+        providesTags: ["Projects"],
       }),
-      putApiV2ProjectsById: build.mutation<PutApiV2ProjectsByIdApiResponse, PutApiV2ProjectsByIdApiArg>({
+      putApiV2ProjectsById: build.mutation<
+        PutApiV2ProjectsByIdApiResponse,
+        PutApiV2ProjectsByIdApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/projects/${queryArg.id}`,
-          method: 'PUT',
+          method: "PUT",
           body: queryArg.updateProjectRequest,
         }),
-        invalidatesTags: ['Projects'],
+        invalidatesTags: ["Projects"],
       }),
-      deleteApiV2ProjectsById: build.mutation<DeleteApiV2ProjectsByIdApiResponse, DeleteApiV2ProjectsByIdApiArg>({
+      deleteApiV2ProjectsById: build.mutation<
+        DeleteApiV2ProjectsByIdApiResponse,
+        DeleteApiV2ProjectsByIdApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/projects/${queryArg.id}`,
-          method: 'DELETE',
+          method: "DELETE",
         }),
-        invalidatesTags: ['Projects'],
+        invalidatesTags: ["Projects"],
       }),
       getApiV2ProjectsByProjectIdDashboard: build.query<
         GetApiV2ProjectsByProjectIdDashboardApiResponse,
@@ -567,19 +681,22 @@ const injectedRtkApi = api
           params: {
             environment: queryArg.environment,
             period: queryArg.period,
-            type: queryArg['type'],
+            type: queryArg["type"],
             granularity: queryArg.granularity,
           },
         }),
-        providesTags: ['Projects'],
+        providesTags: ["Projects"],
       }),
-      postApiV2UploadCtrfReport: build.mutation<PostApiV2UploadCtrfReportApiResponse, PostApiV2UploadCtrfReportApiArg>({
+      postApiV2UploadCtrfReport: build.mutation<
+        PostApiV2UploadCtrfReportApiResponse,
+        PostApiV2UploadCtrfReportApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/upload-ctrf-report`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.body,
         }),
-        invalidatesTags: ['CTRF'],
+        invalidatesTags: ["CTRF"],
       }),
       postApiV2UploadCtrfReportApiKey: build.mutation<
         PostApiV2UploadCtrfReportApiKeyApiResponse,
@@ -587,10 +704,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/upload-ctrf-report-api-key`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.body,
         }),
-        invalidatesTags: ['CTRF'],
+        invalidatesTags: ["CTRF"],
       }),
       postApiV2UploadGenerateKey: build.mutation<
         PostApiV2UploadGenerateKeyApiResponse,
@@ -598,25 +715,34 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/upload/generate-key`,
-          method: 'POST',
+          method: "POST",
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ['Upload API Keys'],
+        invalidatesTags: ["Upload API Keys"],
       }),
-      getApiV2UploadKeys: build.query<GetApiV2UploadKeysApiResponse, GetApiV2UploadKeysApiArg>({
+      getApiV2UploadKeys: build.query<
+        GetApiV2UploadKeysApiResponse,
+        GetApiV2UploadKeysApiArg
+      >({
         query: () => ({ url: `/api/v2/upload/keys` }),
-        providesTags: ['Upload API Keys'],
+        providesTags: ["Upload API Keys"],
       }),
-      deleteApiV2UploadKeysById: build.mutation<DeleteApiV2UploadKeysByIdApiResponse, DeleteApiV2UploadKeysByIdApiArg>({
+      deleteApiV2UploadKeysById: build.mutation<
+        DeleteApiV2UploadKeysByIdApiResponse,
+        DeleteApiV2UploadKeysByIdApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/upload/keys/${queryArg.id}`,
-          method: 'DELETE',
+          method: "DELETE",
         }),
-        invalidatesTags: ['Upload API Keys'],
+        invalidatesTags: ["Upload API Keys"],
       }),
-      getApiV2AnalysisExport: build.query<GetApiV2AnalysisExportApiResponse, GetApiV2AnalysisExportApiArg>({
+      getApiV2AnalysisExport: build.query<
+        GetApiV2AnalysisExportApiResponse,
+        GetApiV2AnalysisExportApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/analysis-export`,
           params: {
@@ -625,23 +751,28 @@ const injectedRtkApi = api
             dateTo: queryArg.dateTo,
           },
         }),
-        providesTags: ['Exports'],
+        providesTags: ["Exports"],
       }),
-      postApiV2ReportsPdfExport: build.mutation<PostApiV2ReportsPdfExportApiResponse, PostApiV2ReportsPdfExportApiArg>({
+      postApiV2ReportsPdfExport: build.mutation<
+        PostApiV2ReportsPdfExportApiResponse,
+        PostApiV2ReportsPdfExportApiArg
+      >({
         query: (queryArg) => ({
           url: `/api/v2/reports/pdf-export`,
-          method: 'POST',
+          method: "POST",
           body: queryArg.pdfExportRequest,
         }),
-        invalidatesTags: ['Reports', 'Exports'],
+        invalidatesTags: ["Reports", "Exports"],
       }),
     }),
     overrideExisting: false,
   });
 export { injectedRtkApi as generatedApi };
-export type GetApiV2StatusApiResponse = /** status 200 Server status */ StatusResponse;
+export type GetApiV2StatusApiResponse =
+  /** status 200 Server status */ StatusResponse;
 export type GetApiV2StatusApiArg = void;
-export type GetApiV2IssuesApiResponse = /** status 200 List of issues */ Issue[];
+export type GetApiV2IssuesApiResponse =
+  /** status 200 List of issues */ Issue[];
 export type GetApiV2IssuesApiArg = {
   /** Project ID to filter issues */
   projectId: string;
@@ -650,17 +781,20 @@ export type GetApiV2IssuesApiArg = {
   page?: number;
   limit?: number;
 };
-export type PostApiV2IssuesApiResponse = /** status 201 Issue created successfully */ Issue;
+export type PostApiV2IssuesApiResponse =
+  /** status 201 Issue created successfully */ Issue;
 export type PostApiV2IssuesApiArg = {
   createIssueRequest: CreateIssueRequest;
 };
-export type GetApiV2IssuesByIssueIdApiResponse = /** status 200 Issue details */ Issue;
+export type GetApiV2IssuesByIssueIdApiResponse =
+  /** status 200 Issue details */ Issue;
 export type GetApiV2IssuesByIssueIdApiArg = {
   issueId: string;
   /** Project ID to verify ownership of the issue */
   projectId: string;
 };
-export type PatchApiV2IssuesByIssueIdApiResponse = /** status 200 Issue updated successfully */ Issue;
+export type PatchApiV2IssuesByIssueIdApiResponse =
+  /** status 200 Issue updated successfully */ Issue;
 export type PatchApiV2IssuesByIssueIdApiArg = {
   issueId: string;
   updateIssueRequest: UpdateIssueRequest;
@@ -675,39 +809,40 @@ export type DeleteApiV2IssuesByIssueIdApiArg = {
   /** Project ID to verify ownership of the issue */
   projectId: string;
 };
-export type GetApiV2IssuesWithStatsApiResponse = /** status 200 List of issues with statistics */ {
-  issues: {
-    id: string;
-    name: string;
-    category?: string;
-    description?: string;
-    portal?: string;
-    service?: string;
-    ticket?: string;
-    projectId: string;
-    createdById?: string;
-    updatedById?: string;
-    createdAt: string;
-    updatedAt: string;
-    statistics: {
-      occurrenceCount: number;
-      firstOccurrence: string | null;
-      lastOccurrence: string | null;
-      impactedTestsCount: number;
-      timeDistribution: {
-        date: string;
-        count: number;
-      }[];
-    };
-  }[];
-  total: number;
-  page: number;
-  totalPages: number;
-};
+export type GetApiV2IssuesWithStatsApiResponse =
+  /** status 200 List of issues with statistics */ {
+    issues: {
+      id: string;
+      name: string;
+      category?: string;
+      description?: string;
+      portal?: string;
+      service?: string;
+      ticket?: string;
+      projectId: string;
+      createdById?: string;
+      updatedById?: string;
+      createdAt: string;
+      updatedAt: string;
+      statistics: {
+        occurrenceCount: number;
+        firstOccurrence: string | null;
+        lastOccurrence: string | null;
+        impactedTestsCount: number;
+        timeDistribution: {
+          date: string;
+          count: number;
+        }[];
+      };
+    }[];
+    total: number;
+    page: number;
+    totalPages: number;
+  };
 export type GetApiV2IssuesWithStatsApiArg = {
   /** Project ID to filter issues with statistics */
   projectId: string;
-  category?: 'Bug' | 'Script' | 'Infra' | 'Performance' | 'Other';
+  category?: "Bug" | "Script" | "Infra" | "Performance" | "Other";
   name?: string;
   page?: number;
   limit?: number;
@@ -716,7 +851,8 @@ export type GetApiV2IssuesWithStatsApiArg = {
   /** End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
   statTo?: string;
 };
-export type GetApiV2ResultsApiResponse = /** status 200 List of results */ ResultsListResponse;
+export type GetApiV2ResultsApiResponse =
+  /** status 200 List of results */ ResultsListResponse;
 export type GetApiV2ResultsApiArg = {
   projectId: string;
   tag?: string;
@@ -734,7 +870,8 @@ export type GetApiV2ResultsApiArg = {
   page?: number;
   limit?: number;
 };
-export type GetApiV2ResultsByResultIdApiResponse = /** status 200 Result details */ Result;
+export type GetApiV2ResultsByResultIdApiResponse =
+  /** status 200 Result details */ Result;
 export type GetApiV2ResultsByResultIdApiArg = {
   resultId: string;
   /** Project ID to verify ownership of the result */
@@ -746,7 +883,8 @@ export type DeleteApiV2ResultsByResultIdApiArg = {
   /** Project ID to verify ownership of the result */
   projectId: string;
 };
-export type GetApiV2ResultsStatsApiResponse = /** status 200 Results statistics */ ResultsStats;
+export type GetApiV2ResultsStatsApiResponse =
+  /** status 200 Results statistics */ ResultsStats;
 export type GetApiV2ResultsStatsApiArg = {
   projectId: string;
   /** Array of dates in YYYY-MM-DD format to filter results. If not provided, returns stats for all results. */
@@ -764,7 +902,8 @@ export type PatchApiV2ResultsByResultIdAnalysisFeedbackApiArg = {
   resultId: string;
   updateResultAnalysisFeedbackRequest: UpdateResultAnalysisFeedbackRequest;
 };
-export type GetApiV2SpecsBySpecIdApiResponse = /** status 200 Spec details */ Spec;
+export type GetApiV2SpecsBySpecIdApiResponse =
+  /** status 200 Spec details */ Spec;
 export type GetApiV2SpecsBySpecIdApiArg = {
   specId: string;
   /** Project ID to verify ownership of the spec */
@@ -776,7 +915,8 @@ export type DeleteApiV2SpecsBySpecIdApiArg = {
   /** Project ID to verify ownership of the spec */
   projectId: string;
 };
-export type PostApiV2AssumptionsApiResponse = /** status 201 Successfully created assumption */ Assumption;
+export type PostApiV2AssumptionsApiResponse =
+  /** status 201 Successfully created assumption */ Assumption;
 export type PostApiV2AssumptionsApiArg = {
   createAssumptionRequest: CreateAssumptionRequest;
 };
@@ -820,9 +960,10 @@ export type PostApiV2ResultErrorsAnalyzeApiResponse =
 export type PostApiV2ResultErrorsAnalyzeApiArg = {
   analyzeResultErrorsRequest: AnalyzeResultErrorsRequest;
 };
-export type GetApiV2ResultErrorsByResultErrorIdApiResponse = /** status 200 Result error retrieved successfully */ {
-  data: ResultError;
-};
+export type GetApiV2ResultErrorsByResultErrorIdApiResponse =
+  /** status 200 Result error retrieved successfully */ {
+    data: ResultError;
+  };
 export type GetApiV2ResultErrorsByResultErrorIdApiArg = {
   resultErrorId: string;
   /** Project ID to verify ownership of the result error */
@@ -859,11 +1000,13 @@ export type PostApiV2UploadJsonReportApiKeyApiArg = {
     report: Blob;
   };
 };
-export type GetApiV2UsersByUserIdApiResponse = /** status 200 User details */ User;
+export type GetApiV2UsersByUserIdApiResponse =
+  /** status 200 User details */ User;
 export type GetApiV2UsersByUserIdApiArg = {
   userId: string;
 };
-export type PatchApiV2UsersByUserIdApiResponse = /** status 200 User updated successfully */ User;
+export type PatchApiV2UsersByUserIdApiResponse =
+  /** status 200 User updated successfully */ User;
 export type PatchApiV2UsersByUserIdApiArg = {
   userId: string;
   userUpdateRequest: UserUpdateRequest;
@@ -884,7 +1027,8 @@ export type DeleteApiV2UsersByUserIdMcpTokenApiResponse =
 export type DeleteApiV2UsersByUserIdMcpTokenApiArg = {
   userId: string;
 };
-export type GetApiV2AdminUsersApiResponse = /** status 200 User list returned successfully */ AdminManagedUser[];
+export type GetApiV2AdminUsersApiResponse =
+  /** status 200 User list returned successfully */ AdminManagedUser[];
 export type GetApiV2AdminUsersApiArg = void;
 export type PostApiV2AdminUsersByUserIdApproveApiResponse =
   /** status 200 User updated successfully */ AdminManagedUser;
@@ -907,15 +1051,18 @@ export type PatchApiV2AdminUsersByUserIdRoleApiArg = {
   userId: string;
   adminUserRoleUpdateRequest: AdminUserRoleUpdateRequest;
 };
-export type GetApiV2AuthConfigApiResponse = /** status 200 Auth provider configuration */ AuthConfig;
+export type GetApiV2AuthConfigApiResponse =
+  /** status 200 Auth provider configuration */ AuthConfig;
 export type GetApiV2AuthConfigApiArg = void;
-export type PostApiV2AuthSignupApiResponse = /** status 201 User created successfully */ PendingApprovalSignupResponse;
+export type PostApiV2AuthSignupApiResponse =
+  /** status 201 User created successfully */ PendingApprovalSignupResponse;
 export type PostApiV2AuthSignupApiArg = {
   userSignupRequest: UserSignupRequest;
 };
 export type PostApiV2AuthLoginApiResponse =
   /** status 200 Login successful or challenge required */
-  UserLoginResponse | AuthChallengeResponse;
+    | UserLoginResponse
+    | AuthChallengeResponse;
 export type PostApiV2AuthLoginApiArg = {
   userLoginRequest: UserLoginRequest;
 };
@@ -924,11 +1071,13 @@ export type PostApiV2AuthRefreshTokenApiResponse =
 export type PostApiV2AuthRefreshTokenApiArg = {
   refreshTokenRequest: RefreshTokenRequest;
 };
-export type PostApiV2AuthLogoutApiResponse = /** status 200 Logout completed */ {
-  message: string;
-};
+export type PostApiV2AuthLogoutApiResponse =
+  /** status 200 Logout completed */ {
+    message: string;
+  };
 export type PostApiV2AuthLogoutApiArg = void;
-export type PostApiV2ErrorFormatterApiResponse = /** status 200 Error formatted successfully */ ErrorFormatterResponse;
+export type PostApiV2ErrorFormatterApiResponse =
+  /** status 200 Error formatted successfully */ ErrorFormatterResponse;
 export type PostApiV2ErrorFormatterApiArg = {
   errorFormatterRequest: ErrorFormatterRequest;
 };
@@ -937,75 +1086,77 @@ export type PostApiV2ErrorFormatterResultApiResponse =
 export type PostApiV2ErrorFormatterResultApiArg = {
   errorSuggestionRequest: ErrorSuggestionRequest;
 };
-export type GetApiV2PromptsApiResponse = /** status 200 List of available prompts */ PromptsListResponse;
+export type GetApiV2PromptsApiResponse =
+  /** status 200 List of available prompts */ PromptsListResponse;
 export type GetApiV2PromptsApiArg = void;
-export type GetApiV2PromptsByNameApiResponse = /** status 200 Prompt configuration */ PromptConfig;
+export type GetApiV2PromptsByNameApiResponse =
+  /** status 200 Prompt configuration */ PromptConfig;
 export type GetApiV2PromptsByNameApiArg = {
   name:
-    | 'developer-code-assistant'
-    | 'test-portal-assistant'
-    | 'issue-analysis-assistant'
-    | 'environment-performance-assistant'
-    | 'software-documentation-assistant';
+    | "developer-code-assistant"
+    | "test-portal-assistant"
+    | "issue-analysis-assistant"
+    | "environment-performance-assistant"
+    | "software-documentation-assistant";
 };
-export type PostApiV2PromptsByNameGenerateApiResponse = /** status 200 Generated prompt */ GeneratePromptResponse;
+export type PostApiV2PromptsByNameGenerateApiResponse =
+  /** status 200 Generated prompt */ GeneratePromptResponse;
 export type PostApiV2PromptsByNameGenerateApiArg = {
   name:
-    | 'developer-code-assistant'
-    | 'test-portal-assistant'
-    | 'issue-analysis-assistant'
-    | 'environment-performance-assistant'
-    | 'software-documentation-assistant';
+    | "developer-code-assistant"
+    | "test-portal-assistant"
+    | "issue-analysis-assistant"
+    | "environment-performance-assistant"
+    | "software-documentation-assistant";
   generatePromptRequest: GeneratePromptRequest;
 };
-export type GetApiV2SkillsApiResponse = /** status 200 List of available skills */ SkillsListResponse;
+export type PostApiV2SkillsApiResponse =
+  /** status 201 Custom skill created */ SkillMetadata;
+export type PostApiV2SkillsApiArg = {
+  skillPackageUpload: SkillPackageUpload;
+};
+export type GetApiV2SkillsApiResponse =
+  /** status 200 List of available skills */ SkillsListResponse;
 export type GetApiV2SkillsApiArg = void;
-export type GetApiV2SkillsByNameApiResponse = /** status 200 Skill metadata and Markdown content */ SkillDetailResponse;
-export type GetApiV2SkillsByNameApiArg = {
-  name:
-    | 'developer-code-assistant'
-    | 'definition-of-ready-assistant'
-    | 'test-portal-assistant'
-    | 'issue-analysis-assistant'
-    | 'environment-performance-assistant'
-    | 'software-documentation-assistant';
+export type PutApiV2SkillsByIdApiResponse =
+  /** status 200 Custom skill replaced */ SkillMetadata;
+export type PutApiV2SkillsByIdApiArg = {
+  id: string;
+  skillPackageUpload: SkillPackageUpload;
 };
-export type GetApiV2SkillsByNameDownloadApiResponse = /** status 200 Markdown skill artifact */ SkillMarkdownDownload;
-export type GetApiV2SkillsByNameDownloadApiArg = {
-  name:
-    | 'developer-code-assistant'
-    | 'definition-of-ready-assistant'
-    | 'test-portal-assistant'
-    | 'issue-analysis-assistant'
-    | 'environment-performance-assistant'
-    | 'software-documentation-assistant';
+export type DeleteApiV2SkillsByIdApiResponse = unknown;
+export type DeleteApiV2SkillsByIdApiArg = {
+  id: string;
 };
-export type GetApiV2SkillsByNameArchiveApiResponse =
-  /** status 200 Zip archive containing the skill package */ SkillArchiveDownload;
-export type GetApiV2SkillsByNameArchiveApiArg = {
-  name:
-    | 'developer-code-assistant'
-    | 'definition-of-ready-assistant'
-    | 'test-portal-assistant'
-    | 'issue-analysis-assistant'
-    | 'environment-performance-assistant'
-    | 'software-documentation-assistant';
+export type GetApiV2SkillsByIdApiResponse =
+  /** status 200 Skill metadata and Markdown preview/source content */ SkillDetailResponse;
+export type GetApiV2SkillsByIdApiArg = {
+  id: string;
 };
-export type GetApiV2ProjectsApiResponse = /** status 200 List of projects */ Project[];
+export type GetApiV2SkillsByIdArchiveApiResponse =
+  /** status 200 Complete portable ZIP skill package */ SkillArchiveDownload;
+export type GetApiV2SkillsByIdArchiveApiArg = {
+  id: string;
+};
+export type GetApiV2ProjectsApiResponse =
+  /** status 200 List of projects */ Project[];
 export type GetApiV2ProjectsApiArg = {
   ownerId?: string;
   isActive?: boolean;
   name?: string;
 };
-export type PostApiV2ProjectsApiResponse = /** status 201 Project created successfully */ Project;
+export type PostApiV2ProjectsApiResponse =
+  /** status 201 Project created successfully */ Project;
 export type PostApiV2ProjectsApiArg = {
   createProjectRequest: CreateProjectRequest;
 };
-export type GetApiV2ProjectsByIdApiResponse = /** status 200 Project details */ Project;
+export type GetApiV2ProjectsByIdApiResponse =
+  /** status 200 Project details */ Project;
 export type GetApiV2ProjectsByIdApiArg = {
   id: string;
 };
-export type PutApiV2ProjectsByIdApiResponse = /** status 200 Project updated successfully */ Project;
+export type PutApiV2ProjectsByIdApiResponse =
+  /** status 200 Project updated successfully */ Project;
 export type PutApiV2ProjectsByIdApiArg = {
   id: string;
   updateProjectRequest: UpdateProjectRequest;
@@ -1026,7 +1177,7 @@ export type GetApiV2ProjectsByProjectIdDashboardApiArg = {
   /** Filter by execution type */
   type?: string;
   /** Aggregation level for history data (daily, weekly, monthly). Defaults to daily for short periods, weekly for long periods. */
-  granularity?: 'daily' | 'weekly' | 'monthly';
+  granularity?: "daily" | "weekly" | "monthly";
 };
 export type PostApiV2UploadCtrfReportApiResponse =
   /** status 200 CTRF report file processed successfully */ CtrfReportResponse;
@@ -1055,12 +1206,14 @@ export type PostApiV2UploadGenerateKeyApiArg = {
 export type GetApiV2UploadKeysApiResponse =
   /** status 200 List of API keys for the authenticated user */ ListApiKeysResponse;
 export type GetApiV2UploadKeysApiArg = void;
-export type DeleteApiV2UploadKeysByIdApiResponse = /** status 200 API key revoked successfully */ RevokeApiKeyResponse;
+export type DeleteApiV2UploadKeysByIdApiResponse =
+  /** status 200 API key revoked successfully */ RevokeApiKeyResponse;
 export type DeleteApiV2UploadKeysByIdApiArg = {
   /** The UUID of the API key to revoke */
   id: string;
 };
-export type GetApiV2AnalysisExportApiResponse = /** status 200 JSONL export file */ string;
+export type GetApiV2AnalysisExportApiResponse =
+  /** status 200 JSONL export file */ string;
 export type GetApiV2AnalysisExportApiArg = {
   projectId: string;
   /** Start date/time (ISO) */
@@ -1150,11 +1303,11 @@ export type Result = {
   duration: number;
   startTime: string;
   /** Test analysis status */
-  analysisStatus?: ('passed' | 'failed') | ('passed' | 'failed');
+  analysisStatus?: ("passed" | "failed") | ("passed" | "failed");
   /** Failure category from AI analysis */
   analysisCategory?:
-    | ('bug' | 'infra' | 'performance' | 'script' | 'other')
-    | ('bug' | 'infra' | 'performance' | 'script' | 'other');
+    | ("bug" | "infra" | "performance" | "script" | "other")
+    | ("bug" | "infra" | "performance" | "script" | "other");
   /** Confidence level of analysis (1-5 scale) */
   analysisConfidence?: number | null;
   /** Explanation for the categorization decision */
@@ -1166,8 +1319,8 @@ export type Result = {
   analysisReviewedAt?: string | null;
   analysisReviewedById?: string | null;
   analysisFeedbackCategory?:
-    | ('bug' | 'infra' | 'performance' | 'script' | 'other')
-    | ('bug' | 'infra' | 'performance' | 'script' | 'other');
+    | ("bug" | "infra" | "performance" | "script" | "other")
+    | ("bug" | "infra" | "performance" | "script" | "other");
   analysisFeedbackConfidence?: number | null;
   analysisFeedbackConclusion?: string | null;
   spec: ResultSpec;
@@ -1211,9 +1364,9 @@ export type ResultsStats = {
 };
 export type UpdateResultAnalysisRequest = {
   /** Test analysis status */
-  analysisStatus?: 'passed' | 'failed';
+  analysisStatus?: "passed" | "failed";
   /** Failure category from AI analysis */
-  analysisCategory?: 'bug' | 'infra' | 'performance' | 'script' | 'other';
+  analysisCategory?: "bug" | "infra" | "performance" | "script" | "other";
   /** Confidence level of analysis (1-5 scale) */
   analysisConfidence?: number;
   /** Explanation for the categorization decision */
@@ -1221,7 +1374,12 @@ export type UpdateResultAnalysisRequest = {
 };
 export type UpdateResultAnalysisFeedbackRequest = {
   /** Manual reviewer category */
-  analysisFeedbackCategory?: 'bug' | 'infra' | 'performance' | 'script' | 'other';
+  analysisFeedbackCategory?:
+    | "bug"
+    | "infra"
+    | "performance"
+    | "script"
+    | "other";
   /** Manual reviewer confidence (1-5 scale) */
   analysisFeedbackConfidence?: number;
   /** Manual reviewer conclusion */
@@ -1322,8 +1480,8 @@ export type JsonReportResponseWithAnalysis = {
   /** Optional AI analysis results for test failures */
   analysis?: any[];
 };
-export type UserStatus = 'pending' | 'active' | 'suspended';
-export type UserRole = 'admin' | 'member';
+export type UserStatus = "pending" | "active" | "suspended";
+export type UserRole = "admin" | "member";
 export type User = {
   id: string;
   name: string;
@@ -1373,7 +1531,7 @@ export type AdminManagedUser = {
 export type AdminUserRoleUpdateRequest = {
   role: UserRole;
 };
-export type AuthProvider = 'local' | 'cognito';
+export type AuthProvider = "local" | "cognito";
 export type AuthConfig = {
   provider: AuthProvider;
   capabilities: {
@@ -1400,7 +1558,7 @@ export type UserLoginResponse = {
   cognitoSession?: any;
 };
 export type AuthChallengeResponse = {
-  status: 'NEW_PASSWORD_REQUIRED';
+  status: "NEW_PASSWORD_REQUIRED";
   message: string;
 };
 export type UserLoginRequest = {
@@ -1445,7 +1603,12 @@ export type PromptConfig = {
   name: string;
   title: string;
   description: string;
-  category: 'development' | 'reporting' | 'analysis' | 'performance' | 'documentation';
+  category:
+    | "development"
+    | "reporting"
+    | "analysis"
+    | "performance"
+    | "documentation";
   parameters: {
     [key: string]: PromptParameter;
   };
@@ -1464,23 +1627,35 @@ export type GeneratePromptRequest = {
   [key: string]: any;
 };
 export type SkillMetadata = {
+  id: string;
   name: string;
   title: string;
   description: string;
   category: string;
+  source: "system" | "custom";
+  readOnly: boolean;
   version?: string;
   license?: string;
   compatibility?: string;
+  /** URL for the complete portable ZIP skill package. This is the only supported installable download. */
   downloadUrl: string;
+};
+export type SkillPackageUpload = {
+  /** Zip archive containing SKILL.md and optional package resources. */
+  package: Blob;
+  /** Display title used in the shared skills catalog. */
+  title: string;
+  /** Catalog category for the custom skill. */
+  category: string;
 };
 export type SkillsListResponse = {
   skills: SkillMetadata[];
 };
 export type SkillDetailResponse = {
   metadata: SkillMetadata;
+  /** Markdown preview/source content. It is not a complete installable artifact; use metadata.downloadUrl for the ZIP package. */
   content: string;
 };
-export type SkillMarkdownDownload = string;
 export type SkillArchiveDownload = Blob;
 export type ProjectCategoryWeights = {
   bug: number;
@@ -1531,6 +1706,8 @@ export type DailyExecutionMetrics = {
   failed: number;
   /** Number of skipped tests */
   skipped: number;
+  /** Number of timed-out tests */
+  timedOut: number;
   /** Total duration in milliseconds */
   duration: number;
   issues: DashboardIssueMetrics;
@@ -1540,7 +1717,7 @@ export type ExecutionSummary = {
   /** Name of the execution */
   name: string;
   /** Overall execution status */
-  status: 'passed' | 'failed' | 'skipped' | 'running';
+  status: "passed" | "failed" | "skipped" | "running";
   /** ISO 8601 timestamp when execution started */
   startedAt: string;
   /** Total duration in milliseconds */
@@ -1623,23 +1800,23 @@ export type RevokeApiKeyResponse = {
   message: string;
 };
 export type PdfExportInvalidParamsResponse = {
-  error: 'INVALID_PARAMS';
+  error: "INVALID_PARAMS";
   details: any[];
 };
 export type PdfExportPeriodTooLargeResponse = {
-  error: 'PERIOD_TOO_LARGE';
-  message: 'Export period cannot exceed 365 days';
+  error: "PERIOD_TOO_LARGE";
+  message: "Export period cannot exceed 365 days";
 };
 export type PdfExportNotFoundResponse = {
-  error: 'NOT_FOUND';
+  error: "NOT_FOUND";
 };
 export type PdfExportServerErrorResponse = {
   /** Internal export failure code: DATA_FETCH_FAILED | CHART_RENDER_FAILED | PDF_BUILD_FAILED */
-  error: 'DATA_FETCH_FAILED' | 'CHART_RENDER_FAILED' | 'PDF_BUILD_FAILED';
+  error: "DATA_FETCH_FAILED" | "CHART_RENDER_FAILED" | "PDF_BUILD_FAILED";
 };
 export type PdfExportTimeoutResponse = {
   /** PDF export exceeded server timeout window */
-  error: 'EXPORT_TIMEOUT';
+  error: "EXPORT_TIMEOUT";
 };
 export type PdfExportRequest = {
   /** Project UUID or project name */
@@ -1653,7 +1830,7 @@ export type PdfExportRequest = {
   /** Accepts YYYY-MM-DD or ISO datetime; backend normalizes to YYYY-MM-DD */
   periodEnd: string;
   /** Time-bucket aggregation level: daily = by day, weekly = ISO week, monthly = year-month */
-  granularity: 'daily' | 'weekly' | 'monthly';
+  granularity: "daily" | "weekly" | "monthly";
   /** When true, the export includes an AI-generated insights section in the PDF. Defaults to false when omitted. */
   includeAiInsights?: boolean;
 };
@@ -1706,10 +1883,12 @@ export const {
   useGetApiV2PromptsQuery,
   useGetApiV2PromptsByNameQuery,
   usePostApiV2PromptsByNameGenerateMutation,
+  usePostApiV2SkillsMutation,
   useGetApiV2SkillsQuery,
-  useGetApiV2SkillsByNameQuery,
-  useGetApiV2SkillsByNameDownloadQuery,
-  useGetApiV2SkillsByNameArchiveQuery,
+  usePutApiV2SkillsByIdMutation,
+  useDeleteApiV2SkillsByIdMutation,
+  useGetApiV2SkillsByIdQuery,
+  useGetApiV2SkillsByIdArchiveQuery,
   useGetApiV2ProjectsQuery,
   usePostApiV2ProjectsMutation,
   useGetApiV2ProjectsByIdQuery,

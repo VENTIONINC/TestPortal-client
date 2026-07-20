@@ -7,7 +7,7 @@ export enum PATHS {
   RESULTS = '/results',
   ISSUES = '/issues',
   SKILLS = '/skills',
-  SKILL_DETAILS = '/skills/:name',
+  SKILL_DETAILS = '/skills/:id',
   LOGIN = '/login',
   SIGNUP = '/signup',
   USER_SETTINGS = '/settings',
