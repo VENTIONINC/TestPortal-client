@@ -37,6 +37,6 @@
 ## 6. Verification
 
 - [x] 6.1 Run `yarn eslint`, `yarn tsc`, the focused Skills tests, the complete `yarn test` suite, and `yarn build`, resolving all failures.
-- [ ] 6.2 Manually create a valid custom skill against `localhost:3001` and verify it appears in the refreshed catalog with working detail, Markdown preview, and authenticated ZIP download.
-- [ ] 6.3 Manually replace a custom skill with changed frontmatter and content, verifying the persisted detail route remains unchanged and all metadata, preview, and downloaded archive content refresh.
-- [ ] 6.4 Manually verify invalid ZIP feedback, duplicate-name conflict feedback, deletion cancellation and confirmation, post-delete catalog navigation, and the absence of mutation controls for system/read-only skills.
+- [x] 6.2 Manually create a valid custom skill against `localhost:3001` and verify it appears in the refreshed catalog with working detail, Markdown preview, and authenticated ZIP download.
+- [x] 6.3 Manually replace a custom skill with changed frontmatter and content, verifying the persisted detail route remains unchanged and all metadata, preview, and downloaded archive content refresh.
+- [x] 6.4 Manually verify invalid ZIP feedback, duplicate-name conflict feedback, deletion cancellation and confirmation, post-delete catalog navigation, and the absence of mutation controls for system/read-only skills.
