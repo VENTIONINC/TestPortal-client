@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo, useCallback } from 'react';
-import { Grid, Heading, Text, VStack } from '@chakra-ui/react';
+import { Button, Grid, Heading, HStack, Text, VStack } from '@chakra-ui/react';
+import { FiPlus } from 'react-icons/fi';
 import { useNavigate } from 'react-router';
 
-import { Alert, Skeleton, Wrap } from '@/components/ui';
+import { Alert, Skeleton, useCreateSkillDialog, Wrap } from '@/components/ui';
 import { PATHS } from '@/types/paths';
 
 import { SkillCard } from '../../components';
@@ -13,6 +14,7 @@ import { useSkillsCatalog } from '../../hooks';
 
 export const SkillsCatalogView = memo(() => {
   const navigate = useNavigate();
+  const openCreateSkillDialog = useCreateSkillDialog();
   const { skills, isInitialLoading, error, isEmpty } = useSkillsCatalog();
 
   const handleSelectSkill = useCallback(
@@ -25,13 +27,19 @@ export const SkillsCatalogView = memo(() => {
   return (
     <Wrap my={4} mx={6} p={4}>
       <VStack align="stretch" gap={4} w="100%">
-        <VStack align="start" gap={2}>
-          <Heading fontSize="lg">Skills Hub</Heading>
-          <Text color="text.secondary">
-            Browse authenticated Skills Hub packages, preview their Markdown instructions, and download the assets you
-            need.
-          </Text>
-        </VStack>
+        <HStack align="start" justify="space-between" gap={4} flexWrap="wrap">
+          <VStack align="start" gap={2} flex={1}>
+            <Heading fontSize="lg">Skills Hub</Heading>
+            <Text color="text.secondary">
+              Browse authenticated Skills Hub packages, preview their Markdown instructions, and download the assets you
+              need.
+            </Text>
+          </VStack>
+          <Button variant="primary" onClick={openCreateSkillDialog}>
+            <FiPlus />
+            Create skill
+          </Button>
+        </HStack>
 
         {isInitialLoading && (
           <Grid templateColumns="repeat(auto-fit, minmax(320px, 1fr))" gap={6} justifyContent="center" py={4}>

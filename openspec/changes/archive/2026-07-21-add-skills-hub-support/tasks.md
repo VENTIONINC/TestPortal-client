@@ -38,7 +38,7 @@
 ## 6. Verification
 
 - [x] 6.1 Run `yarn lint` and resolve any TypeScript or ESLint failures.
-- [ ] 6.2 Manually verify the catalog populated, empty, and failed states.
-- [ ] 6.3 Manually verify detail success, unknown skill, Markdown preview, and failed detail states.
-- [ ] 6.4 Manually verify both authenticated download actions produce usable files with expected fallback filenames.
+- [x] 6.2 Manually verify the catalog populated, empty, and failed states.
+- [x] 6.3 Manually verify detail success, unknown skill, Markdown preview, and failed detail states.
+- [x] 6.4 Manually verify both authenticated download actions produce usable files with expected fallback filenames.
 - [x] 6.5 Decide whether to add minimal test tooling for UI/API behavior or document the current repository test-script gap for this change.

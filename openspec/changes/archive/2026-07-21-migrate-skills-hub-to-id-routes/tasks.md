@@ -32,5 +32,5 @@
 
 - [x] 5.1 Re-run API generation against the latest local OpenAPI URL and confirm it produces no unexpected generated diff or `/api/v2/skills/{id}/download` definitions.
 - [x] 5.2 Search client and test code for obsolete Markdown-download symbols and `/download` skill paths, then run `yarn lint`, `yarn test`, and `yarn build`, resolving all failures.
-- [ ] 5.3 Manually verify catalog selection, browser refresh, direct `/skills/{id}` navigation, unknown-ID handling, Markdown preview, ZIP download through `downloadUrl`, and the absence of a raw Markdown download action.
-- [ ] 5.4 Manually verify a custom skill remains reachable at the same ID route after its human-readable name changes and that the updated name appears in the detail UI and ZIP filename.
+- [x] 5.3 Manually verify catalog selection, browser refresh, direct `/skills/{id}` navigation, unknown-ID handling, Markdown preview, ZIP download through `downloadUrl`, and the absence of a raw Markdown download action.
+- [x] 5.4 Manually verify a custom skill remains reachable at the same ID route after its human-readable name changes and that the updated name appears in the detail UI and ZIP filename.
