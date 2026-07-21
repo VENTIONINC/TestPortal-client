@@ -3,11 +3,11 @@
 
 import { memo } from 'react';
 import { Button, Grid, GridItem, Heading, HStack, Separator, Skeleton, Text, VStack } from '@chakra-ui/react';
-import { FiPackage } from 'react-icons/fi';
+import { FiEdit2, FiPackage, FiTrash2 } from 'react-icons/fi';
 
 import { SkillMarkdownPreview, SkillTag } from '@/components/skills/components';
 import { useSkillDetail, useSkillDownloads } from '@/components/skills/hooks';
-import { Alert, Wrap } from '@/components/ui';
+import { Alert, useDeleteSkillDialog, useReplaceSkillDialog, Wrap } from '@/components/ui';
 
 const MetadataRow = ({ label, value }: { label: string; value: string }) => (
   <VStack align="start" gap={1}>
@@ -19,6 +19,8 @@ const MetadataRow = ({ label, value }: { label: string; value: string }) => (
 );
 
 export const SkillDetailView = memo(() => {
+  const openReplaceSkillDialog = useReplaceSkillDialog();
+  const openDeleteSkillDialog = useDeleteSkillDialog();
   const { metadata, content, isFetching, isInitialLoading, error, isNotFound, hasInvalidSkillId } =
     useSkillDetail();
   const {
@@ -26,6 +28,7 @@ export const SkillDetailView = memo(() => {
     isDownloadingArchive,
     handleArchiveDownload,
   } = useSkillDownloads(metadata?.downloadUrl, metadata?.name);
+  const canManage = metadata?.source === 'custom' && metadata.readOnly === false;
 
   if (hasInvalidSkillId) {
     return (
@@ -104,6 +107,22 @@ export const SkillDetailView = memo(() => {
                     <Text color="status.error.text" fontSize="sm">
                       {archiveError}
                     </Text>
+                  )}
+                  {canManage && metadata && (
+                    <>
+                      <Button variant="outline" onClick={() => openReplaceSkillDialog(metadata)}>
+                        <FiEdit2 />
+                        Replace skill
+                      </Button>
+                      <Button
+                        variant="outline"
+                        color="status.error.text"
+                        onClick={() => openDeleteSkillDialog(metadata)}
+                      >
+                        <FiTrash2 />
+                        Delete skill
+                      </Button>
+                    </>
                   )}
                 </VStack>
               </VStack>

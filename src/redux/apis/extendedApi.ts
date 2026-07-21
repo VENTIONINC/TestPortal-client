@@ -8,8 +8,10 @@ import { getDownloadFilename } from '@/utils/download';
 
 import {
   generatedApi,
+  type PostApiV2SkillsApiResponse,
   type PostApiV2ReportsPdfExportApiArg,
   type PostApiV2ReportsPdfExportApiResponse,
+  type PutApiV2SkillsByIdApiResponse,
 } from './generatedApi';
 import { TAGS } from './tags';
 
@@ -17,6 +19,30 @@ export interface SkillArchiveDownloadResult {
   fileName: string;
   blob: Blob;
 }
+
+export interface SkillPackageMutationInput {
+  package: File;
+  title: string;
+  category: string;
+}
+
+export interface ReplaceSkillPackageMutationInput extends SkillPackageMutationInput {
+  id: string;
+}
+
+const createSkillPackageFormData = ({
+  package: skillPackage,
+  title,
+  category,
+}: SkillPackageMutationInput) => {
+  const formData = new FormData();
+
+  formData.append('package', skillPackage, skillPackage.name);
+  formData.append('title', title.trim());
+  formData.append('category', category.trim());
+
+  return formData;
+};
 
 export const extendedApi = generatedApi
   .enhanceEndpoints({
@@ -84,6 +110,22 @@ export const extendedApi = generatedApi
         }),
         invalidatesTags: [TAGS.Result],
       }),
+      createCustomSkill: build.mutation<PostApiV2SkillsApiResponse, SkillPackageMutationInput>({
+        query: (input) => ({
+          url: '/api/v2/skills',
+          method: 'POST',
+          body: createSkillPackageFormData(input),
+        }),
+        invalidatesTags: ['Skills'],
+      }),
+      replaceCustomSkill: build.mutation<PutApiV2SkillsByIdApiResponse, ReplaceSkillPackageMutationInput>({
+        query: ({ id, ...input }) => ({
+          url: `/api/v2/skills/${encodeURIComponent(id)}`,
+          method: 'PUT',
+          body: createSkillPackageFormData(input),
+        }),
+        invalidatesTags: ['Skills'],
+      }),
       downloadSkillArchive: build.query<SkillArchiveDownloadResult, { downloadUrl: string; name: string }>({
         query: ({ downloadUrl }) => ({
           url: downloadUrl,
@@ -110,6 +152,9 @@ export const {
   useLazyGetAnalysisExportQuery,
   useExportDashboardPdfMutation,
   useBulkReviewMutation,
+  useCreateCustomSkillMutation,
+  useReplaceCustomSkillMutation,
+  useDeleteApiV2SkillsByIdMutation: useDeleteCustomSkillMutation,
   useLazyDownloadSkillArchiveQuery,
   usePostApiV2UploadCtrfReportMutation,
 } = extendedApi;
