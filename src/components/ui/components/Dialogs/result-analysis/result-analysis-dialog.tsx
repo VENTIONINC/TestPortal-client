@@ -30,7 +30,7 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting },
     watch,
     setValue,
   } = useForm<ResultAnalysisFormData>({
@@ -154,7 +154,7 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
           variant="primary"
           px={4}
           loading={isSubmitting}
-          disabled={!isDirty || isSubmitting}
+          disabled={isSubmitting}
         >
           Save
         </Button>
