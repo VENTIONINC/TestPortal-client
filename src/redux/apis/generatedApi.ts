@@ -135,6 +135,7 @@ const injectedRtkApi = api
             issueName: queryArg.issueName,
             from: queryArg["from"],
             to: queryArg.to,
+            dates: queryArg.dates,
             page: queryArg.page,
             limit: queryArg.limit,
           },
@@ -867,6 +868,7 @@ export type GetApiV2ResultsApiArg = {
   issueName?: string;
   from?: string;
   to?: string;
+  dates?: string[];
   page?: number;
   limit?: number;
 };
@@ -1331,7 +1333,9 @@ export type Result = {
 };
 export type ResultsListResponse = {
   results: Result[];
+  rawResults: Result[];
   total: number;
+  rawTotal: number;
   page: number;
   totalPages: number;
 };

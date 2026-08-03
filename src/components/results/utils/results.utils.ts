@@ -85,3 +85,35 @@ export const addToSpecGroup = (map: Map<string, SpecGroup>, result: Result, base
     });
   }
 };
+
+export const buildResultsGroups = (
+  filteredResults: Result[],
+  rawResults: Result[],
+  activeDates: string[],
+  filters: ResultsFilters,
+): {
+  results: Map<string, SpecGroup>;
+  unfilteredResultsMap: Map<string, SpecGroup>;
+  activeDaysResultsIds: string[];
+} => {
+  const activeDatesSet = new Set(activeDates);
+  const unfilteredResultsMap = new Map<string, SpecGroup>();
+  const results = new Map<string, SpecGroup>();
+  const activeDaysResultsIds: string[] = [];
+
+  for (const result of rawResults) {
+    addToSpecGroup(unfilteredResultsMap, result, toBaseResult(result));
+  }
+
+  for (const result of filteredResults) {
+    const resultDate = result.startTime.split('T')[0];
+    if (!activeDatesSet.has(resultDate) || !matchesFilters(result, filters)) {
+      continue;
+    }
+
+    addToSpecGroup(results, result, toBaseResult(result));
+    activeDaysResultsIds.push(result.id);
+  }
+
+  return { results, unfilteredResultsMap, activeDaysResultsIds };
+};
