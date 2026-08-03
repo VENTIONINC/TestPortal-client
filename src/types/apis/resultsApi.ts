@@ -18,12 +18,15 @@ export interface GetResultsRequest {
   reviewStatus?: string;
   errorMessage?: string;
   issueName?: string;
+  dates?: string[];
 }
 
 export interface GetResultsResponse {
   page: number;
   results: Result[];
+  rawResults: Result[];
   total: number;
+  rawTotal: number;
   totalPages: number;
 }
 

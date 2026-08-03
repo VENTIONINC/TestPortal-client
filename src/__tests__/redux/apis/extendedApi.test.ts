@@ -32,6 +32,31 @@ describe('Skill download endpoints', () => {
   });
 });
 
+describe('Results endpoint', () => {
+  it('serializes the selected dates in the results request', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({ results: [], rawResults: [], total: 0, rawTotal: 0, page: 1, totalPages: 0 }),
+        { headers: { 'content-type': 'application/json' } },
+      ),
+    );
+
+    await store
+      .dispatch(
+        extendedApi.endpoints.getResults.initiate({
+          projectId: 'project-1',
+          from: '2026-07-01',
+          to: '2026-07-07',
+          dates: ['2026-07-02', '2026-07-04'],
+        }),
+      )
+      .unwrap();
+
+    const request = fetchMock.mock.calls[0][0] as Request;
+    expect(new URL(request.url).searchParams.get('dates')).toBe('2026-07-02,2026-07-04');
+  });
+});
+
 describe('Custom skill mutation endpoints', () => {
   const responseMetadata = {
     id: 'persisted-skill-id',
