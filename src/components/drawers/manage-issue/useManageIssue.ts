@@ -63,7 +63,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
 
   // API hooks
   const [getIssues] = useLazyGetIssuesQuery();
-  const [createAssumption, { isLoading: isCreatingAssumption }] = useCreateAssumptionMutation();
+  const [createAssumption, { isLoading: isAssigningIssue }] = useCreateAssumptionMutation();
   const [createIssue, { isLoading: isCreatingIssue }] = usePostApiV2IssuesMutation();
   const [updateIssue, { isLoading: isUpdatingIssue }] = usePatchApiV2IssuesByIssueIdMutation();
   const [deleteIssue, { isLoading: isDeletingIssue }] = useDeleteApiV2IssuesByIssueIdMutation();
@@ -95,8 +95,8 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
     setValue('category', selectedIssue.category);
   };
 
-  // Create assumption
-  const handleCreateAssumption = handleSubmit(async (formData) => {
+  // Assign issue to result
+  const handleAssignIssue = handleSubmit(async (formData) => {
     const issueToCreate = {
       ...issue,
       projectId: selectedProjectId,
@@ -191,7 +191,7 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
 
   // Format from result
   const handleFormatFromResult = async () => {
-    // Safety check: only available in Create mode with resultError
+    // Safety check: only available in Assign mode with resultError
     if (!resultError?.id) {
       toaster.create({ title: 'No result error available', type: 'error' });
       return;
@@ -253,14 +253,14 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
     errors,
 
     // Loading states
-    isCreatingAssumption,
+    isAssigningIssue,
     isCreatingIssue,
     isUpdatingIssue,
     isDeletingIssue,
 
     // Handlers
     handleIssueSelected,
-    handleCreateAssumption,
+    handleAssignIssue,
     handleUpdateIssue,
     handleFormatMessage,
     handleFormatFromResult,

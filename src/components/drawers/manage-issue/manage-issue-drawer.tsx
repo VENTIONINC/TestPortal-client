@@ -24,12 +24,12 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
     generatedSuggestionSource,
     register,
     errors,
-    isCreatingAssumption,
+    isAssigningIssue,
     isCreatingIssue,
     isUpdatingIssue,
     isDeletingIssue,
     handleIssueSelected,
-    handleCreateAssumption,
+    handleAssignIssue,
     handleUpdateIssue,
     handleFormatMessage,
     handleFormatFromResult,
@@ -141,11 +141,11 @@ export const ManageIssueDrawer = ({ resultError, issue: initialIssue, closeDrawe
         )}
 
         <Button
-          onClick={initialIssue ? handleUpdateIssue : handleCreateAssumption}
-          loading={isCreatingAssumption || isCreatingIssue || isUpdatingIssue}
+          onClick={initialIssue ? handleUpdateIssue : handleAssignIssue}
+          loading={isAssigningIssue || isCreatingIssue || isUpdatingIssue}
           disabled={isFormatting}
         >
-          {initialIssue ? 'Update' : 'Create'}
+          {initialIssue ? 'Update' : 'Assign Issue'}
         </Button>
 
         {initialIssue && (
