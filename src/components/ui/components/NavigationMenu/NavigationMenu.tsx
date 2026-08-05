@@ -1,14 +1,13 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useNavigate, useLocation } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import { Box, Text, VStack } from '@chakra-ui/react';
 
 import { navigationMenuConfig } from './config';
 import { NavItem } from './NavItem';
 
 export const NavigationMenu = ({ collapsed }: { collapsed: boolean }) => {
-  const navigate = useNavigate();
   const location = useLocation();
 
   return (
@@ -26,8 +25,10 @@ export const NavigationMenu = ({ collapsed }: { collapsed: boolean }) => {
                 ? location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
                 : item.active;
               return (
-                <Box key={item.id} onClick={() => item.path && navigate(item.path)}>
-                  <NavItem icon={item.icon} label={item.label} collapsed={collapsed} active={isActive} />
+                <Box key={item.id} asChild>
+                  <Link to={item.path!}>
+                    <NavItem icon={item.icon} label={item.label} collapsed={collapsed} active={isActive} />
+                  </Link>
                 </Box>
               );
             })}
