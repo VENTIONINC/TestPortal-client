@@ -6,13 +6,15 @@ import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io';
 import { useState } from 'react';
 
 import { Tooltip } from '@/components/ui';
+import type { IssueCategorySummary } from '@/types';
+import { getIssueCategorySummaryPresentation } from '@/utils';
 
 import { categoriesConfig } from '../configs/categories';
 import { List } from './List';
 
 interface CollapsibleWrapperProps {
   title: string;
-  results: { title: string; count: number; category?: string }[];
+  results: { id?: string; title: string; count: number; categorySummary?: IssueCategorySummary }[];
   handleClickToResult: (message: string) => void;
   hideIconList?: boolean;
 }
@@ -24,7 +26,13 @@ export const CollapsibleWrapper = ({
   hideIconList = false,
 }: CollapsibleWrapperProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const availableCategories = Array.from(new Set(results.map((r) => r.category).filter(Boolean))) as string[];
+  const availableCategories = Array.from(
+    new Set(
+      results
+        .map((result) => result.categorySummary && getIssueCategorySummaryPresentation(result.categorySummary).category)
+        .filter(Boolean),
+    ),
+  ) as string[];
   return (
     <Collapsible.Root
       bg="bg.card"
@@ -41,7 +49,7 @@ export const CollapsibleWrapper = ({
           {availableCategories.length > 0 && (
             <Flex gap={2} ml={2}>
               {availableCategories.map((category) => {
-                const config = categoriesConfig[category as keyof typeof categoriesConfig] || categoriesConfig.Other;
+                const config = categoriesConfig[category as keyof typeof categoriesConfig] || categoriesConfig.other;
                 const { Icon, color, bg, textColor, text } = config;
 
                 return (

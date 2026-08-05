@@ -3,21 +3,22 @@
 
 import { LuBug, LuCircleHelp, LuCode, LuCpu, LuServer } from 'react-icons/lu';
 
-import { IssueCategory } from '@/types';
+import { IssueCategorySummary, ResultCategory } from '@/types';
 
-export const ISSUE_CATEGORY_LABELS: Record<IssueCategory, string> = {
-  [IssueCategory.Bug]: 'Bug',
-  [IssueCategory.Script]: 'Script',
-  [IssueCategory.Infra]: 'Environment',
-  [IssueCategory.Performance]: 'Performance',
-  [IssueCategory.Other]: '',
+export const ISSUE_CATEGORY_LABELS: Record<ResultCategory, string> = {
+  [ResultCategory.Bug]: 'Bug',
+  [ResultCategory.Script]: 'Script',
+  [ResultCategory.Infra]: 'Environment',
+  [ResultCategory.Performance]: 'Performance',
+  [ResultCategory.Other]: 'Other',
 };
 
-export const getIssueCategoryStyle = (category: IssueCategory) => {
-  const name = ISSUE_CATEGORY_LABELS[category] || category;
+export const getIssueCategoryStyle = (category?: ResultCategory | null) => {
+  const resolvedCategory = category ?? ResultCategory.Other;
+  const name = ISSUE_CATEGORY_LABELS[resolvedCategory];
 
-  switch (category) {
-    case IssueCategory.Bug:
+  switch (resolvedCategory) {
+    case ResultCategory.Bug:
       return {
         Icon: LuBug,
         color: 'category.bug.color',
@@ -25,7 +26,7 @@ export const getIssueCategoryStyle = (category: IssueCategory) => {
         hoverColor: 'category.bug.hover.color',
         name,
       };
-    case IssueCategory.Script:
+    case ResultCategory.Script:
       return {
         Icon: LuCode,
         color: 'category.script.color',
@@ -33,7 +34,7 @@ export const getIssueCategoryStyle = (category: IssueCategory) => {
         hoverColor: 'category.script.hover.color',
         name,
       };
-    case IssueCategory.Infra:
+    case ResultCategory.Infra:
       return {
         Icon: LuServer,
         color: 'category.environment.color',
@@ -41,7 +42,7 @@ export const getIssueCategoryStyle = (category: IssueCategory) => {
         hoverColor: 'category.environment.hover.color',
         name,
       };
-    case IssueCategory.Performance:
+    case ResultCategory.Performance:
       return {
         Icon: LuCpu,
         color: 'category.performance.color',
@@ -58,4 +59,33 @@ export const getIssueCategoryStyle = (category: IssueCategory) => {
         name,
       };
   }
+};
+
+const SUMMARY_CATEGORY_ORDER = [
+  ResultCategory.Bug,
+  ResultCategory.Infra,
+  ResultCategory.Performance,
+  ResultCategory.Script,
+  ResultCategory.Other,
+] as const;
+
+export const getIssueCategorySummaryPresentation = (summary: IssueCategorySummary) => {
+  const hasCategory = summary.displayCategory !== null;
+
+  return {
+    category: summary.displayCategory,
+    label: hasCategory
+      ? ISSUE_CATEGORY_LABELS[summary.displayCategory as ResultCategory]
+      : summary.isMixed
+        ? 'Mixed'
+        : 'Uncategorized',
+    showMixed: hasCategory && summary.isMixed,
+    details: [
+      ...SUMMARY_CATEGORY_ORDER.map((category) => ({
+        label: ISSUE_CATEGORY_LABELS[category],
+        count: summary.distribution[category] ?? 0,
+      })),
+      { label: 'Uncategorized', count: summary.uncategorizedCount },
+    ],
+  };
 };

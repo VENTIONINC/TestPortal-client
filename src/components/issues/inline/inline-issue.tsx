@@ -8,13 +8,14 @@ import { LuCheck, LuTrash, LuCirclePlus } from 'react-icons/lu';
 import { useManageIssueDrawer } from '@/components/drawers';
 import { useConfirmAssumptionMutation } from '@/redux/apis/extendedApi';
 import { getIssueCategoryStyle } from '@/utils';
-import { ResultError, ResultErrorAssumption } from '@/types';
+import { ResultCategory, ResultError, ResultErrorAssumption } from '@/types';
 
 interface InlineIssueProps {
   resultError: ResultError;
+  category?: ResultCategory;
 }
 
-export const InlineIssue = memo(({ resultError }: InlineIssueProps) => {
+export const InlineIssue = memo(({ resultError, category }: InlineIssueProps) => {
   const [confirmAssumption] = useConfirmAssumptionMutation();
 
   const openManageIssueDrawer = useManageIssueDrawer({ resultError });
@@ -32,7 +33,7 @@ export const InlineIssue = memo(({ resultError }: InlineIssueProps) => {
         resultError.assumptions.map((assumption, index) => {
           if (!assumption) return null;
 
-          const { Icon, color } = getIssueCategoryStyle(assumption.issue.category);
+          const categoryStyle = category ? getIssueCategoryStyle(category) : null;
 
           const isConfirmed = assumption.isConfirmed;
 
@@ -40,13 +41,13 @@ export const InlineIssue = memo(({ resultError }: InlineIssueProps) => {
             <HStack
               key={index}
               border={isConfirmed ? '1px solid' : '1px dashed'}
-              borderColor={isConfirmed ? color : 'border.muted'}
+              borderColor={isConfirmed && categoryStyle ? categoryStyle.color : 'border.muted'}
               borderRadius="xl"
               ml="auto"
               px={2}
               minH="26px"
-              color={isConfirmed ? 'white' : 'fg.muted'}
-              bg={isConfirmed ? color : 'transparent'}
+              color={isConfirmed && categoryStyle ? 'white' : 'fg.muted'}
+              bg={isConfirmed && categoryStyle ? categoryStyle.color : 'transparent'}
               flexShrink={0}
               {...(isConfirmed && {
                 onClick: () => openManageIssueDrawer({ issue: assumption.issue }),
@@ -57,7 +58,14 @@ export const InlineIssue = memo(({ resultError }: InlineIssueProps) => {
             >
               {assumption.issue && (
                 <>
-                  <Icon size={14} color="currentColor" style={{ flexShrink: 0 }} />
+                  {categoryStyle && (
+                    <categoryStyle.Icon
+                      size={14}
+                      color="currentColor"
+                      style={{ flexShrink: 0 }}
+                      aria-label={`Category: ${categoryStyle.name}`}
+                    />
+                  )}
                   <Text fontSize="xs" fontWeight={isConfirmed ? 'bold' : 'normal'} whiteSpace="nowrap">
                     {isConfirmed ? '[Confirmed]' : '[Hypothesis]'}: {assumption.issue.name}
                   </Text>

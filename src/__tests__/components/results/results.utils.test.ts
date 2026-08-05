@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { buildResultsGroups } from '@/components/results/utils';
+import { buildResultsGroups, toBaseResult } from '@/components/results/utils';
 import { Result, ResultStatus, ResultsFilters } from '@/types';
 
 const filters: ResultsFilters = {
@@ -72,5 +72,21 @@ describe('buildResultsGroups', () => {
     expect(grouped.unfilteredResultsMap.get('visible-spec')?.executions).toHaveLength(2);
     expect(grouped.unfilteredResultsMap.has('raw-only-spec')).toBe(true);
     expect(grouped.activeDaysResultsIds).toEqual(['filtered']);
+  });
+});
+
+describe('toBaseResult', () => {
+  it('normalizes a case-insensitive feedback category', () => {
+    const result = makeResult('feedback', 'spec', '2026-07-02', ResultStatus.Failed);
+    Object.assign(result, { analysisCategory: 'bug', analysisFeedbackCategory: ' Environment ' });
+
+    expect(toBaseResult(result).analysisCategory).toBe('infra');
+  });
+
+  it('does not fall back to the AI category for malformed feedback', () => {
+    const result = makeResult('malformed', 'spec', '2026-07-02', ResultStatus.Failed);
+    Object.assign(result, { analysisCategory: 'bug', analysisFeedbackCategory: '' });
+
+    expect(toBaseResult(result).analysisCategory).toBeUndefined();
   });
 });

@@ -57,6 +57,75 @@ describe('Results endpoint', () => {
   });
 });
 
+describe('Category source-of-truth API contracts', () => {
+  it('does not serialize retired category filters on the generated issue list', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ issues: [], total: 0, page: 1, totalPages: 0 }), {
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+
+    await store
+      .dispatch(
+        extendedApi.endpoints.getApiV2Issues.initiate({
+          projectId: 'project-1',
+          name: 'checkout',
+          category: 'Bug',
+        } as never),
+      )
+      .unwrap();
+
+    const request = fetchMock.mock.calls[0][0] as Request;
+    expect(new URL(request.url).searchParams.get('category')).toBeNull();
+  });
+
+  it('refreshes results, issues, and dashboard data after analysis feedback changes a category', async () => {
+    const requestCounts = new Map<string, number>();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const request = input as Request;
+      const path = new URL(request.url).pathname;
+      requestCounts.set(path, (requestCounts.get(path) ?? 0) + 1);
+
+      if (request.method === 'PATCH') {
+        return new Response(JSON.stringify({ id: 'result-1' }), { headers: { 'content-type': 'application/json' } });
+      }
+
+      return new Response(JSON.stringify(path.includes('/issues') ? { issues: [], total: 0, page: 1, totalPages: 0 } : {}), {
+        headers: { 'content-type': 'application/json' },
+      });
+    });
+
+    const results = store.dispatch(extendedApi.endpoints.getApiV2Results.initiate({ projectId: 'project-1' }));
+    const issues = store.dispatch(extendedApi.endpoints.getApiV2Issues.initiate({ projectId: 'project-1' }));
+    const dashboard = store.dispatch(
+      extendedApi.endpoints.getApiV2ProjectsByProjectIdDashboard.initiate({
+        projectId: 'project-1',
+        environment: 'staging',
+      }),
+    );
+    await Promise.all([results, issues, dashboard]);
+
+    await store
+      .dispatch(
+        extendedApi.endpoints.patchApiV2ResultsByResultIdAnalysisFeedback.initiate({
+          resultId: 'result-1',
+          updateResultAnalysisFeedbackRequest: { analysisFeedbackCategory: 'bug' },
+        }),
+      )
+      .unwrap();
+
+    await vi.waitFor(() => {
+      expect(requestCounts.get('/api/v2/results')).toBe(2);
+      expect(requestCounts.get('/api/v2/issues')).toBe(2);
+      expect(requestCounts.get('/api/v2/projects/project-1/dashboard')).toBe(2);
+    });
+
+    results.unsubscribe();
+    issues.unsubscribe();
+    dashboard.unsubscribe();
+  });
+});
+
 describe('Custom skill mutation endpoints', () => {
   const responseMetadata = {
     id: 'persisted-skill-id',

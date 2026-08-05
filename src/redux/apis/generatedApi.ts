@@ -42,7 +42,6 @@ const injectedRtkApi = api
           url: `/api/v2/issues`,
           params: {
             projectId: queryArg.projectId,
-            category: queryArg.category,
             name: queryArg.name,
             page: queryArg.page,
             limit: queryArg.limit,
@@ -60,6 +59,23 @@ const injectedRtkApi = api
           body: queryArg.createIssueRequest,
         }),
         invalidatesTags: ["Issues"],
+      }),
+      getApiV2IssuesWithStats: build.query<
+        GetApiV2IssuesWithStatsApiResponse,
+        GetApiV2IssuesWithStatsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/issues/with-stats`,
+          params: {
+            projectId: queryArg.projectId,
+            name: queryArg.name,
+            page: queryArg.page,
+            limit: queryArg.limit,
+            statFrom: queryArg.statFrom,
+            statTo: queryArg.statTo,
+          },
+        }),
+        providesTags: ["Issues"],
       }),
       getApiV2IssuesByIssueId: build.query<
         GetApiV2IssuesByIssueIdApiResponse,
@@ -96,24 +112,6 @@ const injectedRtkApi = api
           },
         }),
         invalidatesTags: ["Issues", "Results"],
-      }),
-      getApiV2IssuesWithStats: build.query<
-        GetApiV2IssuesWithStatsApiResponse,
-        GetApiV2IssuesWithStatsApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v2/issues/with-stats`,
-          params: {
-            projectId: queryArg.projectId,
-            category: queryArg.category,
-            name: queryArg.name,
-            page: queryArg.page,
-            limit: queryArg.limit,
-            statFrom: queryArg.statFrom,
-            statTo: queryArg.statTo,
-          },
-        }),
-        providesTags: ["Issues"],
       }),
       getApiV2Results: build.query<
         GetApiV2ResultsApiResponse,
@@ -773,29 +771,39 @@ export type GetApiV2StatusApiResponse =
   /** status 200 Server status */ StatusResponse;
 export type GetApiV2StatusApiArg = void;
 export type GetApiV2IssuesApiResponse =
-  /** status 200 List of issues */ Issue[];
+  /** status 200 Paginated list of issues with derived category summaries */ PaginatedIssueList;
 export type GetApiV2IssuesApiArg = {
   /** Project ID to filter issues */
   projectId: string;
-  category?: string;
   name?: string;
   page?: number;
   limit?: number;
 };
 export type PostApiV2IssuesApiResponse =
-  /** status 201 Issue created successfully */ Issue;
+  /** status 201 Issue core created successfully */ IssueCore;
 export type PostApiV2IssuesApiArg = {
   createIssueRequest: CreateIssueRequest;
 };
+export type GetApiV2IssuesWithStatsApiResponse =
+  /** status 200 Paginated list of issues with statistics and derived summaries */ PaginatedIssueStatisticsList;
+export type GetApiV2IssuesWithStatsApiArg = {
+  /** Project ID to filter issues with statistics */
+  projectId: string;
+  name?: string;
+  page?: number;
+  limit?: number;
+  statFrom?: string;
+  statTo?: string;
+};
 export type GetApiV2IssuesByIssueIdApiResponse =
-  /** status 200 Issue details */ Issue;
+  /** status 200 Issue details with derived category summary */ IssueRead;
 export type GetApiV2IssuesByIssueIdApiArg = {
   issueId: string;
   /** Project ID to verify ownership of the issue */
   projectId: string;
 };
 export type PatchApiV2IssuesByIssueIdApiResponse =
-  /** status 200 Issue updated successfully */ Issue;
+  /** status 200 Issue core updated successfully */ IssueCore;
 export type PatchApiV2IssuesByIssueIdApiArg = {
   issueId: string;
   updateIssueRequest: UpdateIssueRequest;
@@ -803,54 +811,12 @@ export type PatchApiV2IssuesByIssueIdApiArg = {
 export type DeleteApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue and all associated assumptions deleted successfully */ {
     message: string;
-    issue: Issue;
+    issue: IssueCore;
   };
 export type DeleteApiV2IssuesByIssueIdApiArg = {
   issueId: string;
   /** Project ID to verify ownership of the issue */
   projectId: string;
-};
-export type GetApiV2IssuesWithStatsApiResponse =
-  /** status 200 List of issues with statistics */ {
-    issues: {
-      id: string;
-      name: string;
-      category?: string;
-      description?: string;
-      portal?: string;
-      service?: string;
-      ticket?: string;
-      projectId: string;
-      createdById?: string;
-      updatedById?: string;
-      createdAt: string;
-      updatedAt: string;
-      statistics: {
-        occurrenceCount: number;
-        firstOccurrence: string | null;
-        lastOccurrence: string | null;
-        impactedTestsCount: number;
-        timeDistribution: {
-          date: string;
-          count: number;
-        }[];
-      };
-    }[];
-    total: number;
-    page: number;
-    totalPages: number;
-  };
-export type GetApiV2IssuesWithStatsApiArg = {
-  /** Project ID to filter issues with statistics */
-  projectId: string;
-  category?: "Bug" | "Script" | "Infra" | "Performance" | "Other";
-  name?: string;
-  page?: number;
-  limit?: number;
-  /** Start date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
-  statFrom?: string;
-  /** End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
-  statTo?: string;
 };
 export type GetApiV2ResultsApiResponse =
   /** status 200 List of results */ ResultsListResponse;
@@ -1235,23 +1201,56 @@ export type StatusResponse = {
 export type ErrorResponse = {
   error: string;
 };
-export type Issue = {
+export type IssueCore = {
   id: string;
   name: string;
-  category?: string;
-  description?: string;
-  portal?: string;
-  service?: string;
-  ticket?: string;
-  projectId: string;
-  createdById?: string;
-  updatedById?: string;
+  description?: string | null;
+  portal?: string | null;
+  service?: string | null;
+  ticket?: string | null;
+  projectId?: string;
+  createdById?: string | null;
+  updatedById?: string | null;
+  createdBy?: {
+    id: string;
+    name: string;
+    email: string;
+    createdAt: string;
+  } | null;
+  updatedBy?: {
+    id: string;
+    name: string;
+    email: string;
+    createdAt: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 };
+export type IssueCategorySummary = {
+  displayCategory:
+    | ("bug" | "infra" | "performance" | "script" | "other")
+    | null;
+  isMixed: boolean;
+  distribution: {
+    bug: number;
+    infra: number;
+    performance: number;
+    script: number;
+    other: number;
+  };
+  uncategorizedCount: number;
+};
+export type IssueRead = IssueCore & {
+  categorySummary: IssueCategorySummary;
+};
+export type PaginatedIssueList = {
+  issues: IssueRead[];
+  total: number;
+  page: number;
+  totalPages: number;
+};
 export type CreateIssueRequest = {
   name: string;
-  category?: string;
   description?: string;
   portal?: string;
   service?: string;
@@ -1259,9 +1258,27 @@ export type CreateIssueRequest = {
   /** The UUID of the project this issue belongs to */
   projectId: string;
 };
+export type IssueStatistics = {
+  occurrenceCount: number;
+  firstOccurrence: string | null;
+  lastOccurrence: string | null;
+  impactedTestsCount: number;
+  timeDistribution: {
+    date: string;
+    count: number;
+  }[];
+};
+export type IssueWithStatistics = IssueRead & {
+  statistics: IssueStatistics;
+};
+export type PaginatedIssueStatisticsList = {
+  issues: IssueWithStatistics[];
+  total: number;
+  page: number;
+  totalPages: number;
+};
 export type UpdateIssueRequest = {
   name?: string;
-  category?: string;
   description?: string;
   portal?: string;
   service?: string;
@@ -1320,6 +1337,7 @@ export type Result = {
   analysisErrorQualityConclusion?: string | null;
   analysisReviewedAt?: string | null;
   analysisReviewedById?: string | null;
+  /** Human category correction. When present, this is authoritative over analysisCategory. */
   analysisFeedbackCategory?:
     | ("bug" | "infra" | "performance" | "script" | "other")
     | ("bug" | "infra" | "performance" | "script" | "other");
@@ -1333,8 +1351,10 @@ export type Result = {
 };
 export type ResultsListResponse = {
   results: Result[];
+  /** Unfiltered period results for specs in the current results page */
   rawResults: Result[];
   total: number;
+  /** Number of raw results returned for the current results page */
   rawTotal: number;
   page: number;
   totalPages: number;
@@ -1360,10 +1380,10 @@ export type ResultsStats = {
     count: number;
   }[];
   topIssues: {
+    id: string;
     title: string;
     count: number;
-    /** Failure category (bug, infra, script, performance, other) */
-    category: string;
+    categorySummary: IssueCategorySummary;
   }[];
 };
 export type UpdateResultAnalysisRequest = {
@@ -1377,7 +1397,7 @@ export type UpdateResultAnalysisRequest = {
   analysisConclusion?: string;
 };
 export type UpdateResultAnalysisFeedbackRequest = {
-  /** Manual reviewer category */
+  /** Human category correction. This becomes the effective category instead of the AI analysisCategory while preserving the AI value. */
   analysisFeedbackCategory?:
     | "bug"
     | "infra"
@@ -1574,23 +1594,18 @@ export type RefreshTokenRequest = {
   refreshToken: string;
 };
 export type ErrorFormatterResponse = {
-  original: {
-    name: string;
-    description: string;
-    category: string;
-  };
-  formatted: {
-    name: string;
-    description: string;
-  };
+  name: string;
+  description: string;
 };
 export type ErrorFormatterRequest = {
   name: string;
   description: string;
-  category: string;
+  /** Optional canonical prompt context category. Values must be lowercase. */
+  contextCategory?: "bug" | "infra" | "performance" | "script" | "other";
+  /** Deprecated legacy prompt context alias. Case-insensitive; use contextCategory instead. */
+  category?: string;
 };
 export type ErrorSuggestionResponse = {
-  category: string;
   description: string;
 };
 export type ErrorSuggestionRequest = {
@@ -1840,44 +1855,58 @@ export type PdfExportRequest = {
 };
 export const {
   useGetApiV2StatusQuery,
+  useLazyGetApiV2StatusQuery,
   useGetApiV2IssuesQuery,
+  useLazyGetApiV2IssuesQuery,
   usePostApiV2IssuesMutation,
+  useGetApiV2IssuesWithStatsQuery,
+  useLazyGetApiV2IssuesWithStatsQuery,
   useGetApiV2IssuesByIssueIdQuery,
+  useLazyGetApiV2IssuesByIssueIdQuery,
   usePatchApiV2IssuesByIssueIdMutation,
   useDeleteApiV2IssuesByIssueIdMutation,
-  useGetApiV2IssuesWithStatsQuery,
   useGetApiV2ResultsQuery,
+  useLazyGetApiV2ResultsQuery,
   useGetApiV2ResultsByResultIdQuery,
+  useLazyGetApiV2ResultsByResultIdQuery,
   useDeleteApiV2ResultsByResultIdMutation,
   useGetApiV2ResultsStatsQuery,
+  useLazyGetApiV2ResultsStatsQuery,
   usePatchApiV2ResultsByResultIdAnalysisMutation,
   usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation,
   useGetApiV2SpecsBySpecIdQuery,
+  useLazyGetApiV2SpecsBySpecIdQuery,
   useDeleteApiV2SpecsBySpecIdMutation,
   usePostApiV2AssumptionsMutation,
   usePatchApiV2AssumptionsByAssumptionIdMutation,
   useGetApiV2AssumptionsByAssumptionIdQuery,
+  useLazyGetApiV2AssumptionsByAssumptionIdQuery,
   useDeleteApiV2AssumptionsByAssumptionIdMutation,
   usePatchApiV2ResultErrorsByResultErrorIdAssignIssueMutation,
   usePatchApiV2ResultErrorsByResultErrorIdReviewMutation,
   usePatchApiV2ResultErrorsBulkReviewMutation,
   usePostApiV2ResultErrorsAnalyzeMutation,
   useGetApiV2ResultErrorsByResultErrorIdQuery,
+  useLazyGetApiV2ResultErrorsByResultErrorIdQuery,
   useGetApiV2ExecutionsByExecutionIdQuery,
+  useLazyGetApiV2ExecutionsByExecutionIdQuery,
   useDeleteApiV2ExecutionsByExecutionIdMutation,
   usePostApiV2UploadJsonReportMutation,
   usePostApiV2UploadJsonReportApiKeyMutation,
   useGetApiV2UsersByUserIdQuery,
+  useLazyGetApiV2UsersByUserIdQuery,
   usePatchApiV2UsersByUserIdMutation,
   usePatchApiV2UsersByUserIdIntegrationsMutation,
   usePostApiV2UsersByUserIdMcpTokenMutation,
   useDeleteApiV2UsersByUserIdMcpTokenMutation,
   useGetApiV2AdminUsersQuery,
+  useLazyGetApiV2AdminUsersQuery,
   usePostApiV2AdminUsersByUserIdApproveMutation,
   usePostApiV2AdminUsersByUserIdSuspendMutation,
   usePostApiV2AdminUsersByUserIdRestoreMutation,
   usePatchApiV2AdminUsersByUserIdRoleMutation,
   useGetApiV2AuthConfigQuery,
+  useLazyGetApiV2AuthConfigQuery,
   usePostApiV2AuthSignupMutation,
   usePostApiV2AuthLoginMutation,
   usePostApiV2AuthRefreshTokenMutation,
@@ -1885,25 +1914,35 @@ export const {
   usePostApiV2ErrorFormatterMutation,
   usePostApiV2ErrorFormatterResultMutation,
   useGetApiV2PromptsQuery,
+  useLazyGetApiV2PromptsQuery,
   useGetApiV2PromptsByNameQuery,
+  useLazyGetApiV2PromptsByNameQuery,
   usePostApiV2PromptsByNameGenerateMutation,
   usePostApiV2SkillsMutation,
   useGetApiV2SkillsQuery,
+  useLazyGetApiV2SkillsQuery,
   usePutApiV2SkillsByIdMutation,
   useDeleteApiV2SkillsByIdMutation,
   useGetApiV2SkillsByIdQuery,
+  useLazyGetApiV2SkillsByIdQuery,
   useGetApiV2SkillsByIdArchiveQuery,
+  useLazyGetApiV2SkillsByIdArchiveQuery,
   useGetApiV2ProjectsQuery,
+  useLazyGetApiV2ProjectsQuery,
   usePostApiV2ProjectsMutation,
   useGetApiV2ProjectsByIdQuery,
+  useLazyGetApiV2ProjectsByIdQuery,
   usePutApiV2ProjectsByIdMutation,
   useDeleteApiV2ProjectsByIdMutation,
   useGetApiV2ProjectsByProjectIdDashboardQuery,
+  useLazyGetApiV2ProjectsByProjectIdDashboardQuery,
   usePostApiV2UploadCtrfReportMutation,
   usePostApiV2UploadCtrfReportApiKeyMutation,
   usePostApiV2UploadGenerateKeyMutation,
   useGetApiV2UploadKeysQuery,
+  useLazyGetApiV2UploadKeysQuery,
   useDeleteApiV2UploadKeysByIdMutation,
   useGetApiV2AnalysisExportQuery,
+  useLazyGetApiV2AnalysisExportQuery,
   usePostApiV2ReportsPdfExportMutation,
 } = injectedRtkApi;

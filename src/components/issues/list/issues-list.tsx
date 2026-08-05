@@ -11,15 +11,10 @@ import { useGetIssuesWithStatsQuery } from '@/redux/apis/extendedApi';
 import { initialFilters, useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useFilterContext } from '@/contexts/FilterContext';
-import { IssueCategory, IssueWithStats } from '@/types';
+import { IssueWithStats } from '@/types';
 import { Filter, Pagination } from '@/components/ui';
 
 import { filterConfig } from '../configs';
-
-const toIssueCategory = (value?: string): IssueCategory | undefined => {
-  if (!value) return undefined;
-  return Object.values(IssueCategory).includes(value as IssueCategory) ? (value as IssueCategory) : undefined;
-};
 
 export const IssuesList = () => {
   const filters = useIssuesFilters();
@@ -39,7 +34,6 @@ export const IssuesList = () => {
     () => ({
       projectId: selectedProjectId,
       page: Number(filterProps.filters.page) || 1,
-      category: toIssueCategory(filterProps.filters.category),
       name: filterProps.filters.name || undefined,
       statFrom: filterProps.filters.statFrom || undefined,
       statTo: filterProps.filters.statTo || undefined,
@@ -47,7 +41,6 @@ export const IssuesList = () => {
     [
       selectedProjectId,
       filterProps.filters.page,
-      filterProps.filters.category,
       filterProps.filters.name,
       filterProps.filters.statFrom,
       filterProps.filters.statTo,

@@ -13,34 +13,32 @@ import {
   usePostApiV2ErrorFormatterMutation,
   usePostApiV2ErrorFormatterResultMutation,
   usePostApiV2IssuesMutation,
+  useLazyGetApiV2IssuesQuery,
 } from '@/redux/apis/generatedApi';
-import { useLazyGetIssuesQuery } from '@/redux/apis/issuesApi';
-import { Issue, IssueCategory, ResultError } from '@/types';
+import { IssueCore, IssueRead, ResultError } from '@/types';
 import { formatMessageSchema, FormatMessageFormData } from '@/schemas';
 import { toaster } from '@/components/ui';
 import { useSelectedProjectId } from '@/redux/slices/projects';
-import { serializeAnalysisCategoryToIssueCategory } from '@/utils';
 
 interface UseManageIssueProps {
-  initialIssue?: Issue;
+  initialIssue?: IssueCore;
   resultError?: ResultError;
   closeDrawer: () => void;
 }
 
 export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseManageIssueProps) => {
   const selectedProjectId = useSelectedProjectId();
-  const [issue, setIssue] = useState<Issue>(
+  const [issue, setIssue] = useState<IssueCore>(
     initialIssue ??
       ({
         name: '',
-        category: '' as IssueCategory,
         description: '',
         portal: '',
         service: '',
         ticket: '',
-      } as Issue),
+      } as IssueCore),
   );
-  const [existingIssues, setExistingIssues] = useState<Issue[]>([]);
+  const [existingIssues, setExistingIssues] = useState<IssueRead[]>([]);
   const [generatedSuggestionSource, setGeneratedSuggestionSource] = useState<'message' | 'result' | null>(null);
 
   // React Hook Form for validation
@@ -54,15 +52,14 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
     resolver: zodResolver(formatMessageSchema),
     defaultValues: {
       name: issue.name,
-      description: issue.description,
-      category: issue.category,
+      description: issue.description ?? '',
     },
   });
 
   const watchedName = watch('name');
 
   // API hooks
-  const [getIssues] = useLazyGetIssuesQuery();
+  const [getIssues] = useLazyGetApiV2IssuesQuery();
   const [createAssumption, { isLoading: isCreatingAssumption }] = useCreateAssumptionMutation();
   const [createIssue, { isLoading: isCreatingIssue }] = usePostApiV2IssuesMutation();
   const [updateIssue, { isLoading: isUpdatingIssue }] = usePatchApiV2IssuesByIssueIdMutation();
@@ -78,31 +75,30 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
     try {
       const res = await getIssues({
         name: watchedName,
-        category: issue.category,
         projectId: selectedProjectId,
       }).unwrap();
       setExistingIssues(res.issues);
     } catch {
       toaster.create({ title: 'Failed to load issues', type: 'error' });
     }
-  }, [getIssues, issue.category, watchedName, selectedProjectId]);
+  }, [getIssues, watchedName, selectedProjectId]);
 
   // Handle issue selection from search results
-  const handleIssueSelected = (selectedIssue: Issue) => {
+  const handleIssueSelected = (selectedIssue: IssueRead) => {
     setIssue(selectedIssue);
     setValue('name', selectedIssue.name);
-    setValue('description', selectedIssue.description);
-    setValue('category', selectedIssue.category);
+    setValue('description', selectedIssue.description ?? '');
   };
 
   // Create assumption
   const handleCreateAssumption = handleSubmit(async (formData) => {
     const issueToCreate = {
-      ...issue,
       projectId: selectedProjectId,
       name: formData.name,
       description: formData.description,
-      category: formData.category,
+      portal: issue.portal ?? undefined,
+      service: issue.service ?? undefined,
+      ticket: issue.ticket ?? undefined,
     };
 
     const issueId = issue.id ?? (await createIssue({ createIssueRequest: issueToCreate }).unwrap()).id;
@@ -137,7 +133,6 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
       issueId: issue.id,
       updateIssueRequest: {
         name: formData.name,
-        category: formData.category,
         description: formData.description,
       },
     });
@@ -167,19 +162,17 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
         errorFormatterRequest: {
           name: formData.name,
           description: formData.description,
-          category: formData.category,
         },
       }).unwrap();
 
-      // Parse the formatted response - the API returns formatted name and description
-      setValue('name', result.formatted.name);
-      setValue('description', result.formatted.description);
+      setValue('name', result.name);
+      setValue('description', result.description);
 
       // Update issue state for other operations
       setIssue({
         ...issue,
-        name: result.formatted.name,
-        description: result.formatted.description,
+        name: result.name,
+        description: result.description,
       });
       setGeneratedSuggestionSource('message');
 
@@ -204,22 +197,14 @@ export const useManageIssue = ({ initialIssue, resultError, closeDrawer }: UseMa
           projectId: selectedProjectId,
         },
       }).unwrap();
-      const category = serializeAnalysisCategoryToIssueCategory(result.category);
       const description = result.description;
 
-      if (!category) {
-        toaster.create({ title: 'Failed to map analysis category to issue category', type: 'error' });
-        return;
-      }
-
-      // The API returns { category, description } (no name field)
-      setValue('category', category);
+      // The API returns a category-free suggestion; categories belong to result analysis.
       setValue('description', description);
 
       // Update issue state for other operations
       setIssue({
         ...issue,
-        category: category,
         description: description,
       });
       setGeneratedSuggestionSource('result');

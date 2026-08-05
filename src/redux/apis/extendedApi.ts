@@ -59,6 +59,12 @@ export const extendedApi = generatedApi
       postApiV2ResultErrorsAnalyze: {
         invalidatesTags: [TAGS.Result],
       },
+      patchApiV2ResultsByResultIdAnalysis: {
+        invalidatesTags: [TAGS.Result],
+      },
+      patchApiV2ResultsByResultIdAnalysisFeedback: {
+        invalidatesTags: [TAGS.Result, TAGS.Issues, TAGS.Project],
+      },
       postApiV2UploadCtrfReport: {
         invalidatesTags: ['Reports', TAGS.Result],
       },

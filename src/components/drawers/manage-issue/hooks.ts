@@ -4,7 +4,7 @@
 import { useCallback } from 'react';
 
 import { useDrawerActions } from '@/redux/slices/drawer';
-import { Issue, ResultError } from '@/types';
+import { IssueCore, ResultError } from '@/types';
 
 import { ManageIssueDrawer } from './manage-issue-drawer';
 
@@ -12,7 +12,7 @@ export const useManageIssueDrawer = ({ resultError }: { resultError?: ResultErro
   const { openDrawer } = useDrawerActions();
 
   return useCallback(
-    ({ issue }: { issue?: Issue } = {}) => openDrawer(ManageIssueDrawer, { resultError, issue }),
+    ({ issue }: { issue?: IssueCore } = {}) => openDrawer(ManageIssueDrawer, { resultError, issue }),
     [openDrawer, resultError],
   );
 };

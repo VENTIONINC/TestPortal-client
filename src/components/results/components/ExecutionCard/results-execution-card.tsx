@@ -266,7 +266,7 @@ export const ResultsExecutionCard = memo(
                   ))}
 
                 {errors.map((resultError) => (
-                  <InlineIssue key={resultError.id} resultError={resultError} />
+                  <InlineIssue key={resultError.id} resultError={resultError} category={analysisCategory} />
                 ))}
 
                 <ContextMenuButton

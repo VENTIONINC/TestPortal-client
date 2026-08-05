@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AnalysisCategory, BaseResult, Result, ResultExecution, ResultSpec, ResultsFilters } from '@/types';
+import { getEffectiveResultCategory, normalizeResultCategory } from '@/utils/analysis';
 
 export type SpecGroup = {
   spec: ResultSpec;
@@ -9,8 +10,7 @@ export type SpecGroup = {
 };
 
 export const toAnalysisCategory = (value?: string): AnalysisCategory | undefined => {
-  if (!value) return undefined;
-  return Object.values(AnalysisCategory).includes(value as AnalysisCategory) ? (value as AnalysisCategory) : undefined;
+  return normalizeResultCategory(value);
 };
 
 export const toBaseResult = (result: Result): BaseResult => ({
@@ -25,7 +25,7 @@ export const toBaseResult = (result: Result): BaseResult => ({
   specId: result.specId,
   executionId: result.executionId,
   errors: result.errors,
-  analysisCategory: toAnalysisCategory(result.analysisFeedbackCategory) ?? result.analysisCategory,
+  analysisCategory: getEffectiveResultCategory(result.analysisCategory, result.analysisFeedbackCategory),
   analysisConfidence: result.analysisFeedbackConfidence ?? result.analysisConfidence,
   analysisStatus: result.analysisStatus,
   analysisConclusion: result.analysisFeedbackConclusion ?? result.analysisConclusion,

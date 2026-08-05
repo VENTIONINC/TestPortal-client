@@ -1,8 +1,6 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { IssueCategory } from '@/types';
-import { ISSUE_CATEGORY_LABELS } from '@/utils';
 import { FilterConfigSection } from '@/types/filter';
 
 export const filterConfig = [
@@ -51,18 +49,6 @@ export const filterConfig = [
   {
     title: 'Issue filters',
     fields: [
-      {
-        label: 'Category:',
-        name: 'category',
-        type: 'select',
-        options: [
-          { value: 'all', label: 'All' },
-          ...Object.values(IssueCategory).map((category) => ({
-            value: category,
-            label: ISSUE_CATEGORY_LABELS[category],
-          })),
-        ],
-      },
       {
         label: 'Name:',
         name: 'name',

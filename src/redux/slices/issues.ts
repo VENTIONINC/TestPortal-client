@@ -5,7 +5,7 @@ import { useCallback } from 'react';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { IssueCategory, IssueFilters } from '@/types';
+import { IssueFilters } from '@/types';
 
 export interface IssuesState {
   filters: IssueFilters;
@@ -19,7 +19,6 @@ export const initialFilters: IssueFilters = {
   specName: '',
   environment: '',
   type: '',
-  category: '' as IssueCategory,
   name: '',
   statFrom: '',
   statTo: '',
@@ -36,7 +35,9 @@ export const issuesSlice = createSlice({
   reducers: {
     reset: () => initialState,
     setFilters: (state, action: PayloadAction<Partial<IssueFilters>>) => {
-      state.filters = { ...state.filters, ...action.payload };
+      const supportedFilters = { ...action.payload } as Partial<IssueFilters> & { category?: unknown };
+      Reflect.deleteProperty(supportedFilters, 'category');
+      state.filters = { ...state.filters, ...supportedFilters };
     },
   },
 });

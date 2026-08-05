@@ -1,7 +1,16 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Issue } from './issue';
+import { IssueCore } from './issue';
+
+export const ResultCategory = {
+  Bug: 'bug',
+  Infra: 'infra',
+  Performance: 'performance',
+  Script: 'script',
+  Other: 'other',
+} as const;
+export type ResultCategory = (typeof ResultCategory)[keyof typeof ResultCategory];
 
 export enum ResultStatus {
   Passed = 'passed',
@@ -15,13 +24,8 @@ export enum AnalysisStatus {
   Failed = 'failed',
 }
 
-export enum AnalysisCategory {
-  Bug = 'bug',
-  Infra = 'infra',
-  Performance = 'performance',
-  Script = 'script',
-  Other = 'other',
-}
+export const AnalysisCategory = ResultCategory;
+export type AnalysisCategory = ResultCategory;
 
 export interface BaseResult {
   id: string;
@@ -35,11 +39,11 @@ export interface BaseResult {
   specId: string;
   executionId: string;
   errors: ResultError[];
-  analysisCategory?: AnalysisCategory;
+  analysisCategory?: ResultCategory;
   analysisConfidence?: number;
   analysisStatus?: AnalysisStatus;
   analysisConclusion?: string;
-  analysisFeedbackCategory?: string;
+  analysisFeedbackCategory?: ResultCategory;
   analysisFeedbackConfidence?: number;
   analysisFeedbackConclusion?: string;
   analysisErrorQuality?: number;
@@ -99,7 +103,7 @@ export interface ResultErrorAssumption {
   madeBy: string;
   issueId: string;
   resultErrorId: string;
-  issue: Issue;
+  issue: IssueCore;
 }
 
 export type ResultGroup = Map<
