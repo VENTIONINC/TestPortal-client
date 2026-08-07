@@ -13,6 +13,11 @@ export const toAnalysisCategory = (value?: string): AnalysisCategory | undefined
   return Object.values(AnalysisCategory).includes(value as AnalysisCategory) ? (value as AnalysisCategory) : undefined;
 };
 
+export const mergeAvailableAndActiveTags = (availableTags: string[], activeTags: string[]): string[] => {
+  const activeTagSet = new Set(activeTags);
+  return [...activeTags, ...availableTags.filter((tag) => !activeTagSet.has(tag))];
+};
+
 export const toBaseResult = (result: Result): BaseResult => ({
   id: result.id,
   createdAt: result.createdAt,

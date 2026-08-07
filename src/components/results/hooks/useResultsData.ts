@@ -23,6 +23,7 @@ export interface UseResultsDataReturn {
   activeDaysResultsIds: string[];
   availableDates: { yyyy_mm_dd: string; display: string; isActive: boolean }[];
   rawResults: Result[];
+  availableTags: string[];
   isFetching: boolean;
 }
 
@@ -80,6 +81,7 @@ export const useResultsData = ({
     activeDaysResultsIds,
     availableDates,
     rawResults: data?.rawResults ?? [],
+    availableTags: data?.availableTags ?? [],
     isFetching,
   };
 };

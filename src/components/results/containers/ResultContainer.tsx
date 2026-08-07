@@ -16,6 +16,7 @@ import { getEffectiveDatesInRange } from '@/utils/dateUtils';
 import { ResultsFloatingHeader, ResultsList, TopSectionContainer } from '../components';
 import { filterConfig } from '../configs';
 import { useResultsData, useResultsEffectiveFilters } from '../hooks';
+import { mergeAvailableAndActiveTags } from '../utils';
 
 export const ResultContainerInner = () => {
   const selectedDates = useSelectedDates();
@@ -30,13 +31,20 @@ export const ResultContainerInner = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveFilters.to]);
 
-  const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates, rawResults, isFetching } =
-    useResultsData({
-      effectiveFilters,
-      debouncedFilters,
-      selectedDates,
-      selectedProjectId: selectedProjectId!,
-    });
+  const {
+    results,
+    unfilteredResultsMap,
+    activeDaysResultsIds,
+    availableDates,
+    rawResults,
+    availableTags: backendAvailableTags,
+    isFetching,
+  } = useResultsData({
+    effectiveFilters,
+    debouncedFilters,
+    selectedDates,
+    selectedProjectId: selectedProjectId!,
+  });
 
   const handleSelectAll = useCallback(() => selectAll(activeDaysResultsIds), [selectAll, activeDaysResultsIds]);
 
@@ -59,15 +67,18 @@ export const ResultContainerInner = () => {
 
   const statistics = debouncedDates.length === 0 ? undefined : statisticsData;
 
-  const availableTags = useMemo(() => {
-    const tagsSet = new Set<string>();
-    rawResults.forEach((result) => {
-      if (result.spec?.tags) {
-        result.spec.tags.forEach((tag) => tagsSet.add(tag));
-      }
-    });
-    return Array.from(tagsSet).sort();
-  }, [rawResults]);
+  const activeTags = useMemo(() => {
+    return typeof effectiveFilters.tags === 'string' && effectiveFilters.tags
+      ? (effectiveFilters.tags as string).split(',')
+      : Array.isArray(effectiveFilters.tags)
+        ? effectiveFilters.tags
+        : [];
+  }, [effectiveFilters.tags]);
+
+  const availableTags = useMemo(
+    () => mergeAvailableAndActiveTags(backendAvailableTags, activeTags),
+    [activeTags, backendAvailableTags],
+  );
 
   const dynamicFilterConfig = useMemo(() => {
     return filterConfig.map((section) => {
@@ -88,14 +99,6 @@ export const ResultContainerInner = () => {
       return section;
     });
   }, [availableTags]);
-
-  const activeTags = useMemo(() => {
-    return typeof effectiveFilters.tags === 'string' && effectiveFilters.tags
-      ? (effectiveFilters.tags as string).split(',')
-      : Array.isArray(effectiveFilters.tags)
-        ? effectiveFilters.tags
-        : [];
-  }, [effectiveFilters.tags]);
 
   const handleToggleTag = useCallback(
     (tag: string) => {
