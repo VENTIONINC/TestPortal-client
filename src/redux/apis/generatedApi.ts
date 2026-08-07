@@ -1333,8 +1333,12 @@ export type Result = {
 };
 export type ResultsListResponse = {
   results: Result[];
+  /** Unfiltered period results for specs in the current results page */
   rawResults: Result[];
+  /** Unique sorted tags matching all active result filters except tag */
+  availableTags: string[];
   total: number;
+  /** Number of raw results returned for the current results page */
   rawTotal: number;
   page: number;
   totalPages: number;

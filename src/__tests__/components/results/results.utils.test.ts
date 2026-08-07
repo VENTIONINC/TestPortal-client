@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { buildResultsGroups } from '@/components/results/utils';
+import { buildResultsGroups, mergeAvailableAndActiveTags } from '@/components/results/utils';
 import { Result, ResultStatus, ResultsFilters } from '@/types';
 
 const filters: ResultsFilters = {
@@ -72,5 +72,16 @@ describe('buildResultsGroups', () => {
     expect(grouped.unfilteredResultsMap.get('visible-spec')?.executions).toHaveLength(2);
     expect(grouped.unfilteredResultsMap.has('raw-only-spec')).toBe(true);
     expect(grouped.activeDaysResultsIds).toEqual(['filtered']);
+  });
+});
+
+describe('mergeAvailableAndActiveTags', () => {
+  it('keeps active tags first and appends remaining available tags without duplicates', () => {
+    expect(mergeAvailableAndActiveTags(['L1', 'L2', 'L3'], ['legacy', 'L2'])).toEqual([
+      'legacy',
+      'L2',
+      'L1',
+      'L3',
+    ]);
   });
 });
