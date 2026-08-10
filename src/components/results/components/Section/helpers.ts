@@ -23,7 +23,8 @@ type SerializedExecution = (
 
 export const serializeExecution: SerializedExecution = (execution, user) => {
   const { reportPortalEnabled, reportPortalUrl, monitoringPortalEnabled, monitoringPortalUrl } = user;
-  const { id, createdAt, updatedAt, environment, type, name, provider } = execution;
+  const { id, createdAt, updatedAt, environment, type, name, provider, version } = execution;
+  const normalizedVersion = version?.trim();
 
   return {
     id,
@@ -32,7 +33,7 @@ export const serializeExecution: SerializedExecution = (execution, user) => {
     environment,
     type,
     name,
-    provider,
+    provider: normalizedVersion ? `${provider} ${normalizedVersion}` : provider,
     reportPortalUrl: reportPortalUrl ?? '',
     monitoringPortalUrl: monitoringPortalUrl ?? '',
     monitoringPortalEnabled,
