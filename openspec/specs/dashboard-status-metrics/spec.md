@@ -20,7 +20,7 @@ The Dashboard SHALL use explicit backend-provided status counts for dashboard st
 The Dashboard SHALL apply the same status-count semantics across statistics cards, donut chart data, pass-rate chart data, and history/regression chart data.
 
 #### Scenario: Dashboard views display matching status totals
-- **WHEN** the dashboard renders status cards and charts for the same project and period
+- **WHEN** the dashboard renders status cards and charts for the same project, environment, and period
 - **THEN** each dashboard status view uses the same passed, failed, skipped, and timed-out counts for that data scope
 
 #### Scenario: Status bucket sum matches total result count
@@ -28,7 +28,7 @@ The Dashboard SHALL apply the same status-count semantics across statistics card
 - **THEN** the displayed status buckets sum to the displayed total result count
 
 ### Requirement: Dashboard preserves selected data scope
-The Dashboard SHALL preserve the existing selected project and period scope when displaying explicit status metrics across all execution environments.
+The Dashboard SHALL preserve the existing selected project, environment, and period scope when displaying explicit status metrics.
 
 #### Scenario: Period filter changes dashboard status metrics
 - **WHEN** the user changes the Dashboard period filter
@@ -36,4 +36,5 @@ The Dashboard SHALL preserve the existing selected project and period scope when
 
 #### Scenario: Project scope remains unchanged
 - **WHEN** the Dashboard fetches status metrics for a selected project
-- **THEN** the displayed status counts correspond to the selected project across all execution environments
+- **THEN** the displayed status counts correspond to the selected project
+

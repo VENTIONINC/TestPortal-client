@@ -680,6 +680,7 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/v2/projects/${queryArg.projectId}/dashboard`,
           params: {
+            environment: queryArg.environment,
             period: queryArg.period,
             type: queryArg["type"],
             granularity: queryArg.granularity,
@@ -1171,6 +1172,8 @@ export type GetApiV2ProjectsByProjectIdDashboardApiResponse =
 export type GetApiV2ProjectsByProjectIdDashboardApiArg = {
   /** The unique identifier of the project */
   projectId: string;
+  /** Target environment to filter results */
+  environment: string;
   /** Number of days to include in history (default 30) */
   period?: string;
   /** Filter by execution type */
@@ -1826,6 +1829,8 @@ export type PdfExportTimeoutResponse = {
 export type PdfExportRequest = {
   /** Project UUID or project name */
   project: string;
+  /** Execution environment filter */
+  environment: string;
   /** Execution type filter, use 'all' to include all types */
   executionType: string;
   /** Accepts YYYY-MM-DD or ISO datetime; backend normalizes to YYYY-MM-DD */

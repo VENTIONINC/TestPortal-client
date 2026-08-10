@@ -21,6 +21,7 @@ import { filterConfig } from '../configs';
 import { DashboardExportSelect, type DashboardExportMode } from './DashboardExportSelect';
 import { DashboardGrid } from './DashboardGrid';
 
+const DEFAULT_ENVIRONMENT = 'staging';
 const DEFAULT_PERIOD = '1';
 
 const initialDashboardFilters: Record<string, string> = {
@@ -50,10 +51,12 @@ const getExportGranularity = (periodDays: number): PdfExportRequest['granularity
 
 const buildDashboardPdfExportRequest = ({
   projectId,
+  environment,
   period,
   includeAiInsights,
 }: {
   projectId: string;
+  environment: string;
   period: string;
   includeAiInsights: boolean;
 }): PdfExportRequest => {
@@ -67,6 +70,7 @@ const buildDashboardPdfExportRequest = ({
 
   return {
     project: projectId,
+    environment,
     executionType: 'all',
     periodStart: formatLocalDate(periodStart),
     periodEnd: formatLocalDate(periodEnd),
@@ -77,18 +81,21 @@ const buildDashboardPdfExportRequest = ({
 
 const buildDashboardPdfFileName = ({
   projectId,
+  environment,
   periodStart,
   periodEnd,
   includeAiInsights,
 }: {
   projectId: string;
+  environment: string;
   periodStart: string;
   periodEnd: string;
   includeAiInsights: boolean;
 }) => {
+  const safeEnvironment = environment.replace(/[^a-zA-Z0-9-_]/g, '_');
   const aiSuffix = includeAiInsights ? '-ai' : '';
 
-  return `dashboard-${projectId}-${periodStart}-${periodEnd}${aiSuffix}.pdf`;
+  return `dashboard-${projectId}-${safeEnvironment}-${periodStart}-${periodEnd}${aiSuffix}.pdf`;
 };
 
 const DashboardContent = () => {
@@ -109,6 +116,7 @@ const DashboardContent = () => {
   // Fetch dashboard data for the last 30 days
   const { data, isLoading, error } = useGetApiV2ProjectsByProjectIdDashboardQuery({
     projectId: selectedProjectId,
+    environment: DEFAULT_ENVIRONMENT,
     period,
   });
 
@@ -131,6 +139,7 @@ const DashboardContent = () => {
     try {
       const pdfExportRequest = buildDashboardPdfExportRequest({
         projectId: selectedProjectId,
+        environment: DEFAULT_ENVIRONMENT,
         period,
         includeAiInsights,
       });
@@ -140,6 +149,7 @@ const DashboardContent = () => {
         pdfBlob,
         buildDashboardPdfFileName({
           projectId: selectedProjectId,
+          environment: DEFAULT_ENVIRONMENT,
           periodStart: pdfExportRequest.periodStart,
           periodEnd: pdfExportRequest.periodEnd,
           includeAiInsights,

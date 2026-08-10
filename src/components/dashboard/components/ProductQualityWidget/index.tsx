@@ -12,6 +12,7 @@ import { ProgressBar, ProgressRoot } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui';
 
+const DEFAULT_ENVIRONMENT = 'staging';
 const DEFAULT_PERIOD = '1';
 
 interface ProductQualityWidgetProps {
@@ -115,6 +116,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   const { data: doubleDashboardData, isLoading: isLoadingDashboard } = useGetApiV2ProjectsByProjectIdDashboardQuery(
     {
       projectId: selectedProjectId,
+      environment: DEFAULT_ENVIRONMENT,
       period: String(periodDays * 2),
     },
     { skip: !selectedProjectId },
