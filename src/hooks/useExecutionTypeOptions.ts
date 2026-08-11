@@ -15,6 +15,7 @@ interface UseExecutionTypeOptionsParams {
 interface UseExecutionTypeOptionsResult {
   options: FilterFieldOption[];
   isLoading: boolean;
+  effectiveType: string;
 }
 
 export const normalizeExecutionTypeFilters = (
@@ -29,10 +30,29 @@ export const useExecutionTypeOptions = ({
   selectedType,
   onInvalidType,
 }: UseExecutionTypeOptionsParams): UseExecutionTypeOptionsResult => {
-  const { data, isFetching } = useGetApiV2ProjectsByIdExecutionTypesQuery(
+  const { data, isFetching, isError } = useGetApiV2ProjectsByIdExecutionTypesQuery(
     { id: projectId },
     { skip: !projectId },
   );
+
+  const isTypePending =
+    !!projectId && selectedType !== 'all' && !isError && (isFetching || data === undefined);
+
+  const effectiveType = useMemo(() => {
+    if (!selectedType || selectedType === 'all') {
+      return 'all';
+    }
+    if (!projectId || isError) {
+      return 'all';
+    }
+    if (isTypePending) {
+      return 'all';
+    }
+    if (!data!.includes(selectedType)) {
+      return 'all';
+    }
+    return selectedType;
+  }, [selectedType, projectId, isError, isTypePending, data]);
 
   const options = useMemo(
     () => [
@@ -41,6 +61,12 @@ export const useExecutionTypeOptions = ({
     ],
     [data],
   );
+
+  useEffect(() => {
+    if (isError && selectedType !== 'all') {
+      onInvalidType?.('all');
+    }
+  }, [isError, onInvalidType, selectedType]);
 
   useEffect(() => {
     if (
@@ -53,5 +79,5 @@ export const useExecutionTypeOptions = ({
     }
   }, [data, onInvalidType, selectedType]);
 
-  return { options, isLoading: isFetching };
+  return { options, isLoading: isFetching, effectiveType };
 };

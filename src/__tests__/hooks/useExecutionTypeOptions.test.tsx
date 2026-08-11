@@ -7,7 +7,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { normalizeExecutionTypeFilters, useExecutionTypeOptions } from '@/hooks/useExecutionTypeOptions';
 
 const queryMock = vi.hoisted(() =>
-  vi.fn(() => ({ data: undefined as string[] | undefined, isFetching: false })),
+  vi.fn(() => ({
+    data: undefined as string[] | undefined,
+    isFetching: false,
+    isError: false,
+  })),
 );
 
 vi.mock('@/redux/apis/generatedApi', () => ({
@@ -17,11 +21,11 @@ vi.mock('@/redux/apis/generatedApi', () => ({
 describe('useExecutionTypeOptions', () => {
   beforeEach(() => {
     queryMock.mockReset();
-    queryMock.mockReturnValue({ data: undefined, isFetching: false });
+    queryMock.mockReturnValue({ data: undefined, isFetching: false, isError: false });
   });
 
   it('maps exact project values after the All option', () => {
-    queryMock.mockReturnValue({ data: ['Custom Release', 'Nightly'], isFetching: false });
+    queryMock.mockReturnValue({ data: ['Custom Release', 'Nightly'], isFetching: false, isError: false });
 
     const { result } = renderHook(() =>
       useExecutionTypeOptions({ projectId: 'project-1', selectedType: 'all' }),
@@ -52,12 +56,13 @@ describe('useExecutionTypeOptions', () => {
     expect(result.current).toEqual({
       options: [{ label: 'All', value: 'all' }],
       isLoading: true,
+      effectiveType: 'all',
     });
   });
 
   it('resets a selected type that is unavailable after a project change', async () => {
     const onInvalidType = vi.fn();
-    queryMock.mockReturnValue({ data: ['Release'], isFetching: false });
+    queryMock.mockReturnValue({ data: ['Release'], isFetching: false, isError: false });
 
     renderHook(() =>
       useExecutionTypeOptions({
@@ -72,9 +77,9 @@ describe('useExecutionTypeOptions', () => {
 
   it('preserves a selected type that is available in the new project', async () => {
     const onInvalidType = vi.fn();
-    queryMock.mockReturnValue({ data: ['Nightly'], isFetching: false });
+    queryMock.mockReturnValue({ data: ['Nightly'], isFetching: false, isError: false });
 
-    renderHook(() =>
+    const { result } = renderHook(() =>
       useExecutionTypeOptions({
         projectId: 'project-2',
         selectedType: 'Nightly',
@@ -83,5 +88,35 @@ describe('useExecutionTypeOptions', () => {
     );
 
     await waitFor(() => expect(onInvalidType).not.toHaveBeenCalled());
+    expect(result.current.effectiveType).toBe('Nightly');
+  });
+
+  it('keeps effectiveType at all while project types are still loading', () => {
+    queryMock.mockReturnValue({ data: undefined, isFetching: true, isError: false });
+
+    const { result } = renderHook(() =>
+      useExecutionTypeOptions({
+        projectId: 'project-2',
+        selectedType: 'Nightly',
+      }),
+    );
+
+    expect(result.current.effectiveType).toBe('all');
+  });
+
+  it('resets an invalid selection when discovery fails', async () => {
+    const onInvalidType = vi.fn();
+    queryMock.mockReturnValue({ data: undefined, isFetching: false, isError: true });
+
+    const { result } = renderHook(() =>
+      useExecutionTypeOptions({
+        projectId: 'project-2',
+        selectedType: 'Nightly',
+        onInvalidType,
+      }),
+    );
+
+    await waitFor(() => expect(onInvalidType).toHaveBeenCalledWith('all'));
+    expect(result.current.effectiveType).toBe('all');
   });
 });

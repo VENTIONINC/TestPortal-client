@@ -65,7 +65,8 @@ export const IssuesList = () => {
     },
     [filterProps],
   );
-  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading } = useExecutionTypeOptions({
+  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading, effectiveType } =
+    useExecutionTypeOptions({
     projectId: selectedProjectId ?? '',
     selectedType: filterProps.filters.type || 'all',
     onInvalidType: handleInvalidExecutionType,
@@ -95,7 +96,7 @@ export const IssuesList = () => {
         page: filterProps.filters.page,
         category: filterProps.filters.category,
         name: filterProps.filters.name,
-        type: filterProps.filters.type || 'all',
+        type: effectiveType,
         statFrom: filterProps.filters.statFrom,
         statTo: filterProps.filters.statTo,
       }),
@@ -105,6 +106,7 @@ export const IssuesList = () => {
       filterProps.filters.category,
       filterProps.filters.name,
       filterProps.filters.type,
+      effectiveType,
       filterProps.filters.statFrom,
       filterProps.filters.statTo,
     ],

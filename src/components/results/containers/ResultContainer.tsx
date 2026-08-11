@@ -33,11 +33,21 @@ export const ResultContainerInner = () => {
     },
     [filterProps],
   );
-  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading } = useExecutionTypeOptions({
+  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading, effectiveType } =
+    useExecutionTypeOptions({
     projectId: selectedProjectId ?? '',
     selectedType: effectiveFilters.type || 'all',
     onInvalidType: handleInvalidExecutionType,
   });
+
+  const queryFilters = useMemo(
+    () => ({ ...effectiveFilters, type: effectiveType }),
+    [effectiveFilters, effectiveType],
+  );
+  const debouncedQueryFilters = useMemo(
+    () => ({ ...debouncedFilters, type: effectiveType }),
+    [debouncedFilters, effectiveType],
+  );
 
   useEffect(() => {
     setSelectedDates([effectiveFilters.to]);
@@ -53,8 +63,8 @@ export const ResultContainerInner = () => {
     availableTags: backendAvailableTags,
     isFetching,
   } = useResultsData({
-    effectiveFilters,
-    debouncedFilters,
+    effectiveFilters: queryFilters,
+    debouncedFilters: debouncedQueryFilters,
     selectedDates,
     selectedProjectId: selectedProjectId!,
   });

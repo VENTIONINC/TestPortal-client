@@ -42,6 +42,7 @@ vi.mock('@/hooks', () => ({
       { label: 'Custom Release', value: 'Custom Release' },
     ],
     isLoading: false,
+    effectiveType: filterState.current.type,
   })),
 }));
 

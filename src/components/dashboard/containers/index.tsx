@@ -116,7 +116,8 @@ const DashboardContent = () => {
     },
     [filterProps],
   );
-  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading } = useExecutionTypeOptions({
+  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading, effectiveType } =
+    useExecutionTypeOptions({
     projectId: selectedProjectId ?? '',
     selectedType: executionType,
     onInvalidType: handleInvalidExecutionType,
@@ -138,7 +139,7 @@ const DashboardContent = () => {
   const { data, isLoading, error } = useGetApiV2ProjectsByProjectIdDashboardQuery({
     projectId: selectedProjectId,
     period,
-    ...(executionType !== 'all' && { type: executionType }),
+    ...(effectiveType !== 'all' && { type: effectiveType }),
   });
 
   const { summary, history } = data || {};
@@ -161,7 +162,7 @@ const DashboardContent = () => {
       const pdfExportRequest = buildDashboardPdfExportRequest({
         projectId: selectedProjectId,
         period,
-        executionType,
+        executionType: effectiveType,
         includeAiInsights,
       });
       const pdfBlob = await exportDashboardPdf({ pdfExportRequest }).unwrap();
