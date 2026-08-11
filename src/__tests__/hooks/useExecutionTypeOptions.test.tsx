@@ -47,7 +47,7 @@ describe('useExecutionTypeOptions', () => {
   });
 
   it('exposes loading state and only the All option before values load', () => {
-    queryMock.mockReturnValue({ data: undefined, isFetching: true });
+    queryMock.mockReturnValue({ data: undefined, isFetching: true, isError: false });
 
     const { result } = renderHook(() =>
       useExecutionTypeOptions({ projectId: 'project-1', selectedType: 'all' }),
