@@ -12,6 +12,7 @@ import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useGetApiV2ResultsStatsQuery } from '@/redux/apis/generatedApi';
 import { useResultsActions, useSelectedDates } from '@/redux/slices/results';
 import { getEffectiveDatesInRange } from '@/utils/dateUtils';
+import { useExecutionTypeOptions } from '@/hooks';
 
 import { ResultsFloatingHeader, ResultsList, TopSectionContainer } from '../components';
 import { filterConfig } from '../configs';
@@ -25,6 +26,18 @@ export const ResultContainerInner = () => {
   const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
   const { effectiveFilters, debouncedFilters, filterFormMethods, filterProps } = useResultsEffectiveFilters();
+
+  const handleInvalidExecutionType = useCallback(
+    (type: 'all') => {
+      filterProps.onApplyFilters({ ...filterProps.filters, type });
+    },
+    [filterProps],
+  );
+  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading } = useExecutionTypeOptions({
+    projectId: selectedProjectId ?? '',
+    selectedType: effectiveFilters.type || 'all',
+    onInvalidType: handleInvalidExecutionType,
+  });
 
   useEffect(() => {
     setSelectedDates([effectiveFilters.to]);
@@ -96,9 +109,19 @@ export const ResultContainerInner = () => {
           }),
         };
       }
+      if (section.title === 'Execution') {
+        return {
+          ...section,
+          fields: section.fields.map((field) =>
+            field.name === 'type'
+              ? { ...field, options: executionTypeOptions, disabled: areExecutionTypesLoading }
+              : field,
+          ),
+        };
+      }
       return section;
     });
-  }, [availableTags]);
+  }, [areExecutionTypesLoading, availableTags, executionTypeOptions]);
 
   const handleToggleTag = useCallback(
     (tag: string) => {

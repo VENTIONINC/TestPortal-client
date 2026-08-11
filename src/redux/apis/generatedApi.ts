@@ -109,6 +109,7 @@ const injectedRtkApi = api
             name: queryArg.name,
             page: queryArg.page,
             limit: queryArg.limit,
+            type: queryArg["type"],
             statFrom: queryArg.statFrom,
             statTo: queryArg.statTo,
           },
@@ -645,6 +646,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Projects"],
       }),
+      getApiV2ProjectsByIdExecutionTypes: build.query<
+        GetApiV2ProjectsByIdExecutionTypesApiResponse,
+        GetApiV2ProjectsByIdExecutionTypesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.id}/execution-types`,
+        }),
+        providesTags: ["Projects"],
+      }),
       getApiV2ProjectsById: build.query<
         GetApiV2ProjectsByIdApiResponse,
         GetApiV2ProjectsByIdApiArg
@@ -846,6 +856,8 @@ export type GetApiV2IssuesWithStatsApiArg = {
   name?: string;
   page?: number;
   limit?: number;
+  /** Filter statistics by exact execution type */
+  type?: string;
   /** Start date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
   statFrom?: string;
   /** End date for statistics in ISO format (YYYY-MM-DDTHH:mm:ss.sssZ) */
@@ -1150,6 +1162,11 @@ export type PostApiV2ProjectsApiResponse =
   /** status 201 Project created successfully */ Project;
 export type PostApiV2ProjectsApiArg = {
   createProjectRequest: CreateProjectRequest;
+};
+export type GetApiV2ProjectsByIdExecutionTypesApiResponse =
+  /** status 200 Project execution types */ ProjectExecutionTypes;
+export type GetApiV2ProjectsByIdExecutionTypesApiArg = {
+  id: string;
 };
 export type GetApiV2ProjectsByIdApiResponse =
   /** status 200 Project details */ Project;
@@ -1689,6 +1706,7 @@ export type CreateProjectRequest = {
   description?: string;
   categoryWeights?: ProjectCategoryWeights;
 };
+export type ProjectExecutionTypes = string[];
 export type UpdateProjectRequest = {
   name?: string;
   description?: string;
@@ -1894,6 +1912,7 @@ export const {
   useGetApiV2SkillsByIdArchiveQuery,
   useGetApiV2ProjectsQuery,
   usePostApiV2ProjectsMutation,
+  useGetApiV2ProjectsByIdExecutionTypesQuery,
   useGetApiV2ProjectsByIdQuery,
   usePutApiV2ProjectsByIdMutation,
   useDeleteApiV2ProjectsByIdMutation,

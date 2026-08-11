@@ -49,7 +49,7 @@ export const useResultsData = ({
     specFile: debouncedFilters.specFile || undefined,
     specName: debouncedFilters.specName || undefined,
     environment: debouncedFilters.environment || undefined,
-    type: debouncedFilters.type || undefined,
+    type: debouncedFilters.type && debouncedFilters.type !== 'all' ? debouncedFilters.type : undefined,
     reviewStatus: debouncedFilters.reviewStatus || undefined,
     errorMessage: debouncedFilters.errorMessage || undefined,
     issueName: debouncedFilters.issueName || undefined,

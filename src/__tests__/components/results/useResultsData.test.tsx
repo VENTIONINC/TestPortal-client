@@ -25,7 +25,7 @@ const filters: ResultsFilters = {
   specFile: '',
   specName: '',
   environment: '',
-  type: '',
+  type: 'all',
   status: 'failed',
   reviewStatus: '',
   errorMessage: '',
@@ -92,5 +92,33 @@ describe('useResultsData', () => {
 
     expect(result.current.availableTags).toEqual(['L1', 'L2', 'L3']);
     expect(result.current.rawResults).toEqual([]);
+  });
+
+  it('omits the type request parameter when All is selected', () => {
+    renderHook(() =>
+      useResultsData({
+        effectiveFilters: filters,
+        debouncedFilters: filters,
+        selectedDates: ['2026-07-02'],
+        selectedProjectId: 'project-1',
+      }),
+    );
+
+    expect(queryMock.mock.lastCall?.[0]).toMatchObject({ type: undefined });
+  });
+
+  it('submits the exact selected execution type', () => {
+    const releaseFilters = { ...filters, type: 'Custom Release' };
+
+    renderHook(() =>
+      useResultsData({
+        effectiveFilters: releaseFilters,
+        debouncedFilters: releaseFilters,
+        selectedDates: ['2026-07-02'],
+        selectedProjectId: 'project-1',
+      }),
+    );
+
+    expect(queryMock.mock.lastCall?.[0]).toMatchObject({ type: 'Custom Release' });
   });
 });
