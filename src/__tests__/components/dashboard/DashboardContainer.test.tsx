@@ -9,6 +9,8 @@ import { useGetApiV2ProjectsByProjectIdDashboardQuery } from '@/redux/apis/gener
 import { useExportDashboardPdfMutation } from '@/redux/apis/extendedApi';
 import { DashboardContainer } from '@/components/dashboard/containers';
 
+const filterState = vi.hoisted(() => ({ current: { type: 'all', period: '14' } }));
+
 vi.mock('@/redux/apis/generatedApi', () => ({
   useGetApiV2ProjectsByProjectIdDashboardQuery: vi.fn(),
 }));
@@ -22,13 +24,25 @@ vi.mock('@/redux/slices/projects', () => ({
 }));
 
 vi.mock('@/hooks', () => ({
+  normalizeExecutionTypeFilters: (filters: Record<string, string>) => ({
+    ...filters,
+    type: filters.type || 'all',
+  }),
   useFiltersWithUrl: vi.fn(() => ({
     formMethods: {},
     filterProps: {
-      filters: { execution: '', period: '14' },
-      initialFilters: { execution: '', period: '' },
+      filters: filterState.current,
+      initialFilters: { type: 'all', period: '' },
       onApplyFilters: vi.fn(),
     },
+  })),
+  useExecutionTypeOptions: vi.fn(() => ({
+    options: [
+      { label: 'All', value: 'all' },
+      { label: 'Custom Release', value: 'Custom Release' },
+    ],
+    isLoading: false,
+    effectiveType: filterState.current.type,
   })),
 }));
 
@@ -92,6 +106,7 @@ describe('DashboardContainer', () => {
     vi.setSystemTime(new Date('2026-08-07T12:00:00'));
     mockedDashboardQuery.mockReturnValue({ data: undefined, isLoading: false, error: undefined } as never);
     mockedExportDashboardPdf.mockReturnValue([exportDashboardPdf, {}] as never);
+    filterState.current = { type: 'all', period: '14' };
   });
 
   afterEach(() => {
@@ -103,6 +118,25 @@ describe('DashboardContainer', () => {
     render(<DashboardContainer />);
 
     expect(mockedDashboardQuery).toHaveBeenCalledWith({ projectId: 'project-123', period: '14' });
+  });
+
+  it('uses the exact selected execution type for dashboard data and PDF export', async () => {
+    filterState.current = { type: 'Custom Release', period: '14' };
+    render(<DashboardContainer />);
+
+    expect(mockedDashboardQuery).toHaveBeenCalledWith({
+      projectId: 'project-123',
+      period: '14',
+      type: 'Custom Release',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Export with AI' }));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(exportDashboardPdf).toHaveBeenCalledWith({
+      pdfExportRequest: expect.objectContaining({ executionType: 'Custom Release' }),
+    });
   });
 
   it('exports dashboard PDF data and filename without an environment filter', async () => {

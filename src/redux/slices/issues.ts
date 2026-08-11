@@ -18,7 +18,7 @@ export const initialFilters: IssueFilters = {
   specFile: '',
   specName: '',
   environment: '',
-  type: '',
+  type: 'all',
   category: '' as IssueCategory,
   name: '',
   statFrom: '',

@@ -43,8 +43,8 @@ export const filterConfig = [
       {
         label: 'Type:',
         name: 'type',
-        disabled: true,
-        type: 'input',
+        type: 'select',
+        options: [{ value: 'all', label: 'All' }],
       },
     ],
   },

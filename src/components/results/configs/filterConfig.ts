@@ -87,8 +87,8 @@ export const filterConfig: FilterConfigSection[] = [
       {
         label: 'Type:',
         name: 'type',
-        disabled: true,
-        type: 'input',
+        type: 'select',
+        options: [{ label: 'All', value: 'all' }],
       },
     ],
   },

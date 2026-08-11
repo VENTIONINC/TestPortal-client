@@ -73,6 +73,23 @@ describe('buildResultsGroups', () => {
     expect(grouped.unfilteredResultsMap.has('raw-only-spec')).toBe(true);
     expect(grouped.activeDaysResultsIds).toEqual(['filtered']);
   });
+
+  it('keeps results from every execution type when All is selected', () => {
+    const nightly = makeResult('nightly', 'nightly-spec', '2026-07-02', ResultStatus.Failed);
+    nightly.execution.type = 'Nightly';
+    const release = makeResult('release', 'release-spec', '2026-07-02', ResultStatus.Failed);
+    release.execution.type = 'Release';
+
+    const grouped = buildResultsGroups(
+      [nightly, release],
+      [nightly, release],
+      ['2026-07-02'],
+      { ...filters, type: 'all' },
+    );
+
+    expect([...grouped.results.keys()]).toEqual(['nightly-spec', 'release-spec']);
+    expect(grouped.activeDaysResultsIds).toEqual(['nightly', 'release']);
+  });
 });
 
 describe('mergeAvailableAndActiveTags', () => {

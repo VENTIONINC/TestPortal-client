@@ -51,7 +51,7 @@ export const matchesFilters = (result: Result, filters: ResultsFilters): boolean
   if (filters.specFile && !result.spec.file.toLowerCase().includes(filters.specFile.toLowerCase())) return false;
   if (filters.specName && !result.spec.title.toLowerCase().includes(filters.specName.toLowerCase())) return false;
   if (filters.environment && result.execution.environment !== filters.environment) return false;
-  if (filters.type && result.execution.type !== filters.type) return false;
+  if (filters.type && filters.type !== 'all' && result.execution.type !== filters.type) return false;
   if (filters.status && result.status !== filters.status) return false;
   if (filters.errorMessage) {
     const hasMatchingError = result.errors.some((e) =>
