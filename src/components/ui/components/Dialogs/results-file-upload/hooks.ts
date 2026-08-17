@@ -5,7 +5,10 @@ import { useState } from 'react';
 import { useFileUpload } from '@chakra-ui/react';
 
 import { toaster } from '@/components/ui';
-import { usePostApiV2UploadJsonReportMutation } from '@/redux/apis/generatedApi';
+import {
+  type FutureExecutionTimestampsWarning,
+  usePostApiV2UploadJsonReportMutation,
+} from '@/redux/apis/generatedApi';
 import { usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/extendedApi';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useDialogActions } from '@/redux/slices/dialog';
@@ -40,30 +43,34 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
       const files = fileUpload.acceptedFiles;
       const totalFiles = files.length;
       let processedCount = 0;
+      const warnings: FutureExecutionTimestampsWarning[] = [];
 
       const fileChunks = chunkArray(files, 5);
 
       for (const chunk of fileChunks) {
-        await Promise.all(
+        const responses = await Promise.all(
           chunk.map(async (file) => {
             if (reportType === 'playwright') {
               const formData = new FormData();
               formData.append('report', file);
               formData.append('projectId', selectedProjectId);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await uploadJsonReport({ body: formData as any }).unwrap();
-            } else if (reportType === 'ctrf') {
-              const formData = new FormData();
-              formData.append('report', file);
-              formData.append('projectId', selectedProjectId);
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await uploadCtrfReport({ body: formData as any }).unwrap();
+              return uploadJsonReport({ body: formData as any }).unwrap();
             }
 
-            processedCount++;
-            setUploadProgress((processedCount / totalFiles) * 100);
+            const formData = new FormData();
+            formData.append('report', file);
+            formData.append('projectId', selectedProjectId);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return uploadCtrfReport({ body: formData as any }).unwrap();
           }),
         );
+
+        for (const response of responses) {
+          warnings.push(...response.warnings);
+          processedCount++;
+          setUploadProgress((processedCount / totalFiles) * 100);
+        }
 
         if (fileChunks.indexOf(chunk) < fileChunks.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 500));
@@ -72,7 +79,25 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
 
       fileUpload.clearFiles();
       setUploadProgress(0);
-      toaster.create({ title: 'Files uploaded', type: 'success' });
+      const futureTimestampWarnings = warnings.filter(
+        (warning) => warning.code === 'FUTURE_EXECUTION_TIMESTAMPS',
+      );
+
+      if (futureTimestampWarnings.length > 0) {
+        const count = futureTimestampWarnings.reduce((total, warning) => total + warning.count, 0);
+        const maxDeviationMinutes = Math.max(
+          ...futureTimestampWarnings.map((warning) => warning.maxDeviationMinutes),
+        );
+        const thresholdMinutes = futureTimestampWarnings[0]?.thresholdMinutes ?? 10;
+
+        toaster.create({
+          title: 'Files uploaded with date warnings',
+          description: `Detected ${count} execution timestamps more than ${thresholdMinutes} minutes in the future. Largest deviation: ${maxDeviationMinutes} minutes. Imported data was not changed.`,
+          type: 'warning',
+        });
+      } else {
+        toaster.create({ title: 'Files uploaded', type: 'success' });
+      }
       closeDialog();
     } catch {
       toaster.create({ title: 'Failed to upload files', type: 'error' });
