@@ -25,6 +25,8 @@ export const DateList = ({ days, toggleHandler, size = 'default', isBorder = tru
               flex={1}
               justifyContent="center"
               borderRadius="0"
+              _first={{ borderLeftRadius: 'md' }}
+              _last={{ borderRightRadius: 'md' }}
               height={buttonH}
               fontSize={buttonFontSize}
               fontWeight={500}

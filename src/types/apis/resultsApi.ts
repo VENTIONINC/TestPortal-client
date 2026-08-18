@@ -25,6 +25,7 @@ export interface GetResultsResponse {
   page: number;
   results: Result[];
   rawResults: Result[];
+  availableTags: string[];
   total: number;
   rawTotal: number;
   totalPages: number;

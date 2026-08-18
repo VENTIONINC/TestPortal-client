@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { Flex } from '@chakra-ui/react';
@@ -11,7 +11,7 @@ import { saveAs } from 'file-saver';
 import { type PdfExportRequest, useGetApiV2ProjectsByProjectIdDashboardQuery } from '@/redux/apis/generatedApi';
 import { useExportDashboardPdfMutation } from '@/redux/apis/extendedApi';
 import { useSelectedProjectId } from '@/redux/slices/projects';
-import { useFiltersWithUrl } from '@/hooks';
+import { normalizeExecutionTypeFilters, useExecutionTypeOptions, useFiltersWithUrl } from '@/hooks';
 import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
 import { Alert, Filter, toaster } from '@/components/ui';
 import { FilterProvider } from '@/contexts/FilterContext';
@@ -21,11 +21,10 @@ import { filterConfig } from '../configs';
 import { DashboardExportSelect, type DashboardExportMode } from './DashboardExportSelect';
 import { DashboardGrid } from './DashboardGrid';
 
-const DEFAULT_ENVIRONMENT = 'staging';
 const DEFAULT_PERIOD = '1';
 
 const initialDashboardFilters: Record<string, string> = {
-  execution: '',
+  type: 'all',
   period: '',
 };
 
@@ -51,13 +50,13 @@ const getExportGranularity = (periodDays: number): PdfExportRequest['granularity
 
 const buildDashboardPdfExportRequest = ({
   projectId,
-  environment,
   period,
+  executionType,
   includeAiInsights,
 }: {
   projectId: string;
-  environment: string;
   period: string;
+  executionType: string;
   includeAiInsights: boolean;
 }): PdfExportRequest => {
   const parsedPeriod = Number.parseInt(period, 10);
@@ -70,8 +69,7 @@ const buildDashboardPdfExportRequest = ({
 
   return {
     project: projectId,
-    environment,
-    executionType: 'all',
+    executionType,
     periodStart: formatLocalDate(periodStart),
     periodEnd: formatLocalDate(periodEnd),
     granularity: getExportGranularity(periodDays),
@@ -81,21 +79,18 @@ const buildDashboardPdfExportRequest = ({
 
 const buildDashboardPdfFileName = ({
   projectId,
-  environment,
   periodStart,
   periodEnd,
   includeAiInsights,
 }: {
   projectId: string;
-  environment: string;
   periodStart: string;
   periodEnd: string;
   includeAiInsights: boolean;
 }) => {
-  const safeEnvironment = environment.replace(/[^a-zA-Z0-9-_]/g, '_');
   const aiSuffix = includeAiInsights ? '-ai' : '';
 
-  return `dashboard-${projectId}-${safeEnvironment}-${periodStart}-${periodEnd}${aiSuffix}.pdf`;
+  return `dashboard-${projectId}-${periodStart}-${periodEnd}${aiSuffix}.pdf`;
 };
 
 const DashboardContent = () => {
@@ -108,16 +103,43 @@ const DashboardContent = () => {
     currentFilters: filters,
     initialFilters: initialDashboardFilters,
     onUpdateFilters: setFilters,
+    normalizeFilters: normalizeExecutionTypeFilters,
   });
 
   const effectiveFilters = filterProps.filters;
   const period = effectiveFilters.period || DEFAULT_PERIOD;
+  const executionType = effectiveFilters.type || 'all';
+
+  const handleInvalidExecutionType = useCallback(
+    (type: 'all') => {
+      filterProps.onApplyFilters({ ...filterProps.filters, type });
+    },
+    [filterProps],
+  );
+  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading, effectiveType } =
+    useExecutionTypeOptions({
+    projectId: selectedProjectId ?? '',
+    selectedType: executionType,
+    onInvalidType: handleInvalidExecutionType,
+  });
+  const dynamicFilterConfig = useMemo(
+    () =>
+      filterConfig.map((section) => ({
+        ...section,
+        fields: section.fields.map((field) =>
+          field.name === 'type'
+            ? { ...field, options: executionTypeOptions, disabled: areExecutionTypesLoading }
+            : field,
+        ),
+      })),
+    [areExecutionTypesLoading, executionTypeOptions],
+  );
 
   // Fetch dashboard data for the last 30 days
   const { data, isLoading, error } = useGetApiV2ProjectsByProjectIdDashboardQuery({
     projectId: selectedProjectId,
-    environment: DEFAULT_ENVIRONMENT,
     period,
+    ...(effectiveType !== 'all' && { type: effectiveType }),
   });
 
   const { summary, history } = data || {};
@@ -139,8 +161,8 @@ const DashboardContent = () => {
     try {
       const pdfExportRequest = buildDashboardPdfExportRequest({
         projectId: selectedProjectId,
-        environment: DEFAULT_ENVIRONMENT,
         period,
+        executionType: effectiveType,
         includeAiInsights,
       });
       const pdfBlob = await exportDashboardPdf({ pdfExportRequest }).unwrap();
@@ -149,7 +171,6 @@ const DashboardContent = () => {
         pdfBlob,
         buildDashboardPdfFileName({
           projectId: selectedProjectId,
-          environment: DEFAULT_ENVIRONMENT,
           periodStart: pdfExportRequest.periodStart,
           periodEnd: pdfExportRequest.periodEnd,
           includeAiInsights,
@@ -204,7 +225,7 @@ const DashboardContent = () => {
     <MainTemplate pageHeader="Dashboard" actionButton={actionButton}>
       <FormProvider {...formMethods}>
         <Flex align="stretch" gap={6}>
-          <Filter config={filterConfig} {...filterProps} />
+          <Filter config={dynamicFilterConfig} {...filterProps} />
           <DashboardGrid summary={summary} history={history} isLoading={isLoading} period={period} />
         </Flex>
       </FormProvider>

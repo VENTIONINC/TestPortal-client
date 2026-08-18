@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { buildResultsGroups, toBaseResult } from '@/components/results/utils';
+import { buildResultsGroups, mergeAvailableAndActiveTags, toBaseResult } from '@/components/results/utils';
 import { Result, ResultStatus, ResultsFilters } from '@/types';
 
 const filters: ResultsFilters = {
@@ -72,6 +72,34 @@ describe('buildResultsGroups', () => {
     expect(grouped.unfilteredResultsMap.get('visible-spec')?.executions).toHaveLength(2);
     expect(grouped.unfilteredResultsMap.has('raw-only-spec')).toBe(true);
     expect(grouped.activeDaysResultsIds).toEqual(['filtered']);
+  });
+
+  it('keeps results from every execution type when All is selected', () => {
+    const nightly = makeResult('nightly', 'nightly-spec', '2026-07-02', ResultStatus.Failed);
+    nightly.execution.type = 'Nightly';
+    const release = makeResult('release', 'release-spec', '2026-07-02', ResultStatus.Failed);
+    release.execution.type = 'Release';
+
+    const grouped = buildResultsGroups(
+      [nightly, release],
+      [nightly, release],
+      ['2026-07-02'],
+      { ...filters, type: 'all' },
+    );
+
+    expect([...grouped.results.keys()]).toEqual(['nightly-spec', 'release-spec']);
+    expect(grouped.activeDaysResultsIds).toEqual(['nightly', 'release']);
+  });
+});
+
+describe('mergeAvailableAndActiveTags', () => {
+  it('keeps active tags first and appends remaining available tags without duplicates', () => {
+    expect(mergeAvailableAndActiveTags(['L1', 'L2', 'L3'], ['legacy', 'L2'])).toEqual([
+      'legacy',
+      'L2',
+      'L1',
+      'L3',
+    ]);
   });
 });
 

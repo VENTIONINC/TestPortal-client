@@ -71,6 +71,7 @@ const injectedRtkApi = api
             name: queryArg.name,
             page: queryArg.page,
             limit: queryArg.limit,
+            type: queryArg["type"],
             statFrom: queryArg.statFrom,
             statTo: queryArg.statTo,
           },
@@ -643,6 +644,15 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Projects"],
       }),
+      getApiV2ProjectsByIdExecutionTypes: build.query<
+        GetApiV2ProjectsByIdExecutionTypesApiResponse,
+        GetApiV2ProjectsByIdExecutionTypesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.id}/execution-types`,
+        }),
+        providesTags: ["Projects"],
+      }),
       getApiV2ProjectsById: build.query<
         GetApiV2ProjectsByIdApiResponse,
         GetApiV2ProjectsByIdApiArg
@@ -678,7 +688,6 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/v2/projects/${queryArg.projectId}/dashboard`,
           params: {
-            environment: queryArg.environment,
             period: queryArg.period,
             type: queryArg["type"],
             granularity: queryArg.granularity,
@@ -792,6 +801,8 @@ export type GetApiV2IssuesWithStatsApiArg = {
   name?: string;
   page?: number;
   limit?: number;
+  /** Filter statistics by exact execution type */
+  type?: string;
   statFrom?: string;
   statTo?: string;
 };
@@ -1118,6 +1129,11 @@ export type PostApiV2ProjectsApiResponse =
 export type PostApiV2ProjectsApiArg = {
   createProjectRequest: CreateProjectRequest;
 };
+export type GetApiV2ProjectsByIdExecutionTypesApiResponse =
+  /** status 200 Project execution types */ ProjectExecutionTypes;
+export type GetApiV2ProjectsByIdExecutionTypesApiArg = {
+  id: string;
+};
 export type GetApiV2ProjectsByIdApiResponse =
   /** status 200 Project details */ Project;
 export type GetApiV2ProjectsByIdApiArg = {
@@ -1138,8 +1154,6 @@ export type GetApiV2ProjectsByProjectIdDashboardApiResponse =
 export type GetApiV2ProjectsByProjectIdDashboardApiArg = {
   /** The unique identifier of the project */
   projectId: string;
-  /** Target environment to filter results */
-  environment: string;
   /** Number of days to include in history (default 30) */
   period?: string;
   /** Filter by execution type */
@@ -1353,6 +1367,8 @@ export type ResultsListResponse = {
   results: Result[];
   /** Unfiltered period results for specs in the current results page */
   rawResults: Result[];
+  /** Unique sorted tags matching all active result filters except tag */
+  availableTags: string[];
   total: number;
   /** Number of raw results returned for the current results page */
   rawTotal: number;
@@ -1703,6 +1719,7 @@ export type CreateProjectRequest = {
   description?: string;
   categoryWeights?: ProjectCategoryWeights;
 };
+export type ProjectExecutionTypes = string[];
 export type UpdateProjectRequest = {
   name?: string;
   description?: string;
@@ -1840,8 +1857,6 @@ export type PdfExportTimeoutResponse = {
 export type PdfExportRequest = {
   /** Project UUID or project name */
   project: string;
-  /** Execution environment filter */
-  environment: string;
   /** Execution type filter, use 'all' to include all types */
   executionType: string;
   /** Accepts YYYY-MM-DD or ISO datetime; backend normalizes to YYYY-MM-DD */
@@ -1930,6 +1945,7 @@ export const {
   useGetApiV2ProjectsQuery,
   useLazyGetApiV2ProjectsQuery,
   usePostApiV2ProjectsMutation,
+  useGetApiV2ProjectsByIdExecutionTypesQuery,
   useGetApiV2ProjectsByIdQuery,
   useLazyGetApiV2ProjectsByIdQuery,
   usePutApiV2ProjectsByIdMutation,

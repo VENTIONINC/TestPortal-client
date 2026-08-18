@@ -36,7 +36,15 @@ describe('Results endpoint', () => {
   it('serializes the selected dates in the results request', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
-        JSON.stringify({ results: [], rawResults: [], total: 0, rawTotal: 0, page: 1, totalPages: 0 }),
+        JSON.stringify({
+          results: [],
+          rawResults: [],
+          availableTags: [],
+          total: 0,
+          rawTotal: 0,
+          page: 1,
+          totalPages: 0,
+        }),
         { headers: { 'content-type': 'application/json' } },
       ),
     );
@@ -100,7 +108,6 @@ describe('Category source-of-truth API contracts', () => {
     const dashboard = store.dispatch(
       extendedApi.endpoints.getApiV2ProjectsByProjectIdDashboard.initiate({
         projectId: 'project-1',
-        environment: 'staging',
       }),
     );
     await Promise.all([results, issues, dashboard]);

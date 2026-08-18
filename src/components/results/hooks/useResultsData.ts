@@ -23,6 +23,7 @@ export interface UseResultsDataReturn {
   activeDaysResultsIds: string[];
   availableDates: { yyyy_mm_dd: string; display: string; isActive: boolean }[];
   rawResults: Result[];
+  availableTags: string[];
   isFetching: boolean;
 }
 
@@ -48,7 +49,7 @@ export const useResultsData = ({
     specFile: debouncedFilters.specFile || undefined,
     specName: debouncedFilters.specName || undefined,
     environment: debouncedFilters.environment || undefined,
-    type: debouncedFilters.type || undefined,
+    type: debouncedFilters.type && debouncedFilters.type !== 'all' ? debouncedFilters.type : undefined,
     reviewStatus: debouncedFilters.reviewStatus || undefined,
     errorMessage: debouncedFilters.errorMessage || undefined,
     issueName: debouncedFilters.issueName || undefined,
@@ -80,6 +81,7 @@ export const useResultsData = ({
     activeDaysResultsIds,
     availableDates,
     rawResults: data?.rawResults ?? [],
+    availableTags: data?.availableTags ?? [],
     isFetching,
   };
 };

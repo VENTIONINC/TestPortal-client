@@ -30,7 +30,7 @@ export const initialFilters: ResultsFilters = {
   specFile: '',
   specName: '',
   environment: '',
-  type: '',
+  type: 'all',
   status: 'failed',
   reviewStatus: '',
   errorMessage: '',

@@ -51,13 +51,13 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
               formData.append('report', file);
               formData.append('projectId', selectedProjectId);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await uploadJsonReport({ body: formData as any });
+              await uploadJsonReport({ body: formData as any }).unwrap();
             } else if (reportType === 'ctrf') {
               const formData = new FormData();
               formData.append('report', file);
               formData.append('projectId', selectedProjectId);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await uploadCtrfReport({ body: formData as any });
+              await uploadCtrfReport({ body: formData as any }).unwrap();
             }
 
             processedCount++;

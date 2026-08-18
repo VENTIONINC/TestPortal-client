@@ -444,10 +444,10 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
       '& .rdp-root': {
         '--rdp-accent-color': 'var(--chakra-colors-accent-solid)',
         '--rdp-accent-background-color': 'var(--chakra-colors-accent-solid)',
-        '--rdp-day-width': '40px',
-        '--rdp-day-height': '40px',
-        '--rdp-day_button-width': '40px',
-        '--rdp-day_button-height': '40px',
+        '--rdp-day-width': 'var(--date-range-picker-day-size)',
+        '--rdp-day-height': 'var(--date-range-picker-day-size)',
+        '--rdp-day_button-width': 'var(--date-range-picker-day-size)',
+        '--rdp-day_button-height': 'var(--date-range-picker-day-size)',
         '--rdp-selected-font': 'bold',
         '--rdp-outside-opacity': '1',
         '--rdp-today-color': 'var(--chakra-colors-accent-solid)',
@@ -459,7 +459,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
       },
       '& .rdp-month_grid': {
         width: '100%',
-        height: '200px',
+        height: 'var(--date-range-picker-grid-height)',
       },
       '& .rdp-weekdays': {
         width: '100%',
@@ -469,7 +469,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
       },
       '& .rdp-week': {
         width: '280px',
-        height: '30px',
+        height: 'calc(var(--date-range-picker-day-size) - 10px)',
         textAlign: 'center',
       },
       '& .rdp-day': {
@@ -601,6 +601,20 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
               w={{ base: 'calc(100vw - 16px)', md: 'auto' }}
               maxW="calc(100vw - 16px)"
               overflowX="hidden"
+              css={{
+                '--date-range-picker-day-size': '40px',
+                '--date-range-picker-grid-height': '200px',
+                '--date-range-picker-input-gap': '20px',
+                '--date-range-picker-heading-gap': '20px',
+                '--date-range-picker-footer-gap': '29px',
+                '@media screen and (max-height: 900px)': {
+                  '--date-range-picker-day-size': '36px',
+                  '--date-range-picker-grid-height': '180px',
+                  '--date-range-picker-input-gap': '12px',
+                  '--date-range-picker-heading-gap': '12px',
+                  '--date-range-picker-footer-gap': '12px',
+                },
+              }}
               _focusVisible={{ outline: 'none' }}
             >
               <Flex direction={{ base: 'column', lg: 'row' }}>
@@ -655,7 +669,12 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                 )}
 
                 <Box p={{ base: '10px', md: '11px 8px 8px 13px' }} flex="1" minWidth={{ base: '0', lg: '605px' }}>
-                  <Flex mb="20px" gap={4} alignItems="center" direction={{ base: 'column', sm: 'row' }}>
+                  <Flex
+                    mb="var(--date-range-picker-input-gap)"
+                    gap={4}
+                    alignItems="center"
+                    direction={{ base: 'column', sm: 'row' }}
+                  >
                     <Field label="Start date" flex="1">
                       <Input
                         name="startDate"
@@ -698,7 +717,11 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                   <Flex direction={{ base: 'column', lg: 'row' }}>
                     {/* Left calendar */}
                     <Box flex="1" mr={{ base: 0, lg: '25px' }} mb={{ base: 4, lg: 0 }}>
-                      <Flex mb={5} alignItems="center" justifyContent="space-between">
+                      <Flex
+                        mb="var(--date-range-picker-heading-gap)"
+                        alignItems="center"
+                        justifyContent="space-between"
+                      >
                         <Button variant="ghost" size="sm" onClick={handlePrevMonth} p={0} minW="32px">
                           <LuChevronLeft size={20} />
                         </Button>
@@ -726,7 +749,11 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
 
                     {/* Right calendar */}
                     <Box flex="1">
-                      <Flex mb={5} alignItems="center" justifyContent="space-between">
+                      <Flex
+                        mb="var(--date-range-picker-heading-gap)"
+                        alignItems="center"
+                        justifyContent="space-between"
+                      >
                         <Box w="32px" /> {/* Placeholder for balance */}
                         <Text fontWeight="bold">
                           {MONTH_NAMES[rightMonth.getMonth()]} {rightMonth.getFullYear()}
@@ -753,7 +780,7 @@ export const DateRangePicker = (props: DateRangePickerProps) => {
                   </Flex>
 
                   <Flex
-                    mt="29px"
+                    mt="var(--date-range-picker-footer-gap)"
                     gap={2}
                     justify="flex-end"
                     alignItems={{ base: 'stretch', sm: 'center' }}
