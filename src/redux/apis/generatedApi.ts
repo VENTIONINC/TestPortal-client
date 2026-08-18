@@ -1490,23 +1490,15 @@ export type Execution = {
   createdAt: string;
   updatedAt: string;
 };
-export type FutureExecutionTimestampsWarning = {
-  code: "FUTURE_EXECUTION_TIMESTAMPS";
-  count: number;
-  maxDeviationMinutes: number;
-  thresholdMinutes: 10;
-};
 export type JsonReportResponse = {
   success: boolean;
   executionId: string;
   specsProcessed: number;
-  warnings: FutureExecutionTimestampsWarning[];
 };
 export type JsonReportResponseWithAnalysis = {
   success: boolean;
   executionId: string;
   specsProcessed: number;
-  warnings: FutureExecutionTimestampsWarning[];
   /** Optional AI analysis results for test failures */
   analysis?: any[];
 };
@@ -1793,7 +1785,6 @@ export type CtrfReportResponse = {
   specsProcessed: number;
   /** Optional AI analysis results for test failures */
   analysis?: any[];
-  warnings: FutureExecutionTimestampsWarning[];
 };
 export type GenerateApiKeyResponse = {
   success: boolean;

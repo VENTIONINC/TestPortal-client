@@ -10,7 +10,7 @@ import { usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/extendedApi';
 import { useResultsFileUpload } from '@/components/ui/components/Dialogs/results-file-upload/hooks';
 
 const clearFiles = vi.fn();
-const acceptedFiles = [new File(['{}'], 'report.json', { type: 'application/json' })];
+let acceptedFiles = [new File(['{}'], 'report.json', { type: 'application/json' })];
 
 vi.mock('@chakra-ui/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@chakra-ui/react')>()),
@@ -44,6 +44,7 @@ describe('useResultsFileUpload', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    acceptedFiles = [new File(['{}'], 'report.json', { type: 'application/json' })];
     vi.mocked(usePostApiV2UploadJsonReportMutation).mockReturnValue([
       uploadJsonReport,
       {} as ReturnType<typeof usePostApiV2UploadJsonReportMutation>[1],
@@ -66,15 +67,24 @@ describe('useResultsFileUpload', () => {
     expect(closeDialog).toHaveBeenCalledOnce();
   });
 
-  it('shows an error and keeps the dialog open when the API rejects the upload', async () => {
-    const unwrap = vi.fn().mockRejectedValue(new Error('Transaction expired'));
+  it('shows the backend validation error and keeps the dialog open', async () => {
+    const backendMessage =
+      'Import failed for file "invalid-results.ctrf.json". Future test execution timestamps were detected. 2 timestamps exceed the allowed 10-minute tolerance. Maximum deviation: 45m. No data was imported.';
+    const unwrap = vi.fn().mockRejectedValue({
+      status: 400,
+      data: { error: backendMessage },
+    });
     uploadCtrfReport.mockReturnValue({ unwrap });
     const { result } = renderHook(() => useResultsFileUpload(closeDialog, 'ctrf'));
 
     await act(async () => result.current.handleUpload());
 
     expect(unwrap).toHaveBeenCalledOnce();
-    expect(toaster.create).toHaveBeenCalledWith({ title: 'Failed to upload files', type: 'error' });
+    expect(toaster.create).toHaveBeenCalledWith({
+      title: 'Failed to upload file',
+      description: backendMessage,
+      type: 'error',
+    });
     expect(toaster.create).not.toHaveBeenCalledWith({ title: 'Files uploaded', type: 'success' });
     expect(closeDialog).not.toHaveBeenCalled();
     expect(clearFiles).not.toHaveBeenCalled();
@@ -88,5 +98,29 @@ describe('useResultsFileUpload', () => {
     await act(async () => result.current.handleUpload());
 
     expect(unwrap).toHaveBeenCalledOnce();
+  });
+
+  it('submits every selected file independently when one file is rejected', async () => {
+    acceptedFiles = [
+      new File(['{}'], 'valid.json', { type: 'application/json' }),
+      new File(['{}'], 'invalid.json', { type: 'application/json' }),
+    ];
+    uploadCtrfReport
+      .mockReturnValueOnce({ unwrap: vi.fn().mockResolvedValue({ success: true }) })
+      .mockReturnValueOnce({
+        unwrap: vi.fn().mockRejectedValue({
+          status: 400,
+          data: { error: 'Future test execution timestamps were detected' },
+        }),
+      });
+    const { result } = renderHook(() => useResultsFileUpload(closeDialog, 'ctrf'));
+
+    await act(async () => result.current.handleUpload());
+
+    expect(uploadCtrfReport).toHaveBeenCalledTimes(2);
+    expect(toaster.create).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'error' }),
+    );
+    expect(closeDialog).not.toHaveBeenCalled();
   });
 });
