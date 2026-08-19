@@ -273,6 +273,30 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Assumptions"],
       }),
+      getApiV2ResultErrorsByResultErrorIdModalContext: build.query<
+        GetApiV2ResultErrorsByResultErrorIdModalContextApiResponse,
+        GetApiV2ResultErrorsByResultErrorIdModalContextApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/result-errors/${queryArg.resultErrorId}/modal-context`,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        providesTags: ["Result Errors"],
+      }),
+      getApiV2ResultErrorsByResultErrorIdSimilaritySuggestion: build.query<
+        GetApiV2ResultErrorsByResultErrorIdSimilaritySuggestionApiResponse,
+        GetApiV2ResultErrorsByResultErrorIdSimilaritySuggestionApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/result-errors/${queryArg.resultErrorId}/similarity-suggestion`,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        providesTags: ["Result Errors"],
+      }),
       patchApiV2ResultErrorsByResultErrorIdAssignIssue: build.mutation<
         PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiResponse,
         PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiArg
@@ -918,6 +942,18 @@ export type DeleteApiV2AssumptionsByAssumptionIdApiArg = {
   /** Project ID to verify ownership of the assumption */
   projectId: string;
 };
+export type GetApiV2ResultErrorsByResultErrorIdModalContextApiResponse =
+  /** status 200 Modal context retrieved successfully */ ResultErrorModalContext;
+export type GetApiV2ResultErrorsByResultErrorIdModalContextApiArg = {
+  resultErrorId: string;
+  projectId: string;
+};
+export type GetApiV2ResultErrorsByResultErrorIdSimilaritySuggestionApiResponse =
+  /** status 200 Match or explicit no-match outcome */ ResultErrorSimilarityOutcome;
+export type GetApiV2ResultErrorsByResultErrorIdSimilaritySuggestionApiArg = {
+  resultErrorId: string;
+  projectId: string;
+};
 export type PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiResponse =
   /** status 200 Issue assigned successfully */ SuccessResponse;
 export type PatchApiV2ResultErrorsByResultErrorIdAssignIssueApiArg = {
@@ -1463,6 +1499,76 @@ export type UpdateAssumptionRequest = {
   hypothesis?: string;
   evidence?: string;
 };
+export type ResultErrorModalIssue = {
+  id: string;
+  name: string;
+  description: string | null;
+  portal: string | null;
+  service: string | null;
+  ticket: string | null;
+};
+export type ResultErrorModalAssignment = {
+  id: string;
+  isConfirmed: boolean;
+  score: number;
+  madeBy: string;
+  issue: ResultErrorModalIssue;
+};
+export type ResultErrorModalContext = {
+  error: {
+    id: string;
+    type: string;
+    message: string;
+    callLog: string[];
+    callStack: string[];
+    logs: string[];
+    sourceSnippet: {
+      path: string;
+      text: string;
+      startLine: number;
+      failingLine: number;
+    } | null;
+    generatedTestCase: string | null;
+    location: string;
+  };
+  result: {
+    id: string;
+    attempt: number;
+    status: string;
+    duration: number;
+    startTime: string;
+    reportPortalLink: string | null;
+    category: "bug" | "infra" | "performance" | "script" | "other";
+    testTitle: string;
+    specPath: string;
+    specKey: string;
+    executionName: string;
+    environment: string;
+  };
+  assignments: {
+    confirmed: {
+      id: string;
+      isConfirmed: boolean;
+      score: number;
+      madeBy: string;
+      issue: ResultErrorModalIssue;
+    } | null;
+    suggestions: ResultErrorModalAssignment[];
+  };
+};
+export type ResultErrorSimilarityOutcome =
+  | {
+      outcome: "match";
+      suggestion: {
+        issue: ResultErrorModalIssue;
+        category: "bug" | "infra" | "performance" | "script" | "other";
+        score: number;
+        otherAffectedTests: number;
+      };
+    }
+  | {
+      outcome: "no_match";
+    };
 export type SuccessResponse = {
   message: string;
 };
@@ -1622,6 +1728,8 @@ export type ErrorFormatterRequest = {
   category?: string;
 };
 export type ErrorSuggestionResponse = {
+  category: "bug" | "infra" | "performance" | "script" | "other";
+  name: string;
   description: string;
 };
 export type ErrorSuggestionRequest = {
@@ -1897,6 +2005,10 @@ export const {
   useGetApiV2AssumptionsByAssumptionIdQuery,
   useLazyGetApiV2AssumptionsByAssumptionIdQuery,
   useDeleteApiV2AssumptionsByAssumptionIdMutation,
+  useGetApiV2ResultErrorsByResultErrorIdModalContextQuery,
+  useLazyGetApiV2ResultErrorsByResultErrorIdModalContextQuery,
+  useGetApiV2ResultErrorsByResultErrorIdSimilaritySuggestionQuery,
+  useLazyGetApiV2ResultErrorsByResultErrorIdSimilaritySuggestionQuery,
   usePatchApiV2ResultErrorsByResultErrorIdAssignIssueMutation,
   usePatchApiV2ResultErrorsByResultErrorIdReviewMutation,
   usePatchApiV2ResultErrorsBulkReviewMutation,
@@ -1946,6 +2058,7 @@ export const {
   useLazyGetApiV2ProjectsQuery,
   usePostApiV2ProjectsMutation,
   useGetApiV2ProjectsByIdExecutionTypesQuery,
+  useLazyGetApiV2ProjectsByIdExecutionTypesQuery,
   useGetApiV2ProjectsByIdQuery,
   useLazyGetApiV2ProjectsByIdQuery,
   usePutApiV2ProjectsByIdMutation,

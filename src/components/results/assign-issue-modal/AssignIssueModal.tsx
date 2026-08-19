@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert as ChakraAlert,
   Box,
@@ -9,8 +9,6 @@ import {
   Flex,
   HStack,
   IconButton,
-  Popover,
-  Portal,
   RadioGroup,
   Spinner,
   Stack,
@@ -23,10 +21,12 @@ import {
   LuClipboard,
   LuFileCode2,
   LuFileText,
+  LuInfo,
   LuMaximize2,
   LuMinimize2,
   LuScrollText,
   LuTestTube,
+  LuUndo2,
   LuWandSparkles,
 } from 'react-icons/lu';
 
@@ -40,30 +40,38 @@ import {
   Tooltip,
   toaster,
 } from '@/components/ui';
+import { ResultCategory } from '@/types';
 import type { DefaultDialogProps } from '@/types';
 import { copyToClipboard } from '@/utils';
+import { getIssueCategoryStyle } from '@/utils/issue-category';
 
-import type { AssignIssueModalState } from './assignIssueModalState';
+import {
+  assignIssueModalStatus,
+  isConfirmedIssueStatus,
+  isReadOnlyIssueStatus,
+  type AssignIssueModalState,
+} from './assignIssueModalState';
 import { useAssignIssueModal } from './useAssignIssueModal';
 
 export interface AssignIssueModalProps extends DefaultDialogProps {
   resultErrorId: string;
   projectId: string;
-  mode: 'assign' | 'confirmed';
+  mode: 'assign' | 'confirmed' | 'context';
 }
 
 const categoryItems = [
-  { value: 'bug', label: 'Bug' },
-  { value: 'script', label: 'Script' },
-  { value: 'infra', label: 'Environment' },
-  { value: 'performance', label: 'Performance' },
-  { value: 'other', label: 'Other' },
+  { value: 'bug', label: 'Bug', style: getIssueCategoryStyle(ResultCategory.Bug) },
+  { value: 'script', label: 'Script', style: getIssueCategoryStyle(ResultCategory.Script) },
+  { value: 'infra', label: 'Environment', style: getIssueCategoryStyle(ResultCategory.Infra) },
+  { value: 'performance', label: 'Performance', style: getIssueCategoryStyle(ResultCategory.Performance) },
+  { value: 'other', label: 'Other', style: getIssueCategoryStyle(ResultCategory.Other) },
 ] as const;
 
 export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }: AssignIssueModalProps) {
   const modal = useAssignIssueModal({ resultErrorId, projectId, mode, onClose: closeDialog });
   const { state, context, actions } = modal;
-  const isReadOnly = state.status === 'opening-search' || state.status === 'ai-categorising' || state.status === 'algorithm-suggestion';
+  const isContextOnly = mode === 'context';
+  const isReadOnly = isReadOnlyIssueStatus(state.status);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [isContextExpanded, setIsContextExpanded] = useState(false);
 
@@ -73,11 +81,15 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
 
   return (
     <Dialog
-      title="Assign issue"
+      title={isContextOnly ? 'Result details' : 'Assign issue'}
       onClose={actions.close}
       size="xl"
-      initialFocusEl={() => (isReadOnly ? null : nameInputRef.current)}
-      contentProps={{ h: 'min(750px, calc(100dvh - 8rem))', minW: { lg: '1200px' } }}
+      initialFocusEl={() => (isContextOnly || isReadOnly ? null : nameInputRef.current)}
+      contentProps={
+        isContextOnly
+          ? { h: 'min(750px, calc(100dvh - 8rem))', w: 'min(820px, calc(100dvw - 2rem))' }
+          : { h: 'min(750px, calc(100dvh - 8rem))', minW: { lg: '1200px' } }
+      }
     >
       <DialogBody p={0} display="flex" flexDirection="column" minH={0} overflowY={{ base: 'auto', lg: 'hidden' }}>
         {!context ? (
@@ -98,7 +110,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
                 Attempt #{context.result.attempt}
               </Text>
               ·
-              <Text color="text.muted" fontSize="sm">
+              <Text color="text.secondary" fontSize="sm">
                 Started{' '}
                 {new Date(context.result.startTime).toLocaleString('en-US', {
                   hour: '2-digit',
@@ -108,7 +120,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
                 })}
               </Text>
               ·
-              <Text color="text.muted" fontSize="sm">
+              <Text color="text.secondary" fontSize="sm">
                 Duration {formatDuration(context.result.duration)}
               </Text>
             </Flex>
@@ -117,7 +129,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
               <Box
                 as="section"
                 aria-label="Result context"
-                flex={isContextExpanded ? '1 1 100%' : '1 1 56%'}
+                flex={isContextOnly || isContextExpanded ? '1 1 100%' : '1 1 56%'}
                 minW={0}
                 minH={{ base: '320px', lg: 0 }}
                 borderEndWidth={{ base: 0, lg: '1px' }}
@@ -128,33 +140,35 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
                   <Box flex="1" minW={0} minH={0}>
                     <ContextTabs context={context} />
                   </Box>
-                  <Flex
-                    role="toolbar"
-                    aria-label="Result context controls"
-                    display={{ base: 'none', lg: 'flex' }}
-                    direction="column"
-                    align="center"
-                    flexShrink={0}
-                    w="56px"
-                    py={3}
-                    borderStartWidth="1px"
-                    borderColor="border.main"
-                  >
-                    <Tooltip content={isContextExpanded ? 'Restore issue assignment' : 'Expand result context'}>
-                      <IconButton
-                        aria-label={isContextExpanded ? 'Restore issue assignment' : 'Expand result context'}
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setIsContextExpanded((expanded) => !expanded)}
-                      >
-                        {isContextExpanded ? <LuMinimize2 /> : <LuMaximize2 />}
-                      </IconButton>
-                    </Tooltip>
-                  </Flex>
+                  {!isContextOnly && (
+                    <Flex
+                      role="toolbar"
+                      aria-label="Result context controls"
+                      display={{ base: 'none', lg: 'flex' }}
+                      direction="column"
+                      align="center"
+                      flexShrink={0}
+                      w="56px"
+                      py={3}
+                      borderStartWidth="1px"
+                      borderColor="border.main"
+                    >
+                      <Tooltip content={isContextExpanded ? 'Restore issue assignment' : 'Expand result context'}>
+                        <IconButton
+                          aria-label={isContextExpanded ? 'Restore issue assignment' : 'Expand result context'}
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setIsContextExpanded((expanded) => !expanded)}
+                        >
+                          {isContextExpanded ? <LuMinimize2 /> : <LuMaximize2 />}
+                        </IconButton>
+                      </Tooltip>
+                    </Flex>
+                  )}
                 </Flex>
               </Box>
 
-              {!isContextExpanded && (
+              {!isContextOnly && !isContextExpanded && (
                 <VStack
                   as="section"
                   aria-label="Issue assignment"
@@ -165,7 +179,6 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
                   overflowY={{ lg: 'auto' }}
                   p={{ base: 4, md: 6 }}
                   gap={4}
-                  // bg="bg.panel"
                 >
                   <CategorySelector
                     value={state.form.category}
@@ -178,7 +191,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
                       name="issue-name"
                       label="Issue name"
                       labelAction={
-                        !isReadOnly ? (
+                        !isReadOnly && state.form.name ? (
                           <PolishActions field="name" state={modal.polish.name} actions={actions} />
                         ) : undefined
                       }
@@ -195,7 +208,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
                       name="description"
                       label="Description"
                       labelAction={
-                        !isReadOnly ? (
+                        !isReadOnly && state.form.description ? (
                           <PolishActions field="description" state={modal.polish.description} actions={actions} />
                         ) : undefined
                       }
@@ -209,13 +222,19 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
                     />
                   </Stack>
                   <Stack mt="auto" gap={3}>
-                    <FeedbackArea state={state} actions={actions} operationError={modal.operationError} />
+                    <FeedbackArea
+                      state={state}
+                      actions={actions}
+                      isMutating={modal.isMutating}
+                      operationError={modal.operationError}
+                    />
                     <FormActions
                       state={state}
                       actions={actions}
                       isMutating={modal.isMutating}
                       isSearching={modal.similarityRequest.isFetching}
                     />
+                    <ConfirmedIssueActions state={state} actions={actions} isMutating={modal.isMutating} />
                   </Stack>
                 </VStack>
               )}
@@ -223,7 +242,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
           </>
         )}
       </DialogBody>
-      {context && <ModalFooter state={state} actions={actions} isMutating={modal.isMutating} />}
+      {context && !isContextOnly && <ModalFooter state={state} actions={actions} isMutating={modal.isMutating} />}
     </Dialog>
   );
 }
@@ -258,7 +277,7 @@ const CategorySelector = ({
           bg="transparent"
           color="text.secondary"
           cursor="pointer"
-          _checked={{ bg: 'accent.solid', borderColor: 'accent.solid', color: 'accent.fg' }}
+          _checked={{ bg: item.style.color, borderColor: item.style.color, color: 'white' }}
           _disabled={{ cursor: 'not-allowed', opacity: 0.5 }}
         >
           <RadioGroup.ItemHiddenInput />
@@ -485,17 +504,19 @@ const SourceSnippet = ({
 const StateNotice = ({
   state,
   actions,
+  isMutating,
 }: {
   state: AssignIssueModalState;
   actions: ReturnType<typeof useAssignIssueModal>['actions'];
+  isMutating: boolean;
 }) => {
-  if (state.status === 'opening-search') {
+  if (state.status === assignIssueModalStatus.openingSearch) {
     return <Notice loading title="Looking for issues that match this error…" />;
   }
-  if (state.status === 'ai-categorising') {
+  if (state.status === assignIssueModalStatus.aiCategorising) {
     return <Notice loading title="Categorising this error with AI…" description="Your current draft will be preserved." />;
   }
-  if (state.status === 'no-match') {
+  if (state.status === assignIssueModalStatus.noMatch) {
     return (
       <Notice
         title="No similar issues were found for this error"
@@ -503,24 +524,66 @@ const StateNotice = ({
       />
     );
   }
-  if (state.status === 'algorithm-suggestion' && state.suggestion) {
+  if (state.status === assignIssueModalStatus.algorithmSuggestion && state.suggestion) {
     return (
       <Stack gap={2}>
-        <HStack justify="space-between" align="center">
-          <Badge status="info" isCapitalize={false}>{state.score}% match</Badge>
-          <Text fontSize="xs" color="text.secondary">{state.suggestion.otherAffectedTests} other affected tests</Text>
+        <HStack
+          gap={2}
+          p={2}
+          borderWidth="1px"
+          borderColor="orange.400"
+          borderRadius="md"
+          bg="orange.50"
+          _dark={{ bg: 'orange.950' }}
+        >
+          <Badge flexShrink={0} bg="dashboard.purple" color="white" isCapitalize={false}>{state.score}% match</Badge>
+          <Tooltip
+            content={<SimilarityTooltipContent score={state.score ?? 0} />}
+            contentProps={{ maxW: '440px', p: 3 }}
+          >
+            <IconButton
+              aria-label="Explain similarity score"
+              size="2xs"
+              variant="ghost"
+              color="orange.600"
+              flexShrink={0}
+            >
+              <LuInfo />
+            </IconButton>
+          </Tooltip>
+          <Text fontSize="sm" lineHeight="short" flex="1">
+            We found an existing issue that looks like this failure. Confirm to link it, or Reject to create a new one.
+          </Text>
         </HStack>
-        <SimilarityExplainer score={state.score ?? 0} />
+        <HStack gap={2}>
+          <Button flex="1" variant="outline" disabled={isMutating} onClick={actions.rejectSuggestion}>Reject</Button>
+          <Button flex="1" loading={isMutating} onClick={() => void actions.confirmSuggestion()}>Confirm</Button>
+        </HStack>
       </Stack>
     );
   }
-  if (state.status === 'ai-suggestion') {
-    return <Notice title="AI-generated issue draft" description="Review and edit every field before creating the issue." />;
+  if (state.status === assignIssueModalStatus.aiSuggestion) {
+    return (
+      <Notice
+        title={
+          <HStack gap={1}>
+            <Text>AI-generated suggestion</Text>
+            <Tooltip content={<AiSuggestionTooltipContent />} contentProps={{ maxW: '440px', p: 3 }}>
+              <IconButton aria-label="Explain AI suggestion" size="2xs" variant="ghost" color="blue.600">
+                <LuInfo />
+              </IconButton>
+            </Tooltip>
+          </HStack>
+        }
+        description="Category, name and description were drafted from this error. Review before assigning."
+        showIndicator={false}
+      />
+    );
   }
-  if (state.status === 'categorisation-error') {
+  if (state.status === assignIssueModalStatus.categorisationError) {
     return <Notice status="error" title="Couldn’t generate an issue draft" description="Your changes are safe. Retry or continue manually." />;
   }
-  if (state.status === 'similarity-error') {
+  if (state.status === assignIssueModalStatus.similarityError) {
     return (
       <ChakraAlert.Root status="error" variant="subtle" px={3} py={2} borderWidth="1px">
         <ChakraAlert.Indicator />
@@ -532,8 +595,8 @@ const StateNotice = ({
       </ChakraAlert.Root>
     );
   }
-  if (state.status === 'confirmed-edit') {
-    return <Notice status="success" title="Confirmed issue" description="Update the issue or remove this result from it." />;
+  if (isConfirmedIssueStatus(state.status)) {
+    return null;
   }
   return <Notice title="Create or assign an issue" description="Describe this failure or search by issue name." />;
 };
@@ -541,14 +604,16 @@ const StateNotice = ({
 const FeedbackArea = ({
   state,
   actions,
+  isMutating,
   operationError,
 }: {
   state: AssignIssueModalState;
   actions: ReturnType<typeof useAssignIssueModal>['actions'];
+  isMutating: boolean;
   operationError: string | null;
 }) => (
   <Stack gap={2}>
-    <StateNotice state={state} actions={actions} />
+    <StateNotice state={state} actions={actions} isMutating={isMutating} />
     {operationError && (
       <ChakraAlert.Root status="error" variant="subtle" px={3} py={2} borderWidth="1px">
         <ChakraAlert.Indicator />
@@ -557,7 +622,6 @@ const FeedbackArea = ({
         </ChakraAlert.Content>
       </ChakraAlert.Root>
     )}
-    {(state.status === 'ai-suggestion' || state.status === 'categorisation-error') && <AiProvenance />}
   </Stack>
 );
 
@@ -572,9 +636,13 @@ const FormActions = ({
   isMutating: boolean;
   isSearching: boolean;
 }) => {
-  if (state.status === 'algorithm-suggestion' || state.status === 'confirmed-edit') return null;
+  if (
+    state.status === assignIssueModalStatus.algorithmSuggestion ||
+    isConfirmedIssueStatus(state.status)
+  ) return null;
 
-  const isRequesting = state.status === 'opening-search' || state.status === 'ai-categorising';
+  const isRequesting =
+    state.status === assignIssueModalStatus.openingSearch || state.status === assignIssueModalStatus.aiCategorising;
 
   return (
     <HStack gap={2}>
@@ -582,7 +650,7 @@ const FormActions = ({
         flex="1"
         variant="outline"
         disabled={isRequesting || isMutating}
-        loading={state.status === 'ai-categorising'}
+        loading={state.status === assignIssueModalStatus.aiCategorising}
         onClick={() => void actions.categorise()}
       >
         Categorise with AI
@@ -590,8 +658,8 @@ const FormActions = ({
       <Button
         flex="1"
         variant="outline"
-        disabled={state.status === 'no-match' || isRequesting || isMutating}
-        loading={isSearching || state.status === 'opening-search'}
+        disabled={state.status === assignIssueModalStatus.noMatch || isRequesting || isMutating}
+        loading={isSearching || state.status === assignIssueModalStatus.openingSearch}
         onClick={() => void actions.retrySimilarity()}
       >
         Find matching issues
@@ -605,14 +673,16 @@ const Notice = ({
   description,
   status = 'info',
   loading = false,
+  showIndicator = true,
 }: {
-  title: string;
+  title: ReactNode;
   description?: string;
   status?: 'info' | 'success' | 'warning' | 'error';
   loading?: boolean;
+  showIndicator?: boolean;
 }) => (
   <ChakraAlert.Root status={status} variant="subtle" px={3} py={2} borderWidth="1px">
-    {loading ? <Spinner size="sm" /> : <ChakraAlert.Indicator />}
+    {loading ? <Spinner size="sm" /> : showIndicator && <ChakraAlert.Indicator />}
     <ChakraAlert.Content>
       <ChakraAlert.Title>{title}</ChakraAlert.Title>
       {description && <ChakraAlert.Description>{description}</ChakraAlert.Description>}
@@ -620,44 +690,55 @@ const Notice = ({
   </ChakraAlert.Root>
 );
 
-const SimilarityExplainer = ({ score }: { score: number }) => (
-  <Popover.Root>
-    <Popover.Trigger asChild>
-      <Button size="xs" variant="plain" justifyContent="flex-start" px={0}>What does {score}% mean?</Button>
-    </Popover.Trigger>
-    <Portal>
-      <Popover.Positioner>
-        <Popover.Content bg="bg.panel" borderColor="border.main" p={4} maxW="340px">
-          <Popover.Arrow />
-          <Popover.Title fontWeight="semibold">Similarity, not probability</Popover.Title>
-          <Popover.Description fontSize="sm" color="text.secondary">
-            The score compares message text, call-stack shape, and spec file. Flaky and timeout failures can look alike,
-            so review the issue before confirming.
-          </Popover.Description>
-        </Popover.Content>
-      </Popover.Positioner>
-    </Portal>
-  </Popover.Root>
+const AiSuggestionTooltipContent = () => (
+  <Stack gap={2} fontSize="sm" lineHeight="short">
+    <Text fontWeight="semibold">How this suggestion was generated</Text>
+    <Text>The model uses the error message, call stack, error location, test title, and spec file.</Text>
+    <Text>
+      Category is selected from those signals, with human feedback taking priority when available. Name and description
+      are drafted separately from the same error context.
+    </Text>
+  </Stack>
 );
 
-const AiProvenance = () => (
-  <Popover.Root>
-    <Popover.Trigger asChild>
-      <Button size="xs" variant="plain" justifyContent="flex-start" px={0}>How this suggestion was generated</Button>
-    </Popover.Trigger>
-    <Portal>
-      <Popover.Positioner>
-        <Popover.Content bg="bg.panel" borderColor="border.main" p={4} maxW="360px">
-          <Popover.Arrow />
-          <Popover.Title fontWeight="semibold">AI suggestion provenance</Popover.Title>
-          <Popover.Description fontSize="sm" color="text.secondary">
-            The model receives the error message, call stack, error location, and existing analysis category. Category
-            priority: Environment, Performance, Script, Bug, Other. Review the generated content before saving.
-          </Popover.Description>
-        </Popover.Content>
-      </Popover.Positioner>
-    </Portal>
-  </Popover.Root>
+const ConfirmedIssueActions = ({
+  state,
+  actions,
+  isMutating,
+}: {
+  state: AssignIssueModalState;
+  actions: ReturnType<typeof useAssignIssueModal>['actions'];
+  isMutating: boolean;
+}) => {
+  if (state.status !== assignIssueModalStatus.confirmedView) return null;
+
+  return (
+    <HStack gap={2}>
+      <Button flex="1" variant="outline" loading={isMutating} onClick={() => void actions.unassign()}>
+        Unassign
+      </Button>
+      <Button flex="1" loading={isMutating} onClick={actions.editConfirmedIssue}>
+        Update
+      </Button>
+    </HStack>
+  );
+};
+
+const SimilarityTooltipContent = ({ score }: { score: number }) => (
+  <Stack gap={2} fontSize="sm" lineHeight="short">
+    <Text fontWeight="semibold">What does {score}% mean?</Text>
+    <Text>
+      It’s a similarity score, not a probability. We compare this failure against open issues in the project on three
+      signals — error message text, call stack shape, and the test file/spec it came from — and combine them into a
+      single score.
+    </Text>
+    <Text>
+      Higher means the failure looks more like the issue we found. Anything above ~80% is usually the same root cause,
+      but flaky and timeout errors often look alike across unrelated tests, so a quick read of the stack trace on the
+      left is worth it. Confirm links this result to the matched issue. Reject clears the suggestion so you can fill in
+      the form yourself or run AI analysis on the error.
+    </Text>
+  </Stack>
 );
 
 const PolishActions = ({
@@ -671,9 +752,21 @@ const PolishActions = ({
 }) => (
   <HStack gap={1}>
     {state.status === 'success' && (
-      <Button size="xs" variant="plain" onClick={() => actions.undoPolish(field)}>
-        Undo
-      </Button>
+      <Tooltip content="Undo polish">
+        <IconButton
+          aria-label={`Undo polish issue ${field}`}
+          minW="20px"
+          w="20px"
+          h="20px"
+          p={0}
+          borderRadius="5px"
+          variant="ghost"
+          onClick={() => actions.undoPolish(field)}
+          css={{ '& svg': { width: '13px', height: '13px', opacity: '0.6' } }}
+        >
+          <LuUndo2 />
+        </IconButton>
+      </Tooltip>
     )}
     {state.status === 'error' && (
       <Button size="xs" variant="plain" onClick={() => void actions.retryPolish(field)}>
@@ -713,28 +806,27 @@ const ModalFooter = ({
   <DialogFooter borderTopWidth="1px" borderColor="border.main" justifyContent="flex-end" gap={3} flexWrap="wrap">
     <HStack gap={2} ms="auto">
       <Button variant="ghost" onClick={actions.close}>Cancel</Button>
-      {state.status === 'algorithm-suggestion' && (
-        <>
-          <Button variant="outline" onClick={actions.rejectSuggestion}>Reject</Button>
-          <Button loading={isMutating} onClick={() => void actions.confirmSuggestion()}>Confirm</Button>
-        </>
-      )}
-      {(state.status === 'no-match' ||
-        state.status === 'unassigned' ||
-        state.status === 'ai-suggestion' ||
-        state.status === 'categorisation-error' ||
-        state.status === 'similarity-error') && (
-        <Button loading={isMutating} disabled={!state.form.name.trim()} onClick={() => void actions.createAndAssign()}>
+      {(state.status === assignIssueModalStatus.noMatch ||
+        state.status === assignIssueModalStatus.unassigned ||
+        state.status === assignIssueModalStatus.aiSuggestion ||
+        state.status === assignIssueModalStatus.categorisationError ||
+        state.status === assignIssueModalStatus.similarityError) && (
+        <Button
+          loading={isMutating}
+          disabled={!state.form.category || !state.form.name.trim() || !state.form.description.trim()}
+          onClick={() => void actions.createAndAssign()}
+        >
           Assign Issue
         </Button>
       )}
-      {state.status === 'confirmed-edit' && (
-        <>
-          <Button variant="outline" loading={isMutating} onClick={() => void actions.unassign()}>Unassign</Button>
-          <Button loading={isMutating} disabled={!state.form.name.trim()} onClick={() => void actions.updateConfirmedIssue()}>
-            Update
-          </Button>
-        </>
+      {state.status === assignIssueModalStatus.confirmedEdit && (
+        <Button
+          loading={isMutating}
+          disabled={!state.form.category || !state.form.name.trim() || !state.form.description.trim()}
+          onClick={() => void actions.updateConfirmedIssue()}
+        >
+          Update
+        </Button>
       )}
     </HStack>
   </DialogFooter>

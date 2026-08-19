@@ -134,7 +134,7 @@ export const ResultsExecutionCard = memo(
                 <Tooltip content="Retry">
                   <Box w={{ base: 'auto', md: '45px' }} flexShrink={0}>
                     <Text whiteSpace="nowrap" textStyle="sm">
-                      #{retry}
+                      #{retry + 1}
                     </Text>
                   </Box>
                 </Tooltip>
@@ -173,7 +173,7 @@ export const ResultsExecutionCard = memo(
                 {errors.map((resultError) => (
                   <Text
                     key={resultError.id}
-                    onClick={() => openAssignIssueModal(resultError, 'assign')}
+                    onClick={() => openAssignIssueModal(resultError, 'context')}
                     cursor="pointer"
                     fontWeight="medium"
                     color="fg"

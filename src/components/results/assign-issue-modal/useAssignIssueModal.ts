@@ -26,7 +26,7 @@ import {
 interface UseAssignIssueModalProps {
   resultErrorId: string;
   projectId: string;
-  mode: 'assign' | 'confirmed';
+  mode: 'assign' | 'confirmed' | 'context';
   onClose?: () => void;
 }
 
@@ -37,12 +37,14 @@ const initialPolishState: Record<PolishField, PolishFieldState> = {
   description: { status: 'idle' },
 };
 
+const isIssueDraftValid = (draft: IssueDraft) => Boolean(draft.category && draft.name.trim() && draft.description.trim());
+
 export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }: UseAssignIssueModalProps) {
   const requestId = useRef(1);
   const searchStarted = useRef(false);
   const [state, dispatch] = useReducer(
     assignIssueModalReducer,
-    createAssignIssueModalState({ mode, requestId: requestId.current }),
+    createAssignIssueModalState({ mode: mode === 'context' ? 'assign' : mode, requestId: requestId.current }),
   );
   const [polish, setPolish] = useState(initialPolishState);
   const [operationError, setOperationError] = useState<string | null>(null);
@@ -79,16 +81,18 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
   }, [contextQuery.data, mode, runSimilarity]);
 
   useEffect(() => {
-    const confirmed = contextQuery.data?.assignments.confirmed;
-    if (mode !== 'confirmed' || !confirmed) return;
+    const context = contextQuery.data;
+    const confirmed = context?.assignments.confirmed;
+    if (mode !== 'confirmed' || !context || !confirmed) return;
     dispatch({
       type: 'formChanged',
       form: {
+        category: context.result.category,
         name: confirmed.issue.name,
         description: confirmed.issue.description ?? '',
       },
     });
-  }, [contextQuery.data?.assignments.confirmed, mode]);
+  }, [contextQuery.data, mode]);
 
   const categorise = useCallback(async () => {
     if (!contextQuery.data) return;
@@ -111,7 +115,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
   }, [onClose]);
 
   const saveCategory = useCallback(async () => {
-    if (!contextQuery.data) return;
+    if (!contextQuery.data || !state.form.category) return;
     await updateAnalysisFeedback({
       resultId: contextQuery.data.result.id,
       updateResultAnalysisFeedbackRequest: { analysisFeedbackCategory: state.form.category },
@@ -145,7 +149,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
   const createAndAssign = useCallback(
     () =>
       runOperation(async () => {
-        if (!state.form.name.trim()) return;
+        if (!isIssueDraftValid(state.form)) return;
         await saveCategory();
         const issue = await createIssue({
           createIssueRequest: {
@@ -164,17 +168,18 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
     () =>
       runOperation(async () => {
         if (!state.suggestion) return;
+        await saveCategory();
         await assignExistingIssue(state.suggestion.issue.id, state.suggestion.score / 100);
         close();
       }),
-    [assignExistingIssue, close, runOperation, state.suggestion],
+    [assignExistingIssue, close, runOperation, saveCategory, state.suggestion],
   );
 
   const updateConfirmedIssue = useCallback(
     () =>
       runOperation(async () => {
         const confirmed = contextQuery.data?.assignments.confirmed;
-        if (!confirmed || !state.form.name.trim()) return;
+        if (!confirmed || !isIssueDraftValid(state.form)) return;
         await saveCategory();
         await updateIssue({
           issueId: confirmed.issue.id,
@@ -253,6 +258,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
       retrySimilarity: runSimilarity,
       categorise,
       createAndAssign,
+      editConfirmedIssue: () => dispatch({ type: 'confirmedEditRequested' }),
       confirmSuggestion,
       updateConfirmedIssue,
       unassign,

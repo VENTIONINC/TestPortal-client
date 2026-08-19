@@ -48,13 +48,31 @@ export const extendedApi = generatedApi
   .enhanceEndpoints({
     endpoints: {
       postApiV2Assumptions: {
-        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result],
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      postApiV2Issues: {
+        invalidatesTags: [TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      patchApiV2IssuesByIssueId: {
+        invalidatesTags: [TAGS.Issues, TAGS.Result, TAGS.ResultError],
       },
       deleteApiV2ExecutionsByExecutionId: {
         invalidatesTags: [TAGS.Result],
       },
       patchApiV2AssumptionsByAssumptionId: {
-        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result],
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      deleteApiV2AssumptionsByAssumptionId: {
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      patchApiV2ResultErrorsByResultErrorIdAssignIssue: {
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      getApiV2ResultErrorsByResultErrorIdModalContext: {
+        providesTags: [TAGS.ResultError, TAGS.Result, TAGS.Issues],
+      },
+      getApiV2ResultErrorsByResultErrorIdSimilaritySuggestion: {
+        providesTags: [TAGS.ResultError, TAGS.Result, TAGS.Issues],
       },
       postApiV2ResultErrorsAnalyze: {
         invalidatesTags: [TAGS.Result],
@@ -152,6 +170,8 @@ export const {
   usePostApiV2AssumptionsMutation: useCreateAssumptionMutation,
   usePatchApiV2AssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
   useGetApiV2IssuesWithStatsQuery: useGetIssuesWithStatsQuery,
+  useGetApiV2ResultErrorsByResultErrorIdModalContextQuery: useResultErrorModalContextQuery,
+  useLazyGetApiV2ResultErrorsByResultErrorIdSimilaritySuggestionQuery: useLazyResultErrorSimilaritySuggestionQuery,
 
   // Custom hooks (from extendedApi)
   useGetResultsQuery,
