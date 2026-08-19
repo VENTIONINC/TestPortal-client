@@ -1,20 +1,21 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { forwardRef } from 'react';
+import { forwardRef, ReactNode } from 'react';
 import { Textarea as ChakraTextarea, TextareaProps as ChakraTextareaProps } from '@chakra-ui/react';
 
 import { Field, FieldProps } from '@/components/ui';
 
 export interface TextareaProps extends ChakraTextareaProps {
   label?: string;
+  labelAction?: ReactNode;
   name: string;
   error?: string | boolean;
   fieldProps?: FieldProps;
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(props, ref) {
-  const { label, error, fieldProps, ...rest } = props;
+  const { label, labelAction, error, fieldProps, ...rest } = props;
   const placeholderColor = 'text.muted';
   const inputFocusBorder = 'border.focus';
 
@@ -38,7 +39,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   };
 
   return (
-    <Field label={label} errorText={error} invalid={Boolean(error)} {...fieldProps}>
+    <Field label={label} labelAction={labelAction} errorText={error} invalid={Boolean(error)} {...fieldProps}>
       <ChakraTextarea ref={ref} {...rest} {...sharedStyles} />
     </Field>
   );

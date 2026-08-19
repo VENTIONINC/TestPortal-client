@@ -10,7 +10,7 @@ import { useIntersectionObserver } from 'usehooks-ts';
 import { IssueTimeDiscributionChart } from '@/components/ui/components/Charts';
 import { Wrap, Skeleton, Tooltip } from '@/components/ui';
 import { useFilterContext } from '@/contexts/FilterContext';
-import { useManageIssueDrawer } from '@/components/drawers';
+import { useEditIssueDrawer } from '@/components/drawers';
 import { getIssueCategoryStyle, getIssueCategorySummaryPresentation } from '@/utils';
 import { IssueWithStats } from '@/types';
 
@@ -22,7 +22,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
   const category = getIssueCategorySummaryPresentation(issue.categorySummary);
   const { Icon, color } = getIssueCategoryStyle(category.category);
 
-  const openManageIssueDrawer = useManageIssueDrawer();
+  const openEditIssueDrawer = useEditIssueDrawer();
 
   const { statistics } = issue ?? {};
   const { firstOccurrence, impactedTestsCount, lastOccurrence, occurrenceCount } = statistics ?? {};
@@ -92,7 +92,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
               mt={1}
               size="xs"
               variant="ghost"
-              onClick={() => openManageIssueDrawer({ issue })}
+              onClick={() => openEditIssueDrawer(issue)}
               aria-label="Manage issue"
             >
               <LuPencil size={16} />

@@ -71,9 +71,9 @@ const injectedRtkApi = api
             name: queryArg.name,
             page: queryArg.page,
             limit: queryArg.limit,
-            type: queryArg["type"],
             statFrom: queryArg.statFrom,
             statTo: queryArg.statTo,
+            type: queryArg["type"],
           },
         }),
         providesTags: ["Issues"],
@@ -801,10 +801,10 @@ export type GetApiV2IssuesWithStatsApiArg = {
   name?: string;
   page?: number;
   limit?: number;
-  /** Filter statistics by exact execution type */
-  type?: string;
   statFrom?: string;
   statTo?: string;
+  /** Filter issues and statistics by exact execution type */
+  type?: string;
 };
 export type GetApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue details with derived category summary */ IssueRead;

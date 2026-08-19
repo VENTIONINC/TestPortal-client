@@ -2,23 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo } from 'react';
-import { HStack, Text } from '@chakra-ui/react';
+import { HStack, IconButton, Text } from '@chakra-ui/react';
 import { LuCheck, LuTrash, LuCirclePlus } from 'react-icons/lu';
 
-import { useManageIssueDrawer } from '@/components/drawers';
+import { useAssignIssueModalDialog } from '@/components/results/assign-issue-modal';
 import { useConfirmAssumptionMutation } from '@/redux/apis/extendedApi';
 import { getIssueCategoryStyle } from '@/utils';
 import { ResultCategory, ResultError, ResultErrorAssumption } from '@/types';
 
 interface InlineIssueProps {
   resultError: ResultError;
+  projectId: string;
   category?: ResultCategory;
 }
 
-export const InlineIssue = memo(({ resultError, category }: InlineIssueProps) => {
+export const InlineIssue = memo(({ resultError, projectId, category }: InlineIssueProps) => {
   const [confirmAssumption] = useConfirmAssumptionMutation();
 
-  const openManageIssueDrawer = useManageIssueDrawer({ resultError });
+  const openAssignIssueModal = useAssignIssueModalDialog(projectId);
 
   const confirm = async (assumption: ResultErrorAssumption, isConfirmed: boolean) => {
     await confirmAssumption({
@@ -50,7 +51,7 @@ export const InlineIssue = memo(({ resultError, category }: InlineIssueProps) =>
               bg={isConfirmed && categoryStyle ? categoryStyle.color : 'transparent'}
               flexShrink={0}
               {...(isConfirmed && {
-                onClick: () => openManageIssueDrawer({ issue: assumption.issue }),
+                onClick: () => openAssignIssueModal(resultError, 'confirmed'),
                 cursor: 'pointer',
 
                 _hover: { opacity: 0.85 },
@@ -102,11 +103,15 @@ export const InlineIssue = memo(({ resultError, category }: InlineIssueProps) =>
         })
       ) : (
         <>
-          <LuCirclePlus
-            size={20}
-            onClick={() => openManageIssueDrawer()}
-            style={{ marginInlineStart: 'auto', cursor: 'pointer' }}
-          />
+          <IconButton
+            aria-label="Assign issue"
+            size="xs"
+            variant="ghost"
+            ms="auto"
+            onClick={() => openAssignIssueModal(resultError, 'assign')}
+          >
+            <LuCirclePlus size={20} />
+          </IconButton>
         </>
       )}
     </>

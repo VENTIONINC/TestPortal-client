@@ -2,14 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ChakraProvider } from '@/components/ui';
 import { InlineIssue } from '@/components/issues/inline/inline-issue';
 import { ResultCategory, ResultError } from '@/types';
 
-vi.mock('@/components/drawers', () => ({
-  useManageIssueDrawer: () => vi.fn(),
+const openAssignIssueModal = vi.fn();
+
+vi.mock('@/components/results/assign-issue-modal', () => ({
+  useAssignIssueModalDialog: () => openAssignIssueModal,
 }));
 
 vi.mock('@/redux/apis/extendedApi', () => ({
@@ -54,10 +57,12 @@ const resultError: ResultError = {
 };
 
 describe('InlineIssue', () => {
+  beforeEach(() => vi.clearAllMocks());
+
   it('presents a linked issue with the containing result category', () => {
     render(
       <ChakraProvider>
-        <InlineIssue resultError={resultError} category={ResultCategory.Bug} />
+        <InlineIssue resultError={resultError} projectId="project-1" category={ResultCategory.Bug} />
       </ChakraProvider>,
     );
 
@@ -67,11 +72,35 @@ describe('InlineIssue', () => {
   it('does not present a default category when the result is uncategorized', () => {
     render(
       <ChakraProvider>
-        <InlineIssue resultError={resultError} />
+        <InlineIssue resultError={resultError} projectId="project-1" />
       </ChakraProvider>,
     );
 
     expect(screen.getByText('[Confirmed]: Login regression')).toBeInTheDocument();
     expect(screen.queryByLabelText(/^Category:/)).not.toBeInTheDocument();
+  });
+
+  it('opens confirmed pills in edit mode', async () => {
+    const user = userEvent.setup();
+    render(
+      <ChakraProvider>
+        <InlineIssue resultError={resultError} projectId="project-1" />
+      </ChakraProvider>,
+    );
+
+    await user.click(screen.getByText('[Confirmed]: Login regression'));
+    expect(openAssignIssueModal).toHaveBeenCalledWith(resultError, 'confirmed');
+  });
+
+  it('opens the add control in assignment mode', async () => {
+    const user = userEvent.setup();
+    render(
+      <ChakraProvider>
+        <InlineIssue resultError={{ ...resultError, assumptions: [] }} projectId="project-1" />
+      </ChakraProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Assign issue' }));
+    expect(openAssignIssueModal).toHaveBeenCalledWith({ ...resultError, assumptions: [] }, 'assign');
   });
 });
