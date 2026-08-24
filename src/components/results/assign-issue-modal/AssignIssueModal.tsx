@@ -67,6 +67,34 @@ const categoryItems = [
   { value: 'other', label: 'Other', style: getIssueCategoryStyle(ResultCategory.Other) },
 ] as const;
 
+type ResultDialogTitleData = {
+  id: string | number;
+  attempt: number;
+  startTime: string;
+  duration: number;
+};
+
+export function getResultDialogTitle(result: ResultDialogTitleData | undefined, isContextOnly: boolean) {
+  const mainTitle = isContextOnly ? 'Result details' : 'Result';
+  if (!result) return mainTitle;
+
+  const startedAt = new Date(result.startTime).toLocaleString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
+  return (
+    <>
+      <Text as="span">{mainTitle} #{result.id}</Text>{' '}
+      <Text as="span" color="text.secondary" fontSize="sm" data-result-metadata>
+        · Attempt #{result.attempt} · Started {startedAt} · Duration {formatDuration(result.duration)}
+      </Text>
+    </>
+  );
+}
+
 export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }: AssignIssueModalProps) {
   const modal = useAssignIssueModal({ resultErrorId, projectId, mode, onClose: closeDialog });
   const { state, context, actions } = modal;
@@ -81,50 +109,18 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
 
   return (
     <Dialog
-      title={isContextOnly ? 'Result details' : 'Assign issue'}
+      title={getResultDialogTitle(context?.result, isContextOnly)}
       onClose={actions.close}
       size="xl"
       initialFocusEl={() => (isContextOnly || isReadOnly ? null : nameInputRef.current)}
-      contentProps={
-        isContextOnly
-          ? { h: 'min(750px, calc(100dvh - 8rem))', w: 'min(820px, calc(100dvw - 2rem))' }
-          : { h: 'min(750px, calc(100dvh - 8rem))', minW: { lg: '1200px' } }
-      }
+      contentProps={{ h: 'min(750px, calc(100dvh - 8rem))', minW: { lg: '1200px' } }}
     >
       <DialogBody p={0} display="flex" flexDirection="column" minH={0} overflowY={{ base: 'auto', lg: 'hidden' }}>
+        <Box flexShrink={0} borderBottomWidth="1px" borderColor="border.main" />
         {!context ? (
           <ContextLoading isError={modal.contextQuery.isError} onRetry={modal.contextQuery.refetch} />
         ) : (
           <>
-            <Flex
-              px={{ base: 4, md: 6 }}
-              pb={4}
-              gap={3}
-              align={{ base: 'flex-start', md: 'center' }}
-              direction={{ base: 'column', md: 'row' }}
-              borderBottomWidth="1px"
-              borderColor="border.main"
-            >
-              <Text fontWeight="semibold">Result #{context.result.id}</Text>·
-              <Text color="text.secondary" fontSize="sm">
-                Attempt #{context.result.attempt}
-              </Text>
-              ·
-              <Text color="text.secondary" fontSize="sm">
-                Started{' '}
-                {new Date(context.result.startTime).toLocaleString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: false,
-                })}
-              </Text>
-              ·
-              <Text color="text.secondary" fontSize="sm">
-                Duration {formatDuration(context.result.duration)}
-              </Text>
-            </Flex>
-
             <Flex flex="1" minH={0} direction={{ base: 'column', lg: 'row' }} overflow={{ lg: 'hidden' }}>
               <Box
                 as="section"

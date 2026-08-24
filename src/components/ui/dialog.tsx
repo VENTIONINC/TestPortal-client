@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { forwardRef, RefObject } from 'react';
+import { forwardRef, type ReactNode, type RefObject } from 'react';
 import { Dialog as ChakraDialog, DialogRootProps, Portal } from '@chakra-ui/react';
 
 import { useDialog } from '@/redux/slices/dialog';
@@ -9,7 +9,7 @@ import { useDialog } from '@/redux/slices/dialog';
 import { CloseButton } from './close-button';
 
 export interface DialogProps extends DialogRootProps {
-  title: string;
+  title: ReactNode;
   onClose: () => void;
   titleProps?: ChakraDialog.TitleProps;
   contentProps?: ChakraDialog.ContentProps;
