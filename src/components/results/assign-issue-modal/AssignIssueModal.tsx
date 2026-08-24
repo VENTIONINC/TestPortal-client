@@ -67,6 +67,22 @@ const categoryItems = [
   { value: 'other', label: 'Other', style: getIssueCategoryStyle(ResultCategory.Other) },
 ] as const;
 
+export const descriptionTextareaProps = {
+  h: { base: '240px', lg: 'clamp(160px, 21vh, 320px)' },
+  overflowY: 'auto',
+  resize: 'none',
+} as const;
+
+export const similarityErrorNoticeProps = {
+  title: 'Couldn’t check for matching issues. Search by name above, or retry.',
+  retryLabel: 'Retry',
+} as const;
+
+export const categorisationErrorNoticeProps = {
+  title: 'Couldn’t draft the issue details. Fill them in below, or retry.',
+  retryLabel: 'Retry',
+} as const;
+
 type ResultDialogTitleData = {
   id: string | number;
   attempt: number;
@@ -113,7 +129,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
       onClose={actions.close}
       size="xl"
       initialFocusEl={() => (isContextOnly || isReadOnly ? null : nameInputRef.current)}
-      contentProps={{ h: 'min(750px, calc(100dvh - 8rem))', minW: { lg: '1200px' } }}
+      contentProps={{ h: 'min(750px, calc(100dvh - 8rem))', minW: { lg: 'clamp(1000px, calc(100vw - 8rem), 1400px)' } }}
     >
       <DialogBody p={0} display="flex" flexDirection="column" minH={0} overflowY={{ base: 'auto', lg: 'hidden' }}>
         <Box flexShrink={0} borderBottomWidth="1px" borderColor="border.main" />
@@ -209,8 +225,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
                         ) : undefined
                       }
                       aria-label="Description"
-                      minH="120px"
-                      autoresize
+                      {...descriptionTextareaProps}
                       value={state.form.description}
                       disabled={isReadOnly}
                       onChange={(event) => actions.updateForm({ description: event.target.value })}
@@ -218,6 +233,18 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
                     />
                   </Stack>
                   <Stack mt="auto" gap={3}>
+                    {state.status === assignIssueModalStatus.similarityError && (
+                      <SimilarityErrorNotice
+                        onRetry={actions.retrySimilarity}
+                        isSearching={modal.similarityRequest.isFetching}
+                      />
+                    )}
+                    {state.status === assignIssueModalStatus.categorisationError && (
+                      <CategorisationErrorNotice
+                        onRetry={actions.categorise}
+                        isCategorising={modal.categorisationRequest.isLoading}
+                      />
+                    )}
                     <FeedbackArea
                       state={state}
                       actions={actions}
@@ -229,6 +256,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }
                       actions={actions}
                       isMutating={modal.isMutating}
                       isSearching={modal.similarityRequest.isFetching}
+                      canFindMatchingIssues={modal.canFindMatchingIssues}
                     />
                     <ConfirmedIssueActions state={state} actions={actions} isMutating={modal.isMutating} />
                   </Stack>
@@ -510,7 +538,12 @@ const StateNotice = ({
     return <Notice loading title="Looking for issues that match this error…" />;
   }
   if (state.status === assignIssueModalStatus.aiCategorising) {
-    return <Notice loading title="Categorising this error with AI…" description="Your current draft will be preserved." />;
+    return (
+      <Notice
+        loading
+        title="Drafting a category, name and description from this error…"
+      />
+    );
   }
   if (state.status === assignIssueModalStatus.noMatch) {
     return (
@@ -577,25 +610,60 @@ const StateNotice = ({
     );
   }
   if (state.status === assignIssueModalStatus.categorisationError) {
-    return <Notice status="error" title="Couldn’t generate an issue draft" description="Your changes are safe. Retry or continue manually." />;
+    return null;
   }
   if (state.status === assignIssueModalStatus.similarityError) {
-    return (
-      <ChakraAlert.Root status="error" variant="subtle" px={3} py={2} borderWidth="1px">
-        <ChakraAlert.Indicator />
-        <ChakraAlert.Content>
-          <ChakraAlert.Title>Couldn’t search for similar issues</ChakraAlert.Title>
-          <ChakraAlert.Description>Enter an issue name manually or retry the search.</ChakraAlert.Description>
-          <Button mt={2} size="xs" variant="outline" onClick={() => void actions.retrySimilarity()}>Retry search</Button>
-        </ChakraAlert.Content>
-      </ChakraAlert.Root>
-    );
+    return null;
   }
   if (isConfirmedIssueStatus(state.status)) {
     return null;
   }
   return <Notice title="Create or assign an issue" description="Describe this failure or search by issue name." />;
 };
+
+const SimilarityErrorNotice = ({ onRetry, isSearching }: { onRetry: () => Promise<void>; isSearching: boolean }) => (
+  <ChakraAlert.Root status="warning" variant="subtle" px={3} py={2} borderWidth="1px" borderColor="orange.400">
+    <ChakraAlert.Indicator />
+    <HStack flex="1" justify="space-between" gap={3}>
+      <Text fontSize="sm">{similarityErrorNoticeProps.title}</Text>
+      <Button
+        size="sm"
+        variant="outline"
+        colorPalette="orange"
+        flexShrink={0}
+        loading={isSearching}
+        onClick={() => void onRetry()}
+      >
+        {similarityErrorNoticeProps.retryLabel}
+      </Button>
+    </HStack>
+  </ChakraAlert.Root>
+);
+
+const CategorisationErrorNotice = ({
+  onRetry,
+  isCategorising,
+}: {
+  onRetry: () => Promise<void>;
+  isCategorising: boolean;
+}) => (
+  <ChakraAlert.Root status="warning" variant="subtle" px={3} py={2} borderWidth="1px" borderColor="orange.400">
+    <ChakraAlert.Indicator />
+    <HStack flex="1" justify="space-between" gap={3}>
+      <Text fontSize="sm">{categorisationErrorNoticeProps.title}</Text>
+      <Button
+        size="sm"
+        variant="outline"
+        colorPalette="orange"
+        flexShrink={0}
+        loading={isCategorising}
+        onClick={() => void onRetry()}
+      >
+        {categorisationErrorNoticeProps.retryLabel}
+      </Button>
+    </HStack>
+  </ChakraAlert.Root>
+);
 
 const FeedbackArea = ({
   state,
@@ -626,11 +694,13 @@ const FormActions = ({
   actions,
   isMutating,
   isSearching,
+  canFindMatchingIssues,
 }: {
   state: AssignIssueModalState;
   actions: ReturnType<typeof useAssignIssueModal>['actions'];
   isMutating: boolean;
   isSearching: boolean;
+  canFindMatchingIssues: boolean;
 }) => {
   if (
     state.status === assignIssueModalStatus.algorithmSuggestion ||
@@ -654,7 +724,7 @@ const FormActions = ({
       <Button
         flex="1"
         variant="outline"
-        disabled={state.status === assignIssueModalStatus.noMatch || isRequesting || isMutating}
+        disabled={!canFindMatchingIssues || state.status === assignIssueModalStatus.noMatch || isRequesting || isMutating}
         loading={isSearching || state.status === assignIssueModalStatus.openingSearch}
         onClick={() => void actions.retrySimilarity()}
       >
@@ -769,7 +839,7 @@ const PolishActions = ({
         Retry polish
       </Button>
     )}
-    <Tooltip content="Polish with AI">
+    <Tooltip content="Rewrite for clarity">
       <IconButton
         aria-label={`Polish issue ${field}`}
         minW="20px"
@@ -801,7 +871,7 @@ const ModalFooter = ({
 }) => (
   <DialogFooter borderTopWidth="1px" borderColor="border.main" justifyContent="flex-end" gap={3} flexWrap="wrap">
     <HStack gap={2} ms="auto">
-      <Button variant="ghost" onClick={actions.close}>Cancel</Button>
+      <Button variant="ghost" loading={isMutating} disabled={isMutating} onClick={actions.close}>Cancel</Button>
       {(state.status === assignIssueModalStatus.noMatch ||
         state.status === assignIssueModalStatus.unassigned ||
         state.status === assignIssueModalStatus.aiSuggestion ||

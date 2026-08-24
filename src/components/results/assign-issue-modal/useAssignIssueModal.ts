@@ -19,6 +19,7 @@ import {
 
 import {
   assignIssueModalReducer,
+  assignIssueModalStatus,
   createAssignIssueModalState,
   type IssueDraft,
 } from './assignIssueModalState';
@@ -42,6 +43,7 @@ const isIssueDraftValid = (draft: IssueDraft) => Boolean(draft.category && draft
 export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }: UseAssignIssueModalProps) {
   const requestId = useRef(1);
   const searchStarted = useRef(false);
+  const isClosing = useRef(false);
   const [state, dispatch] = useReducer(
     assignIssueModalReducer,
     createAssignIssueModalState({ mode: mode === 'context' ? 'assign' : mode, requestId: requestId.current }),
@@ -57,6 +59,13 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
   const [confirmAssumption, confirmAssumptionRequest] = useConfirmAssumptionMutation();
   const [formatField, formatFieldRequest] = usePostApiV2ErrorFormatterMutation();
   const [updateAnalysisFeedback, feedbackRequest] = usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation();
+  const isMutating =
+    createIssueRequest.isLoading ||
+    updateIssueRequest.isLoading ||
+    createAssumptionRequest.isLoading ||
+    confirmAssumptionRequest.isLoading ||
+    feedbackRequest.isLoading;
+  const canFindMatchingIssues = state.status !== assignIssueModalStatus.aiSuggestion;
 
   const runSimilarity = useCallback(async () => {
     const activeRequestId = ++requestId.current;
@@ -109,7 +118,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
     }
   }, [contextQuery.data, projectId, requestDraft]);
 
-  const close = useCallback(() => {
+  const finishClose = useCallback(() => {
     dispatch({ type: 'closed' });
     onClose?.();
   }, [onClose]);
@@ -159,9 +168,9 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
           },
         }).unwrap();
         await assignExistingIssue(issue.id, 1);
-        close();
+        finishClose();
       }),
-    [assignExistingIssue, close, createIssue, projectId, runOperation, saveCategory, state.form],
+    [assignExistingIssue, createIssue, finishClose, projectId, runOperation, saveCategory, state.form],
   );
 
   const confirmSuggestion = useCallback(
@@ -170,9 +179,9 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
         if (!state.suggestion) return;
         await saveCategory();
         await assignExistingIssue(state.suggestion.issue.id, state.suggestion.score / 100);
-        close();
+        finishClose();
       }),
-    [assignExistingIssue, close, runOperation, saveCategory, state.suggestion],
+    [assignExistingIssue, finishClose, runOperation, saveCategory, state.suggestion],
   );
 
   const updateConfirmedIssue = useCallback(
@@ -188,9 +197,9 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
             description: state.form.description,
           },
         }).unwrap();
-        close();
+        finishClose();
       }),
-    [close, contextQuery.data?.assignments.confirmed, runOperation, saveCategory, state.form, updateIssue],
+    [contextQuery.data?.assignments.confirmed, finishClose, runOperation, saveCategory, state.form, updateIssue],
   );
 
   const unassign = useCallback(
@@ -202,10 +211,40 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
           assumptionId,
           updateAssumptionRequest: { madeBy: 'user', isConfirmed: false },
         }).unwrap();
-        close();
+        finishClose();
       }),
-    [close, confirmAssumption, contextQuery.data?.assignments.confirmed?.id, runOperation],
+    [confirmAssumption, contextQuery.data?.assignments.confirmed?.id, finishClose, runOperation],
   );
+
+  const close = useCallback(() => {
+    const suggestion = state.suggestion;
+    const shouldKeepSuggestion = state.status === 'algorithm-suggestion' && suggestion;
+
+    if (!shouldKeepSuggestion) {
+      finishClose();
+      return;
+    }
+    if (isMutating || isClosing.current) return;
+
+    isClosing.current = true;
+    void runOperation(async () => {
+      try {
+        await saveCategory();
+        await createAssumption({
+          createAssumptionRequest: {
+            issueId: suggestion.issue.id,
+            resultErrorId,
+            madeBy: 'bot',
+            isConfirmed: false,
+            score: suggestion.score / 100,
+          },
+        }).unwrap();
+        finishClose();
+      } finally {
+        isClosing.current = false;
+      }
+    });
+  }, [createAssumption, finishClose, isMutating, resultErrorId, runOperation, saveCategory, state.status, state.suggestion]);
 
   const polishField = useCallback(
     async (field: PolishField) => {
@@ -245,12 +284,8 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
     categorisationRequest,
     polish,
     operationError,
-    isMutating:
-      createIssueRequest.isLoading ||
-      updateIssueRequest.isLoading ||
-      createAssumptionRequest.isLoading ||
-      confirmAssumptionRequest.isLoading ||
-      feedbackRequest.isLoading,
+    isMutating,
+    canFindMatchingIssues,
     formatFieldRequest,
     actions: {
       updateForm: (form: Partial<IssueDraft>) => dispatch({ type: 'formChanged', form }),
