@@ -219,8 +219,11 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
   const close = useCallback(() => {
     const suggestion = state.suggestion;
     const shouldKeepSuggestion = state.status === 'algorithm-suggestion' && suggestion;
+    const hasExistingSuggestion = suggestion && contextQuery.data?.assignments.suggestions.some(
+      (assignment) => assignment.issue.id === suggestion.issue.id,
+    );
 
-    if (!shouldKeepSuggestion) {
+    if (!shouldKeepSuggestion || hasExistingSuggestion) {
       finishClose();
       return;
     }
@@ -244,7 +247,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
         isClosing.current = false;
       }
     });
-  }, [createAssumption, finishClose, isMutating, resultErrorId, runOperation, saveCategory, state.status, state.suggestion]);
+  }, [contextQuery.data?.assignments.suggestions, createAssumption, finishClose, isMutating, resultErrorId, runOperation, saveCategory, state.status, state.suggestion]);
 
   const polishField = useCallback(
     async (field: PolishField) => {

@@ -92,6 +92,22 @@ describe('InlineIssue', () => {
     expect(openAssignIssueModal).toHaveBeenCalledWith(resultError, 'confirmed');
   });
 
+  it('opens hypothesis pills in assignment mode', async () => {
+    const user = userEvent.setup();
+    const resultErrorWithHypothesis = {
+      ...resultError,
+      assumptions: [{ ...resultError.assumptions[0], isConfirmed: false }],
+    };
+    render(
+      <ChakraProvider>
+        <InlineIssue resultError={resultErrorWithHypothesis} projectId="project-1" />
+      </ChakraProvider>,
+    );
+
+    await user.click(screen.getByText('[Hypothesis]: Login regression'));
+    expect(openAssignIssueModal).toHaveBeenCalledWith(resultErrorWithHypothesis, 'assign');
+  });
+
   it('opens the add control in assignment mode', async () => {
     const user = userEvent.setup();
     render(
