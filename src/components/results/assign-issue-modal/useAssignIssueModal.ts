@@ -4,17 +4,19 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 
 import {
-  useLazyResultErrorSimilaritySuggestionQuery,
   useCreateAssumptionMutation,
   useConfirmAssumptionMutation,
   useResultErrorModalContextQuery,
 } from '@/redux/apis/extendedApi';
 import {
   usePatchApiV2IssuesByIssueIdMutation,
+  usePatchApiV2ResultErrorsByResultErrorIdReviewMutation,
   usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation,
   usePostApiV2ErrorFormatterMutation,
   usePostApiV2ErrorFormatterResultMutation,
   usePostApiV2IssuesMutation,
+  type ResultErrorModalAssignment,
+  type ResultErrorModalContext,
 } from '@/redux/apis/generatedApi';
 
 import {
@@ -44,7 +46,6 @@ const isIssueDraftValid = (draft: IssueDraft) => Boolean(draft.category && draft
 export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAssumptionId, onClose }: UseAssignIssueModalProps) {
   const requestId = useRef(1);
   const searchStarted = useRef(false);
-  const isClosing = useRef(false);
   const [state, dispatch] = useReducer(
     assignIssueModalReducer,
     createAssignIssueModalState({ mode: mode === 'context' ? 'assign' : mode, requestId: requestId.current }),
@@ -52,7 +53,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
   const [polish, setPolish] = useState(initialPolishState);
   const [operationError, setOperationError] = useState<string | null>(null);
   const contextQuery = useResultErrorModalContextQuery({ resultErrorId, projectId });
-  const [searchSimilarity, similarityRequest] = useLazyResultErrorSimilaritySuggestionQuery();
+  const [reviewError, similarityRequest] = usePatchApiV2ResultErrorsByResultErrorIdReviewMutation();
   const [requestDraft, categorisationRequest] = usePostApiV2ErrorFormatterResultMutation();
   const [createIssue, createIssueRequest] = usePostApiV2IssuesMutation();
   const [updateIssue, updateIssueRequest] = usePatchApiV2IssuesByIssueIdMutation();
@@ -68,27 +69,58 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
     feedbackRequest.isLoading;
   const canFindMatchingIssues = state.status !== assignIssueModalStatus.aiSuggestion;
 
+  const showAssumption = useCallback(
+    (activeRequestId: number, assumption: ResultErrorModalAssignment, category: ResultErrorModalContext['result']['category']) => {
+      dispatch({
+        type: 'similarityMatched',
+        requestId: activeRequestId,
+        suggestion: {
+          assumptionId: assumption.id,
+          issue: assumption.issue,
+          category,
+          score: Math.round(assumption.score * 100),
+          otherAffectedTests: 0,
+        },
+      });
+    },
+    [],
+  );
+
   const runSimilarity = useCallback(async () => {
     const activeRequestId = ++requestId.current;
     dispatch({ type: 'searchRequested', requestId: activeRequestId });
 
     try {
-      const outcome = await searchSimilarity({ resultErrorId, projectId }).unwrap();
-      if (outcome.outcome === 'match') {
-        dispatch({ type: 'similarityMatched', requestId: activeRequestId, suggestion: outcome.suggestion });
-      } else {
+      await reviewError({ resultErrorId }).unwrap();
+      const refreshed = await contextQuery.refetch();
+      const context = refreshed.data;
+      const assumption = context && [...context.assignments.suggestions].sort((left, right) => right.score - left.score)[0];
+      if (!context || !assumption) {
         dispatch({ type: 'similarityMissed', requestId: activeRequestId });
+        return;
       }
+      showAssumption(activeRequestId, assumption, context.result.category);
     } catch {
       dispatch({ type: 'similarityFailed', requestId: activeRequestId });
     }
-  }, [projectId, resultErrorId, searchSimilarity]);
+  }, [contextQuery, resultErrorId, reviewError, showAssumption]);
 
   useEffect(() => {
-    if (mode !== 'assign' || !contextQuery.data || searchStarted.current) return;
+    if ((mode !== 'assign' && mode !== 'context') || selectedAssumptionId || !contextQuery.data || searchStarted.current) return;
     searchStarted.current = true;
     void runSimilarity();
-  }, [contextQuery.data, mode, runSimilarity]);
+  }, [contextQuery.data, mode, runSimilarity, selectedAssumptionId]);
+
+  useEffect(() => {
+    if (!selectedAssumptionId || !contextQuery.data || searchStarted.current) return;
+    searchStarted.current = true;
+    const assumption = contextQuery.data.assignments.suggestions.find((candidate) => candidate.id === selectedAssumptionId);
+    if (!assumption) {
+      dispatch({ type: 'similarityMissed', requestId: requestId.current });
+      return;
+    }
+    showAssumption(requestId.current, assumption, contextQuery.data.result.category);
+  }, [contextQuery.data, selectedAssumptionId, showAssumption]);
 
   useEffect(() => {
     const context = contextQuery.data;
@@ -147,17 +179,14 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
     [createAssumption, resultErrorId],
   );
 
-  const removeSelectedHypothesis = useCallback(async () => {
-    const assumption = selectedAssumptionId && contextQuery.data?.assignments.suggestions.find(
-      (assignment) => assignment.id === selectedAssumptionId,
-    );
-    if (!assumption) return;
-
+  const updateDisplayedHypothesis = useCallback(async (isConfirmed: boolean) => {
+    const assumptionId = state.suggestion?.assumptionId;
+    if (!assumptionId) return;
     await confirmAssumption({
-      assumptionId: assumption.id,
-      updateAssumptionRequest: { madeBy: 'user', isConfirmed: false },
+      assumptionId,
+      updateAssumptionRequest: { madeBy: 'user', isConfirmed },
     }).unwrap();
-  }, [confirmAssumption, contextQuery.data?.assignments.suggestions, selectedAssumptionId]);
+  }, [confirmAssumption, state.suggestion?.assumptionId]);
 
   const runOperation = useCallback(async (operation: () => Promise<void>) => {
     setOperationError(null);
@@ -190,12 +219,11 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
     () =>
       runOperation(async () => {
         if (!state.suggestion) return;
-        await removeSelectedHypothesis();
         await saveCategory();
-        await assignExistingIssue(state.suggestion.issue.id, state.suggestion.score / 100);
+        await updateDisplayedHypothesis(true);
         finishClose();
       }),
-    [assignExistingIssue, finishClose, removeSelectedHypothesis, runOperation, saveCategory, state.suggestion],
+    [finishClose, runOperation, saveCategory, state.suggestion, updateDisplayedHypothesis],
   );
 
   const updateConfirmedIssue = useCallback(
@@ -234,46 +262,16 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
     () => {
       dispatch({ type: 'suggestionRejected' });
 
-      if (!selectedAssumptionId) return;
       void runOperation(async () => {
-        await removeSelectedHypothesis();
+        await updateDisplayedHypothesis(false);
       });
     },
-    [removeSelectedHypothesis, runOperation, selectedAssumptionId],
+    [runOperation, updateDisplayedHypothesis],
   );
 
   const close = useCallback(() => {
-    const suggestion = state.suggestion;
-    const shouldKeepSuggestion = state.status === 'algorithm-suggestion' && suggestion;
-    const hasExistingSuggestion = suggestion && contextQuery.data?.assignments.suggestions.some(
-      (assignment) => assignment.issue.id === suggestion.issue.id,
-    );
-
-    if (!shouldKeepSuggestion || hasExistingSuggestion) {
-      finishClose();
-      return;
-    }
-    if (isMutating || isClosing.current) return;
-
-    isClosing.current = true;
-    void runOperation(async () => {
-      try {
-        await saveCategory();
-        await createAssumption({
-          createAssumptionRequest: {
-            issueId: suggestion.issue.id,
-            resultErrorId,
-            madeBy: 'bot',
-            isConfirmed: false,
-            score: suggestion.score / 100,
-          },
-        }).unwrap();
-        finishClose();
-      } finally {
-        isClosing.current = false;
-      }
-    });
-  }, [contextQuery.data?.assignments.suggestions, createAssumption, finishClose, isMutating, resultErrorId, runOperation, saveCategory, state.status, state.suggestion]);
+    if (!isMutating) finishClose();
+  }, [finishClose, isMutating]);
 
   const polishField = useCallback(
     async (field: PolishField) => {

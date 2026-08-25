@@ -71,8 +71,8 @@ export const extendedApi = generatedApi
       getApiV2ResultErrorsByResultErrorIdModalContext: {
         providesTags: [TAGS.ResultError, TAGS.Result, TAGS.Issues],
       },
-      getApiV2ResultErrorsByResultErrorIdSimilaritySuggestion: {
-        providesTags: [TAGS.ResultError, TAGS.Result, TAGS.Issues],
+      patchApiV2ResultErrorsByResultErrorIdReview: {
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
       },
       postApiV2ResultErrorsAnalyze: {
         invalidatesTags: [TAGS.Result],
@@ -171,8 +171,6 @@ export const {
   usePatchApiV2AssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
   useGetApiV2IssuesWithStatsQuery: useGetIssuesWithStatsQuery,
   useGetApiV2ResultErrorsByResultErrorIdModalContextQuery: useResultErrorModalContextQuery,
-  useLazyGetApiV2ResultErrorsByResultErrorIdSimilaritySuggestionQuery: useLazyResultErrorSimilaritySuggestionQuery,
-
   // Custom hooks (from extendedApi)
   useGetResultsQuery,
   useLazyGetAnalysisExportQuery,

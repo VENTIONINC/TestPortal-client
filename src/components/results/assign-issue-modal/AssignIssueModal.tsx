@@ -237,7 +237,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssum
                     {state.status === assignIssueModalStatus.similarityError && (
                       <SimilarityErrorNotice
                         onRetry={actions.retrySimilarity}
-                        isSearching={modal.similarityRequest.isFetching}
+                        isSearching={modal.similarityRequest.isLoading}
                       />
                     )}
                     {state.status === assignIssueModalStatus.categorisationError && (
@@ -256,7 +256,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssum
                       state={state}
                       actions={actions}
                       isMutating={modal.isMutating}
-                      isSearching={modal.similarityRequest.isFetching}
+                      isSearching={modal.similarityRequest.isLoading}
                       canFindMatchingIssues={modal.canFindMatchingIssues}
                     />
                     <ConfirmedIssueActions state={state} actions={actions} isMutating={modal.isMutating} />

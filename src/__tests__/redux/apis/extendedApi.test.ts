@@ -63,6 +63,38 @@ describe('Results endpoint', () => {
     const request = fetchMock.mock.calls[0][0] as Request;
     expect(new URL(request.url).searchParams.get('dates')).toBe('2026-07-02,2026-07-04');
   });
+
+  it('refreshes subscribed results after a result-error review creates an assumption', async () => {
+    let resultsRequests = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const request = input as Request;
+      const path = new URL(request.url).pathname;
+
+      if (request.method === 'PATCH') {
+        return new Response(JSON.stringify({ id: 'error-1', assumptions: [{ id: 'assumption-1' }] }), {
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      if (path === '/api/v2/results') resultsRequests += 1;
+      return new Response(
+        JSON.stringify({ results: [], rawResults: [], availableTags: [], total: 0, rawTotal: 0, page: 1, totalPages: 0 }),
+        { headers: { 'content-type': 'application/json' } },
+      );
+    });
+
+    const results = store.dispatch(extendedApi.endpoints.getResults.initiate({ projectId: 'project-1' }));
+    await results;
+
+    await store
+      .dispatch(
+        extendedApi.endpoints.patchApiV2ResultErrorsByResultErrorIdReview.initiate({ resultErrorId: 'error-1' }),
+      )
+      .unwrap();
+
+    await vi.waitFor(() => expect(resultsRequests).toBe(2));
+    results.unsubscribe();
+  });
 });
 
 describe('Category source-of-truth API contracts', () => {

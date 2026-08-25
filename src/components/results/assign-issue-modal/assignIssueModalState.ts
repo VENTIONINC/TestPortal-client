@@ -8,6 +8,7 @@ export type IssueDraft = Pick<ErrorSuggestionResponse, 'name' | 'description'> &
 };
 
 export type SimilarIssueSuggestion = {
+  assumptionId: string;
   issue: { id: string; name: string; description?: string | null };
   category: IssueDraft['category'];
   score: number;
