@@ -105,7 +105,7 @@ describe('InlineIssue', () => {
     );
 
     await user.click(screen.getByText('[Hypothesis]: Login regression'));
-    expect(openAssignIssueModal).toHaveBeenCalledWith(resultErrorWithHypothesis, 'assign');
+    expect(openAssignIssueModal).toHaveBeenCalledWith(resultErrorWithHypothesis, 'assign', 'assumption-1');
   });
 
   it('opens the add control in assignment mode', async () => {

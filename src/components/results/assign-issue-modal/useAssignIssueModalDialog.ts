@@ -12,8 +12,8 @@ export function useAssignIssueModalDialog(projectId: string) {
   const { openDialog } = useDialogActions();
 
   return useCallback(
-    (resultError: ResultError, mode: 'assign' | 'confirmed' | 'context' = 'assign') =>
-      openDialog(AssignIssueModal, { resultErrorId: resultError.id, projectId, mode }),
+    (resultError: ResultError, mode: 'assign' | 'confirmed' | 'context' = 'assign', selectedAssumptionId?: string) =>
+      openDialog(AssignIssueModal, { resultErrorId: resultError.id, projectId, mode, selectedAssumptionId }),
     [openDialog, projectId],
   );
 }

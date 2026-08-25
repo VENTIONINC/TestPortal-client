@@ -50,7 +50,11 @@ export const InlineIssue = memo(({ resultError, projectId, category }: InlineIss
               color={isConfirmed && categoryStyle ? 'white' : 'fg.muted'}
               bg={isConfirmed && categoryStyle ? categoryStyle.color : 'transparent'}
               flexShrink={0}
-              onClick={() => openAssignIssueModal(resultError, isConfirmed ? 'confirmed' : 'assign')}
+              onClick={() =>
+                isConfirmed
+                  ? openAssignIssueModal(resultError, 'confirmed')
+                  : openAssignIssueModal(resultError, 'assign', assumption.id.toString())
+              }
               cursor="pointer"
               _hover={{ opacity: 0.85 }}
             >

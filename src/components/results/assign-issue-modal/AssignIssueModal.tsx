@@ -57,6 +57,7 @@ export interface AssignIssueModalProps extends DefaultDialogProps {
   resultErrorId: string;
   projectId: string;
   mode: 'assign' | 'confirmed' | 'context';
+  selectedAssumptionId?: string;
 }
 
 const categoryItems = [
@@ -111,8 +112,8 @@ export function getResultDialogTitle(result: ResultDialogTitleData | undefined, 
   );
 }
 
-export function AssignIssueModal({ resultErrorId, projectId, mode, closeDialog }: AssignIssueModalProps) {
-  const modal = useAssignIssueModal({ resultErrorId, projectId, mode, onClose: closeDialog });
+export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssumptionId, closeDialog }: AssignIssueModalProps) {
+  const modal = useAssignIssueModal({ resultErrorId, projectId, mode, selectedAssumptionId, onClose: closeDialog });
   const { state, context, actions } = modal;
   const isContextOnly = mode === 'context';
   const isReadOnly = isReadOnlyIssueStatus(state.status);
@@ -585,7 +586,7 @@ const StateNotice = ({
           </Text>
         </HStack>
         <HStack gap={2}>
-          <Button flex="1" variant="outline" disabled={isMutating} onClick={actions.rejectSuggestion}>Reject</Button>
+          <Button flex="1" variant="outline" disabled={isMutating} onClick={() => void actions.rejectSuggestion()}>Reject</Button>
           <Button flex="1" loading={isMutating} onClick={() => void actions.confirmSuggestion()}>Confirm</Button>
         </HStack>
       </Stack>

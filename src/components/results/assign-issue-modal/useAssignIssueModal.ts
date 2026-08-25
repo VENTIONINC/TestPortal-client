@@ -28,6 +28,7 @@ interface UseAssignIssueModalProps {
   resultErrorId: string;
   projectId: string;
   mode: 'assign' | 'confirmed' | 'context';
+  selectedAssumptionId?: string;
   onClose?: () => void;
 }
 
@@ -40,7 +41,7 @@ const initialPolishState: Record<PolishField, PolishFieldState> = {
 
 const isIssueDraftValid = (draft: IssueDraft) => Boolean(draft.category && draft.name.trim() && draft.description.trim());
 
-export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }: UseAssignIssueModalProps) {
+export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAssumptionId, onClose }: UseAssignIssueModalProps) {
   const requestId = useRef(1);
   const searchStarted = useRef(false);
   const isClosing = useRef(false);
@@ -146,6 +147,18 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
     [createAssumption, resultErrorId],
   );
 
+  const removeSelectedHypothesis = useCallback(async () => {
+    const assumption = selectedAssumptionId && contextQuery.data?.assignments.suggestions.find(
+      (assignment) => assignment.id === selectedAssumptionId,
+    );
+    if (!assumption) return;
+
+    await confirmAssumption({
+      assumptionId: assumption.id,
+      updateAssumptionRequest: { madeBy: 'user', isConfirmed: false },
+    }).unwrap();
+  }, [confirmAssumption, contextQuery.data?.assignments.suggestions, selectedAssumptionId]);
+
   const runOperation = useCallback(async (operation: () => Promise<void>) => {
     setOperationError(null);
     try {
@@ -177,11 +190,12 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
     () =>
       runOperation(async () => {
         if (!state.suggestion) return;
+        await removeSelectedHypothesis();
         await saveCategory();
         await assignExistingIssue(state.suggestion.issue.id, state.suggestion.score / 100);
         finishClose();
       }),
-    [assignExistingIssue, finishClose, runOperation, saveCategory, state.suggestion],
+    [assignExistingIssue, finishClose, removeSelectedHypothesis, runOperation, saveCategory, state.suggestion],
   );
 
   const updateConfirmedIssue = useCallback(
@@ -214,6 +228,18 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
         finishClose();
       }),
     [confirmAssumption, contextQuery.data?.assignments.confirmed?.id, finishClose, runOperation],
+  );
+
+  const rejectSuggestion = useCallback(
+    () => {
+      dispatch({ type: 'suggestionRejected' });
+
+      if (!selectedAssumptionId) return;
+      void runOperation(async () => {
+        await removeSelectedHypothesis();
+      });
+    },
+    [removeSelectedHypothesis, runOperation, selectedAssumptionId],
   );
 
   const close = useCallback(() => {
@@ -292,7 +318,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, onClose }:
     formatFieldRequest,
     actions: {
       updateForm: (form: Partial<IssueDraft>) => dispatch({ type: 'formChanged', form }),
-      rejectSuggestion: () => dispatch({ type: 'suggestionRejected' }),
+      rejectSuggestion,
       retrySimilarity: runSimilarity,
       categorise,
       createAndAssign,
