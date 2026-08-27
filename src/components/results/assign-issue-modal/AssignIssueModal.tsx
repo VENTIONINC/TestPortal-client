@@ -91,9 +91,10 @@ type ResultDialogTitleData = {
   duration: number;
 };
 
-export function getResultDialogTitle(result: ResultDialogTitleData | undefined, isContextOnly: boolean) {
-  const mainTitle = isContextOnly ? 'Result details' : 'Result';
-  if (!result) return mainTitle;
+export function getResultDialogTitle(result: ResultDialogTitleData | undefined, isContextOnly: boolean, isConfirmed: boolean) {
+  const existingTitle = isConfirmed ? 'Edit Issue' : 'Assign Issue';
+  const mainTitle = isContextOnly ? 'Result details' : existingTitle;
+  if (!result) return 'Result';
 
   const startedAt = new Date(result.startTime).toLocaleString('en-US', {
     hour: '2-digit',
@@ -104,7 +105,7 @@ export function getResultDialogTitle(result: ResultDialogTitleData | undefined, 
 
   return (
     <>
-      <Text as="span">{mainTitle} #{result.id}</Text>{' '}
+      <Text as="span">{mainTitle}</Text>{' '}
       <Text as="span" color="text.secondary" fontSize="sm" data-result-metadata>
         · Attempt #{result.attempt} · Started {startedAt} · Duration {formatDuration(result.duration)}
       </Text>
@@ -126,7 +127,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssum
 
   return (
     <Dialog
-      title={getResultDialogTitle(context?.result, isContextOnly)}
+      title={getResultDialogTitle(context?.result, isContextOnly, isConfirmedIssueStatus(state.status))}
       onClose={actions.close}
       size="xl"
       initialFocusEl={() => (isContextOnly || isReadOnly ? null : nameInputRef.current)}
