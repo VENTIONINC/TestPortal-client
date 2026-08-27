@@ -56,6 +56,12 @@ export const extendedApi = generatedApi
       patchApiV2IssuesByIssueId: {
         invalidatesTags: [TAGS.Issues, TAGS.Result, TAGS.ResultError],
       },
+      postApiV2ResultErrorsByResultErrorIdIssue: {
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError, TAGS.Project],
+      },
+      patchApiV2ResultErrorsByResultErrorIdIssue: {
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError, TAGS.Project],
+      },
       deleteApiV2ExecutionsByExecutionId: {
         invalidatesTags: [TAGS.Result],
       },
@@ -171,6 +177,8 @@ export const {
   usePatchApiV2AssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
   useGetApiV2IssuesWithStatsQuery: useGetIssuesWithStatsQuery,
   useGetApiV2ResultErrorsByResultErrorIdModalContextQuery: useResultErrorModalContextQuery,
+  usePostApiV2ResultErrorsByResultErrorIdIssueMutation,
+  usePatchApiV2ResultErrorsByResultErrorIdIssueMutation,
   // Custom hooks (from extendedApi)
   useGetResultsQuery,
   useLazyGetAnalysisExportQuery,

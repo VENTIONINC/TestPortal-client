@@ -4,19 +4,16 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 
 import {
-  useCreateAssumptionMutation,
   useConfirmAssumptionMutation,
+  usePatchApiV2ResultErrorsByResultErrorIdIssueMutation,
+  usePostApiV2ResultErrorsByResultErrorIdIssueMutation,
   useResultErrorModalContextQuery,
 } from '@/redux/apis/extendedApi';
 import {
-  usePatchApiV2IssuesByIssueIdMutation,
   usePatchApiV2ResultErrorsByResultErrorIdReviewMutation,
-  usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation,
   usePostApiV2ErrorFormatterMutation,
   usePostApiV2ErrorFormatterResultMutation,
-  usePostApiV2IssuesMutation,
   type ResultErrorModalAssignment,
-  type ResultErrorModalContext,
 } from '@/redux/apis/generatedApi';
 
 import {
@@ -41,7 +38,10 @@ const initialPolishState: Record<PolishField, PolishFieldState> = {
   description: { status: 'idle' },
 };
 
-const isIssueDraftValid = (draft: IssueDraft) => Boolean(draft.category && draft.name.trim() && draft.description.trim());
+const isIssueDraftValid = (
+  draft: IssueDraft,
+): draft is IssueDraft & { category: NonNullable<IssueDraft['category']> } =>
+  Boolean(draft.category && draft.name.trim() && draft.description.trim());
 
 export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAssumptionId, onClose }: UseAssignIssueModalProps) {
   const requestId = useRef(1);
@@ -55,29 +55,25 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
   const contextQuery = useResultErrorModalContextQuery({ resultErrorId, projectId });
   const [reviewError, similarityRequest] = usePatchApiV2ResultErrorsByResultErrorIdReviewMutation();
   const [requestDraft, categorisationRequest] = usePostApiV2ErrorFormatterResultMutation();
-  const [createIssue, createIssueRequest] = usePostApiV2IssuesMutation();
-  const [updateIssue, updateIssueRequest] = usePatchApiV2IssuesByIssueIdMutation();
-  const [createAssumption, createAssumptionRequest] = useCreateAssumptionMutation();
+  const [createIssue, createIssueRequest] = usePostApiV2ResultErrorsByResultErrorIdIssueMutation();
+  const [updateIssue, updateIssueRequest] = usePatchApiV2ResultErrorsByResultErrorIdIssueMutation();
   const [confirmAssumption, confirmAssumptionRequest] = useConfirmAssumptionMutation();
   const [formatField, formatFieldRequest] = usePostApiV2ErrorFormatterMutation();
-  const [updateAnalysisFeedback, feedbackRequest] = usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation();
   const isMutating =
     createIssueRequest.isLoading ||
     updateIssueRequest.isLoading ||
-    createAssumptionRequest.isLoading ||
-    confirmAssumptionRequest.isLoading ||
-    feedbackRequest.isLoading;
+    confirmAssumptionRequest.isLoading;
   const canFindMatchingIssues = state.status !== assignIssueModalStatus.aiSuggestion;
 
   const showAssumption = useCallback(
-    (activeRequestId: number, assumption: ResultErrorModalAssignment, category: ResultErrorModalContext['result']['category']) => {
+    (activeRequestId: number, assumption: ResultErrorModalAssignment) => {
       dispatch({
         type: 'similarityMatched',
         requestId: activeRequestId,
         suggestion: {
           assumptionId: assumption.id,
           issue: assumption.issue,
-          category,
+          category: assumption.issue.category,
           score: Math.round(assumption.score * 100),
           otherAffectedTests: 0,
         },
@@ -99,7 +95,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
         dispatch({ type: 'similarityMissed', requestId: activeRequestId });
         return;
       }
-      showAssumption(activeRequestId, assumption, context.result.category);
+      showAssumption(activeRequestId, assumption);
     } catch {
       dispatch({ type: 'similarityFailed', requestId: activeRequestId });
     }
@@ -119,7 +115,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
       dispatch({ type: 'similarityMissed', requestId: requestId.current });
       return;
     }
-    showAssumption(requestId.current, assumption, contextQuery.data.result.category);
+    showAssumption(requestId.current, assumption);
   }, [contextQuery.data, selectedAssumptionId, showAssumption]);
 
   useEffect(() => {
@@ -129,7 +125,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
     dispatch({
       type: 'formChanged',
       form: {
-        category: context.result.category,
+        category: confirmed.issue.category,
         name: confirmed.issue.name,
         description: confirmed.issue.description ?? '',
       },
@@ -156,29 +152,6 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
     onClose?.();
   }, [onClose]);
 
-  const saveCategory = useCallback(async () => {
-    if (!contextQuery.data || !state.form.category) return;
-    await updateAnalysisFeedback({
-      resultId: contextQuery.data.result.id,
-      updateResultAnalysisFeedbackRequest: { analysisFeedbackCategory: state.form.category },
-    }).unwrap();
-  }, [contextQuery.data, state.form.category, updateAnalysisFeedback]);
-
-  const assignExistingIssue = useCallback(
-    async (issueId: string, score: number) => {
-      await createAssumption({
-        createAssumptionRequest: {
-          issueId,
-          resultErrorId,
-          madeBy: 'user',
-          isConfirmed: true,
-          score,
-        },
-      }).unwrap();
-    },
-    [createAssumption, resultErrorId],
-  );
-
   const updateDisplayedHypothesis = useCallback(async (isConfirmed: boolean) => {
     const assumptionId = state.suggestion?.assumptionId;
     if (!assumptionId) return;
@@ -201,29 +174,28 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
     () =>
       runOperation(async () => {
         if (!isIssueDraftValid(state.form)) return;
-        await saveCategory();
-        const issue = await createIssue({
-          createIssueRequest: {
+        await createIssue({
+          resultErrorId,
+          resultErrorIssueCreateRequest: {
             projectId,
+            category: state.form.category,
             name: state.form.name.trim(),
             description: state.form.description,
           },
         }).unwrap();
-        await assignExistingIssue(issue.id, 1);
         finishClose();
       }),
-    [assignExistingIssue, createIssue, finishClose, projectId, runOperation, saveCategory, state.form],
+    [createIssue, finishClose, projectId, resultErrorId, runOperation, state.form],
   );
 
   const confirmSuggestion = useCallback(
     () =>
       runOperation(async () => {
         if (!state.suggestion) return;
-        await saveCategory();
         await updateDisplayedHypothesis(true);
         finishClose();
       }),
-    [finishClose, runOperation, saveCategory, state.suggestion, updateDisplayedHypothesis],
+    [finishClose, runOperation, state.suggestion, updateDisplayedHypothesis],
   );
 
   const updateConfirmedIssue = useCallback(
@@ -231,17 +203,18 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
       runOperation(async () => {
         const confirmed = contextQuery.data?.assignments.confirmed;
         if (!confirmed || !isIssueDraftValid(state.form)) return;
-        await saveCategory();
         await updateIssue({
-          issueId: confirmed.issue.id,
-          updateIssueRequest: {
+          resultErrorId,
+          resultErrorIssueUpdateRequest: {
+            projectId,
+            category: state.form.category,
             name: state.form.name.trim(),
             description: state.form.description,
           },
         }).unwrap();
         finishClose();
       }),
-    [contextQuery.data?.assignments.confirmed, finishClose, runOperation, saveCategory, state.form, updateIssue],
+    [contextQuery.data?.assignments.confirmed, finishClose, projectId, resultErrorId, runOperation, state.form, updateIssue],
   );
 
   const unassign = useCallback(

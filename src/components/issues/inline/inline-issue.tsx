@@ -8,15 +8,14 @@ import { LuCheck, LuTrash, LuCirclePlus } from 'react-icons/lu';
 import { useAssignIssueModalDialog } from '@/components/results/assign-issue-modal';
 import { useConfirmAssumptionMutation } from '@/redux/apis/extendedApi';
 import { getIssueCategoryStyle } from '@/utils';
-import { ResultCategory, ResultError, ResultErrorAssumption } from '@/types';
+import { ResultError, ResultErrorAssumption } from '@/types';
 
 interface InlineIssueProps {
   resultError: ResultError;
   projectId: string;
-  category?: ResultCategory;
 }
 
-export const InlineIssue = memo(({ resultError, projectId, category }: InlineIssueProps) => {
+export const InlineIssue = memo(({ resultError, projectId }: InlineIssueProps) => {
   const [confirmAssumption] = useConfirmAssumptionMutation();
 
   const openAssignIssueModal = useAssignIssueModalDialog(projectId);
@@ -34,7 +33,7 @@ export const InlineIssue = memo(({ resultError, projectId, category }: InlineIss
         resultError.assumptions.map((assumption, index) => {
           if (!assumption) return null;
 
-          const categoryStyle = category ? getIssueCategoryStyle(category) : null;
+          const categoryStyle = getIssueCategoryStyle(assumption.issue.category);
 
           const isConfirmed = assumption.isConfirmed;
 
@@ -42,13 +41,13 @@ export const InlineIssue = memo(({ resultError, projectId, category }: InlineIss
             <HStack
               key={index}
               border={isConfirmed ? '1px solid' : '1px dashed'}
-              borderColor={isConfirmed && categoryStyle ? categoryStyle.color : 'border.muted'}
+              borderColor={categoryStyle.color}
               borderRadius="xl"
               ml="auto"
               px={2}
               minH="26px"
-              color={isConfirmed && categoryStyle ? 'white' : 'fg.muted'}
-              bg={isConfirmed && categoryStyle ? categoryStyle.color : 'transparent'}
+              color={isConfirmed ? 'white' : categoryStyle.color}
+              bg={isConfirmed ? categoryStyle.color : 'transparent'}
               flexShrink={0}
               onClick={() =>
                 isConfirmed
@@ -60,14 +59,12 @@ export const InlineIssue = memo(({ resultError, projectId, category }: InlineIss
             >
               {assumption.issue && (
                 <>
-                  {categoryStyle && (
-                    <categoryStyle.Icon
-                      size={14}
-                      color="currentColor"
-                      style={{ flexShrink: 0 }}
-                      aria-label={`Category: ${categoryStyle.name}`}
-                    />
-                  )}
+                  <categoryStyle.Icon
+                    size={14}
+                    color="currentColor"
+                    style={{ flexShrink: 0 }}
+                    aria-label={`Category: ${categoryStyle.name}`}
+                  />
                   <Text fontSize="xs" fontWeight={isConfirmed ? 'bold' : 'normal'} whiteSpace="nowrap">
                     {isConfirmed ? '[Confirmed]' : '[Hypothesis]'}: {assumption.issue.name}
                   </Text>

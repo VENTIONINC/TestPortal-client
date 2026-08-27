@@ -227,7 +227,6 @@ export const ResultsExecutionCard = memo(
                     key={resultError.id}
                     resultError={resultError}
                     projectId={projectId}
-                    category={analysisCategory}
                   />
                 ))}
 

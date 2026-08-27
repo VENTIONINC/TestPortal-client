@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ChakraProvider } from '@/components/ui';
 import { InlineIssue } from '@/components/issues/inline/inline-issue';
-import { ResultCategory, ResultError } from '@/types';
+import { ResultError } from '@/types';
 
 const openAssignIssueModal = vi.fn();
 
@@ -47,6 +47,7 @@ const resultError: ResultError = {
         createdAt: '2026-08-05T00:00:00.000Z',
         updatedAt: '2026-08-05T00:00:00.000Z',
         name: 'Login regression',
+        category: 'script',
         description: 'Login request fails',
         portal: null,
         service: null,
@@ -59,25 +60,14 @@ const resultError: ResultError = {
 describe('InlineIssue', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('presents a linked issue with the containing result category', () => {
-    render(
-      <ChakraProvider>
-        <InlineIssue resultError={resultError} projectId="project-1" category={ResultCategory.Bug} />
-      </ChakraProvider>,
-    );
-
-    expect(screen.getByLabelText('Category: Bug')).toBeInTheDocument();
-  });
-
-  it('does not present a default category when the result is uncategorized', () => {
+  it('presents a linked issue with its own persisted category', () => {
     render(
       <ChakraProvider>
         <InlineIssue resultError={resultError} projectId="project-1" />
       </ChakraProvider>,
     );
 
-    expect(screen.getByText('[Confirmed]: Login regression')).toBeInTheDocument();
-    expect(screen.queryByLabelText(/^Category:/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Category: Script')).toBeInTheDocument();
   });
 
   it('opens confirmed pills in edit mode', async () => {

@@ -98,7 +98,7 @@ describe('Results endpoint', () => {
 });
 
 describe('Category source-of-truth API contracts', () => {
-  it('does not serialize retired category filters on the generated issue list', async () => {
+  it('serializes an exact lowercase persisted category filter on the generated issue list', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify({ issues: [], total: 0, page: 1, totalPages: 0 }), {
         headers: { 'content-type': 'application/json' },
@@ -110,13 +110,47 @@ describe('Category source-of-truth API contracts', () => {
         extendedApi.endpoints.getApiV2Issues.initiate({
           projectId: 'project-1',
           name: 'checkout',
-          category: 'Bug',
+          category: 'performance',
         } as never),
       )
       .unwrap();
 
     const request = fetchMock.mock.calls[0][0] as Request;
-    expect(new URL(request.url).searchParams.get('category')).toBeNull();
+    expect(new URL(request.url).searchParams.get('category')).toBe('performance');
+  });
+
+  it.each([
+    {
+      endpointName: 'postApiV2ResultErrorsByResultErrorIdIssue',
+      method: 'POST',
+      requestName: 'resultErrorIssueCreateRequest',
+      body: { projectId: 'project-1', name: 'Checkout failed', category: 'bug', description: 'Details' },
+    },
+    {
+      endpointName: 'patchApiV2ResultErrorsByResultErrorIdIssue',
+      method: 'PATCH',
+      requestName: 'resultErrorIssueUpdateRequest',
+      body: { projectId: 'project-1', name: 'Checkout failed', category: 'infra', description: 'Details' },
+    },
+  ])('provides the atomic $method result-error issue workflow', async ({ endpointName, method, requestName, body }) => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({}), { status: method === 'POST' ? 201 : 200, headers: { 'content-type': 'application/json' } }),
+    );
+    const endpoint = Reflect.get(extendedApi.endpoints, endpointName) as
+      | { initiate: (arg: unknown) => ReturnType<typeof store.dispatch> }
+      | undefined;
+
+    expect(endpoint).toBeDefined();
+    if (!endpoint) return;
+
+    await store.dispatch(
+      endpoint.initiate({ resultErrorId: 'error-1', [requestName]: body }) as never,
+    );
+
+    const request = fetchMock.mock.calls[0][0] as Request;
+    expect(new URL(request.url).pathname).toBe('/api/v2/result-errors/error-1/issue');
+    expect(request.method).toBe(method);
+    expect(await request.clone().json()).toEqual(body);
   });
 
   it('refreshes results, issues, and dashboard data after analysis feedback changes a category', async () => {

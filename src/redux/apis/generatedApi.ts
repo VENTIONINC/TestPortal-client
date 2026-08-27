@@ -42,6 +42,7 @@ const injectedRtkApi = api
           url: `/api/v2/issues`,
           params: {
             projectId: queryArg.projectId,
+            category: queryArg.category,
             name: queryArg.name,
             page: queryArg.page,
             limit: queryArg.limit,
@@ -68,6 +69,7 @@ const injectedRtkApi = api
           url: `/api/v2/issues/with-stats`,
           params: {
             projectId: queryArg.projectId,
+            category: queryArg.category,
             name: queryArg.name,
             page: queryArg.page,
             limit: queryArg.limit,
@@ -272,6 +274,28 @@ const injectedRtkApi = api
           },
         }),
         invalidatesTags: ["Assumptions"],
+      }),
+      postApiV2ResultErrorsByResultErrorIdIssue: build.mutation<
+        PostApiV2ResultErrorsByResultErrorIdIssueApiResponse,
+        PostApiV2ResultErrorsByResultErrorIdIssueApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/result-errors/${queryArg.resultErrorId}/issue`,
+          method: "POST",
+          body: queryArg.resultErrorIssueCreateRequest,
+        }),
+        invalidatesTags: ["Result Errors"],
+      }),
+      patchApiV2ResultErrorsByResultErrorIdIssue: build.mutation<
+        PatchApiV2ResultErrorsByResultErrorIdIssueApiResponse,
+        PatchApiV2ResultErrorsByResultErrorIdIssueApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/result-errors/${queryArg.resultErrorId}/issue`,
+          method: "PATCH",
+          body: queryArg.resultErrorIssueUpdateRequest,
+        }),
+        invalidatesTags: ["Result Errors"],
       }),
       getApiV2ResultErrorsByResultErrorIdModalContext: build.query<
         GetApiV2ResultErrorsByResultErrorIdModalContextApiResponse,
@@ -792,16 +816,17 @@ export type GetApiV2StatusApiResponse =
   /** status 200 Server status */ StatusResponse;
 export type GetApiV2StatusApiArg = void;
 export type GetApiV2IssuesApiResponse =
-  /** status 200 Paginated list of issues with derived category summaries */ PaginatedIssueList;
+  /** status 200 Paginated list of categorized issues with linked-result summaries */ PaginatedIssueList;
 export type GetApiV2IssuesApiArg = {
   /** Project ID to filter issues */
   projectId: string;
+  category?: ResultCategory;
   name?: string;
   page?: number;
   limit?: number;
 };
 export type PostApiV2IssuesApiResponse =
-  /** status 201 Issue core created successfully */ IssueCore;
+  /** status 201 Categorized issue created successfully */ IssueCore;
 export type PostApiV2IssuesApiArg = {
   createIssueRequest: CreateIssueRequest;
 };
@@ -810,6 +835,7 @@ export type GetApiV2IssuesWithStatsApiResponse =
 export type GetApiV2IssuesWithStatsApiArg = {
   /** Project ID to filter issues with statistics */
   projectId: string;
+  category?: ResultCategory;
   name?: string;
   page?: number;
   limit?: number;
@@ -929,6 +955,18 @@ export type DeleteApiV2AssumptionsByAssumptionIdApiArg = {
   assumptionId: string;
   /** Project ID to verify ownership of the assumption */
   projectId: string;
+};
+export type PostApiV2ResultErrorsByResultErrorIdIssueApiResponse =
+  /** status 201 Issue created and assigned */ ResultErrorIssueWorkflowResponse;
+export type PostApiV2ResultErrorsByResultErrorIdIssueApiArg = {
+  resultErrorId: string;
+  resultErrorIssueCreateRequest: ResultErrorIssueCreateRequest;
+};
+export type PatchApiV2ResultErrorsByResultErrorIdIssueApiResponse =
+  /** status 200 Confirmed issue updated */ ResultErrorIssueWorkflowResponse;
+export type PatchApiV2ResultErrorsByResultErrorIdIssueApiArg = {
+  resultErrorId: string;
+  resultErrorIssueUpdateRequest: ResultErrorIssueUpdateRequest;
 };
 export type GetApiV2ResultErrorsByResultErrorIdModalContextApiResponse =
   /** status 200 Modal context retrieved successfully */ ResultErrorModalContext;
@@ -1233,9 +1271,16 @@ export type StatusResponse = {
 export type ErrorResponse = {
   error: string;
 };
+export type ResultCategory =
+  | "bug"
+  | "infra"
+  | "performance"
+  | "script"
+  | "other";
 export type IssueCore = {
   id: string;
   name: string;
+  category: ResultCategory;
   description?: string | null;
   portal?: string | null;
   service?: string | null;
@@ -1259,9 +1304,7 @@ export type IssueCore = {
   updatedAt: string;
 };
 export type IssueCategorySummary = {
-  displayCategory:
-    | ("bug" | "infra" | "performance" | "script" | "other")
-    | null;
+  displayCategory: ResultCategory;
   isMixed: boolean;
   distribution: {
     bug: number;
@@ -1283,6 +1326,7 @@ export type PaginatedIssueList = {
 };
 export type CreateIssueRequest = {
   name: string;
+  category: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;
@@ -1311,6 +1355,7 @@ export type PaginatedIssueStatisticsList = {
 };
 export type UpdateIssueRequest = {
   name?: string;
+  category?: ResultCategory;
   description?: string;
   portal?: string;
   service?: string;
@@ -1417,6 +1462,7 @@ export type ResultsStats = {
     id: string;
     title: string;
     count: number;
+    category: "bug" | "infra" | "performance" | "script" | "other";
     categorySummary: IssueCategorySummary;
   }[];
 };
@@ -1481,9 +1527,36 @@ export type UpdateAssumptionRequest = {
   hypothesis?: string;
   evidence?: string;
 };
+export type ResultErrorIssueWorkflowResponse = {
+  issue: IssueCore;
+  assumption: Assumption;
+  result: {
+    id: string;
+    analysisFeedbackCategory: ResultCategory;
+  };
+};
+export type ResultErrorIssueCreateRequest = {
+  projectId: string;
+  name: string;
+  category: ResultCategory;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+};
+export type ResultErrorIssueUpdateRequest = {
+  projectId: string;
+  category: ResultCategory;
+  name?: string;
+  description?: string;
+  portal?: string;
+  service?: string;
+  ticket?: string;
+};
 export type ResultErrorModalIssue = {
   id: string;
   name: string;
+  category: ResultCategory;
   description: string | null;
   portal: string | null;
   service: string | null;
@@ -1974,6 +2047,8 @@ export const {
   useGetApiV2AssumptionsByAssumptionIdQuery,
   useLazyGetApiV2AssumptionsByAssumptionIdQuery,
   useDeleteApiV2AssumptionsByAssumptionIdMutation,
+  usePostApiV2ResultErrorsByResultErrorIdIssueMutation,
+  usePatchApiV2ResultErrorsByResultErrorIdIssueMutation,
   useGetApiV2ResultErrorsByResultErrorIdModalContextQuery,
   useLazyGetApiV2ResultErrorsByResultErrorIdModalContextQuery,
   usePatchApiV2ResultErrorsByResultErrorIdAssignIssueMutation,

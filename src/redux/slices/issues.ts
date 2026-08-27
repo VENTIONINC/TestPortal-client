@@ -19,6 +19,7 @@ export const initialFilters: IssueFilters = {
   specName: '',
   environment: '',
   type: 'all',
+  category: 'all',
   name: '',
   statFrom: '',
   statTo: '',
@@ -35,9 +36,7 @@ export const issuesSlice = createSlice({
   reducers: {
     reset: () => initialState,
     setFilters: (state, action: PayloadAction<Partial<IssueFilters>>) => {
-      const supportedFilters = { ...action.payload } as Partial<IssueFilters> & { category?: unknown };
-      Reflect.deleteProperty(supportedFilters, 'category');
-      state.filters = { ...state.filters, ...supportedFilters };
+      state.filters = { ...state.filters, ...action.payload };
     },
   },
 });

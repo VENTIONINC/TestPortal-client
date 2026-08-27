@@ -50,6 +50,19 @@ export const filterConfig = [
     title: 'Issue filters',
     fields: [
       {
+        label: 'Category:',
+        name: 'category',
+        type: 'select',
+        options: [
+          { value: 'all', label: 'All' },
+          { value: 'bug', label: 'Bug' },
+          { value: 'infra', label: 'Environment' },
+          { value: 'performance', label: 'Performance' },
+          { value: 'script', label: 'Script' },
+          { value: 'other', label: 'Other' },
+        ],
+      },
+      {
         label: 'Name:',
         name: 'name',
         type: 'input',

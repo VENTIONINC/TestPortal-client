@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Button, Stack } from '@chakra-ui/react';
 
-import { Drawer, DrawerBody, Input, Textarea, toaster } from '@/components/ui';
+import { Drawer, DrawerBody, Input, NativeSelect, Textarea, toaster } from '@/components/ui';
 import { useConfirmIssueDeletionDialog } from '@/components/ui/components/Dialogs';
 import {
   useDeleteApiV2IssuesByIssueIdMutation,
@@ -12,7 +12,7 @@ import {
   usePostApiV2ErrorFormatterMutation,
 } from '@/redux/apis/generatedApi';
 import { useSelectedProjectId } from '@/redux/slices/projects';
-import type { DefaultDrawerProps, IssueCore } from '@/types';
+import type { DefaultDrawerProps, IssueCore, ResultCategory } from '@/types';
 
 interface EditIssueDrawerProps extends DefaultDrawerProps {
   issue: IssueCore;
@@ -21,6 +21,7 @@ interface EditIssueDrawerProps extends DefaultDrawerProps {
 export function EditIssueDrawer({ issue, closeDrawer }: EditIssueDrawerProps) {
   const projectId = useSelectedProjectId();
   const [name, setName] = useState(issue.name);
+  const [category, setCategory] = useState<ResultCategory>(issue.category);
   const [description, setDescription] = useState(issue.description ?? '');
   const [updateIssue, updateState] = usePatchApiV2IssuesByIssueIdMutation();
   const [deleteIssue, deleteState] = useDeleteApiV2IssuesByIssueIdMutation();
@@ -31,7 +32,7 @@ export function EditIssueDrawer({ issue, closeDrawer }: EditIssueDrawerProps) {
     try {
       await updateIssue({
         issueId: issue.id,
-        updateIssueRequest: { name: name.trim(), description },
+        updateIssueRequest: { name: name.trim(), category, description },
       }).unwrap();
       closeDrawer();
     } catch {
@@ -67,6 +68,19 @@ export function EditIssueDrawer({ issue, closeDrawer }: EditIssueDrawerProps) {
       <DrawerBody>
         <Stack gap={4}>
           <Input name="issue-name" label="Issue name" value={name} onChange={(event) => setName(event.target.value)} />
+          <NativeSelect
+            name="category"
+            label="Category"
+            value={category}
+            onChange={(event) => setCategory(event.target.value as ResultCategory)}
+            items={[
+              { value: 'bug', label: 'Bug' },
+              { value: 'infra', label: 'Environment' },
+              { value: 'performance', label: 'Performance' },
+              { value: 'script', label: 'Script' },
+              { value: 'other', label: 'Other' },
+            ]}
+          />
           <Textarea
             name="description"
             label="Description"

@@ -8,6 +8,7 @@ export interface IssueCore {
   createdAt: string;
   updatedAt: string;
   name: string;
+  category: ResultCategory;
   description?: string | null;
   portal?: string | null;
   service?: string | null;
@@ -18,7 +19,7 @@ export interface IssueCore {
 }
 
 export interface IssueCategorySummary {
-  displayCategory: ResultCategory | null;
+  displayCategory: ResultCategory;
   isMixed: boolean;
   distribution: Record<ResultCategory, number>;
   uncategorizedCount: number;
@@ -51,6 +52,7 @@ export interface IssueFilters {
   specName: string;
   environment: string;
   type: string;
+  category: string;
   name: string;
   statFrom: string;
   statTo: string;
