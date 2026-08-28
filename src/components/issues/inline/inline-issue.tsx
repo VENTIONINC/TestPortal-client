@@ -66,7 +66,7 @@ export const InlineIssue = memo(({ resultError, projectId }: InlineIssueProps) =
                     aria-label={`Category: ${categoryStyle.name}`}
                   />
                   <Text fontSize="xs" fontWeight={isConfirmed ? 'bold' : 'normal'} whiteSpace="nowrap">
-                    {isConfirmed ? '[Confirmed]' : '[Hypothesis]'}: {assumption.issue.name}
+                    {assumption.issue.name}
                   </Text>
                 </>
               )}
