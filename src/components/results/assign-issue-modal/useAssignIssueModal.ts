@@ -11,6 +11,7 @@ import {
 } from '@/redux/apis/extendedApi';
 import {
   usePatchApiV2ResultErrorsByResultErrorIdReviewMutation,
+  usePatchApiV2ResultErrorsByResultErrorIdAssignIssueMutation,
   usePostApiV2ErrorFormatterMutation,
   usePostApiV2ErrorFormatterResultMutation,
   type ResultErrorModalAssignment,
@@ -20,6 +21,7 @@ import {
   assignIssueModalReducer,
   assignIssueModalStatus,
   createAssignIssueModalState,
+  type AssignIssueModalState,
   type IssueDraft,
 } from './assignIssueModalState';
 
@@ -54,6 +56,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
   const [operationError, setOperationError] = useState<string | null>(null);
   const contextQuery = useResultErrorModalContextQuery({ resultErrorId, projectId });
   const [reviewError, similarityRequest] = usePatchApiV2ResultErrorsByResultErrorIdReviewMutation();
+  const [assignExistingIssue, assignExistingIssueRequest] = usePatchApiV2ResultErrorsByResultErrorIdAssignIssueMutation();
   const [requestDraft, categorisationRequest] = usePostApiV2ErrorFormatterResultMutation();
   const [createIssue, createIssueRequest] = usePostApiV2ResultErrorsByResultErrorIdIssueMutation();
   const [updateIssue, updateIssueRequest] = usePatchApiV2ResultErrorsByResultErrorIdIssueMutation();
@@ -62,6 +65,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
   const isMutating =
     createIssueRequest.isLoading ||
     updateIssueRequest.isLoading ||
+    assignExistingIssueRequest.isLoading ||
     confirmAssumptionRequest.isLoading;
   const canFindMatchingIssues = state.status !== assignIssueModalStatus.aiSuggestion;
 
@@ -191,11 +195,16 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
   const confirmSuggestion = useCallback(
     () =>
       runOperation(async () => {
+        if (state.selectedIssue) {
+          await assignExistingIssue({ resultErrorId, assignIssueRequest: { issueId: state.selectedIssue.id } }).unwrap();
+          finishClose();
+          return;
+        }
         if (!state.suggestion) return;
         await updateDisplayedHypothesis(true);
         finishClose();
       }),
-    [finishClose, runOperation, state.suggestion, updateDisplayedHypothesis],
+    [assignExistingIssue, finishClose, resultErrorId, runOperation, state.selectedIssue, state.suggestion, updateDisplayedHypothesis],
   );
 
   const updateConfirmedIssue = useCallback(
@@ -289,6 +298,8 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
     formatFieldRequest,
     actions: {
       updateForm: (form: Partial<IssueDraft>) => dispatch({ type: 'formChanged', form }),
+      selectExistingIssue: (issue: NonNullable<AssignIssueModalState['selectedIssue']>) =>
+        dispatch({ type: 'existingIssueSelected', issue }),
       rejectSuggestion,
       retrySimilarity: runSimilarity,
       categorise,

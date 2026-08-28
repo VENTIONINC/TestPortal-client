@@ -1,7 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { useDebounce } from 'use-debounce';
 import {
   Alert as ChakraAlert,
   Box,
@@ -44,6 +45,7 @@ import { ResultCategory } from '@/types';
 import type { DefaultDialogProps } from '@/types';
 import { copyToClipboard } from '@/utils';
 import { getIssueCategoryStyle } from '@/utils/issue-category';
+import { useGetApiV2IssuesQuery, type IssueCore } from '@/redux/apis/generatedApi';
 
 import {
   assignIssueModalStatus,
@@ -199,24 +201,17 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssum
                     disabled={isReadOnly}
                     onChange={(category) => actions.updateForm({ category })}
                   />
-                  <Stack gap={1}>
-                    <Input
-                      ref={nameInputRef}
-                      name="issue-name"
-                      label="Issue name"
-                      labelAction={
-                        !isReadOnly && state.form.name ? (
-                          <PolishActions field="name" state={modal.polish.name} actions={actions} />
-                        ) : undefined
-                      }
-                      aria-label="Issue name"
-                      autoFocus={!isReadOnly}
-                      value={state.form.name}
-                      disabled={isReadOnly}
-                      onChange={(event) => actions.updateForm({ name: event.target.value })}
-                      placeholder="Type at least 3 characters to search..."
-                    />
-                  </Stack>
+                  <IssueNameSearch
+                    inputRef={nameInputRef}
+                    projectId={projectId}
+                    value={state.form.name}
+                    disabled={isReadOnly}
+                    labelAction={
+                      !isReadOnly && state.form.name ? <PolishActions field="name" state={modal.polish.name} actions={actions} /> : undefined
+                    }
+                    onChange={(name) => actions.updateForm({ name })}
+                    onSelect={actions.selectExistingIssue}
+                  />
                   <Stack gap={1}>
                     <Textarea
                       name="description"
@@ -313,6 +308,88 @@ const CategorySelector = ({
     </HStack>
   </RadioGroup.Root>
 );
+
+const IssueNameSearch = ({
+  inputRef,
+  projectId,
+  value,
+  disabled,
+  labelAction,
+  onChange,
+  onSelect,
+}: {
+  inputRef: RefObject<HTMLInputElement | null>;
+  projectId: string;
+  value: string;
+  disabled: boolean;
+  labelAction: ReactNode;
+  onChange: (value: string) => void;
+  onSelect: (issue: IssueCore) => void;
+}) => {
+  const [debouncedName] = useDebounce(value.trim(), 300);
+  const canSearch = !disabled && debouncedName.length >= 2;
+  const search = useGetApiV2IssuesQuery(
+    { projectId, name: debouncedName, limit: 10 },
+    { skip: !canSearch },
+  );
+  const issues = canSearch ? (search.data?.issues ?? []) : [];
+
+  return (
+    <Stack gap={1} position="relative">
+      <Input
+        ref={inputRef}
+        name="issue-name"
+        label="Issue name"
+        labelAction={labelAction}
+        aria-label="Issue name"
+        autoFocus={!disabled}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Type at least 2 characters to search..."
+      />
+      {canSearch && (search.isLoading || issues.length > 0) && (
+        <Box
+          position="absolute"
+          zIndex="dropdown"
+          top="100%"
+          mt={1}
+          w="full"
+          maxH="220px"
+          overflowY="auto"
+          borderWidth="1px"
+          borderColor="border.main"
+          borderRadius="md"
+          bg="bg.panel"
+          boxShadow="md"
+        >
+          {search.isLoading ? (
+            <Flex justify="center" py={3}><Spinner size="sm" /></Flex>
+          ) : (
+            issues.map((issue) => (
+              <Button
+                key={issue.id}
+                w="full"
+                h="auto"
+                justifyContent="flex-start"
+                borderRadius={0}
+                px={3}
+                py={2}
+                fontWeight="normal"
+                textAlign="start"
+                whiteSpace="normal"
+                variant="ghost"
+                onClick={() => onSelect(issue)}
+              >
+                {issue.name}
+              </Button>
+            ))
+          )}
+        </Box>
+      )}
+    </Stack>
+  );
+};
 
 const ContextLoading = ({ isError, onRetry }: { isError: boolean; onRetry: () => unknown }) => (
   <VStack flex="1" justify="center" gap={4} p={8}>
@@ -593,6 +670,29 @@ const StateNotice = ({
       </Stack>
     );
   }
+  if (state.status === assignIssueModalStatus.manualSuggestion && state.selectedIssue) {
+    return (
+      <Stack gap={2}>
+        <HStack
+          gap={2}
+          p={2}
+          borderWidth="1px"
+          borderColor="orange.400"
+          borderRadius="md"
+          bg="orange.50"
+          _dark={{ bg: 'orange.950' }}
+        >
+          <Text fontSize="sm" lineHeight="short" flex="1">
+            You selected an existing issue matching the name. Confirm to link it, or Reject to create a new one.
+          </Text>
+        </HStack>
+        <HStack gap={2}>
+          <Button flex="1" variant="outline" disabled={isMutating} onClick={() => void actions.rejectSuggestion()}>Reject</Button>
+          <Button flex="1" loading={isMutating} onClick={() => void actions.confirmSuggestion()}>Confirm</Button>
+        </HStack>
+      </Stack>
+    );
+  }
   if (state.status === assignIssueModalStatus.aiSuggestion) {
     return (
       <Notice
@@ -706,6 +806,7 @@ const FormActions = ({
 }) => {
   if (
     state.status === assignIssueModalStatus.algorithmSuggestion ||
+    state.status === assignIssueModalStatus.manualSuggestion ||
     isConfirmedIssueStatus(state.status)
   ) return null;
 

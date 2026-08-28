@@ -20,6 +20,7 @@ export const assignIssueModalStatus = {
   aiCategorising: 'ai-categorising',
   unassigned: 'unassigned',
   algorithmSuggestion: 'algorithm-suggestion',
+  manualSuggestion: 'manual-suggestion',
   aiSuggestion: 'ai-suggestion',
   noMatch: 'no-match',
   categorisationError: 'categorisation-error',
@@ -37,6 +38,7 @@ export const isReadOnlyIssueStatus = (status: AssignIssueModalStatus) =>
   status === assignIssueModalStatus.openingSearch ||
   status === assignIssueModalStatus.aiCategorising ||
   status === assignIssueModalStatus.algorithmSuggestion ||
+  status === assignIssueModalStatus.manualSuggestion ||
   status === assignIssueModalStatus.confirmedView;
 
 export type AssignIssueModalState = {
@@ -45,6 +47,7 @@ export type AssignIssueModalState = {
   closed: boolean;
   form: IssueDraft;
   suggestion?: SimilarIssueSuggestion;
+  selectedIssue?: SimilarIssueSuggestion['issue'];
   score?: number;
 };
 
@@ -53,6 +56,7 @@ export type AssignIssueModalEvent =
   | { type: 'similarityMatched'; requestId: number; suggestion: SimilarIssueSuggestion }
   | { type: 'similarityMissed'; requestId: number }
   | { type: 'similarityFailed'; requestId: number }
+  | { type: 'existingIssueSelected'; issue: SimilarIssueSuggestion['issue'] }
   | { type: 'categoriseRequested'; requestId: number }
   | { type: 'categoriseSucceeded'; requestId: number; draft: IssueDraft }
   | { type: 'categoriseFailed'; requestId: number }
@@ -111,6 +115,20 @@ export function assignIssueModalReducer(
       return { ...state, status: assignIssueModalStatus.noMatch, suggestion: undefined, score: undefined };
     case 'similarityFailed':
       return { ...state, status: assignIssueModalStatus.similarityError };
+    case 'existingIssueSelected':
+      return {
+        ...state,
+        status: assignIssueModalStatus.manualSuggestion,
+        selectedIssue: event.issue,
+        suggestion: undefined,
+        score: undefined,
+        form: {
+          ...state.form,
+          category: event.issue.category,
+          name: event.issue.name,
+          description: event.issue.description ?? '',
+        },
+      };
     case 'categoriseRequested':
       return { ...state, status: assignIssueModalStatus.aiCategorising, requestId: event.requestId };
     case 'categoriseSucceeded':
@@ -124,7 +142,14 @@ export function assignIssueModalReducer(
         ? { ...state, status: assignIssueModalStatus.confirmedEdit }
         : state;
     case 'suggestionRejected':
-      return { ...state, status: assignIssueModalStatus.unassigned, form: emptyDraft, suggestion: undefined, score: undefined };
+      return {
+        ...state,
+        status: assignIssueModalStatus.unassigned,
+        form: emptyDraft,
+        suggestion: undefined,
+        selectedIssue: undefined,
+        score: undefined,
+      };
     case 'closed':
       return { ...state, closed: true };
   }

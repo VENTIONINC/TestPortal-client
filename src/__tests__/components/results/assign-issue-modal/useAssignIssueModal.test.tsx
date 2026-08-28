@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   reviewError: vi.fn(),
   requestDraft: vi.fn(),
   formatField: vi.fn(),
+  assignExistingIssue: vi.fn(),
 }));
 
 const issue = {
@@ -84,6 +85,7 @@ vi.mock('@/redux/apis/generatedApi', () => ({
   usePatchApiV2ResultErrorsByResultErrorIdReviewMutation: () => [mocks.reviewError, mutationState],
   usePostApiV2ErrorFormatterResultMutation: () => [mocks.requestDraft, mutationState],
   usePostApiV2ErrorFormatterMutation: () => [mocks.formatField, mutationState],
+  usePatchApiV2ResultErrorsByResultErrorIdAssignIssueMutation: () => [mocks.assignExistingIssue, mutationState],
   usePostApiV2IssuesMutation: () => [mocks.createIssue, mutationState],
   usePatchApiV2IssuesByIssueIdMutation: () => [mocks.updateIssue, mutationState],
   usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation: () => [mocks.updateFeedback, mutationState],
@@ -185,5 +187,47 @@ describe('useAssignIssueModal category workflows', () => {
       updateAssumptionRequest: { madeBy: 'user', isConfirmed: true },
     });
     expect(mocks.updateFeedback).not.toHaveBeenCalled();
+  });
+
+  it('links a manually selected existing issue', async () => {
+    const onClose = vi.fn();
+    const { result } = renderHook(() =>
+      useAssignIssueModal({
+        resultErrorId: 'error-1',
+        projectId: 'project-1',
+        mode: 'assign',
+        selectedAssumptionId: 'missing',
+        onClose,
+      }),
+    );
+
+    act(() => result.current.actions.selectExistingIssue(issue));
+
+    expect(result.current.state).toMatchObject({
+      status: 'manual-suggestion',
+      form: { category: 'script', name: 'Existing issue', description: 'Existing description' },
+    });
+
+    await act(async () => result.current.actions.confirmSuggestion());
+
+    expect(mocks.assignExistingIssue).toHaveBeenCalledWith({
+      resultErrorId: 'error-1',
+      assignIssueRequest: { issueId: 'issue-1' },
+    });
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('clears a manually selected issue when it is rejected', () => {
+    const { result } = renderHook(() =>
+      useAssignIssueModal({ resultErrorId: 'error-1', projectId: 'project-1', mode: 'assign', selectedAssumptionId: 'missing' }),
+    );
+
+    act(() => result.current.actions.selectExistingIssue(issue));
+    act(() => result.current.actions.rejectSuggestion());
+
+    expect(result.current.state).toMatchObject({
+      status: 'unassigned',
+      form: { name: '', description: '' },
+    });
   });
 });
