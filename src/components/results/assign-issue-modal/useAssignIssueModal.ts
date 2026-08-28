@@ -226,9 +226,9 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
           assumptionId,
           updateAssumptionRequest: { madeBy: 'user', isConfirmed: false },
         }).unwrap();
-        finishClose();
+        dispatch({ type: 'suggestionRejected' });
       }),
-    [confirmAssumption, contextQuery.data?.assignments.confirmed?.id, finishClose, runOperation],
+    [confirmAssumption, contextQuery.data?.assignments.confirmed?.id, runOperation],
   );
 
   const rejectSuggestion = useCallback(

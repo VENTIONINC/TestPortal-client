@@ -150,6 +150,23 @@ describe('useAssignIssueModal category workflows', () => {
     expect(mocks.updateIssue).not.toHaveBeenCalled();
   });
 
+  it('keeps the modal open with an empty editable draft after unassigning a confirmed issue', async () => {
+    const onClose = vi.fn();
+    const { result } = renderHook(() =>
+      useAssignIssueModal({ resultErrorId: 'error-1', projectId: 'project-1', mode: 'confirmed', onClose }),
+    );
+
+    await act(async () => result.current.actions.unassign());
+
+    expect(result.current.state).toMatchObject({
+      closed: false,
+      status: 'unassigned',
+      form: { name: '', description: '' },
+    });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(mocks.reviewError).not.toHaveBeenCalled();
+  });
+
   it('loads a similarity suggestion from its Issue category and confirms only the assumption', async () => {
     const { result } = renderHook(() =>
       useAssignIssueModal({
