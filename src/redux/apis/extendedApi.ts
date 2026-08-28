@@ -57,6 +57,7 @@ export const extendedApi = generatedApi
         invalidatesTags: [TAGS.Issues, TAGS.Result, TAGS.ResultError],
       },
       postApiV2ResultErrorsByResultErrorIdIssue: {
+        extraOptions: { maxRetries: 0 },
         invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError, TAGS.Project],
       },
       patchApiV2ResultErrorsByResultErrorIdIssue: {

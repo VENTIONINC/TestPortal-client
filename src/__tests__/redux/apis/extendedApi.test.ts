@@ -153,6 +153,30 @@ describe('Category source-of-truth API contracts', () => {
     expect(await request.clone().json()).toEqual(body);
   });
 
+  it('does not retry the non-idempotent create-and-assign request after a server error', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ error: 'temporary failure' }), {
+        status: 503,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+
+    const request = store.dispatch(
+      extendedApi.endpoints.postApiV2ResultErrorsByResultErrorIdIssue.initiate({
+        resultErrorId: 'error-1',
+        resultErrorIssueCreateRequest: {
+          projectId: 'project-1',
+          name: 'Checkout failed',
+          category: 'bug',
+        },
+      }),
+    );
+
+    await request;
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('refreshes results, issues, and dashboard data after analysis feedback changes a category', async () => {
     const requestCounts = new Map<string, number>();
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
