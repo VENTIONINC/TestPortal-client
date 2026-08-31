@@ -60,7 +60,7 @@ describe('source snippet helpers', () => {
     expect(getSnippetLanguage('/tmp/output.unknown')).toBe('text');
   });
 
-  it('renders cleaned, syntax-highlighted source with numbered and emphasized failing line', async () => {
+  it('renders cleaned, syntax-highlighted source without an extra line-number gutter', async () => {
     mocks.codeToTokens.mockResolvedValue({
       tokens: [[{ content: 'throw', color: '#ff0000' }, { content: ' new Error("failed")' }], [{ content: 'return true;' }]],
     });
@@ -70,8 +70,9 @@ describe('source snippet helpers', () => {
     expect(screen.getByRole('region', { name: 'Snippet content' })).toHaveStyle({ overflow: 'auto' });
     expect(screen.getByText('throw new Error("failed")')).toBeInTheDocument();
     expect(screen.queryByText(/\[31m/)).not.toBeInTheDocument();
-    expect(screen.getByText('47').closest('[data-failing-line="true"]')).toBeInTheDocument();
-    expect(screen.getByText('48')).toBeInTheDocument();
+    expect(screen.getByText('throw new Error("failed")').closest('[data-failing-line="true"]')).toBeInTheDocument();
+    expect(screen.queryByText('47')).not.toBeInTheDocument();
+    expect(screen.queryByText('48')).not.toBeInTheDocument();
 
     await waitFor(() => expect(mocks.codeToTokens).toHaveBeenCalledWith('throw new Error("failed")\nreturn true;', {
       lang: 'typescript', theme: 'github-light',

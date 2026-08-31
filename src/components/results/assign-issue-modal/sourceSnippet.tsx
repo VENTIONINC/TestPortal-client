@@ -58,16 +58,13 @@ export const getSnippetLanguage = (path: string): (typeof languageByExtension)[k
     : 'text';
 };
 
-const SourceLine = ({ line, lineNumber, failing }: { line: HighlightToken[]; lineNumber: number; failing: boolean }) => (
+const SourceLine = ({ line, failing }: { line: HighlightToken[]; failing: boolean }) => (
   <Flex
     bg={failing ? 'badge.error.bg' : undefined}
     color={failing ? 'badge.error.text' : 'text.primary'}
     minW="max-content"
     data-failing-line={failing ? 'true' : undefined}
   >
-    <Text w="52px" px={3} textAlign="end" flexShrink={0} color={failing ? 'badge.error.text' : 'text.muted'}>
-      {lineNumber}
-    </Text>
     <Text as="code" px={3} whiteSpace="pre">
       {line.length === 0 ? ' ' : line.map((token, index) => <span key={`${index}-${token.content}`} style={{ color: token.color }}>{token.content}</span>)}
     </Text>
@@ -120,7 +117,7 @@ export const SourceSnippet = ({ snippet }: { snippet: SourceSnippetData }) => {
       <Box role="region" aria-label="Snippet content" tabIndex={0} py={3} overflow="auto" fontFamily="mono" fontSize="xs">
         {lines.map((line, index) => {
           const lineNumber = snippet.startLine + index;
-          return <SourceLine key={`${lineNumber}-${index}`} line={line} lineNumber={lineNumber} failing={lineNumber === snippet.failingLine} />;
+          return <SourceLine key={`${lineNumber}-${index}`} line={line} failing={lineNumber === snippet.failingLine} />;
         })}
       </Box>
     </Box>
