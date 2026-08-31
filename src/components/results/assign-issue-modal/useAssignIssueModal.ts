@@ -106,7 +106,7 @@ export function useAssignIssueModal({ resultErrorId, projectId, mode, selectedAs
   }, [contextQuery, resultErrorId, reviewError, showAssumption]);
 
   useEffect(() => {
-    if ((mode !== 'assign' && mode !== 'context') || selectedAssumptionId || !contextQuery.data || searchStarted.current) return;
+    if (mode !== 'assign' || selectedAssumptionId || !contextQuery.data || searchStarted.current) return;
     searchStarted.current = true;
     void runSimilarity();
   }, [contextQuery.data, mode, runSimilarity, selectedAssumptionId]);

@@ -11,11 +11,13 @@ import { CloseButton } from './close-button';
 export interface DialogProps extends DialogRootProps {
   title: ReactNode;
   onClose: () => void;
+  headerProps?: ChakraDialog.HeaderProps;
   titleProps?: ChakraDialog.TitleProps;
   contentProps?: ChakraDialog.ContentProps;
+  closeTriggerProps?: ChakraDialog.CloseTriggerProps;
 }
 
-export const Dialog = ({ title, onClose, titleProps, contentProps, children, ...props }: DialogProps) => {
+export const Dialog = ({ title, onClose, headerProps, titleProps, contentProps, closeTriggerProps, children, ...props }: DialogProps) => {
   return (
     <ChakraDialog.Root
       open
@@ -33,9 +35,9 @@ export const Dialog = ({ title, onClose, titleProps, contentProps, children, ...
         shadow="dialog"
         {...contentProps}
       >
-        <DialogCloseTrigger />
+        <DialogCloseTrigger {...closeTriggerProps} />
 
-        <ChakraDialog.Header>
+        <ChakraDialog.Header {...headerProps}>
           <ChakraDialog.Title color="text.main" fontWeight={500} fontSize="lg" {...titleProps}>
             {title}
           </ChakraDialog.Title>

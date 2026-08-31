@@ -133,8 +133,10 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssum
       title={getResultDialogTitle(context?.result, isContextOnly, isConfirmedIssueStatus(state.status))}
       onClose={actions.close}
       size="xl"
+      headerProps={{ bg: 'white', _dark: { bg: 'transparent' } }}
       initialFocusEl={() => (isContextOnly || isReadOnly ? null : nameInputRef.current)}
-      contentProps={{ h: 'min(750px, calc(100dvh - 8rem))', minW: { lg: 'clamp(1000px, calc(100vw - 8rem), 1400px)' } }}
+      contentProps={{ h: 'min(750px, calc(100dvh - 8rem))', minW: { lg: isContextOnly ? 'clamp(800px, calc(100vw - 8rem), 900px)' : 'clamp(1000px, calc(100vw - 8rem), 1200px)' } }}
+      closeTriggerProps={{ top: 4 }}
     >
       <DialogBody p={0} display="flex" flexDirection="column" minH={0} overflowY={{ base: 'auto', lg: 'hidden' }}>
         <Box flexShrink={0} borderBottomWidth="1px" borderColor="border.main" />
@@ -194,6 +196,8 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssum
                   minW={0}
                   minH={0}
                   overflowY={{ lg: 'auto' }}
+                  bg="white"
+                  _dark={{ bg: 'transparent' }}
                   p={{ base: 4, md: 6 }}
                   gap={4}
                 >
@@ -938,7 +942,16 @@ const ModalFooter = ({
   actions: ReturnType<typeof useAssignIssueModal>['actions'];
   isMutating: boolean;
 }) => (
-  <DialogFooter borderTopWidth="1px" borderColor="border.main" justifyContent="flex-end" gap={3} flexWrap="wrap">
+  <DialogFooter
+    bg="white"
+    _dark={{ bg: 'transparent' }}
+    py={4}
+    borderTopWidth="1px"
+    borderColor="border.main"
+    justifyContent="flex-end"
+    gap={3}
+    flexWrap="wrap"
+  >
     <HStack gap={2} ms="auto">
       <Button variant="ghost" loading={isMutating} disabled={isMutating} onClick={actions.close}>Cancel</Button>
       {(state.status === assignIssueModalStatus.noMatch ||
@@ -967,5 +980,10 @@ const ModalFooter = ({
   </DialogFooter>
 );
 
-const formatDuration = (milliseconds: number) =>
-  milliseconds < 1000 ? `${milliseconds} ms` : `${(milliseconds / 1000).toFixed(2)} s`;
+const formatDuration = (milliseconds: number) => {
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
