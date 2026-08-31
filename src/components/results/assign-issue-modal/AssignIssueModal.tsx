@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { type ReactNode, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, type RefObject, useEffect, useRef, useState } from 'react';
 import { useDebounce } from 'use-debounce';
 import {
   Alert as ChakraAlert,
@@ -54,6 +54,7 @@ import {
   type AssignIssueModalState,
 } from './assignIssueModalState';
 import { useAssignIssueModal } from './useAssignIssueModal';
+import { SourceSnippet } from './sourceSnippet';
 
 export interface AssignIssueModalProps extends DefaultDialogProps {
   resultErrorId: string;
@@ -564,42 +565,6 @@ const CodeSection = ({
       >
         {value}
       </Text>
-    </Box>
-  );
-};
-
-const SourceSnippet = ({
-  snippet,
-}: {
-  snippet: NonNullable<NonNullable<ReturnType<typeof useAssignIssueModal>['context']>['error']['sourceSnippet']>;
-}) => {
-  const lines = useMemo(() => snippet.text.split('\n'), [snippet.text]);
-  return (
-    <Box borderWidth="1px" borderColor="border.main" borderRadius="md" overflow="hidden" bg="bg.input">
-      <Text px={4} py={2} bg="bg.panel" borderBottomWidth="1px" borderColor="border.main" fontSize="xs" color="text.secondary">
-        {snippet.path}
-      </Text>
-      <Box py={3} overflowX="auto" fontFamily="mono" fontSize="xs">
-        {lines.map((line, index) => {
-          const lineNumber = snippet.startLine + index;
-          const failing = lineNumber === snippet.failingLine;
-          return (
-            <Flex key={`${lineNumber}-${line}`} bg={failing ? 'badge.error.bg' : undefined} color={failing ? 'badge.error.text' : 'text.primary'}>
-              <Text
-                data-failing-line={failing ? 'true' : undefined}
-                w="52px"
-                px={3}
-                textAlign="end"
-                flexShrink={0}
-                color={failing ? 'badge.error.text' : 'text.muted'}
-              >
-                {lineNumber}
-              </Text>
-              <Text as="code" px={3} whiteSpace="pre">{line || ' '}</Text>
-            </Flex>
-          );
-        })}
-      </Box>
     </Box>
   );
 };
