@@ -3,7 +3,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Flex, IconButton, Text } from '@chakra-ui/react';
-import { createHighlighter } from 'shiki';
+import { createBundledHighlighter, createSingletonShorthands } from '@shikijs/core';
+import { createJavaScriptRegexEngine } from '@shikijs/engine-javascript';
 import { LuCheck, LuClipboard } from 'react-icons/lu';
 
 import { Tooltip, toaster, useColorModeValue } from '@/components/ui';
@@ -26,10 +27,27 @@ const languageByExtension = {
   ts: 'typescript', tsx: 'tsx', js: 'javascript', jsx: 'jsx', json: 'json', py: 'python',
   sh: 'bash', bash: 'bash', yml: 'yaml', yaml: 'yaml', css: 'css', html: 'html', md: 'markdown',
 } as const;
-const highlighter = createHighlighter({
-  themes: ['github-light', 'github-dark'],
-  langs: ['typescript', 'tsx', 'javascript', 'jsx', 'json', 'python', 'bash', 'yaml', 'css', 'html', 'markdown'],
+const createHighlighter = createBundledHighlighter({
+  themes: {
+    'github-light': () => import('@shikijs/themes/github-light'),
+    'github-dark': () => import('@shikijs/themes/github-dark'),
+  },
+  langs: {
+    typescript: () => import('@shikijs/langs/typescript'),
+    tsx: () => import('@shikijs/langs/tsx'),
+    javascript: () => import('@shikijs/langs/javascript'),
+    jsx: () => import('@shikijs/langs/jsx'),
+    json: () => import('@shikijs/langs/json'),
+    python: () => import('@shikijs/langs/python'),
+    bash: () => import('@shikijs/langs/bash'),
+    yaml: () => import('@shikijs/langs/yaml'),
+    css: () => import('@shikijs/langs/css'),
+    html: () => import('@shikijs/langs/html'),
+    markdown: () => import('@shikijs/langs/markdown'),
+  },
+  engine: createJavaScriptRegexEngine,
 });
+const { codeToTokens } = createSingletonShorthands(createHighlighter);
 
 export const stripAnsi = (value: string) => value.replace(OSC_ESCAPE_PATTERN, '').replace(ANSI_ESCAPE_PATTERN, '');
 
@@ -67,7 +85,7 @@ export const SourceSnippet = ({ snippet }: { snippet: SourceSnippetData }) => {
     let active = true;
     setHighlightedLines(null);
     if (language === 'text') return;
-    void highlighter.then((instance) => instance.codeToTokens(cleanedText, { lang: language, theme })).then((result) => {
+    void codeToTokens(cleanedText, { lang: language, theme }).then((result) => {
       if (active) setHighlightedLines(result.tokens as HighlightToken[][]);
     }).catch(() => {
       if (active) setHighlightedLines([]);

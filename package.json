@@ -25,6 +25,10 @@
     "@emotion/react": "11.14.0",
     "@hookform/resolvers": "5.0.1",
     "@reduxjs/toolkit": "2.8.2",
+    "@shikijs/core": "3.23.0",
+    "@shikijs/engine-javascript": "3.23.0",
+    "@shikijs/langs": "3.23.0",
+    "@shikijs/themes": "3.23.0",
     "@tippyjs/react": "4.2.6",
     "date-fns": "4.1.0",
     "dayjs": "1.11.19",
@@ -42,7 +46,6 @@
     "recharts": "3.0.0",
     "redux-persist": "6.0.0",
     "remark-gfm": "4.0.1",
-    "shiki": "^3.0.0",
     "use-debounce": "10.0.4",
     "usehooks-ts": "3.1.1",
     "zod": "3.25.48"

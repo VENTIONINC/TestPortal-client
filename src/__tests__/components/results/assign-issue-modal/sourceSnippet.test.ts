@@ -11,9 +11,12 @@ const mocks = vi.hoisted(() => ({
   createToast: vi.fn(),
 }));
 
-vi.mock('shiki', () => ({
-  createHighlighter: vi.fn(() => Promise.resolve({ codeToTokens: mocks.codeToTokens })),
+vi.mock('@shikijs/core', () => ({
+  createBundledHighlighter: vi.fn(() => () => ({})),
+  createSingletonShorthands: vi.fn(() => ({ codeToTokens: mocks.codeToTokens })),
 }));
+
+vi.mock('@shikijs/engine-javascript', () => ({ createJavaScriptRegexEngine: vi.fn() }));
 
 vi.mock('@/utils', () => ({ copyToClipboard: mocks.copyToClipboard }));
 

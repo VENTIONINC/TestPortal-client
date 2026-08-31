@@ -2188,16 +2188,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@shikijs/engine-oniguruma@npm:3.23.0":
-  version: 3.23.0
-  resolution: "@shikijs/engine-oniguruma@npm:3.23.0"
-  dependencies:
-    "@shikijs/types": 3.23.0
-    "@shikijs/vscode-textmate": ^10.0.2
-  checksum: 5aa631ab41149241118262e28f2deb9d37c3384d32251ecef868cd71a03f5e6b85103c31ac331741ecb24734d20329487cba40a3af8bd22485b3f696770d6226
-  languageName: node
-  linkType: hard
-
 "@shikijs/langs@npm:3.23.0":
   version: 3.23.0
   resolution: "@shikijs/langs@npm:3.23.0"
@@ -8800,22 +8790,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shiki@npm:^3.0.0":
-  version: 3.23.0
-  resolution: "shiki@npm:3.23.0"
-  dependencies:
-    "@shikijs/core": 3.23.0
-    "@shikijs/engine-javascript": 3.23.0
-    "@shikijs/engine-oniguruma": 3.23.0
-    "@shikijs/langs": 3.23.0
-    "@shikijs/themes": 3.23.0
-    "@shikijs/types": 3.23.0
-    "@shikijs/vscode-textmate": ^10.0.2
-    "@types/hast": ^3.0.4
-  checksum: 2532378c0265705076d440168b8031c840a6e1f21e5d93a27e911b677a551cedaee336e56ef627d3e9ba0c7e215ce2667072c9e877eb5d391da9052c927d123a
-  languageName: node
-  linkType: hard
-
 "should-equal@npm:^2.0.0":
   version: 2.0.0
   resolution: "should-equal@npm:2.0.0"
@@ -9209,6 +9183,10 @@ __metadata:
     "@hookform/resolvers": 5.0.1
     "@reduxjs/toolkit": 2.8.2
     "@rtk-query/codegen-openapi": 2.0.0
+    "@shikijs/core": 3.23.0
+    "@shikijs/engine-javascript": 3.23.0
+    "@shikijs/langs": 3.23.0
+    "@shikijs/themes": 3.23.0
     "@testing-library/dom": 10.4.1
     "@testing-library/jest-dom": 6.9.1
     "@testing-library/react": 16.3.2
@@ -9244,7 +9222,6 @@ __metadata:
     recharts: 3.0.0
     redux-persist: 6.0.0
     remark-gfm: 4.0.1
-    shiki: ^3.0.0
     typescript: 5.8.3
     typescript-eslint: 8.30.1
     use-debounce: 10.0.4
