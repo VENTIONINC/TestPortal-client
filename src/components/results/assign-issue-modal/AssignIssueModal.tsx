@@ -485,17 +485,18 @@ const ErrorContext = ({ context }: { context: NonNullable<ReturnType<typeof useA
 );
 
 const ContextTab = ({ value, icon, label }: { value: string; icon: React.ReactNode; label: string }) => (
-  <Tabs.Trigger
-    value={value}
-    aria-label={label}
-    title={label}
-    justifyContent="center"
-    w="40px"
-    h="40px"
-    p={0}
-  >
-    {icon}
-  </Tabs.Trigger>
+  <Tooltip content={label} >
+    <Tabs.Trigger
+      value={value}
+      aria-label={label}
+      justifyContent="center"
+      w="40px"
+      h="40px"
+      p={0}
+    >
+      {icon}
+    </Tabs.Trigger>
+  </Tooltip>
 );
 
 const CodeSection = ({
