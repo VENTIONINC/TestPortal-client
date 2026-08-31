@@ -135,10 +135,21 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssum
       size="xl"
       headerProps={{ bg: 'white', _dark: { bg: 'transparent' } }}
       initialFocusEl={() => (isContextOnly || isReadOnly ? null : nameInputRef.current)}
-      contentProps={{ h: 'min(750px, calc(100dvh - 8rem))', minW: { lg: isContextOnly ? 'clamp(800px, calc(100vw - 8rem), 900px)' : 'clamp(1000px, calc(100vw - 8rem), 1200px)' } }}
+      contentProps={{
+        h: 'min(750px, calc(100dvh - 8rem))',
+        minW: { lg: isContextOnly ? 'clamp(800px, calc(100vw - 8rem), 900px)' : 'clamp(1000px, calc(100vw - 8rem), 1200px)' },
+        overflow: 'hidden',
+      }}
       closeTriggerProps={{ top: 4 }}
     >
-      <DialogBody p={0} display="flex" flexDirection="column" minH={0} overflowY={{ base: 'auto', lg: 'hidden' }}>
+      <DialogBody
+        p={0}
+        bg="bg.modalContext"
+        display="flex"
+        flexDirection="column"
+        minH={0}
+        overflowY={{ base: 'auto', lg: 'hidden' }}
+      >
         <Box flexShrink={0} borderBottomWidth="1px" borderColor="border.main" />
         {!context ? (
           <ContextLoading isError={modal.contextQuery.isError} onRetry={modal.contextQuery.refetch} />
