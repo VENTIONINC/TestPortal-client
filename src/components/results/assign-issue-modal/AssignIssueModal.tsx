@@ -46,6 +46,7 @@ import type { DefaultDialogProps } from '@/types';
 import { copyToClipboard } from '@/utils';
 import { getIssueCategoryStyle } from '@/utils/issue-category';
 import { useGetApiV2IssuesQuery, type IssueCore } from '@/redux/apis/generatedApi';
+import { toDuration } from '@/utils/date-time.converter';
 
 import {
   assignIssueModalStatus,
@@ -110,7 +111,7 @@ export function getResultDialogTitle(result: ResultDialogTitleData | undefined, 
     <>
       <Text as="span">{mainTitle}</Text>{' '}
       <Text as="span" color="text.secondary" fontSize="sm" data-result-metadata>
-        · Attempt #{result.attempt} · Started {startedAt} · Duration {formatDuration(result.duration)}
+        · Attempt #{result.attempt} · Started {startedAt} · Duration {toDuration(result.duration)}
       </Text>
     </>
   );
@@ -990,11 +991,3 @@ const ModalFooter = ({
     </HStack>
   </DialogFooter>
 );
-
-const formatDuration = (milliseconds: number) => {
-  const totalSeconds = Math.floor(milliseconds / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-};

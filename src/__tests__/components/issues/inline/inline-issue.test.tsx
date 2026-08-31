@@ -78,7 +78,7 @@ describe('InlineIssue', () => {
       </ChakraProvider>,
     );
 
-    await user.click(screen.getByText('[Confirmed]: Login regression'));
+    await user.click(screen.getByText('Login regression'));
     expect(openAssignIssueModal).toHaveBeenCalledWith(resultError, 'confirmed');
   });
 
@@ -94,7 +94,7 @@ describe('InlineIssue', () => {
       </ChakraProvider>,
     );
 
-    await user.click(screen.getByText('[Hypothesis]: Login regression'));
+    await user.click(screen.getByText('Login regression'));
     expect(openAssignIssueModal).toHaveBeenCalledWith(resultErrorWithHypothesis, 'assign', 'assumption-1');
   });
 
