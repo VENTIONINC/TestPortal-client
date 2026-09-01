@@ -32,4 +32,30 @@ describe('Issues execution type filter', () => {
       type: 'Custom Release',
     });
   });
+
+  it('offers persisted issue categories and serializes the exact lowercase selection', () => {
+    const issueSection = filterConfig.find(({ title }) => title === 'Issue filters');
+    const categoryField = issueSection?.fields.find(({ name }) => name === 'category');
+    const common = {
+      projectId: 'project-1',
+      page: '1',
+      name: '',
+      type: 'all',
+      statFrom: '',
+      statTo: '',
+    };
+
+    expect(initialFilters.category).toBe('all');
+    expect(categoryField).toMatchObject({
+      type: 'select',
+      options: expect.arrayContaining([
+        { value: 'all', label: 'All' },
+        { value: 'bug', label: 'Bug' },
+        { value: 'infra', label: 'Environment' },
+      ]),
+    });
+    expect(buildIssuesQueryParams({ ...common, category: 'all' })).toMatchObject({ category: undefined });
+    expect(buildIssuesQueryParams({ ...common, category: 'performance' })).toMatchObject({ category: 'performance' });
+    expect(buildIssuesQueryParams({ ...common, category: 'Bug' })).toMatchObject({ category: undefined });
+  });
 });
