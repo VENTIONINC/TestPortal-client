@@ -10,8 +10,8 @@ import { useIntersectionObserver } from 'usehooks-ts';
 import { IssueTimeDiscributionChart } from '@/components/ui/components/Charts';
 import { Wrap, Skeleton, Tooltip } from '@/components/ui';
 import { useFilterContext } from '@/contexts/FilterContext';
-import { useManageIssueDrawer } from '@/components/drawers';
-import { getIssueCategoryStyle, getIssueCategorySummaryPresentation } from '@/utils';
+import { useEditIssueDrawer } from '@/components/drawers';
+import { getIssueCategoryStyle, getIssueCategorySummaryPresentation, ISSUE_CATEGORY_LABELS } from '@/utils';
 import { IssueWithStats } from '@/types';
 
 interface IssueCardProps {
@@ -19,10 +19,11 @@ interface IssueCardProps {
 }
 
 export const IssueCard = memo(({ issue }: IssueCardProps) => {
-  const category = getIssueCategorySummaryPresentation(issue.categorySummary);
-  const { Icon, color } = getIssueCategoryStyle(category.category);
+  const categorySummary = getIssueCategorySummaryPresentation(issue.categorySummary);
+  const { Icon, color } = getIssueCategoryStyle(issue.category);
+  const categoryLabel = ISSUE_CATEGORY_LABELS[issue.category];
 
-  const openManageIssueDrawer = useManageIssueDrawer();
+  const openEditIssueDrawer = useEditIssueDrawer();
 
   const { statistics } = issue ?? {};
   const { firstOccurrence, impactedTestsCount, lastOccurrence, occurrenceCount } = statistics ?? {};
@@ -92,7 +93,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
               mt={1}
               size="xs"
               variant="ghost"
-              onClick={() => openManageIssueDrawer({ issue })}
+              onClick={() => openEditIssueDrawer(issue)}
               aria-label="Manage issue"
             >
               <LuPencil size={16} />
@@ -102,7 +103,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
             <Tooltip
               content={
                 <VStack align="stretch" gap={1} minW="150px">
-                  {category.details.map((item) => (
+                  {categorySummary.details.map((item) => (
                     <HStack key={item.label} justify="space-between" gap={4}>
                       <Text fontSize="xs">{item.label}</Text>
                       <Text fontSize="xs" fontWeight="bold">
@@ -113,7 +114,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
                 </VStack>
               }
             >
-              <HStack gap={1} aria-label={`Category summary: ${category.label}`}>
+              <HStack gap={1} aria-label={`Category summary: ${categoryLabel}${categorySummary.showMixed ? ', Mixed' : ''}`}>
                 <Tag.Root
                   color={color}
                   bg="transparent"
@@ -127,10 +128,10 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
                     <Icon size={16} />
                   </Tag.StartElement>
                   <Tag.Label fontWeight={500} color="category.text">
-                    {category.label}
+                    {categoryLabel}
                   </Tag.Label>
                 </Tag.Root>
-                {category.showMixed && (
+                {categorySummary.showMixed && (
                   <Tag.Root variant="subtle" borderRadius="full" size="sm" p="4px 8px">
                     <Tag.Label fontWeight={500}>Mixed</Tag.Label>
                   </Tag.Root>

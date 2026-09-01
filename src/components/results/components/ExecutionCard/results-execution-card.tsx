@@ -1,21 +1,20 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { Box, Flex, HStack, Text, VStack } from '@chakra-ui/react';
 
-import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip, toaster, StatusIcon } from '@/components/ui';
+import { Checkbox, ClipboardCopyText, ContextMenuButton, Tooltip, StatusIcon } from '@/components/ui';
 import { InlineIssue } from '@/components/issues';
-import { useResultAnalysisDialog, useResultsErrorDialog } from '@/components/ui/components/Dialogs';
+import { useResultAnalysisDialog } from '@/components/ui/components/Dialogs';
+import { useAssignIssueModalDialog } from '@/components/results/assign-issue-modal';
 import { useResultsSelection } from '@/contexts/results-selection';
 import { getAnalysisCategoryStyle, getConfidenceLabel } from '@/utils';
 import { toDuration, toStartTime } from '@/utils/date-time.converter';
-import { usePostApiV2ResultErrorsAnalyzeMutation } from '@/redux/apis/generatedApi';
 import { BulkActions } from '@/components/BulkActions';
 
 import { ResultsExecutionCardProps } from './types';
 import { IntegrationLinks } from './integration-links';
-import { AnalyzeCategoryButton } from './analyze-category-button';
 
 export const ResultsExecutionCard = memo(
   ({
@@ -35,45 +34,14 @@ export const ResultsExecutionCard = memo(
   }: ResultsExecutionCardProps) => {
     const { isSelected, toggleSelection, toggleMultiple, getSelectedIds } = useResultsSelection();
 
-    const openResultsErrorDialog = useResultsErrorDialog();
+    const openAssignIssueModal = useAssignIssueModalDialog(projectId);
     const openResultAnalysisDialog = useResultAnalysisDialog();
-    const [analyzeErrors] = usePostApiV2ResultErrorsAnalyzeMutation();
-    const [analyzingResultId, setAnalyzingResultId] = useState<string | null>(null);
 
     const toggleSelectAll = () => {
       toggleMultiple(results.map(({ id }) => id));
     };
 
     const selectedResults = results.filter(({ id }) => getSelectedIds().includes(id));
-
-    const handleAnalyze = async (resultId: string, errorIds: string[]) => {
-      setAnalyzingResultId(resultId);
-      const id = toaster.create({
-        title: 'Analyzing errors...',
-        type: 'loading',
-      });
-
-      try {
-        await analyzeErrors({
-          analyzeResultErrorsRequest: {
-            projectId,
-            errorIds,
-          },
-        }).unwrap();
-
-        toaster.update(id, {
-          title: 'Categorization completed successfully',
-          type: 'success',
-        });
-      } catch {
-        toaster.update(id, {
-          title: 'Failed to categorize errors',
-          type: 'error',
-        });
-      } finally {
-        setAnalyzingResultId(null);
-      }
-    };
 
     return (
       <VStack align="stretch" pt="16px" mt="7px" borderTop="1px solid" borderColor="border.main">
@@ -166,7 +134,7 @@ export const ResultsExecutionCard = memo(
                 <Tooltip content="Retry">
                   <Box w={{ base: 'auto', md: '45px' }} flexShrink={0}>
                     <Text whiteSpace="nowrap" textStyle="sm">
-                      #{retry}
+                      #{retry + 1}
                     </Text>
                   </Box>
                 </Tooltip>
@@ -205,7 +173,7 @@ export const ResultsExecutionCard = memo(
                 {errors.map((resultError) => (
                   <Text
                     key={resultError.id}
-                    onClick={() => openResultsErrorDialog(resultError)}
+                    onClick={() => openAssignIssueModal(resultError, 'context')}
                     cursor="pointer"
                     fontWeight="medium"
                     color="fg"
@@ -229,8 +197,7 @@ export const ResultsExecutionCard = memo(
                 justifyContent={{ base: 'flex-end', md: 'flex-start' }}
                 pl={{ base: 10, md: 0 }}
               >
-                {errors.length > 0 &&
-                  (hasAnalysis ? (
+                {errors.length > 0 && hasAnalysis && (
                     <HStack
                       color={isConfirmedByUser ? 'white' : color}
                       onClick={() => openResultAnalysisDialog(result)}
@@ -253,20 +220,14 @@ export const ResultsExecutionCard = memo(
                         {isConfirmedByUser ? 'Confirmed' : 'AI Suggested'}: {getConfidenceLabel(analysisConfidence)}
                       </Text>
                     </HStack>
-                  ) : (
-                    <AnalyzeCategoryButton
-                      onClick={() =>
-                        handleAnalyze(
-                          String(id),
-                          errors.map((e) => String(e.id)),
-                        )
-                      }
-                      isLoading={analyzingResultId === String(id)}
-                    />
-                  ))}
+                  )}
 
                 {errors.map((resultError) => (
-                  <InlineIssue key={resultError.id} resultError={resultError} category={analysisCategory} />
+                  <InlineIssue
+                    key={resultError.id}
+                    resultError={resultError}
+                    projectId={projectId}
+                  />
                 ))}
 
                 <ContextMenuButton

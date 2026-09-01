@@ -19,8 +19,8 @@ describe('getIssueCategorySummaryPresentation', () => {
   it.each([
     ['unanimous category', ResultCategory.Bug, false, 'Bug', false],
     ['dominant mixed category', ResultCategory.Infra, true, 'Environment', true],
-    ['tied categories', null, true, 'Mixed', false],
-    ['no categorized results', null, false, 'Uncategorized', false],
+    ['persisted category with tied results', ResultCategory.Performance, true, 'Performance', true],
+    ['persisted category with no categorized results', ResultCategory.Other, false, 'Other', false],
     ['explicit other', ResultCategory.Other, false, 'Other', false],
   ] as const)('represents %s', (_case, displayCategory, isMixed, label, showMixed) => {
     expect(

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { forwardRef, ReactNode, type ComponentPropsWithoutRef } from 'react';
-import { Tooltip as ChakraTooltip } from '@chakra-ui/react';
+import { Portal, Tooltip as ChakraTooltip } from '@chakra-ui/react';
 
 type TooltipContentProps = ComponentPropsWithoutRef<typeof ChakraTooltip.Content>;
 
@@ -36,11 +36,13 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(function Tooltip
   return (
     <ChakraTooltip.Root positioning={{ placement: 'top' }} {...props}>
       <ChakraTooltip.Trigger asChild>{children}</ChakraTooltip.Trigger>
-      <ChakraTooltip.Positioner>
-        <ChakraTooltip.Content ref={ref} {...mergedContentProps}>
-          {content}
-        </ChakraTooltip.Content>
-      </ChakraTooltip.Positioner>
+      <Portal>
+        <ChakraTooltip.Positioner>
+          <ChakraTooltip.Content ref={ref} {...mergedContentProps}>
+            {content}
+          </ChakraTooltip.Content>
+        </ChakraTooltip.Positioner>
+      </Portal>
     </ChakraTooltip.Root>
   );
 });

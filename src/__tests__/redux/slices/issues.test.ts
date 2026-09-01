@@ -6,13 +6,13 @@ import { describe, expect, it } from 'vitest';
 import issuesReducer, { issuesSlice } from '@/redux/slices/issues';
 
 describe('issues filters', () => {
-  it('ignores a legacy persisted category filter while applying supported filters', () => {
+  it('preserves a lowercase persisted category filter with other supported filters', () => {
     const state = issuesReducer(
       undefined,
-      issuesSlice.actions.setFilters({ name: 'timeout', category: 'Bug' } as never),
+      issuesSlice.actions.setFilters({ name: 'timeout', category: 'bug' }),
     );
 
     expect(state.filters.name).toBe('timeout');
-    expect(state.filters).not.toHaveProperty('category');
+    expect(state.filters.category).toBe('bug');
   });
 });

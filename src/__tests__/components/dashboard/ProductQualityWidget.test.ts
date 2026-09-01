@@ -12,8 +12,19 @@ const issue = (
   occurrenceCount = 10,
 ) =>
   ({
-    categorySummary: { displayCategory: null, isMixed: true, distribution, uncategorizedCount },
-    statistics: { impactedTestsCount, occurrenceCount },
+    id: 'issue-1',
+    name: 'Checkout failure',
+    category: 'bug',
+    createdAt: '2026-08-01T00:00:00.000Z',
+    updatedAt: '2026-08-01T00:00:00.000Z',
+    categorySummary: { displayCategory: 'bug', isMixed: true, distribution, uncategorizedCount },
+    statistics: {
+      impactedTestsCount,
+      occurrenceCount,
+      firstOccurrence: null,
+      lastOccurrence: null,
+      timeDistribution: [],
+    },
   }) as NonNullable<Parameters<typeof calculateIWQS>[0]>[number];
 
 describe('calculateIWQS', () => {

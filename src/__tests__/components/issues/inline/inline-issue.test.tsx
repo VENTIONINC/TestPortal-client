@@ -2,14 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ChakraProvider } from '@/components/ui';
 import { InlineIssue } from '@/components/issues/inline/inline-issue';
-import { ResultCategory, ResultError } from '@/types';
+import { ResultError } from '@/types';
 
-vi.mock('@/components/drawers', () => ({
-  useManageIssueDrawer: () => vi.fn(),
+const openAssignIssueModal = vi.fn();
+
+vi.mock('@/components/results/assign-issue-modal', () => ({
+  useAssignIssueModalDialog: () => openAssignIssueModal,
 }));
 
 vi.mock('@/redux/apis/extendedApi', () => ({
@@ -44,6 +47,7 @@ const resultError: ResultError = {
         createdAt: '2026-08-05T00:00:00.000Z',
         updatedAt: '2026-08-05T00:00:00.000Z',
         name: 'Login regression',
+        category: 'script',
         description: 'Login request fails',
         portal: null,
         service: null,
@@ -54,24 +58,55 @@ const resultError: ResultError = {
 };
 
 describe('InlineIssue', () => {
-  it('presents a linked issue with the containing result category', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('presents a linked issue with its own persisted category', () => {
     render(
       <ChakraProvider>
-        <InlineIssue resultError={resultError} category={ResultCategory.Bug} />
+        <InlineIssue resultError={resultError} projectId="project-1" />
       </ChakraProvider>,
     );
 
-    expect(screen.getByLabelText('Category: Bug')).toBeInTheDocument();
+    expect(screen.getByLabelText('Category: Script')).toBeInTheDocument();
   });
 
-  it('does not present a default category when the result is uncategorized', () => {
+  it('opens confirmed pills in edit mode', async () => {
+    const user = userEvent.setup();
     render(
       <ChakraProvider>
-        <InlineIssue resultError={resultError} />
+        <InlineIssue resultError={resultError} projectId="project-1" />
       </ChakraProvider>,
     );
 
-    expect(screen.getByText('[Confirmed]: Login regression')).toBeInTheDocument();
-    expect(screen.queryByLabelText(/^Category:/)).not.toBeInTheDocument();
+    await user.click(screen.getByText('Login regression'));
+    expect(openAssignIssueModal).toHaveBeenCalledWith(resultError, 'confirmed');
+  });
+
+  it('opens hypothesis pills in assignment mode', async () => {
+    const user = userEvent.setup();
+    const resultErrorWithHypothesis = {
+      ...resultError,
+      assumptions: [{ ...resultError.assumptions[0], isConfirmed: false }],
+    };
+    render(
+      <ChakraProvider>
+        <InlineIssue resultError={resultErrorWithHypothesis} projectId="project-1" />
+      </ChakraProvider>,
+    );
+
+    await user.click(screen.getByText('Login regression'));
+    expect(openAssignIssueModal).toHaveBeenCalledWith(resultErrorWithHypothesis, 'assign', 'assumption-1');
+  });
+
+  it('opens the add control in assignment mode', async () => {
+    const user = userEvent.setup();
+    render(
+      <ChakraProvider>
+        <InlineIssue resultError={{ ...resultError, assumptions: [] }} projectId="project-1" />
+      </ChakraProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Assign issue' }));
+    expect(openAssignIssueModal).toHaveBeenCalledWith({ ...resultError, assumptions: [] }, 'assign');
   });
 });

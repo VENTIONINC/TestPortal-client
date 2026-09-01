@@ -70,16 +70,10 @@ const SUMMARY_CATEGORY_ORDER = [
 ] as const;
 
 export const getIssueCategorySummaryPresentation = (summary: IssueCategorySummary) => {
-  const hasCategory = summary.displayCategory !== null;
-
   return {
     category: summary.displayCategory,
-    label: hasCategory
-      ? ISSUE_CATEGORY_LABELS[summary.displayCategory as ResultCategory]
-      : summary.isMixed
-        ? 'Mixed'
-        : 'Uncategorized',
-    showMixed: hasCategory && summary.isMixed,
+    label: ISSUE_CATEGORY_LABELS[summary.displayCategory],
+    showMixed: summary.isMixed,
     details: [
       ...SUMMARY_CATEGORY_ORDER.map((category) => ({
         label: ISSUE_CATEGORY_LABELS[category],

@@ -11,7 +11,7 @@ import { useGetIssuesWithStatsQuery } from '@/redux/apis/extendedApi';
 import { initialFilters, useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useFilterContext } from '@/contexts/FilterContext';
-import { IssueWithStats } from '@/types';
+import { IssueWithStats, ResultCategory } from '@/types';
 import { GetApiV2IssuesWithStatsApiArg } from '@/redux/apis/generatedApi';
 import { Filter, Pagination } from '@/components/ui';
 
@@ -32,6 +32,9 @@ export const buildIssuesQueryParams = (
 ): GetApiV2IssuesWithStatsApiArg => ({
   projectId: filters.projectId,
   page: Number(filters.page) || 1,
+  category: Object.values(ResultCategory).includes(filters.category as ResultCategory)
+    ? filters.category as ResultCategory
+    : undefined,
   name: filters.name || undefined,
   type: filters.type && filters.type !== 'all' ? filters.type : undefined,
   statFrom: filters.statFrom || undefined,
@@ -87,7 +90,7 @@ export const IssuesList = () => {
       buildIssuesQueryParams({
         projectId: selectedProjectId,
         page: filterProps.filters.page,
-        category: '',
+        category: filterProps.filters.category,
         name: filterProps.filters.name,
         type: effectiveType,
         statFrom: filterProps.filters.statFrom,
@@ -96,6 +99,7 @@ export const IssuesList = () => {
     [
       selectedProjectId,
       filterProps.filters.page,
+      filterProps.filters.category,
       filterProps.filters.name,
       effectiveType,
       filterProps.filters.statFrom,

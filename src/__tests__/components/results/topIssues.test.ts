@@ -15,20 +15,20 @@ describe('mapTopIssues', () => {
       uncategorizedCount: 1,
     };
 
-    expect(mapTopIssues([{ id: 'issue-7', title: 'Duplicate title', count: 4, categorySummary: summary }])).toEqual([
-      { id: 'issue-7', title: 'Duplicate title', count: 4, categorySummary: summary },
+    expect(mapTopIssues([{ id: 'issue-7', title: 'Duplicate title', count: 4, category: ResultCategory.Bug, categorySummary: summary }])).toEqual([
+      { id: 'issue-7', title: 'Duplicate title', count: 4, category: ResultCategory.Bug, categorySummary: summary },
     ]);
   });
 
-  it('keeps tied and uncategorized summaries instead of coercing them to other', () => {
-    const tied = {
-      displayCategory: null,
+  it('keeps mixed and uncategorized distribution details without replacing the persisted category', () => {
+    const mixed = {
+      displayCategory: ResultCategory.Performance,
       isMixed: true,
       distribution: { bug: 1, infra: 1, performance: 0, script: 0, other: 0 },
       uncategorizedCount: 0,
     };
     const uncategorized = {
-      displayCategory: null,
+      displayCategory: ResultCategory.Other,
       isMixed: false,
       distribution: { bug: 0, infra: 0, performance: 0, script: 0, other: 0 },
       uncategorizedCount: 3,
@@ -36,12 +36,12 @@ describe('mapTopIssues', () => {
 
     expect(
       mapTopIssues([
-        { id: 'tie', title: 'Tie', count: 2, categorySummary: tied },
-        { id: 'none', title: 'None', count: 3, categorySummary: uncategorized },
-      ]).map(({ id, categorySummary }) => ({ id, categorySummary })),
+        { id: 'tie', title: 'Tie', count: 2, category: ResultCategory.Performance, categorySummary: mixed },
+        { id: 'none', title: 'None', count: 3, category: ResultCategory.Other, categorySummary: uncategorized },
+      ]).map(({ id, category, categorySummary }) => ({ id, category, categorySummary })),
     ).toEqual([
-      { id: 'tie', categorySummary: tied },
-      { id: 'none', categorySummary: uncategorized },
+      { id: 'tie', category: ResultCategory.Performance, categorySummary: mixed },
+      { id: 'none', category: ResultCategory.Other, categorySummary: uncategorized },
     ]);
   });
 });
