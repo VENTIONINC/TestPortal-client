@@ -1,0 +1,27 @@
+openspec/changes/add-project-scoped-test-scenario-list/proposal.md
+  s_2f560b94cd835b::t_8e19f960948239 1-30
+openspec/changes/add-project-scoped-test-scenario-list/design.md
+  s_2f560b94cd835b::t_81e4578611fce6 1-71
+openspec/changes/add-project-scoped-test-scenario-list/.openspec.yaml
+  s_2f560b94cd835b::t_3b2558c39aac38 1-2
+openspec/changes/add-project-scoped-test-scenario-list/specs/test-scenario-catalog/spec.md
+  s_2f560b94cd835b::t_830b96d3741928 1-112
+openspec/changes/add-project-scoped-test-scenario-list/tasks.md
+  s_2f560b94cd835b::t_a041f77dc614b6 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "fd9636cc518a803cf67f226684235e722fc1398d",
+  "prompts": {},
+  "sessions": {
+    "s_2f560b94cd835b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06114-6659-7c00-85e8-5a395f09ccd5",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
