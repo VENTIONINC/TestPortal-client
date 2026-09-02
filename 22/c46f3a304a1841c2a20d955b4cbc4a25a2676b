@@ -1,0 +1,67 @@
+openspec/changes/add-project-scoped-test-scenario-list/.openspec.yaml
+  s_2f560b94cd835b::t_3b2558c39aac38 1-2
+openspec/changes/add-project-scoped-test-scenario-list/design.md
+  s_2f560b94cd835b::t_81e4578611fce6 1-71
+openspec/changes/add-project-scoped-test-scenario-list/proposal.md
+  s_2f560b94cd835b::t_8e19f960948239 1-30
+openspec/changes/add-project-scoped-test-scenario-list/specs/test-scenario-catalog/spec.md
+  s_2f560b94cd835b::t_830b96d3741928 1-112
+openspec/changes/add-project-scoped-test-scenario-list/tasks.md
+  s_2f560b94cd835b::t_a041f77dc614b6 1-22
+src/__tests__/components/test-scenarios/TestScenarioCatalogContainer.test.tsx
+  s_2f560b94cd835b::t_c5c067dce856d9 1-128
+src/__tests__/components/test-scenarios/TestScenarioCatalogView.test.tsx
+  s_2f560b94cd835b::t_9adcfb685d770d 1-89
+src/__tests__/components/test-scenarios/testScenarioSummary.test.ts
+  s_2f560b94cd835b::t_6dcf8f3f32553c 1-28
+src/__tests__/components/ui/NavigationMenu/NavigationMenu.test.tsx
+  s_2f560b94cd835b::t_04e99bddf83fb5 16,31-43
+src/__tests__/pages/TestScenarios/index.test.tsx
+  s_2f560b94cd835b::t_fd6e1b0b440fbb 1-29
+src/__tests__/redux/apis/test-scenario-generatedApi.contract.test.ts
+  s_2f560b94cd835b::t_b5c2123cb11d4e 1-52
+src/__tests__/router.test.tsx
+  s_2f560b94cd835b::t_56cae808bb573c 1-60
+src/components/test-scenarios/TestScenarioCatalogContainer.tsx
+  s_2f560b94cd835b::t_80039936a64fc8 1-50
+src/components/test-scenarios/TestScenarioCatalogView.tsx
+  s_2f560b94cd835b::t_ed9d0164cca356 1-84
+src/components/test-scenarios/index.ts
+  s_2f560b94cd835b::t_4f1208f2cb385b 1-7
+src/components/test-scenarios/types.ts
+  s_2f560b94cd835b::t_ca8caf85e13cc8 1-18
+src/components/test-scenarios/utils.ts
+  s_2f560b94cd835b::t_0522335837afa7 1-16
+src/components/ui/components/NavigationMenu/NavigationMenu.tsx
+  s_2f560b94cd835b::t_96571b1a108317 29
+src/components/ui/components/NavigationMenu/config.ts
+  s_2f560b94cd835b::t_e71699871fde83 4,18
+src/pages/TestScenarios/TestScenariosPage.tsx
+  s_2f560b94cd835b::t_49d1788483ed76 1-13
+src/pages/TestScenarios/index.ts
+  s_2f560b94cd835b::t_4018c51bdec427 1-4
+src/pages/index.ts
+  s_2f560b94cd835b::t_3a0e3f3722e024 12
+src/redux/apis/generatedApi.ts
+  s_2f560b94cd835b::t_d308d9b8098f68 23,812-944,1401-1468,2223-2322,2421-2435
+src/router/index.tsx
+  s_2f560b94cd835b::t_7b124fc1d5636a 21,104-114
+src/types/paths.ts
+  s_2f560b94cd835b::t_3169f4b6de07ef 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "22c46f3a304a1841c2a20d955b4cbc4a25a2676b",
+  "prompts": {},
+  "sessions": {
+    "s_2f560b94cd835b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06114-6659-7c00-85e8-5a395f09ccd5",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
