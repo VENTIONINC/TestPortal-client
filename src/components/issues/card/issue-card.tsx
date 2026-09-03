@@ -146,7 +146,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
           </Flex>
         </HStack>
 
-        <Text fontSize="xs" w="60%">
+        <Text fontSize="xs" w="60%" whiteSpace="pre-wrap">
           {issue.description}
         </Text>
       </Card.Header>
