@@ -6,6 +6,7 @@ export enum PATHS {
   DASHBOARD = '/dashboard',
   RESULTS = '/results',
   ISSUES = '/issues',
+  TEST_SCENARIOS = '/test-scenarios',
   SKILLS = '/skills',
   SKILL_DETAILS = '/skills/:id',
   LOGIN = '/login',

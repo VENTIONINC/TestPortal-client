@@ -9,6 +9,7 @@ export { PromptBuilderPage } from './PromptBuilder';
 export { PromptsPage } from './Prompts';
 export { ReportGeneratorPage } from './ReportGenerator';
 export { ResultsPage } from './Results';
+export { TestScenariosPage } from './TestScenarios';
 export { SkillDetailsPage } from './SkillDetails';
 export { SkillsPage } from './Skills';
 export { SignupPage } from './Signup';

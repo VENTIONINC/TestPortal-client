@@ -28,15 +28,17 @@ The system SHALL provide a **Test Scenarios** navigation entry that opens the `/
 
 The system SHALL request only the paginated Test Scenarios belonging to the currently selected project.
 
+The catalog SHALL request a page limit of 10 scenarios.
+
 #### Scenario: Catalog requests its first page
 
 - **WHEN** the catalog loads for a selected project
-- **THEN** the system SHALL request page 1 with the configured page limit and the selected project's `projectId`
+- **THEN** the system SHALL request page 1 with a limit of 10 and the selected project's `projectId`
 
 #### Scenario: User selects another page
 
 - **WHEN** the user selects an available catalog page
-- **THEN** the system SHALL request that page for the same selected project and configured page limit
+- **THEN** the system SHALL request that page for the same selected project with a limit of 10
 
 #### Scenario: Backend returns pagination metadata
 
@@ -45,12 +47,13 @@ The system SHALL request only the paginated Test Scenarios belonging to the curr
 
 ### Requirement: Test Scenario summary presentation
 
-The catalog SHALL present each returned scenario as summary information without rendering or depending on its Markdown content.
+The catalog SHALL present returned scenarios in a table with **Title**, **Created**, and **Updated** columns without rendering or depending on Markdown content.
 
 #### Scenario: Catalog contains scenarios
 
 - **WHEN** the selected project's list response contains one or more scenarios
-- **THEN** the catalog SHALL display each scenario's title and created and updated timestamps
+- **THEN** the catalog SHALL display one table row per scenario
+- **AND** each row SHALL display the scenario title under **Title**, its creation timestamp under **Created**, and its update timestamp under **Updated**
 - **AND** the catalog SHALL NOT display `contentMd`
 
 #### Scenario: List response includes Markdown content
@@ -89,6 +92,7 @@ The catalog SHALL clearly represent loading, error, empty, and populated request
 
 - **WHEN** the scenario-list response reports more than one page
 - **THEN** the catalog SHALL display pagination controls using the reported current and total page values
+- **AND** the pagination controls SHALL appear below the scenario table
 
 ### Requirement: Project-switch isolation
 

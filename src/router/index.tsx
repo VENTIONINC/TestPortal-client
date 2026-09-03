@@ -17,6 +17,7 @@ import {
   SkillDetailsPage,
   SkillsPage,
   SignupPage,
+  TestScenariosPage,
   UserSettingsPage,
 } from '@/pages';
 import { MCPSettings } from '@/pages/UserSettings/MCPSettings';
@@ -96,6 +97,17 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <ProjectGuard>
           <IssuesPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.TEST_SCENARIOS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <TestScenariosPage />
         </ProjectGuard>
       </ProtectedRoute>
     ),
