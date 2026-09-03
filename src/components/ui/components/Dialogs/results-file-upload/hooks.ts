@@ -9,6 +9,7 @@ import { usePostApiV2UploadJsonReportMutation } from '@/redux/apis/generatedApi'
 import { usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/extendedApi';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useDialogActions } from '@/redux/slices/dialog';
+import { extractApiError } from '@/utils/apiErrors';
 
 import { ResultsFileUploadDialog } from './results-file-upload-dialog';
 
@@ -52,7 +53,7 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
               formData.append('projectId', selectedProjectId);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               await uploadJsonReport({ body: formData as any }).unwrap();
-            } else if (reportType === 'ctrf') {
+            } else {
               const formData = new FormData();
               formData.append('report', file);
               formData.append('projectId', selectedProjectId);
@@ -74,8 +75,12 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
       setUploadProgress(0);
       toaster.create({ title: 'Files uploaded', type: 'success' });
       closeDialog();
-    } catch {
-      toaster.create({ title: 'Failed to upload files', type: 'error' });
+    } catch (error) {
+      toaster.create({
+        title: 'Failed to upload file',
+        description: extractApiError(error as Parameters<typeof extractApiError>[0]),
+        type: 'error',
+      });
     } finally {
       setIsUploading(false);
     }
