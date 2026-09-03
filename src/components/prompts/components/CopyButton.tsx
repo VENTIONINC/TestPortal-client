@@ -42,11 +42,10 @@ export const CopyButton = memo(function CopyButton({ text, variant = 'button', d
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      
+
       timeoutRef.current = setTimeout(() => {
         setCopied(false);
       }, 2000);
-
     } catch {
       toaster.create({
         title: 'Copy Failed',

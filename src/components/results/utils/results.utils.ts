@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { AnalysisCategory, BaseResult, Result, ResultExecution, ResultSpec, ResultsFilters } from '@/types';
+import { getEffectiveResultCategory, normalizeResultCategory } from '@/utils/analysis';
 
 export type SpecGroup = {
   spec: ResultSpec;
@@ -9,8 +10,12 @@ export type SpecGroup = {
 };
 
 export const toAnalysisCategory = (value?: string): AnalysisCategory | undefined => {
-  if (!value) return undefined;
-  return Object.values(AnalysisCategory).includes(value as AnalysisCategory) ? (value as AnalysisCategory) : undefined;
+  return normalizeResultCategory(value);
+};
+
+export const mergeAvailableAndActiveTags = (availableTags: string[], activeTags: string[]): string[] => {
+  const activeTagSet = new Set(activeTags);
+  return [...activeTags, ...availableTags.filter((tag) => !activeTagSet.has(tag))];
 };
 
 export const toBaseResult = (result: Result): BaseResult => ({
@@ -25,7 +30,7 @@ export const toBaseResult = (result: Result): BaseResult => ({
   specId: result.specId,
   executionId: result.executionId,
   errors: result.errors,
-  analysisCategory: toAnalysisCategory(result.analysisFeedbackCategory) ?? result.analysisCategory,
+  analysisCategory: getEffectiveResultCategory(result.analysisCategory, result.analysisFeedbackCategory),
   analysisConfidence: result.analysisFeedbackConfidence ?? result.analysisConfidence,
   analysisStatus: result.analysisStatus,
   analysisConclusion: result.analysisFeedbackConclusion ?? result.analysisConclusion,
@@ -46,7 +51,7 @@ export const matchesFilters = (result: Result, filters: ResultsFilters): boolean
   if (filters.specFile && !result.spec.file.toLowerCase().includes(filters.specFile.toLowerCase())) return false;
   if (filters.specName && !result.spec.title.toLowerCase().includes(filters.specName.toLowerCase())) return false;
   if (filters.environment && result.execution.environment !== filters.environment) return false;
-  if (filters.type && result.execution.type !== filters.type) return false;
+  if (filters.type && filters.type !== 'all' && result.execution.type !== filters.type) return false;
   if (filters.status && result.status !== filters.status) return false;
   if (filters.errorMessage) {
     const hasMatchingError = result.errors.some((e) =>
@@ -84,4 +89,36 @@ export const addToSpecGroup = (map: Map<string, SpecGroup>, result: Result, base
       executions: [{ execution: result.execution, results: [baseResult] }],
     });
   }
+};
+
+export const buildResultsGroups = (
+  filteredResults: Result[],
+  rawResults: Result[],
+  activeDates: string[],
+  filters: ResultsFilters,
+): {
+  results: Map<string, SpecGroup>;
+  unfilteredResultsMap: Map<string, SpecGroup>;
+  activeDaysResultsIds: string[];
+} => {
+  const activeDatesSet = new Set(activeDates);
+  const unfilteredResultsMap = new Map<string, SpecGroup>();
+  const results = new Map<string, SpecGroup>();
+  const activeDaysResultsIds: string[] = [];
+
+  for (const result of rawResults) {
+    addToSpecGroup(unfilteredResultsMap, result, toBaseResult(result));
+  }
+
+  for (const result of filteredResults) {
+    const resultDate = result.startTime.split('T')[0];
+    if (!activeDatesSet.has(resultDate) || !matchesFilters(result, filters)) {
+      continue;
+    }
+
+    addToSpecGroup(results, result, toBaseResult(result));
+    activeDaysResultsIds.push(result.id);
+  }
+
+  return { results, unfilteredResultsMap, activeDaysResultsIds };
 };

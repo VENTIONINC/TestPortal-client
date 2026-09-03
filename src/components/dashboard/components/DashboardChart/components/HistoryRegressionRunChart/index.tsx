@@ -3,39 +3,37 @@
 
 import { useState, useMemo } from 'react';
 
+import { mapDashboardStatusChartData } from '@/components/dashboard/utils/statusMetrics';
 import { formatChartLabel } from '@/utils/dateUtils';
 import { MetricsBarChart } from '@/components/ui/components/Charts/MetricsBarChart';
 import { BarChartView, BarChartValueMode, CategorySeries, CategoriesChartDatum } from '@/types/charts';
+import { type DashboardResponse } from '@/redux/apis/generatedApi';
 
-export const HistoryRegressionRunChart = ({
-  data,
-}: {
-  data: { date: string; metrics: { passed: number; total: number; skipped: number } }[];
-}) => {
+export const HistoryRegressionRunChart = ({ data }: { data?: DashboardResponse['history'] }) => {
   const [view, setView] = useState<BarChartView>('multiple');
   const [valueMode, setValueMode] = useState<BarChartValueMode>('count');
   const series: CategorySeries[] = [
     { name: 'passed', label: 'passed', color: 'dashboard.green' },
     { name: 'failed', label: 'failed', color: 'dashboard.red' },
     { name: 'skipped', label: 'skipped', color: 'dashboard.gray' },
+    { name: 'timedOut', label: 'timed out', color: 'dashboard.yellow' },
   ];
 
   const { chartData: mapToDataToChart, maxValue } = useMemo(
-    () =>
-      (data ?? []).reduce(
-        (acc, { date, metrics }) => {
-          const passed = metrics?.passed ?? 0;
-          const total = metrics?.total ?? 0;
-          const skipped = metrics.skipped ?? 0;
-          const failed = total - passed - skipped;
+    () => {
+      const mapped = mapDashboardStatusChartData(data);
 
-          acc.chartData.push({ date: formatChartLabel(date), passed, failed, skipped });
-          acc.maxValue = Math.max(acc.maxValue, passed, failed, skipped);
-
-          return acc;
-        },
-        { chartData: [] as CategoriesChartDatum[], maxValue: 0 },
-      ),
+      return {
+        chartData: mapped.chartData.map(({ date, passed, failed, skipped, timedOut }) => ({
+          date: formatChartLabel(date),
+          passed,
+          failed,
+          skipped,
+          timedOut,
+        })) as CategoriesChartDatum[],
+        maxValue: mapped.maxValue,
+      };
+    },
     [data],
   );
 

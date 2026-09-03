@@ -26,25 +26,9 @@ export const IssueCardSkeleton = memo(() => {
       </Card.Header>
 
       <Card.Body p="9px 8px">
-        <Box
-          display="grid"
-          gridTemplateColumns="1.04fr 1.96fr"
-          gap="8px"
-          alignItems="start"
-          minW={0}
-          mt="auto"
-        >
+        <Box display="grid" gridTemplateColumns="1.04fr 1.96fr" gap="8px" alignItems="start" minW={0} mt="auto">
           <Box w="100%" bg="bg.cardSecondary" borderRadius="xl" p="13px 7px 11px 7px">
-            <Box
-              as="ul"
-              w="100%"
-              listStyleType="none"
-              m={0}
-              p={0}
-              display="flex"
-              flexDirection="column"
-              gap={2}
-            >
+            <Box as="ul" w="100%" listStyleType="none" m={0} p={0} display="flex" flexDirection="column" gap={2}>
               {[1, 2, 3, 4].map((i) => (
                 <Box key={i} as="li" display="flex" justifyContent="space-between" alignItems="center" gap={2}>
                   <Skeleton w="100px" h="12px" />
@@ -54,7 +38,7 @@ export const IssueCardSkeleton = memo(() => {
             </Box>
           </Box>
           <Box w="100%" h="100%" minW={0} bg="bg.cardSecondary" p="4px 7px 6px 3px" borderRadius="xl">
-             <Skeleton w="100%" h="100px" borderRadius="md" />
+            <Skeleton w="100%" h="100px" borderRadius="md" />
           </Box>
         </Box>
       </Card.Body>

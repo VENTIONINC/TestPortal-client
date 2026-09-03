@@ -1,29 +1,100 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type { FetchBaseQueryMeta } from '@reduxjs/toolkit/query';
+
 import { BulkReviewRequest, BulkReviewResponse, GetResultsRequest, GetResultsResponse } from '@/types/apis';
+import { getDownloadFilename } from '@/utils/download';
 
 import {
   generatedApi,
+  type PostApiV2SkillsApiResponse,
   type PostApiV2ReportsPdfExportApiArg,
   type PostApiV2ReportsPdfExportApiResponse,
+  type PutApiV2SkillsByIdApiResponse,
 } from './generatedApi';
 import { TAGS } from './tags';
+
+export interface SkillArchiveDownloadResult {
+  fileName: string;
+  blob: Blob;
+}
+
+export interface SkillPackageMutationInput {
+  package: File;
+  title: string;
+  category: string;
+}
+
+export interface ReplaceSkillPackageMutationInput extends SkillPackageMutationInput {
+  id: string;
+}
+
+const createSkillPackageFormData = ({
+  package: skillPackage,
+  title,
+  category,
+}: SkillPackageMutationInput) => {
+  const formData = new FormData();
+
+  formData.append('package', skillPackage, skillPackage.name);
+  formData.append('title', title.trim());
+  formData.append('category', category.trim());
+
+  return formData;
+};
 
 export const extendedApi = generatedApi
   .enhanceEndpoints({
     endpoints: {
       postApiV2Assumptions: {
-        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result],
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      postApiV2Issues: {
+        invalidatesTags: [TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      patchApiV2IssuesByIssueId: {
+        invalidatesTags: [TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      postApiV2ResultErrorsByResultErrorIdIssue: {
+        extraOptions: { maxRetries: 0 },
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError, TAGS.Project],
+      },
+      patchApiV2ResultErrorsByResultErrorIdIssue: {
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError, TAGS.Project],
       },
       deleteApiV2ExecutionsByExecutionId: {
         invalidatesTags: [TAGS.Result],
       },
       patchApiV2AssumptionsByAssumptionId: {
-        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result],
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      deleteApiV2AssumptionsByAssumptionId: {
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      patchApiV2ResultErrorsByResultErrorIdAssignIssue: {
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
+      },
+      getApiV2ResultErrorsByResultErrorIdModalContext: {
+        providesTags: [TAGS.ResultError, TAGS.Result, TAGS.Issues],
+      },
+      patchApiV2ResultErrorsByResultErrorIdReview: {
+        invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
       },
       postApiV2ResultErrorsAnalyze: {
         invalidatesTags: [TAGS.Result],
+      },
+      patchApiV2ResultsByResultIdAnalysis: {
+        invalidatesTags: [TAGS.Result],
+      },
+      patchApiV2ResultsByResultIdAnalysisFeedback: {
+        invalidatesTags: [TAGS.Result, TAGS.Issues, TAGS.Project],
+      },
+      postApiV2UploadCtrfReport: {
+        invalidatesTags: ['Reports', TAGS.Result],
+      },
+      postApiV2UploadCtrfReportApiKey: {
+        invalidatesTags: ['Reports', TAGS.Result, 'Upload'],
       },
     },
   })
@@ -70,6 +141,34 @@ export const extendedApi = generatedApi
         }),
         invalidatesTags: [TAGS.Result],
       }),
+      createCustomSkill: build.mutation<PostApiV2SkillsApiResponse, SkillPackageMutationInput>({
+        query: (input) => ({
+          url: '/api/v2/skills',
+          method: 'POST',
+          body: createSkillPackageFormData(input),
+        }),
+        invalidatesTags: ['Skills'],
+      }),
+      replaceCustomSkill: build.mutation<PutApiV2SkillsByIdApiResponse, ReplaceSkillPackageMutationInput>({
+        query: ({ id, ...input }) => ({
+          url: `/api/v2/skills/${encodeURIComponent(id)}`,
+          method: 'PUT',
+          body: createSkillPackageFormData(input),
+        }),
+        invalidatesTags: ['Skills'],
+      }),
+      downloadSkillArchive: build.query<SkillArchiveDownloadResult, { downloadUrl: string; name: string }>({
+        query: ({ downloadUrl }) => ({
+          url: downloadUrl,
+          method: 'GET',
+          responseHandler: (response) => response.blob(),
+        }),
+        transformResponse: (blob: Blob, meta: FetchBaseQueryMeta | undefined, arg) => ({
+          blob,
+          fileName: getDownloadFilename(meta?.response?.headers, `${arg.name}.zip`),
+        }),
+        providesTags: ['Skills'],
+      }),
     }),
     overrideExisting: false,
   });
@@ -78,10 +177,17 @@ export const {
   usePostApiV2AssumptionsMutation: useCreateAssumptionMutation,
   usePatchApiV2AssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
   useGetApiV2IssuesWithStatsQuery: useGetIssuesWithStatsQuery,
-
+  useGetApiV2ResultErrorsByResultErrorIdModalContextQuery: useResultErrorModalContextQuery,
+  usePostApiV2ResultErrorsByResultErrorIdIssueMutation,
+  usePatchApiV2ResultErrorsByResultErrorIdIssueMutation,
   // Custom hooks (from extendedApi)
   useGetResultsQuery,
   useLazyGetAnalysisExportQuery,
   useExportDashboardPdfMutation,
   useBulkReviewMutation,
+  useCreateCustomSkillMutation,
+  useReplaceCustomSkillMutation,
+  useDeleteApiV2SkillsByIdMutation: useDeleteCustomSkillMutation,
+  useLazyDownloadSkillArchiveQuery,
+  usePostApiV2UploadCtrfReportMutation,
 } = extendedApi;

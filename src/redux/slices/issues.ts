@@ -5,7 +5,7 @@ import { useCallback } from 'react';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { IssueCategory, IssueFilters } from '@/types';
+import { IssueFilters } from '@/types';
 
 export interface IssuesState {
   filters: IssueFilters;
@@ -18,8 +18,8 @@ export const initialFilters: IssueFilters = {
   specFile: '',
   specName: '',
   environment: '',
-  type: '',
-  category: '' as IssueCategory,
+  type: 'all',
+  category: 'all',
   name: '',
   statFrom: '',
   statTo: '',

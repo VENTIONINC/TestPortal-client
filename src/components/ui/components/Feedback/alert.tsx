@@ -4,7 +4,6 @@
 import { Alert as ChakraAlert, AlertRootProps, Box } from '@chakra-ui/react';
 import { forwardRef } from 'react';
 
-
 const Root = forwardRef<HTMLDivElement, AlertRootProps>(function AlertRoot(props, ref) {
   const status = props.status || 'info';
 

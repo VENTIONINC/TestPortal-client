@@ -15,12 +15,5 @@ export const DateRangeField = ({ field }: DateRangeFieldProps) => {
 
   if (!fromField?.name || !toField?.name) return null;
 
-  return (
-    <FormDateRangePicker
-      fromName={fromField.name}
-      toName={toField.name}
-      label={field.label}
-      maxRangeDays={7}
-    />
-  );
+  return <FormDateRangePicker fromName={fromField.name} toName={toField.name} label={field.label} maxRangeDays={7} />;
 };

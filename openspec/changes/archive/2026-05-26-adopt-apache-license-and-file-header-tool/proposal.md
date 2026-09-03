@@ -15,6 +15,7 @@ The client repository currently has no canonical repository license declaration,
 ## Capabilities
 
 ### New Capabilities
+
 - `repository-licensing`: Defines how the client repository declares, documents, and distributes its Apache 2.0 licensing information.
 - `file-header-scaffolding`: Defines the workflow for creating supported source files with the required Apache 2.0 header and backfilling existing supported files.
 - `contribution-guidance`: Defines the contributor guidance needed to align client changes with the Apache 2.0 license and file-header policy.

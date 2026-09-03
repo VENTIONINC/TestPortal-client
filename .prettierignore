@@ -1,2 +1,6 @@
 .next
 node_modules
+.codex
+.yarn
+dist
+generatedApi.ts

@@ -32,13 +32,10 @@ export const FilterProvider = ({ children, storageKey = 'common' }: { children: 
     setTimeout(() => setIsTransitioning(false), 400);
   }, []);
 
-  const handleSetShowFilters = useCallback(
-    () => {
-      triggerTransition();
-      setShowFiltersState((prev: boolean) => setFilterState(key, !prev));
-    },
-    [key, triggerTransition],
-  );
+  const handleSetShowFilters = useCallback(() => {
+    triggerTransition();
+    setShowFiltersState((prev: boolean) => setFilterState(key, !prev));
+  }, [key, triggerTransition]);
 
   const toggleFilters = useCallback(() => {
     handleSetShowFilters();

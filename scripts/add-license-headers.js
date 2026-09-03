@@ -1,5 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
+import fs from 'node:fs';
+import path from 'node:path';
 
 import {
   DEFAULT_IGNORED_DIRECTORIES,
@@ -7,9 +7,9 @@ import {
   getSupportedExtensions,
   isGeneratedSourceExcluded,
   normalizeLicenseHeaderContent,
-} from "./license-header-utils.js";
+} from './license-header-utils.js';
 
-const TARGET_DIRECTORIES = ["src"];
+const TARGET_DIRECTORIES = ['src'];
 
 function walkDirectory(directoryPath, collectedPaths) {
   const entries = fs.readdirSync(directoryPath, { withFileTypes: true });
@@ -61,7 +61,7 @@ targetFiles.forEach((targetFile) => {
     return;
   }
 
-  const currentContent = fs.readFileSync(targetFile, "utf8");
+  const currentContent = fs.readFileSync(targetFile, 'utf8');
 
   const normalized = normalizeLicenseHeaderContent(currentContent, header);
 
@@ -70,7 +70,7 @@ targetFiles.forEach((targetFile) => {
     return;
   }
 
-  fs.writeFileSync(targetFile, normalized.content, "utf8");
+  fs.writeFileSync(targetFile, normalized.content, 'utf8');
   updatedCount += 1;
   console.log(`Updated ${path.relative(rootDirectory, targetFile)}`);
 });
@@ -78,8 +78,6 @@ targetFiles.forEach((targetFile) => {
 console.log(
   `Processed ${targetFiles.length} supported files. Added or normalized headers in ${updatedCount}; skipped ${skippedCount}; excluded ${excludedCount}.`,
 );
-console.log(`Supported extensions: ${getSupportedExtensions().join(", ")}`);
-console.log(`Scoped directories: ${TARGET_DIRECTORIES.join(", ")}`);
-console.log(
-  "Excluded generated files: src/redux/apis/generatedApi.ts",
-);
+console.log(`Supported extensions: ${getSupportedExtensions().join(', ')}`);
+console.log(`Scoped directories: ${TARGET_DIRECTORIES.join(', ')}`);
+console.log('Excluded generated files: src/redux/apis/generatedApi.ts');

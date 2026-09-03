@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { useFileUpload } from '@chakra-ui/react';
 
 import { toaster } from '@/components/ui';
-import { usePostApiV2UploadJsonReportMutation, usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/generatedApi';
+import { usePostApiV2UploadJsonReportMutation } from '@/redux/apis/generatedApi';
+import { usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/extendedApi';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useDialogActions } from '@/redux/slices/dialog';
 
@@ -50,13 +51,13 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
               formData.append('report', file);
               formData.append('projectId', selectedProjectId);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await uploadJsonReport({ body: formData as any });
+              await uploadJsonReport({ body: formData as any }).unwrap();
             } else if (reportType === 'ctrf') {
               const formData = new FormData();
               formData.append('report', file);
               formData.append('projectId', selectedProjectId);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              await uploadCtrfReport({ body: formData as any });
+              await uploadCtrfReport({ body: formData as any }).unwrap();
             }
 
             processedCount++;

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { forwardRef, ReactNode, type ComponentPropsWithoutRef } from 'react';
-import { Tooltip as ChakraTooltip } from '@chakra-ui/react';
+import { Portal, Tooltip as ChakraTooltip } from '@chakra-ui/react';
 
 type TooltipContentProps = ComponentPropsWithoutRef<typeof ChakraTooltip.Content>;
 
@@ -17,8 +17,8 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(function Tooltip
   ref,
 ) {
   const contentBg = 'bg.panel';
-  const contentColor = 'text.primary';
-  const contentBorder = 'border.subtle';
+  const contentColor = 'text.main';
+  const contentBorder = 'border.main';
   const mergedContentProps: TooltipContentProps = {
     bg: contentBg,
     color: contentColor,
@@ -27,17 +27,22 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(function Tooltip
     boxShadow: 'sm',
     px: 2,
     py: 1,
+    maxW: '480px',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
     ...contentProps,
   };
 
   return (
     <ChakraTooltip.Root positioning={{ placement: 'top' }} {...props}>
       <ChakraTooltip.Trigger asChild>{children}</ChakraTooltip.Trigger>
-      <ChakraTooltip.Positioner>
-        <ChakraTooltip.Content ref={ref} {...mergedContentProps}>
-          {content}
-        </ChakraTooltip.Content>
-      </ChakraTooltip.Positioner>
+      <Portal>
+        <ChakraTooltip.Positioner>
+          <ChakraTooltip.Content ref={ref} {...mergedContentProps}>
+            {content}
+          </ChakraTooltip.Content>
+        </ChakraTooltip.Positioner>
+      </Portal>
     </ChakraTooltip.Root>
   );
 });

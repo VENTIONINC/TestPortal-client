@@ -1,26 +1,45 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { HStack, Text, VStack, Box, useMediaQuery } from '@chakra-ui/react';
 import { FormProvider } from 'react-hook-form';
 
-import { useFiltersWithUrl } from '@/hooks';
+import { normalizeExecutionTypeFilters, useExecutionTypeOptions, useFiltersWithUrl } from '@/hooks';
 import { IssueCard, IssueCardSkeleton } from '@/components/issues';
 import { useGetIssuesWithStatsQuery } from '@/redux/apis/extendedApi';
 import { initialFilters, useIssuesActions, useIssuesFilters } from '@/redux/slices/issues';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useFilterContext } from '@/contexts/FilterContext';
-import { IssueCategory, IssueWithStats } from '@/types';
+import { IssueWithStats, ResultCategory } from '@/types';
+import { GetApiV2IssuesWithStatsApiArg } from '@/redux/apis/generatedApi';
 import { Filter, Pagination } from '@/components/ui';
 
 import { filterConfig } from '../configs';
 
-const toIssueCategory = (value?: string): IssueCategory | undefined => {
-  if (!value) return undefined;
-  return Object.values(IssueCategory).includes(value as IssueCategory) ? (value as IssueCategory) : undefined;
-};
+interface IssuesQueryFilterValues extends Record<string, string> {
+  projectId: string;
+  page: string;
+  category: string;
+  name: string;
+  type: string;
+  statFrom: string;
+  statTo: string;
+}
 
+export const buildIssuesQueryParams = (
+  filters: IssuesQueryFilterValues,
+): GetApiV2IssuesWithStatsApiArg => ({
+  projectId: filters.projectId,
+  page: Number(filters.page) || 1,
+  category: Object.values(ResultCategory).includes(filters.category as ResultCategory)
+    ? filters.category as ResultCategory
+    : undefined,
+  name: filters.name || undefined,
+  type: filters.type && filters.type !== 'all' ? filters.type : undefined,
+  statFrom: filters.statFrom || undefined,
+  statTo: filters.statTo || undefined,
+});
 export const IssuesList = () => {
   const filters = useIssuesFilters();
   const { setFilters } = useIssuesActions();
@@ -33,22 +52,56 @@ export const IssuesList = () => {
     currentFilters: filters,
     initialFilters,
     onUpdateFilters: setFilters,
+    normalizeFilters: normalizeExecutionTypeFilters,
   });
 
+  const handleInvalidExecutionType = useCallback(
+    (type: 'all') => {
+      filterProps.onApplyFilters({ ...filterProps.filters, type });
+    },
+    [filterProps],
+  );
+  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading, effectiveType } =
+    useExecutionTypeOptions({
+    projectId: selectedProjectId ?? '',
+    selectedType: filterProps.filters.type || 'all',
+    onInvalidType: handleInvalidExecutionType,
+  });
+
+  const dynamicFilterConfig = useMemo(
+    () =>
+      filterConfig.map((section) =>
+        section.title === 'Execution filters'
+          ? {
+              ...section,
+              fields: section.fields.map((field) =>
+                field.name === 'type'
+                  ? { ...field, options: executionTypeOptions, disabled: areExecutionTypesLoading }
+                  : field,
+              ),
+            }
+          : section,
+      ),
+    [areExecutionTypesLoading, executionTypeOptions],
+  );
+
   const issuesQueryParams = useMemo(
-    () => ({
-      projectId: selectedProjectId,
-      page: Number(filterProps.filters.page) || 1,
-      category: toIssueCategory(filterProps.filters.category),
-      name: filterProps.filters.name || undefined,
-      statFrom: filterProps.filters.statFrom || undefined,
-      statTo: filterProps.filters.statTo || undefined,
-    }),
+    () =>
+      buildIssuesQueryParams({
+        projectId: selectedProjectId,
+        page: filterProps.filters.page,
+        category: filterProps.filters.category,
+        name: filterProps.filters.name,
+        type: effectiveType,
+        statFrom: filterProps.filters.statFrom,
+        statTo: filterProps.filters.statTo,
+      }),
     [
       selectedProjectId,
       filterProps.filters.page,
       filterProps.filters.category,
       filterProps.filters.name,
+      effectiveType,
       filterProps.filters.statFrom,
       filterProps.filters.statTo,
     ],
@@ -59,7 +112,7 @@ export const IssuesList = () => {
   return (
     <FormProvider {...formMethods}>
       <HStack align="flex-start" gap={4} w="100%">
-        <Filter config={filterConfig} {...filterProps} />
+        <Filter config={dynamicFilterConfig} {...filterProps} />
         <VStack flex={1} align="stretch" minW={0} py={6} pr={4}>
           <Box
             display="grid"

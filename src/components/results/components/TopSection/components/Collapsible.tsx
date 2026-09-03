@@ -6,13 +6,15 @@ import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io';
 import { useState } from 'react';
 
 import { Tooltip } from '@/components/ui';
+import type { IssueCategorySummary } from '@/types';
+import { getIssueCategorySummaryPresentation } from '@/utils';
 
 import { categoriesConfig } from '../configs/categories';
 import { List } from './List';
 
 interface CollapsibleWrapperProps {
   title: string;
-  results: { title: string; count: number; category?: string }[];
+  results: { id?: string; title: string; count: number; categorySummary?: IssueCategorySummary }[];
   handleClickToResult: (message: string) => void;
   hideIconList?: boolean;
 }
@@ -24,7 +26,13 @@ export const CollapsibleWrapper = ({
   hideIconList = false,
 }: CollapsibleWrapperProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const availableCategories = Array.from(new Set(results.map((r) => r.category).filter(Boolean))) as string[];
+  const availableCategories = Array.from(
+    new Set(
+      results
+        .map((result) => result.categorySummary && getIssueCategorySummaryPresentation(result.categorySummary).category)
+        .filter(Boolean),
+    ),
+  ) as string[];
   return (
     <Collapsible.Root
       bg="bg.card"
@@ -35,20 +43,13 @@ export const CollapsibleWrapper = ({
     >
       <Collapsible.Trigger asChild>
         <Flex align="center" minH="27px" pl="2px" justify="space-between">
-          <Text
-            fontWeight={600}
-            cursor="pointer"
-            fontSize="lg"
-            lineClamp={1}
-            flex={1}
-            mr={2}
-          >
+          <Text fontWeight={600} cursor="pointer" fontSize="lg" lineClamp={1} flex={1} mr={2}>
             {title}
           </Text>
           {availableCategories.length > 0 && (
             <Flex gap={2} ml={2}>
               {availableCategories.map((category) => {
-                const config = categoriesConfig[category as keyof typeof categoriesConfig] || categoriesConfig.Other;
+                const config = categoriesConfig[category as keyof typeof categoriesConfig] || categoriesConfig.other;
                 const { Icon, color, bg, textColor, text } = config;
 
                 return (
@@ -65,12 +66,7 @@ export const CollapsibleWrapper = ({
                       minH={6}
                     >
                       <Icon size={12} />
-                      <Text
-                        fontSize="xs"
-                        color={textColor}
-                        fontWeight={600}
-                        display={{ base: 'none', md: 'block' }}
-                      >
+                      <Text fontSize="xs" color={textColor} fontWeight={600} display={{ base: 'none', md: 'block' }}>
                         {text}
                       </Text>
                     </Flex>

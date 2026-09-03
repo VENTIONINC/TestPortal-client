@@ -4,14 +4,15 @@
 import { faker } from '@faker-js/faker';
 import { subDays, format } from 'date-fns';
 
-import { DashboardResponse, DailyExecutionMetrics, ExecutionSummary } from '@/redux/apis/generatedApi';
+import { DashboardResponse, ExecutionSummary } from '@/redux/apis/generatedApi';
 
 export const generateMockDashboardData = (): DashboardResponse => {
   const historyDays = 30;
   const history = [];
 
   let totalRuns = 0;
-  let totalFailures = 0;
+  let totalPassed = 0;
+  let totalFailed = 0;
 
   for (let i = historyDays - 1; i >= 0; i--) {
     const date = subDays(new Date(), i);
@@ -23,7 +24,8 @@ export const generateMockDashboardData = (): DashboardResponse => {
     const passed = faker.number.int({ min: Math.floor(totalTests * 0.8), max: totalTests });
     const remaining = totalTests - passed;
     const failed = faker.number.int({ min: 0, max: remaining });
-    const skipped = remaining - failed;
+    const skipped = faker.number.int({ min: 0, max: remaining - failed });
+    const timedOut = remaining - failed - skipped;
 
     // Issues distribution for failed tests
     // Ensure sum matches failed count (roughly, or exactly if strict)
@@ -40,11 +42,12 @@ export const generateMockDashboardData = (): DashboardResponse => {
         : 0;
     const other = failed - bug - environment - script - performance;
 
-    const metrics: DailyExecutionMetrics = {
+    const metrics = {
       total: totalTests,
       passed,
       failed,
       skipped,
+      timedOut,
       duration: faker.number.int({ min: 60000, max: 600000 }), // 1 min to 10 mins
       issues: {
         bug,
@@ -67,8 +70,9 @@ export const generateMockDashboardData = (): DashboardResponse => {
     // Assuming "totalRuns" means total executions, but our history is daily aggregated tests.
     // Let's assume totalRuns in summary refers to number of execution jobs, which we don't strictly have in daily test metrics unless we simulate them.
     // We'll just generate a plausible summary.
-    totalRuns += faker.number.int({ min: 1, max: 20 }); // Runs per day
-    totalFailures += failed;
+    totalRuns += totalTests;
+    totalPassed += passed;
+    totalFailed += failed;
   }
 
   // Calculate overall pass rate from history or just average it
@@ -107,8 +111,8 @@ export const generateMockDashboardData = (): DashboardResponse => {
   return {
     summary: {
       totalRuns: totalRuns,
-      failures: totalFailures,
-      passRate: overallPassRate,
+      failures: totalFailed,
+      passRate: totalRuns ? parseFloat(((totalPassed / totalRuns) * 100).toFixed(1)) : overallPassRate,
       passRateTrend: faker.number.float({ min: -5, max: 5, fractionDigits: 1 }),
     },
     history,

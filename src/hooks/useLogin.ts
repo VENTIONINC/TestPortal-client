@@ -8,18 +8,39 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useDispatch } from 'react-redux';
 
 import { loginSchema, type LoginFormData } from '@/schemas/authSchemas';
-import { usePostApiV2UsersLoginMutation } from '@/redux/apis/generatedApi';
+import { usePostApiV2AuthLoginMutation } from '@/redux/apis/generatedApi';
 import { setTokens } from '@/redux/slices/auth';
 import { useResetState } from '@/hooks/useResetState';
 import { extractApiError } from '@/utils/apiErrors';
 import { PATHS } from '@/types/paths';
+
+const GENERIC_LOGIN_ERROR = 'Authentication failed. Please check your credentials.';
+const PENDING_APPROVAL_PRIMARY_PATTERNS = [/pending/i, /awaiting/i];
+const PENDING_APPROVAL_SECONDARY_PATTERNS = [/approval/i, /approve/i];
+
+export function isPendingApprovalLoginError(message: string) {
+  return (
+    PENDING_APPROVAL_PRIMARY_PATTERNS.some((pattern) => pattern.test(message)) &&
+    PENDING_APPROVAL_SECONDARY_PATTERNS.some((pattern) => pattern.test(message))
+  );
+}
+
+export function getLoginErrorMessage(error: Parameters<typeof extractApiError>[0]) {
+  const extractedMessage = extractApiError(error);
+
+  if (isPendingApprovalLoginError(extractedMessage)) {
+    return extractedMessage;
+  }
+
+  return GENERIC_LOGIN_ERROR;
+}
 
 export function useLogin() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const resetState = useResetState();
-  const [postApiUsersLogin, { isLoading: isApiLoading, error: apiError }] = usePostApiV2UsersLoginMutation();
+  const [postApiUsersLogin, { isLoading: isApiLoading, error: apiError }] = usePostApiV2AuthLoginMutation();
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -52,7 +73,14 @@ export function useLogin() {
         },
       }).unwrap();
 
-      // Store authentication tokens in Redux - user data will be fetched by useAuth
+      if (!('accessToken' in response) || !('refreshToken' in response)) {
+        setError('root', {
+          type: 'manual',
+          message: 'message' in response ? response.message || GENERIC_LOGIN_ERROR : GENERIC_LOGIN_ERROR,
+        });
+        return;
+      }
+
       dispatch(
         setTokens({
           accessToken: response.accessToken,
@@ -60,13 +88,10 @@ export function useLogin() {
         }),
       );
 
-      // Reset global state to ensure fresh initialization
       resetState();
-
-      // Navigate to intended destination
       navigate(PATHS.ROOT);
-    } catch {
-      const errorMessage = 'Login failed. Please check your credentials.';
+    } catch (error) {
+      const errorMessage = getLoginErrorMessage(error as Parameters<typeof extractApiError>[0]);
 
       setError('root', {
         type: 'manual',

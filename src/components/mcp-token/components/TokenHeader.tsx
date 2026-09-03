@@ -38,12 +38,7 @@ export const TokenHeader = memo(function TokenHeader({
               {isRevokingToken ? 'Revoking...' : 'Revoke'}
             </Button>
           )}
-          <Button
-            variant="primary"
-            onClick={onRequest}
-            disabled={isRequestingToken}
-            loading={isRequestingToken}
-          >
+          <Button variant="primary" onClick={onRequest} disabled={isRequestingToken} loading={isRequestingToken}>
             <LuRefreshCw />
             {hasToken ? 'Regenerate Token' : 'Generate MCP Token'}
           </Button>

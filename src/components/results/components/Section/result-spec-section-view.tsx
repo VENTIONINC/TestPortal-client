@@ -26,9 +26,12 @@ export const ResultSpecSectionView = memo(
     activeTags,
     onToggleTag,
   }: ResultSpecSectionViewProps) => {
+    const cleanSpecTitle = toCleanTitle(specTitle);
+
     return (
       <VStack
         align="stretch"
+        minW={0}
         shadow="card"
         bg="bg.cardSecondary"
         mx={4}
@@ -41,7 +44,7 @@ export const ResultSpecSectionView = memo(
           <DateToggle days={sectionDays} toggleHandler={handleDateToggle} variant="stats" />
         </HStack>
 
-        <VStack gap={1} align="stretch">
+        <VStack gap={1} align="stretch" minW={0}>
           <Flex gap={4} textStyle="sm" p={2} flexWrap="wrap" alignItems="center">
             <ClipboardCopyText value={specKey}>
               <Tooltip content={specKey}>
@@ -67,22 +70,27 @@ export const ResultSpecSectionView = memo(
             </Flex>
           </Flex>
 
-          <div className="row spec-meta" style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <HStack align="center" textStyle="sm">
-              <ClipboardCopyText
-                value={toCleanTitle(specTitle)}
-                display="flex"
-                alignItems="center"
-                gap={2.5}
-                borderRadius="sm"
-                _hover={{ bg: 'bg.active' }}
-                p={2}
-              >
-                <LuFileText size={16} style={{ flexShrink: 0 }} />
-                {toCleanTitle(specTitle)}
-              </ClipboardCopyText>
-            </HStack>
-          </div>
+          <HStack align="center" textStyle="sm" minW={0} w="full">
+            <ClipboardCopyText
+              value={cleanSpecTitle}
+              display="grid"
+              gridTemplateColumns="auto minmax(0, 1fr)"
+              alignItems="center"
+              gap={2.5}
+              borderRadius="sm"
+              _hover={{ bg: 'bg.active' }}
+              p={2}
+              minW={0}
+              w="full"
+            >
+              <LuFileText size={16} style={{ flexShrink: 0 }} />
+              <Tooltip content={cleanSpecTitle}>
+                <Text as="span" data-testid="spec-title" truncate minW={0}>
+                  {cleanSpecTitle}
+                </Text>
+              </Tooltip>
+            </ClipboardCopyText>
+          </HStack>
         </VStack>
 
         {sectionDays.map(

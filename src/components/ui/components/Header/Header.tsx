@@ -1,6 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import { useEffect, useState } from 'react';
 import { Box, Container, Heading, Flex, IconButton, Button } from '@chakra-ui/react';
 import { FiSun, FiMoon, FiMonitor } from 'react-icons/fi';
 import { LuUpload } from 'react-icons/lu';
@@ -15,14 +16,17 @@ interface HeaderProps {
 }
 
 export const Header = ({ title, actionButton }: HeaderProps) => {
+  const [mounted, setMounted] = useState(false);
   const { toggleColorMode, colorMode, theme } = useColorMode();
   const openUploadDialog = useResultsFileUploadDialog();
 
+  useEffect(() => setMounted(true), []);
+
   return (
-    <Box bg="bg.section"  borderBottom="1px solid" borderColor="border.main">
-      <Container px={6} maxW="full" >
+    <Box bg="bg.section" borderBottom="1px solid" borderColor="border.main">
+      <Container px={6} maxW="full">
         <Flex justify="space-between" align="center" h="65px">
-          <Heading size="xl" color="text.primary" >
+          <Heading size="xl" color="text.primary">
             {title}
           </Heading>
 
@@ -35,18 +39,20 @@ export const Header = ({ title, actionButton }: HeaderProps) => {
               Upload
             </Button>
           </Flex>
-          <IconButton
-            aria-label="Toggle theme"
-            onClick={toggleColorMode}
-            variant="ghost"
-            color={colorMode === 'light' ? 'black' : 'white'}
-            borderWidth="1px"
-            borderStyle="solid"
-            size="sm"
-            borderColor="border.subtle"
-          >
-            {theme === 'system' ? <FiSun /> : theme === 'light' ? <FiMoon /> : <FiMonitor />}
-          </IconButton>
+          {mounted && (
+            <IconButton
+              aria-label="Toggle theme"
+              onClick={toggleColorMode}
+              variant="ghost"
+              color={colorMode === 'light' ? 'black' : 'white'}
+              borderWidth="1px"
+              borderStyle="solid"
+              size="sm"
+              borderColor="border.subtle"
+            >
+              {theme === 'system' ? <FiMonitor /> : colorMode === 'light' ? <FiSun /> : <FiMoon />}
+            </IconButton>
+          )}
         </Flex>
       </Container>
     </Box>

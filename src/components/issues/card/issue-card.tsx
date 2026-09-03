@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo, useMemo, useState, useEffect } from 'react';
-import { HStack, Text, Flex, Card, Box, IconButton, Tag } from '@chakra-ui/react';
+import { HStack, Text, Flex, Card, Box, IconButton, Tag, VStack } from '@chakra-ui/react';
 import { LuPencil, LuDot } from 'react-icons/lu';
 import dayjs from 'dayjs';
 import { useIntersectionObserver } from 'usehooks-ts';
 
 import { IssueTimeDiscributionChart } from '@/components/ui/components/Charts';
-import { Wrap, Skeleton } from '@/components/ui';
+import { Wrap, Skeleton, Tooltip } from '@/components/ui';
 import { useFilterContext } from '@/contexts/FilterContext';
-import { useManageIssueDrawer } from '@/components/drawers';
-import { getIssueCategoryStyle, ISSUE_CATEGORY_LABELS } from '@/utils';
+import { useEditIssueDrawer } from '@/components/drawers';
+import { getIssueCategoryStyle, getIssueCategorySummaryPresentation, ISSUE_CATEGORY_LABELS } from '@/utils';
 import { IssueWithStats } from '@/types';
 
 interface IssueCardProps {
@@ -19,9 +19,11 @@ interface IssueCardProps {
 }
 
 export const IssueCard = memo(({ issue }: IssueCardProps) => {
+  const categorySummary = getIssueCategorySummaryPresentation(issue.categorySummary);
   const { Icon, color } = getIssueCategoryStyle(issue.category);
+  const categoryLabel = ISSUE_CATEGORY_LABELS[issue.category];
 
-  const openManageIssueDrawer = useManageIssueDrawer();
+  const openEditIssueDrawer = useEditIssueDrawer();
 
   const { statistics } = issue ?? {};
   const { firstOccurrence, impactedTestsCount, lastOccurrence, occurrenceCount } = statistics ?? {};
@@ -91,29 +93,51 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
               mt={1}
               size="xs"
               variant="ghost"
-              onClick={() => openManageIssueDrawer({ issue })}
+              onClick={() => openEditIssueDrawer(issue)}
               aria-label="Manage issue"
             >
               <LuPencil size={16} />
             </IconButton>
           </Flex>
           <Flex align="center">
-            <Tag.Root
-              color={color}
-              bg="transparent"
-              border="1px solid"
-              borderColor={color}
-              borderRadius="full"
-              size="sm"
-              p="4px 8px"
+            <Tooltip
+              content={
+                <VStack align="stretch" gap={1} minW="150px">
+                  {categorySummary.details.map((item) => (
+                    <HStack key={item.label} justify="space-between" gap={4}>
+                      <Text fontSize="xs">{item.label}</Text>
+                      <Text fontSize="xs" fontWeight="bold">
+                        {item.count}
+                      </Text>
+                    </HStack>
+                  ))}
+                </VStack>
+              }
             >
-              <Tag.StartElement>
-                <Icon size={16} />
-              </Tag.StartElement>
-              <Tag.Label fontWeight={500} color="category.text">
-                {ISSUE_CATEGORY_LABELS[issue.category]}
-              </Tag.Label>
-            </Tag.Root>
+              <HStack gap={1} aria-label={`Category summary: ${categoryLabel}${categorySummary.showMixed ? ', Mixed' : ''}`}>
+                <Tag.Root
+                  color={color}
+                  bg="transparent"
+                  border="1px solid"
+                  borderColor={color}
+                  borderRadius="full"
+                  size="sm"
+                  p="4px 8px"
+                >
+                  <Tag.StartElement>
+                    <Icon size={16} />
+                  </Tag.StartElement>
+                  <Tag.Label fontWeight={500} color="category.text">
+                    {categoryLabel}
+                  </Tag.Label>
+                </Tag.Root>
+                {categorySummary.showMixed && (
+                  <Tag.Root variant="subtle" borderRadius="full" size="sm" p="4px 8px">
+                    <Tag.Label fontWeight={500}>Mixed</Tag.Label>
+                  </Tag.Root>
+                )}
+              </HStack>
+            </Tooltip>
 
             <LuDot size={16} color="text.secondary" />
             <Text fontSize="xs" color="text.secondary">
@@ -122,7 +146,7 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
           </Flex>
         </HStack>
 
-        <Text fontSize="xs" w="60%">
+        <Text fontSize="xs" w="60%" whiteSpace="pre-wrap">
           {issue.description}
         </Text>
       </Card.Header>

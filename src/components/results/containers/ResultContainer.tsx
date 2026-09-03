@@ -12,10 +12,12 @@ import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useGetApiV2ResultsStatsQuery } from '@/redux/apis/generatedApi';
 import { useResultsActions, useSelectedDates } from '@/redux/slices/results';
 import { getEffectiveDatesInRange } from '@/utils/dateUtils';
+import { useExecutionTypeOptions } from '@/hooks';
 
 import { ResultsFloatingHeader, ResultsList, TopSectionContainer } from '../components';
 import { filterConfig } from '../configs';
 import { useResultsData, useResultsEffectiveFilters } from '../hooks';
+import { mergeAvailableAndActiveTags } from '../utils';
 
 export const ResultContainerInner = () => {
   const selectedDates = useSelectedDates();
@@ -25,18 +27,47 @@ export const ResultContainerInner = () => {
 
   const { effectiveFilters, debouncedFilters, filterFormMethods, filterProps } = useResultsEffectiveFilters();
 
+  const handleInvalidExecutionType = useCallback(
+    (type: 'all') => {
+      filterProps.onApplyFilters({ ...filterProps.filters, type });
+    },
+    [filterProps],
+  );
+  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading, effectiveType } =
+    useExecutionTypeOptions({
+    projectId: selectedProjectId ?? '',
+    selectedType: effectiveFilters.type || 'all',
+    onInvalidType: handleInvalidExecutionType,
+  });
+
+  const queryFilters = useMemo(
+    () => ({ ...effectiveFilters, type: effectiveType }),
+    [effectiveFilters, effectiveType],
+  );
+  const debouncedQueryFilters = useMemo(
+    () => ({ ...debouncedFilters, type: effectiveType }),
+    [debouncedFilters, effectiveType],
+  );
+
   useEffect(() => {
     setSelectedDates([effectiveFilters.to]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveFilters.to]);
 
-  const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates, rawResults, isFetching } =
-    useResultsData({
-      effectiveFilters,
-      debouncedFilters,
-      selectedDates,
-      selectedProjectId: selectedProjectId!,
-    });
+  const {
+    results,
+    unfilteredResultsMap,
+    activeDaysResultsIds,
+    availableDates,
+    rawResults,
+    availableTags: backendAvailableTags,
+    isFetching,
+  } = useResultsData({
+    effectiveFilters: queryFilters,
+    debouncedFilters: debouncedQueryFilters,
+    selectedDates,
+    selectedProjectId: selectedProjectId!,
+  });
 
   const handleSelectAll = useCallback(() => selectAll(activeDaysResultsIds), [selectAll, activeDaysResultsIds]);
 
@@ -59,15 +90,18 @@ export const ResultContainerInner = () => {
 
   const statistics = debouncedDates.length === 0 ? undefined : statisticsData;
 
-  const availableTags = useMemo(() => {
-    const tagsSet = new Set<string>();
-    rawResults.forEach((result) => {
-      if (result.spec?.tags) {
-        result.spec.tags.forEach((tag) => tagsSet.add(tag));
-      }
-    });
-    return Array.from(tagsSet).sort();
-  }, [rawResults]);
+  const activeTags = useMemo(() => {
+    return typeof effectiveFilters.tags === 'string' && effectiveFilters.tags
+      ? (effectiveFilters.tags as string).split(',')
+      : Array.isArray(effectiveFilters.tags)
+        ? effectiveFilters.tags
+        : [];
+  }, [effectiveFilters.tags]);
+
+  const availableTags = useMemo(
+    () => mergeAvailableAndActiveTags(backendAvailableTags, activeTags),
+    [activeTags, backendAvailableTags],
+  );
 
   const dynamicFilterConfig = useMemo(() => {
     return filterConfig.map((section) => {
@@ -85,22 +119,27 @@ export const ResultContainerInner = () => {
           }),
         };
       }
+      if (section.title === 'Execution') {
+        return {
+          ...section,
+          fields: section.fields.map((field) =>
+            field.name === 'type'
+              ? { ...field, options: executionTypeOptions, disabled: areExecutionTypesLoading }
+              : field,
+          ),
+        };
+      }
       return section;
     });
-  }, [availableTags]);
-
-  const activeTags = useMemo(() => {
-    return typeof effectiveFilters.tags === 'string' && effectiveFilters.tags
-      ? (effectiveFilters.tags as string).split(',')
-      : Array.isArray(effectiveFilters.tags)
-        ? effectiveFilters.tags
-        : [];
-  }, [effectiveFilters.tags]);
+  }, [areExecutionTypesLoading, availableTags, executionTypeOptions]);
 
   const handleToggleTag = useCallback(
     (tag: string) => {
       const newTags = activeTags.includes(tag) ? activeTags.filter((t) => t !== tag) : [...activeTags, tag];
-      filterProps.onApplyFilters({ ...(effectiveFilters as unknown as Record<string, string>), tags: newTags.join(',') });
+      filterProps.onApplyFilters({
+        ...(effectiveFilters as unknown as Record<string, string>),
+        tags: newTags.join(','),
+      });
     },
     [activeTags, effectiveFilters, filterProps],
   );

@@ -4,6 +4,7 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 
 import { ProtectedRoute, ProjectGuard, RouterErrorFallback } from '@/components';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import {
   IssuesPage,
   DashboardPage,
@@ -13,6 +14,8 @@ import {
   PromptsPage,
   ReportGeneratorPage,
   ResultsPage,
+  SkillDetailsPage,
+  SkillsPage,
   SignupPage,
   UserSettingsPage,
 } from '@/pages';
@@ -21,9 +24,27 @@ import { Configuration } from '@/pages/UserSettings/Configuration';
 import { ProjectsSettings } from '@/pages/UserSettings/ProjectsSettings';
 import { UploadApiSettings } from '@/pages/UserSettings/UploadApiSettings';
 import { InfoSettings } from '@/pages/UserSettings/InfoSettings';
+import { UsersSettings } from '@/pages/UserSettings/UsersSettings';
+import { getDefaultSettingsPath } from '@/pages/UserSettings/SettingsNavigation';
 import { PlaywrightReportGenerator } from '@/pages/ReportGenerator/PlaywrightReportGenerator';
 import { CTRFReportGenerator } from '@/pages/ReportGenerator/CTRFReportGenerator';
 import { PATHS } from '@/types/paths';
+
+function SettingsIndexRedirect() {
+  const currentUser = useCurrentUser();
+
+  return <Navigate to={getDefaultSettingsPath(currentUser.role)} replace />;
+}
+
+function UsersSettingsRoute() {
+  const currentUser = useCurrentUser();
+
+  if (currentUser.role !== 'admin') {
+    return <Navigate to={getDefaultSettingsPath(currentUser.role)} replace />;
+  }
+
+  return <UsersSettings />;
+}
 
 export const router = createBrowserRouter([
   {
@@ -91,6 +112,28 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: PATHS.SKILLS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <SkillsPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.SKILL_DETAILS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <SkillDetailsPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: PATHS.PROMPT_BUILDER,
     errorElement: <RouterErrorFallback />,
     element: (
@@ -114,7 +157,11 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to={PATHS.USER_SETTINGS_MCP} replace />,
+        element: <SettingsIndexRedirect />,
+      },
+      {
+        path: PATHS.USER_SETTINGS_USERS,
+        element: <UsersSettingsRoute />,
       },
       {
         path: PATHS.USER_SETTINGS_MCP,

@@ -36,14 +36,14 @@ export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
       shadow="sm"
       _hover={{ bg: day.isActive ? activeHoverBg : 'bg.hover' }}
     >
-      <Text whiteSpace="nowrap" color={day.isActive ? "text.onAccent" : "text.main"}>
+      <Text whiteSpace="nowrap" color={day.isActive ? 'text.onAccent' : 'text.main'}>
         {day.display}
       </Text>
       {day.stats.length > 0 && (
         <HStack
           gap={0.5}
           justify="center"
-          bg={day.isActive ? "text.onAccent" : 'bg.hover'}
+          bg={day.isActive ? 'text.onAccent' : 'bg.hover'}
           p="2px"
           borderRadius="sm"
           border="1px solid"
@@ -69,7 +69,7 @@ export const DateToggle = memo(({ day, toggleHandler }: DateToggleProps) => {
               };
             }
 
-            const statusColor = status === 'passed' ? 'green.500' : status === 'failed' ? 'red.500' : "text.muted";
+            const statusColor = status === 'passed' ? 'green.500' : status === 'failed' ? 'red.500' : 'text.muted';
 
             return <Box key={index} w={1.5} h={1.5} {...borderRadiusProps} bg={statusColor} />;
           })}

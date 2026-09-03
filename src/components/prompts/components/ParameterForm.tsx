@@ -17,8 +17,13 @@ interface ParameterFormProps {
   requiredFieldsEmpty?: boolean;
 }
 
-export const ParameterForm = memo(function ParameterForm({ prompt, values, onChange, errors = {}, requiredFieldsEmpty }: ParameterFormProps) {
-
+export const ParameterForm = memo(function ParameterForm({
+  prompt,
+  values,
+  onChange,
+  errors = {},
+  requiredFieldsEmpty,
+}: ParameterFormProps) {
   const renderField = (name: string, parameter: PromptParameter) => {
     const value = values[name] || '';
     const error = errors[name];

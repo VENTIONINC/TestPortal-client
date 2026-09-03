@@ -1,5 +1,5 @@
 import { Box, Flex, Icon, Text, Circle } from '@chakra-ui/react';
-import { FiAlertTriangle, FiInfo } from 'react-icons/fi';
+import { FiAlertTriangle, FiMinusSquare } from 'react-icons/fi';
 
 import {
   useGetApiV2IssuesWithStatsQuery,
@@ -11,8 +11,8 @@ import { useSelectedProject } from '@/hooks';
 import { ProgressBar, ProgressRoot } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui';
+import { ResultCategory } from '@/types';
 
-const DEFAULT_ENVIRONMENT = 'staging';
 const DEFAULT_PERIOD = '1';
 
 interface ProductQualityWidgetProps {
@@ -47,7 +47,7 @@ const getWeightMultiplier = (category: string | undefined, projectWeights: Proje
 };
 
 // Calculate IWQS from issues list and category weights
-const calculateIWQS = (
+export const calculateIWQS = (
   issues: GetApiV2IssuesWithStatsApiResponse['issues'] | undefined,
   projectWeights: ProjectCategoryWeights | undefined,
 ) => {
@@ -61,7 +61,15 @@ const calculateIWQS = (
   issues.forEach((issue) => {
     const occurrenceCount = issue.statistics?.occurrenceCount ?? 0;
     const impactedTestsCount = issue.statistics?.impactedTestsCount ?? 0;
-    const multiplier = getWeightMultiplier(issue.category, projectWeights);
+    const { distribution, uncategorizedCount } = issue.categorySummary;
+    const categories = Object.values(ResultCategory);
+    const categorizedCount = categories.reduce((sum, category) => sum + (distribution[category] ?? 0), 0);
+    const totalCategoryCount = categorizedCount + uncategorizedCount;
+    const weightedCategoryCount = categories.reduce(
+      (sum, category) => sum + (distribution[category] ?? 0) * getWeightMultiplier(category, projectWeights),
+      0,
+    );
+    const multiplier = totalCategoryCount > 0 ? weightedCategoryCount / totalCategoryCount : 0;
 
     weightedSum += impactedTestsCount * multiplier;
     totalLinkedFailures += occurrenceCount;
@@ -81,7 +89,8 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   const { project, selectedProjectId } = useSelectedProject();
 
   const parsedPeriod = Number.parseInt(period, 10);
-  const periodDays = Number.isFinite(parsedPeriod) && parsedPeriod > 0 ? parsedPeriod : Number.parseInt(DEFAULT_PERIOD, 10);
+  const periodDays =
+    Number.isFinite(parsedPeriod) && parsedPeriod > 0 ? parsedPeriod : Number.parseInt(DEFAULT_PERIOD, 10);
 
   // Date ranges
   const periodEnd = new Date();
@@ -115,7 +124,6 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   const { data: doubleDashboardData, isLoading: isLoadingDashboard } = useGetApiV2ProjectsByProjectIdDashboardQuery(
     {
       projectId: selectedProjectId,
-      environment: DEFAULT_ENVIRONMENT,
       period: String(periodDays * 2),
     },
     { skip: !selectedProjectId },
@@ -170,7 +178,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
     return (
       <Flex direction="column" justify="center" align="center" h="100%" minH="200px" textAlign="center" gap={3}>
         <Circle size="48px" bg="bg.subtle" border="1px solid" borderColor="border.muted">
-          <Icon as={FiInfo} color="fg.muted" boxSize={5} />
+          <Icon as={FiMinusSquare} color="fg.muted" boxSize={5} />
         </Circle>
         <Flex direction="column" align="center" gap={1}>
           <Text fontSize="md" fontWeight="bold" color="fg" textAlign="center">

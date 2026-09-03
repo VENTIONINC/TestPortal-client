@@ -4,22 +4,22 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: "Target environment"
+        description: 'Target environment'
         required: true
         type: choice
         options: [dev, stg, prod]
         default: dev
       image_tag:
-        description: "Docker tag override (optional). Default = short SHA"
+        description: 'Docker tag override (optional). Default = short SHA'
         required: false
         type: string
       api_url:
-        description: "API_URL build arg (overrides repo variable VITE_API_URL)"
+        description: 'API_URL build arg (overrides repo variable VITE_API_URL)'
         required: false
         type: string
 
 permissions:
-  id-token: write   # требуется для OIDC в AWS
+  id-token: write # required for OIDC in AWS
   contents: read
 
 concurrency:

@@ -10,7 +10,12 @@ import { Dialog, DialogBody, DialogFooter, NativeSelect, Slider, Textarea, toast
 import { usePatchApiV2ResultsByResultIdAnalysisFeedbackMutation } from '@/redux/apis/generatedApi';
 import { resultAnalysisSchema } from '@/schemas';
 import { AnalysisCategory, BaseResult, DefaultDialogProps } from '@/types';
-import { ANALYSIS_CATEGORY_LABELS, getConfidenceLabel, getErrorQualityLabel } from '@/utils';
+import {
+  ANALYSIS_CATEGORY_LABELS,
+  getConfidenceLabel,
+  getEffectiveResultCategory,
+  getErrorQualityLabel,
+} from '@/utils';
 
 type ResultAnalysisFormData = z.infer<typeof resultAnalysisSchema>;
 
@@ -18,26 +23,18 @@ interface ResultAnalysisDialogProps extends DefaultDialogProps {
   result: BaseResult;
 }
 
-const toAnalysisCategory = (value?: string): AnalysisCategory | undefined => {
-  if (!value) {
-    return undefined;
-  }
-
-  return Object.values(AnalysisCategory).includes(value as AnalysisCategory) ? (value as AnalysisCategory) : undefined;
-};
-
 export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDialogProps) => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting },
     watch,
     setValue,
   } = useForm<ResultAnalysisFormData>({
     resolver: zodResolver(resultAnalysisSchema),
     mode: 'onChange',
     defaultValues: {
-      analysisCategory: toAnalysisCategory(result.analysisFeedbackCategory) ?? result.analysisCategory,
+      analysisCategory: getEffectiveResultCategory(result.analysisCategory, result.analysisFeedbackCategory),
       analysisConclusion: result.analysisFeedbackConclusion ?? result.analysisConclusion,
       analysisConfidence: result.analysisFeedbackConfidence ?? result.analysisConfidence,
     },
@@ -64,7 +61,7 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
     }
   };
 
-  const isConfirmed = Boolean(result.analysisFeedbackCategory);
+  const isConfirmed = result.analysisFeedbackCategory != null;
 
   return (
     <Dialog title="Result analysis" onClose={closeDialog} size="md">
@@ -154,7 +151,7 @@ export const ResultAnalysisDialog = ({ result, closeDialog }: ResultAnalysisDial
           variant="primary"
           px={4}
           loading={isSubmitting}
-          disabled={!isDirty || isSubmitting}
+          disabled={isSubmitting}
         >
           Save
         </Button>

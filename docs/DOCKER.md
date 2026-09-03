@@ -31,7 +31,6 @@ Builds are triggered manually to allow for specific configuration per environmen
 ### Examples
 
 - **Internal Dev Build**:
-
   - Branch: `feat/login`
   - API URL: (Empty)
   - Custom Tag: (Empty)

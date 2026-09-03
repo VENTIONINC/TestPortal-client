@@ -248,20 +248,17 @@ export const useDialogBusinessLogic = (closeDialog: () => void) => {
 ### Creating a New Modal Dialog
 
 1. **Requirements Analysis**
-
    - Understand the dialog's purpose and data requirements
    - Identify required API endpoints and form fields
    - Determine validation schema needs
    - Plan component composition and styling
 
 2. **Schema Definition**
-
    - Create or update Zod schema in `src/schemas/`
    - Export schema and infer TypeScript types
    - Add to main schemas index file
 
 3. **Directory Setup**
-
    - Create new dialog directory: `src/components/dialogs/{dialog-name}/`
    - Follow kebab-case naming convention
 
@@ -374,13 +371,11 @@ export const useDialogBusinessLogic = (closeDialog: () => void) => {
 ### Updating Existing Modal Dialogs
 
 1. **Analysis Phase**
-
    - Read and understand existing dialog structure
    - Identify business logic in the component that needs to move to hooks
    - Check for consistency with current patterns
 
 2. **Refactoring Process**
-
    - Move ALL business logic from component to custom hook
    - Update component to be pure UI only
    - Ensure all form setup, API calls, and handlers are in hook
@@ -396,7 +391,6 @@ export const useDialogBusinessLogic = (closeDialog: () => void) => {
 ### Strict Separation Requirements
 
 1. **Dialog Component MUST**:
-
    - Be pure UI only
    - Import only Button from Chakra UI
    - Import only UI components from `@/components/ui`
@@ -406,7 +400,6 @@ export const useDialogBusinessLogic = (closeDialog: () => void) => {
    - NOT contain any business logic
 
 2. **Custom Hook MUST**:
-
    - Contain ALL form setup and configuration
    - Contain ALL API calls and mutations
    - Contain ALL business logic and side effects

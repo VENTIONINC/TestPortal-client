@@ -7,6 +7,7 @@ This document describes the design, architecture, and compliance boundaries of a
 ## 1. AI Integration Stack
 
 ### Failed/Flaky Test Result Analysis
+
 - **Service**: `testAnalysisService.ts`
 - **Framework**: LangChain (`@langchain/openai`)
 - **LLM Model**: `gpt-4.1-mini`
@@ -50,16 +51,21 @@ Separate from the LLM-based analysis, the system runs a deterministic pattern-ma
 The system maintains database-level traceability to distinguish between machine-generated content and human approvals.
 
 ### A. Result Analysis Traceability
+
 Within the `Result` model, we track:
+
 - AI-generated fields: `analysisStatus`, `analysisCategory`, `analysisConfidence`, and `analysisConclusion`.
 - User feedback overrides: `analysisFeedbackCategory`, `analysisFeedbackConfidence`, and `analysisFeedbackConclusion`.
 - Review audit fields: `analysisReviewedAt` (timestamp) and `analysisReviewedById` (UUID of the user who confirmed the action).
 
 ### B. Assumption Traceability
+
 Within the `Assumption` model, we track:
+
 - `madeBy`: Denotes the creator (`"bot"` for deterministic code, `"user"` for human confirmation).
 - `isConfirmed`: `true` if a human has clicked verification, `false` while it remains an AI-suggested suggestion.
 
 ### C. MCP Token and Session Audits
+
 - MCP requests require token authentication using HMAC SHA-256 signature verification matching the user ID.
 - Streamable transport session IDs are tracked in-memory with automatic cleanup on idle timeout.

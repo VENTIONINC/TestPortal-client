@@ -8,23 +8,9 @@ export const filterConfig: FilterConfigSection[] = [
     fields: [
       {
         label: 'Execution',
-        name: 'execution',
+        name: 'type',
         type: 'select',
-        disabled: true,
-        options: [
-          {
-            label: 'Nightly',
-            value: 'nightly',
-          },
-          {
-            label: 'Last 7 days',
-            value: 'last_7_days',
-          },
-          {
-            label: 'Last 30 days',
-            value: 'last_30_days',
-          },
-        ],
+        options: [{ label: 'All', value: 'all' }],
       },
       {
         label: 'Period',

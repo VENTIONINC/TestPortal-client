@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useMemo } from 'react';
+import { useDebounce } from 'use-debounce';
 
 import { useGetResultsQuery } from '@/redux/apis/extendedApi';
 import { getDatesBetween, getDateDisplayName, getEffectiveDatesInRange } from '@/utils/dateUtils';
 import { Result, ResultsFilters } from '@/types';
 
-import { SpecGroup, addToSpecGroup, matchesFilters, toBaseResult } from '../utils';
+import { SpecGroup, buildResultsGroups } from '../utils';
 
 interface UseResultsDataParams {
   effectiveFilters: ResultsFilters;
@@ -22,6 +23,7 @@ export interface UseResultsDataReturn {
   activeDaysResultsIds: string[];
   availableDates: { yyyy_mm_dd: string; display: string; isActive: boolean }[];
   rawResults: Result[];
+  availableTags: string[];
   isFetching: boolean;
 }
 
@@ -31,6 +33,11 @@ export const useResultsData = ({
   selectedDates,
   selectedProjectId,
 }: UseResultsDataParams): UseResultsDataReturn => {
+  const activeDates = useMemo(
+    () => getEffectiveDatesInRange(selectedDates, effectiveFilters.from, effectiveFilters.to),
+    [selectedDates, effectiveFilters.from, effectiveFilters.to],
+  );
+  const [debouncedDates] = useDebounce(activeDates, 200);
   const { data, isFetching } = useGetResultsQuery({
     from: debouncedFilters.from,
     to: debouncedFilters.to,
@@ -42,37 +49,19 @@ export const useResultsData = ({
     specFile: debouncedFilters.specFile || undefined,
     specName: debouncedFilters.specName || undefined,
     environment: debouncedFilters.environment || undefined,
-    type: debouncedFilters.type || undefined,
+    type: debouncedFilters.type && debouncedFilters.type !== 'all' ? debouncedFilters.type : undefined,
     reviewStatus: debouncedFilters.reviewStatus || undefined,
     errorMessage: debouncedFilters.errorMessage || undefined,
     issueName: debouncedFilters.issueName || undefined,
+    dates: debouncedDates,
   });
 
   const { results, unfilteredResultsMap, activeDaysResultsIds, availableDates } = useMemo(() => {
-    const allResults = data?.results || [];
+    const filteredResults = data?.results || [];
+    const rawResults = data?.rawResults || [];
     const allDates = getDatesBetween(effectiveFilters.from, effectiveFilters.to);
-    const activeDates = getEffectiveDatesInRange(selectedDates, effectiveFilters.from, effectiveFilters.to);
     const selectedDatesSet = new Set(selectedDates);
-    const activeDatesSet = new Set(activeDates);
-    const unfilteredMap = new Map<string, SpecGroup>();
-    const resultsMap = new Map<string, SpecGroup>();
-    const activeIds: string[] = [];
-
-    for (const result of allResults) {
-      const baseResult = toBaseResult(result);
-
-      addToSpecGroup(unfilteredMap, result, baseResult);
-
-      const resultDate = result.startTime.split('T')[0];
-      const isActiveDate = activeDatesSet.has(resultDate);
-      const matchesFilter = matchesFilters(result, debouncedFilters);
-      const shouldInclude = isActiveDate && matchesFilter;
-
-      if (shouldInclude) {
-        addToSpecGroup(resultsMap, result, baseResult);
-        activeIds.push(result.id);
-      }
-    }
+    const groupedResults = buildResultsGroups(filteredResults, rawResults, activeDates, debouncedFilters);
 
     const dateItems = allDates.map((date) => ({
       yyyy_mm_dd: date,
@@ -81,19 +70,18 @@ export const useResultsData = ({
     }));
 
     return {
-      results: resultsMap,
-      unfilteredResultsMap: unfilteredMap,
-      activeDaysResultsIds: activeIds,
+      ...groupedResults,
       availableDates: dateItems,
     };
-  }, [data?.results, selectedDates, effectiveFilters.from, effectiveFilters.to, debouncedFilters]);
+  }, [data?.results, data?.rawResults, selectedDates, effectiveFilters.from, effectiveFilters.to, debouncedFilters, activeDates]);
 
   return {
     results,
     unfilteredResultsMap,
     activeDaysResultsIds,
     availableDates,
-    rawResults: data?.results ?? [],
+    rawResults: data?.rawResults ?? [],
+    availableTags: data?.availableTags ?? [],
     isFetching,
   };
 };

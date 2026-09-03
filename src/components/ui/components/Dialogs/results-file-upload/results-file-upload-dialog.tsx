@@ -21,7 +21,10 @@ import { useResultsFileUpload } from './hooks';
 
 export const ResultsFileUploadDialog = ({ closeDialog }: DefaultDialogProps) => {
   const [uploadMethod, setUploadMethod] = useState('playwright');
-  const { fileUpload, isUploading, uploadProgress, handleUpload } = useResultsFileUpload(closeDialog, uploadMethod as 'playwright' | 'ctrf');
+  const { fileUpload, isUploading, uploadProgress, handleUpload } = useResultsFileUpload(
+    closeDialog,
+    uploadMethod as 'playwright' | 'ctrf',
+  );
 
   return (
     <Dialog title="Upload Results" onClose={closeDialog} size="lg">

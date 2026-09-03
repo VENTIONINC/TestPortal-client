@@ -9,13 +9,13 @@ import { FaRegFolder } from 'react-icons/fa6';
 import { ContextMenuButton, ClipboardCopyText } from '@/components/ui';
 import type { Project } from '@/redux/apis/generatedApi';
 import { getIssueCategoryStyle } from '@/utils';
-import { IssueCategory } from '@/types';
+import { ResultCategory } from '@/types';
 
 import { useProjectCardColors } from './hooks';
 
 interface ProjectCardProps {
   project: Project;
-  onContextMenu: (evt: MouseEvent, project: { id: string; isActive: boolean }) => void;
+  onContextMenu: (evt: MouseEvent, project: { id: string; name: string; isActive: boolean }) => void;
 }
 
 const colorSet = {
@@ -181,7 +181,7 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
             </Flex>
           </Flex>
 
-          <ContextMenuButton onClick={(evt) => onContextMenu(evt, { id, isActive })} size="sm" />
+          <ContextMenuButton onClick={(evt) => onContextMenu(evt, { id, name, isActive })} size="sm" />
         </Flex>
 
         {description && (
@@ -222,11 +222,11 @@ export function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
           </Text>
           <Flex gap={2} wrap="wrap">
             {[
-              { key: 'bug', type: IssueCategory.Bug },
-              { key: 'infra', type: IssueCategory.Infra },
-              { key: 'script', type: IssueCategory.Script },
-              { key: 'performance', type: IssueCategory.Performance },
-              { key: 'other', type: IssueCategory.Other },
+              { key: 'bug', type: ResultCategory.Bug },
+              { key: 'infra', type: ResultCategory.Infra },
+              { key: 'script', type: ResultCategory.Script },
+              { key: 'performance', type: ResultCategory.Performance },
+              { key: 'other', type: ResultCategory.Other },
             ].map((cat) => {
               const weight = project.categoryWeights?.[cat.key as keyof typeof project.categoryWeights] ?? 100;
               const style = getIssueCategoryStyle(cat.type);

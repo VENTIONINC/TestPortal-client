@@ -19,11 +19,7 @@ export const useConfirmResultDeletionDialog = () => {
     });
 };
 
-export const useConfirmResultDeletionBusinessLogic = (
-  closeDialog: () => void,
-  resultId: string,
-  projectId: string,
-) => {
+export const useConfirmResultDeletionBusinessLogic = (closeDialog: () => void, resultId: string, projectId: string) => {
   const [deleteResult] = useDeleteApiV2ResultsByResultIdMutation();
 
   const onConfirm = async () => {

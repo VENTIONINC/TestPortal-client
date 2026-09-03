@@ -10,7 +10,7 @@ import { BarChartView, BarChartValueMode, CategorySeries, CategoriesChartDatum }
 export const IssuesCategoriesChart = ({
   data,
 }: {
-  data: {
+  data?: {
     date: string;
     metrics: { issues: { bug: number; environment: number; script: number; performance: number; other: number } };
   }[];

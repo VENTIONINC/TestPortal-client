@@ -3,15 +3,12 @@
 
 import { Box, HStack, StackProps, Text, VStack, Button } from '@chakra-ui/react';
 
-
-
 interface FiltersGroupProps extends StackProps {
   title: string;
   handleSearch: () => void;
 }
 
 export const FiltersGroup = ({ title, children, handleSearch, ...props }: FiltersGroupProps) => {
-
   return (
     <VStack
       w="100%"

@@ -13,7 +13,6 @@ type NavItemProps = {
 };
 
 export const NavItem = ({ icon: IconComp, label, collapsed, active }: NavItemProps) => {
-
   const content = (
     <Flex
       align="center"

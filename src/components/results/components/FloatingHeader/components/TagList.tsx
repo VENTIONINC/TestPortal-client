@@ -15,8 +15,15 @@ export const TagList = ({
   onToggleExpand,
   isStuck,
 }: TagListProps) => {
-  const hasMoreTags = availableTags.length > 5;
-  const visibleTags = isExpanded ? availableTags : availableTags.slice(0, 5);
+  const selectedTags = availableTags.filter((tag) => tagsValue.includes(tag));
+  const unselectedTags = availableTags.filter((tag) => !tagsValue.includes(tag));
+  const collapsedTags = [
+    ...selectedTags,
+    ...unselectedTags.slice(0, Math.max(0, 5 - selectedTags.length)),
+  ];
+  const hasMoreTags = collapsedTags.length < availableTags.length;
+  const visibleTags = isExpanded ? availableTags : collapsedTags;
+  const hiddenTagsCount = availableTags.length - collapsedTags.length;
 
   if (availableTags.length === 0) return null;
 
@@ -25,14 +32,7 @@ export const TagList = ({
       <Wrap gap="8px">
         {visibleTags.map((tag) => {
           const isSelected = tagsValue.includes(tag);
-          return (
-            <FilterTag
-              key={tag}
-              tag={tag}
-              isSelected={isSelected}
-              onClick={() => handleTagClick(tag)}
-            />
-          );
+          return <FilterTag key={tag} tag={tag} isSelected={isSelected} onClick={() => handleTagClick(tag)} />;
         })}
         {hasMoreTags && (
           <Box
@@ -50,7 +50,7 @@ export const TagList = ({
             _hover={{ bg: 'border.active', color: 'text.primary', borderColor: 'border.active' }}
             transition="all 0.2s"
           >
-            {isExpanded ? 'Hide' : `+${availableTags.length - 5}`}
+            {isExpanded ? 'Hide' : `+${hiddenTagsCount}`}
           </Box>
         )}
       </Wrap>
