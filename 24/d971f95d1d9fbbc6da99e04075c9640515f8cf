@@ -1,0 +1,91 @@
+src/__tests__/components/ProtectedRoute.test.tsx
+  s_d7d61ee25bf31b::t_9f6b2909048134 1-51
+src/__tests__/router/index.test.tsx
+  s_7602149e62f824::t_6d7ea58016f348 1-29
+src/redux/apis/generatedApi.ts
+  s_d7d61ee25bf31b::t_93da2ee93dd33a 23,812-944,1401-1468,2223-2322,2421-2435
+openspec/changes/add-project-scoped-test-scenario-list/design.md
+  s_d7d61ee25bf31b::t_a6c2aec71dcb69 15,34,36,42,52,56
+openspec/changes/add-project-scoped-test-scenario-list/proposal.md
+  s_d7d61ee25bf31b::t_0c129258f0638c 9,29
+openspec/changes/add-project-scoped-test-scenario-list/specs/test-scenario-catalog/spec.md
+  s_d7d61ee25bf31b::t_feea1ef42733e6 31-32,36,41,50,55-56,95
+openspec/changes/add-project-scoped-test-scenario-list/tasks.md
+  s_d7d61ee25bf31b::t_d7e5056c564e09 3-4,8-11,15-17,21-22
+src/__tests__/components/ProjectGuard.test.tsx
+  s_d7d61ee25bf31b::t_6ba9dd37e909b1 1-70
+src/__tests__/components/test-scenarios/TestScenarioCatalogBoundary.test.tsx
+  s_d7d61ee25bf31b::t_2f71d5d4c0ba17 1-96
+src/__tests__/components/test-scenarios/TestScenarioCatalogContainer.test.tsx
+  s_d7d61ee25bf31b::t_e1454837de81f4 1-81
+src/__tests__/components/test-scenarios/TestScenarioCatalogView.test.tsx
+  s_d7d61ee25bf31b::t_266f5708e4b4a7 1-98
+src/__tests__/components/test-scenarios/testScenarioSummary.test.ts
+  s_d7d61ee25bf31b::t_c226487607aaaf 1-42
+src/__tests__/components/ui/NavigationMenu/NavigationMenu.test.tsx
+  s_d7d61ee25bf31b::t_aec217d12b7f07 16,31-42
+src/__tests__/pages/TestScenarios/TestScenariosPage.test.tsx
+  s_d7d61ee25bf31b::t_14ff98754d976d 1-29
+src/__tests__/redux/apis/testScenarioApi.test.ts
+  s_d7d61ee25bf31b::t_31d4ffb103e45c 1-58
+src/components/test-scenarios/components/TestScenarioCatalogView.tsx
+  s_d7d61ee25bf31b::t_843aa9e1e7177f 1-158
+src/components/test-scenarios/components/index.ts
+  s_d7d61ee25bf31b::t_019888a114bc99 1-5
+src/components/test-scenarios/constants.ts
+  s_d7d61ee25bf31b::t_acf5fe44fde29a 1-4
+src/components/test-scenarios/containers/TestScenarioCatalogBoundary.tsx
+  s_d7d61ee25bf31b::t_c7a7d1ed345e9b 1-19
+src/components/test-scenarios/containers/TestScenarioCatalogContainer.tsx
+  s_d7d61ee25bf31b::t_f01949fd91a1af 1-16
+src/components/test-scenarios/containers/index.ts
+  s_d7d61ee25bf31b::t_846aab872d9d24 1-6
+src/components/test-scenarios/hooks/index.ts
+  s_d7d61ee25bf31b::t_f4f5e3bfdac6af 1-5
+src/components/test-scenarios/hooks/useTestScenarioCatalog.ts
+  s_d7d61ee25bf31b::t_8ad902116351c1 1-47
+src/components/test-scenarios/index.ts
+  s_d7d61ee25bf31b::t_e850bbbf283f66 1-10
+src/components/test-scenarios/types.ts
+  s_d7d61ee25bf31b::t_b575e425e01eef 1-14
+src/components/test-scenarios/utils.ts
+  s_d7d61ee25bf31b::t_4f5e2bbd892690 1-19
+src/components/ui/components/NavigationMenu/NavigationMenu.tsx
+  s_d7d61ee25bf31b::t_b02922abcea0b9 29
+src/components/ui/components/NavigationMenu/config.ts
+  s_d7d61ee25bf31b::t_22dd240571b38c 4,18
+src/pages/TestScenarios/TestScenariosPage.tsx
+  s_d7d61ee25bf31b::t_3b99e1bbe22c10 1-14
+src/pages/TestScenarios/index.tsx
+  s_d7d61ee25bf31b::t_cd84113d6bce3c 1-5
+src/pages/index.ts
+  s_d7d61ee25bf31b::t_19eea71d4f7cd3 12
+src/router/index.tsx
+  s_d7d61ee25bf31b::t_4d7328fd25b449 20,104-114
+src/types/paths.ts
+  s_d7d61ee25bf31b::t_73281059fb18cc 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "24d971f95d1d9fbbc6da99e04075c9640515f8cf",
+  "prompts": {},
+  "sessions": {
+    "s_7602149e62f824": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a061fc-5afd-7c41-8b52-54878d1e7624",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_d7d61ee25bf31b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06180-e00b-7cb0-8078-4e134a9dbe3c",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
