@@ -18,7 +18,7 @@ export interface TestScenarioCatalogViewProps {
 
 const formatScenarioDate = (timestamp: string) => new Date(timestamp).toLocaleString('en-US');
 
-const TABLE_CELL_PADDING = { px: 4, py: 3 } as const;
+const TABLE_CELL_PADDING = { px: 4, py: 4 } as const;
 
 const LoadingState = () => (
   <VStack align="stretch" gap={4} aria-label="Loading Test Scenarios">
@@ -124,9 +124,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       <VStack align="stretch" gap={4} w="100%">
         <VStack align="start" gap={2}>
           <Heading fontSize="lg">Test Scenarios</Heading>
-          <Text color="text.secondary">
-            Browse the Markdown Test Scenarios available in the selected project.
-          </Text>
+          <Text color="text.secondary">Browse the Markdown Test Scenarios available in the selected project.</Text>
         </VStack>
 
         {isLoading ? (
