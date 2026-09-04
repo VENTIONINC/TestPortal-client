@@ -3,6 +3,7 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ChakraProvider } from '@/components/ui';
@@ -27,13 +28,15 @@ const pagination = {
 const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>
   render(
     <ChakraProvider>
-      <TestScenarioCatalogView
-        scenarios={scenarios}
-        pagination={pagination}
-        isLoading={false}
-        onPageChange={vi.fn()}
-        {...props}
-      />
+      <MemoryRouter>
+        <TestScenarioCatalogView
+          scenarios={scenarios}
+          pagination={pagination}
+          isLoading={false}
+          onPageChange={vi.fn()}
+          {...props}
+        />
+      </MemoryRouter>
     </ChakraProvider>,
   );
 
@@ -57,21 +60,70 @@ describe('TestScenarioCatalogView', () => {
 
     expect(screen.getByText('No Test Scenarios are available for this project.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Next Page' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create Test Scenario' })).toBeInTheDocument();
   });
 
-  it('renders scenario summaries as table rows without Markdown content or detail actions', () => {
-    renderView();
+  it('renders scenario summaries with a final untitled actions column', async () => {
+    const user = userEvent.setup();
+    const onContextMenu = vi.fn();
+
+    renderView({ onContextMenu });
 
     expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getAllByRole('columnheader')).toHaveLength(3);
+    expect(screen.getAllByRole('columnheader')).toHaveLength(4);
     expect(screen.getByRole('columnheader', { name: 'Title' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Created' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Updated' })).toBeInTheDocument();
+    expect(screen.getAllByRole('columnheader')[3]).toHaveTextContent('');
     expect(screen.getAllByRole('row')).toHaveLength(2);
     expect(screen.getByRole('row', { name: /Checkout flow/ })).toBeInTheDocument();
     expect(screen.queryByText('# Checkout flow')).not.toBeInTheDocument();
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute(
+      'href',
+      '/test-scenarios/scenario-1',
+    );
+
+    const actions = screen.getByRole('button', { name: 'Actions for Checkout flow' });
+    expect(actions).toBeInTheDocument();
+
+    await user.click(actions);
+
+    expect(onContextMenu).toHaveBeenCalledWith(expect.anything(), scenarios[0]);
+  });
+
+  it('maps every scenario title to its own detail route while keeping actions separate', () => {
+    renderView({
+      scenarios: [
+        ...scenarios,
+        {
+          id: 'scenario-2',
+          title: 'Refund flow',
+          createdAt: '2026-09-03T10:00:00.000Z',
+          updatedAt: '2026-09-03T11:00:00.000Z',
+        },
+      ],
+    });
+
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute(
+      'href',
+      '/test-scenarios/scenario-1',
+    );
+    expect(screen.getByRole('link', { name: 'Refund flow' })).toHaveAttribute(
+      'href',
+      '/test-scenarios/scenario-2',
+    );
+    expect(screen.getAllByTestId('context-menu-button')).toHaveLength(2);
+  });
+
+  it('reports the create action from the catalog header', async () => {
+    const user = userEvent.setup();
+    const onCreateScenario = vi.fn();
+
+    renderView({ onCreateScenario });
+
+    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
+
+    expect(onCreateScenario).toHaveBeenCalledTimes(1);
   });
 
   it('renders pagination from the response metadata and reports page selection', async () => {

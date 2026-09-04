@@ -5,7 +5,7 @@ import { isValidElement, type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { ProjectGuard, ProtectedRoute } from '@/components';
-import { TestScenariosPage } from '@/pages';
+import { TestScenarioCreatePage, TestScenarioDetailPage, TestScenarioEditPage, TestScenariosPage } from '@/pages';
 import { router } from '@/router';
 import { PATHS } from '@/types/paths';
 
@@ -25,5 +25,25 @@ describe('Test Scenarios route', () => {
     const projectGuardElement = protectedElement.props.children as ReactElement<{ children: ReactElement }>;
     expect(projectGuardElement.type).toBe(ProjectGuard);
     expect(projectGuardElement.props.children.type).toBe(TestScenariosPage);
+  });
+
+  it.each([
+    [PATHS.TEST_SCENARIO_NEW, TestScenarioCreatePage],
+    [PATHS.TEST_SCENARIO_DETAILS, TestScenarioDetailPage],
+    [PATHS.TEST_SCENARIO_EDIT, TestScenarioEditPage],
+  ])('registers %s behind authentication and project guards', (path, Page) => {
+    const route = router.routes.find((candidate) => candidate.path === path) as
+      | { element?: ReactElement; path?: string }
+      | undefined;
+
+    expect(route).toBeDefined();
+    expect(isValidElement(route?.element)).toBe(true);
+
+    const protectedElement = route?.element as ReactElement<{ children: ReactElement }>;
+    expect(protectedElement.type).toBe(ProtectedRoute);
+
+    const projectGuardElement = protectedElement.props.children as ReactElement<{ children: ReactElement }>;
+    expect(projectGuardElement.type).toBe(ProjectGuard);
+    expect(projectGuardElement.props.children.type).toBe(Page);
   });
 });

@@ -17,6 +17,9 @@ import {
   SkillDetailsPage,
   SkillsPage,
   SignupPage,
+  TestScenarioCreatePage,
+  TestScenarioDetailPage,
+  TestScenarioEditPage,
   TestScenariosPage,
   UserSettingsPage,
 } from '@/pages';
@@ -108,6 +111,39 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <ProjectGuard>
           <TestScenariosPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.TEST_SCENARIO_NEW,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <TestScenarioCreatePage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.TEST_SCENARIO_DETAILS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <TestScenarioDetailPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.TEST_SCENARIO_EDIT,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <TestScenarioEditPage />
         </ProjectGuard>
       </ProtectedRoute>
     ),

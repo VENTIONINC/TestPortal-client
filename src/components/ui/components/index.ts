@@ -14,5 +14,6 @@ export { FilterTag } from './FilterTag';
 export { FormInput, FormSelect, FormMultiSelect, FormDateInput, FormDatePicker, FormDateRangePicker } from './Form';
 export { DateToggle } from './DateToggle';
 export { StatusIcon } from './StatusIcon';
+export { MarkdownPreview, type MarkdownPreviewProps } from './MarkdownPreview';
 export * from './Dialogs';
 export * from './Pagination';

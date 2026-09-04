@@ -3,6 +3,7 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ChakraProvider } from '@/components/ui';
@@ -24,6 +25,9 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
     useGetApiV2TestScenariosQuery: vi.fn(),
   };
 });
+vi.mock('@/components/test-scenarios/hooks/useTestScenarioContextMenu', () => ({
+  useTestScenarioContextMenu: () => vi.fn(),
+}));
 
 const mockedSelectedProject = vi.mocked(useSelectedProject);
 const mockedScenarioQuery = vi.mocked(useGetApiV2TestScenariosQuery);
@@ -75,7 +79,9 @@ describe('TestScenarioCatalog project boundary', () => {
     const user = userEvent.setup();
     const { rerender } = render(
       <ChakraProvider>
-        <TestScenarioCatalog />
+        <MemoryRouter>
+          <TestScenarioCatalog />
+        </MemoryRouter>
       </ChakraProvider>,
     );
 
@@ -85,7 +91,9 @@ describe('TestScenarioCatalog project boundary', () => {
     selectedProjectId = 'project-b';
     rerender(
       <ChakraProvider>
-        <TestScenarioCatalog />
+        <MemoryRouter>
+          <TestScenarioCatalog />
+        </MemoryRouter>
       </ChakraProvider>,
     );
 

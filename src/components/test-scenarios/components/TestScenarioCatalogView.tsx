@@ -1,11 +1,14 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { memo } from 'react';
-import { Box, Heading, HStack, Table, Text, VStack } from '@chakra-ui/react';
+import { memo, type MouseEvent } from 'react';
+import { Box, Button, Heading, HStack, Link as ChakraLink, Table, Text, VStack } from '@chakra-ui/react';
+import { FiPlus } from 'react-icons/fi';
+import { Link as RouterLink } from 'react-router';
 
-import { Alert, Pagination, Skeleton, Wrap } from '@/components/ui';
+import { Alert, ContextMenuButton, Pagination, Skeleton, Wrap } from '@/components/ui';
 
+import { getTestScenarioDetailPath } from '../constants';
 import type { TestScenarioPagination, TestScenarioSummary } from '../types';
 
 export interface TestScenarioCatalogViewProps {
@@ -14,6 +17,8 @@ export interface TestScenarioCatalogViewProps {
   isLoading: boolean;
   error?: unknown;
   onPageChange: (page: number) => void;
+  onCreateScenario?: () => void;
+  onContextMenu?: (event: MouseEvent<HTMLButtonElement>, scenario: TestScenarioSummary) => void;
 }
 
 const formatScenarioDate = (timestamp: string) => new Date(timestamp).toLocaleString('en-US');
@@ -24,17 +29,21 @@ const LoadingState = () => (
   <VStack align="stretch" gap={4} aria-label="Loading Test Scenarios">
     <Text color="text.secondary">Loading Test Scenarios...</Text>
     <Box overflowX="auto">
-      <Table.Root size="sm" variant="outline" minW="600px">
+      <Table.Root size="sm" variant="outline" minW="680px">
         <Table.Header>
           <Table.Row>
             <Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader>
             <Table.ColumnHeader {...TABLE_CELL_PADDING}>Created</Table.ColumnHeader>
             <Table.ColumnHeader {...TABLE_CELL_PADDING}>Updated</Table.ColumnHeader>
+            <Table.ColumnHeader {...TABLE_CELL_PADDING} />
           </Table.Row>
         </Table.Header>
         <Table.Body>
           {[1, 2, 3].map((index) => (
             <Table.Row key={index}>
+              <Table.Cell {...TABLE_CELL_PADDING}>
+                <Skeleton h="5" loading={true} />
+              </Table.Cell>
               <Table.Cell {...TABLE_CELL_PADDING}>
                 <Skeleton h="5" loading={true} />
               </Table.Cell>
@@ -68,29 +77,42 @@ const EmptyState = () => (
   </VStack>
 );
 
-const ScenarioTable = ({ scenarios }: { scenarios: TestScenarioSummary[] }) => (
+const ScenarioTable = ({
+  scenarios,
+  onContextMenu,
+}: {
+  scenarios: TestScenarioSummary[];
+  onContextMenu?: TestScenarioCatalogViewProps['onContextMenu'];
+}) => (
   <Box overflowX="auto">
-    <Table.Root size="sm" variant="outline" minW="600px">
+    <Table.Root size="sm" variant="outline" minW="680px">
       <Table.Header>
         <Table.Row>
           <Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader>
           <Table.ColumnHeader {...TABLE_CELL_PADDING}>Created</Table.ColumnHeader>
           <Table.ColumnHeader {...TABLE_CELL_PADDING}>Updated</Table.ColumnHeader>
+          <Table.ColumnHeader {...TABLE_CELL_PADDING} />
         </Table.Row>
       </Table.Header>
       <Table.Body>
         {scenarios.map((scenario) => (
           <Table.Row key={scenario.id} data-testid={`test-scenario-${scenario.id}`}>
             <Table.Cell {...TABLE_CELL_PADDING}>
-              <Text fontWeight="medium" color="text.main">
-                {scenario.title}
-              </Text>
+              <ChakraLink asChild fontWeight="medium" color="text.main">
+                <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
+              </ChakraLink>
             </Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary">
               {formatScenarioDate(scenario.createdAt)}
             </Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary">
               {formatScenarioDate(scenario.updatedAt)}
+            </Table.Cell>
+            <Table.Cell {...TABLE_CELL_PADDING} textAlign="end" w="1%">
+              <ContextMenuButton
+                aria-label={`Actions for ${scenario.title}`}
+                onClick={(event) => onContextMenu?.(event, scenario)}
+              />
             </Table.Cell>
           </Table.Row>
         ))}
@@ -118,14 +140,21 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   isLoading,
   error,
   onPageChange,
+  onCreateScenario,
+  onContextMenu,
 }: TestScenarioCatalogViewProps) {
   return (
     <Wrap my={4} mx={6} p={4}>
       <VStack align="stretch" gap={4} w="100%">
-        <VStack align="start" gap={2}>
-          <Heading fontSize="lg">Test Scenarios</Heading>
-          <Text color="text.secondary">Browse the Markdown Test Scenarios available in the selected project.</Text>
-        </VStack>
+        <HStack justify="space-between" align="start" gap={4} flexWrap="wrap">
+          <VStack align="start" gap={2}>
+            <Heading fontSize="lg">Test Scenarios</Heading>
+          </VStack>
+          <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}>
+            <FiPlus />
+            Create Test Scenario
+          </Button>
+        </HStack>
 
         {isLoading ? (
           <LoadingState />
@@ -135,7 +164,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           <EmptyState />
         ) : (
           <VStack align="stretch" gap={4}>
-            <ScenarioTable scenarios={scenarios} />
+            <ScenarioTable scenarios={scenarios} onContextMenu={onContextMenu} />
             {pagination.totalPages > 1 && (
               <Box as="nav" aria-label="Test Scenario pagination">
                 <HStack justify="center" py={2}>
