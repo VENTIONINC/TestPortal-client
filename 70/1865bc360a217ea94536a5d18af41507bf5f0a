@@ -1,0 +1,147 @@
+openspec/changes/add-markdown-test-scenario-crud/.openspec.yaml
+  s_426a27e9f48d3f::t_78e60ca3d36076 1-2
+src/__tests__/components/test-scenarios/TestScenarioCatalogContainer.test.tsx
+  s_a1e2c08979caa9::t_273c775045b3f8 6,12-24,36,58-60,76-78,91-93,103-118
+src/__tests__/components/test-scenarios/TestScenarioCatalogView.test.tsx
+  s_a1e2c08979caa9::t_276f6b80842d1c 6,31-39,63,66-70,73,77,81-126
+openspec/changes/add-markdown-test-scenario-crud/design.md
+  s_426a27e9f48d3f::t_bfe38b77d61fc4 1-108
+openspec/changes/add-markdown-test-scenario-crud/proposal.md
+  s_426a27e9f48d3f::t_d4d4d4a71bedec 1-37
+openspec/changes/add-markdown-test-scenario-crud/specs/test-scenario-authoring/spec.md
+  s_426a27e9f48d3f::t_93012ee4d1407d 1-278
+openspec/changes/add-markdown-test-scenario-crud/tasks.md
+  s_59ad9adedaa0f2::t_ab8eee1a032472 1-50
+src/__tests__/components/test-scenarios/TestScenarioCatalogBoundary.test.tsx
+  s_59ad9adedaa0f2::t_9e4ce493fbb9a8 6,28-30,82-84,94-96
+src/__tests__/components/test-scenarios/TestScenarioCreateContainer.test.tsx
+  s_59ad9adedaa0f2::t_a8abd2b88bd244 1-103
+src/__tests__/components/test-scenarios/TestScenarioDetailBoundary.test.tsx
+  s_59ad9adedaa0f2::t_fa28c896b1aec8 1-169
+src/__tests__/components/test-scenarios/TestScenarioDetailContainer.test.tsx
+  s_59ad9adedaa0f2::t_1a36c9f009b4a8 1-153
+src/__tests__/components/test-scenarios/TestScenarioEditContainer.test.tsx
+  s_59ad9adedaa0f2::t_9413570c51ab3b 1-157
+src/__tests__/components/test-scenarios/TestScenarioForm.test.tsx
+  s_59ad9adedaa0f2::t_21b79141fda5fa 1-94
+src/__tests__/components/test-scenarios/testScenarioPatch.test.ts
+  s_59ad9adedaa0f2::t_4bc1cca70b736d 1-32
+src/__tests__/components/test-scenarios/useTestScenarioContextMenu.test.tsx
+  s_59ad9adedaa0f2::t_5aa9565a99e247 1-68
+src/__tests__/components/ui/MarkdownPreview.test.tsx
+  s_59ad9adedaa0f2::t_8dcaadb61b8a29 1-35
+src/__tests__/components/ui/components/Dialogs/delete-test-scenario/DeleteTestScenarioDialog.test.tsx
+  s_59ad9adedaa0f2::t_3bac85e7b1740b 1-155
+src/__tests__/redux/apis/testScenarioApi.test.ts
+  s_59ad9adedaa0f2::t_5ab5ac1efcf4bc 4,7-12,14-17,20,22-27,76-191
+src/__tests__/router/index.test.tsx
+  s_59ad9adedaa0f2::t_9ab09c5319446c 8,29-48
+src/__tests__/schemas/testScenarioSchemas.test.ts
+  s_59ad9adedaa0f2::t_59edc719c22b7f 1-44
+src/components/skills/components/SkillMarkdownPreview.styles.ts
+  s_59ad9adedaa0f2::t_b6067fae105e44 4
+src/components/skills/components/SkillMarkdownPreview.tsx
+  s_59ad9adedaa0f2::t_f32b5d2e2eff11 4,10
+src/components/test-scenarios/components/TestScenarioCatalogView.tsx
+  s_59ad9adedaa0f2::t_71a331910d335f 4-7,9,11,20-21,32,38,53-55,80-86,88,94,101-103,111-116,143-144,149-157,167
+src/components/test-scenarios/components/TestScenarioDetailStates.tsx
+  s_59ad9adedaa0f2::t_676886ec7bac2e 1-72
+src/components/test-scenarios/components/TestScenarioDetailsView.tsx
+  s_59ad9adedaa0f2::t_b8959d885fc2fd 1-51
+src/components/test-scenarios/components/TestScenarioForm.tsx
+  s_59ad9adedaa0f2::t_abd2a445abfbf7 1-151
+src/components/test-scenarios/components/index.ts
+  s_59ad9adedaa0f2::t_321af7c738c3e0 5-7
+src/components/test-scenarios/constants.ts
+  s_59ad9adedaa0f2::t_2cf9b08f83d2cd 4-5,7-12
+src/components/test-scenarios/containers/TestScenarioCatalogContainer.tsx
+  s_59ad9adedaa0f2::t_de6abd1d754527 4-8,10,19-21,23
+src/components/test-scenarios/containers/TestScenarioCreateBoundary.tsx
+  s_59ad9adedaa0f2::t_f62fea1b3546de 1-14
+src/components/test-scenarios/containers/TestScenarioCreateContainer.tsx
+  s_59ad9adedaa0f2::t_8155ba4fdba322 1-69
+src/components/test-scenarios/containers/TestScenarioDetailBoundary.tsx
+  s_59ad9adedaa0f2::t_77b60bd197cf10 1-13
+src/components/test-scenarios/containers/TestScenarioDetailContainer.tsx
+  s_59ad9adedaa0f2::t_f6f6169e600afe 1-40
+src/components/test-scenarios/containers/TestScenarioEditBoundary.tsx
+  s_59ad9adedaa0f2::t_fdb320f10506a5 1-11
+src/components/test-scenarios/containers/TestScenarioEditContainer.tsx
+  s_59ad9adedaa0f2::t_c728e845239362 1-91
+src/components/test-scenarios/containers/TestScenarioRouteBoundary.tsx
+  s_59ad9adedaa0f2::t_451c415951a150 1-47
+src/components/test-scenarios/containers/index.ts
+  s_59ad9adedaa0f2::t_6603f69b7af94b 6-12
+src/components/test-scenarios/hooks/index.ts
+  s_59ad9adedaa0f2::t_f3c44e8a887b5a 5-6
+src/components/test-scenarios/hooks/useTestScenarioContextMenu.ts
+  s_59ad9adedaa0f2::t_a2ef985696d717 1-50
+src/components/test-scenarios/hooks/useTestScenarioDetail.ts
+  s_59ad9adedaa0f2::t_60568deac0080b 1-73
+src/components/test-scenarios/utils.ts
+  s_59ad9adedaa0f2::t_a0bd3602d58be3 4,20-43
+src/components/ui/components/Dialogs/delete-test-scenario/delete-test-scenario-dialog.tsx
+  s_59ad9adedaa0f2::t_dcf835cdd723a6 1-109
+src/components/ui/components/Dialogs/delete-test-scenario/hooks.ts
+  s_59ad9adedaa0f2::t_d55512eeac19f5 1-13
+src/components/ui/components/Dialogs/delete-test-scenario/index.ts
+  s_59ad9adedaa0f2::t_1eb4a75b1ff1ff 1-5
+src/components/ui/components/Dialogs/index.ts
+  s_59ad9adedaa0f2::t_cfc335f5917453 11
+src/components/ui/components/MarkdownPreview.styles.ts
+  s_59ad9adedaa0f2::t_0d61abe1a5ef83 1-83
+src/components/ui/components/MarkdownPreview.tsx
+  s_59ad9adedaa0f2::t_0c56c78aafd084 1-35
+src/components/ui/components/index.ts
+  s_59ad9adedaa0f2::t_fa0658c30c52b1 17
+src/pages/TestScenarios/TestScenarioCreatePage.tsx
+  s_59ad9adedaa0f2::t_49688891d7769f 1-13
+src/pages/TestScenarios/TestScenarioDetailPage.tsx
+  s_59ad9adedaa0f2::t_fc1e4a7b987884 1-13
+src/pages/TestScenarios/TestScenarioEditPage.tsx
+  s_59ad9adedaa0f2::t_46fa6703650acc 1-13
+src/pages/TestScenarios/index.tsx
+  s_59ad9adedaa0f2::t_bf5123b6ffcbf4 5-7
+src/pages/index.ts
+  s_59ad9adedaa0f2::t_bf3d274300bf51 13
+src/router/index.tsx
+  s_59ad9adedaa0f2::t_59d96d20472cc9 20-22,118-150
+src/schemas/index.ts
+  s_59ad9adedaa0f2::t_bfceb64dcaf363 10
+src/schemas/testScenarioSchemas.ts
+  s_59ad9adedaa0f2::t_627ae50ea9f095 1-15
+src/types/paths.ts
+  s_59ad9adedaa0f2::t_4217e5cb8be62e 10-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "701865bc360a217ea94536a5d18af41507bf5f0a",
+  "prompts": {},
+  "sessions": {
+    "s_426a27e9f48d3f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0676b-4717-76e2-bf56-ed76ea2485e5",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_59ad9adedaa0f2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06786-b302-7ad3-9e1c-5d2917d52ccf",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_a1e2c08979caa9": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0679c-ef65-74e3-80e4-22924f503a65",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
