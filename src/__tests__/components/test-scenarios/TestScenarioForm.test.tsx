@@ -8,7 +8,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { TestScenarioForm } from '@/components/test-scenarios/components/TestScenarioForm';
 import { ChakraProvider } from '@/components/ui';
 
-const initialValues = { title: 'Checkout flow', contentMd: '# Checkout flow\n\n  exact source  \n' };
+const initialValues = {
+  title: 'Checkout flow',
+  details: 'Existing scenario details',
+  contentMd: '# Checkout flow\n\n  exact source  \n',
+};
 
 const renderForm = (props: Partial<React.ComponentProps<typeof TestScenarioForm>> = {}) =>
   render(
@@ -22,6 +26,7 @@ describe('TestScenarioForm', () => {
     renderForm();
 
     expect(screen.getByRole('heading', { name: 'Create Test Scenario' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue('');
     expect(screen.getByRole('tab', { name: 'Source' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Preview' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create Test Scenario' })).toBeInTheDocument();
@@ -32,6 +37,7 @@ describe('TestScenarioForm', () => {
     renderForm({ mode: 'edit', initialValues });
 
     expect(screen.getByRole('heading', { name: 'Edit Test Scenario' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue(initialValues.details);
     expect(screen.getByRole('button', { name: 'Save Test Scenario' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create Test Scenario' })).not.toBeInTheDocument();
   });
@@ -40,7 +46,7 @@ describe('TestScenarioForm', () => {
     const user = userEvent.setup();
     const contentMd = '# Заголовок ✓\n\n```ts\n  const value = "  exact  ";\n```\n\n';
 
-    renderForm({ initialValues: { title: '', contentMd: '' } });
+    renderForm({ initialValues: { title: '', details: '', contentMd: '' } });
 
     const markdown = screen.getByRole('textbox', { name: 'Markdown' });
     fireEvent.change(markdown, { target: { value: contentMd } });
@@ -50,6 +56,20 @@ describe('TestScenarioForm', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Source' }));
     await waitFor(() => expect(screen.getByRole('textbox', { name: 'Markdown' })).toHaveValue(contentMd));
+  });
+
+  it('initializes null details as empty and preserves internal whitespace while editing', () => {
+    renderForm({
+      mode: 'edit',
+      initialValues: { title: 'Scenario', details: null, contentMd: '# Scenario' },
+    });
+
+    const details = 'First line\n  Second line';
+    const detailsField = screen.getByRole('textbox', { name: 'Details' });
+
+    expect(detailsField).toHaveValue('');
+    fireEvent.change(detailsField, { target: { value: details } });
+    expect(detailsField).toHaveValue(details);
   });
 
   it('does not submit invalid empty values and displays client validation', async () => {
@@ -68,6 +88,7 @@ describe('TestScenarioForm', () => {
     renderForm({ initialValues, apiError: 'The scenario could not be saved.' });
 
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue(initialValues.title);
+    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue(initialValues.details);
     expect(screen.getByRole('textbox', { name: 'Markdown' })).toHaveValue(initialValues.contentMd);
     expect(screen.getByRole('alert')).toHaveTextContent('The scenario could not be saved.');
   });
@@ -79,7 +100,7 @@ describe('TestScenarioForm', () => {
       <ChakraProvider>
         <TestScenarioForm
           mode="edit"
-          initialValues={{ title: 'Normalized title', contentMd: initialValues.contentMd }}
+          initialValues={{ title: 'Normalized title', details: 'Normalized details', contentMd: initialValues.contentMd }}
           isSubmitting
           onSubmit={vi.fn()}
           onCancel={vi.fn()}
@@ -88,6 +109,7 @@ describe('TestScenarioForm', () => {
     );
 
     await waitFor(() => expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Normalized title'));
+    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue('Normalized details');
     expect(screen.getByRole('button', { name: 'Save Test Scenario' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   });

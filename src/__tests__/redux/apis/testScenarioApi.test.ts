@@ -16,7 +16,9 @@ import {
   type PostApiV2TestScenariosApiArg,
   type PostApiV2TestScenariosApiResponse,
   type TestScenario,
+  type TestScenarioCreatorSummary,
   type TestScenarioListResponse,
+  type TestScenarioSummary,
   type UpdateTestScenarioRequest,
 } from '@/redux/apis/generatedApi';
 import { store } from '@/redux/store';
@@ -26,14 +28,32 @@ afterEach(() => {
   store.dispatch(generatedApi.util.resetApiState());
 });
 
+const creator: TestScenarioCreatorSummary = {
+  id: 'user-1',
+  name: 'Ada Lovelace',
+  email: 'ada@example.com',
+};
+
 const scenario: TestScenario = {
   id: 'scenario-1',
   projectId: 'project-1',
   createdById: 'user-1',
   title: 'Checkout flow',
   contentMd: '# Checkout flow',
+  details: 'Scenario details',
   createdAt: '2026-09-01T10:00:00.000Z',
   updatedAt: '2026-09-02T11:00:00.000Z',
+};
+
+const summary: TestScenarioSummary = {
+  id: scenario.id,
+  projectId: scenario.projectId,
+  createdById: scenario.createdById,
+  title: scenario.title,
+  details: scenario.details,
+  createdBy: creator,
+  createdAt: scenario.createdAt,
+  updatedAt: scenario.updatedAt,
 };
 
 const listArgs: GetApiV2TestScenariosApiArg = {
@@ -43,7 +63,7 @@ const listArgs: GetApiV2TestScenariosApiArg = {
 };
 
 const listResponse: TestScenarioListResponse = {
-  scenarios: [scenario],
+  scenarios: [summary],
   total: 31,
   page: 2,
   limit: 30,
@@ -54,17 +74,27 @@ describe('generated Test Scenario list contract', () => {
   it('exposes scenario fields and pagination metadata at compile time', () => {
     expectTypeOf(listArgs).toEqualTypeOf<GetApiV2TestScenariosApiArg>();
     expectTypeOf(listResponse).toEqualTypeOf<TestScenarioListResponse>();
+    expectTypeOf<TestScenarioListResponse['scenarios'][number]>().toEqualTypeOf<TestScenarioSummary>();
+    expectTypeOf(scenario.details).toEqualTypeOf<string | null>();
     expect(scenario).toMatchObject({
       id: expect.any(String),
       projectId: expect.any(String),
       createdById: expect.any(String),
       title: expect.any(String),
       contentMd: expect.any(String),
+      details: expect.any(String),
       createdAt: expect.any(String),
       updatedAt: expect.any(String),
     });
+    expect(listResponse.scenarios[0]).toEqual(summary);
+    expect(listResponse.scenarios[0]).not.toHaveProperty('contentMd');
+    expect(listResponse.scenarios[0].createdBy).toEqual({
+      id: 'user-1',
+      name: 'Ada Lovelace',
+      email: 'ada@example.com',
+    });
     expect(listResponse).toMatchObject({
-      scenarios: [scenario],
+      scenarios: [summary],
       total: 31,
       page: 2,
       limit: 30,
@@ -116,10 +146,16 @@ describe('generated Test Scenario cache behavior', () => {
 
       if (request.method === 'GET' && path === '/api/v2/test-scenarios') {
         catalogRequests += 1;
-        const scenarios = catalogRequests >= 4 ? [] : [scenario];
+        const scenarios = catalogRequests >= 4 ? [] : [summary];
 
         return new Response(
-          JSON.stringify({ scenarios, total: scenarios.length, page: 1, limit: 10, totalPages: scenarios.length ? 1 : 0 }),
+          JSON.stringify({
+            scenarios,
+            total: scenarios.length,
+            page: 1,
+            limit: 10,
+            totalPages: scenarios.length ? 1 : 0,
+          }),
           { headers: { 'content-type': 'application/json' } },
         );
       }

@@ -29,10 +29,12 @@ const LoadingState = () => (
   <VStack align="stretch" gap={4} aria-label="Loading Test Scenarios">
     <Text color="text.secondary">Loading Test Scenarios...</Text>
     <Box overflowX="auto">
-      <Table.Root size="sm" variant="outline" minW="680px">
+      <Table.Root size="sm" variant="outline" minW="960px">
         <Table.Header>
           <Table.Row>
             <Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader>
+            <Table.ColumnHeader {...TABLE_CELL_PADDING}>Details</Table.ColumnHeader>
+            <Table.ColumnHeader {...TABLE_CELL_PADDING}>Created by</Table.ColumnHeader>
             <Table.ColumnHeader {...TABLE_CELL_PADDING}>Created</Table.ColumnHeader>
             <Table.ColumnHeader {...TABLE_CELL_PADDING}>Updated</Table.ColumnHeader>
             <Table.ColumnHeader {...TABLE_CELL_PADDING} />
@@ -41,6 +43,12 @@ const LoadingState = () => (
         <Table.Body>
           {[1, 2, 3].map((index) => (
             <Table.Row key={index}>
+              <Table.Cell {...TABLE_CELL_PADDING}>
+                <Skeleton h="5" loading={true} />
+              </Table.Cell>
+              <Table.Cell {...TABLE_CELL_PADDING}>
+                <Skeleton h="5" loading={true} />
+              </Table.Cell>
               <Table.Cell {...TABLE_CELL_PADDING}>
                 <Skeleton h="5" loading={true} />
               </Table.Cell>
@@ -85,10 +93,12 @@ const ScenarioTable = ({
   onContextMenu?: TestScenarioCatalogViewProps['onContextMenu'];
 }) => (
   <Box overflowX="auto">
-    <Table.Root size="sm" variant="outline" minW="680px">
+    <Table.Root size="sm" variant="outline" minW="960px">
       <Table.Header>
         <Table.Row>
           <Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader>
+          <Table.ColumnHeader {...TABLE_CELL_PADDING}>Details</Table.ColumnHeader>
+          <Table.ColumnHeader {...TABLE_CELL_PADDING}>Created by</Table.ColumnHeader>
           <Table.ColumnHeader {...TABLE_CELL_PADDING}>Created</Table.ColumnHeader>
           <Table.ColumnHeader {...TABLE_CELL_PADDING}>Updated</Table.ColumnHeader>
           <Table.ColumnHeader {...TABLE_CELL_PADDING} />
@@ -101,6 +111,17 @@ const ScenarioTable = ({
               <ChakraLink asChild fontWeight="medium" color="text.main">
                 <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
               </ChakraLink>
+            </Table.Cell>
+            <Table.Cell {...TABLE_CELL_PADDING} maxW="320px" whiteSpace="pre-wrap" overflowWrap="anywhere">
+              {scenario.details ?? 'No details'}
+            </Table.Cell>
+            <Table.Cell {...TABLE_CELL_PADDING}>
+              <VStack align="start" gap={0}>
+                <Text>{scenario.createdBy.name}</Text>
+                <Text color="text.secondary" fontSize="sm" overflowWrap="anywhere">
+                  {scenario.createdBy.email}
+                </Text>
+              </VStack>
             </Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary">
               {formatScenarioDate(scenario.createdAt)}

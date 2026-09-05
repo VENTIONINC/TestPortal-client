@@ -8,7 +8,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ChakraProvider } from '@/components/ui';
 import { TestScenarioCatalogContainer } from '@/components/test-scenarios/containers/TestScenarioCatalogContainer';
-import { useGetApiV2TestScenariosQuery, type GetApiV2TestScenariosApiArg } from '@/redux/apis/generatedApi';
+import {
+  useGetApiV2TestScenariosByScenarioIdQuery,
+  useGetApiV2TestScenariosQuery,
+  type GetApiV2TestScenariosApiArg,
+  type TestScenarioSummary,
+} from '@/redux/apis/generatedApi';
 import { useTestScenarioContextMenu } from '@/components/test-scenarios/hooks/useTestScenarioContextMenu';
 
 const navigate = vi.fn();
@@ -28,11 +33,13 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
 
   return {
     ...actual,
+    useGetApiV2TestScenariosByScenarioIdQuery: vi.fn(),
     useGetApiV2TestScenariosQuery: vi.fn(),
   };
 });
 
 const mockedScenarioQuery = vi.mocked(useGetApiV2TestScenariosQuery);
+const mockedDetailQuery = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
 const mockedContextMenu = vi.mocked(useTestScenarioContextMenu);
 
 const createResponse = (page: number) => ({
@@ -42,10 +49,11 @@ const createResponse = (page: number) => ({
       projectId: 'project-1',
       createdById: 'user-1',
       title: `Scenario page ${page}`,
-      contentMd: `# Scenario page ${page}`,
+      details: `Details page ${page}`,
+      createdBy: { id: 'user-1', name: 'Ada Lovelace', email: 'ada@example.com' },
       createdAt: '2026-09-01T10:00:00.000Z',
       updatedAt: '2026-09-02T11:00:00.000Z',
-    },
+    } satisfies TestScenarioSummary,
   ],
   total: 11,
   page,
@@ -57,15 +65,16 @@ describe('TestScenarioCatalogContainer', () => {
   beforeEach(() => {
     navigate.mockReset();
     contextMenu.mockReset();
+    mockedDetailQuery.mockReset();
     mockedContextMenu.mockReturnValue(contextMenu);
     mockedScenarioQuery.mockImplementation((args) => {
       const queryArgs = args as GetApiV2TestScenariosApiArg;
 
       return {
-      currentData: createResponse(queryArgs.page ?? 1),
-      isLoading: false,
-      isFetching: false,
-      error: undefined,
+        currentData: createResponse(queryArgs.page ?? 1),
+        isLoading: false,
+        isFetching: false,
+        error: undefined,
       } as never;
     });
   });
@@ -80,6 +89,7 @@ describe('TestScenarioCatalogContainer', () => {
     );
 
     expect(mockedScenarioQuery).toHaveBeenCalledWith({ projectId: 'project-1', page: 1, limit: 10 });
+    expect(mockedDetailQuery).not.toHaveBeenCalled();
     expect(screen.getByText('Scenario page 1')).toBeInTheDocument();
   });
 

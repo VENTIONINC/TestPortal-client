@@ -23,6 +23,7 @@ const persistedScenario = {
   createdById: 'user-1',
   title: 'Checkout flow',
   contentMd: '# Checkout flow\n\nExact source\n',
+  details: 'Scenario details',
   createdAt: '2026-09-01T10:00:00.000Z',
   updatedAt: '2026-09-02T11:00:00.000Z',
 };

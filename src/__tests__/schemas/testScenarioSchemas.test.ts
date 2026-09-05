@@ -35,6 +35,13 @@ describe('Test Scenario authoring schema', () => {
     }
   });
 
+  it('accepts optional details, trims only its outer whitespace, and preserves internal whitespace', () => {
+    const details = '  First line\n  Second line  ';
+    const result = testScenarioAuthoringSchema.parse({ title: 'Scenario', details, contentMd: '# Scenario' });
+
+    expect(result.details).toBe('First line\n  Second line');
+  });
+
   it('preserves Unicode, indentation, and trailing line breaks', () => {
     const contentMd = '# Проверка ✓\n\n```ts\n  const value = "  exact  ";\n```\n\n';
     const result = testScenarioAuthoringSchema.parse({ title: '  Unicode сценарий  ', contentMd });

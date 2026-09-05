@@ -7,12 +7,20 @@ import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ChakraProvider } from '@/components/ui';
-import { TestScenarioCatalogView, type TestScenarioCatalogViewProps } from '@/components/test-scenarios/components/TestScenarioCatalogView';
+import {
+  TestScenarioCatalogView,
+  type TestScenarioCatalogViewProps,
+} from '@/components/test-scenarios/components/TestScenarioCatalogView';
+import type { TestScenarioSummary } from '@/redux/apis/generatedApi';
 
-const scenarios = [
+const scenarios: TestScenarioSummary[] = [
   {
     id: 'scenario-1',
+    projectId: 'project-1',
+    createdById: 'user-1',
     title: 'Checkout flow',
+    details: 'Details with **Markdown** <strong>HTML</strong>',
+    createdBy: { id: 'user-1', name: 'Ada Lovelace', email: 'ada@example.com' },
     createdAt: '2026-09-01T10:00:00.000Z',
     updatedAt: '2026-09-02T11:00:00.000Z',
   },
@@ -63,25 +71,31 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByRole('button', { name: 'Create Test Scenario' })).toBeInTheDocument();
   });
 
-  it('renders scenario summaries with a final untitled actions column', async () => {
+  it('renders summary metadata in order with a final untitled actions column', async () => {
     const user = userEvent.setup();
     const onContextMenu = vi.fn();
 
     renderView({ onContextMenu });
 
     expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getAllByRole('columnheader')).toHaveLength(4);
-    expect(screen.getByRole('columnheader', { name: 'Title' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Created' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Updated' })).toBeInTheDocument();
-    expect(screen.getAllByRole('columnheader')[3]).toHaveTextContent('');
+    expect(screen.getAllByRole('columnheader')).toHaveLength(6);
+    expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
+      'Title',
+      'Details',
+      'Created by',
+      'Created',
+      'Updated',
+      '',
+    ]);
     expect(screen.getAllByRole('row')).toHaveLength(2);
     expect(screen.getByRole('row', { name: /Checkout flow/ })).toBeInTheDocument();
+    expect(screen.getByText('Details with **Markdown** <strong>HTML</strong>')).toBeInTheDocument();
+    expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+    expect(screen.getByText('ada@example.com')).toBeInTheDocument();
+    expect(screen.getByText(/9\/1\/2026/)).toBeInTheDocument();
+    expect(screen.getByText(/9\/2\/2026/)).toBeInTheDocument();
     expect(screen.queryByText('# Checkout flow')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute(
-      'href',
-      '/test-scenarios/scenario-1',
-    );
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1');
 
     const actions = screen.getByRole('button', { name: 'Actions for Checkout flow' });
     expect(actions).toBeInTheDocument();
@@ -91,27 +105,33 @@ describe('TestScenarioCatalogView', () => {
     expect(onContextMenu).toHaveBeenCalledWith(expect.anything(), scenarios[0]);
   });
 
+  it('renders a fallback for null details', () => {
+    renderView({ scenarios: [{ ...scenarios[0], details: null }] });
+
+    expect(screen.getByText('No details')).toBeInTheDocument();
+  });
+
   it('maps every scenario title to its own detail route while keeping actions separate', () => {
     renderView({
       scenarios: [
         ...scenarios,
         {
           id: 'scenario-2',
+          projectId: 'project-1',
+          createdById: 'user-2',
           title: 'Refund flow',
+          details: null,
+          createdBy: { id: 'user-2', name: 'Grace Hopper', email: 'grace@example.com' },
           createdAt: '2026-09-03T10:00:00.000Z',
           updatedAt: '2026-09-03T11:00:00.000Z',
         },
       ],
     });
 
-    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute(
-      'href',
-      '/test-scenarios/scenario-1',
-    );
-    expect(screen.getByRole('link', { name: 'Refund flow' })).toHaveAttribute(
-      'href',
-      '/test-scenarios/scenario-2',
-    );
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1');
+    expect(screen.getByRole('link', { name: 'Refund flow' })).toHaveAttribute('href', '/test-scenarios/scenario-2');
+    expect(screen.getByText('Grace Hopper')).toBeInTheDocument();
+    expect(screen.getByText('grace@example.com')).toBeInTheDocument();
     expect(screen.getAllByTestId('context-menu-button')).toHaveLength(2);
   });
 

@@ -12,6 +12,7 @@ import { useSelectedProject } from '@/hooks/useSelectedProject';
 import {
   useGetApiV2TestScenariosQuery,
   type GetApiV2TestScenariosApiArg,
+  type TestScenarioSummary,
 } from '@/redux/apis/generatedApi';
 
 vi.mock('@/hooks/useSelectedProject', () => ({
@@ -40,10 +41,11 @@ const createResponse = (projectId: string, page: number) => ({
       projectId,
       createdById: 'user-1',
       title: `${projectId} scenario`,
-      contentMd: `# ${projectId} scenario`,
+      details: `${projectId} details`,
+      createdBy: { id: 'user-1', name: `${projectId} creator`, email: `${projectId}@example.com` },
       createdAt: '2026-09-01T10:00:00.000Z',
       updatedAt: '2026-09-02T11:00:00.000Z',
-    },
+    } satisfies TestScenarioSummary,
   ],
   total: 11,
   page,
@@ -87,6 +89,8 @@ describe('TestScenarioCatalog project boundary', () => {
 
     await user.click(screen.getByRole('button', { name: /^2$/ }));
     expect(screen.getByText('project-a scenario')).toBeInTheDocument();
+    expect(screen.getByText('project-a details')).toBeInTheDocument();
+    expect(screen.getByText('project-a creator')).toBeInTheDocument();
 
     selectedProjectId = 'project-b';
     rerender(
@@ -99,6 +103,8 @@ describe('TestScenarioCatalog project boundary', () => {
 
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith({ projectId: 'project-b', page: 1, limit: 10 });
     expect(screen.queryByText('project-a scenario')).not.toBeInTheDocument();
+    expect(screen.queryByText('project-a details')).not.toBeInTheDocument();
+    expect(screen.queryByText('project-a creator')).not.toBeInTheDocument();
     expect(screen.getByText('Loading Test Scenarios...')).toBeInTheDocument();
   });
 });

@@ -1,9 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type { TestScenario, TestScenarioListResponse } from '@/redux/apis/generatedApi';
-
-export type TestScenarioSummary = Pick<TestScenario, 'id' | 'title' | 'createdAt' | 'updatedAt'>;
+import type { TestScenarioListResponse } from '@/redux/apis/generatedApi';
+export type { TestScenarioSummary } from '@/redux/apis/generatedApi';
 
 export interface TestScenarioPagination {
   page: TestScenarioListResponse['page'];
@@ -11,4 +10,3 @@ export interface TestScenarioPagination {
   total: TestScenarioListResponse['total'];
   totalPages: TestScenarioListResponse['totalPages'];
 }
-

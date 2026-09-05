@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 export const testScenarioAuthoringSchema = z.object({
   title: z.string().trim().min(1, 'Title is required'),
+  details: z.string().trim().optional(),
   contentMd: z.string().min(1, 'Markdown content is required'),
 });
 
