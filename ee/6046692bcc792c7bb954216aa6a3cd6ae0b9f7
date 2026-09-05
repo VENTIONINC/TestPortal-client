@@ -1,0 +1,81 @@
+openspec/changes/adopt-test-scenario-summary-api/.openspec.yaml
+  s_b42245f3e7a2c6::t_8f2ed963a35128 1-2
+openspec/changes/adopt-test-scenario-summary-api/design.md
+  s_b42245f3e7a2c6::t_1cea30723fa06d 1-67
+openspec/changes/adopt-test-scenario-summary-api/proposal.md
+  s_b42245f3e7a2c6::t_30c01eaa57b6bf 1-31
+openspec/changes/adopt-test-scenario-summary-api/specs/test-scenario-summary-consumption/spec.md
+  s_b42245f3e7a2c6::t_cf5da0a373ecc7 1-126
+src/__tests__/components/test-scenarios/TestScenarioCatalogBoundary.test.tsx
+  s_183cdf61be13db::t_113ca23a56b35b 15,44-45,48,92-93,106-107
+src/__tests__/components/test-scenarios/TestScenarioDetailBoundary.test.tsx
+  s_183cdf61be13db::t_d83b3cb619b58c 56
+src/__tests__/components/test-scenarios/TestScenarioDetailContainer.test.tsx
+  s_7d63da27b60e63::t_bcf9c914a01fe8 24,85
+src/__tests__/components/test-scenarios/TestScenarioEditContainer.test.tsx
+  s_183cdf61be13db::t_8287b85852d5ce 26
+src/__tests__/components/test-scenarios/useTestScenarioDetail.test.tsx
+  s_7d63da27b60e63::t_a18e1ed80c9fee 4-5,7-16,23-24,29-31,34-55
+src/__tests__/redux/apis/testScenarioApi.test.ts
+  s_7d63da27b60e63::t_70fd2955867312 19,21,31-36,43,48-58,66,77-78,85,89-95,97,149,152-158
+src/components/test-scenarios/components/TestScenarioCatalogView.tsx
+  s_7d63da27b60e63::t_b93bcf6b1883b9 32,36-37,58-63,96,100-101,115-125
+src/components/test-scenarios/hooks/useTestScenarioCatalog.ts
+  s_7d63da27b60e63::t_4a5fac6d065147 12,15
+src/components/test-scenarios/hooks/useTestScenarioDetail.ts
+  s_7d63da27b60e63::t_05fb9fddf2aa7c 7,23,59
+src/components/test-scenarios/types.ts
+  s_183cdf61be13db::t_efa67d740505e6 4-5
+src/redux/apis/generatedApi.ts
+  s_7d63da27b60e63::t_34c5bedee43eb3 2256,2264,2269-2274,2323-2338,2341
+openspec/changes/adopt-test-scenario-summary-api/tasks.md
+  s_7d63da27b60e63::t_7c196a52c78df1 1-34
+src/__tests__/components/test-scenarios/TestScenarioCatalogContainer.test.tsx
+  s_7d63da27b60e63::t_bc605f57f7e869 11-16,36,42,52-53,56,68,74-77,92
+src/__tests__/components/test-scenarios/TestScenarioCatalogView.test.tsx
+  s_7d63da27b60e63::t_75575fa66d9e70 10-14,16,19-20,22-23,74,81-89,92-96,98,108-113,120-121,123-124,131-134
+src/__tests__/components/test-scenarios/TestScenarioForm.test.tsx
+  s_7d63da27b60e63::t_9575a4fcd81fc9 11-15,29,40,49,61-74,91,103,112
+src/__tests__/schemas/testScenarioSchemas.test.ts
+  s_7d63da27b60e63::t_76f230bc72438f 38-44
+src/components/test-scenarios/components/TestScenarioForm.tsx
+  s_7d63da27b60e63::t_348fc1fc16672a 29,53-57,63,67,111-112
+src/components/test-scenarios/containers/TestScenarioCreateContainer.tsx
+  s_7d63da27b60e63::t_2a94dd1d28ee74 22,40,44
+src/components/test-scenarios/utils.ts
+  s_7d63da27b60e63::t_bf521271e90a0d 6-7,12,18,28-34
+src/schemas/testScenarioSchemas.ts
+  s_7d63da27b60e63::t_c23a3310bfd966 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "ee6046692bcc792c7bb954216aa6a3cd6ae0b9f7",
+  "prompts": {},
+  "sessions": {
+    "s_183cdf61be13db": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a07097-f135-7722-8fe8-d821ebea5544",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_7d63da27b60e63": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a070a0-f85f-7d50-9582-c6d485ad41be",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_b42245f3e7a2c6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a07096-d340-7451-9d4d-2524ebdfcf9a",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
