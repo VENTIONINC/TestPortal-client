@@ -2253,6 +2253,7 @@ export type TestScenario = {
   createdById: string;
   title: string;
   contentMd: string;
+  details: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -2260,10 +2261,17 @@ export type UpdateTestScenarioRequest =
   | {
       title: string;
       contentMd?: string;
+      details?: string | null;
     }
   | {
       title?: string;
       contentMd: string;
+      details?: string | null;
+    }
+  | {
+      title?: string;
+      contentMd?: string;
+      details: string | null;
     };
 export type TestScenarioResultsResponse = {
   scenarioId: string;
@@ -2312,9 +2320,25 @@ export type CreateTestScenarioRequest = {
   projectId: string;
   title: string;
   contentMd: string;
+  details?: string;
+};
+export type TestScenarioCreatorSummary = {
+  id: string;
+  name: string;
+  email: string;
+};
+export type TestScenarioSummary = {
+  id: string;
+  projectId: string;
+  createdById: string;
+  title: string;
+  details: string | null;
+  createdBy: TestScenarioCreatorSummary;
+  createdAt: string;
+  updatedAt: string;
 };
 export type TestScenarioListResponse = {
-  scenarios: TestScenario[];
+  scenarios: TestScenarioSummary[];
   total: number;
   page: number;
   limit: number;

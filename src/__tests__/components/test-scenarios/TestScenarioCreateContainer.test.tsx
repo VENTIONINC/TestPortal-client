@@ -61,20 +61,47 @@ describe('TestScenarioCreateContainer', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1', { replace: true }));
   });
 
+  it('includes trimmed non-empty details while preserving internal whitespace', async () => {
+    const user = userEvent.setup();
+    const contentMd = '# Checkout flow\n\n  exact source  \n';
+    createScenario.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'scenario-with-details' }) });
+
+    renderContainer();
+    await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Checkout flow');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), {
+      target: { value: '  First line\n  Second line  ' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Markdown' }), { target: { value: contentMd } });
+    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
+
+    await waitFor(() => expect(createScenario).toHaveBeenCalledTimes(1));
+    expect(createScenario).toHaveBeenCalledWith({
+      createTestScenarioRequest: {
+        projectId: 'project-1',
+        title: 'Checkout flow',
+        details: 'First line\n  Second line',
+        contentMd,
+      },
+    });
+  });
+
   it('keeps input, shows API feedback, and permits an explicit retry', async () => {
     const user = userEvent.setup();
     const contentMd = '   \n';
+    const details = 'Retry details';
     createScenario
       .mockReturnValueOnce({ unwrap: () => Promise.reject({ status: 422, data: { error: 'Title already exists' } }) })
       .mockReturnValueOnce({ unwrap: () => Promise.resolve({ id: 'scenario-2' }) });
 
     renderContainer();
     await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Retryable scenario');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: details } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Markdown' }), { target: { value: contentMd } });
     await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Title already exists'));
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Retryable scenario');
+    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue(details);
     expect(screen.getByRole('textbox', { name: 'Markdown' })).toHaveValue(contentMd);
 
     await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));

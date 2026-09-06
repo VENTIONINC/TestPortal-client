@@ -1,10 +1,11 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Button, HStack, Heading, Tabs, Text, VStack } from '@chakra-ui/react';
+import { Alert, Box, Button, HStack, Heading, IconButton, Tabs, Text, VStack } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { FiArrowLeft } from 'react-icons/fi';
 
 import { MarkdownPreview, Textarea, Input } from '@/components/ui';
 import { testScenarioAuthoringSchema, type TestScenarioAuthoringFormData } from '@/schemas';
@@ -26,6 +27,7 @@ export interface TestScenarioFormProps {
 
 const EMPTY_VALUES: TestScenarioEditableValues = {
   title: '',
+  details: '',
   contentMd: '',
 };
 
@@ -49,16 +51,21 @@ export const TestScenarioForm = ({
   } = useForm<TestScenarioAuthoringFormData>({
     resolver: zodResolver(testScenarioAuthoringSchema),
     mode: 'onChange',
-    defaultValues: initialValues,
+    defaultValues: {
+      title: initialValues.title,
+      details: initialValues.details ?? '',
+      contentMd: initialValues.contentMd,
+    },
   });
 
   useEffect(() => {
     reset({
       title: initialValues.title,
+      details: initialValues.details ?? '',
       contentMd: initialValues.contentMd,
     });
     setEditorMode('source');
-  }, [initialValues.contentMd, initialValues.title, reset]);
+  }, [initialValues.contentMd, initialValues.details, initialValues.title, reset]);
 
   const contentMd = watch('contentMd');
   const pending = isSubmitting || isFormSubmitting;
@@ -78,9 +85,22 @@ export const TestScenarioForm = ({
       shadow="sm"
     >
       <VStack align="stretch" gap={6}>
-        <VStack align="start" gap={1}>
+        <HStack align="center" gap={2}>
+          {!isCreate && (
+            <IconButton
+              type="button"
+              aria-label="Return to Test Scenarios"
+              title="Return to Test Scenarios"
+              variant="ghost"
+              color="text.active"
+              onClick={onCancel}
+              disabled={pending}
+            >
+              <FiArrowLeft size={18} aria-hidden="true" />
+            </IconButton>
+          )}
           <Heading size="lg">{isCreate ? 'Create Test Scenario' : 'Edit Test Scenario'}</Heading>
-        </VStack>
+        </HStack>
 
         {displayedError && (
           <Alert.Root status="error" role="alert">
@@ -101,6 +121,8 @@ export const TestScenarioForm = ({
         )}
 
         <Input {...register('title')} name="title" label="Title" error={errors.title?.message} />
+
+        <Textarea {...register('details')} name="details" label="Details" resize="vertical" />
 
         <Tabs.Root
           value={editorMode}

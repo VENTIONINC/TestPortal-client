@@ -23,6 +23,7 @@ const persistedScenario = {
   createdById: 'user-1',
   title: 'Checkout flow',
   contentMd: '# Checkout flow\n\nExact source\n',
+  details: 'Scenario details',
   createdAt: '2026-09-01T10:00:00.000Z',
   updatedAt: '2026-09-02T11:00:00.000Z',
 };
@@ -75,7 +76,17 @@ describe('TestScenarioEditContainer', () => {
 
     expect(mockedGetScenario).toHaveBeenCalledWith({ scenarioId: 'scenario-1', projectId: 'project-1' });
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Checkout flow');
+    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue(persistedScenario.details);
     expect(screen.getByRole('textbox', { name: 'Markdown' })).toHaveValue(persistedScenario.contentMd);
+  });
+
+  it('returns to the catalog from the heading control', async () => {
+    const user = userEvent.setup();
+
+    renderContainer();
+    await user.click(screen.getByRole('button', { name: 'Return to Test Scenarios' }));
+
+    expect(navigate).toHaveBeenCalledWith('/test-scenarios');
   });
 
   it.each([
@@ -98,6 +109,32 @@ describe('TestScenarioEditContainer', () => {
         fireEvent.change(screen.getByRole('textbox', { name: 'Markdown' }), { target: { value: 'Updated source' } });
       },
       expected: { title: 'Updated title', contentMd: 'Updated source' },
+    },
+    {
+      name: 'details only',
+      change: () =>
+        fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), {
+          target: { value: '  Updated details  ' },
+        }),
+      expected: { details: 'Updated details' },
+    },
+    {
+      name: 'all authored fields',
+      change: () => {
+        fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'Updated title' } });
+        fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), {
+          target: { value: '  Updated details  ' },
+        });
+        fireEvent.change(screen.getByRole('textbox', { name: 'Markdown' }), {
+          target: { value: '  Updated source  \n' },
+        });
+      },
+      expected: { title: 'Updated title', details: 'Updated details', contentMd: '  Updated source  \n' },
+    },
+    {
+      name: 'cleared details',
+      change: () => fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: ' \n\t ' } }),
+      expected: { details: null },
     },
   ])('sends the exact $name PATCH payload', async ({ change, expected }) => {
     const user = userEvent.setup();
@@ -125,9 +162,30 @@ describe('TestScenarioEditContainer', () => {
     expect(screen.getByRole('status')).toHaveTextContent('No changes to save.');
   });
 
+  it('initializes null details as blank and treats blank input as an unchanged value', async () => {
+    const user = userEvent.setup();
+    const nullDetailsScenario = { ...persistedScenario, details: null };
+    mockedGetScenario.mockReturnValue({
+      data: nullDetailsScenario,
+      currentData: nullDetailsScenario,
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+      refetch,
+    } as never);
+
+    renderContainer();
+
+    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue('');
+    await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
+
+    expect(updateScenario).not.toHaveBeenCalled();
+    expect(screen.getByRole('status')).toHaveTextContent('No changes to save.');
+  });
+
   it('resets the form baseline from the successful persisted response', async () => {
     const user = userEvent.setup();
-    const response = { ...persistedScenario, title: 'Normalized title' };
+    const response = { ...persistedScenario, title: 'Normalized title', details: 'Persisted response details' };
     updateScenario.mockReturnValue({ unwrap: () => Promise.resolve(response) });
 
     renderContainer();
@@ -135,6 +193,9 @@ describe('TestScenarioEditContainer', () => {
     await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
 
     await waitFor(() => expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Normalized title'));
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue('Persisted response details'),
+    );
     await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
 
     expect(updateScenario).toHaveBeenCalledTimes(1);
@@ -147,11 +208,13 @@ describe('TestScenarioEditContainer', () => {
     renderContainer();
     const contentMd = '  unsaved source  \n';
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'Unsaved title' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: 'Unsaved details' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Markdown' }), { target: { value: contentMd } });
     await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Save failed'));
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Unsaved title');
+    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue('Unsaved details');
     expect(screen.getByRole('textbox', { name: 'Markdown' })).toHaveValue(contentMd);
   });
 });

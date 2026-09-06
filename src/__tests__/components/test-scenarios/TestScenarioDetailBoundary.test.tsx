@@ -53,6 +53,7 @@ const scenarioFor = (projectId: string) => ({
   createdById: 'user-1',
   title: `${projectId} scenario`,
   contentMd: `# ${projectId} scenario`,
+  details: `${projectId} details`,
   createdAt: '2026-09-01T10:00:00.000Z',
   updatedAt: '2026-09-02T11:00:00.000Z',
 });
@@ -128,6 +129,7 @@ describe('Test Scenario route boundaries', () => {
 
     expect(mockedDetailQuery).toHaveBeenLastCalledWith({ scenarioId: 'scenario-1', projectId: 'project-b' });
     expect(screen.queryByDisplayValue('# project-a scenario')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('project-a details')).not.toBeInTheDocument();
     expect(screen.getByText('Loading Test Scenario...')).toBeInTheDocument();
   });
 

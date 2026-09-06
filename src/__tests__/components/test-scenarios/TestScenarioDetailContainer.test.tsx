@@ -21,6 +21,7 @@ const persistedScenario = {
   createdById: 'user-1',
   title: 'Checkout flow',
   contentMd: '# Checkout flow\n\nExact source\n',
+  details: 'Scenario details',
   createdAt: '2026-09-01T10:00:00.000Z',
   updatedAt: '2026-09-02T11:00:00.000Z',
 };
@@ -81,10 +82,8 @@ describe('TestScenarioDetailContainer', () => {
     expect(screen.queryByRole('button', { name: 'Edit Scenario' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Delete Scenario' })).not.toBeInTheDocument();
     expect(screen.queryByText('Read-only Test Scenario details')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Return to Test Scenarios' })).toHaveAttribute(
-      'href',
-      '/test-scenarios',
-    );
+    expect(screen.queryByText('Markdown Preview')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Return to Test Scenarios' })).toHaveAttribute('href', '/test-scenarios');
   });
 
   it('uses the shared scenario context menu without making the details content editable', async () => {

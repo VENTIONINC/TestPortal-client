@@ -3,31 +3,19 @@
 
 import type { TestScenario, UpdateTestScenarioRequest } from '@/redux/apis/generatedApi';
 
-import type { TestScenarioSummary } from './types';
-
-export const mapTestScenarioToSummary = (
-  scenario: Pick<TestScenario, 'id' | 'title' | 'createdAt' | 'updatedAt'>,
-): TestScenarioSummary => {
-  const { id, title, createdAt, updatedAt } = scenario;
-
-  return { id, title, createdAt, updatedAt };
+export type TestScenarioEditableValues = Pick<TestScenario, 'title' | 'contentMd'> & {
+  details?: string | null;
 };
-
-export const mapTestScenariosToSummaries = (
-  scenarios: Pick<TestScenario, 'id' | 'title' | 'createdAt' | 'updatedAt'>[],
-): TestScenarioSummary[] => scenarios.map(mapTestScenarioToSummary);
-
-export type TestScenarioEditableValues = Pick<TestScenario, 'title' | 'contentMd'>;
 
 /**
  * Builds the smallest valid PATCH body from editable values and the last persisted response.
- * Markdown is compared and returned byte-for-byte; no normalization belongs at this boundary.
+ * Markdown is compared and returned byte-for-byte; details are compared after outer whitespace normalization.
  */
 export const getTestScenarioPatchPayload = (
   values: TestScenarioEditableValues,
   persisted: TestScenarioEditableValues,
 ): UpdateTestScenarioRequest | null => {
-  const payload: { title?: string; contentMd?: string } = {};
+  const payload: { title?: string; contentMd?: string; details?: string | null } = {};
 
   if (values.title !== persisted.title) {
     payload.title = values.title;
@@ -35,6 +23,13 @@ export const getTestScenarioPatchPayload = (
 
   if (values.contentMd !== persisted.contentMd) {
     payload.contentMd = values.contentMd;
+  }
+
+  const details = values.details?.trim() ?? '';
+  const persistedDetails = persisted.details?.trim() ?? '';
+
+  if (details !== persistedDetails) {
+    payload.details = details || null;
   }
 
   return Object.keys(payload).length > 0 ? (payload as UpdateTestScenarioRequest) : null;

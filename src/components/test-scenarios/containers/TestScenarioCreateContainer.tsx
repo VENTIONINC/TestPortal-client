@@ -19,7 +19,7 @@ export interface TestScenarioCreateContainerProps {
   projectId: string;
 }
 
-const EMPTY_VALUES = { title: '', contentMd: '' } as const;
+const EMPTY_VALUES = { title: '', details: '', contentMd: '' } as const;
 
 export const TestScenarioCreateContainer = ({ projectId }: TestScenarioCreateContainerProps) => {
   const navigate = useNavigate();
@@ -41,6 +41,7 @@ export const TestScenarioCreateContainer = ({ projectId }: TestScenarioCreateCon
           projectId,
           title: values.title,
           contentMd: values.contentMd,
+          ...(values.details?.trim() ? { details: values.details.trim() } : {}),
         },
       }).unwrap();
 
