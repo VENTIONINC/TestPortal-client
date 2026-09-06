@@ -42,6 +42,12 @@ describe('Test Scenario authoring schema', () => {
     expect(result.details).toBe('First line\n  Second line');
   });
 
+  it.each(['', ' \n\t '])('accepts blank optional details as an empty value: %j', (details) => {
+    const result = testScenarioAuthoringSchema.parse({ title: 'Scenario', details, contentMd: '# Scenario' });
+
+    expect(result.details).toBe('');
+  });
+
   it('preserves Unicode, indentation, and trailing line breaks', () => {
     const contentMd = '# Проверка ✓\n\n```ts\n  const value = "  exact  ";\n```\n\n';
     const result = testScenarioAuthoringSchema.parse({ title: '  Unicode сценарий  ', contentMd });

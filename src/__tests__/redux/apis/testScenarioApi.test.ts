@@ -109,6 +109,7 @@ describe('generated Test Scenario CRUD contract', () => {
     createTestScenarioRequest: {
       projectId: 'project-1',
       title: 'Checkout flow',
+      details: 'Scenario details',
       contentMd: '# Checkout flow\n\n  exact source  \n',
     } satisfies CreateTestScenarioRequest,
   };
@@ -137,16 +138,20 @@ describe('generated Test Scenario CRUD contract', () => {
 });
 
 describe('generated Test Scenario cache behavior', () => {
-  it('refetches the project-scoped catalog after create, update, and delete', async () => {
+  it('refetches the project-scoped catalog after create, update, clear, and delete', async () => {
     let catalogRequests = 0;
-    const updatedScenario = { ...scenario, title: 'Updated checkout flow', contentMd: '# Updated checkout flow' };
+    let deleted = false;
+    let persistedScenario = scenario;
+    let persistedSummary = summary;
+    const postBodies: unknown[] = [];
+    const patchBodies: unknown[] = [];
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const request = input as Request;
       const path = new URL(request.url).pathname;
 
       if (request.method === 'GET' && path === '/api/v2/test-scenarios') {
         catalogRequests += 1;
-        const scenarios = catalogRequests >= 4 ? [] : [summary];
+        const scenarios = deleted ? [] : [persistedSummary];
 
         return new Response(
           JSON.stringify({
@@ -161,14 +166,36 @@ describe('generated Test Scenario cache behavior', () => {
       }
 
       if (request.method === 'POST') {
-        return new Response(JSON.stringify(scenario), {
+        const body = (await request.clone().json()) as { details?: string };
+        postBodies.push(body);
+        persistedScenario = { ...scenario, details: body.details ?? null };
+        persistedSummary = { ...summary, details: persistedScenario.details };
+
+        return new Response(JSON.stringify(persistedScenario), {
           status: 201,
           headers: { 'content-type': 'application/json' },
         });
       }
 
       if (request.method === 'PATCH') {
-        return new Response(JSON.stringify(updatedScenario), {
+        const body = (await request.clone().json()) as Partial<TestScenario>;
+        patchBodies.push(body);
+        persistedScenario = { ...persistedScenario, ...body };
+        persistedSummary = {
+          ...persistedSummary,
+          title: persistedScenario.title,
+          details: persistedScenario.details,
+          updatedAt: persistedScenario.updatedAt,
+        };
+
+        return new Response(JSON.stringify(persistedScenario), {
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      if (request.method === 'DELETE') {
+        deleted = true;
+        return new Response(JSON.stringify({}), {
           headers: { 'content-type': 'application/json' },
         });
       }
@@ -190,22 +217,86 @@ describe('generated Test Scenario cache behavior', () => {
             projectId: 'project-1',
             title: scenario.title,
             contentMd: scenario.contentMd,
+            details: 'Created details',
           },
         }),
       )
       .unwrap();
     await vi.waitFor(() => expect(catalogRequests).toBe(2));
+    expect(postBodies).toEqual([
+      {
+        projectId: 'project-1',
+        title: scenario.title,
+        contentMd: scenario.contentMd,
+        details: 'Created details',
+      },
+    ]);
+    await vi.waitFor(() =>
+      expect(
+        generatedApi.endpoints.getApiV2TestScenarios.select(catalogArgs)(store.getState()).data?.scenarios[0].details,
+      ).toBe('Created details'),
+    );
 
     await store
       .dispatch(
         generatedApi.endpoints.patchApiV2TestScenariosByScenarioId.initiate({
           scenarioId: 'scenario-1',
           projectId: 'project-1',
-          updateTestScenarioRequest: { title: updatedScenario.title },
+          updateTestScenarioRequest: { details: 'Updated details' },
         }),
       )
       .unwrap();
     await vi.waitFor(() => expect(catalogRequests).toBe(3));
+    expect(patchBodies).toEqual([{ details: 'Updated details' }]);
+    await vi.waitFor(() =>
+      expect(
+        generatedApi.endpoints.getApiV2TestScenarios.select(catalogArgs)(store.getState()).data?.scenarios[0].details,
+      ).toBe('Updated details'),
+    );
+
+    await store
+      .dispatch(
+        generatedApi.endpoints.patchApiV2TestScenariosByScenarioId.initiate({
+          scenarioId: 'scenario-1',
+          projectId: 'project-1',
+          updateTestScenarioRequest: { title: 'Updated checkout flow', contentMd: '# Updated checkout flow' },
+        }),
+      )
+      .unwrap();
+    await vi.waitFor(() => expect(catalogRequests).toBe(4));
+    expect(patchBodies).toEqual([
+      { details: 'Updated details' },
+      { title: 'Updated checkout flow', contentMd: '# Updated checkout flow' },
+    ]);
+    await vi.waitFor(() =>
+      expect(
+        generatedApi.endpoints.getApiV2TestScenarios.select(catalogArgs)(store.getState()).data?.scenarios[0],
+      ).toMatchObject({
+        title: 'Updated checkout flow',
+        details: 'Updated details',
+      }),
+    );
+
+    await store
+      .dispatch(
+        generatedApi.endpoints.patchApiV2TestScenariosByScenarioId.initiate({
+          scenarioId: 'scenario-1',
+          projectId: 'project-1',
+          updateTestScenarioRequest: { details: null },
+        }),
+      )
+      .unwrap();
+    await vi.waitFor(() => expect(catalogRequests).toBe(5));
+    expect(patchBodies).toEqual([
+      { details: 'Updated details' },
+      { title: 'Updated checkout flow', contentMd: '# Updated checkout flow' },
+      { details: null },
+    ]);
+    await vi.waitFor(() =>
+      expect(
+        generatedApi.endpoints.getApiV2TestScenarios.select(catalogArgs)(store.getState()).data?.scenarios[0].details,
+      ).toBeNull(),
+    );
 
     await store
       .dispatch(
@@ -215,7 +306,7 @@ describe('generated Test Scenario cache behavior', () => {
         }),
       )
       .unwrap();
-    await vi.waitFor(() => expect(catalogRequests).toBe(4));
+    await vi.waitFor(() => expect(catalogRequests).toBe(6));
 
     await vi.waitFor(() => {
       const cachedCatalog = generatedApi.endpoints.getApiV2TestScenarios.select(catalogArgs)(store.getState()).data;

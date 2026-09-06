@@ -37,9 +37,20 @@ describe('TestScenarioForm', () => {
     renderForm({ mode: 'edit', initialValues });
 
     expect(screen.getByRole('heading', { name: 'Edit Test Scenario' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Return to Test Scenarios' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue(initialValues.details);
     expect(screen.getByRole('button', { name: 'Save Test Scenario' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create Test Scenario' })).not.toBeInTheDocument();
+  });
+
+  it('returns from edit mode through the heading control', async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+
+    renderForm({ mode: 'edit', initialValues, onCancel });
+    await user.click(screen.getByRole('button', { name: 'Return to Test Scenarios' }));
+
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
   it('keeps exact unsaved Markdown across preview and source modes', async () => {
@@ -72,6 +83,32 @@ describe('TestScenarioForm', () => {
     expect(detailsField).toHaveValue(details);
   });
 
+  it('submits normalized details while preserving the exact Markdown source', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    const contentMd = '  # Scenario  \n\n\tstep 1\n';
+
+    renderForm({
+      onSubmit,
+      initialValues: { title: '', details: '', contentMd: '' },
+    });
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: '  Scenario  ' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), {
+      target: { value: '  First line\n  Second line  ' },
+    });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Markdown' }), { target: { value: contentMd } });
+
+    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[0]).toEqual({
+      title: 'Scenario',
+      details: 'First line\n  Second line',
+      contentMd,
+    });
+  });
+
   it('does not submit invalid empty values and displays client validation', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
@@ -100,7 +137,11 @@ describe('TestScenarioForm', () => {
       <ChakraProvider>
         <TestScenarioForm
           mode="edit"
-          initialValues={{ title: 'Normalized title', details: 'Normalized details', contentMd: initialValues.contentMd }}
+          initialValues={{
+            title: 'Normalized title',
+            details: 'Normalized details',
+            contentMd: initialValues.contentMd,
+          }}
           isSubmitting
           onSubmit={vi.fn()}
           onCancel={vi.fn()}

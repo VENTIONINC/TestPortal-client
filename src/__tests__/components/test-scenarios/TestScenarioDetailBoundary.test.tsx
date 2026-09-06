@@ -129,6 +129,7 @@ describe('Test Scenario route boundaries', () => {
 
     expect(mockedDetailQuery).toHaveBeenLastCalledWith({ scenarioId: 'scenario-1', projectId: 'project-b' });
     expect(screen.queryByDisplayValue('# project-a scenario')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('project-a details')).not.toBeInTheDocument();
     expect(screen.getByText('Loading Test Scenario...')).toBeInTheDocument();
   });
 

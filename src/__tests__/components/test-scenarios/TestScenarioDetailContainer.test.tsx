@@ -82,6 +82,7 @@ describe('TestScenarioDetailContainer', () => {
     expect(screen.queryByRole('button', { name: 'Edit Scenario' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Delete Scenario' })).not.toBeInTheDocument();
     expect(screen.queryByText('Read-only Test Scenario details')).not.toBeInTheDocument();
+    expect(screen.queryByText('Markdown Preview')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Return to Test Scenarios' })).toHaveAttribute('href', '/test-scenarios');
   });
 

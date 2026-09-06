@@ -42,8 +42,7 @@ export const TestScenarioDetailsView = ({ scenario, onContextMenu }: TestScenari
     </HStack>
 
     <Wrap w="100%" p={{ base: 4, md: 6 }}>
-      <VStack align="stretch" gap={4} w="100%">
-        <Heading size="md">Markdown Preview</Heading>
+      <VStack align="stretch" w="100%">
         <MarkdownPreview content={scenario.contentMd} />
       </VStack>
     </Wrap>

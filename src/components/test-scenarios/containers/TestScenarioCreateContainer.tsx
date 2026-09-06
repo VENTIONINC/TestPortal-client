@@ -37,7 +37,7 @@ export const TestScenarioCreateContainer = ({ projectId }: TestScenarioCreateCon
 
     try {
       const scenario = await createScenario({
-      createTestScenarioRequest: {
+        createTestScenarioRequest: {
           projectId,
           title: values.title,
           contentMd: values.contentMd,
