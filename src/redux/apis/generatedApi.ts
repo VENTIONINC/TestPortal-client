@@ -20,6 +20,7 @@ export const addTagTypes = [
   "CTRF",
   "Upload API Keys",
   "Exports",
+  "Test Scenarios",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -808,6 +809,139 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Reports", "Exports"],
       }),
+      postApiV2TestScenariosByScenarioIdSpecLinks: build.mutation<
+        PostApiV2TestScenariosByScenarioIdSpecLinksApiResponse,
+        PostApiV2TestScenariosByScenarioIdSpecLinksApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/spec-links`,
+          method: "POST",
+          body: queryArg.testScenarioSpecLinkBody,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenariosByScenarioIdSpecLinks: build.query<
+        GetApiV2TestScenariosByScenarioIdSpecLinksApiResponse,
+        GetApiV2TestScenariosByScenarioIdSpecLinksApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/spec-links`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      patchApiV2TestScenariosByScenarioId: build.mutation<
+        PatchApiV2TestScenariosByScenarioIdApiResponse,
+        PatchApiV2TestScenariosByScenarioIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}`,
+          method: "PATCH",
+          body: queryArg.updateTestScenarioRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenariosByScenarioId: build.query<
+        GetApiV2TestScenariosByScenarioIdApiResponse,
+        GetApiV2TestScenariosByScenarioIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}`,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      deleteApiV2TestScenariosByScenarioId: build.mutation<
+        DeleteApiV2TestScenariosByScenarioIdApiResponse,
+        DeleteApiV2TestScenariosByScenarioIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      deleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecId: build.mutation<
+        DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiResponse,
+        DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/spec-links/${queryArg.specId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenariosByScenarioIdResults: build.query<
+        GetApiV2TestScenariosByScenarioIdResultsApiResponse,
+        GetApiV2TestScenariosByScenarioIdResultsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/results`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenariosByScenarioIdIssues: build.query<
+        GetApiV2TestScenariosByScenarioIdIssuesApiResponse,
+        GetApiV2TestScenariosByScenarioIdIssuesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/issues`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestScenarios: build.mutation<
+        PostApiV2TestScenariosApiResponse,
+        PostApiV2TestScenariosApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios`,
+          method: "POST",
+          body: queryArg.createTestScenarioRequest,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenarios: build.query<
+        GetApiV2TestScenariosApiResponse,
+        GetApiV2TestScenariosApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1263,6 +1397,74 @@ export type PostApiV2ReportsPdfExportApiResponse =
   /** status 200 PDF export stream. When includeAiInsights is true, the PDF may include an AI Insights section embedded in the document. */ Blob;
 export type PostApiV2ReportsPdfExportApiArg = {
   pdfExportRequest: PdfExportRequest;
+};
+export type PostApiV2TestScenariosByScenarioIdSpecLinksApiResponse =
+  /** status 201 Test scenario Spec link created */ TestScenarioSpecLinkResponse;
+export type PostApiV2TestScenariosByScenarioIdSpecLinksApiArg = {
+  scenarioId: string;
+  projectId: string;
+  testScenarioSpecLinkBody: TestScenarioSpecLinkBody;
+};
+export type GetApiV2TestScenariosByScenarioIdSpecLinksApiResponse =
+  /** status 200 Paginated linked Specs */ TestScenarioSpecLinkListResponse;
+export type GetApiV2TestScenariosByScenarioIdSpecLinksApiArg = {
+  scenarioId: string;
+  projectId: string;
+  page?: number;
+  limit?: number;
+};
+export type PatchApiV2TestScenariosByScenarioIdApiResponse =
+  /** status 200 Updated test scenario details */ TestScenario;
+export type PatchApiV2TestScenariosByScenarioIdApiArg = {
+  scenarioId: string;
+  projectId: string;
+  updateTestScenarioRequest: UpdateTestScenarioRequest;
+};
+export type GetApiV2TestScenariosByScenarioIdApiResponse =
+  /** status 200 Test scenario details */ TestScenario;
+export type GetApiV2TestScenariosByScenarioIdApiArg = {
+  scenarioId: string;
+  projectId: string;
+};
+export type DeleteApiV2TestScenariosByScenarioIdApiResponse = unknown;
+export type DeleteApiV2TestScenariosByScenarioIdApiArg = {
+  scenarioId: string;
+  projectId: string;
+};
+export type DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiResponse =
+  unknown;
+export type DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiArg = {
+  scenarioId: string;
+  specId: string;
+  projectId: string;
+};
+export type GetApiV2TestScenariosByScenarioIdResultsApiResponse =
+  /** status 200 Paginated scenario Result evidence */ TestScenarioResultsResponse;
+export type GetApiV2TestScenariosByScenarioIdResultsApiArg = {
+  scenarioId: string;
+  projectId: string;
+  page?: number;
+  limit?: number;
+};
+export type GetApiV2TestScenariosByScenarioIdIssuesApiResponse =
+  /** status 200 Paginated scenario Issue evidence */ TestScenarioIssuesResponse;
+export type GetApiV2TestScenariosByScenarioIdIssuesApiArg = {
+  scenarioId: string;
+  projectId: string;
+  page?: number;
+  limit?: number;
+};
+export type PostApiV2TestScenariosApiResponse =
+  /** status 201 Test scenario created */ TestScenario;
+export type PostApiV2TestScenariosApiArg = {
+  createTestScenarioRequest: CreateTestScenarioRequest;
+};
+export type GetApiV2TestScenariosApiResponse =
+  /** status 200 Paginated test scenarios */ TestScenarioListResponse;
+export type GetApiV2TestScenariosApiArg = {
+  projectId: string;
+  page?: number;
+  limit?: number;
 };
 export type StatusResponse = {
   status: string;
@@ -2018,6 +2220,130 @@ export type PdfExportRequest = {
   /** When true, the export includes an AI-generated insights section in the PDF. Defaults to false when omitted. */
   includeAiInsights?: boolean;
 };
+export type TestScenarioSpecLinkResponse = {
+  scenarioId: string;
+  specId: string;
+};
+export type TestScenarioSpecLinkBody = {
+  specId: string;
+};
+export type TestScenarioLinkedSpec = {
+  id: string;
+  projectId: string;
+  key: string;
+  file: string;
+  title: string;
+  tags: string[];
+  annotations: any[];
+  createdAt: string;
+  updatedAt: string;
+};
+export type TestScenarioSpecLinkListResponse = {
+  scenarioId: string;
+  projectId: string;
+  specs: TestScenarioLinkedSpec[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type TestScenario = {
+  id: string;
+  projectId: string;
+  createdById: string;
+  title: string;
+  contentMd: string;
+  details: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+export type UpdateTestScenarioRequest =
+  | {
+      title: string;
+      contentMd?: string;
+      details?: string | null;
+    }
+  | {
+      title?: string;
+      contentMd: string;
+      details?: string | null;
+    }
+  | {
+      title?: string;
+      contentMd?: string;
+      details: string | null;
+    };
+export type TestScenarioResultsResponse = {
+  scenarioId: string;
+  projectId: string;
+  linkedSpecCount: number;
+  results: Result[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type TestScenarioObservedIssue = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  category: string;
+  description: string | null;
+  portal: string | null;
+  service: string | null;
+  ticket: string | null;
+  createdBy: {
+    id: string;
+    name: string;
+    email: string;
+    createdAt: string;
+  } | null;
+  updatedBy: {
+    id: string;
+    name: string;
+    email: string;
+    createdAt: string;
+  } | null;
+};
+export type TestScenarioIssuesResponse = {
+  scenarioId: string;
+  projectId: string;
+  linkedSpecCount: number;
+  issues: TestScenarioObservedIssue[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type CreateTestScenarioRequest = {
+  projectId: string;
+  title: string;
+  contentMd: string;
+  details?: string;
+};
+export type TestScenarioCreatorSummary = {
+  id: string;
+  name: string;
+  email: string;
+};
+export type TestScenarioSummary = {
+  id: string;
+  projectId: string;
+  createdById: string;
+  title: string;
+  details: string | null;
+  createdBy: TestScenarioCreatorSummary;
+  createdAt: string;
+  updatedAt: string;
+};
+export type TestScenarioListResponse = {
+  scenarios: TestScenarioSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
 export const {
   useGetApiV2StatusQuery,
   useLazyGetApiV2StatusQuery,
@@ -2116,4 +2442,19 @@ export const {
   useGetApiV2AnalysisExportQuery,
   useLazyGetApiV2AnalysisExportQuery,
   usePostApiV2ReportsPdfExportMutation,
+  usePostApiV2TestScenariosByScenarioIdSpecLinksMutation,
+  useGetApiV2TestScenariosByScenarioIdSpecLinksQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdSpecLinksQuery,
+  usePatchApiV2TestScenariosByScenarioIdMutation,
+  useGetApiV2TestScenariosByScenarioIdQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdQuery,
+  useDeleteApiV2TestScenariosByScenarioIdMutation,
+  useDeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdMutation,
+  useGetApiV2TestScenariosByScenarioIdResultsQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdResultsQuery,
+  useGetApiV2TestScenariosByScenarioIdIssuesQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdIssuesQuery,
+  usePostApiV2TestScenariosMutation,
+  useGetApiV2TestScenariosQuery,
+  useLazyGetApiV2TestScenariosQuery,
 } = injectedRtkApi;
