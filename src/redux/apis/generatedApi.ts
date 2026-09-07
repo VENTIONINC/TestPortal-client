@@ -876,6 +876,61 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Test Scenarios"],
       }),
+      postApiV2TestScenariosByScenarioIdSteps: build.mutation<
+        PostApiV2TestScenariosByScenarioIdStepsApiResponse,
+        PostApiV2TestScenariosByScenarioIdStepsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/steps`,
+          method: "POST",
+          body: queryArg.appendTestScenarioStepRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      patchApiV2TestScenariosByScenarioIdStepsAndStepId: build.mutation<
+        PatchApiV2TestScenariosByScenarioIdStepsAndStepIdApiResponse,
+        PatchApiV2TestScenariosByScenarioIdStepsAndStepIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/steps/${queryArg.stepId}`,
+          method: "PATCH",
+          body: queryArg.updateTestScenarioStepRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      deleteApiV2TestScenariosByScenarioIdStepsAndStepId: build.mutation<
+        DeleteApiV2TestScenariosByScenarioIdStepsAndStepIdApiResponse,
+        DeleteApiV2TestScenariosByScenarioIdStepsAndStepIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/steps/${queryArg.stepId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      putApiV2TestScenariosByScenarioIdStepsOrder: build.mutation<
+        PutApiV2TestScenariosByScenarioIdStepsOrderApiResponse,
+        PutApiV2TestScenariosByScenarioIdStepsOrderApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/steps/order`,
+          method: "PUT",
+          body: queryArg.reorderTestScenarioStepsRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
       deleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecId: build.mutation<
         DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiResponse,
         DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiArg
@@ -1430,6 +1485,35 @@ export type DeleteApiV2TestScenariosByScenarioIdApiResponse = unknown;
 export type DeleteApiV2TestScenariosByScenarioIdApiArg = {
   scenarioId: string;
   projectId: string;
+};
+export type PostApiV2TestScenariosByScenarioIdStepsApiResponse =
+  /** status 201 Step appended; complete scenario returned */ TestScenario;
+export type PostApiV2TestScenariosByScenarioIdStepsApiArg = {
+  scenarioId: string;
+  projectId: string;
+  appendTestScenarioStepRequest: AppendTestScenarioStepRequest;
+};
+export type PatchApiV2TestScenariosByScenarioIdStepsAndStepIdApiResponse =
+  /** status 200 Step updated; complete scenario returned */ TestScenario;
+export type PatchApiV2TestScenariosByScenarioIdStepsAndStepIdApiArg = {
+  scenarioId: string;
+  stepId: string;
+  projectId: string;
+  updateTestScenarioStepRequest: UpdateTestScenarioStepRequest;
+};
+export type DeleteApiV2TestScenariosByScenarioIdStepsAndStepIdApiResponse =
+  /** status 200 Step deleted; complete scenario returned */ TestScenario;
+export type DeleteApiV2TestScenariosByScenarioIdStepsAndStepIdApiArg = {
+  scenarioId: string;
+  stepId: string;
+  projectId: string;
+};
+export type PutApiV2TestScenariosByScenarioIdStepsOrderApiResponse =
+  /** status 200 Steps reordered; complete scenario returned */ TestScenario;
+export type PutApiV2TestScenariosByScenarioIdStepsOrderApiArg = {
+  scenarioId: string;
+  projectId: string;
+  reorderTestScenarioStepsRequest: ReorderTestScenarioStepsRequest;
 };
 export type DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiResponse =
   unknown;
@@ -2252,27 +2336,44 @@ export type TestScenario = {
   projectId: string;
   createdById: string;
   title: string;
-  contentMd: string;
   details: string | null;
+  objective: string | null;
+  preconditions: string | null;
+  testData: string | null;
+  expectedResult: string | null;
+  notes: string | null;
+  steps: {
+    id: string;
+    position: number;
+    action: string;
+    expectedResult: string | null;
+  }[];
+  contentMd: string;
+  contentMdHash: string;
+  contentMdFormatVersion: number;
   createdAt: string;
   updatedAt: string;
 };
-export type UpdateTestScenarioRequest =
-  | {
-      title: string;
-      contentMd?: string;
-      details?: string | null;
-    }
-  | {
-      title?: string;
-      contentMd: string;
-      details?: string | null;
-    }
-  | {
-      title?: string;
-      contentMd?: string;
-      details: string | null;
-    };
+export type UpdateTestScenarioRequest = {
+  title?: string;
+  details?: string | null;
+  objective?: string | null;
+  preconditions?: string | null;
+  testData?: string | null;
+  expectedResult?: string | null;
+  notes?: string | null;
+};
+export type AppendTestScenarioStepRequest = {
+  action: string;
+  expectedResult?: string;
+};
+export type UpdateTestScenarioStepRequest = {
+  action?: string;
+  expectedResult?: string | null;
+};
+export type ReorderTestScenarioStepsRequest = {
+  stepIds: string[];
+};
 export type TestScenarioResultsResponse = {
   scenarioId: string;
   projectId: string;
@@ -2316,11 +2417,20 @@ export type TestScenarioIssuesResponse = {
   limit: number;
   totalPages: number;
 };
+export type CreateTestScenarioStep = {
+  action: string;
+  expectedResult?: string;
+};
 export type CreateTestScenarioRequest = {
   projectId: string;
   title: string;
-  contentMd: string;
   details?: string;
+  objective?: string;
+  preconditions?: string;
+  testData?: string;
+  expectedResult?: string;
+  notes?: string;
+  steps?: CreateTestScenarioStep[];
 };
 export type TestScenarioCreatorSummary = {
   id: string;
@@ -2449,6 +2559,10 @@ export const {
   useGetApiV2TestScenariosByScenarioIdQuery,
   useLazyGetApiV2TestScenariosByScenarioIdQuery,
   useDeleteApiV2TestScenariosByScenarioIdMutation,
+  usePostApiV2TestScenariosByScenarioIdStepsMutation,
+  usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
+  useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
+  usePutApiV2TestScenariosByScenarioIdStepsOrderMutation,
   useDeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdMutation,
   useGetApiV2TestScenariosByScenarioIdResultsQuery,
   useLazyGetApiV2TestScenariosByScenarioIdResultsQuery,

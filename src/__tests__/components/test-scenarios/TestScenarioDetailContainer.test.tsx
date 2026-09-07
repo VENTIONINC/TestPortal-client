@@ -22,6 +22,14 @@ const persistedScenario = {
   title: 'Checkout flow',
   contentMd: '# Checkout flow\n\nExact source\n',
   details: 'Scenario details',
+  objective: 'Complete checkout',
+  preconditions: 'Signed in',
+  testData: null,
+  expectedResult: 'Order exists',
+  notes: null,
+  steps: [],
+  contentMdHash: 'hash-1',
+  contentMdFormatVersion: 1,
   createdAt: '2026-09-01T10:00:00.000Z',
   updatedAt: '2026-09-02T11:00:00.000Z',
 };
@@ -71,12 +79,12 @@ describe('TestScenarioDetailContainer', () => {
     } as never);
   });
 
-  it('requests both identities and renders persisted Markdown details', () => {
+  it('requests both identities and renders persisted structured details without Markdown', () => {
     renderContainer();
 
     expect(mockedGetScenario).toHaveBeenCalledWith({ scenarioId: 'scenario-1', projectId: 'project-1' });
     expect(screen.getAllByRole('heading', { name: 'Checkout flow' })).not.toHaveLength(0);
-    expect(screen.getByTestId('markdown-preview')).toHaveTextContent('Exact source');
+    expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save Test Scenario' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit Scenario' })).not.toBeInTheDocument();

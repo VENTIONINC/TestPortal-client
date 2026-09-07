@@ -5,3 +5,4 @@ export * from './TestScenarioCatalogView';
 export * from './TestScenarioDetailStates';
 export * from './TestScenarioDetailsView';
 export * from './TestScenarioForm';
+export * from './TestScenarioStepsEditor';
