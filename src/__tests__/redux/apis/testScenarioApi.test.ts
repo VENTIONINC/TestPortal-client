@@ -41,6 +41,14 @@ const scenario: TestScenario = {
   title: 'Checkout flow',
   contentMd: '# Checkout flow',
   details: 'Scenario details',
+  objective: 'Complete checkout',
+  preconditions: 'Signed in',
+  testData: null,
+  expectedResult: 'Order exists',
+  notes: null,
+  steps: [],
+  contentMdHash: 'hash-1',
+  contentMdFormatVersion: 1,
   createdAt: '2026-09-01T10:00:00.000Z',
   updatedAt: '2026-09-02T11:00:00.000Z',
 };
@@ -110,7 +118,7 @@ describe('generated Test Scenario CRUD contract', () => {
       projectId: 'project-1',
       title: 'Checkout flow',
       details: 'Scenario details',
-      contentMd: '# Checkout flow\n\n  exact source  \n',
+      objective: 'Complete checkout',
     } satisfies CreateTestScenarioRequest,
   };
   const detailArgs: GetApiV2TestScenariosByScenarioIdApiArg = {
@@ -120,7 +128,7 @@ describe('generated Test Scenario CRUD contract', () => {
   const patchArgs: PatchApiV2TestScenariosByScenarioIdApiArg = {
     ...detailArgs,
     updateTestScenarioRequest: {
-      contentMd: '  changed Markdown  \n',
+      objective: 'Updated objective',
     } satisfies UpdateTestScenarioRequest,
   };
   const deleteArgs: DeleteApiV2TestScenariosByScenarioIdApiArg = detailArgs;
@@ -216,7 +224,6 @@ describe('generated Test Scenario cache behavior', () => {
           createTestScenarioRequest: {
             projectId: 'project-1',
             title: scenario.title,
-            contentMd: scenario.contentMd,
             details: 'Created details',
           },
         }),
@@ -227,7 +234,6 @@ describe('generated Test Scenario cache behavior', () => {
       {
         projectId: 'project-1',
         title: scenario.title,
-        contentMd: scenario.contentMd,
         details: 'Created details',
       },
     ]);
@@ -259,14 +265,14 @@ describe('generated Test Scenario cache behavior', () => {
         generatedApi.endpoints.patchApiV2TestScenariosByScenarioId.initiate({
           scenarioId: 'scenario-1',
           projectId: 'project-1',
-          updateTestScenarioRequest: { title: 'Updated checkout flow', contentMd: '# Updated checkout flow' },
+          updateTestScenarioRequest: { title: 'Updated checkout flow', objective: 'Updated objective' },
         }),
       )
       .unwrap();
     await vi.waitFor(() => expect(catalogRequests).toBe(4));
     expect(patchBodies).toEqual([
       { details: 'Updated details' },
-      { title: 'Updated checkout flow', contentMd: '# Updated checkout flow' },
+      { title: 'Updated checkout flow', objective: 'Updated objective' },
     ]);
     await vi.waitFor(() =>
       expect(
@@ -289,7 +295,7 @@ describe('generated Test Scenario cache behavior', () => {
     await vi.waitFor(() => expect(catalogRequests).toBe(5));
     expect(patchBodies).toEqual([
       { details: 'Updated details' },
-      { title: 'Updated checkout flow', contentMd: '# Updated checkout flow' },
+      { title: 'Updated checkout flow', objective: 'Updated objective' },
       { details: null },
     ]);
     await vi.waitFor(() =>

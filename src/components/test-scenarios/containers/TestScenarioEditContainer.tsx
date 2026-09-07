@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { useNavigate } from 'react-router';
@@ -12,9 +12,10 @@ import { type TestScenarioAuthoringFormData } from '@/schemas';
 import { PATHS } from '@/types/paths';
 import { extractApiError } from '@/utils/apiErrors';
 
-import { TestScenarioDetailStateView, TestScenarioForm } from '../components';
+import { TestScenarioDetailStateView, TestScenarioForm, TestScenarioStepsEditor } from '../components';
 import { useTestScenarioDetail } from '../hooks/useTestScenarioDetail';
-import { getTestScenarioPatchPayload } from '../utils';
+import { getTestScenarioEditableValues, getTestScenarioPatchPayload } from '../utils';
+import type { TestScenarioEditableField } from '../types';
 
 export interface TestScenarioEditContainerProps {
   projectId: string;
@@ -28,13 +29,31 @@ export const TestScenarioEditContainer = ({ projectId, scenarioId }: TestScenari
   const [apiError, setApiError] = useState<string>();
   const [successMessage, setSuccessMessage] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reconciliation, setReconciliation] = useState<{
+    token: number;
+    values: ReturnType<typeof getTestScenarioEditableValues>;
+    submittedFields: TestScenarioEditableField[];
+  }>();
   const submitInFlight = useRef(false);
-  const goToCatalog = () => navigate(PATHS.TEST_SCENARIOS);
+  const mountedRef = useRef(true);
+  const latestScope = useRef(`${projectId}:${scenarioId}`);
+  const goToCatalog = useCallback(() => navigate(PATHS.TEST_SCENARIOS), [navigate]);
+
+  latestScope.current = `${projectId}:${scenarioId}`;
+  useEffect(() => () => {
+    mountedRef.current = false;
+  }, []);
+
+  const isCurrentScope = useCallback(
+    () => mountedRef.current && latestScope.current === `${projectId}:${scenarioId}`,
+    [projectId, scenarioId],
+  );
 
   const handleSubmit = async (values: TestScenarioAuthoringFormData) => {
     if (submitInFlight.current || !detail.scenario) return;
 
-    const payload = getTestScenarioPatchPayload(values, detail.scenario);
+    const savedValues = getTestScenarioEditableValues(detail.scenario);
+    const payload = getTestScenarioPatchPayload(values, savedValues);
     setApiError(undefined);
     setSuccessMessage(undefined);
 
@@ -53,18 +72,37 @@ export const TestScenarioEditContainer = ({ projectId, scenarioId }: TestScenari
         updateTestScenarioRequest: payload,
       }).unwrap();
 
+      if (!isCurrentScope()) return;
       detail.setPersistedScenario(response);
+      setReconciliation({
+        token: Date.now(),
+        values: getTestScenarioEditableValues(response),
+        submittedFields: Object.keys(payload) as TestScenarioEditableField[],
+      });
       setSuccessMessage('Test Scenario saved successfully.');
       toaster.create({ title: 'Test Scenario saved successfully.', type: 'success' });
     } catch (error) {
+      if (!isCurrentScope()) return;
       const message = extractApiError(error as FetchBaseQueryError | SerializedError);
       setApiError(message);
       toaster.create({ title: message, type: 'error' });
     } finally {
-      submitInFlight.current = false;
-      setIsSubmitting(false);
+      if (isCurrentScope()) {
+        submitInFlight.current = false;
+        setIsSubmitting(false);
+      }
     }
   };
+
+  const handleScenarioUpdated = useCallback(
+    (scenario: NonNullable<typeof detail.scenario>) => {
+      if (!isCurrentScope()) return;
+      detail.setPersistedScenario(scenario);
+      setApiError(undefined);
+      setSuccessMessage(undefined);
+    },
+    [detail, isCurrentScope],
+  );
 
   return (
     <TestScenarioDetailStateView
@@ -76,15 +114,25 @@ export const TestScenarioEditContainer = ({ projectId, scenarioId }: TestScenari
       onBack={goToCatalog}
     >
       {(scenario) => (
-        <TestScenarioForm
-          mode="edit"
-          initialValues={scenario}
-          isSubmitting={isSubmitting || isMutationLoading}
-          apiError={apiError}
-          successMessage={successMessage}
-          onSubmit={handleSubmit}
-          onCancel={goToCatalog}
-        />
+        <>
+          <TestScenarioForm
+            mode="edit"
+            initialValues={scenario}
+            reconciliation={reconciliation}
+            isSubmitting={isSubmitting || isMutationLoading}
+            apiError={apiError}
+            successMessage={successMessage}
+            onSubmit={handleSubmit}
+            onCancel={goToCatalog}
+          />
+          <TestScenarioStepsEditor
+            scenario={scenario}
+            projectId={projectId}
+            scenarioId={scenarioId}
+            onScenarioUpdated={handleScenarioUpdated}
+            onRefresh={async () => detail.refetch()}
+          />
+        </>
       )}
     </TestScenarioDetailStateView>
   );

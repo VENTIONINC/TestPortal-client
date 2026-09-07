@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Enable authenticated users to create and maintain project-scoped Test Scenarios as exact Markdown source while also providing a safe, readable rendered preview.
+Enable authenticated users to create and maintain project-scoped Test Scenarios through structured fields and ordered steps without exposing generated Markdown previews or raw source.
 
 ## Requirements
 
@@ -36,14 +36,15 @@ The system SHALL provide separate project-guarded routes for creating a Test Sce
 
 ### Requirement: Project-scoped scenario creation
 
-The system SHALL create a Test Scenario using the entered `title` and exact `contentMd` together with the currently selected `projectId`.
+The system SHALL create a Test Scenario from a nonblank `title`, optional structured text fields (`details`, `objective`, `preconditions`, `testData`, `expectedResult`, and `notes`), and optional initial steps together with the currently selected `projectId`. Generated Markdown, hash/version metadata, and immutable metadata SHALL NOT be submitted.
 
 #### Scenario: Valid scenario is created
 
-- **WHEN** a user submits a valid title and non-empty Markdown source
+- **WHEN** a user submits a nonblank title and valid structured fields
 - **THEN** the system SHALL create the scenario for the selected project
 - **AND** the system SHALL navigate to the created scenario's detail route using the returned identifier
-- **AND** the read-only details page SHALL reflect the persisted response
+- **AND** the read-only details page SHALL reflect the persisted structured response and ordered steps
+- **AND** blank optional fields SHALL be omitted from the create request
 
 #### Scenario: Creation is pending
 
@@ -54,7 +55,7 @@ The system SHALL create a Test Scenario using the entered `title` and exact `con
 #### Scenario: Creation fails
 
 - **WHEN** the create request fails
-- **THEN** the system SHALL keep the entered title and Markdown available for correction or retry
+- **THEN** the system SHALL retain all structured field and initial-step drafts for correction or retry
 - **AND** the system SHALL display clear API error feedback
 
 ### Requirement: Scenario table actions
@@ -96,14 +97,15 @@ The system SHALL retrieve a scenario for both details and edit pages using the r
 
 - **WHEN** the requested scenario belongs to the selected project
 - **AND** the user opened `/test-scenarios/:scenarioId`
-- **THEN** the system SHALL display its persisted title and rendered Markdown
+- **THEN** the system SHALL display its persisted title, structured fields, ordered steps without Markdown previews or raw source
 - **AND** the page SHALL remain read-only
 
 #### Scenario: Editable scenario is available
 
 - **WHEN** the requested scenario belongs to the selected project
 - **AND** the user opened `/test-scenarios/:scenarioId/edit`
-- **THEN** the system SHALL initialize editable title and Markdown fields from the persisted response
+- **THEN** the system SHALL initialize editable structured fields and steps from the full persisted response
+- **AND** summary items SHALL NOT be treated as full scenario bodies
 
 #### Scenario: Scenario is unavailable in the selected project
 
@@ -146,63 +148,41 @@ The read-only scenario details page SHALL provide edit and delete actions inside
 #### Scenario: Details page actions preserve read-only presentation
 
 - **WHEN** the details page displays its context-menu trigger
-- **THEN** the persisted title and Markdown SHALL remain non-editable
+- **THEN** the persisted title, structured fields and steps SHALL remain non-editable
 - **AND** the page SHALL NOT display save controls
 - **AND** the page SHALL NOT display standalone Edit or Delete buttons
 
-### Requirement: Exact Markdown source and rendered preview
+### Requirement: Structured scenario presentation
 
-The scenario edit page SHALL allow users to switch between editable Markdown source and a rendered GitHub-Flavored Markdown preview without modifying the stored source value. The read-only details page SHALL render the persisted Markdown without enabling edit mode.
+The system SHALL present Test Scenarios through structured fields and ordered steps. Generated contentMd and hash/version SHALL remain integration data and SHALL NOT be displayed as a Markdown preview, raw source, or a separate Markdown page, edited, parsed into fields, generated or submitted by the client.
 
-#### Scenario: User previews edited Markdown
+#### Scenario: User views scenario details
+- **WHEN** the details page loads or saved data refreshes
+- **THEN** the system SHALL display persisted structured fields and ordered steps without Markdown preview or source controls
 
-- **WHEN** the user switches from source mode to preview mode
-- **THEN** the system SHALL render the current unsaved Markdown value
-- **AND** headings, Unicode, code fences, indentation, whitespace, and line breaks SHALL remain unchanged in the source value
+#### Scenario: User edits a scenario
+- **WHEN** the edit page loads, drafts change, or a field or step mutation succeeds
+- **THEN** the system SHALL display structured editing controls without a saved Markdown preview or raw source view
 
-#### Scenario: User returns to source mode
+### Requirement: Partial structured scenario updates
 
-- **WHEN** the user switches from preview mode back to source mode
-- **THEN** the editor SHALL contain exactly the value that was present before preview rendering
-
-#### Scenario: Preview contains an external link
-
-- **WHEN** rendered Markdown contains an external link
-- **THEN** the system SHALL open the link in a new browsing context with safe opener isolation
-
-#### Scenario: User views Markdown on the details page
-
-- **WHEN** the read-only details page loads a scenario
-- **THEN** the system SHALL render its persisted Markdown using the shared preview behavior
-- **AND** the system SHALL NOT expose a source editor or save action
-
-### Requirement: Partial scenario updates
-
-The system SHALL save scenario edits only from `/test-scenarios/:scenarioId/edit`, using a project-scoped PATCH request containing only fields whose values differ from the last persisted response.
+The system SHALL explicitly save structured scenario field edits only from `/test-scenarios/:scenarioId/edit`, using a project-scoped PATCH containing only changed editable fields. Steps, generated Markdown/hash/version and immutable metadata SHALL be excluded. Omission SHALL preserve stored values and `null` SHALL clear optional text.
 
 #### Scenario: Only title changes
 
 - **WHEN** the user changes only the title and saves
 - **THEN** the PATCH request SHALL contain `title`
-- **AND** the request SHALL omit `contentMd`
-- **AND** the persisted Markdown source SHALL remain unchanged
-
-#### Scenario: Only Markdown changes
-
-- **WHEN** the user changes only `contentMd` and saves
-- **THEN** the PATCH request SHALL contain `contentMd` exactly as entered
-- **AND** the request SHALL omit `title`
-- **AND** the persisted title SHALL remain unchanged
+- **AND** the request SHALL omit generated Markdown
 
 #### Scenario: Both fields change
 
-- **WHEN** the user changes both title and `contentMd` and saves
-- **THEN** the PATCH request SHALL contain both changed fields
+- **WHEN** the user changes several structured fields and saves
+- **THEN** the PATCH request SHALL contain all and only changed normalized fields
 - **AND** the system SHALL reset its comparison baseline to the persisted response after success
 
 #### Scenario: No field changed
 
-- **WHEN** the current form values equal the last persisted response
+- **WHEN** normalized current field values equal the last persisted response
 - **THEN** the system SHALL NOT submit an update request
 
 #### Scenario: Update fails
@@ -211,9 +191,9 @@ The system SHALL save scenario edits only from `/test-scenarios/:scenarioId/edit
 - **THEN** the system SHALL preserve the user's unsaved values
 - **AND** the system SHALL display clear API error feedback without repeatedly submitting the request
 
-### Requirement: Authoring validation
+### Requirement: Structured authoring validation
 
-The system SHALL reject a blank title and an empty Markdown string before submitting a create or update request while preserving non-empty Markdown exactly.
+The system SHALL reject blank titles and step actions, provide field validation feedback, and preserve interior line breaks in optional multiline structured text. Outer whitespace SHALL be normalized consistently with the backend. Explicit saves SHALL remain required without autosave.
 
 #### Scenario: Title contains only whitespace
 
@@ -221,21 +201,36 @@ The system SHALL reject a blank title and an empty Markdown string before submit
 - **THEN** the system SHALL display a title validation message
 - **AND** the system SHALL NOT submit the mutation
 
-#### Scenario: Markdown is empty
+#### Scenario: Optional structured text is empty
 
-- **WHEN** the user submits `contentMd` with a length of zero
-- **THEN** the system SHALL display a Markdown validation message
-- **AND** the system SHALL NOT submit the mutation
+- **WHEN** optional structured text contains only whitespace
+- **THEN** creation SHALL omit it and editing SHALL clear a previously stored value with `null`
 
-#### Scenario: Markdown contains only whitespace
+#### Scenario: Multiline structured text is entered
 
-- **WHEN** the user submits non-empty `contentMd` consisting of whitespace or line breaks
-- **THEN** the system SHALL preserve and submit that exact value
+- **WHEN** a structured body field contains interior line breaks
+- **THEN** normalization SHALL preserve those line breaks
 
 #### Scenario: Backend normalizes a title
 
 - **WHEN** a successful mutation response contains a normalized title
 - **THEN** the system SHALL display and use the persisted response title as the new form baseline
+
+### Requirement: Draft-safe saved response refresh
+
+The system SHALL preserve unrelated unsaved structured field and step drafts when successful mutations return complete scenarios, update saved structured data from persisted responses, and refresh affected project-scoped summary data without fetching full bodies per catalog row.
+
+#### Scenario: Step response changes generated Markdown
+
+- **WHEN** a step response updates saved Markdown while scenario fields are dirty
+- **THEN** those field drafts SHALL remain unchanged and SHALL NOT be submitted with the step operation
+
+#### Scenario: Summary metadata changes
+
+- **WHEN** a successful write changes title, details or `updatedAt`
+- **THEN** subsequent catalog rendering SHALL reflect persisted summary metadata
+- **AND** creator display, null-details fallback, pagination and exact-title deletion SHALL remain available
+- **AND** catalog rows SHALL NOT require `contentMd`, steps or per-row detail requests
 
 ### Requirement: Scenario deletion
 

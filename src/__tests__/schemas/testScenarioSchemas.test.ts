@@ -3,55 +3,53 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { testScenarioAuthoringSchema } from '@/schemas';
+import { testScenarioAuthoringSchema, testScenarioStepSchema } from '@/schemas';
 
 describe('Test Scenario authoring schema', () => {
-  it.each([
-    ['', '# Scenario'],
-    ['   ', '# Scenario'],
-    ['\n\t', '# Scenario'],
-  ])('rejects a blank title: %j', (title, contentMd) => {
-    const result = testScenarioAuthoringSchema.safeParse({ title, contentMd });
+  it.each(['', '   ', '\n\t'])('rejects a blank title: %j', (title) => {
+    const result = testScenarioAuthoringSchema.safeParse({ title });
 
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.flatten().fieldErrors.title).toContain('Title is required');
   });
 
-  it('rejects an empty Markdown string', () => {
-    const result = testScenarioAuthoringSchema.safeParse({ title: 'Scenario', contentMd: '' });
+  it('accepts all structured fields, trims their outer whitespace and preserves interior line breaks', () => {
+    const result = testScenarioAuthoringSchema.parse({
+      title: '  Scenario  ',
+      details: '  First line\n  Second line  ',
+      objective: '  Make checkout reliable  ',
+      preconditions: '  User is signed in\n  Cart has an item  ',
+      testData: '  Account: qa@example.com  ',
+      expectedResult: '  Order is created  ',
+      notes: '  Keep this note  ',
+    });
 
-    expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.flatten().fieldErrors.contentMd).toContain('Markdown content is required');
+    expect(result).toEqual({
+      title: 'Scenario',
+      details: 'First line\n  Second line',
+      objective: 'Make checkout reliable',
+      preconditions: 'User is signed in\n  Cart has an item',
+      testData: 'Account: qa@example.com',
+      expectedResult: 'Order is created',
+      notes: 'Keep this note',
+    });
   });
 
-  it('accepts whitespace-only Markdown without transforming it', () => {
-    const contentMd = ' \n\t  \n';
-    const result = testScenarioAuthoringSchema.safeParse({ title: '  Scenario  ', contentMd });
+  it.each(['', ' \n\t '])('accepts blank optional fields for normalization by the payload layer: %j', (value) => {
+    const result = testScenarioAuthoringSchema.parse({ title: 'Scenario', details: value, objective: value });
 
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.title).toBe('Scenario');
-      expect(result.data.contentMd).toBe(contentMd);
-    }
+    expect(result.details).toBe(value.trim());
+    expect(result.objective).toBe(value.trim());
   });
 
-  it('accepts optional details, trims only its outer whitespace, and preserves internal whitespace', () => {
-    const details = '  First line\n  Second line  ';
-    const result = testScenarioAuthoringSchema.parse({ title: 'Scenario', details, contentMd: '# Scenario' });
+  it('rejects blank step actions and accepts optional multiline expected results', () => {
+    const invalid = testScenarioStepSchema.safeParse({ action: ' \n\t ' });
+    expect(invalid.success).toBe(false);
+    if (!invalid.success) expect(invalid.error.flatten().fieldErrors.action).toContain('Step action is required');
 
-    expect(result.details).toBe('First line\n  Second line');
-  });
-
-  it.each(['', ' \n\t '])('accepts blank optional details as an empty value: %j', (details) => {
-    const result = testScenarioAuthoringSchema.parse({ title: 'Scenario', details, contentMd: '# Scenario' });
-
-    expect(result.details).toBe('');
-  });
-
-  it('preserves Unicode, indentation, and trailing line breaks', () => {
-    const contentMd = '# Проверка ✓\n\n```ts\n  const value = "  exact  ";\n```\n\n';
-    const result = testScenarioAuthoringSchema.parse({ title: '  Unicode сценарий  ', contentMd });
-
-    expect(result).toEqual({ title: 'Unicode сценарий', contentMd });
+    expect(testScenarioStepSchema.parse({ action: '  Open checkout  ', expectedResult: '  Ready\n  to pay  ' })).toEqual({
+      action: 'Open checkout',
+      expectedResult: 'Ready\n  to pay',
+    });
   });
 });
