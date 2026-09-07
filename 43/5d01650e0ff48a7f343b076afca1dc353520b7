@@ -1,0 +1,39 @@
+openspec/changes/adopt-test-scenario-summary-api/tasks.md
+  s_1a862f725f255b::t_404a43b5839ae1 22,35-36
+openspec/changes/archive/2026-09-07-add-client-user-admin/tasks.md
+  s_1a862f725f255b::t_25781be244c8b5 21,23-24
+openspec/specs/admin-user-management/spec.md
+  s_1a862f725f255b::t_a74952ee84a830 1-60
+openspec/specs/test-scenario-authoring/spec.md
+  s_1a862f725f255b::t_66ab279c01a807 1-280
+openspec/specs/test-scenario-catalog/spec.md
+  s_1a862f725f255b::t_ef0335a975b2ea 1-119
+openspec/specs/user-auth-feedback/spec.md
+  s_1a862f725f255b::t_7f6ef3c82083c1 1-28
+src/redux/apis/generatedApi.ts
+  s_d8deca07c3545f::t_c696de5d502833 879-933,1489-1517,2340-2353,2357-2376,2420-2423,2428-2433,2562-2565
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "435d01650e0ff48a7f343b076afca1dc353520b7",
+  "prompts": {},
+  "sessions": {
+    "s_1a862f725f255b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a07b1e-6407-7161-9562-5843ff7fdab3",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_d8deca07c3545f": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a07b14-a3e7-7ac3-8666-849964b94011",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
