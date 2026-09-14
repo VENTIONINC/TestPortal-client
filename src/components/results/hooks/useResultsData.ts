@@ -53,6 +53,7 @@ export const useResultsData = ({
     reviewStatus: debouncedFilters.reviewStatus || undefined,
     errorMessage: debouncedFilters.errorMessage || undefined,
     issueName: debouncedFilters.issueName || undefined,
+    assumption: debouncedFilters.assumption || undefined,
     dates: debouncedDates,
   });
 

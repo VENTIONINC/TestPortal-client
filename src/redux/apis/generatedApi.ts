@@ -134,6 +134,7 @@ const injectedRtkApi = api
             reviewStatus: queryArg.reviewStatus,
             errorMessage: queryArg.errorMessage,
             issueName: queryArg.issueName,
+            assumption: queryArg.assumption,
             from: queryArg["from"],
             to: queryArg.to,
             dates: queryArg.dates,
@@ -881,6 +882,7 @@ export type GetApiV2ResultsApiArg = {
   reviewStatus?: string;
   errorMessage?: string;
   issueName?: string;
+  assumption?: "all" | "confirmed" | "not-confirmed";
   from?: string;
   to?: string;
   dates?: string[];

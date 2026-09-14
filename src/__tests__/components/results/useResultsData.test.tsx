@@ -30,6 +30,7 @@ const filters: ResultsFilters = {
   reviewStatus: '',
   errorMessage: '',
   issueName: '',
+  assumption: '',
   from: '2026-07-01',
   to: '2026-07-07',
   page: 1,
@@ -120,5 +121,31 @@ describe('useResultsData', () => {
     );
 
     expect(queryMock.mock.lastCall?.[0]).toMatchObject({ type: 'Custom Release' });
+  });
+
+  it('submits the selected assumption filter', () => {
+    renderHook(() =>
+      useResultsData({
+        effectiveFilters: { ...filters, assumption: 'confirmed' },
+        debouncedFilters: { ...filters, assumption: 'confirmed' },
+        selectedDates: ['2026-07-02'],
+        selectedProjectId: 'project-1',
+      }),
+    );
+
+    expect(queryMock.mock.lastCall?.[0]).toMatchObject({ assumption: 'confirmed' });
+  });
+
+  it('omits the assumption request parameter when no assumption filter is selected', () => {
+    renderHook(() =>
+      useResultsData({
+        effectiveFilters: filters,
+        debouncedFilters: filters,
+        selectedDates: ['2026-07-02'],
+        selectedProjectId: 'project-1',
+      }),
+    );
+
+    expect(queryMock.mock.lastCall?.[0]).toMatchObject({ assumption: undefined });
   });
 });
