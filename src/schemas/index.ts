@@ -7,6 +7,7 @@ import { z } from 'zod';
 export * from './result-analysis-schemas';
 export * from './authSchemas';
 export * from './skillPackageSchemas';
+export * from './testScenarioSchemas';
 
 export const formatMessageSchema = z.object({
   name: z.string().min(1, 'Issue name is required'),

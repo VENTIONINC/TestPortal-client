@@ -26,7 +26,7 @@ export const NavigationMenu = ({ collapsed }: { collapsed: boolean }) => {
                 : item.active;
               return (
                 <Box key={item.id} asChild>
-                  <Link to={item.path!}>
+                  <Link to={item.path!} aria-current={isActive ? 'page' : undefined}>
                     <NavItem icon={item.icon} label={item.label} collapsed={collapsed} active={isActive} />
                   </Link>
                 </Box>
