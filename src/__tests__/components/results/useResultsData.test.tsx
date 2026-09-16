@@ -30,7 +30,7 @@ const filters: ResultsFilters = {
   reviewStatus: '',
   errorMessage: '',
   issueName: '',
-  assumption: '',
+  assumption: 'any',
   from: '2026-07-01',
   to: '2026-07-07',
   page: 1,
@@ -141,6 +141,19 @@ describe('useResultsData', () => {
       useResultsData({
         effectiveFilters: filters,
         debouncedFilters: filters,
+        selectedDates: ['2026-07-02'],
+        selectedProjectId: 'project-1',
+      }),
+    );
+
+    expect(queryMock.mock.lastCall?.[0]).toMatchObject({ assumption: undefined });
+  });
+
+  it('omits the assumption request parameter when Any is selected', () => {
+    renderHook(() =>
+      useResultsData({
+        effectiveFilters: { ...filters, assumption: 'any' },
+        debouncedFilters: { ...filters, assumption: 'any' },
         selectedDates: ['2026-07-02'],
         selectedProjectId: 'project-1',
       }),

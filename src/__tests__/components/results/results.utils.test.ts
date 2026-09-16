@@ -17,7 +17,7 @@ const filters: ResultsFilters = {
   reviewStatus: '',
   errorMessage: '',
   issueName: '',
-  assumption: '',
+  assumption: 'any',
   from: '2026-07-01',
   to: '2026-07-07',
   page: 1,

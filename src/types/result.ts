@@ -128,7 +128,7 @@ export interface ResultsFilters {
   reviewStatus: string;
   errorMessage: string;
   issueName: string;
-  assumption: '' | 'all' | 'confirmed' | 'not-confirmed';
+  assumption: '' | 'any' | 'all' | 'confirmed' | 'not-confirmed';
   from: string; // YYYY-MM-DD
   to: string; // YYYY-MM-DD
   page: number;
