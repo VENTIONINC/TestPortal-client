@@ -125,6 +125,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
     {
       projectId: selectedProjectId,
       period: String(periodDays * 2),
+      granularity: 'daily',
     },
     { skip: !selectedProjectId },
   );
@@ -240,7 +241,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
           </Text>
         </Flex>
         <Box w="full" px={4}>
-          <ProgressRoot value={linkedRate} max={100} size="sm" w="full" colorPalette="orange">
+          <ProgressRoot value={linkedRate} max={100} size="sm" w="full" colorPalette={ linkedRate > 50 ? 'orange' : 'red' }>
             <ProgressBar bg="bg.subtle" h="6px" borderRadius="full" />
           </ProgressRoot>
           <Flex justify="space-between" mt={1.5} px={1}>
