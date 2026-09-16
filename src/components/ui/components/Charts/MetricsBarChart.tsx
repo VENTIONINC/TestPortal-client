@@ -225,7 +225,7 @@ export const MetricsBarChart = ({
                     barCategoryGap={20}
                   >
                     <CartesianGrid
-                      stroke="var(--chakra-colors-border-subtle)"
+                      stroke={chart.color('border.main')}
                       strokeDasharray="3 3"
                       strokeOpacity={0.6}
                       vertical={false}
