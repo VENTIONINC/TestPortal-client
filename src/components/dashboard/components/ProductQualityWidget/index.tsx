@@ -125,6 +125,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
     {
       projectId: selectedProjectId,
       period: String(periodDays * 2),
+      granularity: 'daily',
     },
     { skip: !selectedProjectId },
   );
