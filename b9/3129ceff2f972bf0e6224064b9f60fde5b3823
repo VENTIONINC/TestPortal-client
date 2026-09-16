@@ -1,0 +1,101 @@
+openspec/specs/test-scenario-authoring/spec.md
+  s_c064b3d143ea4b::t_9f08674c0b4d03 169,172-173,175-178,181-183,186-187,190-191,195,198-199,202-203,206,210-211,215,222,225
+openspec/specs/test-scenario-catalog/spec.md
+  s_c064b3d143ea4b::t_978d737d70e213 52,56-59,64,68-77,86,91-92,110,115,121,126,133-142
+openspec/specs/test-scenario-step-editing/spec.md
+  s_c064b3d143ea4b::t_9ba1cfa06f3b6a 1-74
+src/components/test-scenarios/components/TestScenarioStepsEditor/hooks.ts
+  s_c34d0636ffbc79::t_eab5c62615f324 18-31,33-42,45-49,51-64,66,68-98,100-111,113,120-121,162,167,170,173,181-182,198,201,215,223,225,227,243,250-261
+src/components/test-scenarios/containers/TestScenarioEditContainer/constants.ts
+  s_c34d0636ffbc79::t_2139abeb46b7b1 1-5
+src/components/test-scenarios/containers/TestScenarioEditContainer/helpers.ts
+  s_c34d0636ffbc79::t_05ac96ceae2df5 1-11
+src/components/test-scenarios/containers/TestScenarioEditContainer/hooks.ts
+  s_c34d0636ffbc79::t_3723a3831b8a50 11,13,15-19,21-24,31,34,37,43,56,75,77-78,102-111
+src/components/test-scenarios/containers/TestScenarioEditContainer/index.ts
+  s_c34d0636ffbc79::t_c2799113339ca5 1-4
+src/components/test-scenarios/containers/TestScenarioEditContainer/types.ts
+  s_c34d0636ffbc79::t_212f6e9a3ca0e1 1-18
+openspec/changes/archive/2026-09-07-adopt-structured-test-scenario-authoring/specs/test-scenario-authoring/spec.md
+  s_c064b3d143ea4b::t_bafa4208da6955 65,80,101,105
+openspec/changes/archive/2026-09-07-adopt-test-scenario-summary-api/design.md
+  s_4a11654e1fedf8::t_a4fc94e9c15c5e 3,5,9,11,15,17,19,21,23,25,27,29,31,33,37-40,44-46,48
+openspec/changes/archive/2026-09-07-adopt-test-scenario-summary-api/proposal.md
+  s_4a11654e1fedf8::t_068067365d1d22 3,7-8,11-12,18,22,26-30
+openspec/changes/archive/2026-09-07-adopt-test-scenario-summary-api/specs/test-scenario-catalog/spec.md
+  s_4a11654e1fedf8::t_1a88b8ede0ac33 3,5,13,15,17,19-23,25,27,29-31,36,40,43,45-47,49,51,53,55-57,59,61-63,65,67-69,71,73-76,78,80,82,84-86,88,90-91,93,95-97
+openspec/changes/archive/2026-09-07-adopt-test-scenario-summary-api/tasks.md
+  s_4a11654e1fedf8::t_c682a8f4eced6a 3-5,9-10,12,14-16,18,20-23,25
+src/components/test-scenarios/components/TestScenarioDetailsView/TestScenarioDetailsView.tsx
+  s_b873326591be14::t_1c17b1ef33ca7c 11-13,20-21,23-46,49-58,60-61,63-89
+src/components/test-scenarios/components/TestScenarioDetailsView/constants.ts
+  s_b873326591be14::t_536cd5670711d3 1-11
+src/components/test-scenarios/components/TestScenarioDetailsView/helpers.ts
+  s_b873326591be14::t_203e5de72a281e 1-7
+src/components/test-scenarios/components/TestScenarioDetailsView/index.ts
+  s_b873326591be14::t_f9b13d4388a8d7 1-4
+src/components/test-scenarios/components/TestScenarioForm/TestScenarioForm.tsx
+  s_b873326591be14::t_9e97b84214e0bd 9-11,13-17,21-22,24,32-33,36-44,97,102,117,156
+src/components/test-scenarios/components/TestScenarioForm/constants.ts
+  s_b873326591be14::t_016954b0ec3434 1-25
+src/components/test-scenarios/components/TestScenarioForm/helpers.ts
+  s_b873326591be14::t_79aff320687a8d 1-22
+src/components/test-scenarios/components/TestScenarioForm/hooks.ts
+  s_b873326591be14::t_57e18067b584f0 1-187
+src/components/test-scenarios/components/TestScenarioForm/index.ts
+  s_b873326591be14::t_8b7bab9eb73843 1-10
+src/components/test-scenarios/components/TestScenarioForm/types.ts
+  s_b873326591be14::t_72d08a1262b161 1-31
+src/components/test-scenarios/components/TestScenarioStepsEditor/TestScenarioStepsEditor.tsx
+  s_b873326591be14::t_93f720885ff977 1-151
+src/components/test-scenarios/components/TestScenarioStepsEditor/constants.ts
+  s_b873326591be14::t_2db72e08901b60 1-14
+src/components/test-scenarios/components/TestScenarioStepsEditor/helpers.ts
+  s_b873326591be14::t_f2ff3f857e5228 1-37
+src/components/test-scenarios/components/TestScenarioStepsEditor/index.ts
+  s_b873326591be14::t_58537572189bf3 1-4
+src/components/test-scenarios/components/TestScenarioStepsEditor/types.ts
+  s_b873326591be14::t_4b9db46926f14d 1-16
+src/components/test-scenarios/containers/TestScenarioEditContainer/TestScenarioEditContainer.tsx
+  s_b873326591be14::t_59dac1898cbb6f 1-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "b93129ceff2f972bf0e6224064b9f60fde5b3823",
+  "prompts": {},
+  "sessions": {
+    "s_4a11654e1fedf8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a07c31-476e-7dc3-bcec-900df5886bf1",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_b873326591be14": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a07c4f-69c5-7f73-b125-709b3883b18e",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_c064b3d143ea4b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a07c4d-4cd1-71a2-b84f-7a130b561903",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_c34d0636ffbc79": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a07c47-4fab-7382-8184-5381587b0c62",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
