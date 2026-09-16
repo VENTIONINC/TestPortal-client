@@ -19,7 +19,7 @@
 
 - [ ] 4.1 Run focused Test Scenario API, catalog, boundary, detail, edit, and PATCH tests including the new details authoring scenarios; verify all pass with the revised contract and fixtures.
 - [x] 4.2 Run `yarn lint`, `yarn test`, and `yarn build`; verify successful exits or explicitly document unrelated blockers without silently changing their scope.
-- [ ] 4.3 Perform local browser QA against the backend on port 3001; verify null and non-null details, literal markup text, distinct creator name/email display, long metadata layout, pagination, project switching, and title/edit navigation with full Markdown retrieval, creation with/without details, details-only and combined edits, clearing details, no-op saves, and record the observed results.
+- [x] 4.3 Perform local browser QA against the backend on port 3001; verify null and non-null details, literal markup text, distinct creator name/email display, long metadata layout, pagination, project switching, and title/edit navigation with full Markdown retrieval, creation with/without details, details-only and combined edits, clearing details, no-op saves, and record the observed results.
 - [x] 4.4 Run `openspec validate adopt-test-scenario-summary-api --type change --strict --no-interactive` and `git diff --check`; verify both pass and report how this contract validation relates to the existing CRUD regeneration task without automatically completing another change's checklist.
 
 
@@ -32,3 +32,5 @@ Complete these implementation tasks before repeating section 4 validation. Exist
 - [ ] 5.3 Extend editable values and PATCH comparison to support details-only, combined changes, explicit null clearing, and unchanged omission; verify exact payload tests include null-to-blank no-ops, outer whitespace normalization, and byte-for-byte Markdown preservation.
 - [ ] 5.4 Connect edit initialization, successful-response reset, and comparison baseline to details; verify a second unchanged save is a no-op, failed saves retain input, and project switching clears prior-project details.
 - [ ] 5.5 Extend mutation/cache integration coverage to create details, update details, and clear them; verify refreshed catalog rows show the persisted text or `No details` and existing title/Markdown-only changes leave details untouched.
+
+Manual QA confirmed by the user on 2026-09-07.

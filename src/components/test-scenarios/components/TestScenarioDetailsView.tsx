@@ -1,10 +1,10 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Heading, HStack, VStack } from '@chakra-ui/react';
+import { Box, Heading, HStack, Text, VStack } from '@chakra-ui/react';
 import { FiArrowLeft } from 'react-icons/fi';
 
-import { ContextMenuButton, Link, MarkdownPreview, Wrap } from '@/components/ui';
+import { ContextMenuButton, Link, Wrap } from '@/components/ui';
 import type { TestScenario } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
 
@@ -14,6 +14,17 @@ export interface TestScenarioDetailsViewProps {
   scenario: TestScenario;
   onContextMenu: TestScenarioContextMenuHandler;
 }
+
+const structuredFields = [
+  ['Details', 'details'],
+  ['Objective', 'objective'],
+  ['Preconditions', 'preconditions'],
+  ['Test data', 'testData'],
+  ['Expected result', 'expectedResult'],
+  ['Notes', 'notes'],
+] as const;
+
+const orderedSteps = (scenario: TestScenario) => [...scenario.steps].sort((left, right) => left.position - right.position);
 
 export const TestScenarioDetailsView = ({ scenario, onContextMenu }: TestScenarioDetailsViewProps) => (
   <VStack align="stretch" gap={6} mx={{ base: 4, md: 6 }} my={4}>
@@ -42,8 +53,39 @@ export const TestScenarioDetailsView = ({ scenario, onContextMenu }: TestScenari
     </HStack>
 
     <Wrap w="100%" p={{ base: 4, md: 6 }}>
-      <VStack align="stretch" w="100%">
-        <MarkdownPreview content={scenario.contentMd} />
+      <VStack align="stretch" w="100%" gap={6}>
+        <VStack align="stretch" gap={4}>
+          <Heading size="md">Scenario fields</Heading>
+          {structuredFields.map(([label, field]) => (
+            <Box key={field}>
+              <Text fontWeight="semibold">{label}</Text>
+              <Text whiteSpace="pre-wrap" color="text.secondary">
+                {scenario[field] ?? 'No value'}
+              </Text>
+            </Box>
+          ))}
+        </VStack>
+
+        <VStack align="stretch" gap={3}>
+          <Heading size="md">Scenario steps</Heading>
+          {orderedSteps(scenario).length === 0 ? (
+            <Text color="text.muted">No steps saved.</Text>
+          ) : (
+            orderedSteps(scenario).map((step, index) => (
+              <Box key={step.id} p={4} borderWidth="1px" borderColor="border.subtle" borderRadius="md">
+                <VStack align="stretch" gap={2}>
+                  <Text fontWeight="semibold">Step {index + 1}</Text>
+                  <Text whiteSpace="pre-wrap"><Text as="span" fontWeight="medium">Action: </Text>{step.action}</Text>
+                  <Text whiteSpace="pre-wrap" color="text.secondary">
+                    <Text as="span" fontWeight="medium" color="text.main">Expected result: </Text>
+                    {step.expectedResult ?? 'No expected result'}
+                  </Text>
+                </VStack>
+              </Box>
+            ))
+          )}
+        </VStack>
+
       </VStack>
     </Wrap>
   </VStack>

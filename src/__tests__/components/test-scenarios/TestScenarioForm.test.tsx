@@ -11,7 +11,11 @@ import { ChakraProvider } from '@/components/ui';
 const initialValues = {
   title: 'Checkout flow',
   details: 'Existing scenario details',
-  contentMd: '# Checkout flow\n\n  exact source  \n',
+  objective: 'Complete checkout',
+  preconditions: 'Signed in',
+  testData: 'Account 1',
+  expectedResult: 'Order exists',
+  notes: 'Keep an eye on totals',
 };
 
 const renderForm = (props: Partial<React.ComponentProps<typeof TestScenarioForm>> = {}) =>
@@ -22,136 +26,125 @@ const renderForm = (props: Partial<React.ComponentProps<typeof TestScenarioForm>
   );
 
 describe('TestScenarioForm', () => {
-  it('shows source, preview, and create actions in create mode', () => {
+  it('renders structured fields and has no editable Markdown source', () => {
     renderForm();
 
     expect(screen.getByRole('heading', { name: 'Create Test Scenario' })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue('');
-    expect(screen.getByRole('tab', { name: 'Source' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Preview' })).toBeInTheDocument();
+    for (const label of ['Title', 'Details', 'Objective', 'Preconditions', 'Test data', 'Expected result', 'Notes']) {
+      expect(screen.getByRole('textbox', { name: label })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole('textbox', { name: 'Markdown' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create Test Scenario' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
   });
 
-  it('shows edit-specific heading and save action', () => {
+  it('initializes structured values without a Markdown preview in edit mode', () => {
     renderForm({ mode: 'edit', initialValues });
 
     expect(screen.getByRole('heading', { name: 'Edit Test Scenario' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Return to Test Scenarios' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue(initialValues.details);
-    expect(screen.getByRole('button', { name: 'Save Test Scenario' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Create Test Scenario' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Objective' })).toHaveValue(initialValues.objective);
+    expect(screen.queryByRole('heading', { name: 'Saved Markdown preview' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Markdown' })).not.toBeInTheDocument();
   });
 
-  it('returns from edit mode through the heading control', async () => {
-    const user = userEvent.setup();
-    const onCancel = vi.fn();
-
-    renderForm({ mode: 'edit', initialValues, onCancel });
-    await user.click(screen.getByRole('button', { name: 'Return to Test Scenarios' }));
-
-    expect(onCancel).toHaveBeenCalledTimes(1);
-  });
-
-  it('keeps exact unsaved Markdown across preview and source modes', async () => {
-    const user = userEvent.setup();
-    const contentMd = '# Заголовок ✓\n\n```ts\n  const value = "  exact  ";\n```\n\n';
-
-    renderForm({ initialValues: { title: '', details: '', contentMd: '' } });
-
-    const markdown = screen.getByRole('textbox', { name: 'Markdown' });
-    fireEvent.change(markdown, { target: { value: contentMd } });
-
-    await user.click(screen.getByRole('tab', { name: 'Preview' }));
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Заголовок ✓' })).toBeInTheDocument());
-
-    await user.click(screen.getByRole('tab', { name: 'Source' }));
-    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Markdown' })).toHaveValue(contentMd));
-  });
-
-  it('initializes null details as empty and preserves internal whitespace while editing', () => {
-    renderForm({
-      mode: 'edit',
-      initialValues: { title: 'Scenario', details: null, contentMd: '# Scenario' },
-    });
-
-    const details = 'First line\n  Second line';
-    const detailsField = screen.getByRole('textbox', { name: 'Details' });
-
-    expect(detailsField).toHaveValue('');
-    fireEvent.change(detailsField, { target: { value: details } });
-    expect(detailsField).toHaveValue(details);
-  });
-
-  it('submits normalized details while preserving the exact Markdown source', async () => {
+  it('submits normalized structured values and no initial steps by default', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    const contentMd = '  # Scenario  \n\n\tstep 1\n';
-
-    renderForm({
-      onSubmit,
-      initialValues: { title: '', details: '', contentMd: '' },
-    });
+    renderForm({ onSubmit });
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: '  Scenario  ' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), {
-      target: { value: '  First line\n  Second line  ' },
-    });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Markdown' }), { target: { value: contentMd } });
-
+    fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: '  First\n  Second  ' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Objective' }), { target: { value: '  Objective  ' } });
     await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     expect(onSubmit.mock.calls[0]?.[0]).toEqual({
       title: 'Scenario',
-      details: 'First line\n  Second line',
-      contentMd,
+      details: 'First\n  Second',
+      objective: 'Objective',
+      preconditions: '',
+      testData: '',
+      expectedResult: '',
+      notes: '',
     });
+    expect(onSubmit.mock.calls[0]?.[1]).toEqual([]);
   });
 
-  it('does not submit invalid empty values and displays client validation', async () => {
+  it('supports adding, editing, removing and reordering initial steps', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-
     renderForm({ onSubmit });
+
+    await user.click(screen.getByRole('button', { name: 'Add step' }));
+    await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Scenario');
+    await user.type(screen.getByRole('textbox', { name: 'Step 1 action' }), 'Open checkout');
+    await user.click(screen.getByRole('button', { name: 'Add step' }));
+    await user.type(screen.getByRole('textbox', { name: 'Step 2 action' }), 'Submit order');
+    await user.type(screen.getByRole('textbox', { name: 'Step 2 expected result' }), 'Order is created');
+
+    await user.click(screen.getByRole('button', { name: 'Move step 2 up' }));
+    expect(screen.getByRole('textbox', { name: 'Step 1 action' })).toHaveValue('Submit order');
+    expect(screen.getByRole('textbox', { name: 'Step 2 action' })).toHaveValue('Open checkout');
+
+    await user.click(screen.getByRole('button', { name: 'Remove step 1' }));
+    expect(screen.getByRole('textbox', { name: 'Step 1 action' })).toHaveValue('Open checkout');
+
+    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0]?.[1]).toEqual([
+      expect.objectContaining({ action: 'Open checkout', expectedResult: '' }),
+    ]);
+  });
+
+  it('rejects blank step actions with field feedback and keeps drafts', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    renderForm({ onSubmit });
+
+    await user.click(screen.getByRole('button', { name: 'Add step' }));
+    await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Scenario');
     await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
 
     expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText('Step action is required')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Step 1 action' })).toHaveValue('');
+  });
+
+  it('rejects blank titles and disables actions while pending', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    const firstRender = renderForm({ onSubmit, isSubmitting: true });
+
+    expect(screen.getByRole('button', { name: 'Create Test Scenario' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    firstRender.unmount();
+    const { unmount } = renderForm({ onSubmit });
+    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
     expect(screen.getByText('Title is required')).toBeInTheDocument();
-    expect(screen.getByText('Markdown content is required')).toBeInTheDocument();
+    unmount();
   });
 
-  it('keeps editable values when API feedback is displayed', () => {
-    renderForm({ initialValues, apiError: 'The scenario could not be saved.' });
+  it('updates pristine values from a refreshed response while preserving an unrelated dirty field', async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderForm({ mode: 'edit', initialValues });
 
-    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue(initialValues.title);
-    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue(initialValues.details);
-    expect(screen.getByRole('textbox', { name: 'Markdown' })).toHaveValue(initialValues.contentMd);
-    expect(screen.getByRole('alert')).toHaveTextContent('The scenario could not be saved.');
-  });
-
-  it('resets from a newly persisted response and disables pending actions', async () => {
-    const { rerender } = renderForm({ initialValues });
-
+    await user.type(screen.getByRole('textbox', { name: 'Notes' }), ' (draft)');
     rerender(
       <ChakraProvider>
         <TestScenarioForm
           mode="edit"
-          initialValues={{
-            title: 'Normalized title',
-            details: 'Normalized details',
-            contentMd: initialValues.contentMd,
-          }}
-          isSubmitting
+          initialValues={{ ...initialValues, objective: 'Persisted objective' }}
           onSubmit={vi.fn()}
           onCancel={vi.fn()}
         />
       </ChakraProvider>,
     );
 
-    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Normalized title'));
-    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue('Normalized details');
-    expect(screen.getByRole('button', { name: 'Save Test Scenario' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Objective' })).toHaveValue('Persisted objective'));
+    expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue('Keep an eye on totals (draft)');
   });
 });

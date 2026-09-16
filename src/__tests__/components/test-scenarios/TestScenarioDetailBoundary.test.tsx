@@ -11,8 +11,12 @@ import { TestScenarioEditBoundary } from '@/components/test-scenarios/containers
 import { ChakraProvider } from '@/components/ui';
 import { useTestScenarioContextMenu } from '@/components/test-scenarios/hooks/useTestScenarioContextMenu';
 import {
+  useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
   useGetApiV2TestScenariosByScenarioIdQuery,
   usePatchApiV2TestScenariosByScenarioIdMutation,
+  usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
+  usePostApiV2TestScenariosByScenarioIdStepsMutation,
+  usePutApiV2TestScenariosByScenarioIdStepsOrderMutation,
 } from '@/redux/apis/generatedApi';
 
 const routeParams = vi.hoisted(() => ({ scenarioId: 'scenario-1' as string | undefined }));
@@ -40,11 +44,19 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
     ...actual,
     useGetApiV2TestScenariosByScenarioIdQuery: vi.fn(),
     usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn(),
+    usePostApiV2TestScenariosByScenarioIdStepsMutation: vi.fn(),
+    usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation: vi.fn(),
+    useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation: vi.fn(),
+    usePutApiV2TestScenariosByScenarioIdStepsOrderMutation: vi.fn(),
   };
 });
 
 const mockedDetailQuery = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
 const mockedUpdateMutation = vi.mocked(usePatchApiV2TestScenariosByScenarioIdMutation);
+const mockedAppendMutation = vi.mocked(usePostApiV2TestScenariosByScenarioIdStepsMutation);
+const mockedStepUpdateMutation = vi.mocked(usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation);
+const mockedDeleteMutation = vi.mocked(useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation);
+const mockedReorderMutation = vi.mocked(usePutApiV2TestScenariosByScenarioIdStepsOrderMutation);
 const mockedContextMenu = vi.mocked(useTestScenarioContextMenu);
 
 const scenarioFor = (projectId: string) => ({
@@ -52,8 +64,16 @@ const scenarioFor = (projectId: string) => ({
   projectId,
   createdById: 'user-1',
   title: `${projectId} scenario`,
-  contentMd: `# ${projectId} scenario`,
-  details: `${projectId} details`,
+    contentMd: `# ${projectId} scenario`,
+    details: `${projectId} details`,
+    objective: `${projectId} objective`,
+    preconditions: null,
+    testData: null,
+    expectedResult: null,
+    notes: null,
+    steps: [],
+    contentMdHash: `${projectId}-hash`,
+    contentMdFormatVersion: 1,
   createdAt: '2026-09-01T10:00:00.000Z',
   updatedAt: '2026-09-02T11:00:00.000Z',
 });
@@ -76,6 +96,10 @@ describe('Test Scenario route boundaries', () => {
     mockedDetailQuery.mockReset();
     mockedContextMenu.mockReturnValue(contextMenu);
     mockedUpdateMutation.mockReturnValue([updateScenario, { isLoading: false }] as never);
+    mockedAppendMutation.mockReturnValue([vi.fn(), { isLoading: false }] as never);
+    mockedStepUpdateMutation.mockReturnValue([vi.fn(), { isLoading: false }] as never);
+    mockedDeleteMutation.mockReturnValue([vi.fn(), { isLoading: false }] as never);
+    mockedReorderMutation.mockReturnValue([vi.fn(), { isLoading: false }] as never);
     mockedDetailQuery.mockImplementation((args) => {
       const projectId = (args as { projectId: string }).projectId;
       const scenario = scenarioFor(projectId);
@@ -95,20 +119,21 @@ describe('Test Scenario route boundaries', () => {
     const { unmount } = renderWithRouter(<TestScenarioDetailBoundary />);
 
     expect(mockedDetailQuery).toHaveBeenLastCalledWith({ scenarioId: 'scenario-1', projectId: 'project-a' });
-    expect(screen.getByTestId('markdown-preview')).toBeInTheDocument();
+    expect(screen.getByText('project-a objective')).toBeInTheDocument();
+    expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
 
     unmount();
     renderWithRouter(<TestScenarioEditBoundary />);
 
     expect(mockedDetailQuery).toHaveBeenLastCalledWith({ scenarioId: 'scenario-1', projectId: 'project-a' });
-    expect(screen.getByRole('textbox', { name: 'Markdown' })).toHaveValue('# project-a scenario');
+    expect(screen.getByRole('textbox', { name: 'Objective' })).toHaveValue('project-a objective');
   });
 
   it('clears the edit form immediately and requests the new project scope after a project switch', () => {
     const { rerender } = renderWithRouter(<TestScenarioEditBoundary />);
 
-    expect(screen.getByRole('textbox', { name: 'Markdown' })).toHaveValue('# project-a scenario');
+    expect(screen.getByRole('textbox', { name: 'Objective' })).toHaveValue('project-a objective');
 
     selectedProject.id = 'project-b';
     mockedDetailQuery.mockReturnValue({
@@ -136,7 +161,8 @@ describe('Test Scenario route boundaries', () => {
   it('clears read-only details immediately when the selected project changes', () => {
     const { rerender } = renderWithRouter(<TestScenarioDetailBoundary />);
 
-    expect(screen.getByTestId('markdown-preview')).toHaveTextContent('project-a scenario');
+    expect(screen.getByText('project-a objective')).toBeInTheDocument();
+    expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
 
     selectedProject.id = 'project-b';
     mockedDetailQuery.mockReturnValue({
