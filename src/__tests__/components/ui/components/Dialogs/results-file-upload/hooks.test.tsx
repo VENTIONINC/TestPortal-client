@@ -5,7 +5,10 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { toaster } from '@/components/ui';
-import { usePostApiV2UploadJsonReportMutation } from '@/redux/apis/generatedApi';
+import {
+  useGetApiV2ProjectsQuery,
+  usePostApiV2UploadJsonReportMutation,
+} from '@/redux/apis/generatedApi';
 import { usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/extendedApi';
 import { useResultsFileUpload } from '@/components/ui/components/Dialogs/results-file-upload/hooks';
 
@@ -22,6 +25,7 @@ vi.mock('@/components/ui', () => ({
 }));
 
 vi.mock('@/redux/apis/generatedApi', () => ({
+  useGetApiV2ProjectsQuery: vi.fn(),
   usePostApiV2UploadJsonReportMutation: vi.fn(),
 }));
 
@@ -44,6 +48,9 @@ describe('useResultsFileUpload', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useGetApiV2ProjectsQuery).mockReturnValue({
+      data: [{ id: 'project-123', isActive: true }],
+    } as unknown as ReturnType<typeof useGetApiV2ProjectsQuery>);
     vi.mocked(usePostApiV2UploadJsonReportMutation).mockReturnValue([
       uploadJsonReport,
       {} as ReturnType<typeof usePostApiV2UploadJsonReportMutation>[1],
@@ -62,6 +69,11 @@ describe('useResultsFileUpload', () => {
     await act(async () => result.current.handleUpload());
 
     expect(unwrap).toHaveBeenCalledOnce();
+    expect(uploadCtrfReport).toHaveBeenCalledWith(
+      expect.objectContaining({ body: expect.any(FormData) }),
+    );
+    const formData = uploadCtrfReport.mock.calls[0][0].body as FormData;
+    expect(formData.get('projectId')).toBe('project-123');
     expect(toaster.create).toHaveBeenCalledWith({ title: 'Files uploaded', type: 'success' });
     expect(closeDialog).toHaveBeenCalledOnce();
   });

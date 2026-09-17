@@ -6,10 +6,13 @@ import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, L
 import { format, parseISO } from 'date-fns';
 
 import { DashboardResponse } from '@/redux/apis/generatedApi';
+import { computeYAxisTicks } from '@/utils/chartAxis';
 
 interface DashboardTrendChartProps {
   data: DashboardResponse['history'];
 }
+
+const percentYAxis = computeYAxisTicks(100);
 
 export const DashboardTrendChart = ({ data }: DashboardTrendChartProps) => {
   const chartData = data.map((item) => ({
@@ -31,12 +34,15 @@ export const DashboardTrendChart = ({ data }: DashboardTrendChartProps) => {
             axisLine={false}
           />
           <YAxis
-            domain={[0, 100]}
+            domain={percentYAxis.domain}
+            ticks={percentYAxis.ticks}
             unit="%"
             style={{ fontSize: 12 }}
             stroke="#718096"
             tickLine={false}
             axisLine={false}
+            allowDecimals={false}
+            interval={0}
           />
           <Tooltip
             formatter={(value: string | number | readonly (string | number)[] | undefined) =>

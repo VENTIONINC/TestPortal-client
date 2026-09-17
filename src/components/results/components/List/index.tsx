@@ -47,6 +47,7 @@ export const ResultsList = memo(
     const allEntries = useMemo(() => Array.from(results.entries()), [results]);
     const visibleEntries = allEntries.slice(0, visibleCount);
     const hasMore = visibleCount < allEntries.length;
+    const shouldReserveListHeight = allEntries.length > 0 || isFetching;
 
     useEffect(() => {
       setVisibleCount(PAGE_SIZE);
@@ -70,7 +71,7 @@ export const ResultsList = memo(
     }, [hasMore, allEntries.length]);
 
     return (
-      <Box bg="bg.section" borderRadius="xl" minH="calc(100vh - 200px)">
+      <Box bg="bg.section" borderRadius="xl" minH={shouldReserveListHeight ? 'calc(100vh - 200px)' : 0}>
         <Stack>
           <Box mx={4} mt={4} mb="8px" borderBottom="1px solid" borderColor="border.main">
             <Heading fontSize="lg" mb={4}>
