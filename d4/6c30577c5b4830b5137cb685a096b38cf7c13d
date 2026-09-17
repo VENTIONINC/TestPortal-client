@@ -1,0 +1,109 @@
+.codex/config.toml
+  s_78f64b72f25fda::t_93efdd83facf5f 1-44
+.docker/README.md
+  s_78f64b72f25fda::t_79807853620721 1-82
+.docker/mcp-profile.json
+  s_78f64b72f25fda::t_e69ee48d4ad2d3 1-2022
+openspec/changes/add-manual-test-run-execution/.openspec.yaml
+  s_55e6d0f0548487::t_0426b751e01f2e 1-2
+openspec/changes/add-manual-test-run-execution/qa-notes.md
+  s_a972d525e4651a::t_6778d9bafedc29 1-27
+openspec/changes/add-manual-test-run-execution/tasks.md
+  s_a972d525e4651a::t_3fe78a1a27864d 1-30
+src/__tests__/components/manual-test-runs/ManualTestRunRouteBoundary.test.tsx
+  s_a972d525e4651a::t_475f82d7abe885 1-70
+src/__tests__/components/manual-test-runs/utils.test.ts
+  s_a972d525e4651a::t_c02fb8a1c1ac85 1-63
+src/__tests__/components/test-scenarios/TestScenarioDetailBoundary.test.tsx
+  s_a972d525e4651a::t_56b5608b5b8844 53-60
+src/__tests__/components/test-scenarios/TestScenarioDetailContainer.test.tsx
+  s_a972d525e4651a::t_8a2de9b3ba2cd7 13,18,55-59,62,78,81,170-196
+src/__tests__/redux/apis/manualTestRunApi.test.ts
+  s_a972d525e4651a::t_9d42f16a5c0d97 1-109
+src/__tests__/router/index.test.tsx
+  s_a972d525e4651a::t_b69a7830e0679e 8,30-42
+src/components/manual-test-runs/components/ManualTestRunCompletionDialog.tsx
+  s_a972d525e4651a::t_10953c7f6cfdf7 1-75
+src/components/manual-test-runs/components/ManualTestRunDetailStates.tsx
+  s_a972d525e4651a::t_25c601ec2b78b9 1-63
+src/components/manual-test-runs/components/index.ts
+  s_a972d525e4651a::t_3285884dfc8cd5 1-6
+src/components/manual-test-runs/containers/ManualTestRunDetailContainer.tsx
+  s_a972d525e4651a::t_5170bb7116cb96 1-43
+src/components/manual-test-runs/containers/ManualTestRunRouteBoundary.tsx
+  s_a972d525e4651a::t_3d370fdb230e84 1-48
+src/components/manual-test-runs/containers/index.ts
+  s_a972d525e4651a::t_371d8ab1e0e2fd 1-5
+src/components/manual-test-runs/hooks/index.ts
+  s_a972d525e4651a::t_2610af5393de9d 1-5
+src/components/manual-test-runs/hooks/useManualTestRunDetail.ts
+  s_a972d525e4651a::t_9abc6749347680 1-86
+src/components/manual-test-runs/hooks/useManualTestRunExecution.ts
+  s_a972d525e4651a::t_4b65ed8d49f0ef 1-411
+src/components/manual-test-runs/index.ts
+  s_a972d525e4651a::t_89ba61c3d65da2 1-8
+src/components/manual-test-runs/types.ts
+  s_a972d525e4651a::t_f464aa7ca0778d 1-26
+src/components/manual-test-runs/utils.ts
+  s_a972d525e4651a::t_1066c56f669a87 1-68
+src/components/test-scenarios/components/TestScenarioDetailsView.tsx
+  s_a972d525e4651a::t_49db19259a7ea1 4,16-19,33-40,60-70,73-91
+src/components/test-scenarios/constants.ts
+  s_a972d525e4651a::t_92c74616ab731d 13-15
+src/components/test-scenarios/containers/TestScenarioDetailContainer.tsx
+  s_a972d525e4651a::t_985e21c19511ea 4-5,8-9,11,14,27-32,35-74,88-91
+src/pages/ManualTestRuns/ManualTestRunPage.tsx
+  s_a972d525e4651a::t_ea419ef82d35a7 1-15
+src/pages/ManualTestRuns/index.ts
+  s_a972d525e4651a::t_5d2e9301217689 1-4
+src/pages/index.ts
+  s_a972d525e4651a::t_83dbf8c653e23c 18
+src/redux/apis/extendedApi.ts
+  s_a972d525e4651a::t_d12d52e321b7d2 11-22,30-53,135-179,274-283
+src/redux/apis/generatedApi.ts
+  s_a972d525e4651a::t_e2e0d89a77f553 24,1001-1103,1657-1718,2623-2724,2842-2851
+src/redux/apis/tags.ts
+  s_a972d525e4651a::t_41f801ef672a5a 15
+src/router/index.tsx
+  s_a972d525e4651a::t_0444c41089ca23 24,152-162
+src/types/paths.ts
+  s_a972d525e4651a::t_6a4914a9e19549 13
+openspec/changes/add-manual-test-run-execution/design.md
+  s_55e6d0f0548487::t_06f9169be13562 1-58
+openspec/changes/add-manual-test-run-execution/proposal.md
+  s_55e6d0f0548487::t_bec7cb6d1ba931 1-31
+openspec/changes/add-manual-test-run-execution/specs/manual-test-run-execution/spec.md
+  s_55e6d0f0548487::t_9b4e0ce2d29edf 1-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "d46c30577c5b4830b5137cb685a096b38cf7c13d",
+  "prompts": {},
+  "sessions": {
+    "s_55e6d0f0548487": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ae69-825d-7e13-bea1-e3c2f13a80df",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_78f64b72f25fda": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ae68-6545-7961-bbc9-db12cfe07707",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_a972d525e4651a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0aeac-8a46-79f0-830d-96c2815b8a3b",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
