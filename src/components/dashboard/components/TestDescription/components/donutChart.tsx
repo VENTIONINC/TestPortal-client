@@ -62,7 +62,7 @@ export const DonutChart = ({ title, metrics, donutChart }: DonutChartProps) => {
                       <Cell key={`cell-${index}`} fill={donutChart.color(item.color)} stroke="none" />
                     ))}
                   </Pie>
-                  <Tooltip cursor={false} content={<Chart.Tooltip />} wrapperStyle={{ zIndex: 10 }} />
+`                  <Tooltip cursor={false} content={<Chart.Tooltip hideLabel />} wrapperStyle={{ zIndex: 10 }} />
                 </PieChart>
               </Chart.Root>
             </ResponsiveContainer>
@@ -90,7 +90,7 @@ export const DonutChart = ({ title, metrics, donutChart }: DonutChartProps) => {
               <Text>passed {metrics.passed}</Text>
             </HStack>
             <HStack>
-              <Box w="2" h="2" bg="orange.400" borderRadius="xs" />
+              <Box w="2" h="2" bg="dashboard.red" borderRadius="xs" />
               <Text>failed {metrics.failed}</Text>
             </HStack>
             <HStack>

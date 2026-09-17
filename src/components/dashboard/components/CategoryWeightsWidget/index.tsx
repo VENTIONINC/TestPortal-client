@@ -3,16 +3,16 @@ import { Progress as ChakraProgress } from '@chakra-ui/react';
 
 import { useSelectedProject } from '@/hooks';
 import { getIssueCategoryStyle } from '@/utils';
-import { IssueCategory } from '@/types';
+import { ResultCategory } from '@/types';
 import { ProgressRoot, ProgressBar } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const categories = [
-  { key: 'bug', type: IssueCategory.Bug },
-  { key: 'infra', type: IssueCategory.Infra },
-  { key: 'script', type: IssueCategory.Script },
-  { key: 'performance', type: IssueCategory.Performance },
-  { key: 'other', type: IssueCategory.Other },
+  { key: 'bug', type: ResultCategory.Bug },
+  { key: 'infra', type: ResultCategory.Infra },
+  { key: 'script', type: ResultCategory.Script },
+  { key: 'performance', type: ResultCategory.Performance },
+  { key: 'other', type: ResultCategory.Other },
 ];
 
 export const CategoryWeightsWidget = () => {

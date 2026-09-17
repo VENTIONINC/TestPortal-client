@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { forwardRef } from 'react';
-import { Field as ChakraField } from '@chakra-ui/react';
+import { Field as ChakraField, HStack } from '@chakra-ui/react';
 
 export interface FieldProps extends ChakraField.RootProps {
   label?: React.ReactNode;
+  labelAction?: React.ReactNode;
   helperText?: React.ReactNode;
   errorText?: React.ReactNode;
   optionalText?: React.ReactNode;
@@ -13,15 +14,18 @@ export interface FieldProps extends ChakraField.RootProps {
 }
 
 export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field(props, ref) {
-  const { label, children, helperText, errorText, optionalText, labelProps, ...rest } = props;
+  const { label, labelAction, children, helperText, errorText, optionalText, labelProps, ...rest } = props;
 
   return (
     <ChakraField.Root ref={ref} gap={1} {...rest}>
       {label && (
-        <ChakraField.Label fontSize="12px" {...labelProps}>
-          {label}
-          <ChakraField.RequiredIndicator fallback={optionalText} />
-        </ChakraField.Label>
+        <HStack gap={1} align="center">
+          <ChakraField.Label fontSize="12px" {...labelProps}>
+            {label}
+            <ChakraField.RequiredIndicator fallback={optionalText} />
+          </ChakraField.Label>
+          {labelAction}
+        </HStack>
       )}
       {children}
       {helperText && <ChakraField.HelperText>{helperText}</ChakraField.HelperText>}

@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui';
 import { type ResultsStats as ResultsStatsResponse } from '@/redux/apis/generatedApi';
 
 import { CollapsibleWrapper } from './components';
+import { mapTopIssues } from './helpers';
 
 interface TopSectionContainerProps {
   statistics?: ResultsStatsResponse;
@@ -25,7 +26,7 @@ export const TopSectionContainer = memo(({ statistics, isFetching }: TopSectionC
           { title: '...', count: 0 },
         ]
       : []);
-  const topIssues = statistics?.topIssues ?? [];
+  const topIssues = mapTopIssues(statistics?.topIssues ?? []);
 
   const handleClickTopError = useCallback(
     (message: string) => {

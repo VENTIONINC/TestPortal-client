@@ -40,6 +40,12 @@ export const bg = {
       _dark: palette.grey_alpha_4100,
     },
   },
+  modalContext: {
+    value: {
+      _light: palette.grey_1200,
+      _dark: palette.transparent,
+    },
+  },
   input: {
     value: {
       _light: palette.grey_300,

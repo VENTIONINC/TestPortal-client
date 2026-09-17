@@ -1,16 +1,32 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-export interface Issue {
+import type { ResultCategory } from './result';
+
+export interface IssueCore {
   id: string;
   createdAt: string;
   updatedAt: string;
   name: string;
-  category: IssueCategory;
-  description: string;
-  portal: string;
-  service: string;
-  ticket: string;
+  category: ResultCategory;
+  description?: string | null;
+  portal?: string | null;
+  service?: string | null;
+  ticket?: string | null;
+  projectId?: string;
+  createdById?: string | null;
+  updatedById?: string | null;
+}
+
+export interface IssueCategorySummary {
+  displayCategory: ResultCategory;
+  isMixed: boolean;
+  distribution: Record<ResultCategory, number>;
+  uncategorizedCount: number;
+}
+
+export interface IssueRead extends IssueCore {
+  categorySummary: IssueCategorySummary;
 }
 
 export interface IssueTimeDistribution {
@@ -18,7 +34,7 @@ export interface IssueTimeDistribution {
   count: number;
 }
 
-export interface IssueWithStats extends Issue {
+export interface IssueWithStats extends IssueRead {
   statistics: {
     occurrenceCount: number;
     firstOccurrence: string | null;
@@ -26,14 +42,6 @@ export interface IssueWithStats extends Issue {
     impactedTestsCount: number;
     timeDistribution: IssueTimeDistribution[];
   };
-}
-
-export enum IssueCategory {
-  Bug = 'Bug',
-  Script = 'Script',
-  Infra = 'Infra',
-  Performance = 'Performance',
-  Other = 'Other',
 }
 
 export interface IssueFilters {
@@ -44,7 +52,7 @@ export interface IssueFilters {
   specName: string;
   environment: string;
   type: string;
-  category: IssueCategory;
+  category: string;
   name: string;
   statFrom: string;
   statTo: string;

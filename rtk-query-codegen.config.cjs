@@ -6,10 +6,10 @@ module.exports = {
   outputFiles: {
     './src/redux/apis/generatedApi.ts': {
       exportName: 'generatedApi',
-      hooks: true,
+      hooks: { queries: true, lazyQueries: true, mutations: true },
       tag: true, // Enable automatic tag generation
     },
   },
   tag: true, // Generate providesTags/invalidatesTags automatically
-  hooks: true, // Generate useQuery and useMutation hooks
+  hooks: { queries: true, lazyQueries: true, mutations: true }, // Generate useQuery, lazy query, and useMutation hooks
 };

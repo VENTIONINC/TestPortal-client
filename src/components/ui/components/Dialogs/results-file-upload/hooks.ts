@@ -5,7 +5,10 @@ import { useState } from 'react';
 import { useFileUpload } from '@chakra-ui/react';
 
 import { toaster } from '@/components/ui';
-import { usePostApiV2UploadJsonReportMutation } from '@/redux/apis/generatedApi';
+import {
+  useGetApiV2ProjectsQuery,
+  usePostApiV2UploadJsonReportMutation,
+} from '@/redux/apis/generatedApi';
 import { usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/extendedApi';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useDialogActions } from '@/redux/slices/dialog';
@@ -26,6 +29,9 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const selectedProjectId = useSelectedProjectId();
+  const { data: projects = [] } = useGetApiV2ProjectsQuery({});
+  const selectedProject = projects.find((project) => project.id === selectedProjectId);
+  const uploadProjectId = selectedProject?.id ?? projects.find((project) => project.isActive)?.id;
 
   const fileUpload = useFileUpload({ maxFiles: 1000, accept: ['application/json'] });
   const [uploadJsonReport] = usePostApiV2UploadJsonReportMutation();
@@ -33,6 +39,10 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
 
   const handleUpload = async () => {
     if (fileUpload.acceptedFiles.length === 0) return;
+    if (!uploadProjectId) {
+      toaster.create({ title: 'Select an active project before uploading', type: 'error' });
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -50,13 +60,13 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
             if (reportType === 'playwright') {
               const formData = new FormData();
               formData.append('report', file);
-              formData.append('projectId', selectedProjectId);
+              formData.append('projectId', uploadProjectId);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               await uploadJsonReport({ body: formData as any }).unwrap();
             } else {
               const formData = new FormData();
               formData.append('report', file);
-              formData.append('projectId', selectedProjectId);
+              formData.append('projectId', uploadProjectId);
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               await uploadCtrfReport({ body: formData as any }).unwrap();
             }

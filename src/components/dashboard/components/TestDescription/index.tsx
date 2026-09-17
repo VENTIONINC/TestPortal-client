@@ -25,7 +25,7 @@ export const TestDescription = ({ summary, isGrid }: TestDescriptionProps) => {
   ];
   const donutChart = useChart({
     data: donutData,
-    series: donutData.map((item) => ({ color: item.color })),
+    series: donutData.map((item) => ({ name: item.name as keyof typeof item, color: item.color })),
   });
   const qualitySegments = 24;
   const filledSegments = Math.round(((metrics.total ? (metrics.passed / metrics.total) * 100 : 0) / 100) * qualitySegments);

@@ -3,44 +3,36 @@
 
 import { LuCircleHelp } from 'react-icons/lu';
 
-import { AnalysisCategory, IssueCategory } from '@/types';
+import { AnalysisCategory, ResultCategory } from '@/types';
 
 import { getIssueCategoryStyle, ISSUE_CATEGORY_LABELS } from './issue-category';
 
 export const ANALYSIS_CATEGORY_LABELS: Record<AnalysisCategory, string> = {
-  [AnalysisCategory.Bug]: ISSUE_CATEGORY_LABELS[IssueCategory.Bug],
-  [AnalysisCategory.Script]: ISSUE_CATEGORY_LABELS[IssueCategory.Script],
-  [AnalysisCategory.Infra]: ISSUE_CATEGORY_LABELS[IssueCategory.Infra],
-  [AnalysisCategory.Performance]: ISSUE_CATEGORY_LABELS[IssueCategory.Performance],
+  [AnalysisCategory.Bug]: ISSUE_CATEGORY_LABELS[AnalysisCategory.Bug],
+  [AnalysisCategory.Script]: ISSUE_CATEGORY_LABELS[AnalysisCategory.Script],
+  [AnalysisCategory.Infra]: ISSUE_CATEGORY_LABELS[AnalysisCategory.Infra],
+  [AnalysisCategory.Performance]: ISSUE_CATEGORY_LABELS[AnalysisCategory.Performance],
   [AnalysisCategory.Other]: 'Other',
 };
 
-const ANALYSIS_TO_ISSUE_CATEGORY_MAP: Record<Exclude<AnalysisCategory, AnalysisCategory.Other>, IssueCategory> = {
-  [AnalysisCategory.Bug]: IssueCategory.Bug,
-  [AnalysisCategory.Script]: IssueCategory.Script,
-  [AnalysisCategory.Infra]: IssueCategory.Infra,
-  [AnalysisCategory.Performance]: IssueCategory.Performance,
+const LEGACY_CATEGORY_ALIASES: Record<string, ResultCategory> = {
+  environment: ResultCategory.Infra,
 };
 
-export const serializeAnalysisCategoryToIssueCategory = (category?: string): IssueCategory | undefined => {
-  if (!category) return undefined;
+export const normalizeResultCategory = (value: unknown): ResultCategory | undefined => {
+  if (typeof value !== 'string') return undefined;
 
-  const normalizedCategory = category.trim().toLowerCase();
+  const normalized = value.trim().toLowerCase();
+  const aliased = LEGACY_CATEGORY_ALIASES[normalized] ?? normalized;
 
-  if (normalizedCategory === 'environment') {
-    return IssueCategory.Infra;
-  }
-
-  if (normalizedCategory === AnalysisCategory.Other) {
-    return undefined;
-  }
-
-  if (!Object.values(AnalysisCategory).includes(normalizedCategory as AnalysisCategory)) {
-    return undefined;
-  }
-
-  return ANALYSIS_TO_ISSUE_CATEGORY_MAP[normalizedCategory as Exclude<AnalysisCategory, AnalysisCategory.Other>];
+  return Object.values(ResultCategory).includes(aliased as ResultCategory) ? (aliased as ResultCategory) : undefined;
 };
+
+export const getEffectiveResultCategory = (
+  analysisCategory: unknown,
+  analysisFeedbackCategory: unknown,
+): ResultCategory | undefined =>
+  normalizeResultCategory(analysisFeedbackCategory != null ? analysisFeedbackCategory : analysisCategory);
 
 export const getAnalysisCategoryStyle = (category?: AnalysisCategory) => {
   if (!category || category === AnalysisCategory.Other) {
@@ -53,8 +45,7 @@ export const getAnalysisCategoryStyle = (category?: AnalysisCategory) => {
     };
   }
 
-  const issueCategory = ANALYSIS_TO_ISSUE_CATEGORY_MAP[category];
-  const style = getIssueCategoryStyle(issueCategory);
+  const style = getIssueCategoryStyle(category);
 
   return {
     ...style,

@@ -2,22 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { memo } from 'react';
-import { HStack, Text } from '@chakra-ui/react';
+import { HStack, IconButton, Text } from '@chakra-ui/react';
 import { LuCheck, LuTrash, LuCirclePlus } from 'react-icons/lu';
 
-import { useManageIssueDrawer } from '@/components/drawers';
+import { useAssignIssueModalDialog } from '@/components/results/assign-issue-modal';
 import { useConfirmAssumptionMutation } from '@/redux/apis/extendedApi';
 import { getIssueCategoryStyle } from '@/utils';
 import { ResultError, ResultErrorAssumption } from '@/types';
 
 interface InlineIssueProps {
   resultError: ResultError;
+  projectId: string;
 }
 
-export const InlineIssue = memo(({ resultError }: InlineIssueProps) => {
+export const InlineIssue = memo(({ resultError, projectId }: InlineIssueProps) => {
   const [confirmAssumption] = useConfirmAssumptionMutation();
 
-  const openManageIssueDrawer = useManageIssueDrawer({ resultError });
+  const openAssignIssueModal = useAssignIssueModalDialog(projectId);
 
   const confirm = async (assumption: ResultErrorAssumption, isConfirmed: boolean) => {
     await confirmAssumption({
@@ -32,7 +33,7 @@ export const InlineIssue = memo(({ resultError }: InlineIssueProps) => {
         resultError.assumptions.map((assumption, index) => {
           if (!assumption) return null;
 
-          const { Icon, color } = getIssueCategoryStyle(assumption.issue.category);
+          const categoryStyle = getIssueCategoryStyle(assumption.issue.category);
 
           const isConfirmed = assumption.isConfirmed;
 
@@ -40,26 +41,32 @@ export const InlineIssue = memo(({ resultError }: InlineIssueProps) => {
             <HStack
               key={index}
               border={isConfirmed ? '1px solid' : '1px dashed'}
-              borderColor={isConfirmed ? color : 'border.muted'}
+              borderColor={categoryStyle.color}
               borderRadius="xl"
               ml="auto"
               px={2}
               minH="26px"
-              color={isConfirmed ? 'white' : 'fg.muted'}
-              bg={isConfirmed ? color : 'transparent'}
+              color={isConfirmed ? 'white' : categoryStyle.color}
+              bg={isConfirmed ? categoryStyle.color : 'transparent'}
               flexShrink={0}
-              {...(isConfirmed && {
-                onClick: () => openManageIssueDrawer({ issue: assumption.issue }),
-                cursor: 'pointer',
-
-                _hover: { opacity: 0.85 },
-              })}
+              onClick={() =>
+                isConfirmed
+                  ? openAssignIssueModal(resultError, 'confirmed')
+                  : openAssignIssueModal(resultError, 'assign', assumption.id.toString())
+              }
+              cursor="pointer"
+              _hover={{ opacity: 0.85 }}
             >
               {assumption.issue && (
                 <>
-                  <Icon size={14} color="currentColor" style={{ flexShrink: 0 }} />
+                  <categoryStyle.Icon
+                    size={14}
+                    color="currentColor"
+                    style={{ flexShrink: 0 }}
+                    aria-label={`Category: ${categoryStyle.name}`}
+                  />
                   <Text fontSize="xs" fontWeight={isConfirmed ? 'bold' : 'normal'} whiteSpace="nowrap">
-                    {isConfirmed ? '[Confirmed]' : '[Hypothesis]'}: {assumption.issue.name}
+                    {assumption.issue.name}
                   </Text>
                 </>
               )}
@@ -94,11 +101,15 @@ export const InlineIssue = memo(({ resultError }: InlineIssueProps) => {
         })
       ) : (
         <>
-          <LuCirclePlus
-            size={20}
-            onClick={() => openManageIssueDrawer()}
-            style={{ marginInlineStart: 'auto', cursor: 'pointer' }}
-          />
+          <IconButton
+            aria-label="Assign issue"
+            size="xs"
+            variant="ghost"
+            ms="auto"
+            onClick={() => openAssignIssueModal(resultError, 'assign')}
+          >
+            <LuCirclePlus size={20} />
+          </IconButton>
         </>
       )}
     </>

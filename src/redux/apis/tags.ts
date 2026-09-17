@@ -11,4 +11,5 @@ export const TAGS = {
   Report: 'Report',
   System: 'System',
   ResultError: 'ResultError',
+  Project: 'Projects',
 };

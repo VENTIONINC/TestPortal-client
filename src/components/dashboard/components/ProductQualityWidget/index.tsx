@@ -11,6 +11,7 @@ import { useSelectedProject } from '@/hooks';
 import { ProgressBar, ProgressRoot } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui';
+import { ResultCategory } from '@/types';
 
 const DEFAULT_PERIOD = '1';
 
@@ -46,7 +47,7 @@ const getWeightMultiplier = (category: string | undefined, projectWeights: Proje
 };
 
 // Calculate IWQS from issues list and category weights
-const calculateIWQS = (
+export const calculateIWQS = (
   issues: GetApiV2IssuesWithStatsApiResponse['issues'] | undefined,
   projectWeights: ProjectCategoryWeights | undefined,
 ) => {
@@ -60,7 +61,15 @@ const calculateIWQS = (
   issues.forEach((issue) => {
     const occurrenceCount = issue.statistics?.occurrenceCount ?? 0;
     const impactedTestsCount = issue.statistics?.impactedTestsCount ?? 0;
-    const multiplier = getWeightMultiplier(issue.category, projectWeights);
+    const { distribution, uncategorizedCount } = issue.categorySummary;
+    const categories = Object.values(ResultCategory);
+    const categorizedCount = categories.reduce((sum, category) => sum + (distribution[category] ?? 0), 0);
+    const totalCategoryCount = categorizedCount + uncategorizedCount;
+    const weightedCategoryCount = categories.reduce(
+      (sum, category) => sum + (distribution[category] ?? 0) * getWeightMultiplier(category, projectWeights),
+      0,
+    );
+    const multiplier = totalCategoryCount > 0 ? weightedCategoryCount / totalCategoryCount : 0;
 
     weightedSum += impactedTestsCount * multiplier;
     totalLinkedFailures += occurrenceCount;
@@ -116,6 +125,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
     {
       projectId: selectedProjectId,
       period: String(periodDays * 2),
+      granularity: 'daily',
     },
     { skip: !selectedProjectId },
   );
@@ -231,7 +241,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
           </Text>
         </Flex>
         <Box w="full" px={4}>
-          <ProgressRoot value={linkedRate} max={100} size="sm" w="full" colorPalette="orange">
+          <ProgressRoot value={linkedRate} max={100} size="sm" w="full" colorPalette={ linkedRate > 50 ? 'orange' : 'red' }>
             <ProgressBar bg="bg.subtle" h="6px" borderRadius="full" />
           </ProgressRoot>
           <Flex justify="space-between" mt={1.5} px={1}>

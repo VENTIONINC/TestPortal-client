@@ -110,7 +110,7 @@ const DonutChartWidget = ({
   ];
   const donutChart = useChart({
     data: donutData,
-    series: donutData.map((item) => ({ color: item.color })),
+    series: donutData.map((item) => ({ name: item.name as keyof typeof item, color: item.color })),
   });
   return <DonutChart title="Test runs" metrics={metrics} donutChart={donutChart} />;
 };
