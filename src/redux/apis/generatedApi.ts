@@ -728,6 +728,8 @@ const injectedRtkApi = api
             period: queryArg.period,
             type: queryArg["type"],
             granularity: queryArg.granularity,
+            dateFrom: queryArg.dateFrom,
+            dateTo: queryArg.dateTo,
           },
         }),
         providesTags: ["Projects"],
@@ -1218,6 +1220,10 @@ export type GetApiV2ProjectsByProjectIdDashboardApiArg = {
   type?: string;
   /** Aggregation level for history data (daily, weekly, monthly). Defaults to daily for short periods, weekly for long periods. */
   granularity?: "daily" | "weekly" | "monthly";
+  /** Inclusive start date in YYYY-MM-DD format */
+  dateFrom?: string;
+  /** Inclusive end date in YYYY-MM-DD format */
+  dateTo?: string;
 };
 export type PostApiV2UploadCtrfReportApiResponse =
   /** status 200 CTRF report file processed successfully */ CtrfReportResponse;
