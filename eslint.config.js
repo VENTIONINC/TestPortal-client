@@ -7,7 +7,7 @@ import importPlugin from 'eslint-plugin-import';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-  { ignores: ['dist', '.yarn/**', 'src/redux/apis/generatedApi.ts'] },
+  { ignores: ['dist', '**/.worktrees/**', '.yarn/**', 'src/redux/apis/generatedApi.ts'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended, eslintConfigPrettier],
     files: ['**/*.{ts,tsx}'],
