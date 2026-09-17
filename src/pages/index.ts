@@ -15,3 +15,4 @@ export { SkillDetailsPage } from './SkillDetails';
 export { SkillsPage } from './Skills';
 export { SignupPage } from './Signup';
 export { UserSettingsPage } from './UserSettings';
+export { ManualTestRunPage } from './ManualTestRuns';
