@@ -66,7 +66,12 @@ const runFor = (overrides: Partial<ManualTestRunRead> = {}): ManualTestRunRead =
   ...overrides,
 });
 
-const renderView = (run = runFor(), setPersistedRun = vi.fn(), refetch = vi.fn().mockResolvedValue(run)) =>
+const renderView = (
+  run = runFor(),
+  setPersistedRun = vi.fn(),
+  refetch = vi.fn().mockResolvedValue(run),
+  options: { onRetest?: () => void; onViewSourceHistory?: () => void } = {},
+) =>
   render(
     <ChakraProvider>
       <MemoryRouter>
@@ -77,6 +82,8 @@ const renderView = (run = runFor(), setPersistedRun = vi.fn(), refetch = vi.fn()
           setPersistedRun={setPersistedRun}
           refetch={refetch}
           onBack={vi.fn()}
+          onRetest={options.onRetest}
+          onViewSourceHistory={options.onViewSourceHistory}
         />
       </MemoryRouter>
     </ChakraProvider>,
@@ -208,6 +215,25 @@ describe('ManualTestRunDetailsView', () => {
     expect(screen.queryByRole('button', { name: 'Save execution notes' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save step' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveAttribute('readonly');
+  });
+
+  it('offers a fresh retest only for completed runs with a live source', async () => {
+    const onRetest = vi.fn();
+    const onViewSourceHistory = vi.fn();
+    const user = userEvent.setup();
+
+    const { unmount } = renderView(runFor({ status: 'passed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: 'scenario-live' }), vi.fn(), undefined, { onRetest, onViewSourceHistory });
+    expect(screen.getByRole('link', { name: 'View current scenario' })).toHaveAttribute('href', '/test-scenarios/scenario-live');
+    expect(screen.getByText('Retest uses the current scenario')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Retest' }));
+    await user.click(screen.getByRole('button', { name: 'View source history' }));
+    expect(onRetest).toHaveBeenCalledTimes(1);
+    expect(onViewSourceHistory).toHaveBeenCalledTimes(1);
+
+    unmount();
+    renderView(runFor({ status: 'failed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: null }), vi.fn(), undefined, { onRetest });
+    expect(within(screen.getByRole('status')).getByText('Source deleted')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retest' })).toBeDisabled();
   });
 
   it('refetches after an active 409, keeps the dirty draft, and does not replay the write', async () => {

@@ -3,3 +3,5 @@
 
 export { ManualTestRunDetailContainer } from './ManualTestRunDetailContainer';
 export { ManualTestRunRouteBoundary } from './ManualTestRunRouteBoundary';
+export { ManualTestRunHistoryBoundary } from './ManualTestRunHistoryBoundary';
+export { ManualTestRunHistoryContainer } from './ManualTestRunHistoryContainer';

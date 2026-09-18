@@ -10,6 +10,7 @@ import type { IconType } from 'react-icons';
 import { Link, NativeSelect, Textarea, Wrap } from '@/components/ui';
 import type { ManualTestRunRead, ManualTestRunStepStatus } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
+import { getTestScenarioDetailPath } from '@/components/test-scenarios/constants';
 
 import { MANUAL_TEST_RUN_STEP_STATUSES } from '../types';
 import { isManualTestRunPassedEligible } from '../utils';
@@ -43,6 +44,11 @@ export interface ManualTestRunDetailsViewProps {
   setPersistedRun: (run: ManualTestRunRead) => void;
   refetch: () => Promise<ManualTestRunRead | undefined>;
   onBack: () => void;
+  onRetest?: () => void;
+  isRetesting?: boolean;
+  retestError?: string;
+  retestUncertain?: boolean;
+  onViewSourceHistory?: () => void;
 }
 
 export const ManualTestRunDetailsView = ({
@@ -52,6 +58,11 @@ export const ManualTestRunDetailsView = ({
   setPersistedRun,
   refetch,
   onBack,
+  onRetest,
+  isRetesting = false,
+  retestError,
+  retestUncertain = false,
+  onViewSourceHistory,
 }: ManualTestRunDetailsViewProps) => {
   const completionTriggerRef = useRef<HTMLButtonElement>(null);
   const wasCompletionOpen = useRef(false);
@@ -97,16 +108,23 @@ export const ManualTestRunDetailsView = ({
           </Link>
           <Heading size="lg">{execution.savedRun.title}</Heading>
         </HStack>
-        {!readOnly && (
-          <Button
-            ref={completionTriggerRef}
-            type="button"
-            onClick={execution.requestCompletion}
-            disabled={isPending || execution.recoveryBlocked}
-          >
-            Complete run
-          </Button>
-        )}
+        <HStack gap={2} flexWrap="wrap">
+          {!readOnly && (
+            <Button
+              ref={completionTriggerRef}
+              type="button"
+              onClick={execution.requestCompletion}
+              disabled={isPending || execution.recoveryBlocked}
+            >
+              Complete run
+            </Button>
+          )}
+          {readOnly && onRetest && (
+            <Button type="button" onClick={onRetest} loading={isRetesting} disabled={isRetesting || !execution.savedRun.testScenarioId}>
+              Retest
+            </Button>
+          )}
+        </HStack>
       </HStack>
 
       <HStack gap={6} flexWrap="wrap" color="text.secondary">
@@ -129,6 +147,40 @@ export const ManualTestRunDetailsView = ({
           </Alert.Content>
         </Alert.Root>
       )}
+      {readOnly && (
+        <Alert.Root status={execution.savedRun.testScenarioId ? 'info' : 'warning'} role="status">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>{execution.savedRun.testScenarioId ? 'Retest uses the current scenario' : 'Source deleted'}</Alert.Title>
+            <Alert.Description>
+              {execution.savedRun.testScenarioId
+                ? 'Retest starts a fresh run from the current saved scenario content and steps. It does not modify this historical snapshot or copy its outcomes and notes.'
+                : 'This saved snapshot remains available, but a fresh run cannot be started because its source scenario was deleted.'}
+            </Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
+      {retestError && (
+        <Alert.Root status={retestUncertain ? 'warning' : 'error'} role="alert">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>{retestUncertain ? 'Retest result is uncertain' : 'Retest was not started'}</Alert.Title>
+            <Alert.Description>{retestError}</Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
+
+      <HStack gap={4} flexWrap="wrap">
+        {execution.savedRun.testScenarioId ? (
+          <>
+            <Link href={getTestScenarioDetailPath(execution.savedRun.testScenarioId)}>View current scenario</Link>
+            <Text color="text.secondary" fontSize="sm">Current content may differ from this saved snapshot.</Text>
+          </>
+        ) : (
+          <Text color="text.secondary">Source deleted</Text>
+        )}
+        {onViewSourceHistory && <Button variant="plain" onClick={onViewSourceHistory}>View source history</Button>}
+      </HStack>
       {execution.recoveryBlocked && (
         <HStack justify="end">
           <Button type="button" variant="outline" onClick={() => void execution.retryAuthoritativeRecovery()}>

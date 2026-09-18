@@ -14,6 +14,7 @@ describe('NavigationMenu', () => {
     ['Results', '/results'],
     ['Issues', '/issues'],
     ['Test Scenarios', '/test-scenarios'],
+    ['Manual Test Runs', '/manual-test-runs'],
     ['Prompts', '/prompts'],
     ['Skills', '/skills'],
     ['Settings', '/settings'],
