@@ -28,3 +28,13 @@
 - [ ] 5.2 Perform authenticated browser QA against the migrated local backend: start zero/multiple-step runs, save all statuses/notes and clearing, reopen URL after reload, source edit/reorder/deletion snapshot persistence, project switching, completion gating and immutable outcomes; record observed results and separate live failure/concurrency checks from simulations.
 - [x] 5.3 Review implementation against #92 and the execution spec, run `openspec validate add-manual-test-run-execution --type change --strict --no-interactive` and `git diff --check`; verify scope excludes #93 UI and unrelated changes/checklist updates.
 - [x] 5.4 Before delivery, verify backend integration and regenerate against its final served OpenAPI; review generated diff and rerun affected checks if it changes. Record any outstanding backend merge or verification dependency rather than claiming local integration proves delivery.
+
+## 6. Step submission and progress UX
+
+- [x] 6.1 Place step actions beneath notes, introduce Submit / Submit changes, submitted-outcome feedback and dirty-only Discard changes, preserve editable corrections and separate run-note saving; verify unchanged drafts do not submit and discard restores saved values without resetting a result.
+- [x] 6.2 Add local Saving / Not saved feedback while preserving draft retention, serialized writes, conflict recovery and read-only access; distinguish saved notes on not_started steps from submitted outcomes.
+- [x] 6.3 Add top-of-page progress dots and persisted result counts, outcome icons/colors, neutral connectors and independent dirty outlines; verify out-of-order submission, note-only saves, failed writes, discarded drafts, refreshes and zero-step runs.
+- [x] 6.4 Add accessible dot labels/tooltips, keyboard activation and scroll/focus navigation to step headings; support wrapping on narrow screens and many-step runs without mutations.
+- [ ] 6.5 Run focused execution/progress tests, lint and build; perform browser QA for Submit/correction/discard feedback, saved-only counts and navigation on wide/narrow screens, preserving outstanding integration QA separately.
+
+Tasks 6.1–6.4 are implemented. This UX continues to use existing step PATCH operations and does not introduce backend submission metadata, autosave, result reset, reassignment or a change to terminal completion rules.

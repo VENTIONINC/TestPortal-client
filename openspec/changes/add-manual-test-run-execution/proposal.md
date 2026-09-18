@@ -6,7 +6,8 @@ Testers can author structured scenarios but cannot execute them and persist obse
 
 - Add Start manual run on saved scenario detail and a protected run detail/resume route.
 - Display persisted scenario snapshots, ordered copied steps, executor and server timestamps.
-- Record step outcomes and execution notes through explicit saves, preserving unrelated drafts and retaining drafts on failures.
+- Record step outcomes and notes with local Submit / Submit changes controls; allow corrections while the run is active and use Discard changes to restore persisted values. Keep run notes separately saved.
+- Show a top-of-page step progress strip with outcome dots, result counts, unsaved-change markers and navigation to each step. Progress reflects persisted outcomes only.
 - Add explicit terminal completion with confirmation, saved-state eligibility checks and immutable completed presentation. Require saving or discarding all drafts before completion.
 - Regenerate authenticated RTK Query contracts from the coordinated local OpenAPI; add deliberate retry and cache policies outside generated declarations.
 - Preserve selected-project isolation across queries, writes and late responses.

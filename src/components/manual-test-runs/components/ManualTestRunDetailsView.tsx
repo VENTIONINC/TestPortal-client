@@ -7,12 +7,12 @@ import { FiArrowLeft } from 'react-icons/fi';
 import { LuBan, LuCheck, LuCircleHelp, LuCircleX, LuSkipForward } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 
-import { Link, NativeSelect, Textarea, Wrap } from '@/components/ui';
-import type { ManualTestRunRead, ManualTestRunStepStatus } from '@/redux/apis/generatedApi';
+import { Link, NativeSelect, Textarea, Tooltip, Wrap } from '@/components/ui';
+import type { ManualTestRunRead, ManualTestRunStepRead, ManualTestRunStepStatus } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
 
 import { MANUAL_TEST_RUN_STEP_STATUSES } from '../types';
-import { isManualTestRunPassedEligible } from '../utils';
+import { getManualTestRunProgressCounts, isManualTestRunPassedEligible } from '../utils';
 import { ManualTestRunCompletionDialog } from './ManualTestRunCompletionDialog';
 import { useManualTestRunExecution } from '../hooks/useManualTestRunExecution';
 
@@ -36,6 +36,74 @@ const stepStatusVisuals: Record<ManualTestRunStepStatus, { Icon: IconType; color
   skipped: { Icon: LuSkipForward, color: 'status.neutral.icon', label: 'Skipped' },
 };
 
+interface ManualTestRunProgressProps {
+  steps: ManualTestRunStepRead[];
+  dirtyStepIds: string[];
+  onNavigate: (stepId: string) => void;
+}
+
+const ManualTestRunProgress = ({ steps, dirtyStepIds, onNavigate }: ManualTestRunProgressProps) => {
+  const counts = getManualTestRunProgressCounts(steps);
+  const dirtyIds = new Set(dirtyStepIds);
+
+  return (
+    <Box as="section" aria-labelledby="manual-test-run-progress-heading" p={{ base: 4, md: 6 }} borderWidth="1px" borderColor="border.subtle" borderRadius="md">
+      <VStack align="stretch" gap={4}>
+        <HStack justify="space-between" align="start" gap={4} flexWrap="wrap">
+          <Heading id="manual-test-run-progress-heading" size="md">Step progress</Heading>
+          <Text color="text.secondary">
+            {counts.total === 0 ? 'No steps in this run' : `${counts.submitted} of ${counts.total} steps submitted`}
+          </Text>
+        </HStack>
+        {counts.total > 0 && (
+          <Box display="flex" alignItems="center" flexWrap="wrap" gap={2}>
+            {steps.map((step, index) => {
+              const visual = stepStatusVisuals[step.status];
+              const hasDraft = dirtyIds.has(step.id);
+              const label = `Step ${index + 1} · ${visual.label}${hasDraft ? ' · Unsaved changes' : ''}`;
+
+              return (
+                <HStack key={step.id} gap={2}>
+                  <Tooltip content={label}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      borderRadius="full"
+                      minW={10}
+                      h={10}
+                      px={0}
+                      borderColor={visual.color}
+                      color={visual.color}
+                      outline={hasDraft ? '2px solid' : undefined}
+                      outlineColor={hasDraft ? 'status.warning.icon' : undefined}
+                      outlineOffset={hasDraft ? '2px' : undefined}
+                      aria-label={label}
+                      title={label}
+                      onClick={() => onNavigate(step.id)}
+                    >
+                      <Icon as={visual.Icon} aria-hidden="true" boxSize={5} />
+                    </Button>
+                  </Tooltip>
+                  {index < steps.length - 1 && <Box aria-hidden="true" w={{ base: 4, sm: 8 }} h="1px" bg="border.subtle" />}
+                </HStack>
+              );
+            })}
+          </Box>
+        )}
+        {counts.total > 0 && (
+          <HStack gap={4} flexWrap="wrap" color="text.secondary" aria-label="Saved step result counts">
+            <Text>Passed: {counts.passed}</Text>
+            <Text>Failed: {counts.failed}</Text>
+            <Text>Blocked: {counts.blocked}</Text>
+            <Text>Skipped: {counts.skipped}</Text>
+          </HStack>
+        )}
+      </VStack>
+    </Box>
+  );
+};
+
 export interface ManualTestRunDetailsViewProps {
   projectId: string;
   runId: string;
@@ -54,6 +122,7 @@ export const ManualTestRunDetailsView = ({
   onBack,
 }: ManualTestRunDetailsViewProps) => {
   const completionTriggerRef = useRef<HTMLButtonElement>(null);
+  const stepHeadingRefs = useRef<Record<string, HTMLHeadingElement | null>>({});
   const wasCompletionOpen = useRef(false);
   const execution = useManualTestRunExecution({ projectId, runId, run, setPersistedRun, refetch });
   const orderedSteps = [...execution.savedRun.steps].sort((left, right) => left.position - right.position);
@@ -72,6 +141,11 @@ export const ManualTestRunDetailsView = ({
   const readOnly = execution.isReadOnly;
   const isPending = Boolean(execution.pendingWrite);
   const isPassedEligible = isManualTestRunPassedEligible(execution.savedRun.steps);
+  const focusStep = (stepId: string) => {
+    const heading = stepHeadingRefs.current[stepId];
+    if (typeof heading?.scrollIntoView === 'function') heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    heading?.focus();
+  };
 
   return (
     <VStack align="stretch" gap={6} mx={{ base: 4, md: 6 }} my={4}>
@@ -137,6 +211,8 @@ export const ManualTestRunDetailsView = ({
         </HStack>
       )}
 
+      <ManualTestRunProgress steps={orderedSteps} dirtyStepIds={execution.dirtyStepIds} onNavigate={focusStep} />
+
       <Wrap w="100%" p={{ base: 4, md: 6 }}>
         <VStack align="stretch" w="100%" gap={6}>
           <VStack align="stretch" gap={4}>
@@ -180,7 +256,17 @@ export const ManualTestRunDetailsView = ({
                 return (
                   <Box key={step.id} p={4} borderWidth="1px" borderColor="border.subtle" borderRadius="md">
                     <VStack align="stretch" gap={3}>
-                      <Text fontWeight="semibold">Step {index + 1}</Text>
+                      <Heading
+                        as="h3"
+                        size="sm"
+                        id={`manual-test-run-step-${step.id}`}
+                        tabIndex={-1}
+                        ref={(heading) => {
+                          stepHeadingRefs.current[step.id] = heading;
+                        }}
+                      >
+                        Step {index + 1}
+                      </Heading>
                       <Text whiteSpace="pre-wrap"><Text as="span" fontWeight="medium">Action: </Text>{step.action}</Text>
                       <Text whiteSpace="pre-wrap" color="text.secondary"><Text as="span" fontWeight="medium" color="text.main">Expected result: </Text>{step.expectedResult ?? 'No expected result'}</Text>
                       <HStack align="end" gap={3} w={{ base: '100%', sm: '260px' }}>
@@ -216,9 +302,30 @@ export const ManualTestRunDetailsView = ({
                         maxW={{ base: '100%', md: '560px' }}
                       />
                       {!readOnly && (
-                        <HStack justify="end">
-                          <Button type="button" variant="ghost" onClick={() => execution.discardStep(step.id)} disabled={isPending || execution.recoveryBlocked}>Discard</Button>
-                          <Button type="button" onClick={() => void execution.saveStep(step.id)} disabled={isPending || execution.recoveryBlocked}>Save step</Button>
+                        <HStack justify="start" align="center" gap={3} w={{ base: '100%', md: '560px' }} flexWrap="wrap">
+                          {stepPending ? (
+                            <Text color="text.secondary" aria-live="polite">Saving</Text>
+                          ) : execution.stepSaveStates[step.id] === 'not_saved' ? (
+                            <Text color="status.error.text" aria-live="polite">Not saved</Text>
+                          ) : execution.dirtyStepIds.includes(step.id) ? (
+                            <Text color="text.secondary">Unsaved changes</Text>
+                          ) : execution.stepSaveStates[step.id] === 'submitted' ? (
+                            <Text color="status.success.text">Submitted: {formatLabel(step.status)}</Text>
+                          ) : execution.stepSaveStates[step.id] === 'saved_notes' ? (
+                            <Text color="status.success.text">Saved notes</Text>
+                          ) : null}
+                          {execution.dirtyStepIds.includes(step.id) && (
+                            <Button type="button" variant="ghost" onClick={() => execution.discardStep(step.id)} disabled={isPending || execution.recoveryBlocked}>
+                              Discard changes
+                            </Button>
+                          )}
+                          <Button
+                            type="button"
+                            onClick={() => void execution.saveStep(step.id)}
+                            disabled={isPending || execution.recoveryBlocked || !execution.dirtyStepIds.includes(step.id)}
+                          >
+                            {step.status === 'not_started' ? 'Submit' : 'Submit changes'}
+                          </Button>
                         </HStack>
                       )}
                     </VStack>

@@ -11,6 +11,15 @@ import type {
 
 import type { ManualTestRunStepDraft, ManualTestRunStepDrafts, ManualTestRunOutcome } from './types';
 
+export interface ManualTestRunProgressCounts {
+  total: number;
+  submitted: number;
+  passed: number;
+  failed: number;
+  blocked: number;
+  skipped: number;
+}
+
 /** Trims only the outer whitespace; line breaks inside a note are retained. */
 export const normalizeManualTestRunNote = (value: string | null | undefined): string | null => {
   const normalized = value?.trim() ?? '';
@@ -54,6 +63,26 @@ export const isManualTestRunOutcome = (value: string): value is ManualTestRunOut
 
 export const isManualTestRunStepStatus = (value: string): value is ManualTestRunStepStatus =>
   value === 'not_started' || value === 'passed' || value === 'failed' || value === 'blocked' || value === 'skipped';
+
+export const getManualTestRunProgressCounts = (
+  steps: Pick<ManualTestRunStepRead, 'status'>[],
+): ManualTestRunProgressCounts => {
+  const counts: ManualTestRunProgressCounts = {
+    total: steps.length,
+    submitted: 0,
+    passed: 0,
+    failed: 0,
+    blocked: 0,
+    skipped: 0,
+  };
+
+  for (const step of steps) {
+    if (step.status !== 'not_started') counts.submitted += 1;
+    if (step.status in counts) counts[step.status as keyof Omit<ManualTestRunProgressCounts, 'total' | 'submitted'>] += 1;
+  }
+
+  return counts;
+};
 
 export const hasManualTestRunStepDraftChanges = (
   steps: ManualTestRunStepRead[],

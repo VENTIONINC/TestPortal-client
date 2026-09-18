@@ -10,7 +10,7 @@ import {
   usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
   usePostApiV2ManualTestRunsByRunIdCompleteMutation,
 } from '@/redux/apis/extendedApi';
-import type { ManualTestRunRead, ManualTestRunStepStatus } from '@/redux/apis/generatedApi';
+import type { ManualTestRunRead, ManualTestRunStepRead, ManualTestRunStepStatus } from '@/redux/apis/generatedApi';
 import { extractApiError } from '@/utils/apiErrors';
 
 import {
@@ -21,7 +21,7 @@ import {
   isManualTestRunPassedEligible,
   normalizeManualTestRunNote,
 } from '../utils';
-import type { ManualTestRunOutcome, ManualTestRunStepDrafts } from '../types';
+import type { ManualTestRunOutcome, ManualTestRunStepDrafts, ManualTestRunStepSaveState } from '../types';
 
 export type ManualTestRunPendingWrite =
   | { kind: 'run' }
@@ -54,6 +54,7 @@ export interface UseManualTestRunExecutionResult {
   isDirty: boolean;
   isRunNotesDirty: boolean;
   dirtyStepIds: string[];
+  stepSaveStates: Record<string, ManualTestRunStepSaveState>;
   setRunNotesDraft: (value: string) => void;
   setStepStatus: (stepId: string, status: ManualTestRunStepStatus) => void;
   setStepNotes: (stepId: string, notes: string) => void;
@@ -72,6 +73,11 @@ const getStatus = (error: unknown) =>
   error && typeof error === 'object' && 'status' in error ? (error as FetchBaseQueryError).status : undefined;
 
 const isConflict = (error: unknown) => getStatus(error) === 409;
+
+const getStepSaveState = (step: Pick<ManualTestRunStepRead, 'status' | 'notes'>): ManualTestRunStepSaveState | undefined => {
+  if (step.status !== 'not_started') return 'submitted';
+  return step.notes ? 'saved_notes' : undefined;
+};
 
 const reconcileDrafts = (
   baseline: ManualTestRunRead,
@@ -107,6 +113,7 @@ export const useManualTestRunExecution = ({
   const [savedRun, setSavedRun] = useState(run);
   const [runNotesDraft, setRunNotesDraftState] = useState(run.notes ?? '');
   const [stepDrafts, setStepDrafts] = useState<ManualTestRunStepDrafts>(() => getManualTestRunStepDrafts(run.steps));
+  const [stepSaveStates, setStepSaveStates] = useState<Record<string, ManualTestRunStepSaveState>>({});
   const [pendingWrite, setPendingWrite] = useState<ManualTestRunPendingWrite>(null);
   const [feedback, setFeedback] = useState<ManualTestRunFeedback>();
   const [recoveryBlocked, setRecoveryBlocked] = useState(false);
@@ -135,6 +142,7 @@ export const useManualTestRunExecution = ({
       setSavedRun(run);
       setRunNotesDraftState(run.notes ?? '');
       setStepDrafts(getManualTestRunStepDrafts(run.steps));
+      setStepSaveStates({});
       return;
     }
 
@@ -212,6 +220,15 @@ export const useManualTestRunExecution = ({
     setPendingWrite(null);
   }, [isCurrentScope]);
 
+  const updateStepSaveState = useCallback((stepId: string, state: ManualTestRunStepSaveState | undefined) => {
+    setStepSaveStates((current) => {
+      const next = { ...current };
+      if (state) next[stepId] = state;
+      else delete next[stepId];
+      return next;
+    });
+  }, []);
+
   const setRunNotesDraft = useCallback((value: string) => {
     if (pendingWrite?.kind === 'run') return;
     setRunNotesDraftState(value);
@@ -243,6 +260,7 @@ export const useManualTestRunExecution = ({
       const response = await patchRun({ projectId, runId, manualTestRunUpdateRequest: payload }).unwrap();
       if (!isCurrentScope()) return;
       applySavedResponse(response, baseline);
+      setRunNotesDraftState(response.notes ?? '');
       setFeedback({ status: 'success', title: 'Execution notes saved.' });
     } catch (error) {
       if (!isCurrentScope()) return;
@@ -278,21 +296,26 @@ export const useManualTestRunExecution = ({
       const response = await patchStep({ projectId, runId, stepId, manualTestRunStepUpdateRequest: payload }).unwrap();
       if (!isCurrentScope()) return;
       applySavedResponse(response, baseline);
+      const responseStep = response.steps.find((step) => step.id === stepId) ?? savedStep;
+      setStepDrafts((current) => ({ ...current, [stepId]: { status: responseStep.status, notes: responseStep.notes ?? '' } }));
+      updateStepSaveState(stepId, getStepSaveState(responseStep));
       setFeedback({ status: 'success', title: 'Step result saved.' });
     } catch (error) {
       if (!isCurrentScope()) return;
       if (isConflict(error)) {
+        updateStepSaveState(stepId, 'not_saved');
         const authoritative = await recoverAuthoritativeState('conflict');
         if (authoritative?.status === 'in_progress') {
           setFeedback({ status: 'warning', title: 'Step result was not saved.', description: 'The run changed elsewhere. Review the refreshed saved values and save explicitly again.' });
         }
       } else {
+        updateStepSaveState(stepId, 'not_saved');
         setFeedback({ status: 'error', title: 'Step result was not saved.', description: extractApiError(error as FetchBaseQueryError | SerializedError) });
       }
     } finally {
       endWrite();
     }
-  }, [applySavedResponse, beginWrite, endWrite, isCurrentScope, patchStep, projectId, recoverAuthoritativeState, runId, stepDrafts]);
+  }, [applySavedResponse, beginWrite, endWrite, isCurrentScope, patchStep, projectId, recoverAuthoritativeState, runId, stepDrafts, updateStepSaveState]);
 
   const discardRunNotes = useCallback(() => {
     if (pendingWrite) return;
@@ -305,8 +328,9 @@ export const useManualTestRunExecution = ({
     const savedStep = savedRunRef.current.steps.find((step) => step.id === stepId);
     if (!savedStep) return;
     setStepDrafts((current) => ({ ...current, [stepId]: { status: savedStep.status, notes: savedStep.notes ?? '' } }));
+    updateStepSaveState(stepId, getStepSaveState(savedStep));
     setFeedback(undefined);
-  }, [pendingWrite]);
+  }, [pendingWrite, updateStepSaveState]);
 
   const isRunNotesDirty = Boolean(getManualTestRunNotePatchPayload(runNotesDraft, savedRun.notes));
   const dirtyStepIds = savedRun.steps
@@ -392,6 +416,7 @@ export const useManualTestRunExecution = ({
     isDirty,
     isRunNotesDirty,
     dirtyStepIds,
+    stepSaveStates,
     setRunNotesDraft,
     setStepStatus,
     setStepNotes,
