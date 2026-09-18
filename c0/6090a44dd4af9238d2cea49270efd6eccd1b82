@@ -1,0 +1,53 @@
+openspec/changes/add-manual-test-run-execution/design.md
+  s_9110c734229281::t_9b4ca51fcab242 33-50
+openspec/changes/add-manual-test-run-execution/proposal.md
+  s_9110c734229281::t_c4f10629388e4c 9-10
+openspec/changes/add-manual-test-run-execution/specs/manual-test-run-execution/spec.md
+  s_9110c734229281::t_ef954637f35104 125-165
+openspec/changes/add-manual-test-run-execution/tasks.md
+  s_ef139ecd33a3e8::t_63b879372aa166 31-40
+src/__tests__/components/manual-test-runs/ManualTestRunDetailsView.test.tsx
+  s_678554852b6dde::t_f69ce918cc1646 4,125,209-210,221,229-333
+src/__tests__/components/manual-test-runs/utils.test.ts
+  s_678554852b6dde::t_89e12ea8786ac3 9,65-80
+src/components/manual-test-runs/components/ManualTestRunDetailsView.tsx
+  s_678554852b6dde::t_07d3aac5ad41aa 10-11,15,39-106,125,144-148,214-215,259-269,305-328
+src/components/manual-test-runs/hooks/useManualTestRunExecution.ts
+  s_678554852b6dde::t_59dd86e7002573 13,24,57,77-81,116,145,223-231,263,299-301,306,312,318,331,333,419
+src/components/manual-test-runs/types.ts
+  s_678554852b6dde::t_7c2599c8032608 15
+src/components/manual-test-runs/utils.ts
+  s_678554852b6dde::t_145fb4460a3f36 14-22,67-86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "c06090a44dd4af9238d2cea49270efd6eccd1b82",
+  "prompts": {},
+  "sessions": {
+    "s_678554852b6dde": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b4f2-a3ec-7b43-b027-7e741d33c193",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_9110c734229281": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b3d5-5a69-7711-947e-60c320c972ac",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_ef139ecd33a3e8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b505-ec9f-7b93-b81e-178d6c0df789",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
