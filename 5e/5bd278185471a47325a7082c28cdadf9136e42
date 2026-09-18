@@ -1,0 +1,91 @@
+openspec/changes/add-manual-test-run-history-and-retest/.openspec.yaml
+  s_f445facb9fdd3c::t_17d8bc48879ea0 1-2
+openspec/changes/add-manual-test-run-history-and-retest/design.md
+  s_f445facb9fdd3c::t_33506ab31ca08a 1-56
+openspec/changes/add-manual-test-run-history-and-retest/proposal.md
+  s_f445facb9fdd3c::t_fa62d07ad084b5 1-30
+openspec/changes/add-manual-test-run-history-and-retest/specs/manual-test-run-history/spec.md
+  s_f445facb9fdd3c::t_bcfc4b4e246521 1-123
+openspec/changes/add-manual-test-run-history-and-retest/specs/test-scenario-authoring/spec.md
+  s_f445facb9fdd3c::t_554e0d7ff1450b 1-37
+openspec/changes/add-manual-test-run-history-and-retest/tasks.md
+  s_a29e61c4f16990::t_ea7c70ddd220af 1-35
+src/__tests__/components/manual-test-runs/ManualTestRunDetailContainer.test.tsx
+  s_a29e61c4f16990::t_8a0f4d954a22d5 1-113
+src/__tests__/components/manual-test-runs/ManualTestRunDetailsView.test.tsx
+  s_a29e61c4f16990::t_e1c7729bad7b1a 69-74,85-86,220-238
+src/__tests__/components/manual-test-runs/history.test.ts
+  s_a29e61c4f16990::t_32c71a6812b77d 1-43
+src/__tests__/components/ui/NavigationMenu/NavigationMenu.test.tsx
+  s_a29e61c4f16990::t_ce4364fb14a782 17
+src/__tests__/components/ui/components/Dialogs/delete-test-scenario/DeleteTestScenarioDialog.test.tsx
+  s_a29e61c4f16990::t_361ef8339a88ac 13,19-20,56
+src/__tests__/redux/apis/manualTestRunApi.test.ts
+  s_a29e61c4f16990::t_d2b4d9bed51fc2 51-87
+src/__tests__/router/index.test.tsx
+  s_a29e61c4f16990::t_9b644d8e03e7f8 8,43-58
+src/components/manual-test-runs/components/ManualTestRunDetailsView.tsx
+  s_a29e61c4f16990::t_a0b844aca8d9b7 13,47-51,61-65,111-127,150-183
+src/components/manual-test-runs/components/index.ts
+  s_a29e61c4f16990::t_9f730440535c24 7
+src/components/manual-test-runs/containers/ManualTestRunDetailContainer.tsx
+  s_a29e61c4f16990::t_78be44542e9ff6 4-6,8-9,11,15,24,26-93,112-116
+src/components/manual-test-runs/containers/ManualTestRunHistoryBoundary.tsx
+  s_a29e61c4f16990::t_4b6c8cf4eba4fb 1-33
+src/components/manual-test-runs/containers/ManualTestRunHistoryContainer.tsx
+  s_a29e61c4f16990::t_f6cd80b383cb64 1-49
+src/components/manual-test-runs/containers/index.ts
+  s_a29e61c4f16990::t_d81be2a327a3ea 6-7
+src/components/manual-test-runs/hooks/index.ts
+  s_a29e61c4f16990::t_f5d2da270bdbcd 6
+src/components/manual-test-runs/hooks/useManualTestRunHistory.ts
+  s_a29e61c4f16990::t_ae01bdb4ff6d70 1-136
+src/components/manual-test-runs/utils/history.ts
+  s_a29e61c4f16990::t_ea5c2dc3a576d2 1-62
+src/components/manual-test-runs/utils/paths.ts
+  s_a29e61c4f16990::t_5c8317a9214f1f 1-10
+src/components/test-scenarios/components/TestScenarioDetailsView.tsx
+  s_a29e61c4f16990::t_59f5312ead0dcd 10,67
+src/components/ui/components/Dialogs/delete-test-scenario/delete-test-scenario-dialog.tsx
+  s_a29e61c4f16990::t_872fab0c9fa67f 10,70-72
+src/components/ui/components/NavigationMenu/config.ts
+  s_a29e61c4f16990::t_073b318437b98c 19
+src/pages/ManualTestRuns/ManualTestRunHistoryPage.tsx
+  s_a29e61c4f16990::t_78101856215c11 1-13
+src/pages/ManualTestRuns/index.ts
+  s_a29e61c4f16990::t_3d52ccfb614dec 5
+src/pages/index.ts
+  s_a29e61c4f16990::t_55bbf7f261769f 19
+src/redux/apis/extendedApi.ts
+  s_a29e61c4f16990::t_b47027a2d6e97c 23,42-44,47,57,148-155,288
+src/redux/apis/tags.ts
+  s_a29e61c4f16990::t_cccabb7bed9a6e 15
+src/router/index.tsx
+  s_a29e61c4f16990::t_1ebafc36eca74f 25,120-130,164-174
+src/types/paths.ts
+  s_a29e61c4f16990::t_3c80e8c665fa8b 12,14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "5e5bd278185471a47325a7082c28cdadf9136e42",
+  "prompts": {},
+  "sessions": {
+    "s_a29e61c4f16990": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b393-9911-7491-84b2-b68c7e33c057",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_f445facb9fdd3c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b36d-a120-7120-ae97-5d9f17de3e26",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
