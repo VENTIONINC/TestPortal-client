@@ -20,6 +20,7 @@ import {
   type PostApiV2ManualTestRunsByRunIdCompleteApiArg,
   type PostApiV2ManualTestRunsByRunIdCompleteApiResponse,
   type PostApiV2TestScenariosByScenarioIdManualRunsApiArg,
+  type DeleteApiV2TestScenariosByScenarioIdApiArg,
   type PostApiV2SkillsApiResponse,
   type PostApiV2ReportsPdfExportApiArg,
   type PostApiV2ReportsPdfExportApiResponse,
@@ -38,8 +39,12 @@ export const manualTestRunProjectHistoryTag = (projectId: string) =>
 export const manualTestRunScenarioHistoryTag = (projectId: string, scenarioId: string) =>
   manualTestRunTag(`scenario-history:${projectId}:${scenarioId}`);
 
+export const manualTestRunProjectDetailsTag = (projectId: string) =>
+  manualTestRunTag(`project-details:${projectId}`);
+
 const getRunScopeTags = (run: Pick<ManualTestRunRead, 'projectId' | 'id' | 'sourceTestScenarioId'>) => [
   manualTestRunDetailTag(run.projectId, run.id),
+  manualTestRunProjectDetailsTag(run.projectId),
   manualTestRunProjectHistoryTag(run.projectId),
   manualTestRunScenarioHistoryTag(run.projectId, run.sourceTestScenarioId),
 ];
@@ -49,6 +54,7 @@ const getRunArgTags = (projectId: string, runId: string) => [manualTestRunDetail
 const getMutationErrorTags = (projectId: string, runId: string) => [
   ...getRunArgTags(projectId, runId),
   manualTestRunProjectHistoryTag(projectId),
+  manualTestRunProjectDetailsTag(projectId),
 ];
 
 export interface SkillArchiveDownloadResult {
@@ -137,6 +143,14 @@ export const extendedApi = generatedApi
         invalidatesTags: (_result, _error, arg: PostApiV2TestScenariosByScenarioIdManualRunsApiArg) => [
           manualTestRunProjectHistoryTag(arg.projectId),
           manualTestRunScenarioHistoryTag(arg.projectId, arg.scenarioId),
+        ],
+      },
+      deleteApiV2TestScenariosByScenarioId: {
+        invalidatesTags: (_result, _error, arg: DeleteApiV2TestScenariosByScenarioIdApiArg) => [
+          TAGS.TestScenario,
+          manualTestRunProjectHistoryTag(arg.projectId),
+          manualTestRunScenarioHistoryTag(arg.projectId, arg.scenarioId),
+          manualTestRunProjectDetailsTag(arg.projectId),
         ],
       },
       getApiV2TestScenariosByScenarioIdManualRuns: {
@@ -271,6 +285,7 @@ export const {
   useDeleteApiV2SkillsByIdMutation: useDeleteCustomSkillMutation,
   useLazyDownloadSkillArchiveQuery,
   usePostApiV2UploadCtrfReportMutation,
+  useDeleteApiV2TestScenariosByScenarioIdMutation,
   usePostApiV2TestScenariosByScenarioIdManualRunsMutation,
   useGetApiV2TestScenariosByScenarioIdManualRunsQuery,
   useLazyGetApiV2TestScenariosByScenarioIdManualRunsQuery,

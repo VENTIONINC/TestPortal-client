@@ -7,7 +7,7 @@ import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { Button, Text, VStack } from '@chakra-ui/react';
 
 import { Alert, Dialog, DialogBody, DialogFooter, Input, toaster } from '@/components/ui';
-import { useDeleteApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/generatedApi';
+import { useDeleteApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
 import type { DefaultDialogProps } from '@/types';
 import { extractApiError } from '@/utils/apiErrors';
 
@@ -66,6 +66,9 @@ export const DeleteTestScenarioDialog = ({
         <VStack align="stretch" gap={4}>
           <Text>
             This permanently deletes <strong>{scenarioTitle}</strong> from the selected project.
+          </Text>
+          <Text>
+            Existing manual test runs and their saved snapshots are preserved. New manual test runs can no longer be started from this scenario.
           </Text>
           <Text>Enter the exact scenario title to confirm. Matching is case-sensitive and whitespace-sensitive.</Text>
           <Input
