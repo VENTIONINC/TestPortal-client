@@ -1,0 +1,37 @@
+openspec/changes/add-manual-test-run-history-and-retest/design.md
+  s_9110c734229281::t_22efa69ca0cc16 17,37,57-64
+openspec/changes/add-manual-test-run-history-and-retest/proposal.md
+  s_9110c734229281::t_729e8ac76aa4c5 9,27,32-33
+openspec/changes/add-manual-test-run-history-and-retest/specs/manual-test-run-history/spec.md
+  s_9110c734229281::t_852197a02e1da1 91,124-146
+openspec/changes/add-manual-test-run-history-and-retest/tasks.md
+  s_9110c734229281::t_d3900faee590b6 18,36-47
+src/__tests__/components/manual-test-runs/ManualTestRunDetailsView.test.tsx
+  s_9110c734229281::t_b045147394a8c0 4,9,19-23,47,98,107,128-129,140-142,293-326
+src/__tests__/components/manual-test-runs/ManualTestRunHistoryView.test.tsx
+  s_9110c734229281::t_2cddf1927a1bf5 77-78,95-101
+src/components/manual-test-runs/components/ManualTestRunDetailsView.tsx
+  s_9110c734229281::t_7a1ae84b4414fa 122,150-159,221-227,231-234,246,284-289,294-297
+src/components/manual-test-runs/components/ManualTestRunHistoryView.tsx
+  s_9110c734229281::t_c18e0b90f66f10 43,131,144,153,170
+src/components/manual-test-runs/containers/ManualTestRunHistoryContainer.tsx
+  s_9110c734229281::t_d5e7f8461196b4 6,8-9,22-23,34
+src/components/manual-test-runs/hooks/useManualTestRunExecution.ts
+  s_9110c734229281::t_9e64b1ea0259f8 7,9-10,110-111,113,206,213,222,224,227,229,232,234,304,307,310,315,324,340,398
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "4861039f23ebc43a95224d212d0492c54915cc96",
+  "prompts": {},
+  "sessions": {
+    "s_9110c734229281": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b3d5-5a69-7711-947e-60c320c972ac",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
