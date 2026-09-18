@@ -12,4 +12,5 @@ export const TAGS = {
   System: 'System',
   ResultError: 'ResultError',
   Project: 'Projects',
+  ManualTestRun: 'Manual Test Runs',
 };

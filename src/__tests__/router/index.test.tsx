@@ -5,7 +5,7 @@ import { isValidElement, type ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { ProjectGuard, ProtectedRoute } from '@/components';
-import { TestScenarioCreatePage, TestScenarioDetailPage, TestScenarioEditPage, TestScenariosPage } from '@/pages';
+import { ManualTestRunPage, TestScenarioCreatePage, TestScenarioDetailPage, TestScenarioEditPage, TestScenariosPage } from '@/pages';
 import { router } from '@/router';
 import { PATHS } from '@/types/paths';
 
@@ -25,6 +25,19 @@ describe('Test Scenarios route', () => {
     const projectGuardElement = protectedElement.props.children as ReactElement<{ children: ReactElement }>;
     expect(projectGuardElement.type).toBe(ProjectGuard);
     expect(projectGuardElement.props.children.type).toBe(TestScenariosPage);
+  });
+
+  it('registers the manual test run page behind authentication and project guards', () => {
+    const route = router.routes.find((candidate) => candidate.path === PATHS.MANUAL_TEST_RUN_DETAILS) as
+      | { element?: ReactElement; path?: string }
+      | undefined;
+
+    expect(route).toBeDefined();
+    const protectedElement = route?.element as ReactElement<{ children: ReactElement }>;
+    expect(protectedElement.type).toBe(ProtectedRoute);
+    const projectGuardElement = protectedElement.props.children as ReactElement<{ children: ReactElement }>;
+    expect(projectGuardElement.type).toBe(ProjectGuard);
+    expect(projectGuardElement.props.children.type).toBe(ManualTestRunPage);
   });
 
   it.each([

@@ -10,10 +10,12 @@ import { TestScenarioDetailContainer } from '@/components/test-scenarios/contain
 import { ChakraProvider } from '@/components/ui';
 import { useTestScenarioContextMenu } from '@/components/test-scenarios/hooks/useTestScenarioContextMenu';
 import { useGetApiV2TestScenariosByScenarioIdQuery } from '@/redux/apis/generatedApi';
+import { usePostApiV2TestScenariosByScenarioIdManualRunsMutation } from '@/redux/apis/extendedApi';
 
 const navigate = vi.fn();
 const refetch = vi.fn();
 const contextMenu = vi.fn();
+const startManualRun = vi.fn();
 
 const persistedScenario = {
   id: 'scenario-1',
@@ -50,8 +52,14 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
     useGetApiV2TestScenariosByScenarioIdQuery: vi.fn(),
   };
 });
+vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
+
+  return { ...actual, usePostApiV2TestScenariosByScenarioIdManualRunsMutation: vi.fn() };
+});
 
 const mockedGetScenario = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
+const mockedStartManualRun = vi.mocked(usePostApiV2TestScenariosByScenarioIdManualRunsMutation);
 const mockedContextMenu = vi.mocked(useTestScenarioContextMenu);
 
 const renderContainer = () =>
@@ -67,8 +75,10 @@ describe('TestScenarioDetailContainer', () => {
   beforeEach(() => {
     navigate.mockReset();
     refetch.mockReset();
+    startManualRun.mockReset();
     contextMenu.mockReset();
     mockedContextMenu.mockReturnValue(contextMenu);
+    mockedStartManualRun.mockReturnValue([startManualRun, { isLoading: false }] as never);
     mockedGetScenario.mockReturnValue({
       data: persistedScenario,
       currentData: persistedScenario,
@@ -156,5 +166,32 @@ describe('TestScenarioDetailContainer', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Failed to load Test Scenario');
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts with an empty body and navigates only after the server returns the run identity', async () => {
+    const user = userEvent.setup();
+    startManualRun.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'run-1' }) });
+
+    renderContainer();
+    await user.click(screen.getByRole('button', { name: 'Start manual run' }));
+
+    expect(startManualRun).toHaveBeenCalledWith({
+      scenarioId: 'scenario-1',
+      projectId: 'project-1',
+      manualTestRunStartRequest: {},
+    });
+    expect(navigate).toHaveBeenCalledWith('/manual-test-runs/run-1');
+  });
+
+  it('reports uncertain transport failures without retrying automatically', async () => {
+    const user = userEvent.setup();
+    startManualRun.mockReturnValue({ unwrap: () => Promise.reject({ status: 'FETCH_ERROR' }) });
+
+    renderContainer();
+    await user.click(screen.getByRole('button', { name: 'Start manual run' }));
+
+    expect(startManualRun).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('alert')).toHaveTextContent('A run may have been created');
+    expect(navigate).not.toHaveBeenCalled();
   });
 });
