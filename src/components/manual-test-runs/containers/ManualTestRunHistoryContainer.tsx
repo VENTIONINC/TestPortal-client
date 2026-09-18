@@ -3,7 +3,10 @@
 
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
+import { useSelector } from 'react-redux';
 
+import type { RootState } from '@/redux/store';
+import { getUserIdFromToken } from '@/utils/auth';
 import type { ManualTestRunSummaryRead } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
 
@@ -16,6 +19,8 @@ export interface ManualTestRunHistoryContainerProps {
 }
 
 export const ManualTestRunHistoryContainer = ({ projectId, scenarioId }: ManualTestRunHistoryContainerProps) => {
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
+  const currentUserId = accessToken ? getUserIdFromToken(accessToken) : null;
   const navigate = useNavigate();
   const history = useManualTestRunHistory(projectId, scenarioId);
   const onSourceHistory = useCallback((run: ManualTestRunSummaryRead) => {
@@ -26,6 +31,7 @@ export const ManualTestRunHistoryContainer = ({ projectId, scenarioId }: ManualT
 
   return (
     <ManualTestRunHistoryView
+      currentUserId={currentUserId}
       data={history.data}
       error={history.error}
       isLoading={history.isLoading}

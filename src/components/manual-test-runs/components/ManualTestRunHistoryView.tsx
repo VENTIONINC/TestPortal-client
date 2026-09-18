@@ -40,6 +40,7 @@ const StatusCell = ({ status }: { status: ManualTestRunStatus }) => {
 };
 
 export interface ManualTestRunHistoryViewProps {
+  currentUserId?: string | null;
   data?: { runs: ManualTestRunSummaryRead[]; total: number; page: number; limit: number; totalPages: number };
   error?: unknown;
   isLoading: boolean;
@@ -127,7 +128,7 @@ const Filters = ({
   </VStack>
 );
 
-const RunTable = ({ runs, onSourceHistory }: { runs: ManualTestRunSummaryRead[]; onSourceHistory: ManualTestRunHistoryViewProps['onSourceHistory'] }) => (
+const RunTable = ({ runs, onSourceHistory, currentUserId }: { currentUserId?: string | null; runs: ManualTestRunSummaryRead[]; onSourceHistory: ManualTestRunHistoryViewProps['onSourceHistory'] }) => (
   <Box overflowX="auto">
     <Table.Root size="sm" variant="outline" minW="1050px">
       <Table.Header><Table.Row><Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Status</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Source</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Executor</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Started</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Completed</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING} /></Table.Row></Table.Header>
@@ -140,7 +141,7 @@ const RunTable = ({ runs, onSourceHistory }: { runs: ManualTestRunSummaryRead[];
             <Table.Cell {...TABLE_CELL_PADDING}>{run.executedBy?.name ?? 'Executor unavailable'}</Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary">{formatDate(run.startedAt)}</Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary">{formatDate(run.completedAt)}</Table.Cell>
-            <Table.Cell {...TABLE_CELL_PADDING} textAlign="end" w="1%"><RouterLink to={getManualTestRunPath(run.id)} state={{ from: 'manual-test-run-history' }}>{run.status === 'in_progress' ? 'Resume' : 'View'}</RouterLink></Table.Cell>
+            <Table.Cell {...TABLE_CELL_PADDING} textAlign="end" w="1%"><RouterLink to={getManualTestRunPath(run.id)} state={{ from: 'manual-test-run-history' }}>{run.status === 'in_progress' && currentUserId && run.executedById === currentUserId ? 'Resume' : 'View'}</RouterLink></Table.Cell>
           </Table.Row>
         ))}
       </Table.Body>
@@ -149,7 +150,7 @@ const RunTable = ({ runs, onSourceHistory }: { runs: ManualTestRunSummaryRead[];
 );
 
 export const ManualTestRunHistoryView = memo(function ManualTestRunHistoryView({
-  data, error, isLoading, isFetching, isNotFound, filters, dateError, isFiltered, isProjectHistory,
+  currentUserId, data, error, isLoading, isFetching, isNotFound, filters, dateError, isFiltered, isProjectHistory,
   onStatusChange, onSourceChange, onStartDateChange, onEndDateChange, onClearFilters, onPageChange, onRetry, onProjectHistory, onSourceHistory,
 }: ManualTestRunHistoryViewProps) {
   const showLoading = isLoading || (isFetching && !data);
@@ -166,7 +167,7 @@ export const ManualTestRunHistoryView = memo(function ManualTestRunHistoryView({
           </Tooltip>
         </HStack>
         <Filters filters={filters} dateError={dateError} isProjectHistory={isProjectHistory} isFiltered={isFiltered} onStatusChange={onStatusChange} onSourceChange={onSourceChange} onStartDateChange={onStartDateChange} onEndDateChange={onEndDateChange} onClearFilters={onClearFilters} />
-        {isNotFound ? <SourceNotFoundState onProjectHistory={onProjectHistory} /> : error ? <ErrorState onRetry={onRetry} /> : showLoading ? <LoadingState /> : !data || data.runs.length === 0 ? <EmptyState isFiltered={isFiltered} onClearFilters={onClearFilters} /> : <VStack align="stretch" gap={4}><RunTable runs={data.runs} onSourceHistory={onSourceHistory} />{data.totalPages > 1 && <Box as="nav" aria-label="Manual Test Run pagination"><HStack justify="center" py={2}><Pagination currentPage={data.page} totalPages={data.totalPages} onPageChange={onPageChange} /></HStack></Box>}<Text color="text.secondary" fontSize="sm" textAlign="right">Showing {data.total === 0 ? 0 : (data.page - 1) * data.limit + 1}-{Math.min(data.page * data.limit, data.total)} of {data.total} Manual Test Runs</Text></VStack>}
+        {isNotFound ? <SourceNotFoundState onProjectHistory={onProjectHistory} /> : error ? <ErrorState onRetry={onRetry} /> : showLoading ? <LoadingState /> : !data || data.runs.length === 0 ? <EmptyState isFiltered={isFiltered} onClearFilters={onClearFilters} /> : <VStack align="stretch" gap={4}><RunTable currentUserId={currentUserId} runs={data.runs} onSourceHistory={onSourceHistory} />{data.totalPages > 1 && <Box as="nav" aria-label="Manual Test Run pagination"><HStack justify="center" py={2}><Pagination currentPage={data.page} totalPages={data.totalPages} onPageChange={onPageChange} /></HStack></Box>}<Text color="text.secondary" fontSize="sm" textAlign="right">Showing {data.total === 0 ? 0 : (data.page - 1) * data.limit + 1}-{Math.min(data.page * data.limit, data.total)} of {data.total} Manual Test Runs</Text></VStack>}
       </VStack>
     </Wrap>
   );

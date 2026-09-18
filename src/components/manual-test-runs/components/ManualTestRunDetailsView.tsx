@@ -119,7 +119,7 @@ export const ManualTestRunDetailsView = ({
               Complete run
             </Button>
           )}
-          {readOnly && onRetest && (
+          {execution.savedRun.status !== 'in_progress' && onRetest && (
             <Button type="button" onClick={onRetest} loading={isRetesting} disabled={isRetesting || !execution.savedRun.testScenarioId}>
               Retest
             </Button>
@@ -147,7 +147,16 @@ export const ManualTestRunDetailsView = ({
           </Alert.Content>
         </Alert.Root>
       )}
-      {readOnly && (
+      {readOnly && execution.savedRun.status === 'in_progress' && (
+        <Alert.Root status="info" role="status">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>View-only run</Alert.Title>
+            <Alert.Description>Only the user who started this run can change its results, notes or complete it.</Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
+      {execution.savedRun.status !== 'in_progress' && (
         <Alert.Root status={execution.savedRun.testScenarioId ? 'info' : 'warning'} role="status">
           <Alert.Indicator />
           <Alert.Content>
@@ -209,13 +218,20 @@ export const ManualTestRunDetailsView = ({
               value={execution.runNotesDraft}
               onChange={(event) => execution.setRunNotesDraft(event.target.value)}
               readOnly={readOnly || execution.pendingWrite?.kind === 'run'}
-              fieldProps={{ helperText: readOnly ? 'Completed run; saved values are immutable.' : 'Notes are saved explicitly and are separate from scenario notes.' }}
+              fieldProps={{ helperText: readOnly ? 'View-only run; saved notes cannot be edited.' : 'Save notes explicitly, or press Ctrl/Cmd + Enter.' }}
+              onKeyDown={(event) => {
+                if (!readOnly && execution.isRunNotesDirty && !isPending && !execution.recoveryBlocked && event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                  event.preventDefault();
+                  void execution.saveRunNotes();
+                }
+              }}
               rows={5}
             />
             {!readOnly && (
-              <HStack justify="end">
-                <Button type="button" variant="ghost" onClick={execution.discardRunNotes} disabled={isPending || execution.recoveryBlocked}>Discard</Button>
-                <Button type="button" onClick={() => void execution.saveRunNotes()} disabled={isPending || execution.recoveryBlocked}>Save execution notes</Button>
+              <HStack justify="start" flexWrap="wrap">
+                <Button type="button" onClick={() => void execution.saveRunNotes()} loading={execution.pendingWrite?.kind === 'run'} loadingText="Saving…" disabled={!execution.isRunNotesDirty || isPending || execution.recoveryBlocked}>Save execution notes</Button>
+                <Button type="button" variant="ghost" onClick={execution.discardRunNotes} disabled={!execution.isRunNotesDirty || isPending || execution.recoveryBlocked}>Discard</Button>
+                <Text role="status" fontSize="sm" color="text.secondary">{execution.pendingWrite?.kind === 'run' ? 'Saving…' : execution.isRunNotesDirty ? 'Unsaved changes' : 'Saved'}</Text>
               </HStack>
             )}
           </VStack>
@@ -227,6 +243,7 @@ export const ManualTestRunDetailsView = ({
             ) : (
               orderedSteps.map((step, index) => {
                 const draft = execution.stepDrafts[step.id] ?? { status: step.status, notes: '' };
+                const stepDirty = execution.dirtyStepIds.includes(step.id);
                 const stepPending = execution.pendingWrite?.kind === 'step' && execution.pendingWrite.stepId === step.id;
 
                 return (
@@ -264,13 +281,20 @@ export const ManualTestRunDetailsView = ({
                         value={draft.notes}
                         onChange={(event) => execution.setStepNotes(step.id, event.target.value)}
                         readOnly={readOnly || execution.recoveryBlocked || stepPending}
+                        onKeyDown={(event) => {
+                          if (!readOnly && stepDirty && !isPending && !execution.recoveryBlocked && event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                            event.preventDefault();
+                            void execution.saveStep(step.id);
+                          }
+                        }}
                         rows={3}
                         maxW={{ base: '100%', md: '560px' }}
                       />
                       {!readOnly && (
-                        <HStack justify="end">
-                          <Button type="button" variant="ghost" onClick={() => execution.discardStep(step.id)} disabled={isPending || execution.recoveryBlocked}>Discard</Button>
-                          <Button type="button" onClick={() => void execution.saveStep(step.id)} disabled={isPending || execution.recoveryBlocked}>Save step</Button>
+                        <HStack justify="start" flexWrap="wrap" maxW={{ base: '100%', md: '560px' }}>
+                          <Button type="button" onClick={() => void execution.saveStep(step.id)} loading={stepPending} loadingText="Saving…" disabled={!stepDirty || isPending || execution.recoveryBlocked}>Save step</Button>
+                          <Button type="button" variant="ghost" onClick={() => execution.discardStep(step.id)} disabled={!stepDirty || isPending || execution.recoveryBlocked}>Discard</Button>
+                          <Text role="status" fontSize="sm" color="text.secondary">{stepPending ? 'Saving…' : stepDirty ? 'Unsaved changes' : 'Saved'}</Text>
                         </HStack>
                       )}
                     </VStack>

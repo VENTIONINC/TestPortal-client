@@ -15,7 +15,7 @@
 
 - [x] 3.1 Add Source deleted to history/detail, View current scenario with possible-difference wording on live-source detail and View source history actions; verify null/live relations, snapshot preservation and no claimed drift detection.
 - [x] 3.2 Add nested-history source-not-found fallback to project history retaining the original source filter; verify 404 is distinct from empty history and late scope responses cannot trigger fallback under another project.
-- [x] 3.3 Wire active Resume and completed View to existing detail; verify Resume performs no start, detached active runs remain executable, completed snapshots remain read-only and active runs offer no Retest.
+- [x] 3.3 Wire active Resume and completed View to existing detail; verify Resume performs no start, detached active runs remain executable for their executor, completed snapshots remain read-only and active runs offer no Retest.
 
 ## 4. Completed-run retest
 
@@ -33,3 +33,15 @@
 - [x] 6.1 Run yarn lint, yarn test and yarn build; verify passing exits, mirrored tests under src/__tests__ and retained #92 execution plus scenario catalog/authoring behavior.
 - [ ] 6.2 Perform authenticated browser QA against the migrated local backend: project/scenario history, combined filters/totals, pagination, reload defaults, source edit/deletion with multiple active/completed runs, current-source link, nested fallback, detached resume and fresh completed retest; record live observations separately from simulated errors/concurrency and do not mark unrelated #92 QA complete by inference.
 - [x] 6.3 Validate the change with strict OpenSpec validation and git diff --check, review final served-contract compatibility and ticket boundaries; verify no backend modifications or excluded features and record any delivery dependency separately from local QA.
+
+## 7. Executor-only client access
+
+- [x] 7.1 Restrict Resume and detail execution changes to the current executor, default missing identity to view-only, preserve completed Retest, and verify own/foreign/null-executor behavior with focused tests and lint/build checks. Backend authorization remains tracked in backend #102.
+
+Verification for 7.1: yarn lint and yarn build passed; yarn test passed (62 files, 269 tests); strict OpenSpec validation and git diff --check passed. Authenticated two-user browser QA and backend #102 enforcement are not yet verified.
+
+## 8. Local save actions
+
+- [x] 8.1 Move execution Save/Discard beneath their notes, add local state and dirty guards, support Ctrl/Cmd + Enter, and verify existing explicit-save and read-only behavior.
+
+Verification for 8.1: detail tests passed (16 tests), including disabled unchanged saves and Ctrl + Enter step saving; yarn lint, yarn build, strict OpenSpec validation and git diff --check passed. Browser layout QA remains pending.

@@ -1,11 +1,12 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen, within } from '@testing-library/react';
+import { act, renderHook, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useManualTestRunExecution } from '@/components/manual-test-runs/hooks/useManualTestRunExecution';
 import { ManualTestRunDetailsView } from '@/components/manual-test-runs';
 import { ChakraProvider } from '@/components/ui';
 import type { ManualTestRunRead } from '@/redux/apis/generatedApi';
@@ -14,6 +15,11 @@ import {
   usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
   usePostApiV2ManualTestRunsByRunIdCompleteMutation,
 } from '@/redux/apis/extendedApi';
+
+vi.mock('react-redux', async (importOriginal) => ({
+  ...await importOriginal<typeof import('react-redux')>(),
+  useSelector: (selector: (state: unknown) => unknown) => selector({ auth: { accessToken: `header.${btoa(JSON.stringify({ userId: 'user-1' }))}.signature` } }),
+}));
 
 const patchRun = vi.fn();
 const patchStep = vi.fn();
@@ -38,7 +44,7 @@ const runFor = (overrides: Partial<ManualTestRunRead> = {}): ManualTestRunRead =
   projectId: 'project-1',
   sourceTestScenarioId: 'scenario-1',
   testScenarioId: null,
-  executedById: null,
+  executedById: 'user-1',
   executedBy: null,
   status: 'in_progress',
   startedAt: '2026-09-17T10:00:00.000Z',
@@ -89,8 +95,7 @@ const renderView = (
     </ChakraProvider>,
   );
 
-describe('ManualTestRunDetailsView', () => {
-  beforeEach(() => {
+beforeEach(() => {
     patchRun.mockReset();
     patchStep.mockReset();
     completeRun.mockReset();
@@ -99,6 +104,7 @@ describe('ManualTestRunDetailsView', () => {
     mockedCompleteRun.mockReturnValue([completeRun, { isLoading: false }] as never);
   });
 
+describe('ManualTestRunDetailsView', () => {
   it('renders the persisted snapshot and distinguishes scenario notes from execution notes', () => {
     renderView();
 
@@ -119,6 +125,8 @@ describe('ManualTestRunDetailsView', () => {
     patchStep.mockReturnValue({ unwrap: () => Promise.resolve(savedStepRun) });
 
     renderView(runFor());
+    expect(screen.getByRole('button', { name: 'Save execution notes' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save step' })).toBeDisabled();
     await user.type(screen.getByRole('textbox', { name: 'Execution notes' }), 'run note');
     await user.click(screen.getByRole('button', { name: 'Save execution notes' }));
 
@@ -129,7 +137,9 @@ describe('ManualTestRunDetailsView', () => {
     });
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'passed');
-    await user.click(screen.getByRole('button', { name: 'Save step' }));
+    expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+    await user.click(screen.getByRole('textbox', { name: 'Notes for step 1' }));
+    await user.keyboard('{Control>}{Enter}{/Control}');
     expect(patchStep).toHaveBeenCalledWith({
       projectId: 'project-1',
       runId: 'run-1',
@@ -279,4 +289,38 @@ describe('ManualTestRunDetailsView', () => {
     expect(screen.getByText('Could not refresh the saved run')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Retry refresh' })).toBeInTheDocument();
   });
+});
+
+
+describe('run executor access', () => {
+  it.each(['other-user', null])('renders an active run owned by %s as view-only', (executedById) => {
+    renderView(runFor({ executedById }), vi.fn(), vi.fn(), { onRetest: vi.fn() });
+    expect(screen.getByText('View-only run')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Complete run' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retest' })).not.toBeInTheDocument();
+    for (const textbox of screen.getAllByRole('textbox')) expect(textbox).toHaveAttribute('readonly');
+    expect(screen.queryByRole('button', { name: /Save/i })).not.toBeInTheDocument();
+  });
+});
+
+
+it('blocks execution callbacks for a foreign run', async () => {
+  const run = runFor({ executedById: 'other-user' });
+  const { result } = renderHook(() => useManualTestRunExecution({ projectId: run.projectId, runId: run.id, run, setPersistedRun: vi.fn(), refetch: vi.fn() }));
+  act(() => {
+    result.current.setRunNotesDraft('Changed notes');
+    result.current.setStepStatus('step-1', 'passed');
+    result.current.setStepNotes('step-1', 'Changed step');
+    result.current.requestCompletion();
+  });
+  await act(async () => {
+    await result.current.saveRunNotes();
+    await result.current.saveStep('step-1');
+    await result.current.confirmCompletion('failed');
+  });
+  expect(result.current.isCompletionOpen).toBe(false);
+  expect(result.current.isDirty).toBe(false);
+  expect(patchRun).not.toHaveBeenCalled();
+  expect(patchStep).not.toHaveBeenCalled();
+  expect(completeRun).not.toHaveBeenCalled();
 });

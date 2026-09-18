@@ -74,7 +74,8 @@ describe('ManualTestRunHistoryView', () => {
     expect(screen.getByText('Source deleted')).toBeInTheDocument();
     expect(screen.getByText('Executor unavailable')).toBeInTheDocument();
     expect(screen.getAllByText('Not available')).toHaveLength(1);
-    expect(screen.getAllByText('Resume')).toHaveLength(1);
+    expect(screen.getAllByText('View')).toHaveLength(1);
+    expect(screen.queryByText('Resume')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Next Page' }));
     expect(onPageChange).toHaveBeenCalledWith(2);
@@ -90,4 +91,11 @@ describe('ManualTestRunHistoryView', () => {
     rerender(<ChakraProvider><MemoryRouter><ManualTestRunHistoryView {...defaultProps} data={{ runs: [], total: 0, page: 1, limit: 30, totalPages: 0 }} isFiltered={true} /></MemoryRouter></ChakraProvider>);
     expect(screen.getByText('No Manual Test Runs match these filters.')).toBeInTheDocument();
   });
+});
+
+
+it('offers Resume only for the current executor', () => {
+  renderView({ currentUserId: 'user-1', data: { runs: [{ ...run, executedById: 'user-1' }, { ...run, id: 'run-2', executedById: 'user-2' }], total: 2, page: 1, limit: 30, totalPages: 1 } });
+  expect(screen.getAllByText('Resume')).toHaveLength(1);
+  expect(screen.getAllByText('View')).toHaveLength(1);
 });

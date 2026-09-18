@@ -14,7 +14,7 @@ Backend history summaries include snapshot title, immutable sourceTestScenarioId
 
 ### Separate history routes with shared presentation
 
-Add `/manual-test-runs` and `/test-scenarios/:scenarioId/manual-runs` within existing authentication/project guards. Add Manual Test Runs beside Test Scenarios in left navigation and a scenario-detail history link. Use shared table/filter/pagination views with project and nested query adapters. Reuse #92 detail for row navigation; label active action Resume and completed action View. Inline scenario history was considered, but a separate route keeps filtering and pagination off scenario detail.
+Add `/manual-test-runs` and `/test-scenarios/:scenarioId/manual-runs` within existing authentication/project guards. Add Manual Test Runs beside Test Scenarios in left navigation and a scenario-detail history link. Use shared table/filter/pagination views with project and nested query adapters. Reuse #92 detail for row navigation; label active action Resume only for its executor and all other actions View. Inline scenario history was considered, but a separate route keeps filtering and pagination off scenario detail.
 
 ### Ephemeral filters and scope boundaries
 
@@ -34,7 +34,7 @@ Use testScenarioId nullability to show Source deleted in rows/detail. For a live
 
 ### Retest only from completed detail
 
-Active rows open existing detail through Resume, including detached runs. Retest appears only on completed detail, disabled with a source-deleted explanation when the live relation is null. Explain current saved content and fresh outcomes/notes next to the action. Use the enhanced start mutation with `{ scenarioId: run.testScenarioId, projectId, manualTestRunStartRequest: {} }`, synchronous duplicate guard, visible pending state and post-await project/run scope guard. Navigate only on confirmed scoped success. Reuse #92 uncertainty handling and zero transport retries; failed/ambiguous requests retain history and offer history inspection without automatic replay. Source-not-found errors refetch authoritative detail. Row retest was considered but rejected by the agreed detail-only interaction.
+Active rows owned by the current user open existing detail through Resume, including detached runs. Other active rows provide View. Retest appears only on completed detail, disabled with a source-deleted explanation when the live relation is null. Explain current saved content and fresh outcomes/notes next to the action. Use the enhanced start mutation with `{ scenarioId: run.testScenarioId, projectId, manualTestRunStartRequest: {} }`, synchronous duplicate guard, visible pending state and post-await project/run scope guard. Navigate only on confirmed scoped success. Reuse #92 uncertainty handling and zero transport retries; failed/ambiguous requests retain history and offer history inspection without automatic replay. Source-not-found errors refetch authoritative detail. Row retest was considered but rejected by the agreed detail-only interaction.
 
 Completed detail has no editable execution drafts, resolving retest draft loss without a save/discard flow. Opening active runs starts no mutation and does not reopen completed records.
 
@@ -54,3 +54,11 @@ Extend exact-title deletion copy to explain preserved runs/snapshots and unavail
 ## Migration Plan
 
 Verify a running compatible migrated local backend, compare served history/start/detail contracts and regenerate only through the existing generator if contract drift requires it. Implement feature UI and non-generated cache enhancements together. Run focused coverage then lint, tests, build and authenticated browser QA. Record live versus simulated deletion/concurrency/transport checks separately and preserve outstanding #92 QA status. Deploy with the compatible backend; rollback removes client entry points without deleting retained runs or reversing migrations.
+
+### Executor-only execution
+
+Compare the authenticated user ID with `executedById`. Unknown identity or a null/different executor makes detail view-only, including direct route access. Hide execution editing and completion, guard mutation callbacks, and explain the restriction. Keep Retest limited to completed detail; viewing a foreign active run must not enable Retest. Reassignment is excluded. Client presentation is not authorization: backend issue #102 must enforce mutation access and return 403 for other users.
+
+### Local execution save actions
+
+Align Save and Discard beneath the notes they affect, with Save first. Step actions stay within the 560px notes width and wrap on small screens. Show Saved, Unsaved changes or Saving locally. Disable unchanged Save/Discard and preserve existing pending/recovery guards. Ctrl/Cmd + Enter in a notes field saves only that field's run notes or step, with the same guards. No autosave is introduced.

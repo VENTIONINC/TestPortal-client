@@ -88,7 +88,7 @@ History and run detail SHALL display Source deleted when testScenarioId is null.
 
 ### Requirement: Resume existing active runs
 
-Active history rows SHALL provide Resume, opening the existing detail route without starting a run. Completed rows SHALL provide view access to read-only detail. Active runs SHALL NOT offer Retest; active runs with deleted sources SHALL remain resumable.
+Active history rows started by the current user SHALL provide Resume, opening the existing detail route without starting a run. Completed rows SHALL provide view access to read-only detail. Active runs SHALL NOT offer Retest; active runs with deleted sources SHALL remain resumable by their executor.
 
 #### Scenario: User resumes a detached active run
 - **WHEN** the user activates Resume for an in_progress run whose source was deleted
@@ -121,3 +121,26 @@ Successful starts and completions SHALL refresh relevant project and source hist
 #### Scenario: User completes or retests a run
 - **WHEN** completion or retest succeeds
 - **THEN** subsequent affected history SHALL reflect the persisted outcome or new run through refreshed scoped caches
+
+### Requirement: Executor-only run editing
+
+The client SHALL allow execution changes and completion only when the authenticated user ID matches the run's non-null executedById and the run is in_progress. All other runs SHALL open view-only, including direct detail navigation. Missing user identity SHALL default to view-only. Reassignment SHALL NOT be offered.
+
+#### Scenario: User views another executor's active run
+- **WHEN** the user opens an active run started by another user or with an unavailable executor
+- **THEN** history SHALL offer View instead of Resume
+- **AND** detail SHALL explain view-only access and omit editable execution controls, completion and Retest
+- **AND** execution mutation callbacks SHALL NOT submit changes
+
+#### Scenario: User continues their own active run
+- **WHEN** the authenticated user matches executedById on an active run
+- **THEN** Resume and existing execution controls SHALL remain available even after source deletion
+
+### Requirement: Local execution saving
+
+Editable run detail SHALL place Save and Discard directly beneath their notes, aligned to the start. Step actions SHALL remain within the notes width. Each block SHALL show Saved, Unsaved changes or Saving, and unchanged saves SHALL be disabled. Ctrl/Cmd + Enter SHALL explicitly save the focused notes block subject to existing pending, recovery and executor guards.
+
+#### Scenario: User edits step notes
+- **WHEN** an executor changes a step note or outcome
+- **THEN** its local controls SHALL show Unsaved changes and enable Save
+- **AND** successful saving SHALL restore Saved unless newer unsaved edits remain
