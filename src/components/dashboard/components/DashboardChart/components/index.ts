@@ -2,5 +2,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
 export { PassRateChart } from './PassRateChart';
-export { IssuesCategoriesChart } from './IssuesCategoriesChart';
+export { FailureBreakdownChart } from './FailureBreakdownChart';
 export { HistoryRegressionRunChart } from './HistoryRegressionRunChart';

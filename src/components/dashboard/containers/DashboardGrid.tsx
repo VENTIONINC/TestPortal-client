@@ -15,13 +15,13 @@ import { LuClock3, LuRotateCcw, LuSkipForward } from 'react-icons/lu';
 
 import { type DashboardResponse } from '@/redux/apis/generatedApi';
 import { aggregateDashboardStatusMetrics } from '@/components/dashboard/utils/statusMetrics';
+import { FailureBreakdownChart } from '@/components/dashboard/components/DashboardChart/components';
+import { HistoryRegressionRunChart } from '@/components/dashboard/components/DashboardChart/components';
 
 import { TestDescriptionSummary, TestStat } from '../types';
 import { Stats } from '../components/TestDescription/components/stats';
 import { DonutChart } from '../components/TestDescription/components/donutChart';
 import { PassRateChart } from '../components/DashboardChart/components/PassRateChart';
-import { IssuesCategoriesChart } from '../components/DashboardChart/components/IssuesCategoriesChart';
-import { HistoryRegressionRunChart } from '../components/DashboardChart/components/HistoryRegressionRunChart';
 import { ProductQualityWidget } from '../components';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
@@ -176,8 +176,8 @@ export const DashboardGrid = ({ summary, history, period }: DashboardGridProps) 
           </GridCard>
         </div>
         <div key="issues">
-          <GridCard title="Issues categories">
-            <IssuesCategoriesChart data={history} />
+          <GridCard title="Failure Breakdown">
+            <FailureBreakdownChart data={history} />
           </GridCard>
         </div>
         <div key="regression">
