@@ -151,7 +151,6 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   let totalRuns = 0;
   let totalFailures = 0;
   let prevRuns = 0;
-  let prevFailures = 0;
 
   history.forEach((row) => {
     const failed = row.metrics?.failed ?? 0;
@@ -162,7 +161,6 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
       totalFailures += failed;
     } else if (row.date >= prevStatFrom && row.date <= prevStatTo) {
       prevRuns += runs;
-      prevFailures += failed;
     }
   });
 
@@ -173,7 +171,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   );
 
   // Calculate previous period IWQS
-  const { totalLinkedFailures: prevLinkedFailures, score: prevIWQS } = calculateIWQS(
+  const { score: prevIWQS } = calculateIWQS(
     prevIssuesData?.issues,
     project?.categoryWeights,
   );
@@ -205,8 +203,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   const unlinkedRate = totalFailures === 0 ? 0 : (unlinkedFailures / totalFailures) * 100;
 
   // Delta calculation (State 1 vs State 2)
-  const prevLinkedRate = prevFailures === 0 ? 100 : (prevLinkedFailures / prevFailures) * 100;
-  const hasPrevData = prevRuns > 0 && prevLinkedRate >= 80;
+  const hasPrevData = prevRuns > 0;
   const delta = hasPrevData ? currentIWQS - prevIWQS : null;
 
   // Triage indicator pill styling based on unlinked rate
