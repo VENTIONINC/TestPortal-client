@@ -23,7 +23,7 @@ export const ResultContainerInner = () => {
   const selectedDates = useSelectedDates();
   const selectedProjectId = useSelectedProjectId();
   const { toggleDate, setSelectedDates } = useResultsActions();
-  const { selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
+  const { clearSelection, selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
   const { effectiveFilters, debouncedFilters, filterFormMethods, filterProps } = useResultsEffectiveFilters();
 
@@ -70,6 +70,14 @@ export const ResultContainerInner = () => {
   });
 
   const handleSelectAll = useCallback(() => selectAll(activeDaysResultsIds), [selectAll, activeDaysResultsIds]);
+
+  const handleToggleDate = useCallback(
+    (date: string) => {
+      clearSelection();
+      toggleDate(date);
+    },
+    [clearSelection, toggleDate],
+  );
 
   const selectedCount = getSelectedCount();
   const selectedResults = useMemo(
@@ -164,7 +172,7 @@ export const ResultContainerInner = () => {
           <ResultsFloatingHeader
             availableDates={availableDates}
             statistics={statistics}
-            toggleDate={toggleDate}
+            toggleDate={handleToggleDate}
             isFetching={isStatsFetching}
             availableTags={availableTags}
             activeTags={activeTags}
