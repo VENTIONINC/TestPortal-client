@@ -10,14 +10,23 @@ import {
   usePostApiV2UploadJsonReportMutation,
 } from '@/redux/apis/generatedApi';
 import { usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/extendedApi';
-import { useResultsFileUpload } from '@/components/ui/components/Dialogs/results-file-upload/hooks';
+import {
+  getResultsFileUploadLimitMessage,
+  hasTooManyFilesRejection,
+  useResultsFileUpload,
+} from '@/components/ui/components/Dialogs/results-file-upload/hooks';
 
 const clearFiles = vi.fn();
+const clearRejectedFiles = vi.fn();
 let acceptedFiles = [new File(['{}'], 'report.json', { type: 'application/json' })];
+let useFileUploadOptions: { onFileChange?: (details: unknown) => void } | undefined;
 
 vi.mock('@chakra-ui/react', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@chakra-ui/react')>()),
-  useFileUpload: () => ({ acceptedFiles, clearFiles }),
+  useFileUpload: (options: { onFileChange?: (details: unknown) => void }) => {
+    useFileUploadOptions = options;
+    return { acceptedFiles, clearFiles, clearRejectedFiles, rejectedFiles: [] };
+  },
 }));
 
 vi.mock('@/components/ui', () => ({
@@ -48,6 +57,7 @@ describe('useResultsFileUpload', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    useFileUploadOptions = undefined;
     acceptedFiles = [new File(['{}'], 'report.json', { type: 'application/json' })];
     vi.mocked(useGetApiV2ProjectsQuery).mockReturnValue({
       data: [{ id: 'project-123', isActive: true }],
@@ -134,5 +144,45 @@ describe('useResultsFileUpload', () => {
       expect.objectContaining({ type: 'error' }),
     );
     expect(closeDialog).not.toHaveBeenCalled();
+  });
+
+  it('sets a validation message when the file limit is exceeded', () => {
+    const { result } = renderHook(() => useResultsFileUpload(closeDialog, 'ctrf'));
+
+    act(() => {
+      useFileUploadOptions?.onFileChange?.({
+        acceptedFiles: [],
+        rejectedFiles: [{ file: new File(['{}'], 'report.json'), errors: ['TOO_MANY_FILES'] }],
+      });
+    });
+
+    expect(result.current.fileSelectionError).toBe(getResultsFileUploadLimitMessage());
+  });
+
+  it('clears the validation message when the selection is reset', () => {
+    const { result } = renderHook(() => useResultsFileUpload(closeDialog, 'ctrf'));
+
+    act(() => {
+      useFileUploadOptions?.onFileChange?.({
+        acceptedFiles: [],
+        rejectedFiles: [{ file: new File(['{}'], 'report.json'), errors: ['TOO_MANY_FILES'] }],
+      });
+    });
+    act(() => result.current.clearSelectedFiles());
+
+    expect(result.current.fileSelectionError).toBeNull();
+    expect(clearFiles).toHaveBeenCalledOnce();
+    expect(clearRejectedFiles).toHaveBeenCalledOnce();
+  });
+});
+
+describe('results file upload helpers', () => {
+  it('detects TOO_MANY_FILES rejections', () => {
+    expect(
+      hasTooManyFilesRejection([{ file: new File([], 'a.json'), errors: ['FILE_INVALID_TYPE'] }]),
+    ).toBe(false);
+    expect(
+      hasTooManyFilesRejection([{ file: new File([], 'a.json'), errors: ['TOO_MANY_FILES'] }]),
+    ).toBe(true);
   });
 });
