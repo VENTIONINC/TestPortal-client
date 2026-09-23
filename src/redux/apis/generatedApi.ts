@@ -136,6 +136,7 @@ const injectedRtkApi = api
             reviewStatus: queryArg.reviewStatus,
             errorMessage: queryArg.errorMessage,
             issueName: queryArg.issueName,
+            assumption: queryArg.assumption,
             from: queryArg["from"],
             to: queryArg.to,
             dates: queryArg.dates,
@@ -729,6 +730,8 @@ const injectedRtkApi = api
             period: queryArg.period,
             type: queryArg["type"],
             granularity: queryArg.granularity,
+            dateFrom: queryArg.dateFrom,
+            dateTo: queryArg.dateTo,
           },
         }),
         providesTags: ["Projects"],
@@ -1174,6 +1177,7 @@ export type GetApiV2ResultsApiArg = {
   reviewStatus?: string;
   errorMessage?: string;
   issueName?: string;
+  assumption?: "all" | "confirmed" | "not-confirmed";
   from?: string;
   to?: string;
   dates?: string[];
@@ -1509,9 +1513,13 @@ export type GetApiV2ProjectsByProjectIdDashboardApiArg = {
   type?: string;
   /** Aggregation level for history data (daily, weekly, monthly). Defaults to daily for short periods, weekly for long periods. */
   granularity?: "daily" | "weekly" | "monthly";
+  /** Inclusive start date in YYYY-MM-DD format */
+  dateFrom?: string;
+  /** Inclusive end date in YYYY-MM-DD format */
+  dateTo?: string;
 };
 export type PostApiV2UploadCtrfReportApiResponse =
-  /** status 200 CTRF report file processed successfully */ CtrfReportResponse;
+  /** status 201 CTRF report file processed successfully */ CtrfReportResponse;
 export type PostApiV2UploadCtrfReportApiArg = {
   body: {
     /** CTRF report JSON file to upload */
@@ -1521,7 +1529,7 @@ export type PostApiV2UploadCtrfReportApiArg = {
   };
 };
 export type PostApiV2UploadCtrfReportApiKeyApiResponse =
-  /** status 200 CTRF report file processed successfully */ CtrfReportResponse;
+  /** status 201 CTRF report file processed successfully */ CtrfReportResponse;
 export type PostApiV2UploadCtrfReportApiKeyApiArg = {
   body: {
     /** CTRF report JSON file to upload */
@@ -2394,15 +2402,12 @@ export type DashboardResponse = {
 };
 export type CtrfReportResponse = {
   success: boolean;
-  message: string;
   /** Execution ID for the processed report */
   executionId: string;
-  data: {
-    /** Number of test specs processed */
-    specsProcessed: number;
-    /** Database execution ID */
-    executionId: string;
-  };
+  /** Number of test specs processed */
+  specsProcessed: number;
+  /** Optional AI analysis results for test failures */
+  analysis?: any[];
 };
 export type GenerateApiKeyResponse = {
   success: boolean;

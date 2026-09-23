@@ -13,6 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui';
 import { ResultCategory } from '@/types';
 
+import { getDashboardDateRange } from '../../utils/period';
+
 const DEFAULT_PERIOD = '1';
 
 interface ProductQualityWidgetProps {
@@ -93,9 +95,10 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
     Number.isFinite(parsedPeriod) && parsedPeriod > 0 ? parsedPeriod : Number.parseInt(DEFAULT_PERIOD, 10);
 
   // Date ranges
-  const periodEnd = new Date();
-  const periodStart = new Date(periodEnd);
-  periodStart.setDate(periodEnd.getDate() - Math.max(periodDays - 1, 0));
+  const selectedDateRange = getDashboardDateRange(period);
+  const periodEnd = selectedDateRange ? new Date(`${selectedDateRange.dateTo}T00:00:00`) : new Date();
+  const periodStart = selectedDateRange ? new Date(`${selectedDateRange.dateFrom}T00:00:00`) : new Date(periodEnd);
+  if (!selectedDateRange) periodStart.setDate(periodEnd.getDate() - Math.max(periodDays - 1, 0));
 
   const prevPeriodEnd = new Date(periodStart);
   prevPeriodEnd.setDate(periodStart.getDate() - 1); // Day before current period starts
@@ -125,6 +128,8 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
     {
       projectId: selectedProjectId,
       period: String(periodDays * 2),
+      granularity: 'daily',
+      ...(selectedDateRange && { dateFrom: prevStatFrom, dateTo: statTo }),
     },
     { skip: !selectedProjectId },
   );
@@ -240,7 +245,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
           </Text>
         </Flex>
         <Box w="full" px={4}>
-          <ProgressRoot value={linkedRate} max={100} size="sm" w="full" colorPalette="orange">
+          <ProgressRoot value={linkedRate} max={100} size="sm" w="full" colorPalette={ linkedRate > 50 ? 'orange' : 'red' }>
             <ProgressBar bg="bg.subtle" h="6px" borderRadius="full" />
           </ProgressRoot>
           <Flex justify="space-between" mt={1.5} px={1}>

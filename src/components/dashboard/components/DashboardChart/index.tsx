@@ -5,7 +5,7 @@ import { Box, SimpleGrid, VStack, useMediaQuery } from '@chakra-ui/react';
 
 import { type DashboardResponse } from '@/redux/apis/generatedApi';
 
-import { PassRateChart, IssuesCategoriesChart, HistoryRegressionRunChart } from './components';
+import { PassRateChart, FailureBreakdownChart, HistoryRegressionRunChart } from './components';
 
 type DashboardChartProps = {
   data: DashboardResponse['history'] | [];
@@ -30,7 +30,7 @@ export const DashboardChart = ({ data, showFilters }: DashboardChartProps) => {
           <PassRateChart data={data} />
         </Box>
         <Box minW={0}>
-          <IssuesCategoriesChart data={data} />
+          <FailureBreakdownChart data={data} />
         </Box>
       </SimpleGrid>
       <Box minW={0}>
@@ -51,7 +51,7 @@ export const DashboardChart = ({ data, showFilters }: DashboardChartProps) => {
   //        */}
   //       <Flex>
   //         <PassRateChart />
-  //         <IssuesCategoriesChart />
+  //         <FailureBreakdownChart />
   //       </Flex>
   //       <HistoryRegressionRunChart />
   //     </VStack>
