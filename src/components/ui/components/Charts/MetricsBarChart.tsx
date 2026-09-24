@@ -20,6 +20,15 @@ type TooltipProps = {
   text: string;
 };
 
+type MultipleBarShapeProps = {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  fill?: string;
+  payload?: CategoriesChartDatum;
+};
+
 export const MetricsBarChart = ({
   title = '',
   data,
@@ -125,6 +134,26 @@ export const MetricsBarChart = ({
   const tooltipWrapperStyle = useMemo(() => ({ zIndex: 10 }), []);
   const xAxisPadding = useMemo(() => ({ left: 20, right: 20 }), []);
   const chartMargin = useMemo(() => ({ top: 10, right: 10, left: 0, bottom: 0 }), []);
+  const multipleBarGap = 8;
+
+  const renderMultipleBarShape = useCallback(
+    ({ x = 0, y = 0, width = 0, height = 0, fill, payload }: MultipleBarShapeProps, item: CategorySeries, itemIndex: number) => {
+      const activeSeries = series.filter((candidate) => Number(payload?.[candidate.name]) > 0);
+      const activeIndex = activeSeries.findIndex((candidate) => candidate.name === item.name);
+
+      if (activeIndex < 0 || height <= 0) {
+        return <></>;
+      }
+
+      const groupWidth = series.length * multipleBarSize + (series.length - 1) * multipleBarGap;
+      const groupStart = x - itemIndex * (width + multipleBarGap);
+      const activeGroupWidth = activeSeries.length * multipleBarSize + (activeSeries.length - 1) * multipleBarGap;
+      const activeGroupStart = groupStart + (groupWidth - activeGroupWidth) / 2;
+
+      return <rect x={activeGroupStart + activeIndex * (multipleBarSize + multipleBarGap)} y={y} width={multipleBarSize} height={height} fill={fill} />;
+    },
+    [multipleBarSize, multipleBarGap, series],
+  );
 
   return (
     <Card.Root>
@@ -201,7 +230,7 @@ export const MetricsBarChart = ({
                   <BarChart
                     data={chart.data}
                     margin={chartMargin}
-                    barGap={view === 'stacked' ? 0 : 8}
+                    barGap={view === 'stacked' ? 0 : multipleBarGap}
                     barCategoryGap={20}
                   >
                     <CartesianGrid
@@ -230,13 +259,18 @@ export const MetricsBarChart = ({
                       allowDecimals={false}
                     />
                     <Tooltip cursor={tooltipCursor} wrapperStyle={tooltipWrapperStyle} content={tooltipContent} />
-                    {series.map((item) => (
+                    {series.map((item, itemIndex) => (
                       <Bar
                         key={item.name}
                         dataKey={chart.key(item.name)}
                         fill={chart.color(item.color)}
                         stackId={view === 'stacked' ? 'issues' : undefined}
                         barSize={view === 'stacked' ? stackedBarSize : multipleBarSize}
+                        shape={
+                          view === 'multiple'
+                            ? (props: unknown) => renderMultipleBarShape(props as MultipleBarShapeProps, item, itemIndex)
+                            : undefined
+                        }
                       />
                     ))}
                   </BarChart>

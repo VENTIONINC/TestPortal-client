@@ -18,6 +18,10 @@ export const mergeAvailableAndActiveTags = (availableTags: string[], activeTags:
   return [...activeTags, ...availableTags.filter((tag) => !activeTagSet.has(tag))];
 };
 
+export const getVisibleResultIds = (
+  sectionDays: { isVisible: boolean; results: Pick<BaseResult, 'id'>[] }[],
+): string[] => sectionDays.filter(({ isVisible }) => isVisible).flatMap(({ results }) => results.map(({ id }) => id));
+
 export const toBaseResult = (result: Result): BaseResult => ({
   id: result.id,
   createdAt: result.createdAt,
