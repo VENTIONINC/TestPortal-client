@@ -66,7 +66,6 @@ export const ResultContainerInner = () => {
   const {
     results,
     unfilteredResultsMap,
-    activeDaysResultsIds,
     availableDates,
     rawResults,
     availableTags: backendAvailableTags,
@@ -78,7 +77,7 @@ export const ResultContainerInner = () => {
     selectedProjectId: selectedProjectId!,
   });
 
-  const handleSelectAll = useCallback(() => selectAll(activeDaysResultsIds), [selectAll, activeDaysResultsIds]);
+  const handleSelectAll = useCallback((resultIds: string[]) => selectAll(resultIds), [selectAll]);
 
   const handleToggleDate = useCallback(
     (date: string) => {
@@ -191,7 +190,6 @@ export const ResultContainerInner = () => {
             <TopSectionContainer statistics={statistics} isFetching={isStatsFetching} />
 
             <ResultsList
-              activeDaysResultsIds={activeDaysResultsIds}
               handleSelectAll={handleSelectAll}
               selectedCount={selectedCount}
               selectedResults={selectedResults}
