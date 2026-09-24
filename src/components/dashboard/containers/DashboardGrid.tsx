@@ -7,13 +7,14 @@ import 'react-resizable/css/styles.css';
 import { ReactNode, useCallback, useState } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout/legacy';
 import type { Layout, LayoutItem, ResponsiveLayouts } from 'react-grid-layout/legacy';
-import { Box, Button, Flex, Icon, Text } from '@chakra-ui/react';
+import { Box, Button, Flex, Icon, IconButton, Text } from '@chakra-ui/react';
 import { useChart } from '@chakra-ui/charts';
 import { PiDotsNineBold } from 'react-icons/pi';
 import { FaCircleCheck, FaRegCircleXmark } from 'react-icons/fa6';
-import { LuClock3, LuRotateCcw, LuSkipForward } from 'react-icons/lu';
+import { LuCircleHelp, LuClock3, LuRotateCcw, LuSkipForward } from 'react-icons/lu';
 
 import { type DashboardResponse } from '@/redux/apis/generatedApi';
+import { Tooltip } from '@/components/ui';
 import { aggregateDashboardStatusMetrics } from '@/components/dashboard/utils/statusMetrics';
 import { FailureBreakdownChart } from '@/components/dashboard/components/DashboardChart/components';
 import { HistoryRegressionRunChart } from '@/components/dashboard/components/DashboardChart/components';
@@ -56,7 +57,28 @@ interface DashboardGridProps {
   period?: string;
 }
 
-const GridCard = ({ title, children }: { title: string; children: ReactNode }) => (
+export const WIDGET_DESCRIPTIONS = {
+  statistics:
+    'Summary counts for the selected period and execution: total test runs, passed tests, and failed tests.',
+  productQuality:
+    'Product quality score derived from issue distribution across categories, weighted by category importance. The score is calculated only when at least 80% of issues are categorized. Category weights are configured in the project settings.',
+  testRuns: 'Passed vs failed test results in the selected period, shown as a proportional donut chart.',
+  passRate: 'Trend of passed and failed tests over time. Switch between absolute counts and percentage view.',
+  issuesCategories:
+    'Failed tests grouped by issue category (bug, environment, script, performance, other) across the selected period.',
+  historyRegressionRuns:
+    'Regression run outcomes over time: passed, failed, and skipped tests per time bucket.',
+} as const;
+
+const GridCard = ({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) => (
   <Box
     h="100%"
     borderRadius="xl"
@@ -69,11 +91,29 @@ const GridCard = ({ title, children }: { title: string; children: ReactNode }) =
     transition="all 0.2s"
     _hover={{ boxShadow: 'sm', borderColor: 'border.main' }}
   >
-    <Flex className="drag-handle" cursor="grab" px={4} pt={4} pb={2} align="center" userSelect="none" flexShrink={0}>
-      <Icon as={PiDotsNineBold} color="fg.muted" mr={2} boxSize="18px" />
-      <Text fontSize="md" color="fg" fontWeight="semibold" letterSpacing="tight">
-        {title}
-      </Text>
+    <Flex px={4} pt={4} pb={2} align="center" justify="space-between" gap={2} flexShrink={0}>
+      <Flex className="drag-handle" cursor="grab" align="center" userSelect="none" minW={0} flex="1">
+        <Icon as={PiDotsNineBold} color="fg.muted" mr={2} boxSize="18px" flexShrink={0} />
+        <Text fontSize="md" color="fg" fontWeight="semibold" letterSpacing="tight" truncate>
+          {title}
+        </Text>
+      </Flex>
+      <Tooltip content={description} contentProps={{ maxW: '300px' }} positioning={{ placement: 'top' }}>
+        <IconButton
+          aria-label="About this widget"
+          variant="ghost"
+          size="xs"
+          color="fg.muted"
+          cursor="help"
+          flexShrink={0}
+          minW="auto"
+          h="auto"
+          p={1}
+          _hover={{ color: 'fg', bg: 'bg.subtle' }}
+        >
+          <Icon as={LuCircleHelp} boxSize="16px" />
+        </IconButton>
+      </Tooltip>
     </Flex>
     <Box flex="1" overflow="auto" px={4} pb={4}>
       {children}
@@ -155,33 +195,33 @@ export const DashboardGrid = ({ summary, history, period }: DashboardGridProps) 
         margin={[16, 16]}
       >
         <div key="stats">
-          <GridCard title="Statistics">
+          <GridCard title="Statistics" description={WIDGET_DESCRIPTIONS.statistics}>
             <StatsWidget summary={summary} history={history} />
           </GridCard>
         </div>
         <div key="quality">
-          <GridCard title="Product quality">
+          <GridCard title="Product quality" description={WIDGET_DESCRIPTIONS.productQuality}>
             <ProductQualityWidget period={period} />
           </GridCard>
         </div>
         <div key="donut">
-          <GridCard title="Test runs">
+          <GridCard title="Test runs" description={WIDGET_DESCRIPTIONS.testRuns}>
             <DonutChartWidget summary={summary} history={history} />
           </GridCard>
         </div>
 
         <div key="passRate">
-          <GridCard title="Pass rate">
+          <GridCard title="Pass rate" description={WIDGET_DESCRIPTIONS.passRate}>
             <PassRateChart data={history} />
           </GridCard>
         </div>
         <div key="issues">
-          <GridCard title="Failure Breakdown">
+          <GridCard title="Failure Breakdown" description={WIDGET_DESCRIPTIONS.issuesCategories}>
             <FailureBreakdownChart data={history} />
           </GridCard>
         </div>
         <div key="regression">
-          <GridCard title="History regression runs">
+          <GridCard title="History regression runs" description={WIDGET_DESCRIPTIONS.historyRegressionRuns}>
             <HistoryRegressionRunChart data={history} />
           </GridCard>
         </div>
