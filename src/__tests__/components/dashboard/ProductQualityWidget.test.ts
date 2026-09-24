@@ -1,9 +1,52 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { describe, expect, it } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createElement, type ReactNode } from 'react';
 
+import {
+  useGetApiV2IssuesWithStatsQuery,
+  useGetApiV2ProjectsByProjectIdDashboardQuery,
+} from '@/redux/apis/generatedApi';
+import { ProductQualityWidget } from '@/components/dashboard/components/ProductQualityWidget';
 import { calculateIWQS } from '@/components/dashboard/components/ProductQualityWidget';
+
+vi.mock('@/redux/apis/generatedApi', () => ({
+  useGetApiV2IssuesWithStatsQuery: vi.fn(),
+  useGetApiV2ProjectsByProjectIdDashboardQuery: vi.fn(),
+}));
+
+vi.mock('@/hooks', () => ({
+  useSelectedProject: vi.fn(() => ({ project: undefined, selectedProjectId: 'project-1' })),
+}));
+
+vi.mock('@chakra-ui/react', () => {
+  const element = () => ({ children }: { children?: ReactNode }) => createElement('div', null, children);
+
+  return {
+    Box: element(),
+    Circle: element(),
+    Flex: element(),
+    Icon: element(),
+    Text: element(),
+  };
+});
+
+vi.mock('@/components/ui', () => ({
+  Badge: ({ children }: { children?: ReactNode }) => createElement('span', null, children),
+}));
+vi.mock('@/components/ui/progress', () => ({
+  ProgressBar: ({ children }: { children?: ReactNode }) => createElement('div', null, children),
+  ProgressRoot: ({ children }: { children?: ReactNode }) => createElement('div', null, children),
+}));
+vi.mock('@/components/ui/skeleton', () => ({
+  Skeleton: ({ children }: { children?: ReactNode }) => createElement('div', null, children),
+}));
+vi.mock('react-icons/fi', () => ({ FiAlertTriangle: 'svg', FiMinusSquare: 'svg' }));
+
+const mockedIssuesQuery = vi.mocked(useGetApiV2IssuesWithStatsQuery);
+const mockedDashboardQuery = vi.mocked(useGetApiV2ProjectsByProjectIdDashboardQuery);
 
 const issue = (
   distribution: Record<'bug' | 'infra' | 'performance' | 'script' | 'other', number>,
@@ -26,6 +69,42 @@ const issue = (
       timeDistribution: [],
     },
   }) as NonNullable<Parameters<typeof calculateIWQS>[0]>[number];
+
+describe('ProductQualityWidget', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-07T12:00:00Z'));
+
+    mockedIssuesQuery
+      .mockReturnValueOnce({ data: { issues: [] }, isLoading: false } as never)
+      .mockReturnValueOnce({
+        data: { issues: [issue({ bug: 1, infra: 0, performance: 0, script: 0, other: 0 }, 0, 1, 1)] },
+        isLoading: false,
+      } as never);
+    mockedDashboardQuery.mockReturnValue({
+      data: {
+        history: [
+          { date: '2026-08-04', metrics: { total: 1, passed: 0, failed: 2 } },
+          { date: '2026-08-05', metrics: { total: 0, passed: 0, failed: 0 } },
+          { date: '2026-08-06', metrics: { total: 1, passed: 1, failed: 0 } },
+          { date: '2026-08-07', metrics: { total: 0, passed: 0, failed: 0 } },
+        ],
+      },
+      isLoading: false,
+    } as never);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
+
+  it('shows the comparison when the previous period has runs even below the current linking threshold', () => {
+    render(createElement(ProductQualityWidget, { period: '2' }));
+
+    expect(screen.getByText('vs prev. period')).toBeInTheDocument();
+  });
+});
 
 describe('calculateIWQS', () => {
   it('weights a mixed category distribution instead of its display category', () => {

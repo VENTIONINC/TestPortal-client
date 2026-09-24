@@ -11,7 +11,6 @@ import { useSelectedProject } from '@/hooks';
 import { ProgressBar, ProgressRoot } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui';
-import { ResultCategory } from '@/types';
 
 import { getDashboardDateRange } from '../../utils/period';
 
@@ -28,24 +27,15 @@ const formatLocalDate = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-// Weight multiplier helper respecting settings or spec defaults
+// Project settings are stored as percentages; defaults follow the Product Quality spec.
 const getWeightMultiplier = (category: string | undefined, projectWeights: ProjectCategoryWeights | undefined) => {
   const cat = category?.toLowerCase();
 
-  if (projectWeights) {
-    if (cat === 'bug') return projectWeights.bug / 100;
-    if (cat === 'infra' || cat === 'environment') return projectWeights.infra / 100;
-    if (cat === 'script') return projectWeights.script / 100;
-    if (cat === 'performance') return projectWeights.performance / 100;
-    return (projectWeights.other ?? 100) / 100;
-  }
-
-  // Fallback to spec defaults
-  if (cat === 'bug') return 1.5;
-  if (cat === 'performance') return 1.0;
-  if (cat === 'infra' || cat === 'environment') return 0.3;
-  if (cat === 'script') return 0.2;
-  return 0.1;
+  if (cat === 'bug') return (projectWeights?.bug ?? 100) / 100;
+  if (cat === 'performance') return (projectWeights?.performance ?? 70) / 100;
+  if (cat === 'infra' || cat === 'environment') return (projectWeights?.infra ?? 30) / 100;
+  if (cat === 'script') return (projectWeights?.script ?? 10) / 100;
+  return (projectWeights?.other ?? 10) / 100;
 };
 
 // Calculate IWQS from issues list and category weights
@@ -63,17 +53,10 @@ export const calculateIWQS = (
   issues.forEach((issue) => {
     const occurrenceCount = issue.statistics?.occurrenceCount ?? 0;
     const impactedTestsCount = issue.statistics?.impactedTestsCount ?? 0;
-    const { distribution, uncategorizedCount } = issue.categorySummary;
-    const categories = Object.values(ResultCategory);
-    const categorizedCount = categories.reduce((sum, category) => sum + (distribution[category] ?? 0), 0);
-    const totalCategoryCount = categorizedCount + uncategorizedCount;
-    const weightedCategoryCount = categories.reduce(
-      (sum, category) => sum + (distribution[category] ?? 0) * getWeightMultiplier(category, projectWeights),
-      0,
-    );
-    const multiplier = totalCategoryCount > 0 ? weightedCategoryCount / totalCategoryCount : 0;
-
-    weightedSum += impactedTestsCount * multiplier;
+    // The spec assigns one root-cause category to each issue. categorySummary
+    // describes the categories of results linked to the issue and must not
+    // override the issue's own category for quality scoring.
+    weightedSum += impactedTestsCount * getWeightMultiplier(issue.category, projectWeights);
     totalLinkedFailures += occurrenceCount;
   });
 
@@ -151,7 +134,6 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   let totalRuns = 0;
   let totalFailures = 0;
   let prevRuns = 0;
-  let prevFailures = 0;
 
   history.forEach((row) => {
     const failed = row.metrics?.failed ?? 0;
@@ -162,7 +144,6 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
       totalFailures += failed;
     } else if (row.date >= prevStatFrom && row.date <= prevStatTo) {
       prevRuns += runs;
-      prevFailures += failed;
     }
   });
 
@@ -173,7 +154,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   );
 
   // Calculate previous period IWQS
-  const { totalLinkedFailures: prevLinkedFailures, score: prevIWQS } = calculateIWQS(
+  const { score: prevIWQS } = calculateIWQS(
     prevIssuesData?.issues,
     project?.categoryWeights,
   );
@@ -205,8 +186,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   const unlinkedRate = totalFailures === 0 ? 0 : (unlinkedFailures / totalFailures) * 100;
 
   // Delta calculation (State 1 vs State 2)
-  const prevLinkedRate = prevFailures === 0 ? 100 : (prevLinkedFailures / prevFailures) * 100;
-  const hasPrevData = prevRuns > 0 && prevLinkedRate >= 80;
+  const hasPrevData = prevRuns > 0;
   const delta = hasPrevData ? currentIWQS - prevIWQS : null;
 
   // Triage indicator pill styling based on unlinked rate
