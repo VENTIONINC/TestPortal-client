@@ -26,12 +26,21 @@ export const ResultContainerInner = () => {
   const { clearSelection, selectAll, getSelectedCount, getSelectedIds } = useResultsSelection();
 
   const { effectiveFilters, debouncedFilters, filterFormMethods, filterProps } = useResultsEffectiveFilters();
+  const { filters: currentFilterValues, onApplyFilters } = filterProps;
+
+  const applyFilters = useCallback(
+    (filters: Record<string, string>) => {
+      clearSelection();
+      onApplyFilters(filters);
+    },
+    [clearSelection, onApplyFilters],
+  );
 
   const handleInvalidExecutionType = useCallback(
     (type: 'all') => {
-      filterProps.onApplyFilters({ ...filterProps.filters, type });
+      applyFilters({ ...currentFilterValues, type });
     },
-    [filterProps],
+    [applyFilters, currentFilterValues],
   );
   const { options: executionTypeOptions, isLoading: areExecutionTypesLoading, effectiveType } =
     useExecutionTypeOptions({
@@ -144,18 +153,18 @@ export const ResultContainerInner = () => {
   const handleToggleTag = useCallback(
     (tag: string) => {
       const newTags = activeTags.includes(tag) ? activeTags.filter((t) => t !== tag) : [...activeTags, tag];
-      filterProps.onApplyFilters({
+      applyFilters({
         ...(effectiveFilters as unknown as Record<string, string>),
         tags: newTags.join(','),
       });
     },
-    [activeTags, effectiveFilters, filterProps],
+    [activeTags, applyFilters, effectiveFilters],
   );
 
   return (
     <FormProvider {...filterFormMethods}>
       <HStack w="100%" display="grid" alignItems="start" gap={0} gridTemplateColumns="auto 1fr">
-        <Filter config={dynamicFilterConfig} {...filterProps} />
+        <Filter config={dynamicFilterConfig} {...filterProps} onApplyFilters={applyFilters} />
 
         <VStack
           as="section"
