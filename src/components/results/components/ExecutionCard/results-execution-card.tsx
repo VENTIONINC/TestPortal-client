@@ -44,7 +44,7 @@ export const ResultsExecutionCard = memo(
     const selectedResults = results.filter(({ id }) => getSelectedIds().includes(id));
 
     return (
-      <VStack align="stretch" pt="16px" mt="7px" borderTop="1px solid" borderColor="border.main">
+      <VStack align="stretch" minW="760px" pt="16px" mt="7px" borderTop="1px solid" borderColor="border.main">
         <HStack gap={4} pl={2} bg="bg.panel" borderRadius="sm" textStyle="sm" minH="47px">
           <Checkbox
             checked={results.every(({ id }) => isSelected(id))}

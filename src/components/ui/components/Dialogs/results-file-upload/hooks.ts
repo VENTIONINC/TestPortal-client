@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { useFileUpload } from '@chakra-ui/react';
+import type { FileUploadFileChangeDetails } from '@chakra-ui/react';
 
 import { toaster } from '@/components/ui';
 import {
@@ -16,6 +17,15 @@ import { extractApiError } from '@/utils/apiErrors';
 
 import { ResultsFileUploadDialog } from './results-file-upload-dialog';
 
+export const MAX_RESULTS_UPLOAD_FILES = 1000;
+
+export const getResultsFileUploadLimitMessage = () =>
+  `Maximum ${MAX_RESULTS_UPLOAD_FILES} files allowed`;
+
+export const hasTooManyFilesRejection = (
+  rejectedFiles: FileUploadFileChangeDetails['rejectedFiles'],
+) => rejectedFiles.some((rejection) => rejection.errors.includes('TOO_MANY_FILES'));
+
 const chunkArray = <T>(array: T[], size: number): T[][] => {
   const chunks = [];
   for (let i = 0; i < array.length; i += size) {
@@ -28,12 +38,30 @@ const chunkArray = <T>(array: T[], size: number): T[][] => {
 export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playwright' | 'ctrf' = 'playwright') => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [fileSelectionError, setFileSelectionError] = useState<string | null>(null);
   const selectedProjectId = useSelectedProjectId();
   const { data: projects = [] } = useGetApiV2ProjectsQuery({});
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
   const uploadProjectId = selectedProject?.id ?? projects.find((project) => project.isActive)?.id;
 
-  const fileUpload = useFileUpload({ maxFiles: 1000, accept: ['application/json'] });
+  const fileUpload = useFileUpload({
+    maxFiles: MAX_RESULTS_UPLOAD_FILES,
+    accept: ['application/json'],
+    onFileChange: ({ rejectedFiles }) => {
+      if (hasTooManyFilesRejection(rejectedFiles)) {
+        setFileSelectionError(getResultsFileUploadLimitMessage());
+        return;
+      }
+
+      setFileSelectionError(null);
+    },
+  });
+
+  const clearSelectedFiles = () => {
+    fileUpload.clearFiles();
+    fileUpload.clearRejectedFiles();
+    setFileSelectionError(null);
+  };
   const [uploadJsonReport] = usePostApiV2UploadJsonReportMutation();
   const [uploadCtrfReport] = usePostApiV2UploadCtrfReportMutation();
 
@@ -98,6 +126,8 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
 
   return {
     fileUpload,
+    fileSelectionError,
+    clearSelectedFiles,
     isUploading,
     uploadProgress,
     handleUpload,
