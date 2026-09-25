@@ -98,22 +98,21 @@ export const ResultSpecSectionView = memo(
             isVisible &&
             execution &&
             serialized && (
-              <HStack key={execution.id} overflowX="auto" minW={0} align="stretch">
-                <ResultsExecutionCard
-                  results={results}
-                  specName={specTitle}
-                  projectId={projectId}
-                  onContextMenu={(evt) =>
-                    onExecutionContextMenu(evt, {
-                      id: execution.id,
-                      name: execution.name,
-                      projectId: projectId,
-                    })
-                  }
-                  onResultContextMenu={onResultContextMenu}
-                  {...serialized}
-                />
-              </HStack>
+              <ResultsExecutionCard
+                key={execution.id}
+                results={results}
+                specName={specTitle}
+                projectId={projectId}
+                onContextMenu={(evt) =>
+                  onExecutionContextMenu(evt, {
+                    id: execution.id,
+                    name: execution.name,
+                    projectId: projectId,
+                  })
+                }
+                onResultContextMenu={onResultContextMenu}
+                {...serialized}
+              />
             ),
         )}
       </VStack>
