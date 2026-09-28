@@ -10,7 +10,8 @@ import {
 import { useSelectedProject } from '@/hooks';
 import { ProgressBar, ProgressRoot } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui';
+import { Badge, Tooltip } from '@/components/ui';
+import { ResultCategory } from '@/types';
 
 import { getDashboardDateRange } from '../../utils/period';
 
@@ -31,10 +32,10 @@ const formatLocalDate = (date: Date) => {
 const getWeightMultiplier = (category: string | undefined, projectWeights: ProjectCategoryWeights | undefined) => {
   const cat = category?.toLowerCase();
 
-  if (cat === 'bug') return (projectWeights?.bug ?? 100) / 100;
-  if (cat === 'performance') return (projectWeights?.performance ?? 70) / 100;
-  if (cat === 'infra' || cat === 'environment') return (projectWeights?.infra ?? 30) / 100;
-  if (cat === 'script') return (projectWeights?.script ?? 10) / 100;
+  if (cat === ResultCategory.Bug) return (projectWeights?.bug ?? 100) / 100;
+  if (cat === ResultCategory.Performance) return (projectWeights?.performance ?? 70) / 100;
+  if (cat === ResultCategory.Infra || cat === 'environment') return (projectWeights?.infra ?? 30) / 100;
+  if (cat === ResultCategory.Script) return (projectWeights?.script ?? 10) / 100;
   return (projectWeights?.other ?? 10) / 100;
 };
 
@@ -53,9 +54,6 @@ export const calculateIWQS = (
   issues.forEach((issue) => {
     const occurrenceCount = issue.statistics?.occurrenceCount ?? 0;
     const impactedTestsCount = issue.statistics?.impactedTestsCount ?? 0;
-    // The spec assigns one root-cause category to each issue. categorySummary
-    // describes the categories of results linked to the issue and must not
-    // override the issue's own category for quality scoring.
     weightedSum += impactedTestsCount * getWeightMultiplier(issue.category, projectWeights);
     totalLinkedFailures += occurrenceCount;
   });
@@ -324,16 +322,33 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
           justify="center"
           pointerEvents="none"
         >
-          <Text fontSize="5xl" fontWeight="black" color="fg" lineHeight="1" mb={1}>
-            {currentIWQS}%
-          </Text>
+          <Tooltip
+            content={
+              currentIWQS === 100
+                ? 'Product quality is in good standing.'
+                : currentIWQS === 0
+                  ? 'Product quality is critically low.'
+                  : 'Product quality score for the selected period.'
+            }
+          >
+            <Text
+              fontSize="5xl"
+              fontWeight="black"
+              color={currentIWQS === 100 ? 'green.500' : currentIWQS === 0 ? 'red.500' : 'fg'}
+              lineHeight="1"
+              mb={1}
+              pointerEvents="auto"
+            >
+              {currentIWQS}%
+            </Text>
+          </Tooltip>
         </Flex>
-        <Flex align="center" justifyContent="center">
+        <Flex align="center" justifyContent="center" gap={1}>
           {delta !== null ? (
             <>
               <Badge
                 variant="surface"
-                status={delta > 0 ? 'success' : delta < 0 ? 'error' : 'default'}
+                status={delta > 0 ? 'success' : delta < 0 ? 'warning' : 'default'}
                 isCapitalize={false}
                 fontWeight="black"
                 fontSize="xs"
@@ -355,28 +370,30 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
       </Box>
 
       {/* Triage Failure Indicator Pill */}
-      <Flex justify="center" w="full">
-        <Box
-          bg={pillBg}
-          borderRadius="full"
-          px={3.5}
-          py={1}
-          display="inline-flex"
-          alignItems="center"
-          gap={2}
-          border={isWarningPill ? 'none' : '1px solid'}
-          borderColor={isWarningPill ? 'transparent' : 'border.muted'}
-        >
-          {isWarningPill ? (
-            <Icon as={FiAlertTriangle} color={pillIconColor} boxSize="12px" />
-          ) : (
-            <Circle size="6px" bg={pillIconColor} />
-          )}
-          <Text fontSize="xs" fontWeight="bold" color={pillTextColor} letterSpacing="tight">
-            {unlinkedRate.toFixed(1)}% failures pending triage
-          </Text>
-        </Box>
-      </Flex>
+      {unlinkedRate > 0 && (
+        <Flex justify="center" w="full">
+          <Box
+            bg={pillBg}
+            borderRadius="full"
+            px={3.5}
+            py={1}
+            display="inline-flex"
+            alignItems="center"
+            gap={2}
+            border={isWarningPill ? 'none' : '1px solid'}
+            borderColor={isWarningPill ? 'transparent' : 'border.muted'}
+          >
+            {isWarningPill ? (
+              <Icon as={FiAlertTriangle} color={pillIconColor} boxSize="12px" />
+            ) : (
+              <Circle size="6px" bg={pillIconColor} />
+            )}
+            <Text fontSize="xs" fontWeight="bold" color={pillTextColor} letterSpacing="tight">
+              {unlinkedRate.toFixed(1)}% failures pending triage
+            </Text>
+          </Box>
+        </Flex>
+      )}
     </Flex>
   );
 };
