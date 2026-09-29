@@ -12,6 +12,7 @@ export type ManualTestRunOutcome = Exclude<ManualTestRunStatus, 'in_progress'>;
 
 export type ManualTestRunStepDraft = Pick<ManualTestRunStepRead, 'status'> & { notes: string };
 export type ManualTestRunStepDrafts = Record<string, ManualTestRunStepDraft>;
+export type ManualTestRunStepSaveState = 'submitted' | 'saved_notes' | 'not_saved';
 
 export const MANUAL_TEST_RUN_STEP_STATUSES: ManualTestRunStepStatus[] = [
   'not_started',
