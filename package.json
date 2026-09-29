@@ -16,6 +16,7 @@
     "preview": "vite preview",
     "prepare": "husky",
     "generate-api": "npx @rtk-query/codegen-openapi rtk-query-codegen.config.cjs",
+    "generate-result-detail-api": "node scripts/generate-result-detail-api.cjs",
     "generate-mcp-api": "npx @rtk-query/codegen-openapi rtk-query-codegen.mcp.config.cjs",
     "typegen": "chakra typegen src/theme/system.ts"
   },
