@@ -8,12 +8,48 @@ import { getDownloadFilename } from '@/utils/download';
 
 import {
   generatedApi,
+  type GetApiV2ManualTestRunsByRunIdApiArg,
+  type GetApiV2ManualTestRunsByRunIdApiResponse,
+  type GetApiV2ManualTestRunsApiArg,
+  type GetApiV2TestScenariosByScenarioIdManualRunsApiArg,
+  type ManualTestRunRead,
+  type PatchApiV2ManualTestRunsByRunIdApiArg,
+  type PatchApiV2ManualTestRunsByRunIdApiResponse,
+  type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiArg,
+  type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse,
+  type PostApiV2ManualTestRunsByRunIdCompleteApiArg,
+  type PostApiV2ManualTestRunsByRunIdCompleteApiResponse,
+  type PostApiV2TestScenariosByScenarioIdManualRunsApiArg,
   type PostApiV2SkillsApiResponse,
   type PostApiV2ReportsPdfExportApiArg,
   type PostApiV2ReportsPdfExportApiResponse,
   type PutApiV2SkillsByIdApiResponse,
 } from './generatedApi';
 import { TAGS } from './tags';
+
+export const manualTestRunTag = (id: string) => ({ type: TAGS.ManualTestRun, id } as const);
+
+export const manualTestRunDetailTag = (projectId: string, runId: string) =>
+  manualTestRunTag(`detail:${projectId}:${runId}`);
+
+export const manualTestRunProjectHistoryTag = (projectId: string) =>
+  manualTestRunTag(`project-history:${projectId}`);
+
+export const manualTestRunScenarioHistoryTag = (projectId: string, scenarioId: string) =>
+  manualTestRunTag(`scenario-history:${projectId}:${scenarioId}`);
+
+const getRunScopeTags = (run: Pick<ManualTestRunRead, 'projectId' | 'id' | 'sourceTestScenarioId'>) => [
+  manualTestRunDetailTag(run.projectId, run.id),
+  manualTestRunProjectHistoryTag(run.projectId),
+  manualTestRunScenarioHistoryTag(run.projectId, run.sourceTestScenarioId),
+];
+
+const getRunArgTags = (projectId: string, runId: string) => [manualTestRunDetailTag(projectId, runId)];
+
+const getMutationErrorTags = (projectId: string, runId: string) => [
+  ...getRunArgTags(projectId, runId),
+  manualTestRunProjectHistoryTag(projectId),
+];
 
 export interface SkillArchiveDownloadResult {
   fileName: string;
@@ -95,6 +131,51 @@ export const extendedApi = generatedApi
       },
       postApiV2UploadCtrfReportApiKey: {
         invalidatesTags: ['Reports', TAGS.Result, 'Upload'],
+      },
+      postApiV2TestScenariosByScenarioIdManualRuns: {
+        extraOptions: { maxRetries: 0 },
+        invalidatesTags: (_result, _error, arg: PostApiV2TestScenariosByScenarioIdManualRunsApiArg) => [
+          manualTestRunProjectHistoryTag(arg.projectId),
+          manualTestRunScenarioHistoryTag(arg.projectId, arg.scenarioId),
+        ],
+      },
+      getApiV2TestScenariosByScenarioIdManualRuns: {
+        providesTags: (_result, _error, arg: GetApiV2TestScenariosByScenarioIdManualRunsApiArg) => [
+          manualTestRunScenarioHistoryTag(arg.projectId, arg.scenarioId),
+        ],
+      },
+      getApiV2ManualTestRuns: {
+        providesTags: (_result, _error, arg: GetApiV2ManualTestRunsApiArg) => [
+          manualTestRunProjectHistoryTag(arg.projectId),
+        ],
+      },
+      getApiV2ManualTestRunsByRunId: {
+        providesTags: (result: GetApiV2ManualTestRunsByRunIdApiResponse | undefined, _error, arg: GetApiV2ManualTestRunsByRunIdApiArg) =>
+          result ? getRunScopeTags(result) : getRunArgTags(arg.projectId, arg.runId),
+      },
+      patchApiV2ManualTestRunsByRunId: {
+        extraOptions: { maxRetries: 0 },
+        invalidatesTags: (
+          result: PatchApiV2ManualTestRunsByRunIdApiResponse | undefined,
+          _error,
+          arg: PatchApiV2ManualTestRunsByRunIdApiArg,
+        ) => (result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId)),
+      },
+      patchApiV2ManualTestRunsByRunIdStepsAndStepId: {
+        extraOptions: { maxRetries: 0 },
+        invalidatesTags: (
+          result: PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse | undefined,
+          _error,
+          arg: PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiArg,
+        ) => (result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId)),
+      },
+      postApiV2ManualTestRunsByRunIdComplete: {
+        extraOptions: { maxRetries: 0 },
+        invalidatesTags: (
+          result: PostApiV2ManualTestRunsByRunIdCompleteApiResponse | undefined,
+          _error,
+          arg: PostApiV2ManualTestRunsByRunIdCompleteApiArg,
+        ) => (result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId)),
       },
     },
   })
@@ -190,4 +271,14 @@ export const {
   useDeleteApiV2SkillsByIdMutation: useDeleteCustomSkillMutation,
   useLazyDownloadSkillArchiveQuery,
   usePostApiV2UploadCtrfReportMutation,
+  usePostApiV2TestScenariosByScenarioIdManualRunsMutation,
+  useGetApiV2TestScenariosByScenarioIdManualRunsQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdManualRunsQuery,
+  useGetApiV2ManualTestRunsQuery,
+  useLazyGetApiV2ManualTestRunsQuery,
+  useGetApiV2ManualTestRunsByRunIdQuery,
+  useLazyGetApiV2ManualTestRunsByRunIdQuery,
+  usePatchApiV2ManualTestRunsByRunIdMutation,
+  usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
+  usePostApiV2ManualTestRunsByRunIdCompleteMutation,
 } = extendedApi;

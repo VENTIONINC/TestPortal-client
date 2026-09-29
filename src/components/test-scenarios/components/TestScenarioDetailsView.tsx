@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Heading, HStack, Text, VStack } from '@chakra-ui/react';
+import { Alert, Box, Button, Heading, HStack, Text, VStack } from '@chakra-ui/react';
 import { FiArrowLeft } from 'react-icons/fi';
 
 import { ContextMenuButton, Link, Wrap } from '@/components/ui';
@@ -13,6 +13,10 @@ import type { TestScenarioContextMenuHandler } from '../hooks/useTestScenarioCon
 export interface TestScenarioDetailsViewProps {
   scenario: TestScenario;
   onContextMenu: TestScenarioContextMenuHandler;
+  onStartManualRun?: () => void;
+  isStartingManualRun?: boolean;
+  startError?: string;
+  startUncertain?: boolean;
 }
 
 const structuredFields = [
@@ -26,7 +30,14 @@ const structuredFields = [
 
 const orderedSteps = (scenario: TestScenario) => [...scenario.steps].sort((left, right) => left.position - right.position);
 
-export const TestScenarioDetailsView = ({ scenario, onContextMenu }: TestScenarioDetailsViewProps) => (
+export const TestScenarioDetailsView = ({
+  scenario,
+  onContextMenu,
+  onStartManualRun,
+  isStartingManualRun = false,
+  startError,
+  startUncertain = false,
+}: TestScenarioDetailsViewProps) => (
   <VStack align="stretch" gap={6} mx={{ base: 4, md: 6 }} my={4}>
     <HStack justify="space-between" align="start" gap={4} flexWrap="wrap">
       <HStack align="center" gap={2}>
@@ -46,11 +57,37 @@ export const TestScenarioDetailsView = ({ scenario, onContextMenu }: TestScenari
         </Link>
         <Heading size="lg">{scenario.title}</Heading>
       </HStack>
-      <ContextMenuButton
-        aria-label={`Actions for ${scenario.title}`}
-        onClick={(event) => onContextMenu(event, scenario)}
-      />
+      <HStack gap={2}>
+        {onStartManualRun && (
+          <Button type="button" onClick={onStartManualRun} loading={isStartingManualRun} disabled={isStartingManualRun}>
+            {startUncertain ? 'Start manual run again' : 'Start manual run'}
+          </Button>
+        )}
+        <ContextMenuButton
+          aria-label={`Actions for ${scenario.title}`}
+          onClick={(event) => onContextMenu(event, scenario)}
+        />
+      </HStack>
     </HStack>
+
+    {startUncertain && (
+      <Alert.Root status="warning" role="alert">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>Start result is uncertain</Alert.Title>
+          <Alert.Description>{startError ?? 'A run may have been created. Starting again could create another run.'}</Alert.Description>
+        </Alert.Content>
+      </Alert.Root>
+    )}
+    {startError && !startUncertain && (
+      <Alert.Root status="error" role="alert">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>Failed to start manual run</Alert.Title>
+          <Alert.Description>{startError}</Alert.Description>
+        </Alert.Content>
+      </Alert.Root>
+    )}
 
     <Wrap w="100%" p={{ base: 4, md: 6 }}>
       <VStack align="stretch" w="100%" gap={6}>

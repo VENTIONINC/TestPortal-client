@@ -21,6 +21,7 @@ export const addTagTypes = [
   "Upload API Keys",
   "Exports",
   "Test Scenarios",
+  "Manual Test Runs",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -997,6 +998,109 @@ const injectedRtkApi = api
         }),
         providesTags: ["Test Scenarios"],
       }),
+      postApiV2TestScenariosByScenarioIdManualRuns: build.mutation<
+        PostApiV2TestScenariosByScenarioIdManualRunsApiResponse,
+        PostApiV2TestScenariosByScenarioIdManualRunsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/manual-runs`,
+          method: "POST",
+          body: queryArg.manualTestRunStartRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Manual Test Runs"],
+      }),
+      getApiV2TestScenariosByScenarioIdManualRuns: build.query<
+        GetApiV2TestScenariosByScenarioIdManualRunsApiResponse,
+        GetApiV2TestScenariosByScenarioIdManualRunsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/manual-runs`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+            startedFrom: queryArg.startedFrom,
+            startedBefore: queryArg.startedBefore,
+            status: queryArg.status,
+          },
+        }),
+        providesTags: ["Manual Test Runs"],
+      }),
+      getApiV2ManualTestRuns: build.query<
+        GetApiV2ManualTestRunsApiResponse,
+        GetApiV2ManualTestRunsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+            startedFrom: queryArg.startedFrom,
+            startedBefore: queryArg.startedBefore,
+            testScenarioId: queryArg.testScenarioId,
+            status: queryArg.status,
+          },
+        }),
+        providesTags: ["Manual Test Runs"],
+      }),
+      getApiV2ManualTestRunsByRunId: build.query<
+        GetApiV2ManualTestRunsByRunIdApiResponse,
+        GetApiV2ManualTestRunsByRunIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}`,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        providesTags: ["Manual Test Runs"],
+      }),
+      patchApiV2ManualTestRunsByRunId: build.mutation<
+        PatchApiV2ManualTestRunsByRunIdApiResponse,
+        PatchApiV2ManualTestRunsByRunIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}`,
+          method: "PATCH",
+          body: queryArg.manualTestRunUpdateRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Manual Test Runs"],
+      }),
+      patchApiV2ManualTestRunsByRunIdStepsAndStepId: build.mutation<
+        PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse,
+        PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}/steps/${queryArg.stepId}`,
+          method: "PATCH",
+          body: queryArg.manualTestRunStepUpdateRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Manual Test Runs"],
+      }),
+      postApiV2ManualTestRunsByRunIdComplete: build.mutation<
+        PostApiV2ManualTestRunsByRunIdCompleteApiResponse,
+        PostApiV2ManualTestRunsByRunIdCompleteApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}/complete`,
+          method: "POST",
+          body: queryArg.manualTestRunCompleteRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Manual Test Runs"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1549,6 +1653,68 @@ export type GetApiV2TestScenariosApiArg = {
   projectId: string;
   page?: number;
   limit?: number;
+};
+export type PostApiV2TestScenariosByScenarioIdManualRunsApiResponse =
+  /** status 201 Manual test run started */ ManualTestRunRead;
+export type PostApiV2TestScenariosByScenarioIdManualRunsApiArg = {
+  scenarioId: string;
+  projectId: string;
+  manualTestRunStartRequest: ManualTestRunStartRequest;
+};
+export type GetApiV2TestScenariosByScenarioIdManualRunsApiResponse =
+  /** status 200 Scenario manual-run history */ ManualTestRunPageRead;
+export type GetApiV2TestScenariosByScenarioIdManualRunsApiArg = {
+  scenarioId: string;
+  projectId: string;
+  page?: number;
+  limit?: number;
+  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
+  startedFrom?: string;
+  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
+  startedBefore?: string;
+  status?: ManualTestRunStatus;
+};
+export type GetApiV2ManualTestRunsApiResponse =
+  /** status 200 Project manual-run history */ ManualTestRunPageRead;
+export type GetApiV2ManualTestRunsApiArg = {
+  projectId: string;
+  page?: number;
+  limit?: number;
+  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
+  startedFrom?: string;
+  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
+  startedBefore?: string;
+  /** Immutable source scenario UUID */
+  testScenarioId?: string;
+  status?: ManualTestRunStatus;
+};
+export type GetApiV2ManualTestRunsByRunIdApiResponse =
+  /** status 200 Manual test run detail */ ManualTestRunRead;
+export type GetApiV2ManualTestRunsByRunIdApiArg = {
+  runId: string;
+  projectId: string;
+};
+export type PatchApiV2ManualTestRunsByRunIdApiResponse =
+  /** status 200 Updated manual test run */ ManualTestRunRead;
+export type PatchApiV2ManualTestRunsByRunIdApiArg = {
+  runId: string;
+  projectId: string;
+  manualTestRunUpdateRequest: ManualTestRunUpdateRequest;
+};
+export type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse =
+  /** status 200 Updated manual test run */ ManualTestRunRead;
+export type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiArg = {
+  runId: string;
+  stepId: string;
+  projectId: string;
+  manualTestRunStepUpdateRequest: ManualTestRunStepUpdateRequest;
+};
+export type PostApiV2ManualTestRunsByRunIdCompleteApiResponse =
+  /** status 200 Completed manual test run */ ManualTestRunRead;
+export type PostApiV2ManualTestRunsByRunIdCompleteApiArg = {
+  runId: string;
+  projectId: string;
+  manualTestRunCompleteRequest: ManualTestRunCompleteRequest;
 };
 export type StatusResponse = {
   status: string;
@@ -2454,6 +2620,108 @@ export type TestScenarioListResponse = {
   limit: number;
   totalPages: number;
 };
+export type ManualTestRunExecutor = {
+  id: string;
+  name: string;
+  email: string;
+} | null;
+export type ManualTestRunStatus =
+  | "in_progress"
+  | "passed"
+  | "failed"
+  | "blocked"
+  | "skipped";
+export type ManualTestRun = {
+  executedBy: ManualTestRunExecutor;
+  status: ManualTestRunStatus;
+  notes: string | null;
+};
+export type ManualTestRunStepStatus =
+  | "not_started"
+  | "passed"
+  | "failed"
+  | "blocked"
+  | "skipped";
+export type ManualTestRunStep = {
+  status: ManualTestRunStepStatus;
+  notes: string | null;
+};
+export type ManualTestRunStepRead = {
+  id: string;
+  position: number;
+  action: string;
+  expectedResult: string | null;
+  status: ManualTestRunStepStatus;
+  notes: string | null;
+  updatedAt: string;
+};
+export type ManualTestRunRead = {
+  id: string;
+  projectId: string;
+  sourceTestScenarioId: string;
+  testScenarioId: string | null;
+  executedById: string | null;
+  executedBy: ManualTestRunExecutor;
+  status: ManualTestRunStatus;
+  startedAt: string;
+  completedAt: string | null;
+  updatedAt: string;
+  title: string;
+  details: string | null;
+  objective: string | null;
+  preconditions: string | null;
+  testData: string | null;
+  expectedResult: string | null;
+  scenarioNotes: string | null;
+  notes: string | null;
+  steps: ManualTestRunStepRead[];
+};
+export type ManualTestRunStartRequest = {
+  notes?: string | null;
+};
+export type ManualTestRunSummary = {
+  executedBy: ManualTestRunExecutor;
+  status: ManualTestRunStatus;
+};
+export type ManualTestRunSummaryRead = {
+  id: string;
+  projectId: string;
+  sourceTestScenarioId: string;
+  testScenarioId: string | null;
+  executedById: string | null;
+  executedBy: ManualTestRunExecutor;
+  title: string;
+  status: ManualTestRunStatus;
+  startedAt: string;
+  completedAt: string | null;
+  updatedAt: string;
+};
+export type ManualTestRunPage = {
+  runs: ManualTestRunSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type ManualTestRunPageRead = {
+  runs: ManualTestRunSummaryRead[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type ManualTestRunUpdateRequest = {
+  status?: ManualTestRunStatus;
+  notes?: string | null;
+};
+export type ManualTestRunStepUpdateRequest = {
+  status?: ManualTestRunStepStatus;
+  notes?: string | null;
+};
+export type ManualTestRunCompleteRequest = {
+  status: "passed" | "failed" | "blocked" | "skipped";
+  notes?: string | null;
+};
 export const {
   useGetApiV2StatusQuery,
   useLazyGetApiV2StatusQuery,
@@ -2571,4 +2839,14 @@ export const {
   usePostApiV2TestScenariosMutation,
   useGetApiV2TestScenariosQuery,
   useLazyGetApiV2TestScenariosQuery,
+  usePostApiV2TestScenariosByScenarioIdManualRunsMutation,
+  useGetApiV2TestScenariosByScenarioIdManualRunsQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdManualRunsQuery,
+  useGetApiV2ManualTestRunsQuery,
+  useLazyGetApiV2ManualTestRunsQuery,
+  useGetApiV2ManualTestRunsByRunIdQuery,
+  useLazyGetApiV2ManualTestRunsByRunIdQuery,
+  usePatchApiV2ManualTestRunsByRunIdMutation,
+  usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
+  usePostApiV2ManualTestRunsByRunIdCompleteMutation,
 } = injectedRtkApi;
