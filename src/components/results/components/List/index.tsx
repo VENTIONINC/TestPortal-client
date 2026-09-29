@@ -1,11 +1,12 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Mark, Spinner, Box, Stack, Heading, Flex } from '@chakra-ui/react';
 
 import { Checkbox, Skeleton } from '@/components/ui';
 import { BulkActions } from '@/components/BulkActions';
+import { useResultsSelection } from '@/contexts/results-selection';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 
 import { ResultSpecSection } from '../Section';
@@ -18,8 +19,7 @@ interface ResultEntry {
 }
 
 interface ResultsListProps {
-  activeDaysResultsIds: string[];
-  handleSelectAll: () => void;
+  handleSelectAll: (resultIds: string[]) => void;
   selectedCount: number;
   selectedResults: BaseResult[];
   isFetching: boolean;
@@ -31,7 +31,6 @@ interface ResultsListProps {
 
 export const ResultsList = memo(
   ({
-    activeDaysResultsIds,
     handleSelectAll,
     selectedCount,
     selectedResults,
@@ -42,16 +41,43 @@ export const ResultsList = memo(
     onToggleTag,
   }: ResultsListProps) => {
     const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+    const [visibleResultIdsBySpec, setVisibleResultIdsBySpec] = useState<Record<string, string[]>>({});
+    const { pruneSelection } = useResultsSelection();
     const sentinelRef = useRef<HTMLDivElement>(null);
 
     const allEntries = useMemo(() => Array.from(results.entries()), [results]);
     const visibleEntries = allEntries.slice(0, visibleCount);
     const hasMore = visibleCount < allEntries.length;
     const shouldReserveListHeight = allEntries.length > 0 || isFetching;
+    const defaultVisibleResultIdsBySpec = useMemo(
+      () =>
+        Object.fromEntries(
+          allEntries.map(([specKey, { executions }]) => [
+            specKey,
+            executions.flatMap(({ results: executionResults }) => executionResults.map(({ id }) => id)),
+          ]),
+        ),
+      [allEntries],
+    );
 
     useEffect(() => {
       setVisibleCount(PAGE_SIZE);
-    }, [results]);
+      setVisibleResultIdsBySpec(defaultVisibleResultIdsBySpec);
+    }, [defaultVisibleResultIdsBySpec]);
+
+    const handleVisibleResultIdsChange = useCallback((specKey: string, resultIds: string[]) => {
+      setVisibleResultIdsBySpec((previous) => ({ ...previous, [specKey]: resultIds }));
+    }, []);
+
+    const visibleResultIds = useMemo(() => {
+      return visibleEntries.flatMap(
+        ([specKey]) => visibleResultIdsBySpec[specKey] ?? defaultVisibleResultIdsBySpec[specKey] ?? [],
+      );
+    }, [defaultVisibleResultIdsBySpec, visibleEntries, visibleResultIdsBySpec]);
+
+    useEffect(() => {
+      pruneSelection(visibleResultIds);
+    }, [pruneSelection, visibleResultIds]);
 
     useEffect(() => {
       if (!sentinelRef.current || !hasMore) return;
@@ -80,8 +106,8 @@ export const ResultsList = memo(
             <Flex p="3px 16px 1px" mb={4} align="center" bg="bg.section" borderRadius="md">
               <Box mr={2}>
                 <Checkbox
-                  checked={activeDaysResultsIds.length !== 0 && selectedCount === activeDaysResultsIds.length}
-                  onCheckedChange={handleSelectAll}
+                  checked={visibleResultIds.length !== 0 && selectedCount === visibleResultIds.length}
+                  onCheckedChange={() => handleSelectAll(visibleResultIds)}
                 >
                   Selected <Mark fontWeight={600}>{selectedCount}</Mark>
                   {/* <span>/</span>
@@ -113,6 +139,7 @@ export const ResultsList = memo(
                     allExecutions={unfilteredExecutions}
                     activeTags={activeTags}
                     onToggleTag={onToggleTag}
+                    onVisibleResultIdsChange={handleVisibleResultIdsChange}
                   />
                 </Skeleton>
               );

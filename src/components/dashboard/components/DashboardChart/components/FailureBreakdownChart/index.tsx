@@ -7,7 +7,7 @@ import { formatChartLabel } from '@/utils/dateUtils';
 import { MetricsBarChart } from '@/components/ui/components/Charts/MetricsBarChart';
 import { BarChartView, BarChartValueMode, CategorySeries, CategoriesChartDatum } from '@/types/charts';
 
-export const IssuesCategoriesChart = ({
+export const FailureBreakdownChart = ({
   data,
 }: {
   data?: {
@@ -47,7 +47,7 @@ export const IssuesCategoriesChart = ({
 
   return (
     <MetricsBarChart
-      title="Issues categories"
+      title="Failure Breakdown"
       data={mapToDataToChart}
       series={series}
       view={view}
