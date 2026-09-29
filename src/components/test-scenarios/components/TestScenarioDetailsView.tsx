@@ -7,6 +7,7 @@ import { FiArrowLeft } from 'react-icons/fi';
 import { ContextMenuButton, Link, Wrap } from '@/components/ui';
 import type { TestScenario } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
+import { getManualTestRunScenarioHistoryPath } from '@/components/manual-test-runs/utils/paths';
 
 import type { TestScenarioContextMenuHandler } from '../hooks/useTestScenarioContextMenu';
 
@@ -63,6 +64,7 @@ export const TestScenarioDetailsView = ({
             {startUncertain ? 'Start manual run again' : 'Start manual run'}
           </Button>
         )}
+        <Link href={getManualTestRunScenarioHistoryPath(scenario.id)}>Run history</Link>
         <ContextMenuButton
           aria-label={`Actions for ${scenario.title}`}
           onClick={(event) => onContextMenu(event, scenario)}

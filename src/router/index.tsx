@@ -22,6 +22,7 @@ import {
   TestScenarioEditPage,
   TestScenariosPage,
   ManualTestRunPage,
+  ManualTestRunHistoryPage,
   UserSettingsPage,
 } from '@/pages';
 import { MCPSettings } from '@/pages/UserSettings/MCPSettings';
@@ -117,6 +118,17 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: PATHS.TEST_SCENARIO_MANUAL_RUNS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <ManualTestRunHistoryPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: PATHS.TEST_SCENARIO_NEW,
     errorElement: <RouterErrorFallback />,
     element: (
@@ -145,6 +157,17 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <ProjectGuard>
           <TestScenarioEditPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.MANUAL_TEST_RUNS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <ManualTestRunHistoryPage />
         </ProjectGuard>
       </ProtectedRoute>
     ),

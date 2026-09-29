@@ -10,14 +10,14 @@ import {
   type DeleteTestScenarioDialogProps,
 } from '@/components/ui/components/Dialogs/delete-test-scenario/delete-test-scenario-dialog';
 import { ChakraProvider, toaster } from '@/components/ui';
-import { useDeleteApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/generatedApi';
+import { useDeleteApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
 
 const deleteScenario = vi.fn();
 const closeDialog = vi.fn();
 const onDeleted = vi.fn();
 
-vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/redux/apis/generatedApi')>();
+vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
 
   return { ...actual, useDeleteApiV2TestScenariosByScenarioIdMutation: vi.fn() };
 });
@@ -53,6 +53,7 @@ describe('DeleteTestScenarioDialog', () => {
     renderDialog();
 
     expect(screen.getByRole('alertdialog')).toHaveTextContent('Checkout flow');
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('Existing manual test runs and their saved snapshots are preserved');
     expect(screen.getByRole('textbox', { name: 'Scenario title' })).toHaveValue('');
     expect(screen.getByRole('button', { name: 'Confirm Test Scenario deletion' })).toBeDisabled();
   });

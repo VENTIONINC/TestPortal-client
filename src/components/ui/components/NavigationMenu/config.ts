@@ -16,6 +16,7 @@ export const navigationMenuConfig: NavigationMenuGroup[] = [
       { id: 'results', icon: FiFileText, label: 'Results', path: PATHS.RESULTS, active: true },
       { id: 'issues', icon: FiAlertTriangle, label: 'Issues', path: PATHS.ISSUES },
       { id: 'test-scenarios', icon: FiClipboard, label: 'Test Scenarios', path: PATHS.TEST_SCENARIOS },
+      { id: 'manual-test-runs', icon: FiClipboard, label: 'Manual Test Runs', path: PATHS.MANUAL_TEST_RUNS },
       { id: 'prompts', icon: FiMessageSquare, label: 'Prompts', path: PATHS.PROMPTS },
       { id: 'skills', icon: FiCode, label: 'Skills', path: PATHS.SKILLS },
       // { id: 'report-generator', icon: FiPieChart, label: 'Report Generator', path: PATHS.REPORT_GENERATOR },

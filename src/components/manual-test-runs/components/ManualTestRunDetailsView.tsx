@@ -10,6 +10,7 @@ import type { IconType } from 'react-icons';
 import { Link, NativeSelect, Textarea, Tooltip, Wrap } from '@/components/ui';
 import type { ManualTestRunRead, ManualTestRunStepRead, ManualTestRunStepStatus } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
+import { getTestScenarioDetailPath } from '@/components/test-scenarios/constants';
 
 import { MANUAL_TEST_RUN_STEP_STATUSES } from '../types';
 import { getManualTestRunProgressCounts, isManualTestRunPassedEligible } from '../utils';
@@ -111,6 +112,11 @@ export interface ManualTestRunDetailsViewProps {
   setPersistedRun: (run: ManualTestRunRead) => void;
   refetch: () => Promise<ManualTestRunRead | undefined>;
   onBack: () => void;
+  onRetest?: () => void;
+  isRetesting?: boolean;
+  retestError?: string;
+  retestUncertain?: boolean;
+  onViewSourceHistory?: () => void;
 }
 
 export const ManualTestRunDetailsView = ({
@@ -120,6 +126,11 @@ export const ManualTestRunDetailsView = ({
   setPersistedRun,
   refetch,
   onBack,
+  onRetest,
+  isRetesting = false,
+  retestError,
+  retestUncertain = false,
+  onViewSourceHistory,
 }: ManualTestRunDetailsViewProps) => {
   const completionTriggerRef = useRef<HTMLButtonElement>(null);
   const stepHeadingRefs = useRef<Record<string, HTMLHeadingElement | null>>({});
@@ -171,16 +182,23 @@ export const ManualTestRunDetailsView = ({
           </Link>
           <Heading size="lg">{execution.savedRun.title}</Heading>
         </HStack>
-        {!readOnly && (
-          <Button
-            ref={completionTriggerRef}
-            type="button"
-            onClick={execution.requestCompletion}
-            disabled={isPending || execution.recoveryBlocked}
-          >
-            Complete run
-          </Button>
-        )}
+        <HStack gap={2} flexWrap="wrap">
+          {!readOnly && (
+            <Button
+              ref={completionTriggerRef}
+              type="button"
+              onClick={execution.requestCompletion}
+              disabled={isPending || execution.recoveryBlocked}
+            >
+              Complete run
+            </Button>
+          )}
+          {execution.savedRun.status !== 'in_progress' && onRetest && (
+            <Button type="button" onClick={onRetest} loading={isRetesting} disabled={isRetesting || !execution.savedRun.testScenarioId}>
+              Retest
+            </Button>
+          )}
+        </HStack>
       </HStack>
 
       <HStack gap={6} flexWrap="wrap" color="text.secondary">
@@ -203,6 +221,49 @@ export const ManualTestRunDetailsView = ({
           </Alert.Content>
         </Alert.Root>
       )}
+      {readOnly && execution.savedRun.status === 'in_progress' && (
+        <Alert.Root status="info" role="status">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>View-only run</Alert.Title>
+            <Alert.Description>Only the user who started this run can change its results, notes or complete it.</Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
+      {execution.savedRun.status !== 'in_progress' && (
+        <Alert.Root status={execution.savedRun.testScenarioId ? 'info' : 'warning'} role="status">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>{execution.savedRun.testScenarioId ? 'Retest uses the current scenario' : 'Source deleted'}</Alert.Title>
+            <Alert.Description>
+              {execution.savedRun.testScenarioId
+                ? 'Retest starts a fresh run from the current saved scenario content and steps. It does not modify this historical snapshot or copy its outcomes and notes.'
+                : 'This saved snapshot remains available, but a fresh run cannot be started because its source scenario was deleted.'}
+            </Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
+      {retestError && (
+        <Alert.Root status={retestUncertain ? 'warning' : 'error'} role="alert">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>{retestUncertain ? 'Retest result is uncertain' : 'Retest was not started'}</Alert.Title>
+            <Alert.Description>{retestError}</Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
+
+      <HStack gap={4} flexWrap="wrap">
+        {execution.savedRun.testScenarioId ? (
+          <>
+            <Link href={getTestScenarioDetailPath(execution.savedRun.testScenarioId)}>View current scenario</Link>
+            <Text color="text.secondary" fontSize="sm">Current content may differ from this saved snapshot.</Text>
+          </>
+        ) : (
+          <Text color="text.secondary">Source deleted</Text>
+        )}
+        {onViewSourceHistory && <Button variant="plain" onClick={onViewSourceHistory}>View source history</Button>}
+      </HStack>
       {execution.recoveryBlocked && (
         <HStack justify="end">
           <Button type="button" variant="outline" onClick={() => void execution.retryAuthoritativeRecovery()}>
@@ -233,13 +294,20 @@ export const ManualTestRunDetailsView = ({
               value={execution.runNotesDraft}
               onChange={(event) => execution.setRunNotesDraft(event.target.value)}
               readOnly={readOnly || execution.pendingWrite?.kind === 'run'}
-              fieldProps={{ helperText: readOnly ? 'Completed run; saved values are immutable.' : 'Notes are saved explicitly and are separate from scenario notes.' }}
+              fieldProps={{ helperText: readOnly ? 'View-only run; saved notes cannot be edited.' : 'Save notes explicitly, or press Ctrl/Cmd + Enter.' }}
+              onKeyDown={(event) => {
+                if (!readOnly && execution.isRunNotesDirty && !isPending && !execution.recoveryBlocked && event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                  event.preventDefault();
+                  void execution.saveRunNotes();
+                }
+              }}
               rows={5}
             />
             {!readOnly && (
-              <HStack justify="end">
-                <Button type="button" variant="ghost" onClick={execution.discardRunNotes} disabled={isPending || execution.recoveryBlocked}>Discard</Button>
-                <Button type="button" onClick={() => void execution.saveRunNotes()} disabled={isPending || execution.recoveryBlocked}>Save execution notes</Button>
+              <HStack justify="start" flexWrap="wrap">
+                <Button type="button" onClick={() => void execution.saveRunNotes()} loading={execution.pendingWrite?.kind === 'run'} loadingText="Saving…" disabled={!execution.isRunNotesDirty || isPending || execution.recoveryBlocked}>Save execution notes</Button>
+                <Button type="button" variant="ghost" onClick={execution.discardRunNotes} disabled={!execution.isRunNotesDirty || isPending || execution.recoveryBlocked}>Discard</Button>
+                <Text role="status" fontSize="sm" color="text.secondary">{execution.pendingWrite?.kind === 'run' ? 'Saving…' : execution.isRunNotesDirty ? 'Unsaved changes' : 'Saved'}</Text>
               </HStack>
             )}
           </VStack>
@@ -251,6 +319,7 @@ export const ManualTestRunDetailsView = ({
             ) : (
               orderedSteps.map((step, index) => {
                 const draft = execution.stepDrafts[step.id] ?? { status: step.status, notes: '' };
+                const stepDirty = execution.dirtyStepIds.includes(step.id);
                 const stepPending = execution.pendingWrite?.kind === 'step' && execution.pendingWrite.stepId === step.id;
 
                 return (
@@ -298,6 +367,12 @@ export const ManualTestRunDetailsView = ({
                         value={draft.notes}
                         onChange={(event) => execution.setStepNotes(step.id, event.target.value)}
                         readOnly={readOnly || execution.recoveryBlocked || stepPending}
+                        onKeyDown={(event) => {
+                          if (!readOnly && stepDirty && !isPending && !execution.recoveryBlocked && event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                            event.preventDefault();
+                            void execution.saveStep(step.id);
+                          }
+                        }}
                         rows={3}
                         maxW={{ base: '100%', md: '560px' }}
                       />
@@ -307,14 +382,14 @@ export const ManualTestRunDetailsView = ({
                             <Text color="text.secondary" aria-live="polite">Saving</Text>
                           ) : execution.stepSaveStates[step.id] === 'not_saved' ? (
                             <Text color="status.error.text" aria-live="polite">Not saved</Text>
-                          ) : execution.dirtyStepIds.includes(step.id) ? (
+                          ) : stepDirty ? (
                             <Text color="text.secondary">Unsaved changes</Text>
                           ) : execution.stepSaveStates[step.id] === 'submitted' ? (
                             <Text color="status.success.text">Submitted: {formatLabel(step.status)}</Text>
                           ) : execution.stepSaveStates[step.id] === 'saved_notes' ? (
                             <Text color="status.success.text">Saved notes</Text>
                           ) : null}
-                          {execution.dirtyStepIds.includes(step.id) && (
+                          {stepDirty && (
                             <Button type="button" variant="ghost" onClick={() => execution.discardStep(step.id)} disabled={isPending || execution.recoveryBlocked}>
                               Discard changes
                             </Button>
@@ -322,7 +397,7 @@ export const ManualTestRunDetailsView = ({
                           <Button
                             type="button"
                             onClick={() => void execution.saveStep(step.id)}
-                            disabled={isPending || execution.recoveryBlocked || !execution.dirtyStepIds.includes(step.id)}
+                            disabled={isPending || execution.recoveryBlocked || !stepDirty}
                           >
                             {step.status === 'not_started' ? 'Submit' : 'Submit changes'}
                           </Button>

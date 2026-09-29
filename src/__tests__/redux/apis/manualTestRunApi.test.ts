@@ -48,6 +48,43 @@ describe('Manual Test Run API integration', () => {
     expect(url.searchParams.get('projectId')).toBe('project-1');
   });
 
+  it('serializes combined project history filters and keeps nested history free of a source filter', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => new Response(
+      JSON.stringify({ runs: [], total: 0, page: 1, limit: 30, totalPages: 0 }),
+      { headers: { 'content-type': 'application/json' } },
+    ));
+
+    await store.dispatch(extendedApi.endpoints.getApiV2ManualTestRuns.initiate({
+      projectId: 'project-1',
+      page: 2,
+      limit: 30,
+      startedFrom: '2026-09-18T00:00:00.000Z',
+      startedBefore: '2026-09-19T00:00:00.000Z',
+      testScenarioId: 'scenario-1',
+      status: 'failed',
+    }));
+    await store.dispatch(extendedApi.endpoints.getApiV2TestScenariosByScenarioIdManualRuns.initiate({
+      projectId: 'project-1',
+      scenarioId: 'scenario-1',
+      page: 1,
+      limit: 30,
+      startedFrom: '2026-09-18T00:00:00.000Z',
+      startedBefore: '2026-09-19T00:00:00.000Z',
+      status: 'passed',
+    }));
+
+    const getRequestUrl = (input: unknown) => new URL(typeof input === 'string' ? input : (input as Request).url);
+    const projectUrl = getRequestUrl(fetchMock.mock.calls[0][0]).searchParams;
+    const nestedUrl = getRequestUrl(fetchMock.mock.calls[1][0]).searchParams;
+    expect(projectUrl.get('projectId')).toBe('project-1');
+    expect(projectUrl.get('page')).toBe('2');
+    expect(projectUrl.get('testScenarioId')).toBe('scenario-1');
+    expect(projectUrl.get('status')).toBe('failed');
+    expect(nestedUrl.get('scenarioId')).toBeNull();
+    expect(nestedUrl.get('testScenarioId')).toBeNull();
+    expect(nestedUrl.get('status')).toBe('passed');
+  });
+
   it('refetches the matching detail and project history after a successful scoped write', async () => {
     const run = {
       id: 'run-1',
