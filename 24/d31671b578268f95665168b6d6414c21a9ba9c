@@ -1,0 +1,53 @@
+openspec/changes/show-related-scenarios-in-result-modal/.openspec.yaml
+  s_53d82d1b2f45e8::t_d1b9712be27022 1-2
+src/redux/apis/generatedResultDetailApi.ts
+  s_b582d29ea8c85d::t_5145ef88fd742e 1-113
+openspec/changes/show-related-scenarios-in-result-modal/design.md
+  s_53d82d1b2f45e8::t_ec137d3cfd5c94 1-44
+openspec/changes/show-related-scenarios-in-result-modal/proposal.md
+  s_53d82d1b2f45e8::t_2406d0d8e8031b 1-26
+openspec/changes/show-related-scenarios-in-result-modal/specs/result-scenario-modal/spec.md
+  s_53d82d1b2f45e8::t_f4252ce6513706 1-66
+openspec/changes/show-related-scenarios-in-result-modal/specs/test-scenario-authoring/spec.md
+  s_53d82d1b2f45e8::t_08ac7a95db2789 1-18
+openspec/changes/show-related-scenarios-in-result-modal/tasks.md
+  s_b582d29ea8c85d::t_37b9d97fbbecb0 1-18
+package.json
+  s_b582d29ea8c85d::t_66eebb686df072 19
+rtk-query-result-detail-codegen.config.cjs
+  s_b582d29ea8c85d::t_e47006dd0b9817 1-10
+scripts/generate-result-detail-api.cjs
+  s_b582d29ea8c85d::t_388323a516ab1d 1-53
+src/__tests__/components/results/assign-issue-modal/AssignIssueModalEvidenceTabs.test.tsx
+  s_b582d29ea8c85d::t_60057b4bdd0f6c 1-114
+src/__tests__/components/results/assign-issue-modal/ResultRelatedScenarios.test.tsx
+  s_b582d29ea8c85d::t_fd75d427afffa2 1-182
+src/components/results/assign-issue-modal/AssignIssueModal.tsx
+  s_b582d29ea8c85d::t_fdbc16e9cd9034 59,173,428-434,438,442-443,464,477-483
+src/components/results/assign-issue-modal/ResultRelatedScenarios.tsx
+  s_b582d29ea8c85d::t_a57f644b06e844 1-157
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "24d31671b578268f95665168b6d6414c21a9ba9c",
+  "prompts": {},
+  "sessions": {
+    "s_53d82d1b2f45e8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0cef8-c8f2-7741-877a-426b536c8567",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_b582d29ea8c85d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d876-8fc8-7811-a196-acf777851875",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
