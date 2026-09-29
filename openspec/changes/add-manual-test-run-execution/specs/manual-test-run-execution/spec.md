@@ -122,3 +122,44 @@ The system SHALL provide labelled keyboard-accessible start, outcome, note, save
 #### Scenario: Tester uses the keyboard
 - **WHEN** the tester performs execution and completion using a keyboard
 - **THEN** controls and feedback SHALL be accessible and completion cancellation SHALL restore focus to its trigger
+
+### Requirement: Local step submission and correction
+
+Step actions SHALL appear directly beneath their notes, aligned to the start within the notes width. Editable steps SHALL offer Submit when their saved outcome is not_started and Submit changes when a saved result exists. Submission SHALL be disabled for unchanged normalized drafts. Confirmed passed, failed, blocked or skipped results SHALL display Submitted with the saved outcome. Active editable runs SHALL permit correcting submitted outcomes and notes. Run notes SHALL remain separately saved.
+
+#### Scenario: Tester corrects a submitted result
+- **WHEN** the tester changes a submitted step's outcome or notes
+- **THEN** the step SHALL show Unsaved changes and enable Submit changes and Discard changes
+- **AND** Discard changes SHALL restore the latest saved outcome and notes without resetting the result
+- **AND** confirmed submission SHALL display the returned saved outcome and preserve unrelated drafts
+
+#### Scenario: Submission is pending or fails
+- **WHEN** a step submission is pending or fails
+- **THEN** local feedback SHALL show Saving or Not saved respectively
+- **AND** failures SHALL preserve drafts without claiming submission succeeded
+- **AND** existing write serialization and authoritative recovery rules SHALL remain in effect
+
+#### Scenario: Tester saves notes before choosing an outcome
+- **WHEN** notes are saved while the step outcome remains not_started
+- **THEN** the client SHALL indicate Saved notes without marking the step submitted
+
+### Requirement: Persisted step progress and navigation
+
+Run detail SHALL show a top-of-page progress strip containing one dot per ordered copied step, a submitted-step count and saved Passed, Failed, Blocked and Skipped counts. A submitted step SHALL mean its persisted outcome is not not_started. Dots SHALL represent persisted outcomes using color and icons, with neutral connectors and a separate unsaved-change outline. Drafts SHALL NOT change saved counts or dot outcomes. The strip SHALL wrap for narrow screens or many steps and SHALL NOT determine overall run completion outcome.
+
+#### Scenario: Outcome draft differs from a saved result
+- **WHEN** a tester changes a saved Passed outcome to Failed without submitting
+- **THEN** the dot and counters SHALL retain Passed with an unsaved-change outline
+- **AND** confirmed submission SHALL update them to Failed
+- **AND** failure SHALL retain the saved counts and the unsaved-change marker
+
+#### Scenario: Tester navigates through progress dots
+- **WHEN** the tester activates a dot by pointer or keyboard
+- **THEN** the page SHALL scroll to its step and focus its heading without submitting a request
+- **AND** each dot SHALL expose its step number, saved outcome and any unsaved changes through an accessible label and tooltip on hover or focus
+
+#### Scenario: Run has no steps or is view-only
+- **WHEN** the run has no copied steps
+- **THEN** progress SHALL show No steps in this run without dots or division by zero
+- **WHEN** a run is completed or otherwise view-only
+- **THEN** saved progress and step navigation SHALL remain available without execution mutation controls

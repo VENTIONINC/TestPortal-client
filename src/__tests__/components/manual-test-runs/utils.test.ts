@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { ManualTestRunStepRead } from '@/redux/apis/generatedApi';
 import {
   getManualTestRunNotePatchPayload,
+  getManualTestRunProgressCounts,
   getManualTestRunStepDrafts,
   getManualTestRunStepPatchPayload,
   isManualTestRunPassedEligible,
@@ -59,5 +60,21 @@ describe('manual test run passed eligibility', () => {
     { name: 'failed step', steps: [{ status: 'passed' as const }, { status: 'failed' as const }], eligible: false },
   ])('$name eligibility is $eligible', ({ steps, eligible }) => {
     expect(isManualTestRunPassedEligible(steps)).toBe(eligible);
+  });
+});
+
+describe('manual test run progress', () => {
+  it('counts persisted outcomes and excludes not-started or draft values', () => {
+    expect(getManualTestRunProgressCounts([
+      { status: 'not_started' },
+      { status: 'passed' },
+      { status: 'failed' },
+      { status: 'blocked' },
+      { status: 'skipped' },
+    ])).toEqual({ total: 5, submitted: 4, passed: 1, failed: 1, blocked: 1, skipped: 1 });
+  });
+
+  it('handles an empty run without a percentage or submitted steps', () => {
+    expect(getManualTestRunProgressCounts([])).toEqual({ total: 0, submitted: 0, passed: 0, failed: 0, blocked: 0, skipped: 0 });
   });
 });

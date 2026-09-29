@@ -30,6 +30,24 @@ Use full persisted detail as the baseline, with separate run-note and per-step s
 
 Serialize writes per run using synchronous guards plus visible pending feedback. Disable mutation actions while a write is pending and freeze submitted inputs; unrelated drafts can remain editable. Reconcile submitted values with returned saved values, update pristine drafts, preserve unrelated dirty drafts. This avoids response-order ambiguity without introducing a write queue. Discard restores the current saved baseline. Unsaved drafts are local and are not recovered after reload.
 
+### Step submission and corrections
+
+Place step actions directly beneath Step notes, aligned to the start and within the notes width. Use Submit for steps whose persisted outcome is not_started and Submit changes for steps with a persisted terminal outcome. Disable submission when normalized outcome/notes match the saved baseline, and keep existing pending/recovery/access guards. A first submission therefore requires a changed outcome or note; saving notes alone does not count as a completed step.
+
+After confirmed success, show Submitted with the persisted outcome for passed, failed, blocked or skipped steps. Keep fields editable while execution is permitted on an active run. Editing a submitted step shows Unsaved changes and enables Submit changes plus Discard changes. Discard changes restores both outcome and notes from the latest persisted baseline; it does not reset or delete a submitted result. There is no Reset result action or autosave. Keep a pristine submitted step's submit control disabled; show Discard changes only when a draft differs from saved values.
+
+Show Saving while the step write is pending. On failure, show Not saved beside the step actions, preserve the draft and retain the existing error/recovery behavior. Only server-confirmed values can produce submitted feedback. Notes saved on a not_started step show Saved notes rather than Submitted. Run-level execution notes retain their separate local save/discard controls and do not contribute to step progress.
+
+### Persisted step progress strip
+
+Place the progress summary near the top of run detail, before the snapshot and execution fields. Render one keyboard-accessible button/dot per copied step in persisted position order. Each dot uses the saved outcome's color and icon: neutral not_started, passed check, failed cross, blocked and skipped icons. Do not rely on color alone. Keep connecting lines neutral because steps may be submitted in any order. Wrap dots across rows for large runs and narrow screens.
+
+A separate outline marks a step with an unsaved outcome or note draft while retaining its saved outcome color/icon. Tooltip and accessible labels identify the step number, saved outcome and unsaved changes, for example Step 3 · Failed · Unsaved changes. Activating a dot scrolls to its step and moves keyboard focus to the step heading without submitting anything.
+
+Show N of M steps submitted and counts for Passed, Failed, Blocked and Skipped. N counts persisted outcomes other than not_started; saving a note alone does not increase it. A draft change from Passed to Failed leaves the dot and counters Passed until confirmed submission, with an unsaved outline in the meantime. Successful writes and authoritative refreshes update the strip from saved values; failures do not advance it. A discarded draft removes its outline without changing counts. Counts are informational and never select the run's completion outcome.
+
+For zero-step runs, show No steps in this run without dots or a percentage calculation. Completed/view-only runs retain progress and navigation but do not expose mutation controls. Existing completion eligibility remains unchanged.
+
 ### Completion
 
 Require no pending writes and no dirty run/step drafts before opening completion. Show save-or-discard guidance when blocked. Use a keyboard-accessible confirmation dialog with explicit terminal outcome, no automatic default derived from steps, and an irreversible/read-only warning. Cancellation sends no request. Notes remain managed through the existing explicit save, avoiding a second completion-note draft.
