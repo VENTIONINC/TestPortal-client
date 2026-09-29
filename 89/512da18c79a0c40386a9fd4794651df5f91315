@@ -1,0 +1,21 @@
+src/__tests__/components/manual-test-runs/ManualTestRunDetailsView.test.tsx
+  s_531b266ef8d1a6::t_c898e95c361bba 4,129,140,224-225,255,263-367
+src/components/manual-test-runs/components/ManualTestRunDetailsView.tsx
+  s_531b266ef8d1a6::t_91a9115efdd74a 10-11,16,40-107,136,155-159,275-276,328-338,380-403
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "89512da18c79a0c40386a9fd4794651df5f91315",
+  "prompts": {},
+  "sessions": {
+    "s_531b266ef8d1a6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ed41-39d0-7d01-aced-28333259028e",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
