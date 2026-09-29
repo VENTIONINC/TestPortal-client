@@ -10,3 +10,6 @@ export const getTestScenarioDetailPath = (scenarioId: string) =>
 
 export const getTestScenarioEditPath = (scenarioId: string) =>
   PATHS.TEST_SCENARIO_EDIT.replace(':scenarioId', encodeURIComponent(scenarioId));
+
+export const getManualTestRunPath = (runId: string) =>
+  PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(runId));

@@ -1,0 +1,2022 @@
+{
+  "version": 1,
+  "id": "testportal-github",
+  "name": "TestPortal GitHub",
+  "servers": [
+    {
+      "type": "image",
+      "secrets": "default",
+      "tools": [
+        "get_me",
+        "get_file_contents",
+        "list_pull_requests",
+        "pull_request_read",
+        "search_pull_requests",
+        "issue_read",
+        "list_issues",
+        "search_issues",
+        "issue_write",
+        "create_pull_request",
+        "update_pull_request",
+        "add_issue_comment",
+        "add_reply_to_pull_request_comment",
+        "pull_request_review_write"
+      ],
+      "image": "ghcr.io/github/github-mcp-server@sha256:0ba840c46a237879c8300e7fddb0b6347f20e029ccb9cbe2ce4a943daa1ff560",
+      "snapshot": {
+        "server": {
+          "name": "github-official",
+          "type": "server",
+          "image": "ghcr.io/github/github-mcp-server@sha256:0ba840c46a237879c8300e7fddb0b6347f20e029ccb9cbe2ce4a943daa1ff560",
+          "description": "Official GitHub MCP Server, by GitHub. Provides seamless integration with GitHub APIs, enabling advanced automation and interaction capabilities for developers and tools.",
+          "title": "GitHub Official",
+          "icon": "https://avatars.githubusercontent.com/u/9919?s=200\u0026v=4",
+          "readme": "https://desktop.docker.com/mcp/catalog/v3/readme/github-official.md",
+          "remote": {},
+          "oauth": {
+            "providers": [
+              {
+                "provider": "github",
+                "secret": "github.personal_access_token",
+                "env": "GITHUB_PERSONAL_ACCESS_TOKEN"
+              }
+            ]
+          },
+          "secrets": [
+            {
+              "name": "github.personal_access_token",
+              "env": "GITHUB_PERSONAL_ACCESS_TOKEN"
+            }
+          ],
+          "allowHosts": [
+            "api.github.com:443",
+            "github.com:443",
+            "raw.githubusercontent.com:443"
+          ],
+          "tools": [
+            {
+              "name": "add_comment_to_pending_review",
+              "description": "Add review comment to the requester's latest pending pull request review. A pending review needs to already exist to call this (check with the user if not sure).",
+              "arguments": [
+                {
+                  "name": "body",
+                  "type": "string",
+                  "desc": "The text of the review comment"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "path",
+                  "type": "string",
+                  "desc": "The relative path to the file that necessitates a comment"
+                },
+                {
+                  "name": "pullNumber",
+                  "type": "number",
+                  "desc": "Pull request number"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "subjectType",
+                  "type": "string",
+                  "desc": "The level at which the comment is targeted"
+                },
+                {
+                  "name": "line",
+                  "type": "number",
+                  "desc": "The line of the blob in the pull request diff that the comment applies to. For multi-line comments, the last line of the range",
+                  "optional": true
+                },
+                {
+                  "name": "side",
+                  "type": "string",
+                  "desc": "The side of the diff to comment on. LEFT indicates the previous state, RIGHT indicates the new state",
+                  "optional": true
+                },
+                {
+                  "name": "startLine",
+                  "type": "number",
+                  "desc": "For multi-line comments, the first line of the range that the comment applies to",
+                  "optional": true
+                },
+                {
+                  "name": "startSide",
+                  "type": "string",
+                  "desc": "For multi-line comments, the starting side of the diff that the comment applies to. LEFT indicates the previous state, RIGHT indicates the new state",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Add review comment to the requester's latest pending pull request review"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "add_issue_comment",
+              "description": "Add a comment to a specific issue in a GitHub repository. Use this tool to add comments to pull requests as well (in this case pass pull request number as issue_number), but only if user is not asking specifically to add review comments.",
+              "arguments": [
+                {
+                  "name": "body",
+                  "type": "string",
+                  "desc": "Comment content"
+                },
+                {
+                  "name": "issue_number",
+                  "type": "number",
+                  "desc": "Issue number to comment on"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                }
+              ],
+              "annotations": {
+                "title": "Add comment to issue"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "assign_copilot_to_issue",
+              "description": "Assign Copilot to a specific issue in a GitHub repository.\n\nThis tool can help with the following outcomes:\n- a Pull Request created with source code changes to resolve the issue\n\n\nMore information can be found at:\n- https://docs.github.com/en/copilot/using-github-copilot/using-copilot-coding-agent-to-work-on-tasks/about-assigning-tasks-to-copilot",
+              "arguments": [
+                {
+                  "name": "issueNumber",
+                  "type": "number",
+                  "desc": "Issue number"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                }
+              ],
+              "annotations": {
+                "title": "Assign Copilot to issue",
+                "idempotentHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "create_branch",
+              "description": "Create a new branch in a GitHub repository",
+              "arguments": [
+                {
+                  "name": "branch",
+                  "type": "string",
+                  "desc": "Name for new branch"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "from_branch",
+                  "type": "string",
+                  "desc": "Source branch (defaults to repo default)",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Create branch"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "create_or_update_file",
+              "description": "Create or update a single file in a GitHub repository. If updating, you must provide the SHA of the file you want to update. Use this tool to create or update a file in a GitHub repository remotely; do not use it for local file operations.",
+              "arguments": [
+                {
+                  "name": "branch",
+                  "type": "string",
+                  "desc": "Branch to create/update the file in"
+                },
+                {
+                  "name": "content",
+                  "type": "string",
+                  "desc": "Content of the file"
+                },
+                {
+                  "name": "message",
+                  "type": "string",
+                  "desc": "Commit message"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner (username or organization)"
+                },
+                {
+                  "name": "path",
+                  "type": "string",
+                  "desc": "Path where to create/update the file"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "sha",
+                  "type": "string",
+                  "desc": "Required if updating an existing file. The blob SHA of the file being replaced.",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Create or update file"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "create_pull_request",
+              "description": "Create a new pull request in a GitHub repository.",
+              "arguments": [
+                {
+                  "name": "base",
+                  "type": "string",
+                  "desc": "Branch to merge into"
+                },
+                {
+                  "name": "head",
+                  "type": "string",
+                  "desc": "Branch containing changes"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "title",
+                  "type": "string",
+                  "desc": "PR title"
+                },
+                {
+                  "name": "body",
+                  "type": "string",
+                  "desc": "PR description",
+                  "optional": true
+                },
+                {
+                  "name": "draft",
+                  "type": "boolean",
+                  "desc": "Create as draft PR",
+                  "optional": true
+                },
+                {
+                  "name": "maintainer_can_modify",
+                  "type": "boolean",
+                  "desc": "Allow maintainer edits",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Open new pull request"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "create_repository",
+              "description": "Create a new GitHub repository in your account or specified organization",
+              "arguments": [
+                {
+                  "name": "name",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "autoInit",
+                  "type": "boolean",
+                  "desc": "Initialize with README",
+                  "optional": true
+                },
+                {
+                  "name": "description",
+                  "type": "string",
+                  "desc": "Repository description",
+                  "optional": true
+                },
+                {
+                  "name": "organization",
+                  "type": "string",
+                  "desc": "Organization to create the repository in (omit to create in your personal account)",
+                  "optional": true
+                },
+                {
+                  "name": "private",
+                  "type": "boolean",
+                  "desc": "Whether repo should be private",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Create repository"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "delete_file",
+              "description": "Delete a file from a GitHub repository",
+              "arguments": [
+                {
+                  "name": "branch",
+                  "type": "string",
+                  "desc": "Branch to delete the file from"
+                },
+                {
+                  "name": "message",
+                  "type": "string",
+                  "desc": "Commit message"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner (username or organization)"
+                },
+                {
+                  "name": "path",
+                  "type": "string",
+                  "desc": "Path to the file to delete"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                }
+              ],
+              "annotations": {
+                "title": "Delete file",
+                "destructiveHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "fork_repository",
+              "description": "Fork a GitHub repository to your account or specified organization",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "organization",
+                  "type": "string",
+                  "desc": "Organization to fork to",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Fork repository"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "get_commit",
+              "description": "Get details for a commit from a GitHub repository",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "sha",
+                  "type": "string",
+                  "desc": "Commit SHA, branch name, or tag name"
+                },
+                {
+                  "name": "include_diff",
+                  "type": "boolean",
+                  "desc": "Whether to include file diffs and stats in the response. Default is true.",
+                  "optional": true
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Get commit details",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "get_file_contents",
+              "description": "Get the contents of a file or directory from a GitHub repository",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner (username or organization)"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "path",
+                  "type": "string",
+                  "desc": "Path to file/directory (directories must end with a slash '/')",
+                  "optional": true
+                },
+                {
+                  "name": "ref",
+                  "type": "string",
+                  "desc": "Accepts optional git refs such as `refs/tags/{tag}`, `refs/heads/{branch}` or `refs/pull/{pr_number}/head`",
+                  "optional": true
+                },
+                {
+                  "name": "sha",
+                  "type": "string",
+                  "desc": "Accepts optional commit SHA. If specified, it will be used instead of ref",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Get file or directory contents",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "get_label",
+              "description": "Get a specific label from a repository.",
+              "arguments": [
+                {
+                  "name": "name",
+                  "type": "string",
+                  "desc": "Label name."
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner (username or organization name)"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                }
+              ],
+              "annotations": {
+                "title": "Get a specific label from a repository.",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "get_latest_release",
+              "description": "Get the latest release in a GitHub repository",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                }
+              ],
+              "annotations": {
+                "title": "Get latest release",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "get_me",
+              "description": "Get details of the authenticated GitHub user. Use this when a request is about the user's own profile for GitHub. Or when information is missing to build other tool calls.",
+              "arguments": [],
+              "annotations": {
+                "title": "Get my user profile",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "get_release_by_tag",
+              "description": "Get a specific release by its tag name in a GitHub repository",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "tag",
+                  "type": "string",
+                  "desc": "Tag name (e.g., 'v1.0.0')"
+                }
+              ],
+              "annotations": {
+                "title": "Get a release by tag name",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "get_tag",
+              "description": "Get details about a specific git tag in a GitHub repository",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "tag",
+                  "type": "string",
+                  "desc": "Tag name"
+                }
+              ],
+              "annotations": {
+                "title": "Get tag details",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "get_team_members",
+              "description": "Get member usernames of a specific team in an organization. Limited to organizations accessible with current credentials",
+              "arguments": [
+                {
+                  "name": "org",
+                  "type": "string",
+                  "desc": "Organization login (owner) that contains the team."
+                },
+                {
+                  "name": "team_slug",
+                  "type": "string",
+                  "desc": "Team slug"
+                }
+              ],
+              "annotations": {
+                "title": "Get team members",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "get_teams",
+              "description": "Get details of the teams the user is a member of. Limited to organizations accessible with current credentials",
+              "arguments": [
+                {
+                  "name": "user",
+                  "type": "string",
+                  "desc": "Username to get teams for. If not provided, uses the authenticated user.",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Get teams",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "issue_read",
+              "description": "Get information about a specific issue in a GitHub repository.",
+              "arguments": [
+                {
+                  "name": "issue_number",
+                  "type": "number",
+                  "desc": "The number of the issue"
+                },
+                {
+                  "name": "method",
+                  "type": "string",
+                  "desc": "The read operation to perform on a single issue.\nOptions are:\n1. get - Get details of a specific issue.\n2. get_comments - Get issue comments.\n3. get_sub_issues - Get sub-issues of the issue.\n4. get_labels - Get labels assigned to the issue.\n"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "The owner of the repository"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "The name of the repository"
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Get issue details",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "issue_write",
+              "description": "Create a new or update an existing issue in a GitHub repository.",
+              "arguments": [
+                {
+                  "name": "method",
+                  "type": "string",
+                  "desc": "Write operation to perform on a single issue.\nOptions are:\n- 'create' - creates a new issue.\n- 'update' - updates an existing issue.\n"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "assignees",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "desc": "Usernames to assign to this issue",
+                  "optional": true
+                },
+                {
+                  "name": "body",
+                  "type": "string",
+                  "desc": "Issue body content",
+                  "optional": true
+                },
+                {
+                  "name": "duplicate_of",
+                  "type": "number",
+                  "desc": "Issue number that this issue is a duplicate of. Only used when state_reason is 'duplicate'.",
+                  "optional": true
+                },
+                {
+                  "name": "issue_number",
+                  "type": "number",
+                  "desc": "Issue number to update",
+                  "optional": true
+                },
+                {
+                  "name": "labels",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "desc": "Labels to apply to this issue",
+                  "optional": true
+                },
+                {
+                  "name": "milestone",
+                  "type": "number",
+                  "desc": "Milestone number",
+                  "optional": true
+                },
+                {
+                  "name": "state",
+                  "type": "string",
+                  "desc": "New state",
+                  "optional": true
+                },
+                {
+                  "name": "state_reason",
+                  "type": "string",
+                  "desc": "Reason for the state change. Ignored unless state is changed.",
+                  "optional": true
+                },
+                {
+                  "name": "title",
+                  "type": "string",
+                  "desc": "Issue title",
+                  "optional": true
+                },
+                {
+                  "name": "type",
+                  "type": "string",
+                  "desc": "Type of this issue. Only use if the repository has issue types configured. Use list_issue_types tool to get valid type values for the organization. If the repository doesn't support issue types, omit this parameter.",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Create or update issue."
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "list_branches",
+              "description": "List branches in a GitHub repository",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "List branches",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "list_commits",
+              "description": "Get list of commits of a branch in a GitHub repository. Returns at least 30 results per page by default, but can return more if specified using the perPage parameter (up to 100).",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "author",
+                  "type": "string",
+                  "desc": "Author username or email address to filter commits by",
+                  "optional": true
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                },
+                {
+                  "name": "sha",
+                  "type": "string",
+                  "desc": "Commit SHA, branch or tag name to list commits of. If not provided, uses the default branch of the repository. If a commit SHA is provided, will list commits up to that SHA.",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "List commits",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "list_issue_types",
+              "description": "List supported issue types for repository owner (organization).",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "The organization owner of the repository"
+                }
+              ],
+              "annotations": {
+                "title": "List available issue types",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "list_issues",
+              "description": "List issues in a GitHub repository. For pagination, use the 'endCursor' from the previous response's 'pageInfo' in the 'after' parameter.",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "after",
+                  "type": "string",
+                  "desc": "Cursor for pagination. Use the endCursor from the previous page's PageInfo for GraphQL APIs.",
+                  "optional": true
+                },
+                {
+                  "name": "direction",
+                  "type": "string",
+                  "desc": "Order direction. If provided, the 'orderBy' also needs to be provided.",
+                  "optional": true
+                },
+                {
+                  "name": "labels",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "desc": "Filter by labels",
+                  "optional": true
+                },
+                {
+                  "name": "orderBy",
+                  "type": "string",
+                  "desc": "Order issues by field. If provided, the 'direction' also needs to be provided.",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                },
+                {
+                  "name": "since",
+                  "type": "string",
+                  "desc": "Filter by date (ISO 8601 timestamp)",
+                  "optional": true
+                },
+                {
+                  "name": "state",
+                  "type": "string",
+                  "desc": "Filter by state, by default both open and closed issues are returned when not provided",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "List issues",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "list_pull_requests",
+              "description": "List pull requests in a GitHub repository. If the user specifies an author, then DO NOT use this tool and use the search_pull_requests tool instead.",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "base",
+                  "type": "string",
+                  "desc": "Filter by base branch",
+                  "optional": true
+                },
+                {
+                  "name": "direction",
+                  "type": "string",
+                  "desc": "Sort direction",
+                  "optional": true
+                },
+                {
+                  "name": "head",
+                  "type": "string",
+                  "desc": "Filter by head user/org and branch",
+                  "optional": true
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                },
+                {
+                  "name": "sort",
+                  "type": "string",
+                  "desc": "Sort by",
+                  "optional": true
+                },
+                {
+                  "name": "state",
+                  "type": "string",
+                  "desc": "Filter by state",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "List pull requests",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "list_releases",
+              "description": "List releases in a GitHub repository",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "List releases",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "list_tags",
+              "description": "List git tags in a GitHub repository",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "List tags",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "merge_pull_request",
+              "description": "Merge a pull request in a GitHub repository.",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "pullNumber",
+                  "type": "number",
+                  "desc": "Pull request number"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "commit_message",
+                  "type": "string",
+                  "desc": "Extra detail for merge commit",
+                  "optional": true
+                },
+                {
+                  "name": "commit_title",
+                  "type": "string",
+                  "desc": "Title for merge commit",
+                  "optional": true
+                },
+                {
+                  "name": "merge_method",
+                  "type": "string",
+                  "desc": "Merge method",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Merge pull request"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "pull_request_read",
+              "description": "Get information on a specific pull request in GitHub repository.",
+              "arguments": [
+                {
+                  "name": "method",
+                  "type": "string",
+                  "desc": "Action to specify what pull request data needs to be retrieved from GitHub. \nPossible options: \n 1. get - Get details of a specific pull request.\n 2. get_diff - Get the diff of a pull request.\n 3. get_status - Get status of a head commit in a pull request. This reflects status of builds and checks.\n 4. get_files - Get the list of files changed in a pull request. Use with pagination parameters to control the number of results returned.\n 5. get_review_comments - Get the review comments on a pull request. They are comments made on a portion of the unified diff during a pull request review. Use with pagination parameters to control the number of results returned.\n 6. get_reviews - Get the reviews on a pull request. When asked for review comments, use get_review_comments method.\n 7. get_comments - Get comments on a pull request. Use this if user doesn't specifically want review comments. Use with pagination parameters to control the number of results returned.\n"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "pullNumber",
+                  "type": "number",
+                  "desc": "Pull request number"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Get details for a single pull request",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "pull_request_review_write",
+              "description": "Create and/or submit, delete review of a pull request.\n\nAvailable methods:\n- create: Create a new review of a pull request. If \"event\" parameter is provided, the review is submitted. If \"event\" is omitted, a pending review is created.\n- submit_pending: Submit an existing pending review of a pull request. This requires that a pending review exists for the current user on the specified pull request. The \"body\" and \"event\" parameters are used when submitting the review.\n- delete_pending: Delete an existing pending review of a pull request. This requires that a pending review exists for the current user on the specified pull request.",
+              "arguments": [
+                {
+                  "name": "method",
+                  "type": "string",
+                  "desc": "The write operation to perform on pull request review."
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "pullNumber",
+                  "type": "number",
+                  "desc": "Pull request number"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "body",
+                  "type": "string",
+                  "desc": "Review comment text",
+                  "optional": true
+                },
+                {
+                  "name": "commitID",
+                  "type": "string",
+                  "desc": "SHA of commit to review",
+                  "optional": true
+                },
+                {
+                  "name": "event",
+                  "type": "string",
+                  "desc": "Review action to perform.",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Write operations (create, submit, delete) on pull request reviews."
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "push_files",
+              "description": "Push multiple files to a GitHub repository in a single commit",
+              "arguments": [
+                {
+                  "name": "branch",
+                  "type": "string",
+                  "desc": "Branch to push to"
+                },
+                {
+                  "name": "files",
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  },
+                  "desc": "Array of file objects to push, each object with path (string) and content (string)"
+                },
+                {
+                  "name": "message",
+                  "type": "string",
+                  "desc": "Commit message"
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                }
+              ],
+              "annotations": {
+                "title": "Push files to repository"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "request_copilot_review",
+              "description": "Request a GitHub Copilot code review for a pull request. Use this for automated feedback on pull requests, usually before requesting a human reviewer.",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "pullNumber",
+                  "type": "number",
+                  "desc": "Pull request number"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                }
+              ],
+              "annotations": {
+                "title": "Request Copilot review"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "search_code",
+              "description": "Fast and precise code search across ALL GitHub repositories using GitHub's native search engine. Best for finding exact symbols, functions, classes, or specific code patterns.",
+              "arguments": [
+                {
+                  "name": "query",
+                  "type": "string",
+                  "desc": "Search query using GitHub's powerful code search syntax. Examples: 'content:Skill language:Java org:github', 'NOT is:archived language:Python OR language:go', 'repo:github/github-mcp-server'. Supports exact matching, language filters, path filters, and more."
+                },
+                {
+                  "name": "order",
+                  "type": "string",
+                  "desc": "Sort order for results",
+                  "optional": true
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                },
+                {
+                  "name": "sort",
+                  "type": "string",
+                  "desc": "Sort field ('indexed' only)",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Search code",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "search_issues",
+              "description": "Search for issues in GitHub repositories using issues search syntax already scoped to is:issue",
+              "arguments": [
+                {
+                  "name": "query",
+                  "type": "string",
+                  "desc": "Search query using GitHub issues search syntax"
+                },
+                {
+                  "name": "order",
+                  "type": "string",
+                  "desc": "Sort order",
+                  "optional": true
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Optional repository owner. If provided with repo, only issues for this repository are listed.",
+                  "optional": true
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Optional repository name. If provided with owner, only issues for this repository are listed.",
+                  "optional": true
+                },
+                {
+                  "name": "sort",
+                  "type": "string",
+                  "desc": "Sort field by number of matches of categories, defaults to best match",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Search issues",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "search_pull_requests",
+              "description": "Search for pull requests in GitHub repositories using issues search syntax already scoped to is:pr",
+              "arguments": [
+                {
+                  "name": "query",
+                  "type": "string",
+                  "desc": "Search query using GitHub pull request search syntax"
+                },
+                {
+                  "name": "order",
+                  "type": "string",
+                  "desc": "Sort order",
+                  "optional": true
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Optional repository owner. If provided with repo, only pull requests for this repository are listed.",
+                  "optional": true
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Optional repository name. If provided with owner, only pull requests for this repository are listed.",
+                  "optional": true
+                },
+                {
+                  "name": "sort",
+                  "type": "string",
+                  "desc": "Sort field by number of matches of categories, defaults to best match",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Search pull requests",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "search_repositories",
+              "description": "Find GitHub repositories by name, description, readme, topics, or other metadata. Perfect for discovering projects, finding examples, or locating specific repositories across GitHub.",
+              "arguments": [
+                {
+                  "name": "query",
+                  "type": "string",
+                  "desc": "Repository search query. Examples: 'machine learning in:name stars:\u003e1000 language:python', 'topic:react', 'user:facebook'. Supports advanced search syntax for precise filtering."
+                },
+                {
+                  "name": "minimal_output",
+                  "type": "boolean",
+                  "desc": "Return minimal repository information (default: true). When false, returns full GitHub API repository objects.",
+                  "optional": true
+                },
+                {
+                  "name": "order",
+                  "type": "string",
+                  "desc": "Sort order",
+                  "optional": true
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                },
+                {
+                  "name": "sort",
+                  "type": "string",
+                  "desc": "Sort repositories by field, defaults to best match",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Search repositories",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "search_users",
+              "description": "Find GitHub users by username, real name, or other profile information. Useful for locating developers, contributors, or team members.",
+              "arguments": [
+                {
+                  "name": "query",
+                  "type": "string",
+                  "desc": "User search query. Examples: 'john smith', 'location:seattle', 'followers:\u003e100'. Search is automatically scoped to type:user."
+                },
+                {
+                  "name": "order",
+                  "type": "string",
+                  "desc": "Sort order",
+                  "optional": true
+                },
+                {
+                  "name": "page",
+                  "type": "number",
+                  "desc": "Page number for pagination (min 1)",
+                  "optional": true
+                },
+                {
+                  "name": "perPage",
+                  "type": "number",
+                  "desc": "Results per page for pagination (min 1, max 100)",
+                  "optional": true
+                },
+                {
+                  "name": "sort",
+                  "type": "string",
+                  "desc": "Sort users by number of followers or repositories, or when the person joined GitHub.",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Search users",
+                "readOnlyHint": true
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "sub_issue_write",
+              "description": "Add a sub-issue to a parent issue in a GitHub repository.",
+              "arguments": [
+                {
+                  "name": "issue_number",
+                  "type": "number",
+                  "desc": "The number of the parent issue"
+                },
+                {
+                  "name": "method",
+                  "type": "string",
+                  "desc": "The action to perform on a single sub-issue\nOptions are:\n- 'add' - add a sub-issue to a parent issue in a GitHub repository.\n- 'remove' - remove a sub-issue from a parent issue in a GitHub repository.\n- 'reprioritize' - change the order of sub-issues within a parent issue in a GitHub repository. Use either 'after_id' or 'before_id' to specify the new position.\n                "
+                },
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "sub_issue_id",
+                  "type": "number",
+                  "desc": "The ID of the sub-issue to add. ID is not the same as issue number"
+                },
+                {
+                  "name": "after_id",
+                  "type": "number",
+                  "desc": "The ID of the sub-issue to be prioritized after (either after_id OR before_id should be specified)",
+                  "optional": true
+                },
+                {
+                  "name": "before_id",
+                  "type": "number",
+                  "desc": "The ID of the sub-issue to be prioritized before (either after_id OR before_id should be specified)",
+                  "optional": true
+                },
+                {
+                  "name": "replace_parent",
+                  "type": "boolean",
+                  "desc": "When true, replaces the sub-issue's current parent issue. Use with 'add' method only.",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Change sub-issue"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "update_pull_request",
+              "description": "Update an existing pull request in a GitHub repository.",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "pullNumber",
+                  "type": "number",
+                  "desc": "Pull request number to update"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "base",
+                  "type": "string",
+                  "desc": "New base branch name",
+                  "optional": true
+                },
+                {
+                  "name": "body",
+                  "type": "string",
+                  "desc": "New description",
+                  "optional": true
+                },
+                {
+                  "name": "draft",
+                  "type": "boolean",
+                  "desc": "Mark pull request as draft (true) or ready for review (false)",
+                  "optional": true
+                },
+                {
+                  "name": "maintainer_can_modify",
+                  "type": "boolean",
+                  "desc": "Allow maintainer edits",
+                  "optional": true
+                },
+                {
+                  "name": "reviewers",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "desc": "GitHub usernames to request reviews from",
+                  "optional": true
+                },
+                {
+                  "name": "state",
+                  "type": "string",
+                  "desc": "New state",
+                  "optional": true
+                },
+                {
+                  "name": "title",
+                  "type": "string",
+                  "desc": "New title",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Edit pull request"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            },
+            {
+              "name": "update_pull_request_branch",
+              "description": "Update the branch of a pull request with the latest changes from the base branch.",
+              "arguments": [
+                {
+                  "name": "owner",
+                  "type": "string",
+                  "desc": "Repository owner"
+                },
+                {
+                  "name": "pullNumber",
+                  "type": "number",
+                  "desc": "Pull request number"
+                },
+                {
+                  "name": "repo",
+                  "type": "string",
+                  "desc": "Repository name"
+                },
+                {
+                  "name": "expectedHeadSha",
+                  "type": "string",
+                  "desc": "The expected SHA of the pull request's HEAD ref",
+                  "optional": true
+                }
+              ],
+              "annotations": {
+                "title": "Update pull request branch"
+              },
+              "container": {
+                "image": "",
+                "command": null,
+                "volumes": null
+              },
+              "parameters": {
+                "type": "",
+                "properties": null,
+                "required": null
+              }
+            }
+          ],
+          "metadata": {
+            "githubStars": 32938,
+            "category": "devops",
+            "tags": [
+              "github",
+              "devops"
+            ],
+            "license": "MIT License",
+            "owner": "github"
+          }
+        }
+      }
+    }
+  ],
+  "secrets": {
+    "default": {
+      "provider": "docker-desktop-store"
+    }
+  }
+}

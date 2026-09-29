@@ -10,6 +10,7 @@ export enum PATHS {
   TEST_SCENARIO_NEW = '/test-scenarios/new',
   TEST_SCENARIO_DETAILS = '/test-scenarios/:scenarioId',
   TEST_SCENARIO_EDIT = '/test-scenarios/:scenarioId/edit',
+  MANUAL_TEST_RUN_DETAILS = '/manual-test-runs/:runId',
   SKILLS = '/skills',
   SKILL_DETAILS = '/skills/:id',
   LOGIN = '/login',
