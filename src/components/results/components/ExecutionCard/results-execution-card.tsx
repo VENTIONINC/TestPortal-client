@@ -222,13 +222,7 @@ export const ResultsExecutionCard = memo(
                     </HStack>
                   )}
 
-                {errors.map((resultError) => (
-                  <InlineIssue
-                    key={resultError.id}
-                    resultError={resultError}
-                    projectId={projectId}
-                  />
-                ))}
+                {errors[0] && <InlineIssue resultError={errors[0]} projectId={projectId} />}
 
                 <ContextMenuButton
                   onClick={(evt) =>
