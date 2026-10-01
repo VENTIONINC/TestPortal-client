@@ -116,7 +116,7 @@ export const SourceSnippet = ({ snippet }: { snippet: SourceSnippetData }) => {
       </Flex>
       <Box role="region" aria-label="Snippet content" tabIndex={0} py={3} overflow="auto" fontFamily="mono" fontSize="xs">
         {lines.map((line, index) => {
-          const lineNumber = snippet.startLine + index;
+          const lineNumber = snippet.failingLine + index;
           return <SourceLine key={`${lineNumber}-${index}`} line={line} failing={lineNumber === snippet.failingLine} />;
         })}
       </Box>
