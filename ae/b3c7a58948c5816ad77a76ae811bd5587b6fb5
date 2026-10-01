@@ -1,0 +1,169 @@
+openspec/changes/adopt-readable-test-management-keys/.openspec.yaml
+  s_23859b55c5b7a4::t_d9248e7be4ed2c 1-2
+openspec/changes/adopt-readable-test-management-keys/proposal.md
+  s_efb8127749afd1::t_c5f29b98d99638 1-31
+openspec/changes/show-related-scenarios-in-result-modal/.openspec.yaml
+  s_f59f6e3a14953b::t_68d741042c43cf 1-2
+openspec/changes/show-related-scenarios-in-result-modal/design.md
+  s_f59f6e3a14953b::t_d1923662c7b893 1-44
+openspec/changes/show-related-scenarios-in-result-modal/proposal.md
+  s_f59f6e3a14953b::t_ab48b68bd63599 1-26
+openspec/changes/show-related-scenarios-in-result-modal/specs/result-scenario-modal/spec.md
+  s_f59f6e3a14953b::t_f9ba4acfa75c13 1-66
+openspec/changes/show-related-scenarios-in-result-modal/specs/test-scenario-authoring/spec.md
+  s_f59f6e3a14953b::t_24a1237b2233cf 1-18
+openspec/changes/show-related-scenarios-in-result-modal/tasks.md
+  s_f59f6e3a14953b::t_9f0593383a3a8b 1-18
+package.json
+  s_f59f6e3a14953b::t_97e76db0749353 19
+rtk-query-result-detail-codegen.config.cjs
+  s_f59f6e3a14953b::t_737acb30a5893d 1-10
+scripts/generate-result-detail-api.cjs
+  s_f59f6e3a14953b::t_9e02053c1ba6a2 1-53
+src/__tests__/components/manual-test-runs/ManualTestRunDetailsView.test.tsx
+  s_5261ad0776b2dd::t_efbe631eab64aa 4,46-47,116-117,124-260,385,522
+src/__tests__/components/results/assign-issue-modal/AssignIssueModalEvidenceTabs.test.tsx
+  s_f59f6e3a14953b::t_2415d62c56df60 1-114
+src/__tests__/components/test-scenarios/TestScenarioCatalogBoundary.test.tsx
+  s_5d078bc1eac805::t_3f6ae5b74a334e 43
+src/__tests__/components/test-scenarios/TestScenarioCatalogContainer.test.tsx
+  s_5d078bc1eac805::t_efd199c8e25eaa 51
+src/__tests__/redux/apis/testScenarioApi.test.ts
+  s_5d078bc1eac805::t_4ceace2b882342 41,62
+src/components/manual-test-runs/components/index.ts
+  s_5d078bc1eac805::t_69e7b8fa9ed8d1 8
+src/components/results/assign-issue-modal/AssignIssueModal.tsx
+  s_f59f6e3a14953b::t_c63c6d1a648439 59,173,428-434,438,442-443,464,477-483
+src/redux/apis/generatedResultDetailApi.ts
+  s_f59f6e3a14953b::t_034c166cb0d8d2 1-114
+src/schemas/testScenarioSchemas.ts
+  s_5d078bc1eac805::t_48bc3aaf5e75a6 6-12,14
+openspec/changes/add-manual-test-run-execution/specs/manual-test-run-execution/spec.md
+  s_f59f6e3a14953b::t_964ab5cd510080 9,14,90
+openspec/changes/add-manual-test-run-history-and-retest/specs/manual-test-run-history/spec.md
+  s_f59f6e3a14953b::t_da6c70e4ef043d 100,104
+openspec/changes/adopt-readable-test-management-keys/design.md
+  s_f59f6e3a14953b::t_3afee3ec2882c5 1-84
+openspec/changes/adopt-readable-test-management-keys/specs/readable-test-management-keys/spec.md
+  s_f59f6e3a14953b::t_f3b99d89a229a3 1-138
+openspec/changes/adopt-readable-test-management-keys/specs/test-scenario-catalog/spec.md
+  s_f59f6e3a14953b::t_3e4e3cab00f9a0 1-30
+openspec/changes/adopt-readable-test-management-keys/tasks.md
+  s_5261ad0776b2dd::t_8c4e0e82c1fe5a 1-44
+src/__tests__/components/manual-test-runs/ManualTestRunDetailContainer.test.tsx
+  s_5261ad0776b2dd::t_c48f2d8411d326 21-22,63-65,68,72,75,82-83,103-104,120,126-143
+src/__tests__/components/manual-test-runs/ManualTestRunHistoryView.test.tsx
+  s_5261ad0776b2dd::t_9f349ebca0a167 4,28-29,46,54-55,78-88,99-135
+src/__tests__/components/manual-test-runs/RunKeyStartDialog.test.tsx
+  s_f59f6e3a14953b::t_abe37e049f94b6 1-90
+src/__tests__/components/manual-test-runs/useManualTestRunHistory.test.tsx
+  s_f59f6e3a14953b::t_6f2f4c86643584 1-79
+src/__tests__/components/results/assign-issue-modal/ResultRelatedScenarios.test.tsx
+  s_5261ad0776b2dd::t_c08cc8b272fb8d 1-186
+src/__tests__/components/test-scenarios/TestScenarioCatalogView.test.tsx
+  s_f59f6e3a14953b::t_7dc258a04c05cd 21,82,84,94,112,115,126
+src/__tests__/components/test-scenarios/TestScenarioDetailBoundary.test.tsx
+  s_f59f6e3a14953b::t_99eb97f32a4f4a 20,57
+src/__tests__/components/test-scenarios/TestScenarioDetailContainer.test.tsx
+  s_5261ad0776b2dd::t_5e6972f56ec590 4,10,24,66,70,91,99,110-125,196-197,207-235,242,248-298
+src/__tests__/components/test-scenarios/TestScenarioEditContainer.test.tsx
+  s_f59f6e3a14953b::t_0f28299937185b 17,45-48,61,118,131,197,203
+src/__tests__/components/test-scenarios/TestScenarioForm.test.tsx
+  s_f59f6e3a14953b::t_2579221ce36173 12,34-43,46-51,61,81,158,165
+src/__tests__/components/test-scenarios/TestScenarioStepsEditor.test.tsx
+  s_5261ad0776b2dd::t_d19799ad5bf20b 46
+src/__tests__/components/test-scenarios/testScenarioPatch.test.ts
+  s_f59f6e3a14953b::t_b1b9e3cc0f40c9 38-58,64,66
+src/__tests__/components/test-scenarios/useTestScenarioDetail.test.tsx
+  s_f59f6e3a14953b::t_2903862c532499 22,66-90
+src/__tests__/schemas/testScenarioSchemas.test.ts
+  s_f59f6e3a14953b::t_9754cc0c986b8d 18,29,47-62
+src/components/manual-test-runs/components/ManualTestRunDetailsView.tsx
+  s_f59f6e3a14953b::t_6a72d21a013722 10,115,179-182,196-203,275-310,313-318,335-341,425-431
+src/components/manual-test-runs/components/ManualTestRunHistoryView.tsx
+  s_f59f6e3a14953b::t_296b65f1668e0d 57-58,70-72,115-116,118,125,129-130,134,140-141,145-146,148,163,178
+src/components/manual-test-runs/components/RunKeyStartDialog.tsx
+  s_5261ad0776b2dd::t_fd8a6d9b232361 1-116
+src/components/manual-test-runs/containers/ManualTestRunDetailContainer.tsx
+  s_f59f6e3a14953b::t_4f74eb87b4b454 8,27,30-32,35-36,50-66,72-91,100,105,108-109,141,158,164-180
+src/components/manual-test-runs/containers/ManualTestRunHistoryContainer.tsx
+  s_f59f6e3a14953b::t_ad7b1e3c4cd425 48-49
+src/components/manual-test-runs/hooks/useManualTestRunExecution.ts
+  s_f59f6e3a14953b::t_7aa7c76b0a225c 11,22,28,34,61,64-66,70,74,77,84,103,110-113,124,138,140-141,149,155,174-175,186,192,200-206,210,212-216,223,240,243-249,270,308-316,391-446,527-535,552,558-579,598,602,609,616-625,704-706,722,725-727,731,735,738,745
+src/components/manual-test-runs/hooks/useManualTestRunHistory.ts
+  s_5261ad0776b2dd::t_b1d99b62a0df5e 7,34,41,44,62,64-72,76,86,95-99,106-108,110,112,118,122-127,130,147,150,154,157
+src/components/manual-test-runs/utils.ts
+  s_f59f6e3a14953b::t_e140881273caf0 38-48
+src/components/manual-test-runs/utils/history.ts
+  s_f59f6e3a14953b::t_3fb7211b528735 20,28,64
+src/components/results/assign-issue-modal/ResultRelatedScenarios.tsx
+  s_f59f6e3a14953b::t_4444fd6a5de059 1-160
+src/components/test-scenarios/components/TestScenarioCatalogView.tsx
+  s_f59f6e3a14953b::t_55e97cdb7017ca 32,35,65-67,100,103,115-117
+src/components/test-scenarios/components/TestScenarioDetailsView.tsx
+  s_f59f6e3a14953b::t_18b292053389ef 4,17,55-58,62-68
+src/components/test-scenarios/components/TestScenarioForm.tsx
+  s_f59f6e3a14953b::t_dfb8e07cbb1317 45,66,76,101,111,120-129,266-274,277
+src/components/test-scenarios/containers/TestScenarioCreateContainer.tsx
+  s_f59f6e3a14953b::t_35e2c3c6c34135 24
+src/components/test-scenarios/containers/TestScenarioDetailContainer.tsx
+  s_f59f6e3a14953b::t_46e5f78abd931a 8,31-33,35-36,51-86,91-92,98,102-103,121-155
+src/components/test-scenarios/containers/TestScenarioEditContainer.tsx
+  s_f59f6e3a14953b::t_8dac617a67aac8 10
+src/components/test-scenarios/hooks/useTestScenarioDetail.ts
+  s_f59f6e3a14953b::t_08919cdfbc4ef9 21
+src/components/test-scenarios/types.ts
+  s_f59f6e3a14953b::t_7cecfbcbad700a 8
+src/redux/apis/extendedApi.ts
+  s_f59f6e3a14953b::t_cd6639d0e3493f 91,93-95,276
+src/redux/apis/generatedApi.ts
+  s_f59f6e3a14953b::t_947f55251dda35 1048,1189,1698-1699,1904-1914,2524,2545,2614,2633,2658-2659,2687-2690,2710,2713-2714,2722-2725,2752
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "aeb3c7a58948c5816ad77a76ae811bd5587b6fb5",
+  "prompts": {},
+  "sessions": {
+    "s_23859b55c5b7a4": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f6b2-792b-7c12-86a1-7cee9466919a",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_5261ad0776b2dd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f727-60f0-72e2-969d-cc2b38fda8df",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_5d078bc1eac805": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f6d8-0084-7060-a05d-ee06c3afde73",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_efb8127749afd1": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f6bc-41a8-78e0-8918-6c534ec4aae0",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_f59f6e3a14953b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f6ca-9eff-7a80-b6b7-feee75aa8760",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
