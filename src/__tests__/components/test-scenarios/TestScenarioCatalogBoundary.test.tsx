@@ -40,6 +40,7 @@ const createResponse = (projectId: string, page: number) => ({
       id: `${projectId}-scenario`,
       projectId,
       createdById: 'user-1',
+      scenarioKey: null,
       title: `${projectId} scenario`,
       details: `${projectId} details`,
       createdBy: { id: 'user-1', name: `${projectId} creator`, email: `${projectId}@example.com` },

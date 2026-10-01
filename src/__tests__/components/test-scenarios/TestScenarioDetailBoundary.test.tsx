@@ -13,11 +13,11 @@ import { useTestScenarioContextMenu } from '@/components/test-scenarios/hooks/us
 import {
   useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
   useGetApiV2TestScenariosByScenarioIdQuery,
-  usePatchApiV2TestScenariosByScenarioIdMutation,
   usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
   usePostApiV2TestScenariosByScenarioIdStepsMutation,
   usePutApiV2TestScenariosByScenarioIdStepsOrderMutation,
 } from '@/redux/apis/generatedApi';
+import { usePatchApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
 
 const routeParams = vi.hoisted(() => ({ scenarioId: 'scenario-1' as string | undefined }));
 const selectedProject = vi.hoisted(() => ({ id: 'project-a' }));
@@ -43,7 +43,6 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
   return {
     ...actual,
     useGetApiV2TestScenariosByScenarioIdQuery: vi.fn(),
-    usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn(),
     usePostApiV2TestScenariosByScenarioIdStepsMutation: vi.fn(),
     usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation: vi.fn(),
     useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation: vi.fn(),
@@ -55,6 +54,7 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
 
   return {
     ...actual,
+    usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn(),
     usePostApiV2TestScenariosByScenarioIdManualRunsMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
   };
 });

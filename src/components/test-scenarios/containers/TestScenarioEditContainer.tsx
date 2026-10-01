@@ -7,7 +7,7 @@ import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { useNavigate } from 'react-router';
 
 import { toaster } from '@/components/ui';
-import { usePatchApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/generatedApi';
+import { usePatchApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
 import { type TestScenarioAuthoringFormData } from '@/schemas';
 import { PATHS } from '@/types/paths';
 import { extractApiError } from '@/utils/apiErrors';

@@ -35,6 +35,17 @@ export const getManualTestRunNotePatchPayload = (
   return { notes: next };
 };
 
+export const normalizeManualTestRunKey = (value: string | null | undefined): string => value?.trim() ?? '';
+
+export const getManualTestRunKeyPatchPayload = (
+  draft: string | null | undefined,
+  saved: string | null | undefined,
+): ManualTestRunUpdateRequest | null => {
+  const next = normalizeManualTestRunKey(draft);
+  if (next === normalizeManualTestRunKey(saved)) return null;
+  return { runKey: next || null };
+};
+
 export const getManualTestRunStepPatchPayload = (
   draft: ManualTestRunStepDraft,
   saved: Pick<ManualTestRunStepRead, 'status' | 'notes'>,

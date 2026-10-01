@@ -19,6 +19,7 @@ const scenario: TestScenario = {
   id: 'scenario-1',
   projectId: 'project-1',
   createdById: 'user-1',
+  scenarioKey: null,
   title: 'Checkout flow',
   contentMd: '# Checkout flow',
   details: 'Original details',
@@ -61,5 +62,30 @@ describe('useTestScenarioDetail', () => {
     rerender();
 
     await waitFor(() => expect(result.current.scenario?.details).toBe('Updated details'));
+  });
+
+  it('refreshes a key-only response without changing the other persisted fields', async () => {
+    let response = scenario;
+    mockedDetailQuery.mockImplementation(
+      () =>
+        ({
+          data: response,
+          currentData: response,
+          isLoading: false,
+          isFetching: false,
+          error: undefined,
+          refetch: vi.fn(),
+        }) as never,
+    );
+
+    const { result, rerender } = renderHook(() => useTestScenarioDetail('project-1', 'scenario-1'));
+    await waitFor(() => expect(result.current.scenario?.scenarioKey).toBeNull());
+
+    response = { ...scenario, scenarioKey: 'R1' };
+    rerender();
+
+    await waitFor(() => expect(result.current.scenario?.scenarioKey).toBe('R1'));
+    expect(result.current.scenario?.details).toBe('Original details');
+    expect(result.current.scenario?.title).toBe('Checkout flow');
   });
 });

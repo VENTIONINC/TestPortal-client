@@ -88,7 +88,11 @@ const createSkillPackageFormData = ({
 
 export const extendedApi = generatedApi
   .enhanceEndpoints({
+    addTagTypes: ['Results'],
     endpoints: {
+      patchApiV2TestScenariosByScenarioId: {
+        invalidatesTags: ['Test Scenarios', 'Results'],
+      },
       postApiV2Assumptions: {
         invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
       },
@@ -269,6 +273,7 @@ export const extendedApi = generatedApi
   });
 
 export const {
+  usePatchApiV2TestScenariosByScenarioIdMutation,
   usePostApiV2AssumptionsMutation: useCreateAssumptionMutation,
   usePatchApiV2AssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
   useGetApiV2IssuesWithStatsQuery: useGetIssuesWithStatsQuery,

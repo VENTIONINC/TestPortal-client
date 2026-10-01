@@ -6,12 +6,12 @@ Enable testers to execute saved scenarios, persist observations and complete imm
 
 ### Requirement: Start a run from a saved scenario
 
-The system SHALL expose Start manual run on saved scenario detail, create a run in the selected project without identity or snapshot overrides, prevent duplicate pending starts and navigate only after confirmed success in the current scope.
+The system SHALL expose Start manual run on saved scenario detail and request an optional readable run key in an accessible confirmation dialog before creating the run. A blank key SHALL be omitted. Creation SHALL use the selected project without identity or snapshot overrides, prevent duplicate pending starts and navigate only after confirmed success in the current scope.
 
 #### Scenario: Start succeeds
 - **WHEN** the tester starts an available saved scenario
 - **THEN** the system SHALL create a run with server identity/timestamps, in_progress status and not_started steps
-- **AND** it SHALL open the returned run detail URL without a preliminary notes dialog
+- **AND** it SHALL open the returned run detail URL after the optional key dialog is confirmed
 
 #### Scenario: Start result is uncertain
 - **WHEN** a start fails without establishing whether the server created a run
@@ -87,7 +87,7 @@ The system SHALL confirm completion with an explicit passed, failed, blocked or 
 
 ### Requirement: Authoritative conflict and uncertain-result recovery
 
-The system SHALL refetch authoritative detail on 409 and before repeating an ambiguous completion. It SHALL NOT automatically replay starts/completions after ambiguous errors or rejected writes. Completed records SHALL remain immutable with no reopen action.
+The system SHALL refetch authoritative detail on 409 and before repeating an ambiguous completion. It SHALL NOT automatically replay starts/completions after ambiguous errors or rejected writes. Completed execution results and captured snapshots SHALL remain immutable with no reopen action; the authenticated executor MAY edit only the optional runKey metadata using a runKey-only PATCH, as specified by the readable-test-management-keys capability.
 
 #### Scenario: Conflict leaves the run active
 - **WHEN** a rejected write returns 409 and refreshed detail remains in_progress
