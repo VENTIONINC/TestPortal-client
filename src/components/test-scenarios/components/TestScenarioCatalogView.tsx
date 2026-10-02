@@ -29,9 +29,10 @@ const LoadingState = () => (
   <VStack align="stretch" gap={4} aria-label="Loading Test Scenarios">
     <Text color="text.secondary">Loading Test Scenarios...</Text>
     <Box overflowX="auto">
-      <Table.Root size="sm" variant="outline" minW="960px">
+      <Table.Root size="sm" variant="outline" minW="1040px">
         <Table.Header>
           <Table.Row>
+            <Table.ColumnHeader {...TABLE_CELL_PADDING}>Scenario key</Table.ColumnHeader>
             <Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader>
             <Table.ColumnHeader {...TABLE_CELL_PADDING}>Details</Table.ColumnHeader>
             <Table.ColumnHeader {...TABLE_CELL_PADDING}>Created by</Table.ColumnHeader>
@@ -43,6 +44,9 @@ const LoadingState = () => (
         <Table.Body>
           {[1, 2, 3].map((index) => (
             <Table.Row key={index}>
+              <Table.Cell {...TABLE_CELL_PADDING}>
+                <Skeleton h="5" loading={true} />
+              </Table.Cell>
               <Table.Cell {...TABLE_CELL_PADDING}>
                 <Skeleton h="5" loading={true} />
               </Table.Cell>
@@ -93,9 +97,10 @@ const ScenarioTable = ({
   onContextMenu?: TestScenarioCatalogViewProps['onContextMenu'];
 }) => (
   <Box overflowX="auto">
-    <Table.Root size="sm" variant="outline" minW="960px">
+    <Table.Root size="sm" variant="outline" minW="1040px">
       <Table.Header>
         <Table.Row>
+          <Table.ColumnHeader {...TABLE_CELL_PADDING}>Scenario key</Table.ColumnHeader>
           <Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader>
           <Table.ColumnHeader {...TABLE_CELL_PADDING}>Details</Table.ColumnHeader>
           <Table.ColumnHeader {...TABLE_CELL_PADDING}>Created by</Table.ColumnHeader>
@@ -107,6 +112,9 @@ const ScenarioTable = ({
       <Table.Body>
         {scenarios.map((scenario) => (
           <Table.Row key={scenario.id} data-testid={`test-scenario-${scenario.id}`}>
+            <Table.Cell {...TABLE_CELL_PADDING} maxW="180px" whiteSpace="pre-wrap" overflowWrap="anywhere">
+              {scenario.scenarioKey ?? 'N/A'}
+            </Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING}>
               <ChakraLink asChild fontWeight="medium" color="text.main">
                 <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>

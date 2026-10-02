@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
@@ -25,6 +25,8 @@ const run: ManualTestRunSummaryRead = {
   id: 'run-1',
   projectId: 'project-1',
   sourceTestScenarioId: 'scenario-1',
+  runKey: null,
+  sourceScenarioKey: null,
   testScenarioId: null,
   executedById: null,
   executedBy: null,
@@ -41,7 +43,7 @@ const defaultProps: ManualTestRunHistoryViewProps = {
   isLoading: false,
   isFetching: false,
   isNotFound: false,
-  filters: { status: '', sourceTestScenarioId: '', startedOnOrAfter: '', startedOnOrBefore: '' },
+  filters: { status: '', sourceTestScenarioId: '', sourceScenarioKey: '', startedOnOrAfter: '', startedOnOrBefore: '' },
   dateError: undefined,
   isFiltered: false,
   isProjectHistory: true,
@@ -49,6 +51,8 @@ const defaultProps: ManualTestRunHistoryViewProps = {
   onSourceChange: vi.fn(),
   onStartDateChange: vi.fn(),
   onEndDateChange: vi.fn(),
+  onSourceKeyChange: vi.fn(),
+  onApplyFilters: vi.fn(),
   onClearFilters: vi.fn(),
   onPageChange: vi.fn(),
   onRetry: vi.fn(),
@@ -71,6 +75,17 @@ describe('ManualTestRunHistoryView', () => {
     renderView({ onPageChange });
 
     expect(screen.getByText('Deleted source snapshot')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Run key' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Scenario key' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Source' })).toBeInTheDocument();
+    const headers = screen.getAllByRole('columnheader').map((header) => header.textContent);
+    expect(headers.indexOf('Run key')).toBe(0);
+    expect(headers.indexOf('Title')).toBe(1);
+    const row = screen.getByTestId<HTMLTableRowElement>('manual-test-run-run-1');
+    expect(row.cells[0]).toHaveTextContent('N/A');
+    expect(within(row.cells[1]).getByRole('link', { name: 'Deleted source snapshot' })).toBeInTheDocument();
+    expect(row.cells[3]).toHaveTextContent('N/A');
+    expect(within(row.cells[4]).getByText('Source deleted')).toBeInTheDocument();
     expect(screen.getByText('Source deleted')).toBeInTheDocument();
     expect(screen.getByText('Executor unavailable')).toBeInTheDocument();
     expect(screen.getAllByText('Not available')).toHaveLength(1);
@@ -79,6 +94,43 @@ describe('ManualTestRunHistoryView', () => {
 
     await user.click(screen.getByRole('button', { name: 'Next Page' }));
     expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
+  it('shows the project key filter and applies it explicitly', async () => {
+    const user = userEvent.setup();
+    const onSourceKeyChange = vi.fn();
+    const onApplyFilters = vi.fn();
+    renderView({ filters: { ...defaultProps.filters, sourceScenarioKey: ' R1 ' }, onSourceKeyChange, onApplyFilters });
+
+    await user.type(screen.getByRole('textbox', { name: 'Scenario key' }), 'X');
+    const infoIcon = screen.getByLabelText('Scenario key filter information');
+    await user.hover(infoIcon);
+    expect(infoIcon.parentElement).toHaveAttribute('title', 'Exact match, case-sensitive.');
+    expect(onSourceKeyChange).toHaveBeenCalled();
+    expect(onApplyFilters).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+    expect(onApplyFilters).toHaveBeenCalledOnce();
+  });
+
+  it('shows captured keys on historical rows while preserving UUID source history actions', async () => {
+    const user = userEvent.setup();
+    const onSourceHistory = vi.fn();
+    renderView({
+      onSourceHistory,
+      data: { runs: [{ ...run, runKey: 'RUN-2026-VERY-LONG-KEY', sourceScenarioKey: 'AUTH-LOGIN', testScenarioId: 'renamed-or-live' }], total: 1, page: 1, limit: 30, totalPages: 1 },
+    });
+
+    expect(screen.getByRole('columnheader', { name: 'Run key' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Scenario key' })).toBeInTheDocument();
+    expect(screen.getByText('RUN-2026-VERY-LONG-KEY')).toBeInTheDocument();
+    expect(screen.getByText('AUTH-LOGIN')).toBeInTheDocument();
+    const row = screen.getByTestId<HTMLTableRowElement>('manual-test-run-run-1');
+    expect(row.cells[0]).toHaveTextContent('RUN-2026-VERY-LONG-KEY');
+    expect(within(row.cells[1]).getByRole('link', { name: 'Deleted source snapshot' })).toBeInTheDocument();
+    expect(row.cells[3]).toHaveTextContent('AUTH-LOGIN');
+    expect(within(row.cells[4]).getByRole('button', { name: 'View source history' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'View source history' }));
+    expect(onSourceHistory).toHaveBeenCalledWith(expect.objectContaining({ sourceTestScenarioId: 'scenario-1', sourceScenarioKey: 'AUTH-LOGIN' }));
   });
 
   it('distinguishes loading, error and filtered-empty states', () => {

@@ -97,11 +97,11 @@ Active history rows started by the current user SHALL provide Resume, opening th
 
 ### Requirement: Fresh retest from completed detail
 
-Retest SHALL be available only on completed run detail with a non-null live source relation. The system SHALL explain that it starts from current saved scenario content and steps, use the existing start endpoint with selected projectId, and SHALL NOT copy historical outcomes/notes, modify the original snapshot, reopen a completed run or imply persisted lineage.
+Retest SHALL be available only on completed run detail with a non-null live source relation. It SHALL first request an optional readable run key in an accessible confirmation dialog; a blank key SHALL be omitted. The system SHALL explain that Retest starts from current saved scenario content and steps, use the existing start endpoint with selected projectId, and SHALL NOT copy historical outcomes/notes, modify the original snapshot, reopen a completed run or imply persisted lineage. Unsaved run-key metadata drafts on the historical run SHALL be explicitly saved or discarded before Retest.
 
 #### Scenario: Retest succeeds
 - **WHEN** the user activates Retest on eligible completed detail
-- **THEN** the system SHALL start a distinct run using the live scenario ID and an empty valid start body
+- **THEN** the system SHALL start a distinct run using the live scenario ID and the optional key entered for that new run
 - **AND** it SHALL navigate only after a successful response in the still-current scope
 - **AND** the original completed run SHALL remain unchanged
 

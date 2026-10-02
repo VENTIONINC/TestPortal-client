@@ -5,6 +5,7 @@ import type { TestScenario, TestScenarioListResponse } from '@/redux/apis/genera
 export type { TestScenarioSummary } from '@/redux/apis/generatedApi';
 
 export const TEST_SCENARIO_EDITABLE_FIELDS = [
+  'scenarioKey',
   'title',
   'details',
   'objective',

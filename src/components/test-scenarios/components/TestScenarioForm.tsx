@@ -42,6 +42,7 @@ export interface TestScenarioFormProps {
 }
 
 const EMPTY_VALUES: TestScenarioEditableValues = {
+  scenarioKey: '',
   title: '',
   details: null,
   objective: null,
@@ -62,6 +63,7 @@ const createDraftStep = (): TestScenarioInitialStepDraft => ({
 });
 
 const toFormValues = (values: Partial<TestScenarioEditableValues> & Pick<TestScenarioEditableValues, 'title'>) => ({
+  scenarioKey: values.scenarioKey ?? '',
   title: values.title ?? '',
   details: values.details ?? '',
   objective: values.objective ?? '',
@@ -71,7 +73,7 @@ const toFormValues = (values: Partial<TestScenarioEditableValues> & Pick<TestSce
   notes: values.notes ?? '',
 });
 
-const fieldLabels: Record<Exclude<TestScenarioEditableField, 'title'>, string> = {
+const fieldLabels: Record<Exclude<TestScenarioEditableField, 'title' | 'scenarioKey'>, string> = {
   details: 'Details',
   objective: 'Objective',
   preconditions: 'Preconditions',
@@ -96,6 +98,7 @@ export const TestScenarioForm = ({
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const appliedReconciliationToken = useRef<number | undefined>(undefined);
   const isCreate = mode === 'create';
+  const initialScenarioKey = initialValues.scenarioKey;
   const initialTitle = initialValues.title;
   const initialDetails = initialValues.details;
   const initialObjective = initialValues.objective;
@@ -105,6 +108,7 @@ export const TestScenarioForm = ({
   const initialNotes = initialValues.notes;
   const formValues = useMemo(
     () => toFormValues({
+      scenarioKey: initialScenarioKey,
       title: initialTitle,
       details: initialDetails,
       objective: initialObjective,
@@ -113,7 +117,16 @@ export const TestScenarioForm = ({
       expectedResult: initialExpectedResult,
       notes: initialNotes,
     }),
-    [initialDetails, initialExpectedResult, initialNotes, initialObjective, initialPreconditions, initialTestData, initialTitle],
+    [
+      initialDetails,
+      initialExpectedResult,
+      initialNotes,
+      initialObjective,
+      initialPreconditions,
+      initialScenarioKey,
+      initialTestData,
+      initialTitle,
+    ],
   );
   const {
     register,
@@ -250,9 +263,18 @@ export const TestScenarioForm = ({
           </Alert.Root>
         )}
 
+        <Input
+          {...register('scenarioKey')}
+          name="scenarioKey"
+          label="Scenario key (optional)"
+          placeholder="e.g. R1 or AUTH-LOGIN"
+          fieldProps={{ helperText: 'Up to 100 characters. Duplicate keys are allowed.' }}
+          error={errors.scenarioKey?.message}
+        />
+
         <Input {...register('title')} name="title" label="Title" error={errors.title?.message} />
 
-        {(Object.keys(fieldLabels) as Exclude<TestScenarioEditableField, 'title'>[]).map((field) => (
+        {(Object.keys(fieldLabels) as Exclude<TestScenarioEditableField, 'title' | 'scenarioKey'>[]).map((field) => (
           <Textarea
             key={field}
             {...register(field)}

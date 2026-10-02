@@ -1,13 +1,13 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TestScenarioDetailContainer } from '@/components/test-scenarios/containers/TestScenarioDetailContainer';
-import { ChakraProvider } from '@/components/ui';
+import { ChakraProvider, toaster } from '@/components/ui';
 import { useTestScenarioContextMenu } from '@/components/test-scenarios/hooks/useTestScenarioContextMenu';
 import { useGetApiV2TestScenariosByScenarioIdQuery } from '@/redux/apis/generatedApi';
 import { usePostApiV2TestScenariosByScenarioIdManualRunsMutation } from '@/redux/apis/extendedApi';
@@ -21,6 +21,7 @@ const persistedScenario = {
   id: 'scenario-1',
   projectId: 'project-1',
   createdById: 'user-1',
+  scenarioKey: 'AUTH-1',
   title: 'Checkout flow',
   contentMd: '# Checkout flow\n\nExact source\n',
   details: 'Scenario details',
@@ -62,11 +63,11 @@ const mockedGetScenario = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
 const mockedStartManualRun = vi.mocked(usePostApiV2TestScenariosByScenarioIdManualRunsMutation);
 const mockedContextMenu = vi.mocked(useTestScenarioContextMenu);
 
-const renderContainer = () =>
+const renderContainer = (projectId = 'project-1', scenarioId = 'scenario-1') =>
   render(
     <ChakraProvider>
       <MemoryRouter>
-        <TestScenarioDetailContainer projectId="project-1" scenarioId="scenario-1" />
+        <TestScenarioDetailContainer projectId={projectId} scenarioId={scenarioId} />
       </MemoryRouter>
     </ChakraProvider>,
   );
@@ -87,6 +88,7 @@ describe('TestScenarioDetailContainer', () => {
       error: undefined,
       refetch,
     } as never);
+    vi.spyOn(toaster, 'create').mockClear();
   });
 
   it('requests both identities and renders persisted structured details without Markdown', () => {
@@ -94,6 +96,7 @@ describe('TestScenarioDetailContainer', () => {
 
     expect(mockedGetScenario).toHaveBeenCalledWith({ scenarioId: 'scenario-1', projectId: 'project-1' });
     expect(screen.getAllByRole('heading', { name: 'Checkout flow' })).not.toHaveLength(0);
+    expect(screen.getByText('Scenario key: AUTH-1')).toBeInTheDocument();
     expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save Test Scenario' })).not.toBeInTheDocument();
@@ -102,6 +105,22 @@ describe('TestScenarioDetailContainer', () => {
     expect(screen.queryByText('Read-only Test Scenario details')).not.toBeInTheDocument();
     expect(screen.queryByText('Markdown Preview')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Return to Test Scenarios' })).toHaveAttribute('href', '/test-scenarios');
+  });
+
+  it('shows an explicit fallback when the scenario key is null', () => {
+    const withoutKey = { ...persistedScenario, scenarioKey: null };
+    mockedGetScenario.mockReturnValue({
+      data: withoutKey,
+      currentData: withoutKey,
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+      refetch,
+    } as never);
+
+    renderContainer();
+
+    expect(screen.getByText('Scenario key: N/A')).toBeInTheDocument();
   });
 
   it('uses the shared scenario context menu without making the details content editable', async () => {
@@ -174,6 +193,8 @@ describe('TestScenarioDetailContainer', () => {
 
     renderContainer();
     await user.click(screen.getByRole('button', { name: 'Start manual run' }));
+    expect(screen.getByRole('textbox', { name: 'Run key (optional)' })).toHaveValue('');
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
 
     expect(startManualRun).toHaveBeenCalledWith({
       scenarioId: 'scenario-1',
@@ -183,15 +204,96 @@ describe('TestScenarioDetailContainer', () => {
     expect(navigate).toHaveBeenCalledWith('/manual-test-runs/run-1');
   });
 
+  it('submits the entered key', async () => {
+    const user = userEvent.setup();
+    startManualRun.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'run-keyed' }) });
+
+    renderContainer();
+    const trigger = screen.getByRole('button', { name: 'Start manual run' });
+    await user.click(trigger);
+    await user.type(screen.getByRole('textbox', { name: 'Run key (optional)' }), '  RUN-1  ');
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
+
+    expect(startManualRun).toHaveBeenCalledWith({
+      scenarioId: 'scenario-1',
+      projectId: 'project-1',
+      manualTestRunStartRequest: { runKey: 'RUN-1' },
+    });
+
+  });
+
+  it('restores trigger focus after cancellation without starting a run', async () => {
+    const user = userEvent.setup();
+    renderContainer();
+    const trigger = screen.getByRole('button', { name: 'Start manual run' });
+    await user.click(trigger);
+    await user.type(screen.getByRole('textbox', { name: 'Run key (optional)' }), 'Unsaved run key');
+    await user.keyboard('{Escape}');
+    expect(startManualRun).not.toHaveBeenCalled();
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
   it('reports uncertain transport failures without retrying automatically', async () => {
     const user = userEvent.setup();
     startManualRun.mockReturnValue({ unwrap: () => Promise.reject({ status: 'FETCH_ERROR' }) });
 
     renderContainer();
     await user.click(screen.getByRole('button', { name: 'Start manual run' }));
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
 
     expect(startManualRun).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('alert')).toHaveTextContent('A run may have been created');
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('retains a Run key on server errors and requires confirmation before an uncertain retry', async () => {
+    const user = userEvent.setup();
+    startManualRun
+      .mockReturnValueOnce({ unwrap: () => Promise.reject({ status: 422, data: { error: 'Invalid run key' } }) })
+      .mockReturnValueOnce({ unwrap: () => Promise.reject({ status: 'FETCH_ERROR' }) })
+      .mockReturnValueOnce({ unwrap: () => Promise.resolve({ id: 'run-retried' }) });
+
+    renderContainer();
+    await user.click(screen.getByRole('button', { name: 'Start manual run' }));
+    const input = screen.getByRole('textbox', { name: 'Run key (optional)' });
+    await user.type(input, 'RUN-1');
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
+
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Invalid run key'));
+    expect(input).toHaveValue('RUN-1');
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('A run may have been created'));
+    expect(input).toHaveValue('RUN-1');
+
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
+    expect(startManualRun).toHaveBeenCalledTimes(2);
+    expect(screen.getByText(/starting again could create a duplicate/i)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Start another run' }));
+
+    expect(startManualRun).toHaveBeenCalledTimes(3);
+    expect(navigate).toHaveBeenCalledWith('/manual-test-runs/run-retried');
+  });
+
+  it('closes and resets the dialog when project scope changes during a start', async () => {
+    const user = userEvent.setup();
+    let resolveStart!: (value: { id: string }) => void;
+    startManualRun.mockReturnValue({ unwrap: () => new Promise((resolve) => (resolveStart = resolve)) });
+
+    const { rerender } = renderContainer();
+    await user.click(screen.getByRole('button', { name: 'Start manual run' }));
+    await user.type(screen.getByRole('textbox', { name: 'Run key (optional)' }), 'OLD-SCOPE');
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
+
+    rerender(
+      <ChakraProvider>
+        <MemoryRouter>
+          <TestScenarioDetailContainer projectId="project-2" scenarioId="scenario-2" />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    resolveStart({ id: 'late-run' });
+    await waitFor(() => expect(navigate).not.toHaveBeenCalled());
+    expect(toaster.create).not.toHaveBeenCalled();
   });
 });

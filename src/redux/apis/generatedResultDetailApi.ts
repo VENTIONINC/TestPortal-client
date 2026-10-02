@@ -1,5 +1,5 @@
-import { generatedApi as api } from "./generatedApi";
-export const addTagTypes = ["Results"] as const;
+import { generatedApi as api } from './generatedApi';
+export const addTagTypes = ['Results'] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
     addTagTypes,
@@ -16,14 +16,13 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ["Results"],
+        providesTags: ['Results'],
       }),
     }),
     overrideExisting: false,
   });
 export { injectedRtkApi as generatedResultDetailApi };
-export type GetResultDetailWithRelatedScenariosApiResponse =
-  /** status 200 Result details */ ResultDetail;
+export type GetResultDetailWithRelatedScenariosApiResponse = /** status 200 Result details */ ResultDetail;
 export type GetResultDetailWithRelatedScenariosApiArg = {
   resultId: string;
   /** Project ID to verify ownership of the result */
@@ -67,11 +66,11 @@ export type Result = {
   duration: number;
   startTime: string;
   /** Test analysis status */
-  analysisStatus?: ("passed" | "failed") | ("passed" | "failed");
+  analysisStatus?: ('passed' | 'failed') | ('passed' | 'failed');
   /** Failure category from AI analysis */
   analysisCategory?:
-    | ("bug" | "infra" | "performance" | "script" | "other")
-    | ("bug" | "infra" | "performance" | "script" | "other");
+    | ('bug' | 'infra' | 'performance' | 'script' | 'other')
+    | ('bug' | 'infra' | 'performance' | 'script' | 'other');
   /** Confidence level of analysis (1-5 scale) */
   analysisConfidence?: number | null;
   /** Explanation for the categorization decision */
@@ -84,8 +83,8 @@ export type Result = {
   analysisReviewedById?: string | null;
   /** Human category correction. When present, this is authoritative over analysisCategory. */
   analysisFeedbackCategory?:
-    | ("bug" | "infra" | "performance" | "script" | "other")
-    | ("bug" | "infra" | "performance" | "script" | "other");
+    | ('bug' | 'infra' | 'performance' | 'script' | 'other')
+    | ('bug' | 'infra' | 'performance' | 'script' | 'other');
   analysisFeedbackConfidence?: number | null;
   analysisFeedbackConclusion?: string | null;
   spec: ResultSpec;
@@ -97,6 +96,7 @@ export type Result = {
 export type RelatedTestScenarioSummary = {
   id: string;
   title: string;
+  scenarioKey: string | null;
   details: string | null;
   /** Current generated Test Scenario Markdown returned as JSON text */
   contentMd: string;
@@ -107,7 +107,5 @@ export type ResultDetail = Result & {
 export type ErrorResponse = {
   error: string;
 };
-export const {
-  useGetResultDetailWithRelatedScenariosQuery,
-  useLazyGetResultDetailWithRelatedScenariosQuery,
-} = injectedRtkApi;
+export const { useGetResultDetailWithRelatedScenariosQuery, useLazyGetResultDetailWithRelatedScenariosQuery } =
+  injectedRtkApi;

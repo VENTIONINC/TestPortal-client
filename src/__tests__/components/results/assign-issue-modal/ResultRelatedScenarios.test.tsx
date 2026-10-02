@@ -20,6 +20,7 @@ import { ResultRelatedScenarios } from '@/components/results/assign-issue-modal/
 const firstScenario = {
   id: 'scenario-1',
   title: 'Checkout flow',
+  scenarioKey: 'AUTH-1',
   details: 'Verify checkout totals.',
   contentMd: '# Checkout\n\n**Current steps**',
 };
@@ -27,6 +28,7 @@ const firstScenario = {
 const secondScenario = {
   id: 'scenario-2',
   title: 'Refund flow',
+  scenarioKey: null,
   details: null,
   contentMd: 'Refund content',
 };
@@ -66,18 +68,20 @@ describe('ResultRelatedScenarios', () => {
     renderScenarios();
 
     const titles = screen.getAllByRole('button').map((button) => button.textContent);
-    expect(titles).toEqual(['Checkout flow', 'Refund flow']);
+    expect(titles).toEqual(['AUTH-1 · Checkout flow', 'N/A · Refund flow']);
 
-    await user.click(screen.getByRole('button', { name: 'Checkout flow' }));
+    await user.click(screen.getByRole('button', { name: 'AUTH-1 · Checkout flow' }));
     expect(screen.getByRole('heading', { name: 'Checkout flow' })).toBeInTheDocument();
+    expect(screen.getByText('Scenario key: AUTH-1')).toBeInTheDocument();
     expect(screen.getByText('Verify checkout totals.')).toBeInTheDocument();
     expect(screen.getByText('Current steps')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Back to Test Scenarios' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Checkout flow' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Back to Test Scenarios' }));
-    await user.click(screen.getByRole('button', { name: 'Refund flow' }));
+    await user.click(screen.getByRole('button', { name: 'N/A · Refund flow' }));
     expect(screen.getByRole('heading', { name: 'Refund flow' })).toBeInTheDocument();
+    expect(screen.getByText('Scenario key: N/A')).toBeInTheDocument();
     expect(screen.getByText('Refund content')).toBeInTheDocument();
     expect(screen.queryByText('No details')).not.toBeInTheDocument();
   });
@@ -137,7 +141,9 @@ describe('ResultRelatedScenarios', () => {
     );
     expect(screen.queryByText('Current Result scenario')).not.toBeInTheDocument();
     expect(screen.queryByText('Checkout flow')).not.toBeInTheDocument();
-    await waitFor(() => expect(mocks.trigger).toHaveBeenLastCalledWith({ resultId: 'result-2', projectId: 'project-2' }));
+    await waitFor(() =>
+      expect(mocks.trigger).toHaveBeenLastCalledWith({ resultId: 'result-2', projectId: 'project-2' }),
+    );
 
     mocks.queryResult = makeQueryResult({
       originalArgs: { resultId: 'result-2', projectId: 'project-2' },
@@ -149,7 +155,7 @@ describe('ResultRelatedScenarios', () => {
         <ResultRelatedScenarios resultId="result-2" projectId="project-2" isActive />
       </ChakraProvider>,
     );
-    expect(screen.getByRole('button', { name: 'Current Project scenario' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'N/A · Current Project scenario' })).toBeInTheDocument();
     expect(screen.queryByText('Checkout flow')).not.toBeInTheDocument();
   });
 

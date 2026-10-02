@@ -51,11 +51,16 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: Result
       <StateMessage
         message="Couldn’t load related Test Scenarios."
         isError
-        action={(
-          <Button size="sm" variant="outline" loading={query.isFetching} onClick={() => void fetchResultDetail({ resultId, projectId })}>
+        action={
+          <Button
+            size="sm"
+            variant="outline"
+            loading={query.isFetching}
+            onClick={() => void fetchResultDetail({ resultId, projectId })}
+          >
             Retry
           </Button>
-        )}
+        }
       />
     );
   }
@@ -78,11 +83,16 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: Result
       <StateMessage
         message="Related Test Scenarios are unavailable for this Result."
         isError
-        action={(
-          <Button size="sm" variant="outline" loading={query.isFetching} onClick={() => void fetchResultDetail({ resultId, projectId })}>
+        action={
+          <Button
+            size="sm"
+            variant="outline"
+            loading={query.isFetching}
+            onClick={() => void fetchResultDetail({ resultId, projectId })}
+          >
             Retry
           </Button>
-        )}
+        }
       />
     );
   }
@@ -97,7 +107,9 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: Result
 
   return (
     <Stack h="full" minH={0} gap={4} p={{ base: 4, md: 6 }} overflowY="auto">
-      <Heading as="h2" size="md">Related Test Scenarios</Heading>
+      <Heading as="h2" size="md">
+        Related Test Scenarios
+      </Heading>
       <VStack align="stretch" gap={2}>
         {result.relatedTestScenarios.map((scenario) => (
           <Button
@@ -110,7 +122,11 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: Result
             whiteSpace="normal"
             onClick={() => setSelected({ scopeKey, scenarioId: scenario.id })}
           >
-            {scenario.title}
+            <VStack align="start" gap={0}>
+              <Text>
+                {scenario.scenarioKey ? `${scenario.scenarioKey} · ${scenario.title}` : `N/A · ${scenario.title}`}
+              </Text>
+            </VStack>
           </Button>
         ))}
       </VStack>
@@ -118,20 +134,17 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: Result
   );
 };
 
-const ScenarioContent = ({
-  scenario,
-  onReturn,
-}: {
-  scenario: RelatedTestScenarioSummary;
-  onReturn: () => void;
-}) => (
+const ScenarioContent = ({ scenario, onReturn }: { scenario: RelatedTestScenarioSummary; onReturn: () => void }) => (
   <Flex h="full" minH={0} direction="column" gap={3} p={{ base: 4, md: 6 }}>
     <Button alignSelf="flex-start" size="sm" variant="ghost" onClick={onReturn}>
       Back to Test Scenarios
     </Button>
     <Box flex="1" minH={0} overflowY="auto">
       <Stack gap={4}>
-        <Heading as="h2" size="md">{scenario.title}</Heading>
+        <Heading as="h2" size="md">
+          {scenario.title}
+        </Heading>
+        <Text color="text.secondary">Scenario key: {scenario.scenarioKey ?? 'N/A'}</Text>
         {scenario.details?.trim() && <Text whiteSpace="pre-wrap">{scenario.details}</Text>}
         <MarkdownPreview content={scenario.contentMd} />
       </Stack>

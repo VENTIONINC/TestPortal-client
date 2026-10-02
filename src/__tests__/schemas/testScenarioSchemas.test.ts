@@ -15,6 +15,7 @@ describe('Test Scenario authoring schema', () => {
 
   it('accepts all structured fields, trims their outer whitespace and preserves interior line breaks', () => {
     const result = testScenarioAuthoringSchema.parse({
+      scenarioKey: '  AUTH LOGIN  ',
       title: '  Scenario  ',
       details: '  First line\n  Second line  ',
       objective: '  Make checkout reliable  ',
@@ -25,6 +26,7 @@ describe('Test Scenario authoring schema', () => {
     });
 
     expect(result).toEqual({
+      scenarioKey: 'AUTH LOGIN',
       title: 'Scenario',
       details: 'First line\n  Second line',
       objective: 'Make checkout reliable',
@@ -40,6 +42,22 @@ describe('Test Scenario authoring schema', () => {
 
     expect(result.details).toBe(value.trim());
     expect(result.objective).toBe(value.trim());
+  });
+
+  it('accepts duplicate keys and keys at the normalized 100-character boundary', () => {
+    const key = `  ${'K'.repeat(100)}  `;
+
+    expect(testScenarioAuthoringSchema.parse({ title: 'Scenario', scenarioKey: key }).scenarioKey).toBe('K'.repeat(100));
+    expect(testScenarioAuthoringSchema.safeParse({ title: 'Scenario', scenarioKey: 'AUTH-1' }).success).toBe(true);
+    expect(testScenarioAuthoringSchema.safeParse({ title: 'Another scenario', scenarioKey: 'AUTH-1' }).success).toBe(true);
+    expect(testScenarioAuthoringSchema.safeParse({ title: 'Scenario', scenarioKey: 'K'.repeat(101) }).success).toBe(false);
+  });
+
+  it('rejects line breaks in Scenario keys', () => {
+    const result = testScenarioAuthoringSchema.safeParse({ title: 'Scenario', scenarioKey: 'AUTH\nLOGIN' });
+
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.flatten().fieldErrors.scenarioKey).toContain('Scenario key must be a single line');
   });
 
   it('rejects blank step actions and accepts optional multiline expected results', () => {
