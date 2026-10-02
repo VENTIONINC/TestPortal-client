@@ -54,6 +54,8 @@ export interface ManualTestRunHistoryViewProps {
   onSourceChange: (value: string) => void;
   onStartDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
+  onSourceKeyChange: (value: string) => void;
+  onApplyFilters: () => void;
   onClearFilters: () => void;
   onPageChange: (page: number) => void;
   onRetry: () => unknown;
@@ -65,9 +67,9 @@ const LoadingState = () => (
   <VStack align="stretch" gap={4} aria-label="Loading Manual Test Runs">
     <Text color="text.secondary">Loading Manual Test Runs...</Text>
     <Box overflowX="auto">
-      <Table.Root size="sm" variant="outline" minW="1050px">
-        <Table.Header><Table.Row>{['Title', 'Status', 'Source', 'Executor', 'Started', 'Completed', ''].map((label) => <Table.ColumnHeader key={label} {...TABLE_CELL_PADDING}>{label}</Table.ColumnHeader>)}</Table.Row></Table.Header>
-        <Table.Body>{[1, 2, 3].map((index) => <Table.Row key={index}>{[1, 2, 3, 4, 5, 6, 7].map((cell) => <Table.Cell key={cell} {...TABLE_CELL_PADDING}><Skeleton h="5" loading={true} /></Table.Cell>)}</Table.Row>)}</Table.Body>
+      <Table.Root size="sm" variant="outline" minW="1150px">
+        <Table.Header><Table.Row>{['Run key', 'Title', 'Status', 'Scenario key', 'Source', 'Executor', 'Started', 'Completed', ''].map((label) => <Table.ColumnHeader key={label} {...TABLE_CELL_PADDING}>{label}</Table.ColumnHeader>)}</Table.Row></Table.Header>
+        <Table.Body>{[1, 2, 3].map((index) => <Table.Row key={index}>{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((cell) => <Table.Cell key={cell} {...TABLE_CELL_PADDING}><Skeleton h="5" loading={true} /></Table.Cell>)}</Table.Row>)}</Table.Body>
       </Table.Root>
     </Box>
   </VStack>
@@ -110,33 +112,40 @@ const Filters = ({
   onSourceChange,
   onStartDateChange,
   onEndDateChange,
+  onSourceKeyChange,
+  onApplyFilters,
   onClearFilters,
-}: Pick<ManualTestRunHistoryViewProps, 'filters' | 'dateError' | 'isProjectHistory' | 'isFiltered' | 'onStatusChange' | 'onSourceChange' | 'onStartDateChange' | 'onEndDateChange' | 'onClearFilters'>) => (
+}: Pick<ManualTestRunHistoryViewProps, 'filters' | 'dateError' | 'isProjectHistory' | 'isFiltered' | 'onStatusChange' | 'onSourceChange' | 'onStartDateChange' | 'onEndDateChange' | 'onSourceKeyChange' | 'onApplyFilters' | 'onClearFilters'>) => (
   <VStack align="stretch" gap={3}>
     <Box overflowX="auto" w="100%">
       <HStack align="end" gap={3} flexWrap="nowrap" minW="max-content" w="100%" pb={1}>
         <HStack align="end" gap={3} flexShrink={0}>
           <NativeSelect name="manual-test-run-status" label="Status" value={filters.status} onChange={(event: ChangeEvent<HTMLSelectElement>) => onStatusChange(event.target.value as ManualTestRunHistoryFilters['status'])} items={MANUAL_TEST_RUN_HISTORY_STATUSES} w="190px" />
           {isProjectHistory && <Input name="manual-test-run-source" label="Source scenario ID" value={filters.sourceTestScenarioId} onChange={(event) => onSourceChange(event.target.value)} placeholder="UUID, including deleted sources" w="290px" />}
+          {isProjectHistory && <Input name="manual-test-run-source-key" label="Scenario key" labelAction={<Tooltip content="Exact match, case-sensitive." openDelay={300} closeDelay={100}><Box as="span" display="inline-flex" aria-label="Scenario key filter information" color="text.secondary" cursor="help"><LuInfo size={15} aria-hidden="true" /></Box></Tooltip>} value={filters.sourceScenarioKey} onChange={(event) => onSourceKeyChange(event.target.value)} placeholder="e.g. R1 or AUTH-LOGIN" error={dateError?.includes('Source scenario key') ? dateError : undefined} w="250px" />}
           <Input name="manual-test-run-start-date" label="Started on or after" type="date" value={filters.startedOnOrAfter} onChange={(event) => onStartDateChange(event.target.value)} error={dateError?.includes('start') ? dateError : undefined} w="190px" />
           <Input name="manual-test-run-end-date" label="Started on or before" type="date" value={filters.startedOnOrBefore} onChange={(event) => onEndDateChange(event.target.value)} error={dateError?.includes('end') || dateError?.includes('before') ? dateError : undefined} w="190px" />
         </HStack>
-        <Button variant="outline" onClick={onClearFilters} disabled={!isFiltered} flexShrink={0} marginStart="auto">Clear filters</Button>
+        <Button variant="outline" onClick={onApplyFilters} disabled={Boolean(dateError)} flexShrink={0}>Apply</Button>
+        <Button variant="outline" onClick={onClearFilters} disabled={!isFiltered} flexShrink={0}>Clear filters</Button>
       </HStack>
     </Box>
     {dateError && !dateError.includes('start') && !dateError.includes('end') && <Alert.Root status="error" role="alert"><Alert.Indicator /><Alert.Content><Alert.Description>{dateError}</Alert.Description></Alert.Content></Alert.Root>}
+    {isProjectHistory && <Text color="text.secondary" fontSize="sm">Captured keys can match multiple scenarios; matching uses the key saved when each run started.</Text>}
   </VStack>
 );
 
 const RunTable = ({ runs, onSourceHistory, currentUserId }: { currentUserId?: string | null; runs: ManualTestRunSummaryRead[]; onSourceHistory: ManualTestRunHistoryViewProps['onSourceHistory'] }) => (
   <Box overflowX="auto">
-    <Table.Root size="sm" variant="outline" minW="1050px">
-      <Table.Header><Table.Row><Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Status</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Source</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Executor</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Started</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Completed</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING} /></Table.Row></Table.Header>
+    <Table.Root size="sm" variant="outline" minW="1150px">
+      <Table.Header><Table.Row><Table.ColumnHeader {...TABLE_CELL_PADDING}>Run key</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Status</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Scenario key</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Source</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Executor</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Started</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Completed</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING} /></Table.Row></Table.Header>
       <Table.Body>
         {runs.map((run) => (
           <Table.Row key={run.id} data-testid={`manual-test-run-${run.id}`}>
-            <Table.Cell {...TABLE_CELL_PADDING}><RouterLink to={getManualTestRunPath(run.id)} state={{ from: 'manual-test-run-history' }}>{run.title}</RouterLink></Table.Cell>
+            <Table.Cell {...TABLE_CELL_PADDING} maxW="180px" overflowWrap="anywhere">{run.runKey ?? 'N/A'}</Table.Cell>
+            <Table.Cell {...TABLE_CELL_PADDING} maxW="240px" overflowWrap="anywhere"><RouterLink to={getManualTestRunPath(run.id)} state={{ from: 'manual-test-run-history' }}>{run.title}</RouterLink></Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING}><StatusCell status={run.status} /></Table.Cell>
+            <Table.Cell {...TABLE_CELL_PADDING} maxW="220px" overflowWrap="anywhere">{run.sourceScenarioKey ?? 'N/A'}</Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING}><VStack align="start" gap={1}>{!run.testScenarioId && <Text>Source deleted</Text>}<Button variant="plain" size="sm" onClick={() => onSourceHistory(run)}>View source history</Button></VStack></Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING}>{run.executedBy?.name ?? 'Executor unavailable'}</Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary">{formatDate(run.startedAt)}</Table.Cell>
@@ -151,7 +160,7 @@ const RunTable = ({ runs, onSourceHistory, currentUserId }: { currentUserId?: st
 
 export const ManualTestRunHistoryView = memo(function ManualTestRunHistoryView({
   currentUserId, data, error, isLoading, isFetching, isNotFound, filters, dateError, isFiltered, isProjectHistory,
-  onStatusChange, onSourceChange, onStartDateChange, onEndDateChange, onClearFilters, onPageChange, onRetry, onProjectHistory, onSourceHistory,
+  onStatusChange, onSourceChange, onStartDateChange, onEndDateChange, onSourceKeyChange, onApplyFilters, onClearFilters, onPageChange, onRetry, onProjectHistory, onSourceHistory,
 }: ManualTestRunHistoryViewProps) {
   const showLoading = isLoading || (isFetching && !data);
 
@@ -166,7 +175,7 @@ export const ManualTestRunHistoryView = memo(function ManualTestRunHistoryView({
             </Box>
           </Tooltip>
         </HStack>
-        <Filters filters={filters} dateError={dateError} isProjectHistory={isProjectHistory} isFiltered={isFiltered} onStatusChange={onStatusChange} onSourceChange={onSourceChange} onStartDateChange={onStartDateChange} onEndDateChange={onEndDateChange} onClearFilters={onClearFilters} />
+        <Filters filters={filters} dateError={dateError} isProjectHistory={isProjectHistory} isFiltered={isFiltered} onStatusChange={onStatusChange} onSourceChange={onSourceChange} onStartDateChange={onStartDateChange} onEndDateChange={onEndDateChange} onSourceKeyChange={onSourceKeyChange} onApplyFilters={onApplyFilters} onClearFilters={onClearFilters} />
         {isNotFound ? <SourceNotFoundState onProjectHistory={onProjectHistory} /> : error ? <ErrorState onRetry={onRetry} /> : showLoading ? <LoadingState /> : !data || data.runs.length === 0 ? <EmptyState isFiltered={isFiltered} onClearFilters={onClearFilters} /> : <VStack align="stretch" gap={4}><RunTable currentUserId={currentUserId} runs={data.runs} onSourceHistory={onSourceHistory} />{data.totalPages > 1 && <Box as="nav" aria-label="Manual Test Run pagination"><HStack justify="center" py={2}><Pagination currentPage={data.page} totalPages={data.totalPages} onPageChange={onPageChange} /></HStack></Box>}<Text color="text.secondary" fontSize="sm" textAlign="right">Showing {data.total === 0 ? 0 : (data.page - 1) * data.limit + 1}-{Math.min(data.page * data.limit, data.total)} of {data.total} Manual Test Runs</Text></VStack>}
       </VStack>
     </Wrap>

@@ -18,6 +18,8 @@ const run: ManualTestRunRead = {
   id: 'run-1',
   projectId: 'project-1',
   sourceTestScenarioId: 'scenario-source',
+  runKey: null,
+  sourceScenarioKey: null,
   testScenarioId: 'scenario-live',
   executedById: null,
   executedBy: null,
@@ -58,19 +60,27 @@ vi.mock('@/components/manual-test-runs/hooks/useManualTestRunExecution', () => (
     isReadOnly: true,
     isDirty: false,
     isRunNotesDirty: false,
+    runKeyDraft: persistedRun.runKey ?? '',
+    runKeyError: undefined,
+    isRunKeyDirty: false,
     dirtyStepIds: [],
     setRunNotesDraft: vi.fn(),
+    setRunKeyDraft: vi.fn(),
     setStepStatus: vi.fn(),
     setStepNotes: vi.fn(),
     saveRunNotes: vi.fn(),
+    saveRunKey: vi.fn(),
     saveStep: vi.fn(),
     discardRunNotes: vi.fn(),
+    discardRunKey: vi.fn(),
     discardStep: vi.fn(),
     requestCompletion: vi.fn(),
     isCompletionOpen: false,
     closeCompletion: vi.fn(),
     confirmCompletion: vi.fn(),
     retryAuthoritativeRecovery: vi.fn(),
+    canEditRunKey: false,
+    canStartRetest: () => true,
   }),
 }));
 
@@ -90,6 +100,8 @@ describe('ManualTestRunDetailContainer', () => {
 
     render(<ChakraProvider><MemoryRouter><ManualTestRunDetailContainer projectId="project-1" runId="run-1" /></MemoryRouter></ChakraProvider>);
     await user.click(screen.getByRole('button', { name: 'Retest' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('current saved scenario content and steps');
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
 
     expect(startManualRun).toHaveBeenCalledWith({
       scenarioId: 'scenario-live',
@@ -105,9 +117,28 @@ describe('ManualTestRunDetailContainer', () => {
 
     render(<ChakraProvider><MemoryRouter><ManualTestRunDetailContainer projectId="project-1" runId="run-1" /></MemoryRouter></ChakraProvider>);
     await user.click(screen.getByRole('button', { name: 'Retest' }));
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
 
     expect(screen.getByRole('alert')).toHaveTextContent('Inspect history before trying again');
     expect(startManualRun).toHaveBeenCalledTimes(1);
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('submits a fresh Run key without copying a historical label', async () => {
+    const user = userEvent.setup();
+    startManualRun.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'run-3' }) });
+
+    render(<ChakraProvider><MemoryRouter><ManualTestRunDetailContainer projectId="project-1" runId="run-1" /></MemoryRouter></ChakraProvider>);
+    await user.click(screen.getByRole('button', { name: 'Retest' }));
+    expect(screen.getByRole('textbox', { name: 'Run key (optional)' })).toHaveValue('');
+    await user.type(screen.getByRole('textbox', { name: 'Run key (optional)' }), 'RUN-3');
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
+
+    expect(startManualRun).toHaveBeenCalledWith({
+      scenarioId: 'scenario-live',
+      projectId: 'project-1',
+      manualTestRunStartRequest: { runKey: 'RUN-3' },
+    });
+    expect(navigate).toHaveBeenCalledWith('/manual-test-runs/run-3', { state: { from: 'manual-test-run-history' } });
   });
 });

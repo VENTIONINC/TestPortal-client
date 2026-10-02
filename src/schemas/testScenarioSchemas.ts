@@ -3,7 +3,15 @@
 
 import { z } from 'zod';
 
+export const createReadableLabelSchema = (label: string) =>
+  z
+    .string()
+    .refine((value) => !/[\r\n]/.test(value), `${label} must be a single line`)
+    .refine((value) => value.trim().length <= 100, `${label} must be 100 characters or fewer`)
+    .transform((value) => value.trim());
+
 export const testScenarioAuthoringSchema = z.object({
+  scenarioKey: createReadableLabelSchema('Scenario key').optional(),
   title: z.string().trim().min(1, 'Title is required'),
   details: z.string().trim().optional(),
   objective: z.string().trim().optional(),

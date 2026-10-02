@@ -18,6 +18,7 @@ const scenarios: TestScenarioSummary[] = [
     id: 'scenario-1',
     projectId: 'project-1',
     createdById: 'user-1',
+    scenarioKey: 'AUTH-1',
     title: 'Checkout flow',
     details: 'Details with **Markdown** <strong>HTML</strong>',
     createdBy: { id: 'user-1', name: 'Ada Lovelace', email: 'ada@example.com' },
@@ -78,8 +79,9 @@ describe('TestScenarioCatalogView', () => {
     renderView({ onContextMenu });
 
     expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getAllByRole('columnheader')).toHaveLength(6);
+    expect(screen.getAllByRole('columnheader')).toHaveLength(7);
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
+      'Scenario key',
       'Title',
       'Details',
       'Created by',
@@ -89,6 +91,7 @@ describe('TestScenarioCatalogView', () => {
     ]);
     expect(screen.getAllByRole('row')).toHaveLength(2);
     expect(screen.getByRole('row', { name: /Checkout flow/ })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: 'AUTH-1' })).toBeInTheDocument();
     expect(screen.getByText('Details with **Markdown** <strong>HTML</strong>')).toBeInTheDocument();
     expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
     expect(screen.getByText('ada@example.com')).toBeInTheDocument();
@@ -106,9 +109,10 @@ describe('TestScenarioCatalogView', () => {
   });
 
   it('renders a fallback for null details', () => {
-    renderView({ scenarios: [{ ...scenarios[0], details: null }] });
+    renderView({ scenarios: [{ ...scenarios[0], scenarioKey: null, details: null }] });
 
     expect(screen.getByText('No details')).toBeInTheDocument();
+    expect(screen.getByText('N/A')).toBeInTheDocument();
   });
 
   it('maps every scenario title to its own detail route while keeping actions separate', () => {
@@ -119,6 +123,7 @@ describe('TestScenarioCatalogView', () => {
           id: 'scenario-2',
           projectId: 'project-1',
           createdById: 'user-2',
+          scenarioKey: null,
           title: 'Refund flow',
           details: null,
           createdBy: { id: 'user-2', name: 'Grace Hopper', email: 'grace@example.com' },

@@ -35,14 +35,35 @@ describe('Test Scenario structured payload helpers', () => {
     expect(getTestScenarioPatchPayload({ ...persisted, details: ' \n\t ' }, persisted)).toEqual({ details: null });
   });
 
+  it('trims a Scenario key on creation and omits a blank key', () => {
+    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', scenarioKey: '  AUTH Login  ' })).toEqual({
+      projectId: 'project-1',
+      title: 'Checkout',
+      scenarioKey: 'AUTH Login',
+    });
+    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', scenarioKey: ' \t ' })).toEqual({
+      projectId: 'project-1',
+      title: 'Checkout',
+    });
+  });
+
+  it('clears a persisted Scenario key to null and omits unchanged keys', () => {
+    const persistedWithKey = { ...persisted, scenarioKey: 'AUTH-1' };
+
+    expect(getTestScenarioPatchPayload({ ...persistedWithKey, scenarioKey: '  \t ' }, persistedWithKey)).toEqual({
+      scenarioKey: null,
+    });
+    expect(getTestScenarioPatchPayload({ ...persistedWithKey, scenarioKey: ' AUTH-1 ' }, persistedWithKey)).toBeNull();
+  });
+
   it('treats blank input as a no-op when the saved optional value is already null', () => {
     expect(getTestScenarioPatchPayload({ ...persisted, testData: '  ' }, persisted)).toBeNull();
   });
 
   it('does not include generated Markdown, hash, version, steps or immutable metadata', () => {
-    const payload = getTestScenarioPatchPayload({ ...persisted, title: 'Updated' }, persisted);
+    const payload = getTestScenarioPatchPayload({ ...persisted, title: 'Updated', scenarioKey: 'R1' }, persisted);
 
-    expect(payload).toEqual({ title: 'Updated' });
+    expect(payload).toEqual({ title: 'Updated', scenarioKey: 'R1' });
     expect(payload).not.toHaveProperty('contentMd');
     expect(payload).not.toHaveProperty('steps');
     expect(payload).not.toHaveProperty('id');

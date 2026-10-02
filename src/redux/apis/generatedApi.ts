@@ -1045,6 +1045,7 @@ const injectedRtkApi = api
             startedFrom: queryArg.startedFrom,
             startedBefore: queryArg.startedBefore,
             testScenarioId: queryArg.testScenarioId,
+            sourceScenarioKey: queryArg.sourceScenarioKey,
             status: queryArg.status,
           },
         }),
@@ -1185,7 +1186,7 @@ export type GetApiV2ResultsApiArg = {
   limit?: number;
 };
 export type GetApiV2ResultsByResultIdApiResponse =
-  /** status 200 Result details */ Result;
+  /** status 200 Result details */ ResultDetail;
 export type GetApiV2ResultsByResultIdApiArg = {
   resultId: string;
   /** Project ID to verify ownership of the result */
@@ -1694,6 +1695,8 @@ export type GetApiV2ManualTestRunsApiArg = {
   startedBefore?: string;
   /** Immutable source scenario UUID */
   testScenarioId?: string;
+  /** Exact, case-sensitive captured source label; duplicate labels match multiple scenarios */
+  sourceScenarioKey?: string;
   status?: ManualTestRunStatus;
 };
 export type GetApiV2ManualTestRunsByRunIdApiResponse =
@@ -1897,6 +1900,17 @@ export type ResultsListResponse = {
   rawTotal: number;
   page: number;
   totalPages: number;
+};
+export type RelatedTestScenarioSummary = {
+  id: string;
+  title: string;
+  scenarioKey: string | null;
+  details: string | null;
+  /** Current generated Test Scenario Markdown returned as JSON text */
+  contentMd: string;
+};
+export type ResultDetail = Result & {
+  relatedTestScenarios: RelatedTestScenarioSummary[];
 };
 export type ResultsStats = {
   byStatus: {
@@ -2507,6 +2521,7 @@ export type TestScenario = {
   projectId: string;
   createdById: string;
   title: string;
+  scenarioKey: string | null;
   details: string | null;
   objective: string | null;
   preconditions: string | null;
@@ -2527,6 +2542,7 @@ export type TestScenario = {
 };
 export type UpdateTestScenarioRequest = {
   title?: string;
+  scenarioKey?: string | null;
   details?: string | null;
   objective?: string | null;
   preconditions?: string | null;
@@ -2595,6 +2611,7 @@ export type CreateTestScenarioStep = {
 export type CreateTestScenarioRequest = {
   projectId: string;
   title: string;
+  scenarioKey?: string | null;
   details?: string;
   objective?: string;
   preconditions?: string;
@@ -2613,6 +2630,7 @@ export type TestScenarioSummary = {
   projectId: string;
   createdById: string;
   title: string;
+  scenarioKey: string | null;
   details: string | null;
   createdBy: TestScenarioCreatorSummary;
   createdAt: string;
@@ -2637,6 +2655,8 @@ export type ManualTestRunStatus =
   | "blocked"
   | "skipped";
 export type ManualTestRun = {
+  /** Editable nonunique label; UUIDs remain entity identifiers */
+  runKey: string | null;
   executedBy: ManualTestRunExecutor;
   status: ManualTestRunStatus;
   notes: string | null;
@@ -2664,6 +2684,10 @@ export type ManualTestRunRead = {
   id: string;
   projectId: string;
   sourceTestScenarioId: string;
+  /** Editable nonunique label; UUIDs remain entity identifiers */
+  runKey: string | null;
+  /** Scenario label captured when the run started */
+  sourceScenarioKey: string | null;
   testScenarioId: string | null;
   executedById: string | null;
   executedBy: ManualTestRunExecutor;
@@ -2683,8 +2707,11 @@ export type ManualTestRunRead = {
 };
 export type ManualTestRunStartRequest = {
   notes?: string | null;
+  runKey?: string | null;
 };
 export type ManualTestRunSummary = {
+  /** Editable nonunique label; UUIDs remain entity identifiers */
+  runKey: string | null;
   executedBy: ManualTestRunExecutor;
   status: ManualTestRunStatus;
 };
@@ -2692,6 +2719,10 @@ export type ManualTestRunSummaryRead = {
   id: string;
   projectId: string;
   sourceTestScenarioId: string;
+  /** Editable nonunique label; UUIDs remain entity identifiers */
+  runKey: string | null;
+  /** Scenario label captured when the run started */
+  sourceScenarioKey: string | null;
   testScenarioId: string | null;
   executedById: string | null;
   executedBy: ManualTestRunExecutor;
@@ -2718,6 +2749,7 @@ export type ManualTestRunPageRead = {
 export type ManualTestRunUpdateRequest = {
   status?: ManualTestRunStatus;
   notes?: string | null;
+  runKey?: string | null;
 };
 export type ManualTestRunStepUpdateRequest = {
   status?: ManualTestRunStepStatus;

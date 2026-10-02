@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { useLocation, useNavigate } from 'react-router';
 
+import { RunKeyStartDialog } from '@/components/manual-test-runs/components';
 import { toaster } from '@/components/ui';
 import { usePostApiV2TestScenariosByScenarioIdManualRunsMutation } from '@/redux/apis/extendedApi';
 import { PATHS } from '@/types/paths';
@@ -23,11 +24,16 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
   const navigate = useNavigate();
   const location = useLocation();
   const detail = useManualTestRunDetail(projectId, runId);
-  const [startManualRun] = usePostApiV2TestScenariosByScenarioIdManualRunsMutation();
+  const [startManualRun, { isLoading: isStartingRun }] = usePostApiV2TestScenariosByScenarioIdManualRunsMutation();
   const [retestError, setRetestError] = useState<string>();
   const [retestUncertain, setRetestUncertain] = useState(false);
+  const [isRetestDialogOpen, setIsRetestDialogOpen] = useState(false);
+  const [runKeyDraft, setRunKeyDraft] = useState('');
+  const [isRetryConfirmationRequired, setIsRetryConfirmationRequired] = useState(false);
   const [isRetesting, setIsRetesting] = useState(false);
   const retestInFlight = useRef(false);
+  const retestTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const restoreFocusOnClose = useRef(false);
   const mountedRef = useRef(true);
   const latestScope = useRef(`${projectId}:${runId}`);
   latestScope.current = `${projectId}:${runId}`;
@@ -41,12 +47,48 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
     [projectId, runId],
   );
 
+  useEffect(() => {
+    if (isRetestDialogOpen || !restoreFocusOnClose.current) return;
+    restoreFocusOnClose.current = false;
+    retestTriggerRef.current?.focus();
+  }, [isRetestDialogOpen]);
+
+  useEffect(() => {
+    retestInFlight.current = false;
+    setIsRetesting(false);
+    setIsRetestDialogOpen(false);
+    setRunKeyDraft('');
+    setRetestError(undefined);
+    setRetestUncertain(false);
+    setIsRetryConfirmationRequired(false);
+    restoreFocusOnClose.current = false;
+  }, [projectId, runId]);
+
   const goToScenarios = useCallback(
     () => navigate(location.state?.from === 'manual-test-run-history' ? PATHS.MANUAL_TEST_RUNS : PATHS.TEST_SCENARIOS),
     [location.state, navigate],
   );
 
-  const handleRetest = useCallback(async () => {
+  const openRetestDialog = useCallback((trigger: HTMLButtonElement) => {
+    retestTriggerRef.current = trigger;
+    setRunKeyDraft('');
+    setRetestError(undefined);
+    setRetestUncertain(false);
+    setIsRetryConfirmationRequired(false);
+    setIsRetestDialogOpen(true);
+  }, []);
+
+  const closeRetestDialog = useCallback(() => {
+    if (retestInFlight.current) return;
+    restoreFocusOnClose.current = true;
+    setIsRetestDialogOpen(false);
+    setRunKeyDraft('');
+    setRetestError(undefined);
+    setRetestUncertain(false);
+    setIsRetryConfirmationRequired(false);
+  }, []);
+
+  const handleRetest = useCallback(async (runKey?: string) => {
     const historicalRun = detail.run;
     const sourceScenarioId = historicalRun?.testScenarioId;
     if (!historicalRun || !sourceScenarioId || historicalRun.status === 'in_progress' || retestInFlight.current) return;
@@ -55,13 +97,16 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
     setIsRetesting(true);
     setRetestError(undefined);
     setRetestUncertain(false);
+    setIsRetryConfirmationRequired(false);
     try {
       const run = await startManualRun({
         scenarioId: sourceScenarioId,
         projectId,
-        manualTestRunStartRequest: {},
+        manualTestRunStartRequest: runKey ? { runKey } : {},
       }).unwrap();
       if (!isCurrentScope()) return;
+      setIsRetestDialogOpen(false);
+      setRunKeyDraft('');
       toaster.create({ title: 'Fresh manual test run started.', type: 'success' });
       navigate(getManualTestRunPath(run.id), { state: { from: 'manual-test-run-history' } });
     } catch (error) {
@@ -93,6 +138,7 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
   }, [detail.run, navigate]);
 
   return (
+    <>
     <ManualTestRunDetailStateView
       run={detail.run}
       isLoading={detail.isLoading}
@@ -109,13 +155,28 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
           setPersistedRun={detail.setPersistedRun}
           refetch={detail.refetch}
           onBack={goToScenarios}
-          onRetest={() => void handleRetest()}
+          onRetest={openRetestDialog}
           isRetesting={isRetesting}
-          retestError={retestError}
-          retestUncertain={retestUncertain}
           onViewSourceHistory={viewSourceHistory}
         />
       )}
     </ManualTestRunDetailStateView>
+    <RunKeyStartDialog
+      isOpen={isRetestDialogOpen}
+      context="retest"
+      value={runKeyDraft}
+      error={retestError}
+      isUncertain={retestUncertain}
+      isRetryConfirmationRequired={isRetryConfirmationRequired}
+      isSubmitting={isRetesting || isStartingRun}
+      onValueChange={(value) => {
+        setRunKeyDraft(value);
+        setRetestError(undefined);
+      }}
+      onCancel={closeRetestDialog}
+      onRequireRetryConfirmation={() => setIsRetryConfirmationRequired(true)}
+      onSubmit={(runKey) => void handleRetest(runKey)}
+    />
+    </>
   );
 };

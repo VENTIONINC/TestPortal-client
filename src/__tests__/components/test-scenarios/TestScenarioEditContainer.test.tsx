@@ -10,11 +10,11 @@ import { ChakraProvider, toaster } from '@/components/ui';
 import {
   useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
   useGetApiV2TestScenariosByScenarioIdQuery,
-  usePatchApiV2TestScenariosByScenarioIdMutation,
   usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
   usePostApiV2TestScenariosByScenarioIdStepsMutation,
   usePutApiV2TestScenariosByScenarioIdStepsOrderMutation,
 } from '@/redux/apis/generatedApi';
+import { usePatchApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
 
 const navigate = vi.fn();
 const updateScenario = vi.fn();
@@ -36,12 +36,15 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
   return {
     ...actual,
     useGetApiV2TestScenariosByScenarioIdQuery: vi.fn(),
-    usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn(),
     usePostApiV2TestScenariosByScenarioIdStepsMutation: vi.fn(),
     usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation: vi.fn(),
     useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation: vi.fn(),
     usePutApiV2TestScenariosByScenarioIdStepsOrderMutation: vi.fn(),
   };
+});
+vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
+  return { ...actual, usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn() };
 });
 
 const mockedGetScenario = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
@@ -55,6 +58,7 @@ const scenario = (overrides: Record<string, unknown> = {}) => ({
   id: 'scenario-1',
   projectId: 'project-1',
   createdById: 'user-1',
+  scenarioKey: 'AUTH-1',
   title: 'Checkout flow',
   details: 'Scenario details',
   objective: 'Complete checkout',
@@ -111,6 +115,7 @@ describe('TestScenarioEditContainer', () => {
     renderContainer();
 
     expect(mockedGetScenario).toHaveBeenCalledWith({ scenarioId: 'scenario-1', projectId: 'project-1' });
+    expect(screen.getByRole('textbox', { name: 'Scenario key (optional)' })).toHaveValue('AUTH-1');
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Checkout flow');
     expect(screen.getByRole('textbox', { name: 'Objective' })).toHaveValue('Complete checkout');
     expect(screen.getByRole('textbox', { name: 'Step 1 action' })).toHaveValue('Open checkout');
@@ -123,6 +128,7 @@ describe('TestScenarioEditContainer', () => {
     ['details', () => fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: '  Updated details  ' } }), { details: 'Updated details' }],
     ['objective', () => fireEvent.change(screen.getByRole('textbox', { name: 'Objective' }), { target: { value: '  Updated objective  ' } }), { objective: 'Updated objective' }],
     ['cleared details', () => fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: ' \n\t ' } }), { details: null }],
+    ['cleared scenario key', () => fireEvent.change(screen.getByRole('textbox', { name: 'Scenario key (optional)' }), { target: { value: '  ' } }), { scenarioKey: null }],
   ])('sends only the normalized %s PATCH field', async (_name, change, expected) => {
     const user = userEvent.setup();
     updateScenario.mockReturnValue({ unwrap: () => Promise.resolve({ ...scenario(), ...expected }) });
@@ -188,11 +194,13 @@ describe('TestScenarioEditContainer', () => {
     renderContainer();
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'Unsaved title' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Notes' }), { target: { value: 'Unsaved note' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Scenario key (optional)' }), { target: { value: 'Unsaved key' } });
     await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Save failed'));
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Unsaved title');
     expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue('Unsaved note');
+    expect(screen.getByRole('textbox', { name: 'Scenario key (optional)' })).toHaveValue('Unsaved key');
   });
 
   it('appends a step with only structured step fields and adopts the returned scenario', async () => {
