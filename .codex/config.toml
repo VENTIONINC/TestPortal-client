@@ -1,0 +1,44 @@
+# GitHub access for this repository goes through the Docker MCP profile.
+
+[mcp_servers.MCP_DOCKER]
+command = "docker"
+args = ["mcp", "gateway", "run", "--profile", "testportal-github"]
+enabled = true
+required = false
+startup_timeout_sec = 30
+tool_timeout_sec = 60
+default_tools_approval_mode = "auto"
+enabled_tools = [
+  "get_me",
+  "get_file_contents",
+  "list_pull_requests",
+  "pull_request_read",
+  "search_pull_requests",
+  "issue_read",
+  "list_issues",
+  "search_issues",
+  "issue_write",
+  "create_pull_request",
+  "update_pull_request",
+  "add_issue_comment",
+  "add_reply_to_pull_request_comment",
+  "pull_request_review_write",
+]
+
+[mcp_servers.MCP_DOCKER.tools.issue_write]
+approval_mode = "prompt"
+
+[mcp_servers.MCP_DOCKER.tools.create_pull_request]
+approval_mode = "prompt"
+
+[mcp_servers.MCP_DOCKER.tools.update_pull_request]
+approval_mode = "prompt"
+
+[mcp_servers.MCP_DOCKER.tools.add_issue_comment]
+approval_mode = "prompt"
+
+[mcp_servers.MCP_DOCKER.tools.add_reply_to_pull_request_comment]
+approval_mode = "prompt"
+
+[mcp_servers.MCP_DOCKER.tools.pull_request_review_write]
+approval_mode = "prompt"

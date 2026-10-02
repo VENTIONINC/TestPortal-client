@@ -264,14 +264,12 @@ describe('Custom skill mutation endpoints', () => {
 
     const request = fetchMock.mock.calls[0][0] as Request;
     const rawBody = await request.clone().text();
-    const body = await request.formData();
 
     expect(new URL(request.url).pathname).toBe(path);
     expect(request.method).toBe(method);
     expect(request.headers.get('content-type')).toMatch(/^multipart\/form-data; boundary=/);
-    expect(body.get('title')).toBe('Title');
-    expect(body.get('category')).toBe('Category');
-    expect(body.get('package')).not.toBe('[object Object]');
+    expect(rawBody).toContain('name="title"\r\n\r\nTitle');
+    expect(rawBody).toContain('name="category"\r\n\r\nCategory');
     expect(rawBody).toContain('name="package"');
     expect(rawBody).toContain('Content-Type: application/zip');
   });

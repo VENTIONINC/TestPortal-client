@@ -20,6 +20,8 @@ export const addTagTypes = [
   "CTRF",
   "Upload API Keys",
   "Exports",
+  "Test Scenarios",
+  "Manual Test Runs",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -811,6 +813,297 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Reports", "Exports"],
       }),
+      postApiV2TestScenariosByScenarioIdSpecLinks: build.mutation<
+        PostApiV2TestScenariosByScenarioIdSpecLinksApiResponse,
+        PostApiV2TestScenariosByScenarioIdSpecLinksApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/spec-links`,
+          method: "POST",
+          body: queryArg.testScenarioSpecLinkBody,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenariosByScenarioIdSpecLinks: build.query<
+        GetApiV2TestScenariosByScenarioIdSpecLinksApiResponse,
+        GetApiV2TestScenariosByScenarioIdSpecLinksApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/spec-links`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      patchApiV2TestScenariosByScenarioId: build.mutation<
+        PatchApiV2TestScenariosByScenarioIdApiResponse,
+        PatchApiV2TestScenariosByScenarioIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}`,
+          method: "PATCH",
+          body: queryArg.updateTestScenarioRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenariosByScenarioId: build.query<
+        GetApiV2TestScenariosByScenarioIdApiResponse,
+        GetApiV2TestScenariosByScenarioIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}`,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      deleteApiV2TestScenariosByScenarioId: build.mutation<
+        DeleteApiV2TestScenariosByScenarioIdApiResponse,
+        DeleteApiV2TestScenariosByScenarioIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestScenariosByScenarioIdSteps: build.mutation<
+        PostApiV2TestScenariosByScenarioIdStepsApiResponse,
+        PostApiV2TestScenariosByScenarioIdStepsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/steps`,
+          method: "POST",
+          body: queryArg.appendTestScenarioStepRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      patchApiV2TestScenariosByScenarioIdStepsAndStepId: build.mutation<
+        PatchApiV2TestScenariosByScenarioIdStepsAndStepIdApiResponse,
+        PatchApiV2TestScenariosByScenarioIdStepsAndStepIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/steps/${queryArg.stepId}`,
+          method: "PATCH",
+          body: queryArg.updateTestScenarioStepRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      deleteApiV2TestScenariosByScenarioIdStepsAndStepId: build.mutation<
+        DeleteApiV2TestScenariosByScenarioIdStepsAndStepIdApiResponse,
+        DeleteApiV2TestScenariosByScenarioIdStepsAndStepIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/steps/${queryArg.stepId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      putApiV2TestScenariosByScenarioIdStepsOrder: build.mutation<
+        PutApiV2TestScenariosByScenarioIdStepsOrderApiResponse,
+        PutApiV2TestScenariosByScenarioIdStepsOrderApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/steps/order`,
+          method: "PUT",
+          body: queryArg.reorderTestScenarioStepsRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      deleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecId: build.mutation<
+        DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiResponse,
+        DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/spec-links/${queryArg.specId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenariosByScenarioIdResults: build.query<
+        GetApiV2TestScenariosByScenarioIdResultsApiResponse,
+        GetApiV2TestScenariosByScenarioIdResultsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/results`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenariosByScenarioIdIssues: build.query<
+        GetApiV2TestScenariosByScenarioIdIssuesApiResponse,
+        GetApiV2TestScenariosByScenarioIdIssuesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/issues`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestScenarios: build.mutation<
+        PostApiV2TestScenariosApiResponse,
+        PostApiV2TestScenariosApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios`,
+          method: "POST",
+          body: queryArg.createTestScenarioRequest,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenarios: build.query<
+        GetApiV2TestScenariosApiResponse,
+        GetApiV2TestScenariosApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestScenariosByScenarioIdManualRuns: build.mutation<
+        PostApiV2TestScenariosByScenarioIdManualRunsApiResponse,
+        PostApiV2TestScenariosByScenarioIdManualRunsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/manual-runs`,
+          method: "POST",
+          body: queryArg.manualTestRunStartRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Manual Test Runs"],
+      }),
+      getApiV2TestScenariosByScenarioIdManualRuns: build.query<
+        GetApiV2TestScenariosByScenarioIdManualRunsApiResponse,
+        GetApiV2TestScenariosByScenarioIdManualRunsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/manual-runs`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+            startedFrom: queryArg.startedFrom,
+            startedBefore: queryArg.startedBefore,
+            status: queryArg.status,
+          },
+        }),
+        providesTags: ["Manual Test Runs"],
+      }),
+      getApiV2ManualTestRuns: build.query<
+        GetApiV2ManualTestRunsApiResponse,
+        GetApiV2ManualTestRunsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs`,
+          params: {
+            projectId: queryArg.projectId,
+            page: queryArg.page,
+            limit: queryArg.limit,
+            startedFrom: queryArg.startedFrom,
+            startedBefore: queryArg.startedBefore,
+            testScenarioId: queryArg.testScenarioId,
+            status: queryArg.status,
+          },
+        }),
+        providesTags: ["Manual Test Runs"],
+      }),
+      getApiV2ManualTestRunsByRunId: build.query<
+        GetApiV2ManualTestRunsByRunIdApiResponse,
+        GetApiV2ManualTestRunsByRunIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}`,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        providesTags: ["Manual Test Runs"],
+      }),
+      patchApiV2ManualTestRunsByRunId: build.mutation<
+        PatchApiV2ManualTestRunsByRunIdApiResponse,
+        PatchApiV2ManualTestRunsByRunIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}`,
+          method: "PATCH",
+          body: queryArg.manualTestRunUpdateRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Manual Test Runs"],
+      }),
+      patchApiV2ManualTestRunsByRunIdStepsAndStepId: build.mutation<
+        PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse,
+        PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}/steps/${queryArg.stepId}`,
+          method: "PATCH",
+          body: queryArg.manualTestRunStepUpdateRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Manual Test Runs"],
+      }),
+      postApiV2ManualTestRunsByRunIdComplete: build.mutation<
+        PostApiV2ManualTestRunsByRunIdCompleteApiResponse,
+        PostApiV2ManualTestRunsByRunIdCompleteApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}/complete`,
+          method: "POST",
+          body: queryArg.manualTestRunCompleteRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Manual Test Runs"],
+      }),
     }),
     overrideExisting: false,
   });
@@ -1271,6 +1564,165 @@ export type PostApiV2ReportsPdfExportApiResponse =
   /** status 200 PDF export stream. When includeAiInsights is true, the PDF may include an AI Insights section embedded in the document. */ Blob;
 export type PostApiV2ReportsPdfExportApiArg = {
   pdfExportRequest: PdfExportRequest;
+};
+export type PostApiV2TestScenariosByScenarioIdSpecLinksApiResponse =
+  /** status 201 Test scenario Spec link created */ TestScenarioSpecLinkResponse;
+export type PostApiV2TestScenariosByScenarioIdSpecLinksApiArg = {
+  scenarioId: string;
+  projectId: string;
+  testScenarioSpecLinkBody: TestScenarioSpecLinkBody;
+};
+export type GetApiV2TestScenariosByScenarioIdSpecLinksApiResponse =
+  /** status 200 Paginated linked Specs */ TestScenarioSpecLinkListResponse;
+export type GetApiV2TestScenariosByScenarioIdSpecLinksApiArg = {
+  scenarioId: string;
+  projectId: string;
+  page?: number;
+  limit?: number;
+};
+export type PatchApiV2TestScenariosByScenarioIdApiResponse =
+  /** status 200 Updated test scenario details */ TestScenario;
+export type PatchApiV2TestScenariosByScenarioIdApiArg = {
+  scenarioId: string;
+  projectId: string;
+  updateTestScenarioRequest: UpdateTestScenarioRequest;
+};
+export type GetApiV2TestScenariosByScenarioIdApiResponse =
+  /** status 200 Test scenario details */ TestScenario;
+export type GetApiV2TestScenariosByScenarioIdApiArg = {
+  scenarioId: string;
+  projectId: string;
+};
+export type DeleteApiV2TestScenariosByScenarioIdApiResponse = unknown;
+export type DeleteApiV2TestScenariosByScenarioIdApiArg = {
+  scenarioId: string;
+  projectId: string;
+};
+export type PostApiV2TestScenariosByScenarioIdStepsApiResponse =
+  /** status 201 Step appended; complete scenario returned */ TestScenario;
+export type PostApiV2TestScenariosByScenarioIdStepsApiArg = {
+  scenarioId: string;
+  projectId: string;
+  appendTestScenarioStepRequest: AppendTestScenarioStepRequest;
+};
+export type PatchApiV2TestScenariosByScenarioIdStepsAndStepIdApiResponse =
+  /** status 200 Step updated; complete scenario returned */ TestScenario;
+export type PatchApiV2TestScenariosByScenarioIdStepsAndStepIdApiArg = {
+  scenarioId: string;
+  stepId: string;
+  projectId: string;
+  updateTestScenarioStepRequest: UpdateTestScenarioStepRequest;
+};
+export type DeleteApiV2TestScenariosByScenarioIdStepsAndStepIdApiResponse =
+  /** status 200 Step deleted; complete scenario returned */ TestScenario;
+export type DeleteApiV2TestScenariosByScenarioIdStepsAndStepIdApiArg = {
+  scenarioId: string;
+  stepId: string;
+  projectId: string;
+};
+export type PutApiV2TestScenariosByScenarioIdStepsOrderApiResponse =
+  /** status 200 Steps reordered; complete scenario returned */ TestScenario;
+export type PutApiV2TestScenariosByScenarioIdStepsOrderApiArg = {
+  scenarioId: string;
+  projectId: string;
+  reorderTestScenarioStepsRequest: ReorderTestScenarioStepsRequest;
+};
+export type DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiResponse =
+  unknown;
+export type DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiArg = {
+  scenarioId: string;
+  specId: string;
+  projectId: string;
+};
+export type GetApiV2TestScenariosByScenarioIdResultsApiResponse =
+  /** status 200 Paginated scenario Result evidence */ TestScenarioResultsResponse;
+export type GetApiV2TestScenariosByScenarioIdResultsApiArg = {
+  scenarioId: string;
+  projectId: string;
+  page?: number;
+  limit?: number;
+};
+export type GetApiV2TestScenariosByScenarioIdIssuesApiResponse =
+  /** status 200 Paginated scenario Issue evidence */ TestScenarioIssuesResponse;
+export type GetApiV2TestScenariosByScenarioIdIssuesApiArg = {
+  scenarioId: string;
+  projectId: string;
+  page?: number;
+  limit?: number;
+};
+export type PostApiV2TestScenariosApiResponse =
+  /** status 201 Test scenario created */ TestScenario;
+export type PostApiV2TestScenariosApiArg = {
+  createTestScenarioRequest: CreateTestScenarioRequest;
+};
+export type GetApiV2TestScenariosApiResponse =
+  /** status 200 Paginated test scenarios */ TestScenarioListResponse;
+export type GetApiV2TestScenariosApiArg = {
+  projectId: string;
+  page?: number;
+  limit?: number;
+};
+export type PostApiV2TestScenariosByScenarioIdManualRunsApiResponse =
+  /** status 201 Manual test run started */ ManualTestRunRead;
+export type PostApiV2TestScenariosByScenarioIdManualRunsApiArg = {
+  scenarioId: string;
+  projectId: string;
+  manualTestRunStartRequest: ManualTestRunStartRequest;
+};
+export type GetApiV2TestScenariosByScenarioIdManualRunsApiResponse =
+  /** status 200 Scenario manual-run history */ ManualTestRunPageRead;
+export type GetApiV2TestScenariosByScenarioIdManualRunsApiArg = {
+  scenarioId: string;
+  projectId: string;
+  page?: number;
+  limit?: number;
+  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
+  startedFrom?: string;
+  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
+  startedBefore?: string;
+  status?: ManualTestRunStatus;
+};
+export type GetApiV2ManualTestRunsApiResponse =
+  /** status 200 Project manual-run history */ ManualTestRunPageRead;
+export type GetApiV2ManualTestRunsApiArg = {
+  projectId: string;
+  page?: number;
+  limit?: number;
+  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
+  startedFrom?: string;
+  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
+  startedBefore?: string;
+  /** Immutable source scenario UUID */
+  testScenarioId?: string;
+  status?: ManualTestRunStatus;
+};
+export type GetApiV2ManualTestRunsByRunIdApiResponse =
+  /** status 200 Manual test run detail */ ManualTestRunRead;
+export type GetApiV2ManualTestRunsByRunIdApiArg = {
+  runId: string;
+  projectId: string;
+};
+export type PatchApiV2ManualTestRunsByRunIdApiResponse =
+  /** status 200 Updated manual test run */ ManualTestRunRead;
+export type PatchApiV2ManualTestRunsByRunIdApiArg = {
+  runId: string;
+  projectId: string;
+  manualTestRunUpdateRequest: ManualTestRunUpdateRequest;
+};
+export type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse =
+  /** status 200 Updated manual test run */ ManualTestRunRead;
+export type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiArg = {
+  runId: string;
+  stepId: string;
+  projectId: string;
+  manualTestRunStepUpdateRequest: ManualTestRunStepUpdateRequest;
+};
+export type PostApiV2ManualTestRunsByRunIdCompleteApiResponse =
+  /** status 200 Completed manual test run */ ManualTestRunRead;
+export type PostApiV2ManualTestRunsByRunIdCompleteApiArg = {
+  runId: string;
+  projectId: string;
+  manualTestRunCompleteRequest: ManualTestRunCompleteRequest;
 };
 export type StatusResponse = {
   status: string;
@@ -2023,6 +2475,258 @@ export type PdfExportRequest = {
   /** When true, the export includes an AI-generated insights section in the PDF. Defaults to false when omitted. */
   includeAiInsights?: boolean;
 };
+export type TestScenarioSpecLinkResponse = {
+  scenarioId: string;
+  specId: string;
+};
+export type TestScenarioSpecLinkBody = {
+  specId: string;
+};
+export type TestScenarioLinkedSpec = {
+  id: string;
+  projectId: string;
+  key: string;
+  file: string;
+  title: string;
+  tags: string[];
+  annotations: any[];
+  createdAt: string;
+  updatedAt: string;
+};
+export type TestScenarioSpecLinkListResponse = {
+  scenarioId: string;
+  projectId: string;
+  specs: TestScenarioLinkedSpec[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type TestScenario = {
+  id: string;
+  projectId: string;
+  createdById: string;
+  title: string;
+  details: string | null;
+  objective: string | null;
+  preconditions: string | null;
+  testData: string | null;
+  expectedResult: string | null;
+  notes: string | null;
+  steps: {
+    id: string;
+    position: number;
+    action: string;
+    expectedResult: string | null;
+  }[];
+  contentMd: string;
+  contentMdHash: string;
+  contentMdFormatVersion: number;
+  createdAt: string;
+  updatedAt: string;
+};
+export type UpdateTestScenarioRequest = {
+  title?: string;
+  details?: string | null;
+  objective?: string | null;
+  preconditions?: string | null;
+  testData?: string | null;
+  expectedResult?: string | null;
+  notes?: string | null;
+};
+export type AppendTestScenarioStepRequest = {
+  action: string;
+  expectedResult?: string;
+};
+export type UpdateTestScenarioStepRequest = {
+  action?: string;
+  expectedResult?: string | null;
+};
+export type ReorderTestScenarioStepsRequest = {
+  stepIds: string[];
+};
+export type TestScenarioResultsResponse = {
+  scenarioId: string;
+  projectId: string;
+  linkedSpecCount: number;
+  results: Result[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type TestScenarioObservedIssue = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  category: string;
+  description: string | null;
+  portal: string | null;
+  service: string | null;
+  ticket: string | null;
+  createdBy: {
+    id: string;
+    name: string;
+    email: string;
+    createdAt: string;
+  } | null;
+  updatedBy: {
+    id: string;
+    name: string;
+    email: string;
+    createdAt: string;
+  } | null;
+};
+export type TestScenarioIssuesResponse = {
+  scenarioId: string;
+  projectId: string;
+  linkedSpecCount: number;
+  issues: TestScenarioObservedIssue[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type CreateTestScenarioStep = {
+  action: string;
+  expectedResult?: string;
+};
+export type CreateTestScenarioRequest = {
+  projectId: string;
+  title: string;
+  details?: string;
+  objective?: string;
+  preconditions?: string;
+  testData?: string;
+  expectedResult?: string;
+  notes?: string;
+  steps?: CreateTestScenarioStep[];
+};
+export type TestScenarioCreatorSummary = {
+  id: string;
+  name: string;
+  email: string;
+};
+export type TestScenarioSummary = {
+  id: string;
+  projectId: string;
+  createdById: string;
+  title: string;
+  details: string | null;
+  createdBy: TestScenarioCreatorSummary;
+  createdAt: string;
+  updatedAt: string;
+};
+export type TestScenarioListResponse = {
+  scenarios: TestScenarioSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type ManualTestRunExecutor = {
+  id: string;
+  name: string;
+  email: string;
+} | null;
+export type ManualTestRunStatus =
+  | "in_progress"
+  | "passed"
+  | "failed"
+  | "blocked"
+  | "skipped";
+export type ManualTestRun = {
+  executedBy: ManualTestRunExecutor;
+  status: ManualTestRunStatus;
+  notes: string | null;
+};
+export type ManualTestRunStepStatus =
+  | "not_started"
+  | "passed"
+  | "failed"
+  | "blocked"
+  | "skipped";
+export type ManualTestRunStep = {
+  status: ManualTestRunStepStatus;
+  notes: string | null;
+};
+export type ManualTestRunStepRead = {
+  id: string;
+  position: number;
+  action: string;
+  expectedResult: string | null;
+  status: ManualTestRunStepStatus;
+  notes: string | null;
+  updatedAt: string;
+};
+export type ManualTestRunRead = {
+  id: string;
+  projectId: string;
+  sourceTestScenarioId: string;
+  testScenarioId: string | null;
+  executedById: string | null;
+  executedBy: ManualTestRunExecutor;
+  status: ManualTestRunStatus;
+  startedAt: string;
+  completedAt: string | null;
+  updatedAt: string;
+  title: string;
+  details: string | null;
+  objective: string | null;
+  preconditions: string | null;
+  testData: string | null;
+  expectedResult: string | null;
+  scenarioNotes: string | null;
+  notes: string | null;
+  steps: ManualTestRunStepRead[];
+};
+export type ManualTestRunStartRequest = {
+  notes?: string | null;
+};
+export type ManualTestRunSummary = {
+  executedBy: ManualTestRunExecutor;
+  status: ManualTestRunStatus;
+};
+export type ManualTestRunSummaryRead = {
+  id: string;
+  projectId: string;
+  sourceTestScenarioId: string;
+  testScenarioId: string | null;
+  executedById: string | null;
+  executedBy: ManualTestRunExecutor;
+  title: string;
+  status: ManualTestRunStatus;
+  startedAt: string;
+  completedAt: string | null;
+  updatedAt: string;
+};
+export type ManualTestRunPage = {
+  runs: ManualTestRunSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type ManualTestRunPageRead = {
+  runs: ManualTestRunSummaryRead[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+export type ManualTestRunUpdateRequest = {
+  status?: ManualTestRunStatus;
+  notes?: string | null;
+};
+export type ManualTestRunStepUpdateRequest = {
+  status?: ManualTestRunStepStatus;
+  notes?: string | null;
+};
+export type ManualTestRunCompleteRequest = {
+  status: "passed" | "failed" | "blocked" | "skipped";
+  notes?: string | null;
+};
 export const {
   useGetApiV2StatusQuery,
   useLazyGetApiV2StatusQuery,
@@ -2121,4 +2825,33 @@ export const {
   useGetApiV2AnalysisExportQuery,
   useLazyGetApiV2AnalysisExportQuery,
   usePostApiV2ReportsPdfExportMutation,
+  usePostApiV2TestScenariosByScenarioIdSpecLinksMutation,
+  useGetApiV2TestScenariosByScenarioIdSpecLinksQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdSpecLinksQuery,
+  usePatchApiV2TestScenariosByScenarioIdMutation,
+  useGetApiV2TestScenariosByScenarioIdQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdQuery,
+  useDeleteApiV2TestScenariosByScenarioIdMutation,
+  usePostApiV2TestScenariosByScenarioIdStepsMutation,
+  usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
+  useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
+  usePutApiV2TestScenariosByScenarioIdStepsOrderMutation,
+  useDeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdMutation,
+  useGetApiV2TestScenariosByScenarioIdResultsQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdResultsQuery,
+  useGetApiV2TestScenariosByScenarioIdIssuesQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdIssuesQuery,
+  usePostApiV2TestScenariosMutation,
+  useGetApiV2TestScenariosQuery,
+  useLazyGetApiV2TestScenariosQuery,
+  usePostApiV2TestScenariosByScenarioIdManualRunsMutation,
+  useGetApiV2TestScenariosByScenarioIdManualRunsQuery,
+  useLazyGetApiV2TestScenariosByScenarioIdManualRunsQuery,
+  useGetApiV2ManualTestRunsQuery,
+  useLazyGetApiV2ManualTestRunsQuery,
+  useGetApiV2ManualTestRunsByRunIdQuery,
+  useLazyGetApiV2ManualTestRunsByRunIdQuery,
+  usePatchApiV2ManualTestRunsByRunIdMutation,
+  usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
+  usePostApiV2ManualTestRunsByRunIdCompleteMutation,
 } = injectedRtkApi;
