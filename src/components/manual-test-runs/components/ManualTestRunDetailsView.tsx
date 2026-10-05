@@ -1,16 +1,18 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Button, Heading, HStack, Icon, Text, VStack } from '@chakra-ui/react';
-import { FiArrowLeft } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2 } from 'react-icons/fi';
 import { LuBan, LuCheck, LuCircleHelp, LuCircleX, LuSkipForward } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 import { Input, Link, NativeSelect, Textarea, Tooltip, Wrap } from '@/components/ui';
-import type { ManualTestRunRead, ManualTestRunStepRead, ManualTestRunStepStatus } from '@/redux/apis/generatedApi';
+import type { ActiveUserDirectoryEntry, ManualTestRunRead, ManualTestRunStepRead, ManualTestRunStepStatus } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
 import { getTestScenarioDetailPath } from '@/components/test-scenarios/constants';
+import { extractApiError } from '@/utils/apiErrors';
 
 import { MANUAL_TEST_RUN_STEP_STATUSES } from '../types';
 import { getManualTestRunProgressCounts, isManualTestRunPassedEligible } from '../utils';
@@ -19,7 +21,6 @@ import { useManualTestRunExecution } from '../hooks/useManualTestRunExecution';
 
 const formatDate = (timestamp: string | null) => (timestamp ? new Date(timestamp).toLocaleString('en-US') : 'Not available');
 const formatLabel = (value: string) => value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
-
 const snapshotFields = [
   ['Details', 'details'],
   ['Objective', 'objective'],
@@ -114,6 +115,13 @@ export interface ManualTestRunDetailsViewProps {
   onBack: () => void;
   onRetest?: (trigger: HTMLButtonElement) => void;
   isRetesting?: boolean;
+  activeUsers?: ActiveUserDirectoryEntry[];
+  isLoadingActiveUsers: boolean;
+  isActiveUsersError: boolean;
+  onLoadActiveUsers: () => void;
+  onRetryActiveUsers: () => void;
+  isReassigningExecutor: boolean;
+  onReassignExecutor: (userId: string) => Promise<ManualTestRunRead | undefined>;
   onViewSourceHistory?: () => void;
 }
 
@@ -126,11 +134,29 @@ export const ManualTestRunDetailsView = ({
   onBack,
   onRetest,
   isRetesting = false,
+  activeUsers,
+  isLoadingActiveUsers,
+  isActiveUsersError,
+  onLoadActiveUsers,
+  onRetryActiveUsers,
+  isReassigningExecutor,
+  onReassignExecutor,
   onViewSourceHistory,
 }: ManualTestRunDetailsViewProps) => {
   const completionTriggerRef = useRef<HTMLButtonElement>(null);
+  const executorEditTriggerRef = useRef<HTMLButtonElement>(null);
   const stepHeadingRefs = useRef<Record<string, HTMLHeadingElement | null>>({});
   const wasCompletionOpen = useRef(false);
+  const isMounted = useRef(true);
+  const latestScope = useRef(`${projectId}:${runId}`);
+  latestScope.current = `${projectId}:${runId}`;
+  const [executorDraft, setExecutorDraft] = useState(run.executedById ?? '');
+  const [isExecutorEditorOpen, setIsExecutorEditorOpen] = useState(false);
+  const [executorFeedback, setExecutorFeedback] = useState<{
+    status: 'success' | 'error';
+    title: string;
+    description?: string;
+  }>();
   const execution = useManualTestRunExecution({ projectId, runId, run, setPersistedRun, refetch });
   const orderedSteps = [...execution.savedRun.steps].sort((left, right) => left.position - right.position);
 
@@ -153,6 +179,85 @@ export const ManualTestRunDetailsView = ({
     if (typeof heading?.scrollIntoView === 'function') heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
     heading?.focus();
   };
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setExecutorDraft(run.executedById ?? '');
+    setIsExecutorEditorOpen(false);
+  }, [run.executedById, run.id, run.projectId]);
+
+  useEffect(() => {
+    setExecutorFeedback(undefined);
+  }, [run.id, run.projectId]);
+
+  const saveExecutor = async () => {
+    const scope = `${projectId}:${runId}`;
+    if (
+      !executorDraft ||
+      executorDraft === execution.savedRun.executedById ||
+      !activeUsers?.some((user) => user.id === executorDraft) ||
+      execution.pendingWrite ||
+      execution.recoveryBlocked ||
+      isReassigningExecutor
+    ) return;
+
+    setExecutorFeedback(undefined);
+    try {
+      const response = await onReassignExecutor(executorDraft);
+      if (!response) return;
+      if (!isMounted.current || latestScope.current !== scope || response.id !== runId || response.projectId !== projectId) return;
+
+      setExecutorDraft(response.executedById ?? '');
+      setExecutorFeedback({
+        status: 'success',
+        title: 'Executor updated.',
+        description: 'Execution controls now follow the saved Executor assignment.',
+      });
+      setIsExecutorEditorOpen(false);
+      executorEditTriggerRef.current?.focus();
+    } catch (error) {
+      if (!isMounted.current || latestScope.current !== scope) return;
+      setExecutorFeedback({
+        status: 'error',
+        title: 'Executor was not changed.',
+        description: extractApiError(error as FetchBaseQueryError),
+      });
+    }
+  };
+
+  const assignableUserIds = new Set(activeUsers?.map((user) => user.id) ?? []);
+  const executorItems = [
+    ...(execution.savedRun.executedById && !assignableUserIds.has(execution.savedRun.executedById)
+      ? [{
+          value: execution.savedRun.executedById,
+          label: `${execution.savedRun.executedBy?.name ?? 'Saved Executor'} (inactive or unavailable)`,
+          disabled: true,
+        }]
+      : []),
+    ...(executorDraft && executorDraft !== execution.savedRun.executedById && !assignableUserIds.has(executorDraft)
+      ? [{ value: executorDraft, label: 'Selected user is no longer active', disabled: true }]
+      : []),
+    ...(activeUsers?.map((user) => ({
+      value: user.id,
+      label: `${user.name} (${user.email})`,
+    })) ?? []),
+  ];
+  const canSaveExecutor = Boolean(
+    executorDraft &&
+    executorDraft !== execution.savedRun.executedById &&
+    assignableUserIds.has(executorDraft) &&
+    !isLoadingActiveUsers &&
+    !isActiveUsersError &&
+    !isReassigningExecutor &&
+    !execution.pendingWrite &&
+    !execution.recoveryBlocked,
+  );
 
   return (
     <VStack align="stretch" gap={6} mx={{ base: 4, md: 6 }} my={4}>
@@ -211,12 +316,114 @@ export const ManualTestRunDetailsView = ({
         <Text><Text as="span" fontWeight="semibold" color="text.main">Status:</Text> {formatLabel(execution.savedRun.status)}</Text>
         <Text><Text as="span" fontWeight="semibold" color="text.main">Started:</Text> {formatDate(execution.savedRun.startedAt)}</Text>
         <Text><Text as="span" fontWeight="semibold" color="text.main">Completed:</Text> {formatDate(execution.savedRun.completedAt)}</Text>
-        <Text>
-          <Text as="span" fontWeight="semibold" color="text.main">Executor:</Text>{' '}
-          {execution.savedRun.executedBy?.name ?? 'Executor unavailable'}
-          {execution.savedRun.executedBy?.email ? ` (${execution.savedRun.executedBy.email})` : ''}
-        </Text>
+        <HStack gap={2} flexWrap="wrap">
+          <Text>
+            <Text as="span" fontWeight="semibold" color="text.main">Executor:</Text>{' '}
+            {execution.savedRun.executedBy?.name ?? 'Executor unavailable'}
+            {execution.savedRun.executedBy?.email ? ` (${execution.savedRun.executedBy.email})` : ''}
+          </Text>
+          <Button
+            ref={executorEditTriggerRef}
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={isReassigningExecutor}
+            aria-expanded={isExecutorEditorOpen}
+            aria-controls="manual-test-run-executor-editor"
+            onClick={() => {
+              if (isExecutorEditorOpen) {
+                setExecutorDraft(execution.savedRun.executedById ?? '');
+                setExecutorFeedback(undefined);
+                setIsExecutorEditorOpen(false);
+                return;
+              }
+              setExecutorDraft(execution.savedRun.executedById ?? '');
+              setExecutorFeedback(undefined);
+              setIsExecutorEditorOpen(true);
+              onLoadActiveUsers();
+            }}
+          >
+            <FiEdit2 aria-hidden="true" />
+            Change Executor
+          </Button>
+          {executorFeedback?.status === 'success' && (
+            <Text role="status" fontSize="sm" color="status.success.text">{executorFeedback.title}</Text>
+          )}
+        </HStack>
       </HStack>
+
+      {isExecutorEditorOpen && (
+        <Box id="manual-test-run-executor-editor" as="section" aria-labelledby="manual-test-run-executor-heading" p={{ base: 4, md: 5 }} borderWidth="1px" borderColor="border.subtle" borderRadius="md">
+          <VStack align="stretch" gap={3} maxW="560px">
+            <Heading id="manual-test-run-executor-heading" size="md">Executor assignment</Heading>
+            {isLoadingActiveUsers && <Text role="status">Loading active users…</Text>}
+            {isActiveUsersError && (
+              <Alert.Root status="error" role="alert">
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>Could not load active users.</Alert.Title>
+                  <Alert.Description>Retry to choose an Executor.</Alert.Description>
+                </Alert.Content>
+              </Alert.Root>
+            )}
+            {isActiveUsersError && <Button type="button" variant="outline" onClick={onRetryActiveUsers}>Retry active users</Button>}
+            {activeUsers && !isLoadingActiveUsers && !isActiveUsersError && (
+              <>
+                <NativeSelect
+                  name="manual-test-run-executor"
+                  label="Executor"
+                  value={executorDraft}
+                  onChange={(event) => {
+                    setExecutorDraft(event.target.value);
+                    setExecutorFeedback(undefined);
+                  }}
+                  disabled={isReassigningExecutor || Boolean(execution.pendingWrite) || execution.recoveryBlocked}
+                  placeholder="Select an active user"
+                  items={executorItems}
+                  w="100%"
+                />
+                {activeUsers.length === 0 && <Text color="text.secondary">No active users are available to assign.</Text>}
+                <HStack gap={3} flexWrap="wrap">
+                  <Button
+                    type="button"
+                    onClick={() => void saveExecutor()}
+                    loading={isReassigningExecutor}
+                    loadingText="Saving…"
+                    disabled={!canSaveExecutor}
+                  >
+                    Save Executor
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isReassigningExecutor}
+                    onClick={() => {
+                      setExecutorDraft(execution.savedRun.executedById ?? '');
+                      setExecutorFeedback(undefined);
+                      setIsExecutorEditorOpen(false);
+                      executorEditTriggerRef.current?.focus();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  {executorDraft !== (execution.savedRun.executedById ?? '') && (
+                    <Text role="status" fontSize="sm" color="text.secondary">Unsaved Executor selection</Text>
+                  )}
+                </HStack>
+              </>
+            )}
+            {executorFeedback?.status === 'error' && (
+              <Alert.Root status="error" role="alert" aria-live="polite">
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>{executorFeedback.title}</Alert.Title>
+                  {executorFeedback.description && <Alert.Description>{executorFeedback.description}</Alert.Description>}
+                </Alert.Content>
+              </Alert.Root>
+            )}
+          </VStack>
+        </Box>
+      )}
 
       {execution.feedback && (
         <Alert.Root status={execution.feedback.status} role="alert" aria-live="polite">
@@ -227,12 +434,21 @@ export const ManualTestRunDetailsView = ({
           </Alert.Content>
         </Alert.Root>
       )}
+      {readOnly && execution.isDirty && (
+        <Alert.Root status="warning" role="status">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Unsaved execution changes are kept for review.</Alert.Title>
+            <Alert.Description>These local changes were not submitted and will not be saved automatically. Copy anything you need before leaving this run.</Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
       {readOnly && execution.savedRun.status === 'in_progress' && (
         <Alert.Root status="info" role="status">
           <Alert.Indicator />
           <Alert.Content>
             <Alert.Title>View-only run</Alert.Title>
-            <Alert.Description>Only the user who started this run can change its results, notes or complete it.</Alert.Description>
+            <Alert.Description>Execution controls in this client are available to the assigned Executor. Change the Executor above to continue this run as another user.</Alert.Description>
           </Alert.Content>
         </Alert.Root>
       )}
