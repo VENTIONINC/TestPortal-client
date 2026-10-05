@@ -21,6 +21,7 @@ export interface TestScenarioCreateContainerProps {
 }
 
 const EMPTY_VALUES = {
+  scenarioKey: '',
   title: '',
   details: null,
   objective: null,

@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Button, Heading, HStack, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, Heading, HStack, Text, VStack } from '@chakra-ui/react';
 import { FiArrowLeft } from 'react-icons/fi';
 
 import { ContextMenuButton, Link, Wrap } from '@/components/ui';
@@ -14,10 +14,8 @@ import type { TestScenarioContextMenuHandler } from '../hooks/useTestScenarioCon
 export interface TestScenarioDetailsViewProps {
   scenario: TestScenario;
   onContextMenu: TestScenarioContextMenuHandler;
-  onStartManualRun?: () => void;
+  onStartManualRun?: (trigger: HTMLButtonElement) => void;
   isStartingManualRun?: boolean;
-  startError?: string;
-  startUncertain?: boolean;
 }
 
 const structuredFields = [
@@ -36,8 +34,6 @@ export const TestScenarioDetailsView = ({
   onContextMenu,
   onStartManualRun,
   isStartingManualRun = false,
-  startError,
-  startUncertain = false,
 }: TestScenarioDetailsViewProps) => (
   <VStack align="stretch" gap={6} mx={{ base: 4, md: 6 }} my={4}>
     <HStack justify="space-between" align="start" gap={4} flexWrap="wrap">
@@ -56,12 +52,20 @@ export const TestScenarioDetailsView = ({
         >
           <FiArrowLeft size={18} aria-hidden="true" />
         </Link>
-        <Heading size="lg">{scenario.title}</Heading>
+        <VStack align="start" gap={0}>
+          <Heading size="lg">{scenario.title}</Heading>
+          <Text color="text.secondary">Scenario key: {scenario.scenarioKey ?? 'N/A'}</Text>
+        </VStack>
       </HStack>
       <HStack gap={2}>
         {onStartManualRun && (
-          <Button type="button" onClick={onStartManualRun} loading={isStartingManualRun} disabled={isStartingManualRun}>
-            {startUncertain ? 'Start manual run again' : 'Start manual run'}
+          <Button
+            type="button"
+            onClick={(event) => onStartManualRun(event.currentTarget)}
+            loading={isStartingManualRun}
+            disabled={isStartingManualRun}
+          >
+            Start manual run
           </Button>
         )}
         <Link href={getManualTestRunScenarioHistoryPath(scenario.id)}>Run history</Link>
@@ -71,25 +75,6 @@ export const TestScenarioDetailsView = ({
         />
       </HStack>
     </HStack>
-
-    {startUncertain && (
-      <Alert.Root status="warning" role="alert">
-        <Alert.Indicator />
-        <Alert.Content>
-          <Alert.Title>Start result is uncertain</Alert.Title>
-          <Alert.Description>{startError ?? 'A run may have been created. Starting again could create another run.'}</Alert.Description>
-        </Alert.Content>
-      </Alert.Root>
-    )}
-    {startError && !startUncertain && (
-      <Alert.Root status="error" role="alert">
-        <Alert.Indicator />
-        <Alert.Content>
-          <Alert.Title>Failed to start manual run</Alert.Title>
-          <Alert.Description>{startError}</Alert.Description>
-        </Alert.Content>
-      </Alert.Root>
-    )}
 
     <Wrap w="100%" p={{ base: 4, md: 6 }}>
       <VStack align="stretch" w="100%" gap={6}>

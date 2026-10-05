@@ -45,6 +45,8 @@ export const ManualTestRunHistoryContainer = ({ projectId, scenarioId }: ManualT
       onSourceChange={history.setSourceTestScenarioId}
       onStartDateChange={history.setStartedOnOrAfter}
       onEndDateChange={history.setStartedOnOrBefore}
+      onSourceKeyChange={(value) => history.setSourceScenarioKey(value)}
+      onApplyFilters={history.applyFilters}
       onClearFilters={history.clearFilters}
       onPageChange={history.setPage}
       onRetry={history.retry}

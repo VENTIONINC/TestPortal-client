@@ -9,6 +9,7 @@ import { TestScenarioForm } from '@/components/test-scenarios/components/TestSce
 import { ChakraProvider } from '@/components/ui';
 
 const initialValues = {
+  scenarioKey: 'AUTH-LOGIN',
   title: 'Checkout flow',
   details: 'Existing scenario details',
   objective: 'Complete checkout',
@@ -30,9 +31,24 @@ describe('TestScenarioForm', () => {
     renderForm();
 
     expect(screen.getByRole('heading', { name: 'Create Test Scenario' })).toBeInTheDocument();
-    for (const label of ['Title', 'Details', 'Objective', 'Preconditions', 'Test data', 'Expected result', 'Notes']) {
+    for (const label of [
+      'Scenario key (optional)',
+      'Title',
+      'Details',
+      'Objective',
+      'Preconditions',
+      'Test data',
+      'Expected result',
+      'Notes',
+    ]) {
       expect(screen.getByRole('textbox', { name: label })).toBeInTheDocument();
     }
+    expect(screen.getByRole('textbox', { name: 'Scenario key (optional)' })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Scenario key (optional)' })).toHaveAttribute(
+      'placeholder',
+      'e.g. R1 or AUTH-LOGIN',
+    );
+    expect(screen.getByText('Up to 100 characters. Duplicate keys are allowed.')).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Markdown' })).not.toBeInTheDocument();
     expect(screen.queryByRole('tab')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create Test Scenario' })).toBeInTheDocument();
@@ -42,6 +58,7 @@ describe('TestScenarioForm', () => {
     renderForm({ mode: 'edit', initialValues });
 
     expect(screen.getByRole('heading', { name: 'Edit Test Scenario' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Scenario key (optional)' })).toHaveValue(initialValues.scenarioKey);
     expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue(initialValues.details);
     expect(screen.getByRole('textbox', { name: 'Objective' })).toHaveValue(initialValues.objective);
     expect(screen.queryByRole('heading', { name: 'Saved Markdown preview' })).not.toBeInTheDocument();
@@ -61,6 +78,7 @@ describe('TestScenarioForm', () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     expect(onSubmit.mock.calls[0]?.[0]).toEqual({
+      scenarioKey: '',
       title: 'Scenario',
       details: 'First\n  Second',
       objective: 'Objective',
@@ -137,14 +155,14 @@ describe('TestScenarioForm', () => {
       <ChakraProvider>
         <TestScenarioForm
           mode="edit"
-          initialValues={{ ...initialValues, objective: 'Persisted objective' }}
+          initialValues={{ ...initialValues, scenarioKey: 'AUTH-LOGIN-2' }}
           onSubmit={vi.fn()}
           onCancel={vi.fn()}
         />
       </ChakraProvider>,
     );
 
-    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Objective' })).toHaveValue('Persisted objective'));
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Scenario key (optional)' })).toHaveValue('AUTH-LOGIN-2'));
     expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue('Keep an eye on totals (draft)');
   });
 });

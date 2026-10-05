@@ -18,6 +18,7 @@ const isSameScenario = (left: TestScenario | undefined, right: TestScenario) =>
   left?.id === right.id &&
   left.projectId === right.projectId &&
   left.createdById === right.createdById &&
+  left.scenarioKey === right.scenarioKey &&
   left.title === right.title &&
   left.contentMd === right.contentMd &&
   left.details === right.details &&

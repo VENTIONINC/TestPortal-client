@@ -17,6 +17,7 @@ export const MANUAL_TEST_RUN_HISTORY_STATUSES: Array<{ value: ManualTestRunStatu
 export interface ManualTestRunHistoryFilters {
   status: ManualTestRunStatus | '';
   sourceTestScenarioId: string;
+  sourceScenarioKey: string;
   startedOnOrAfter: string;
   startedOnOrBefore: string;
 }
@@ -24,6 +25,7 @@ export interface ManualTestRunHistoryFilters {
 export const DEFAULT_MANUAL_TEST_RUN_HISTORY_FILTERS: ManualTestRunHistoryFilters = {
   status: '',
   sourceTestScenarioId: '',
+  sourceScenarioKey: '',
   startedOnOrAfter: '',
   startedOnOrBefore: '',
 };
@@ -59,4 +61,4 @@ export const calendarDateToManualTestRunBoundary = (value: string, boundary: 'fr
 };
 
 export const hasManualTestRunHistoryFilters = (filters: ManualTestRunHistoryFilters) =>
-  Boolean(filters.status || filters.sourceTestScenarioId || filters.startedOnOrAfter || filters.startedOnOrBefore);
+  Boolean(filters.status || filters.sourceTestScenarioId || filters.sourceScenarioKey || filters.startedOnOrAfter || filters.startedOnOrBefore);

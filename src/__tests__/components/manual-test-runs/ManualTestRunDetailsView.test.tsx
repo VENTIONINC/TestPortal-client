@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, renderHook, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, renderHook, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -43,6 +43,8 @@ const runFor = (overrides: Partial<ManualTestRunRead> = {}): ManualTestRunRead =
   id: 'run-1',
   projectId: 'project-1',
   sourceTestScenarioId: 'scenario-1',
+  runKey: null,
+  sourceScenarioKey: null,
   testScenarioId: null,
   executedById: 'user-1',
   executedBy: null,
@@ -111,10 +113,149 @@ describe('ManualTestRunDetailsView', () => {
     expect(screen.getByText('Snapshot details')).toBeInTheDocument();
     expect(screen.getByText('Complete checkout')).toBeInTheDocument();
     expect(screen.getByText('Author note')).toBeInTheDocument();
+    expect(screen.getByText('Run key: N/A')).toBeInTheDocument();
+    expect(within(screen.getByText('Source scenario key at start').parentElement!).getByText('N/A')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Execution notes' })).toBeInTheDocument();
     expect(screen.getByText('Submit checkout')).toBeInTheDocument();
     expect(screen.getByText('Executor unavailable')).toBeInTheDocument();
     expect(screen.getByLabelText('Not started outcome')).toBeInTheDocument();
+  });
+
+  it('renders persisted run labels from the historical response after the source is deleted', () => {
+    renderView(runFor({ runKey: 'RUN-7', sourceScenarioKey: 'R1', testScenarioId: null }));
+
+    expect(screen.getByText('Run key: RUN-7')).toBeInTheDocument();
+    expect(screen.getByText('Source scenario key at start')).toBeInTheDocument();
+    expect(screen.getByText('R1')).toBeInTheDocument();
+    expect(screen.getByText('Source deleted')).toBeInTheDocument();
+  });
+
+  it('saves only the Run key for the authenticated executor', async () => {
+    const user = userEvent.setup();
+    patchRun.mockReturnValue({ unwrap: () => Promise.resolve(runFor({ runKey: 'RUN-2' })) });
+
+    renderView(runFor({ runKey: 'RUN-1' }));
+    await user.type(screen.getByRole('textbox', { name: 'Execution notes' }), 'unsaved execution draft');
+    const input = screen.getByRole('textbox', { name: 'Edit Run key' });
+    expect(input).toHaveValue('RUN-1');
+    expect(screen.queryByRole('button', { name: 'Discard Run key' })).not.toBeInTheDocument();
+    fireEvent.change(input, { target: { value: '  RUN-2  ' } });
+    expect(screen.getByRole('button', { name: 'Discard Run key' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save Run key' }));
+
+    await waitFor(() => expect(patchRun).toHaveBeenCalledWith({
+      projectId: 'project-1',
+      runId: 'run-1',
+      manualTestRunUpdateRequest: { runKey: 'RUN-2' },
+    }));
+    expect(screen.getByText('Run key: RUN-2')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveValue('unsaved execution draft');
+  });
+
+  it('allows completed-run key edits while execution controls stay frozen', async () => {
+    const user = userEvent.setup();
+    patchRun.mockReturnValue({ unwrap: () => Promise.resolve(runFor({
+      runKey: 'RUN-COMPLETE-2',
+      status: 'passed',
+      completedAt: '2026-09-17T11:00:00.000Z',
+    })) });
+
+    renderView(runFor({
+      runKey: 'RUN-COMPLETE-1',
+      status: 'passed',
+      completedAt: '2026-09-17T11:00:00.000Z',
+    }));
+    expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveAttribute('readonly');
+    expect(screen.queryByRole('button', { name: 'Complete run' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Edit Run key' })).not.toHaveAttribute('readonly');
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: 'RUN-COMPLETE-2' } });
+    await user.click(screen.getByRole('button', { name: 'Save Run key' }));
+
+    await waitFor(() => expect(patchRun).toHaveBeenCalledWith({
+      projectId: 'project-1',
+      runId: 'run-1',
+      manualTestRunUpdateRequest: { runKey: 'RUN-COMPLETE-2' },
+    }));
+  });
+
+  it('retains a failed Run key draft and preserves independent execution drafts on label save', async () => {
+    const user = userEvent.setup();
+    const onRetest = vi.fn();
+    patchRun.mockReturnValue({ unwrap: () => Promise.reject({ status: 503, data: { message: 'Unavailable' } }) });
+    renderView(runFor({ runKey: 'RUN-1', status: 'passed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: 'scenario-live' }), vi.fn(), vi.fn().mockResolvedValue(runFor({ runKey: 'RUN-1' })), { onRetest });
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: 'RUN-2' } });
+    await user.click(screen.getByRole('button', { name: 'Save Run key' }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Run key was not saved.'));
+    expect(screen.getByRole('textbox', { name: 'Edit Run key' })).toHaveValue('RUN-2');
+
+    await user.click(screen.getByRole('button', { name: 'Discard Run key' }));
+    await user.click(screen.getByRole('button', { name: 'Retest' }));
+    expect(onRetest).toHaveBeenCalledOnce();
+  });
+
+  it('recovers a Run key conflict from authoritative state without replaying or losing rejected input', async () => {
+    const user = userEvent.setup();
+    const authoritative = runFor({ runKey: 'RUN-AUTHORITATIVE', status: 'passed', completedAt: '2026-09-17T11:00:00.000Z' });
+    const refetch = vi.fn().mockResolvedValue(authoritative);
+    patchRun.mockReturnValue({ unwrap: () => Promise.reject({ status: 409, data: { error: 'run key changed' } }) });
+    renderView(runFor({ runKey: 'RUN-OLD', status: 'passed', completedAt: '2026-09-17T11:00:00.000Z' }), vi.fn(), refetch);
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: 'RUN-REJECTED' } });
+    await user.click(screen.getByRole('button', { name: 'Save Run key' }));
+
+    expect(refetch).toHaveBeenCalledOnce();
+    expect(patchRun).toHaveBeenCalledOnce();
+    expect(screen.getByText('Run key: RUN-AUTHORITATIVE')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Edit Run key' })).toHaveValue('RUN-REJECTED');
+    expect(screen.getByRole('alert')).toHaveTextContent('Run key was not saved.');
+  });
+
+  it('requires explicitly saving or discarding a dirty Run key before completion or Retest', async () => {
+    const user = userEvent.setup();
+    const onRetest = vi.fn();
+    const activeView = renderView(runFor({ steps: [] }), vi.fn(), undefined, { onRetest });
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: 'RUN-DRAFT' } });
+    await user.click(screen.getByRole('button', { name: 'Complete run' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.getByText('Save or discard drafts before completing.')).toBeInTheDocument();
+    expect(completeRun).not.toHaveBeenCalled();
+    activeView.unmount();
+
+    const completedView = renderView(runFor({ status: 'passed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: 'scenario-live' }), vi.fn(), undefined, { onRetest });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: 'RUN-DRAFT' } });
+    await user.click(screen.getByRole('button', { name: 'Retest' }));
+    expect(onRetest).not.toHaveBeenCalled();
+    expect(screen.getByText('Save or discard Run key changes before Retest.')).toBeInTheDocument();
+    completedView.unmount();
+  });
+
+  it('clears a Run key with null and does not PATCH an unchanged key', async () => {
+    const user = userEvent.setup();
+    patchRun.mockReturnValue({ unwrap: () => Promise.resolve(runFor({ runKey: null })) });
+
+    renderView(runFor({ runKey: 'RUN-CLEAR' }));
+    expect(screen.getByRole('button', { name: 'Save Run key' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Save Run key' }));
+    expect(patchRun).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: '' } });
+    await user.click(screen.getByRole('button', { name: 'Save Run key' }));
+    await waitFor(() => expect(patchRun).toHaveBeenCalledWith({
+      projectId: 'project-1',
+      runId: 'run-1',
+      manualTestRunUpdateRequest: { runKey: null },
+    }));
+  });
+
+  it.each(['user-2', null])('keeps the Run key view-only when the executor is %s', (executedById) => {
+    renderView(runFor({ runKey: 'RUN-FOREIGN', executedById }));
+
+    expect(screen.getByText('Run key: RUN-FOREIGN')).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Edit Run key' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save Run key' })).not.toBeInTheDocument();
   });
 
   it('saves only changed execution fields and keeps the run-note endpoint separate from step saves', async () => {
@@ -241,7 +382,7 @@ describe('ManualTestRunDetailsView', () => {
 
     unmount();
     renderView(runFor({ status: 'failed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: null }), vi.fn(), undefined, { onRetest });
-    expect(within(screen.getByRole('status')).getByText('Source deleted')).toBeInTheDocument();
+    expect(screen.getAllByText('Source deleted')).toHaveLength(2);
     expect(screen.getByRole('button', { name: 'Retest' })).toBeDisabled();
   });
 
@@ -378,7 +519,7 @@ describe('ManualTestRunDetailsView', () => {
     expect(refetch).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveValue(' rejected local note');
     expect(screen.queryByRole('button', { name: 'Save execution notes' })).not.toBeInTheDocument();
-    expect(screen.getByText('Run is now read-only')).toBeInTheDocument();
+    expect(screen.getByText('Execution is read-only')).toBeInTheDocument();
   });
 
   it('blocks writes when authoritative recovery fails and exposes an explicit retry', async () => {

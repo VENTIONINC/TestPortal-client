@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 
 import type { RootState } from '@/redux/store';
 import { getUserIdFromToken } from '@/utils/auth';
+import { createReadableLabelSchema } from '@/schemas';
 import {
   usePatchApiV2ManualTestRunsByRunIdMutation,
   usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
@@ -18,16 +19,19 @@ import { extractApiError } from '@/utils/apiErrors';
 
 import {
   getManualTestRunNotePatchPayload,
+  getManualTestRunKeyPatchPayload,
   getManualTestRunStepDrafts,
   getManualTestRunStepPatchPayload,
   hasManualTestRunDraftChanges,
   isManualTestRunPassedEligible,
   normalizeManualTestRunNote,
+  normalizeManualTestRunKey,
 } from '../utils';
 import type { ManualTestRunOutcome, ManualTestRunStepDrafts, ManualTestRunStepSaveState } from '../types';
 
 export type ManualTestRunPendingWrite =
   | { kind: 'run' }
+  | { kind: 'metadata' }
   | { kind: 'step'; stepId: string }
   | { kind: 'completion' }
   | null;
@@ -54,22 +58,30 @@ export interface UseManualTestRunExecutionResult {
   feedback?: ManualTestRunFeedback;
   recoveryBlocked: boolean;
   isReadOnly: boolean;
+  canEditRunKey: boolean;
   isDirty: boolean;
   isRunNotesDirty: boolean;
+  runKeyDraft: string;
+  runKeyError?: string;
+  isRunKeyDirty: boolean;
   dirtyStepIds: string[];
   stepSaveStates: Record<string, ManualTestRunStepSaveState>;
   setRunNotesDraft: (value: string) => void;
+  setRunKeyDraft: (value: string) => void;
   setStepStatus: (stepId: string, status: ManualTestRunStepStatus) => void;
   setStepNotes: (stepId: string, notes: string) => void;
   saveRunNotes: () => Promise<void>;
+  saveRunKey: () => Promise<void>;
   saveStep: (stepId: string) => Promise<void>;
   discardRunNotes: () => void;
+  discardRunKey: () => void;
   discardStep: (stepId: string) => void;
   requestCompletion: () => void;
   isCompletionOpen: boolean;
   closeCompletion: () => void;
   confirmCompletion: (outcome: ManualTestRunOutcome) => Promise<void>;
   retryAuthoritativeRecovery: () => Promise<void>;
+  canStartRetest: () => boolean;
 }
 
 const getStatus = (error: unknown) =>
@@ -88,12 +100,17 @@ const reconcileDrafts = (
   baseline: ManualTestRunRead,
   nextSaved: ManualTestRunRead,
   runNotesDraft: string,
+  runKeyDraft: string,
   stepDrafts: ManualTestRunStepDrafts,
 ) => {
   const nextRunNotesDraft =
     normalizeManualTestRunNote(runNotesDraft) === normalizeManualTestRunNote(baseline.notes)
       ? (nextSaved.notes ?? '')
       : runNotesDraft;
+  const nextRunKeyDraft =
+    normalizeManualTestRunKey(runKeyDraft) === normalizeManualTestRunKey(baseline.runKey)
+      ? (nextSaved.runKey ?? '')
+      : runKeyDraft;
   const nextStepDrafts: ManualTestRunStepDrafts = { ...stepDrafts };
 
   for (const step of nextSaved.steps) {
@@ -104,7 +121,7 @@ const reconcileDrafts = (
     if (!isDirty || !draft) nextStepDrafts[step.id] = { status: step.status, notes: step.notes ?? '' };
   }
 
-  return { nextRunNotesDraft, nextStepDrafts };
+  return { nextRunNotesDraft, nextRunKeyDraft, nextStepDrafts };
 };
 
 export const useManualTestRunExecution = ({
@@ -118,7 +135,10 @@ export const useManualTestRunExecution = ({
   const currentUserId = accessToken ? getUserIdFromToken(accessToken) : null;
   const [savedRun, setSavedRun] = useState(run);
   const isReadOnly = savedRun.status !== 'in_progress' || !currentUserId || savedRun.executedById !== currentUserId;
+  const canEditRunKey = Boolean(currentUserId && savedRun.executedById === currentUserId);
   const [runNotesDraft, setRunNotesDraftState] = useState(run.notes ?? '');
+  const [runKeyDraft, setRunKeyDraftState] = useState(run.runKey ?? '');
+  const [runKeyError, setRunKeyError] = useState<string>();
   const [stepDrafts, setStepDrafts] = useState<ManualTestRunStepDrafts>(() => getManualTestRunStepDrafts(run.steps));
   const [stepSaveStates, setStepSaveStates] = useState<Record<string, ManualTestRunStepSaveState>>({});
   const [pendingWrite, setPendingWrite] = useState<ManualTestRunPendingWrite>(null);
@@ -126,13 +146,13 @@ export const useManualTestRunExecution = ({
   const [recoveryBlocked, setRecoveryBlocked] = useState(false);
   const [isCompletionOpen, setIsCompletionOpen] = useState(false);
   const savedRunRef = useRef(run);
-  const draftStateRef = useRef({ runNotesDraft, stepDrafts });
+  const draftStateRef = useRef({ runNotesDraft, runKeyDraft, stepDrafts });
   const mountedRef = useRef(true);
   const latestScopeRef = useRef(`${projectId}:${runId}`);
   const writeInFlightRef = useRef(false);
 
   latestScopeRef.current = `${projectId}:${runId}`;
-  draftStateRef.current = { runNotesDraft, stepDrafts };
+  draftStateRef.current = { runNotesDraft, runKeyDraft, stepDrafts };
 
   useEffect(
     () => () => {
@@ -151,6 +171,8 @@ export const useManualTestRunExecution = ({
       savedRunRef.current = run;
       setSavedRun(run);
       setRunNotesDraftState(run.notes ?? '');
+      setRunKeyDraftState(run.runKey ?? '');
+      setRunKeyError(undefined);
       setStepDrafts(getManualTestRunStepDrafts(run.steps));
       setStepSaveStates({});
       return;
@@ -161,11 +183,13 @@ export const useManualTestRunExecution = ({
       baseline,
       run,
       draftStateRef.current.runNotesDraft,
+      draftStateRef.current.runKeyDraft,
       draftStateRef.current.stepDrafts,
     );
     savedRunRef.current = run;
     setSavedRun(run);
     setRunNotesDraftState(reconciled.nextRunNotesDraft);
+    setRunKeyDraftState(reconciled.nextRunKeyDraft);
     setStepDrafts(reconciled.nextStepDrafts);
   }, [run]);
 
@@ -173,18 +197,30 @@ export const useManualTestRunExecution = ({
     (response: ManualTestRunRead, baseline = savedRunRef.current) => {
       if (!isCurrentScope() || response.id !== runId || response.projectId !== projectId) return;
       const currentDrafts = draftStateRef.current;
-      const reconciled = reconcileDrafts(baseline, response, currentDrafts.runNotesDraft, currentDrafts.stepDrafts);
+      const reconciled = reconcileDrafts(
+        baseline,
+        response,
+        currentDrafts.runNotesDraft,
+        currentDrafts.runKeyDraft,
+        currentDrafts.stepDrafts,
+      );
       savedRunRef.current = response;
       setSavedRun(response);
       setRunNotesDraftState(reconciled.nextRunNotesDraft);
+      setRunKeyDraftState(reconciled.nextRunKeyDraft);
       setStepDrafts(reconciled.nextStepDrafts);
+      draftStateRef.current = {
+        runNotesDraft: reconciled.nextRunNotesDraft,
+        runKeyDraft: reconciled.nextRunKeyDraft,
+        stepDrafts: reconciled.nextStepDrafts,
+      };
       setPersistedRun(response);
     },
     [isCurrentScope, projectId, runId, setPersistedRun],
   );
 
   const recoverAuthoritativeState = useCallback(
-    async (reason: 'conflict' | 'uncertain-completion') => {
+    async (reason: 'conflict' | 'uncertain-completion' | 'run-key-conflict') => {
       if (!isCurrentScope()) return undefined;
       setRecoveryBlocked(true);
       const response = await refetch();
@@ -201,10 +237,16 @@ export const useManualTestRunExecution = ({
 
       applySavedResponse(response);
       setRecoveryBlocked(false);
-      if (response.status !== 'in_progress') {
+      if (reason === 'run-key-conflict') {
         setFeedback({
           status: 'warning',
-          title: 'Run is now read-only',
+          title: 'Run key was not saved.',
+          description: 'The refreshed saved key is authoritative. Your rejected label remains available for review; execution results stay frozen.',
+        });
+      } else if (response.status !== 'in_progress') {
+        setFeedback({
+          status: 'warning',
+          title: 'Execution is read-only',
           description:
             reason === 'conflict'
               ? 'The rejected local change was not saved. The completed result is authoritative; keep the rejected text for review or copying.'
@@ -225,7 +267,7 @@ export const useManualTestRunExecution = ({
       if (
         writeInFlightRef.current ||
         !isCurrentScope() ||
-        savedRunRef.current.status !== 'in_progress' ||
+        (write.kind !== 'metadata' && savedRunRef.current.status !== 'in_progress') ||
         !currentUserId ||
         savedRunRef.current.executedById !== currentUserId ||
         recoveryBlocked
@@ -261,6 +303,15 @@ export const useManualTestRunExecution = ({
       setRunNotesDraftState(value);
     },
     [isReadOnly, pendingWrite],
+  );
+
+  const setRunKeyDraft = useCallback(
+    (value: string) => {
+      if (!canEditRunKey || pendingWrite?.kind === 'metadata') return;
+      setRunKeyError(undefined);
+      setRunKeyDraftState(value);
+    },
+    [canEditRunKey, pendingWrite],
   );
 
   const setStepStatus = useCallback(
@@ -336,6 +387,62 @@ export const useManualTestRunExecution = ({
     runId,
     runNotesDraft,
   ]);
+
+  const saveRunKey = useCallback(async () => {
+    const baseline = savedRunRef.current;
+    const validation = createReadableLabelSchema('Run key').safeParse(runKeyDraft);
+    if (!validation.success) {
+      const message = validation.error.issues[0]?.message ?? 'Enter a valid Run key.';
+      setRunKeyError(message);
+      setFeedback({ status: 'error', title: 'Run key is invalid.', description: message });
+      return;
+    }
+    setRunKeyError(undefined);
+    const payload = getManualTestRunKeyPatchPayload(validation.data, baseline.runKey);
+    if (!payload) {
+      setFeedback({ status: 'info', title: 'No Run key changes to save.' });
+      return;
+    }
+    if (!beginWrite({ kind: 'metadata' })) {
+      setFeedback({
+        status: 'warning',
+        title: 'A run update is already pending.',
+        description: 'Wait for it to finish before saving the Run key.',
+      });
+      return;
+    }
+
+    try {
+      const response = await patchRun({ projectId, runId, manualTestRunUpdateRequest: payload }).unwrap();
+      if (!isCurrentScope()) return;
+      applySavedResponse(response, baseline);
+      const savedKey = response.runKey ?? '';
+      draftStateRef.current = { ...draftStateRef.current, runKeyDraft: savedKey };
+      setRunKeyDraftState(savedKey);
+      setRunKeyError(undefined);
+      setFeedback({ status: 'success', title: 'Run key saved.' });
+    } catch (error) {
+      if (!isCurrentScope()) return;
+      if (isConflict(error)) {
+        const authoritative = await recoverAuthoritativeState('run-key-conflict');
+        if (authoritative?.status === 'in_progress') {
+          setFeedback({
+            status: 'warning',
+            title: 'Run key was not saved.',
+            description: 'The run changed elsewhere. Review the refreshed saved key and save explicitly again.',
+          });
+        }
+      } else {
+        setFeedback({
+          status: 'error',
+          title: 'Run key was not saved.',
+          description: extractApiError(error as FetchBaseQueryError | SerializedError),
+        });
+      }
+    } finally {
+      endWrite();
+    }
+  }, [applySavedResponse, beginWrite, endWrite, isCurrentScope, patchRun, projectId, recoverAuthoritativeState, runId, runKeyDraft]);
 
   const saveStep = useCallback(
     async (stepId: string) => {
@@ -417,6 +524,15 @@ export const useManualTestRunExecution = ({
     setFeedback(undefined);
   }, [isReadOnly, pendingWrite]);
 
+  const discardRunKey = useCallback(() => {
+    if (!canEditRunKey || pendingWrite) return;
+    const savedKey = savedRunRef.current.runKey ?? '';
+    draftStateRef.current = { ...draftStateRef.current, runKeyDraft: savedKey };
+    setRunKeyDraftState(savedKey);
+    setRunKeyError(undefined);
+    setFeedback(undefined);
+  }, [canEditRunKey, pendingWrite]);
+
   const discardStep = useCallback(
     (stepId: string) => {
       if (isReadOnly || pendingWrite) return;
@@ -433,10 +549,33 @@ export const useManualTestRunExecution = ({
   );
 
   const isRunNotesDirty = Boolean(getManualTestRunNotePatchPayload(runNotesDraft, savedRun.notes));
+  const isRunKeyDirty = Boolean(getManualTestRunKeyPatchPayload(runKeyDraft, savedRun.runKey));
   const dirtyStepIds = savedRun.steps
     .filter((step) => getManualTestRunStepPatchPayload(stepDrafts[step.id] ?? { status: step.status, notes: '' }, step))
     .map((step) => step.id);
   const isDirty = hasManualTestRunDraftChanges(savedRun, runNotesDraft, stepDrafts);
+
+  const canStartRetest = useCallback(() => {
+    if (isRunKeyDirty) {
+      setFeedback({
+        status: 'warning',
+        title: 'Save or discard Run key changes before Retest.',
+        description: 'Retest starts a new run and will not carry this unsaved label draft forward.',
+      });
+      return false;
+    }
+    if (pendingWrite || recoveryBlocked) {
+      setFeedback({
+        status: 'warning',
+        title: recoveryBlocked ? 'Refresh the saved run first.' : 'A run update is still pending.',
+        description: recoveryBlocked
+          ? 'Further writes are blocked until authoritative state is recovered.'
+          : 'Wait for the current write to finish before starting a Retest.',
+      });
+      return false;
+    }
+    return true;
+  }, [isRunKeyDirty, pendingWrite, recoveryBlocked]);
 
   const requestCompletion = useCallback(() => {
     if (isReadOnly) return;
@@ -456,24 +595,34 @@ export const useManualTestRunExecution = ({
       });
       return;
     }
-    if (isDirty) {
+    if (isDirty || isRunKeyDirty) {
       setFeedback({
         status: 'warning',
         title: 'Save or discard drafts before completing.',
-        description: 'Completion never silently saves or discards execution changes.',
+        description: 'Completion never silently saves or discards execution changes or the Run key.',
       });
       return;
     }
     if (savedRun.status !== 'in_progress') return;
     setFeedback(undefined);
     setIsCompletionOpen(true);
-  }, [isDirty, isReadOnly, pendingWrite, recoveryBlocked, savedRun.status]);
+  }, [isDirty, isReadOnly, isRunKeyDirty, pendingWrite, recoveryBlocked, savedRun.status]);
 
   const closeCompletion = useCallback(() => setIsCompletionOpen(false), []);
 
   const confirmCompletion = useCallback(
     async (outcome: ManualTestRunOutcome) => {
       if (!isManualOutcome(outcome)) return;
+      if (isDirty || isRunKeyDirty) {
+        setFeedback({
+          status: 'warning',
+          title: 'Save or discard drafts before completing.',
+          description: 'Completion cannot include or silently save or discard execution changes or the Run key.',
+        });
+        setIsCompletionOpen(false);
+        return;
+      }
+      if (savedRunRef.current.status !== 'in_progress' || recoveryBlocked) return;
       if (outcome === 'passed' && !isManualTestRunPassedEligible(savedRun.steps)) {
         setFeedback({
           status: 'warning',
@@ -552,6 +701,9 @@ export const useManualTestRunExecution = ({
       recoverAuthoritativeState,
       runId,
       savedRun.steps,
+      isDirty,
+      isRunKeyDirty,
+      recoveryBlocked,
     ],
   );
 
@@ -567,22 +719,30 @@ export const useManualTestRunExecution = ({
     feedback,
     recoveryBlocked,
     isReadOnly,
+    canEditRunKey,
     isDirty,
     isRunNotesDirty,
+    runKeyDraft,
+    runKeyError,
+    isRunKeyDirty,
     dirtyStepIds,
     stepSaveStates,
     setRunNotesDraft,
+    setRunKeyDraft,
     setStepStatus,
     setStepNotes,
     saveRunNotes,
+    saveRunKey,
     saveStep,
     discardRunNotes,
+    discardRunKey,
     discardStep,
     requestCompletion,
     isCompletionOpen,
     closeCompletion,
     confirmCompletion,
     retryAuthoritativeRecovery,
+    canStartRetest,
   };
 };
 

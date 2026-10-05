@@ -7,7 +7,7 @@ import { FiArrowLeft } from 'react-icons/fi';
 import { LuBan, LuCheck, LuCircleHelp, LuCircleX, LuSkipForward } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 
-import { Link, NativeSelect, Textarea, Tooltip, Wrap } from '@/components/ui';
+import { Input, Link, NativeSelect, Textarea, Tooltip, Wrap } from '@/components/ui';
 import type { ManualTestRunRead, ManualTestRunStepRead, ManualTestRunStepStatus } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
 import { getTestScenarioDetailPath } from '@/components/test-scenarios/constants';
@@ -112,10 +112,8 @@ export interface ManualTestRunDetailsViewProps {
   setPersistedRun: (run: ManualTestRunRead) => void;
   refetch: () => Promise<ManualTestRunRead | undefined>;
   onBack: () => void;
-  onRetest?: () => void;
+  onRetest?: (trigger: HTMLButtonElement) => void;
   isRetesting?: boolean;
-  retestError?: string;
-  retestUncertain?: boolean;
   onViewSourceHistory?: () => void;
 }
 
@@ -128,8 +126,6 @@ export const ManualTestRunDetailsView = ({
   onBack,
   onRetest,
   isRetesting = false,
-  retestError,
-  retestUncertain = false,
   onViewSourceHistory,
 }: ManualTestRunDetailsViewProps) => {
   const completionTriggerRef = useRef<HTMLButtonElement>(null);
@@ -180,7 +176,10 @@ export const ManualTestRunDetailsView = ({
           >
             <FiArrowLeft size={18} aria-hidden="true" />
           </Link>
-          <Heading size="lg">{execution.savedRun.title}</Heading>
+          <VStack align="start" gap={0}>
+            <Heading size="lg">{execution.savedRun.title}</Heading>
+            <Text color="text.secondary">Run key: {execution.savedRun.runKey ?? 'N/A'}</Text>
+          </VStack>
         </HStack>
         <HStack gap={2} flexWrap="wrap">
           {!readOnly && (
@@ -194,7 +193,14 @@ export const ManualTestRunDetailsView = ({
             </Button>
           )}
           {execution.savedRun.status !== 'in_progress' && onRetest && (
-            <Button type="button" onClick={onRetest} loading={isRetesting} disabled={isRetesting || !execution.savedRun.testScenarioId}>
+            <Button
+              type="button"
+              onClick={(event) => {
+                if (execution.canStartRetest()) onRetest(event.currentTarget);
+              }}
+              loading={isRetesting}
+              disabled={isRetesting || !execution.savedRun.testScenarioId}
+            >
               Retest
             </Button>
           )}
@@ -243,16 +249,6 @@ export const ManualTestRunDetailsView = ({
           </Alert.Content>
         </Alert.Root>
       )}
-      {retestError && (
-        <Alert.Root status={retestUncertain ? 'warning' : 'error'} role="alert">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Title>{retestUncertain ? 'Retest result is uncertain' : 'Retest was not started'}</Alert.Title>
-            <Alert.Description>{retestError}</Alert.Description>
-          </Alert.Content>
-        </Alert.Root>
-      )}
-
       <HStack gap={4} flexWrap="wrap">
         {execution.savedRun.testScenarioId ? (
           <>
@@ -276,8 +272,50 @@ export const ManualTestRunDetailsView = ({
 
       <Wrap w="100%" p={{ base: 4, md: 6 }}>
         <VStack align="stretch" w="100%" gap={6}>
+          {execution.canEditRunKey && (
+            <VStack align="stretch" gap={3} maxW="560px" aria-label="Run key editing">
+              <Input
+                name="run-key"
+                label="Edit Run key"
+                value={execution.runKeyDraft}
+                onChange={(event) => execution.setRunKeyDraft(event.target.value)}
+                readOnly={execution.pendingWrite?.kind === 'metadata' || execution.isCompletionOpen}
+                fieldProps={{ helperText: 'Up to 100 characters. Duplicate keys are allowed.' }}
+                error={execution.runKeyError}
+              />
+              <HStack gap={3} flexWrap="wrap">
+                <Button
+                  type="button"
+                  onClick={() => void execution.saveRunKey()}
+                  loading={execution.pendingWrite?.kind === 'metadata'}
+                  loadingText="Saving…"
+                  disabled={!execution.isRunKeyDirty || isPending || execution.recoveryBlocked || execution.isCompletionOpen}
+                >
+                  Save Run key
+                </Button>
+                {execution.isRunKeyDirty && !isPending && !execution.recoveryBlocked && !execution.isCompletionOpen && (
+                  <Button type="button" variant="ghost" onClick={execution.discardRunKey}>
+                    Discard Run key
+                  </Button>
+                )}
+                <Text role="status" fontSize="sm" color="text.secondary">
+                  {execution.pendingWrite?.kind === 'metadata'
+                    ? 'Saving…'
+                    : execution.isRunKeyDirty
+                      ? 'Unsaved changes'
+                      : 'Saved'}
+                </Text>
+              </HStack>
+            </VStack>
+          )}
           <VStack align="stretch" gap={4}>
             <Heading size="md">Scenario snapshot</Heading>
+            <Box>
+              <Text fontWeight="semibold">Source scenario key at start</Text>
+              <Text whiteSpace="pre-wrap" color="text.secondary">
+                {execution.savedRun.sourceScenarioKey ?? 'N/A'}
+              </Text>
+            </Box>
             {snapshotFields.map(([label, field]) => (
               <Box key={field}>
                 <Text fontWeight="semibold">{label}</Text>
@@ -294,7 +332,13 @@ export const ManualTestRunDetailsView = ({
               value={execution.runNotesDraft}
               onChange={(event) => execution.setRunNotesDraft(event.target.value)}
               readOnly={readOnly || execution.pendingWrite?.kind === 'run'}
-              fieldProps={{ helperText: readOnly ? 'View-only run; saved notes cannot be edited.' : 'Save notes explicitly, or press Ctrl/Cmd + Enter.' }}
+              fieldProps={{
+                helperText: readOnly
+                  ? execution.savedRun.status === 'in_progress'
+                    ? 'View-only run; saved notes cannot be edited.'
+                    : 'Execution results are frozen. The executor can still edit the Run key.'
+                  : 'Save notes explicitly, or press Ctrl/Cmd + Enter.',
+              }}
               onKeyDown={(event) => {
                 if (!readOnly && execution.isRunNotesDirty && !isPending && !execution.recoveryBlocked && event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
                   event.preventDefault();
@@ -378,6 +422,13 @@ export const ManualTestRunDetailsView = ({
                       />
                       {!readOnly && (
                         <HStack justify="start" align="center" gap={3} w={{ base: '100%', md: '560px' }} flexWrap="wrap">
+                          <Button
+                            type="button"
+                            onClick={() => void execution.saveStep(step.id)}
+                            disabled={isPending || execution.recoveryBlocked || !stepDirty}
+                          >
+                            {step.status === 'not_started' ? 'Submit' : 'Submit changes'}
+                          </Button>
                           {stepPending ? (
                             <Text color="text.secondary" aria-live="polite">Saving</Text>
                           ) : execution.stepSaveStates[step.id] === 'not_saved' ? (
@@ -394,13 +445,6 @@ export const ManualTestRunDetailsView = ({
                               Discard changes
                             </Button>
                           )}
-                          <Button
-                            type="button"
-                            onClick={() => void execution.saveStep(step.id)}
-                            disabled={isPending || execution.recoveryBlocked || !stepDirty}
-                          >
-                            {step.status === 'not_started' ? 'Submit' : 'Submit changes'}
-                          </Button>
                         </HStack>
                       )}
                     </VStack>
