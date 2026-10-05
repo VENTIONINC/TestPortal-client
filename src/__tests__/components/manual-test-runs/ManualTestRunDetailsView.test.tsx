@@ -22,6 +22,8 @@ vi.mock('react-redux', async (importOriginal) => ({
 }));
 
 const patchRun = vi.fn();
+const reassignExecutor = vi.fn();
+const refetchUsers = vi.fn();
 const patchStep = vi.fn();
 const completeRun = vi.fn();
 
@@ -74,13 +76,12 @@ const runFor = (overrides: Partial<ManualTestRunRead> = {}): ManualTestRunRead =
   ...overrides,
 });
 
-const renderView = (
+const getView = (
   run = runFor(),
   setPersistedRun = vi.fn(),
   refetch = vi.fn().mockResolvedValue(run),
   options: { onRetest?: () => void; onViewSourceHistory?: () => void } = {},
-) =>
-  render(
+) => (
     <ChakraProvider>
       <MemoryRouter>
         <ManualTestRunDetailsView
@@ -91,22 +92,78 @@ const renderView = (
           refetch={refetch}
           onBack={vi.fn()}
           onRetest={options.onRetest}
+          activeUsers={[
+            { id: 'user-1', name: 'Current User', email: 'current@example.com' },
+            { id: 'user-2', name: 'Next User', email: 'next@example.com' },
+          ]}
+          isLoadingActiveUsers={false}
+          isActiveUsersError={false}
+          onLoadActiveUsers={vi.fn()}
+          onRetryActiveUsers={refetchUsers}
+          isReassigningExecutor={false}
+          onReassignExecutor={reassignExecutor}
           onViewSourceHistory={options.onViewSourceHistory}
         />
       </MemoryRouter>
-    </ChakraProvider>,
+    </ChakraProvider>
   );
+const renderView = (
+  run = runFor(),
+  setPersistedRun = vi.fn(),
+  refetch = vi.fn().mockResolvedValue(run),
+  options: { onRetest?: () => void; onViewSourceHistory?: () => void } = {},
+) => render(getView(run, setPersistedRun, refetch, options));
 
 beforeEach(() => {
-    patchRun.mockReset();
+  patchRun.mockReset();
+  reassignExecutor.mockReset();
+  refetchUsers.mockReset();
     patchStep.mockReset();
     completeRun.mockReset();
-    mockedPatchRun.mockReturnValue([patchRun, { isLoading: false }] as never);
+  mockedPatchRun.mockReturnValue([patchRun, { isLoading: false }] as never);
     mockedPatchStep.mockReturnValue([patchStep, { isLoading: false }] as never);
     mockedCompleteRun.mockReturnValue([completeRun, { isLoading: false }] as never);
   });
 
 describe('ManualTestRunDetailsView', () => {
+  it('allows any active user to reassign a completed run without unlocking execution fields', async () => {
+    const completedRun = runFor({
+      status: 'passed',
+      completedAt: '2026-09-17T11:00:00.000Z',
+      executedById: 'user-3',
+      executedBy: { id: 'user-3', name: 'Original User', email: 'original@example.com' },
+    });
+    const reassignedRun = runFor({
+      status: 'passed',
+      completedAt: completedRun.completedAt,
+      executedById: 'user-2',
+      executedBy: { id: 'user-2', name: 'Next User', email: 'next@example.com' },
+    });
+    reassignExecutor.mockResolvedValue(reassignedRun);
+
+    renderView(completedRun);
+    fireEvent.click(screen.getByRole('button', { name: 'Change Executor' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Executor' }), { target: { value: 'user-2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Executor' }));
+
+    await waitFor(() => expect(reassignExecutor).toHaveBeenCalledWith('user-2'));
+    expect(await screen.findByText('Executor updated.')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveAttribute('readonly');
+    expect(screen.queryByRole('button', { name: 'Save execution notes' })).not.toBeInTheDocument();
+  });
+
+  it('preserves a rejected Executor selection and shows the backend validation error', async () => {
+    reassignExecutor.mockRejectedValue({ status: 400, data: { error: 'Executor must be an active user' } });
+
+    renderView();
+    fireEvent.click(screen.getByRole('button', { name: 'Change Executor' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Executor' }), { target: { value: 'user-2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Executor' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Executor must be an active user');
+    expect(screen.getByRole('combobox', { name: 'Executor' })).toHaveValue('user-2');
+  });
+
   it('renders the persisted snapshot and distinguishes scenario notes from execution notes', () => {
     renderView();
 
@@ -544,7 +601,65 @@ describe('run executor access', () => {
     expect(screen.queryByRole('button', { name: 'Complete run' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Retest' })).not.toBeInTheDocument();
     for (const textbox of screen.getAllByRole('textbox')) expect(textbox).toHaveAttribute('readonly');
-    expect(screen.queryByRole('button', { name: /Save/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save execution notes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save Executor' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Executor' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Change Executor' })).toBeInTheDocument();
+  });
+
+  it('makes the newly assigned Executor editable and the former Executor view-only', async () => {
+    const originalRun = runFor({ executedById: 'user-3' });
+    const reassignedRun = runFor({ executedById: 'user-2' });
+    reassignExecutor.mockResolvedValue(reassignedRun);
+    const view = renderView(originalRun);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change Executor' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Executor' }), { target: { value: 'user-2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Executor' }));
+    await waitFor(() => expect(reassignExecutor).toHaveBeenCalledOnce());
+
+    view.rerender(getView(reassignedRun));
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveAttribute('readonly'));
+    expect(screen.getByText('View-only run')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save execution notes' })).not.toBeInTheDocument();
+  });
+
+  it('keeps local execution text available for review when reassignment removes edit access', async () => {
+    const originalRun = runFor();
+    const reassignedRun = runFor({ executedById: 'user-2' });
+    reassignExecutor.mockResolvedValue(reassignedRun);
+    const view = renderView(originalRun);
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Execution notes' }), { target: { value: 'unsaved local note' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Change Executor' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Executor' }), { target: { value: 'user-2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Executor' }));
+    await waitFor(() => expect(reassignExecutor).toHaveBeenCalledOnce());
+
+    view.rerender(getView(reassignedRun));
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveAttribute('readonly'));
+    expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveValue('unsaved local note');
+    expect(screen.getByText('Unsaved execution changes are kept for review.')).toBeInTheDocument();
+  });
+
+  it('ignores a reassignment response after leaving the run scope', async () => {
+    let resolveResponse!: (run: ManualTestRunRead) => void;
+    reassignExecutor.mockReturnValue(
+      new Promise<ManualTestRunRead>((resolve) => {
+        resolveResponse = resolve;
+      }),
+    );
+    const view = renderView();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change Executor' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Executor' }), { target: { value: 'user-2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Executor' }));
+    await waitFor(() => expect(reassignExecutor).toHaveBeenCalledOnce());
+    view.unmount();
+    resolveResponse(runFor({ executedById: 'user-2' }));
+    await Promise.resolve();
+
+    expect(view.container.firstChild).toBeNull();
   });
 });
 

@@ -16,6 +16,8 @@ import {
   type ManualTestRunRead,
   type PatchApiV2ManualTestRunsByRunIdApiArg,
   type PatchApiV2ManualTestRunsByRunIdApiResponse,
+  type PatchApiV2ManualTestRunsByRunIdExecutorApiArg,
+  type PatchApiV2ManualTestRunsByRunIdExecutorApiResponse,
   type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiArg,
   type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse,
   type PostApiV2ManualTestRunsByRunIdCompleteApiArg,
@@ -208,6 +210,17 @@ export const extendedApi = generatedApi
           arg: PatchApiV2ManualTestRunsByRunIdApiArg,
         ) => (result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId)),
       },
+      getApiV2Users: {
+        providesTags: ['Users'],
+      },
+      patchApiV2ManualTestRunsByRunIdExecutor: {
+        extraOptions: { maxRetries: 0 },
+        invalidatesTags: (
+          result: PatchApiV2ManualTestRunsByRunIdExecutorApiResponse | undefined,
+          _error,
+          arg: PatchApiV2ManualTestRunsByRunIdExecutorApiArg,
+        ) => (result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId)),
+      },
       patchApiV2ManualTestRunsByRunIdStepsAndStepId: {
         extraOptions: { maxRetries: 0 },
         invalidatesTags: (
@@ -302,6 +315,8 @@ export const extendedApi = generatedApi
   });
 
 export const {
+  useGetApiV2UsersQuery,
+  useLazyGetApiV2UsersQuery,
   usePatchApiV2TestScenariosByScenarioIdMutation,
   usePostApiV2TestScenariosByScenarioIdSpecLinksMutation,
   useDeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdMutation,
@@ -330,6 +345,7 @@ export const {
   useGetApiV2ManualTestRunsByRunIdQuery,
   useLazyGetApiV2ManualTestRunsByRunIdQuery,
   usePatchApiV2ManualTestRunsByRunIdMutation,
+  usePatchApiV2ManualTestRunsByRunIdExecutorMutation,
   usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
   usePostApiV2ManualTestRunsByRunIdCompleteMutation,
 } = extendedApi;

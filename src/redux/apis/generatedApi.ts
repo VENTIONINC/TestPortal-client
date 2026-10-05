@@ -414,6 +414,12 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Reports", "Results", "Upload"],
       }),
+      getApiV2Users: build.query<GetApiV2UsersApiResponse, GetApiV2UsersApiArg>(
+        {
+          query: () => ({ url: `/api/v2/users` }),
+          providesTags: ["Users"],
+        },
+      ),
       getApiV2UsersByUserId: build.query<
         GetApiV2UsersByUserIdApiResponse,
         GetApiV2UsersByUserIdApiArg
@@ -1077,6 +1083,20 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Manual Test Runs"],
       }),
+      patchApiV2ManualTestRunsByRunIdExecutor: build.mutation<
+        PatchApiV2ManualTestRunsByRunIdExecutorApiResponse,
+        PatchApiV2ManualTestRunsByRunIdExecutorApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}/executor`,
+          method: "PATCH",
+          body: queryArg.manualTestRunExecutorReassignmentRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Manual Test Runs"],
+      }),
       patchApiV2ManualTestRunsByRunIdStepsAndStepId: build.mutation<
         PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse,
         PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiArg
@@ -1333,6 +1353,9 @@ export type PostApiV2UploadJsonReportApiKeyApiArg = {
     report: Blob;
   };
 };
+export type GetApiV2UsersApiResponse =
+  /** status 200 Active user directory */ ActiveUserDirectoryEntry[];
+export type GetApiV2UsersApiArg = void;
 export type GetApiV2UsersByUserIdApiResponse =
   /** status 200 User details */ User;
 export type GetApiV2UsersByUserIdApiArg = {
@@ -1711,6 +1734,13 @@ export type PatchApiV2ManualTestRunsByRunIdApiArg = {
   runId: string;
   projectId: string;
   manualTestRunUpdateRequest: ManualTestRunUpdateRequest;
+};
+export type PatchApiV2ManualTestRunsByRunIdExecutorApiResponse =
+  /** status 200 Reassigned run with authoritative Executor identity */ ManualTestRunRead;
+export type PatchApiV2ManualTestRunsByRunIdExecutorApiArg = {
+  runId: string;
+  projectId: string;
+  manualTestRunExecutorReassignmentRequest: ManualTestRunExecutorReassignmentRequest;
 };
 export type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse =
   /** status 200 Updated manual test run */ ManualTestRunRead;
@@ -2141,6 +2171,11 @@ export type JsonReportResponseWithAnalysis = {
   specsProcessed: number;
   /** Optional AI analysis results for test failures */
   analysis?: any[];
+};
+export type ActiveUserDirectoryEntry = {
+  id: string;
+  name: string;
+  email: string;
 };
 export type UserStatus = "pending" | "active" | "suspended";
 export type UserRole = "admin" | "member";
@@ -2751,6 +2786,9 @@ export type ManualTestRunUpdateRequest = {
   notes?: string | null;
   runKey?: string | null;
 };
+export type ManualTestRunExecutorReassignmentRequest = {
+  executedById: string;
+};
 export type ManualTestRunStepUpdateRequest = {
   status?: ManualTestRunStepStatus;
   notes?: string | null;
@@ -2803,6 +2841,8 @@ export const {
   useDeleteApiV2ExecutionsByExecutionIdMutation,
   usePostApiV2UploadJsonReportMutation,
   usePostApiV2UploadJsonReportApiKeyMutation,
+  useGetApiV2UsersQuery,
+  useLazyGetApiV2UsersQuery,
   useGetApiV2UsersByUserIdQuery,
   useLazyGetApiV2UsersByUserIdQuery,
   usePatchApiV2UsersByUserIdMutation,
@@ -2884,6 +2924,7 @@ export const {
   useGetApiV2ManualTestRunsByRunIdQuery,
   useLazyGetApiV2ManualTestRunsByRunIdQuery,
   usePatchApiV2ManualTestRunsByRunIdMutation,
+  usePatchApiV2ManualTestRunsByRunIdExecutorMutation,
   usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
   usePostApiV2ManualTestRunsByRunIdCompleteMutation,
 } = injectedRtkApi;

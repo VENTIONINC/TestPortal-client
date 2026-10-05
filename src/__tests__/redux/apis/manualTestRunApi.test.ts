@@ -7,6 +7,7 @@ import { extendedApi } from '@/redux/apis/extendedApi';
 import { store } from '@/redux/store';
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
   store.dispatch(extendedApi.util.resetApiState());
 });
@@ -47,6 +48,44 @@ describe('Manual Test Run API integration', () => {
     expect(url.pathname).toBe('/api/v2/manual-test-runs/run-1');
     expect(url.searchParams.get('projectId')).toBe('project-1');
   });
+
+  it('loads the authenticated active-user directory', async () => {
+    const users = [{ id: 'user-2', name: 'Alex User', email: 'alex@example.com' }];
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(users), { headers: { 'content-type': 'application/json' } }),
+    );
+
+    const result = await store.dispatch(extendedApi.endpoints.getApiV2Users.initiate());
+
+    expect(result.data).toEqual(users);
+    expect(new URL((fetchMock.mock.calls[0][0] as Request).url).pathname).toBe('/api/v2/users');
+  });
+
+  it('sends executor reassignment with project scope and does not retry a failed mutation', async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Executor must be an active user' }), {
+        status: 503,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+
+    const resultPromise = store.dispatch(extendedApi.endpoints.patchApiV2ManualTestRunsByRunIdExecutor.initiate({
+      projectId: 'project-1',
+      runId: 'run-1',
+      manualTestRunExecutorReassignmentRequest: { executedById: 'user-2' },
+    }));
+    await vi.runAllTimersAsync();
+    await resultPromise;
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const request = fetchMock.mock.calls[0][0] as Request;
+    const url = new URL(request.url);
+    expect(request.method).toBe('PATCH');
+    expect(url.pathname).toBe('/api/v2/manual-test-runs/run-1/executor');
+    expect(url.searchParams.get('projectId')).toBe('project-1');
+    expect(await request.json()).toEqual({ executedById: 'user-2' });
+  }, 15000);
 
   it('serializes combined project history filters and keeps nested history free of a source filter', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => new Response(
@@ -142,5 +181,79 @@ describe('Manual Test Run API integration', () => {
     });
     detail.unsubscribe();
     history.unsubscribe();
+  });
+
+  it('refreshes only the reassigned run and its matching project/scenario histories', async () => {
+    const run = {
+      id: 'run-1',
+      projectId: 'project-1',
+      sourceTestScenarioId: 'scenario-1',
+      testScenarioId: 'scenario-1',
+      executedById: 'user-1',
+      executedBy: { id: 'user-1', name: 'Current User', email: 'current@example.com' },
+      status: 'in_progress',
+      startedAt: '2026-09-17T10:00:00.000Z',
+      completedAt: null,
+      updatedAt: '2026-09-17T10:00:00.000Z',
+      title: 'Snapshot',
+      details: null,
+      objective: null,
+      preconditions: null,
+      testData: null,
+      expectedResult: null,
+      scenarioNotes: null,
+      notes: null,
+      steps: [],
+    };
+    const reassignedRun = {
+      ...run,
+      executedById: 'user-2',
+      executedBy: { id: 'user-2', name: 'Next User', email: 'next@example.com' },
+      updatedAt: '2026-09-17T11:00:00.000Z',
+    };
+    const counts = new Map<string, number>();
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url = new URL((input as Request).url);
+      const key = `${url.pathname}:${url.searchParams.get('projectId') ?? ''}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+      if (url.pathname.endsWith('/executor')) {
+        return new Response(JSON.stringify(reassignedRun), { headers: { 'content-type': 'application/json' } });
+      }
+      if (url.pathname.endsWith('/run-1')) {
+        return new Response(JSON.stringify(run), { headers: { 'content-type': 'application/json' } });
+      }
+      if (url.pathname.endsWith('/manual-runs')) {
+        return new Response(JSON.stringify({ runs: [], total: 0, page: 1, limit: 30, totalPages: 0 }), {
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ runs: [], total: 0, page: 1, limit: 30, totalPages: 0 }), {
+        headers: { 'content-type': 'application/json' },
+      });
+    });
+
+    const detail = store.dispatch(extendedApi.endpoints.getApiV2ManualTestRunsByRunId.initiate({ runId: 'run-1', projectId: 'project-1' }));
+    const projectHistory = store.dispatch(extendedApi.endpoints.getApiV2ManualTestRuns.initiate({ projectId: 'project-1' }));
+    const otherProjectHistory = store.dispatch(extendedApi.endpoints.getApiV2ManualTestRuns.initiate({ projectId: 'project-2' }));
+    const scenarioHistory = store.dispatch(extendedApi.endpoints.getApiV2TestScenariosByScenarioIdManualRuns.initiate({ scenarioId: 'scenario-1', projectId: 'project-1' }));
+    await Promise.all([detail, projectHistory, otherProjectHistory, scenarioHistory]);
+
+    await store.dispatch(extendedApi.endpoints.patchApiV2ManualTestRunsByRunIdExecutor.initiate({
+      projectId: 'project-1',
+      runId: 'run-1',
+      manualTestRunExecutorReassignmentRequest: { executedById: 'user-2' },
+    }));
+
+    await vi.waitFor(() => {
+      expect(counts.get('/api/v2/manual-test-runs/run-1:project-1')).toBeGreaterThanOrEqual(2);
+      expect(counts.get('/api/v2/manual-test-runs:project-1')).toBeGreaterThanOrEqual(2);
+      expect(counts.get('/api/v2/test-scenarios/scenario-1/manual-runs:project-1')).toBeGreaterThanOrEqual(2);
+    });
+    expect(counts.get('/api/v2/manual-test-runs:project-2')).toBe(1);
+    detail.unsubscribe();
+    projectHistory.unsubscribe();
+    otherProjectHistory.unsubscribe();
+    scenarioHistory.unsubscribe();
+    expect(fetchMock).toHaveBeenCalled();
   });
 });

@@ -7,7 +7,12 @@ import { useLocation, useNavigate } from 'react-router';
 
 import { RunKeyStartDialog } from '@/components/manual-test-runs/components';
 import { toaster } from '@/components/ui';
-import { usePostApiV2TestScenariosByScenarioIdManualRunsMutation } from '@/redux/apis/extendedApi';
+import {
+  useLazyGetApiV2UsersQuery,
+  usePatchApiV2ManualTestRunsByRunIdExecutorMutation,
+  usePostApiV2TestScenariosByScenarioIdManualRunsMutation,
+} from '@/redux/apis/extendedApi';
+import type { ManualTestRunRead } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
 import { extractApiError, isNetworkError } from '@/utils/apiErrors';
 
@@ -25,6 +30,8 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
   const location = useLocation();
   const detail = useManualTestRunDetail(projectId, runId);
   const [startManualRun, { isLoading: isStartingRun }] = usePostApiV2TestScenariosByScenarioIdManualRunsMutation();
+  const [loadActiveUsers, activeUsers] = useLazyGetApiV2UsersQuery();
+  const [patchExecutor, { isLoading: isReassigningExecutor }] = usePatchApiV2ManualTestRunsByRunIdExecutorMutation();
   const [retestError, setRetestError] = useState<string>();
   const [retestUncertain, setRetestUncertain] = useState(false);
   const [isRetestDialogOpen, setIsRetestDialogOpen] = useState(false);
@@ -32,6 +39,7 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
   const [isRetryConfirmationRequired, setIsRetryConfirmationRequired] = useState(false);
   const [isRetesting, setIsRetesting] = useState(false);
   const retestInFlight = useRef(false);
+  const executorMutationInFlight = useRef(false);
   const retestTriggerRef = useRef<HTMLButtonElement | null>(null);
   const restoreFocusOnClose = useRef(false);
   const mountedRef = useRef(true);
@@ -46,6 +54,31 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
     () => mountedRef.current && latestScope.current === `${projectId}:${runId}`,
     [projectId, runId],
   );
+
+  const reassignExecutor = useCallback(async (executedById: string): Promise<ManualTestRunRead | undefined> => {
+    if (!detail.run || executorMutationInFlight.current) return undefined;
+    executorMutationInFlight.current = true;
+    try {
+      const response = await patchExecutor({
+        projectId,
+        runId,
+        manualTestRunExecutorReassignmentRequest: { executedById },
+      }).unwrap();
+      if (!isCurrentScope() || response.id !== runId || response.projectId !== projectId) return undefined;
+      detail.setPersistedRun(response);
+      return response;
+    } catch (error) {
+      if (!isCurrentScope()) return undefined;
+      const status = error && typeof error === 'object' && 'status' in error
+        ? (error as FetchBaseQueryError).status
+        : undefined;
+      if (status === 400) void loadActiveUsers(undefined, true);
+      if (status === 404) await detail.refetch();
+      throw error;
+    } finally {
+      executorMutationInFlight.current = false;
+    }
+  }, [detail, isCurrentScope, loadActiveUsers, patchExecutor, projectId, runId]);
 
   useEffect(() => {
     if (isRetestDialogOpen || !restoreFocusOnClose.current) return;
@@ -157,6 +190,13 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
           onBack={goToScenarios}
           onRetest={openRetestDialog}
           isRetesting={isRetesting}
+          activeUsers={activeUsers.data}
+          isLoadingActiveUsers={activeUsers.isFetching}
+          isActiveUsersError={activeUsers.isError}
+          onLoadActiveUsers={() => { void loadActiveUsers(); }}
+          onRetryActiveUsers={() => { void loadActiveUsers(undefined, true); }}
+          isReassigningExecutor={isReassigningExecutor}
+          onReassignExecutor={reassignExecutor}
           onViewSourceHistory={viewSourceHistory}
         />
       )}
