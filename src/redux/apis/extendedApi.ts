@@ -12,6 +12,7 @@ import {
   type GetApiV2ManualTestRunsByRunIdApiResponse,
   type GetApiV2ManualTestRunsApiArg,
   type GetApiV2TestScenariosByScenarioIdManualRunsApiArg,
+  type GetApiV2TestScenariosByScenarioIdSpecLinksApiArg,
   type ManualTestRunRead,
   type PatchApiV2ManualTestRunsByRunIdApiArg,
   type PatchApiV2ManualTestRunsByRunIdApiResponse,
@@ -21,6 +22,8 @@ import {
   type PostApiV2ManualTestRunsByRunIdCompleteApiResponse,
   type PostApiV2TestScenariosByScenarioIdManualRunsApiArg,
   type DeleteApiV2TestScenariosByScenarioIdApiArg,
+  type DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiArg,
+  type PostApiV2TestScenariosByScenarioIdSpecLinksApiArg,
   type PostApiV2SkillsApiResponse,
   type PostApiV2ReportsPdfExportApiArg,
   type PostApiV2ReportsPdfExportApiResponse,
@@ -41,6 +44,13 @@ export const manualTestRunScenarioHistoryTag = (projectId: string, scenarioId: s
 
 export const manualTestRunProjectDetailsTag = (projectId: string) =>
   manualTestRunTag(`project-details:${projectId}`);
+
+export const resultSpecCoverageTag = (projectId: string) => ({ type: 'ResultSpecCoverage', id: projectId } as const);
+export const scenarioCatalogTag = (projectId: string) => ({ type: 'ScenarioCatalog', id: projectId } as const);
+export const scenarioSpecLinkTag = (projectId: string, scenarioId: string) => ({
+  type: 'ScenarioSpecLink',
+  id: `${projectId}:${scenarioId}`,
+} as const);
 
 const getRunScopeTags = (run: Pick<ManualTestRunRead, 'projectId' | 'id' | 'sourceTestScenarioId'>) => [
   manualTestRunDetailTag(run.projectId, run.id),
@@ -88,8 +98,27 @@ const createSkillPackageFormData = ({
 
 export const extendedApi = generatedApi
   .enhanceEndpoints({
-    addTagTypes: ['Results'],
+    addTagTypes: ['Results', 'ResultSpecCoverage', 'ScenarioCatalog', 'ScenarioSpecLink'],
     endpoints: {
+      postApiV2TestScenariosByScenarioIdSpecLinks: {
+        extraOptions: { maxRetries: 0 },
+        invalidatesTags: (_result, _error, arg: PostApiV2TestScenariosByScenarioIdSpecLinksApiArg) => [
+          resultSpecCoverageTag(arg.projectId),
+          scenarioSpecLinkTag(arg.projectId, arg.scenarioId),
+        ],
+      },
+      deleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecId: {
+        extraOptions: { maxRetries: 0 },
+        invalidatesTags: (_result, _error, arg: DeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdApiArg) => [
+          resultSpecCoverageTag(arg.projectId),
+          scenarioSpecLinkTag(arg.projectId, arg.scenarioId),
+        ],
+      },
+      getApiV2TestScenariosByScenarioIdSpecLinks: {
+        providesTags: (_result, _error, arg: GetApiV2TestScenariosByScenarioIdSpecLinksApiArg) => [
+          scenarioSpecLinkTag(arg.projectId, arg.scenarioId),
+        ],
+      },
       patchApiV2TestScenariosByScenarioId: {
         invalidatesTags: ['Test Scenarios', 'Results'],
       },
@@ -274,6 +303,8 @@ export const extendedApi = generatedApi
 
 export const {
   usePatchApiV2TestScenariosByScenarioIdMutation,
+  usePostApiV2TestScenariosByScenarioIdSpecLinksMutation,
+  useDeleteApiV2TestScenariosByScenarioIdSpecLinksAndSpecIdMutation,
   usePostApiV2AssumptionsMutation: useCreateAssumptionMutation,
   usePatchApiV2AssumptionsByAssumptionIdMutation: useConfirmAssumptionMutation,
   useGetApiV2IssuesWithStatsQuery: useGetIssuesWithStatsQuery,
