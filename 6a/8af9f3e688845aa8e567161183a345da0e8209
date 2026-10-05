@@ -1,0 +1,71 @@
+openspec/changes/manage-result-spec-scenario-links/.openspec.yaml
+  s_55d368a5dbeeb6::t_5acb0ca4254d5f 1-2
+src/__tests__/components/results/assign-issue-modal/AssignIssueModalManagement.test.tsx
+  s_324a26ea80feed::t_154bf50feba80f 1-160
+src/__tests__/components/results/assign-issue-modal/ResultRelatedScenarios.test.tsx
+  s_324a26ea80feed::t_1955750e93665d 4,10-13,17,21-32,56,78-89,99-102,121,140,145,166,182,220-546
+src/redux/apis/generatedResultDetailApi.ts
+  s_cd8a16c4329821::t_a0d3394c343fd2 1-2,19,25-26,70,73-74,87-88,111-114
+src/redux/apis/generatedScenarioManagementApi.ts
+  s_cd8a16c4329821::t_b58ea1516363cc 1-69
+openspec/changes/manage-result-spec-scenario-links/design.md
+  s_55d368a5dbeeb6::t_0e3d208ab904e8 1-56
+openspec/changes/manage-result-spec-scenario-links/proposal.md
+  s_55d368a5dbeeb6::t_370e5307d31fd8 1-28
+openspec/changes/manage-result-spec-scenario-links/specs/result-spec-scenario-links/spec.md
+  s_55d368a5dbeeb6::t_cc0cb33492e728 1-101
+openspec/changes/manage-result-spec-scenario-links/tasks.md
+  s_cd8a16c4329821::t_221a5a2a649191 1-42
+package.json
+  s_cd8a16c4329821::t_1ee38af0c5afd5 19
+rtk-query-scenario-management-codegen.config.cjs
+  s_cd8a16c4329821::t_c252feca8d7a50 1-10
+scripts/generate-scenario-management-api.cjs
+  s_cd8a16c4329821::t_dc90ff0d0c231c 1-53
+src/__tests__/components/results/assign-issue-modal/AssignIssueModalEvidenceTabs.test.tsx
+  s_cd8a16c4329821::t_a2ad40627d7f87 13,23,27-35,65-66,75-79,86,93-96,105-109,113-114
+src/__tests__/redux/apis/resultScenarioLinksApi.test.ts
+  s_cd8a16c4329821::t_d685f342e68f81 1-147
+src/components/results/assign-issue-modal/ResultRelatedScenarios.tsx
+  s_cd8a16c4329821::t_5ab04ace977557 4-5,8-11,13-19,27,33,41,50,55,60-61,64-131,136-164,169-198,201,204,213-220,222
+src/components/results/assign-issue-modal/useResultScenarioManagement.ts
+  s_cd8a16c4329821::t_7dd0115dd57242 1-285
+src/redux/apis/extendedApi.ts
+  s_cd8a16c4329821::t_91c04486f6f759 15,25-26,48-54,101,103-121,306-307
+src/redux/apis/resultDetailApi.ts
+  s_cd8a16c4329821::t_84b417f9c74be0 1-26
+src/redux/apis/scenarioManagementApi.ts
+  s_cd8a16c4329821::t_f21dd98503a855 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "6a8af9f3e688845aa8e567161183a345da0e8209",
+  "prompts": {},
+  "sessions": {
+    "s_324a26ea80feed": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a10be7-d980-7171-be2a-c72955729b93",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_55d368a5dbeeb6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0fc08-793e-74e1-8041-a31b02ebb7e7",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_cd8a16c4329821": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a10b51-d0b3-7f41-b005-6305da74c4c3",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
