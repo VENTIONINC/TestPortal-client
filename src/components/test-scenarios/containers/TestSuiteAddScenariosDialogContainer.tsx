@@ -15,7 +15,6 @@ import {
   TestSuiteAddScenariosDialogView,
   type ScenarioFolderOption,
 } from '../components/TestSuiteAddScenariosDialogView';
-import type { TestScenarioSummary } from '../types';
 
 interface TestSuiteAddScenariosDialogContainerProps {
   projectId: string;
@@ -55,7 +54,9 @@ export const TestSuiteAddScenariosDialogContainer = ({ projectId, suite, folderO
   }), [folderId, page, projectId, search]);
   const { currentData, isLoading, isFetching, error } = useGetApiV2TestScenariosQuery(queryArgs);
   const existingIds = useMemo(() => new Set((suite.members ?? []).map((member) => member.testScenarioId)), [suite.members]);
-  const scenarios = (currentData?.scenarios ?? []).filter((scenario) => !existingIds.has(scenario.id));
+  const matchingScenarios = currentData?.scenarios ?? [];
+  const scenarios = matchingScenarios.filter((scenario) => !existingIds.has(scenario.id));
+  const emptyState = matchingScenarios.length > 0 && scenarios.length === 0 ? 'already-added' : 'no-results';
   const allPageSelected = scenarios.length > 0 && scenarios.every((scenario) => selectedIds.includes(scenario.id));
   const somePageSelected = scenarios.some((scenario) => selectedIds.includes(scenario.id)) && !allPageSelected;
   const isInitialLoading = isLoading || (isFetching && !currentData);
@@ -74,6 +75,7 @@ export const TestSuiteAddScenariosDialogContainer = ({ projectId, suite, folderO
   });
   const handleSearchChange = (value: string) => { setSearch(value); setPage(1); };
   const handleFolderChange = (value: string) => { setFolderId(value); setPage(1); };
+  const clearFilters = () => { setSearch(''); setFolderId(''); setPage(1); };
   const handleAdd = async () => {
     if (selectedIds.length === 0 || isAdding) return;
     setAddError(undefined);
@@ -93,10 +95,13 @@ export const TestSuiteAddScenariosDialogContainer = ({ projectId, suite, folderO
       onSearchChange={handleSearchChange}
       folderId={folderId}
       onFolderChange={handleFolderChange}
-      scenarios={scenarios as TestScenarioSummary[]}
+      scenarios={scenarios}
       selectedIds={selectedIds}
+      emptyState={emptyState}
       onToggleScenario={toggleScenario}
       onTogglePage={togglePage}
+      onClearSelection={() => setSelectedIds([])}
+      onClearFilters={clearFilters}
       allPageSelected={allPageSelected}
       somePageSelected={somePageSelected}
       page={page}

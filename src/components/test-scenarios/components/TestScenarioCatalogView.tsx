@@ -6,7 +6,7 @@ import { Box, Button, Collapsible, Grid, Heading, HStack, IconButton, Input, Lin
 import { FiChevronDown, FiChevronRight, FiFolder, FiLayers, FiMoreHorizontal, FiPlus } from 'react-icons/fi';
 import { Link as RouterLink } from 'react-router';
 
-import { Alert, ContextMenuButton, Dialog, DialogBody, DialogFooter, NativeSelect, Pagination, Skeleton, Wrap } from '@/components/ui';
+import { Alert, ContextMenuButton, Dialog, DialogBody, DialogFooter, NativeSelect, Pagination, Skeleton, Tooltip, Wrap } from '@/components/ui';
 import { extractApiError } from '@/utils/apiErrors';
 
 import { TestSuiteAddScenariosDialogContainer } from '../containers/TestSuiteAddScenariosDialogContainer';
@@ -71,7 +71,18 @@ export interface TestScenarioCatalogViewProps {
   onIncludeDescendantsChange: (value: boolean) => void;
 }
 
-const formatScenarioDate = (timestamp: string) => new Date(timestamp).toLocaleString('en-US');
+const formatScenarioDate = (timestamp: string) => {
+  const date = new Date(timestamp);
+  return {
+    date: date.toLocaleDateString('en-US'),
+    time: date.toLocaleTimeString('en-US'),
+  };
+};
+
+const ScenarioTimestamp = ({ timestamp }: { timestamp: string }) => {
+  const { date, time } = formatScenarioDate(timestamp);
+  return <VStack align="start" gap={0} whiteSpace="nowrap" fontSize="xs"><Text>{date}</Text><Text>{time}</Text></VStack>;
+};
 
 const TABLE_CELL_PADDING = { px: 4, py: 4 } as const;
 const UNFILED_DESTINATION = '__unfiled__';
@@ -93,20 +104,22 @@ const flattenFolders = (folders: CatalogFolder[]): Array<CatalogFolder & { depth
   return flattened;
 };
 
-const LoadingState = () => (
+const LoadingState = ({ showFolder }: { showFolder: boolean }) => (
   <VStack align="stretch" gap={4} aria-label="Loading Test Scenarios">
     <Text color="text.secondary">Loading Test Scenarios...</Text>
     <Box overflowX="auto">
-      <Table.Root size="sm" variant="outline" minW="960px" tableLayout="fixed">
+      <Table.Root size="sm" variant="outline" w="100%" minW={showFolder ? '1100px' : '960px'} tableLayout="fixed">
         <Table.Header>
           <Table.Row>
-            <Table.ColumnHeader {...TABLE_CELL_PADDING}>Scenario key</Table.ColumnHeader>
-            <Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader>
-            <Table.ColumnHeader {...TABLE_CELL_PADDING}>Details</Table.ColumnHeader>
-            <Table.ColumnHeader {...TABLE_CELL_PADDING}>Created by</Table.ColumnHeader>
-            <Table.ColumnHeader {...TABLE_CELL_PADDING}>Created</Table.ColumnHeader>
-            <Table.ColumnHeader {...TABLE_CELL_PADDING}>Updated</Table.ColumnHeader>
-            <Table.ColumnHeader {...TABLE_CELL_PADDING} />
+            <Table.ColumnHeader {...TABLE_CELL_PADDING} w="48px" />
+            <Table.ColumnHeader px={2} py={4} w="8%">Scenario key</Table.ColumnHeader>
+            <Table.ColumnHeader {...TABLE_CELL_PADDING} w={{ base: '29%', xl: '20%' }}>Title</Table.ColumnHeader>
+            <Table.ColumnHeader {...TABLE_CELL_PADDING} w={{ base: '31%', xl: '22%' }}>Details</Table.ColumnHeader>
+            {showFolder && <Table.ColumnHeader px={2} py={4} w="180px">Folder</Table.ColumnHeader>}
+            <Table.ColumnHeader {...TABLE_CELL_PADDING} w="18%" display={{ base: 'none', xl: 'table-cell' }}>Created by</Table.ColumnHeader>
+            <Table.ColumnHeader px={1} py={4} w="10%">Created</Table.ColumnHeader>
+            <Table.ColumnHeader px={1} py={4} w="10%">Updated</Table.ColumnHeader>
+            <Table.ColumnHeader px={1} py={4} w="44px" />
           </Table.Row>
         </Table.Header>
         <Table.Body>
@@ -115,7 +128,7 @@ const LoadingState = () => (
               <Table.Cell {...TABLE_CELL_PADDING}>
                 <Skeleton h="5" loading={true} />
               </Table.Cell>
-              <Table.Cell {...TABLE_CELL_PADDING}>
+              <Table.Cell px={2} py={4}>
                 <Skeleton h="5" loading={true} />
               </Table.Cell>
               <Table.Cell {...TABLE_CELL_PADDING}>
@@ -124,10 +137,14 @@ const LoadingState = () => (
               <Table.Cell {...TABLE_CELL_PADDING}>
                 <Skeleton h="5" loading={true} />
               </Table.Cell>
-              <Table.Cell {...TABLE_CELL_PADDING}>
+              {showFolder && <Table.Cell {...TABLE_CELL_PADDING}><Skeleton h="5" loading={true} /></Table.Cell>}
+              <Table.Cell {...TABLE_CELL_PADDING} display={{ base: 'none', xl: 'table-cell' }}>
                 <Skeleton h="5" loading={true} />
               </Table.Cell>
-              <Table.Cell {...TABLE_CELL_PADDING}>
+              <Table.Cell px={1} py={4}>
+                <Skeleton h="5" loading={true} />
+              </Table.Cell>
+              <Table.Cell px={1} py={4}>
                 <Skeleton h="5" loading={true} />
               </Table.Cell>
               <Table.Cell {...TABLE_CELL_PADDING}>
@@ -162,11 +179,15 @@ const ScenarioTable = ({
   selectedIds,
   onToggleSelected,
   onContextMenu,
+  showFolder,
+  folderPathById,
 }: {
   scenarios: TestScenarioSummary[];
   selectedIds: string[];
   onToggleSelected: (id: string) => void;
   onContextMenu?: TestScenarioCatalogViewProps['onContextMenu'];
+  showFolder: boolean;
+  folderPathById: Map<string, string>;
 }) => {
   const [anchorScenarioId, setAnchorScenarioId] = useState<string | null>(null);
   const extendSelectionRef = useRef(false);
@@ -184,7 +205,7 @@ const ScenarioTable = ({
   };
   return (
   <Box overflowX="auto">
-    <Table.Root size="sm" variant="outline" minW="960px" tableLayout="fixed">
+    <Table.Root size="sm" variant="outline" w="100%" minW={showFolder ? '1100px' : '960px'} tableLayout="fixed">
       <Table.Header>
         <Table.Row bg="bg.subtle">
           <Table.ColumnHeader {...TABLE_CELL_PADDING} w="48px">
@@ -202,20 +223,21 @@ const ScenarioTable = ({
             />
             <Text srOnly>Select</Text>
           </Table.ColumnHeader>
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w="100px">Scenario key</Table.ColumnHeader>
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w="22%">Title</Table.ColumnHeader>
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w="24%">Details</Table.ColumnHeader>
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w="170px" display={{ base: 'none', xl: 'table-cell' }}>Created by</Table.ColumnHeader>
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w="140px">Created</Table.ColumnHeader>
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w="140px">Updated</Table.ColumnHeader>
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w="44px" />
+          <Table.ColumnHeader px={2} py={4} w="8%">Scenario key</Table.ColumnHeader>
+          <Table.ColumnHeader {...TABLE_CELL_PADDING} w={{ base: '29%', xl: '20%' }}>Title</Table.ColumnHeader>
+          <Table.ColumnHeader {...TABLE_CELL_PADDING} w={{ base: '31%', xl: '22%' }}>Details</Table.ColumnHeader>
+          {showFolder && <Table.ColumnHeader px={2} py={4} w="180px">Folder</Table.ColumnHeader>}
+          <Table.ColumnHeader {...TABLE_CELL_PADDING} w="18%" display={{ base: 'none', xl: 'table-cell' }}>Created by</Table.ColumnHeader>
+          <Table.ColumnHeader px={1} py={4} w="10%">Created</Table.ColumnHeader>
+          <Table.ColumnHeader px={1} py={4} w="10%">Updated</Table.ColumnHeader>
+          <Table.ColumnHeader px={1} py={4} w="44px" />
         </Table.Row>
       </Table.Header>
       <Table.Body>
         {scenarios.map((scenario, index) => (
           <Table.Row key={scenario.id} data-testid={`test-scenario-${scenario.id}`} bg={selectedIds.includes(scenario.id) ? 'bg.subtle' : undefined} borderStartWidth={selectedIds.includes(scenario.id) ? '3px' : undefined} borderStartColor={selectedIds.includes(scenario.id) ? 'border.focus' : undefined} _hover={{ bg: 'bg.subtle' }}>
             <Table.Cell {...TABLE_CELL_PADDING}><input type="checkbox" aria-label={`Select ${scenario.title}`} checked={selectedIds.includes(scenario.id)} onClick={(event) => { extendSelectionRef.current = event.shiftKey; }} onChange={() => { handleScenarioSelection(scenario.id, index, extendSelectionRef.current); extendSelectionRef.current = false; }} /></Table.Cell>
-            <Table.Cell {...TABLE_CELL_PADDING} maxW="180px" whiteSpace="pre-wrap" overflowWrap="anywhere">
+            <Table.Cell px={2} py={4} maxW="180px" whiteSpace="pre-wrap" overflowWrap="anywhere">
               {scenario.scenarioKey ?? <Text as="span" color="text.muted">—</Text>}
             </Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING}>
@@ -226,6 +248,20 @@ const ScenarioTable = ({
             <Table.Cell {...TABLE_CELL_PADDING} maxW="320px" whiteSpace="pre-wrap" overflowWrap="anywhere" color="text.secondary">
               {scenario.details ?? 'No details'}
             </Table.Cell>
+            {showFolder && (() => {
+              const folderPath = scenario.folderId
+                ? folderPathById.get(scenario.folderId) ?? scenario.folderName ?? 'Unknown folder'
+                : 'Unfiled';
+              return (
+                <Table.Cell px={2} py={4} w="180px" maxW="180px">
+                  <Tooltip content={folderPath} openDelay={300} closeDelay={100}>
+                    <Text display="block" maxW="148px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={folderPath}>
+                      {folderPath}
+                    </Text>
+                  </Tooltip>
+                </Table.Cell>
+              );
+            })()}
             <Table.Cell {...TABLE_CELL_PADDING} display={{ base: 'none', xl: 'table-cell' }}>
               <VStack align="start" gap={0}>
                 <Text>{scenario.createdBy.name}</Text>
@@ -234,13 +270,13 @@ const ScenarioTable = ({
                 </Text>
               </VStack>
             </Table.Cell>
-            <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary" whiteSpace="nowrap" fontSize="sm">
-              {formatScenarioDate(scenario.createdAt)}
+            <Table.Cell px={1} py={4} color="text.secondary" fontSize="sm">
+              <ScenarioTimestamp timestamp={scenario.createdAt} />
             </Table.Cell>
-            <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary" whiteSpace="nowrap" fontSize="sm">
-              {formatScenarioDate(scenario.updatedAt)}
+            <Table.Cell px={1} py={4} color="text.secondary" fontSize="sm">
+              <ScenarioTimestamp timestamp={scenario.updatedAt} />
             </Table.Cell>
-            <Table.Cell {...TABLE_CELL_PADDING} textAlign="end" w="1%">
+            <Table.Cell px={1} py={4} textAlign="end" w="44px">
               <ContextMenuButton
                 aria-label={`Actions for ${scenario.title}`}
                 onClick={(event) => onContextMenu?.(event, scenario)}
@@ -326,6 +362,22 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const folderRows = flattenFolders(folders);
+  const showFolderColumn = scope.kind === 'all' || scope.kind === 'suite' || (scope.kind === 'folder' && includeDescendants);
+  const folderPathById = new Map<string, string>();
+  const folderScenarioCounts = new Map<string, number>();
+  folderRows.forEach((folder) => {
+    const parentPath = folder.parentId ? folderPathById.get(folder.parentId) : undefined;
+    folderPathById.set(folder.id, parentPath ? `${parentPath} / ${folder.name}` : folder.name);
+    folderScenarioCounts.set(folder.id, folder.scenarioCount);
+  });
+  [...folderRows].reverse().forEach((folder) => {
+    if (folder.parentId) {
+      folderScenarioCounts.set(
+        folder.parentId,
+        (folderScenarioCounts.get(folder.parentId) ?? 0) + (folderScenarioCounts.get(folder.id) ?? 0),
+      );
+    }
+  });
   const selectedFolder = scope.kind === 'folder' ? folderRows.find((folder) => folder.id === scope.id) : undefined;
   const selectedSuite = scope.kind === 'suite' ? suites.find((suite) => suite.id === scope.id) : undefined;
   const breadcrumbs = selectedFolder ? [...folderRows.filter((folder) => {
@@ -488,13 +540,13 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     const selected = scope.kind === 'folder' && scope.id === folder.id;
     return (
       <Box key={folder.id}>
-        <HStack gap={1}>
-          {children.length ? <IconButton size="xs" w="6" minW="6" flexShrink={0} variant="ghost" aria-label={`${expanded ? 'Collapse' : 'Expand'} ${folder.name}`} onClick={() => toggleFolderExpanded(folder.id)}>{expanded ? <FiChevronDown /> : <FiChevronRight />}</IconButton> : <Box w="6" flexShrink={0} />}
-          <Button flex="1" minW="0" size="sm" variant={selected ? 'subtle' : 'ghost'} justifyContent="flex-start" aria-current={selected ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'folder', id: folder.id })}>
-            <FiFolder /><Text flex="1" textAlign="left" lineClamp={1}>{folder.name}</Text><Text color="text.muted" fontSize="xs">{folder.scenarioCount}</Text>
+        <HStack gap={0}>
+          {children.length ? <IconButton size="xs" w="4" minW="4" flexShrink={0} variant="ghost" aria-label={`${expanded ? 'Collapse' : 'Expand'} ${folder.name}`} onClick={() => toggleFolderExpanded(folder.id)}>{expanded ? <FiChevronDown /> : <FiChevronRight />}</IconButton> : <Box w="4" flexShrink={0} />}
+          <Button flex="1" minW="0" size="sm" px={2} ps={1} variant={selected ? 'subtle' : 'ghost'} colorPalette={selected ? 'blue' : undefined} borderStartWidth="3px" borderStartColor={selected ? 'blue.500' : 'transparent'} justifyContent="flex-start" aria-current={selected ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'folder', id: folder.id })}>
+            <FiFolder /><Text flex="1" textAlign="left" lineClamp={1}>{folder.name}</Text><Text color="text.muted" fontSize="xs">{folderScenarioCounts.get(folder.id) ?? folder.scenarioCount}</Text>
           </Button>
           <Menu.Root>
-            <Menu.Trigger asChild><IconButton size="xs" variant="ghost" aria-label={`Actions for folder ${folder.name}`}><FiMoreHorizontal /></IconButton></Menu.Trigger>
+            <Menu.Trigger asChild><IconButton size="xs" variant="ghost" color="text.muted" aria-label={`Actions for folder ${folder.name}`}><FiMoreHorizontal /></IconButton></Menu.Trigger>
             <Menu.Positioner><Menu.Content>
               <Menu.Item value="rename" onClick={() => openEditFolderDialog(folder)}>Rename</Menu.Item>
               <Menu.Item value="move" onClick={() => openFolderActionDialog('move-folder', folder)}>Move</Menu.Item>
@@ -516,11 +568,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}><FiPlus />Create scenario</Button>
         </HStack>
 
-        <Grid templateColumns={{ base: '1fr', lg: '250px minmax(0, 1fr)' }} gap={{ base: 4, lg: 6 }} alignItems="start">
-          <VStack align="stretch" gap={4} p={3} borderWidth="1px" borderColor="border.main" borderRadius="lg" bg="bg.card" aria-label="Scenario organization">
+        <Grid templateColumns={{ base: '1fr', lg: '250px minmax(0, 1fr)' }} gap={{ base: 4, lg: 6 }} alignItems="stretch">
+          <VStack align="stretch" gap={4} pe={{ base: 0, lg: 4 }} borderEndWidth={{ base: 0, lg: '1px' }} borderColor="border.main" aria-label="Scenario organization">
             <VStack align="stretch" gap={1}>
-              <Button size="sm" justifyContent="flex-start" variant={scope.kind === 'all' ? 'subtle' : 'ghost'} aria-current={scope.kind === 'all' ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'all' })}><FiLayers />All scenarios{scope.kind === 'all' && <Text ml="auto" color="text.muted" fontSize="xs">{pagination.total}</Text>}</Button>
-              <Button size="sm" justifyContent="flex-start" variant={scope.kind === 'unfiled' ? 'subtle' : 'ghost'} aria-current={scope.kind === 'unfiled' ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'unfiled' })}><FiFolder />Unfiled</Button>
+              <Button size="sm" justifyContent="flex-start" variant={scope.kind === 'all' ? 'subtle' : 'ghost'} colorPalette={scope.kind === 'all' ? 'blue' : undefined} borderStartWidth="3px" borderStartColor={scope.kind === 'all' ? 'blue.500' : 'transparent'} aria-current={scope.kind === 'all' ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'all' })}><FiLayers />All scenarios{scope.kind === 'all' && <Text ml="auto" color="text.muted" fontSize="xs">{pagination.total}</Text>}</Button>
+              <Button size="sm" justifyContent="flex-start" variant={scope.kind === 'unfiled' ? 'subtle' : 'ghost'} colorPalette={scope.kind === 'unfiled' ? 'blue' : undefined} borderStartWidth="3px" borderStartColor={scope.kind === 'unfiled' ? 'blue.500' : 'transparent'} aria-current={scope.kind === 'unfiled' ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'unfiled' })}><FiFolder />Unfiled</Button>
             </VStack>
             <Box>
               <HStack justify="space-between" px={2} mb={1}><Text fontSize="xs" fontWeight="bold" letterSpacing="wider" color="text.muted" textTransform="uppercase">Folders</Text><IconButton size="xs" variant="ghost" aria-label={selectedFolder ? 'Create subfolder' : 'Create folder'} title={selectedFolder ? 'Create inside selected folder' : 'Create folder'} onClick={() => openCreateDialog('folder')}><FiPlus /></IconButton></HStack>
@@ -530,7 +582,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
               <HStack justify="space-between" px={2} mb={1}><Text fontSize="xs" fontWeight="bold" letterSpacing="wider" color="text.muted" textTransform="uppercase">Suites</Text><IconButton size="xs" variant="ghost" aria-label="Create suite" onClick={() => openCreateDialog('suite')}><FiPlus /></IconButton></HStack>
               {organizationLoading ? <Text px={2} color="text.muted" fontSize="sm">Loading suites…</Text> : organizationError ? <Text px={2} color="fg.error" fontSize="sm" role="alert">Suites could not be loaded.</Text> : suites.length === 0 ? <Text px={2} color="text.muted" fontSize="sm">No suites yet</Text> : <VStack align="stretch" gap={0}>{suites.map((suite) => {
                 const selected = scope.kind === 'suite' && scope.id === suite.id;
-                return <Button key={suite.id} size="sm" variant={selected ? 'subtle' : 'ghost'} justifyContent="flex-start" aria-current={selected ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'suite', id: suite.id })}><FiLayers /><Text flex="1" textAlign="left" lineClamp={1}>{suite.name}</Text><Text color="text.muted" fontSize="xs">{suite.members?.length ?? 0}</Text></Button>;
+                return <Button key={suite.id} size="sm" variant={selected ? 'subtle' : 'ghost'} colorPalette={selected ? 'blue' : undefined} borderStartWidth="3px" borderStartColor={selected ? 'blue.500' : 'transparent'} justifyContent="flex-start" aria-current={selected ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'suite', id: suite.id })}><FiLayers /><Text flex="1" textAlign="left" lineClamp={1}>{suite.name}</Text><Text color="text.muted" fontSize="xs">{suite.members?.length ?? 0}</Text></Button>;
               })}</VStack>}
             </Box>
           </VStack>
@@ -547,8 +599,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
 
             {selectedSuite?.members && selectedSuite.members.length > 0 && <Collapsible.Root><Collapsible.Trigger asChild><Button variant="ghost" size="sm" alignSelf="flex-start">Manage suite order ({selectedSuite.members.length})<FiChevronDown /></Button></Collapsible.Trigger><Collapsible.Content><VStack align="stretch" gap={1} p={3} mt={2} borderWidth="1px" borderColor="border.main" borderRadius="md" maxH="240px" overflowY="auto">{selectedSuite.members.map((member, index, members) => <HStack key={member.testScenarioId}><Text flex="1" fontSize="sm" lineClamp={1}>{index + 1}. {scenarios.find((scenario) => scenario.id === member.testScenarioId)?.title ?? member.testScenarioId}</Text><Button size="xs" variant="ghost" aria-label={`Move member ${index + 1} up`} disabled={index === 0} onClick={() => { const ids = members.map((item) => item.testScenarioId); [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]]; void onReorderSuite(selectedSuite.id, ids).catch((error: unknown) => window.alert(String(error))); }}>↑</Button><Button size="xs" variant="ghost" aria-label={`Move member ${index + 1} down`} disabled={index === members.length - 1} onClick={() => { const ids = members.map((item) => item.testScenarioId); [ids[index + 1], ids[index]] = [ids[index], ids[index + 1]]; void onReorderSuite(selectedSuite.id, ids).catch((error: unknown) => window.alert(String(error))); }}>↓</Button></HStack>)}</VStack></Collapsible.Content></Collapsible.Root>}
 
-            <HStack align="end" gap={3} flexWrap="wrap" p={3} bg="bg.card" borderWidth="1px" borderColor="border.main" borderRadius="lg">
-              <Input aria-label="Search scenarios" placeholder="Search title or scenario key" value={search} onChange={(event) => onSearchChange(event.currentTarget.value)} flex="1" minW={{ base: '100%', md: '220px' }} />
+            <HStack align="end" gap={3} flexWrap="wrap">
+              <Input aria-label="Search scenarios" placeholder="Search title or scenario key" value={search} onChange={(event) => onSearchChange(event.currentTarget.value)} flex="1" minW={{ base: '100%', md: '220px' }} bg="bg.card" />
               <NativeSelect label="Sort by" aria-label="Sort scenarios" value={sort} onChange={(event) => onSortChange(event.currentTarget.value as typeof sort)} maxW="220px"><option value="recently_created">Recently created</option><option value="recently_updated">Recently updated</option><option value="title_asc">Title A–Z</option></NativeSelect>
               {scope.kind === 'folder' && <label style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 40 }}><input type="checkbox" checked={includeDescendants} onChange={(event) => onIncludeDescendantsChange(event.currentTarget.checked)} />Include subfolders</label>}
             </HStack>
@@ -563,7 +615,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             </HStack>}
 
             <Box borderWidth="1px" borderColor="border.main" borderRadius="lg" overflow="hidden" bg="bg.card">
-              {isLoading ? <Box p={4}><LoadingState /></Box> : error ? <Box p={4}><ErrorState /></Box> : scenarios.length === 0 ? <EmptyState /> : <><ScenarioTable scenarios={scenarios} selectedIds={selectedIds} onToggleSelected={toggleSelected} onContextMenu={onContextMenu} /><HStack justify="space-between" flexWrap="wrap" p={3} borderTopWidth="1px" borderColor="border.main"><PaginationSummary pagination={pagination} />{pagination.totalPages > 1 && <Box as="nav" aria-label="Test Scenario pagination"><Pagination currentPage={pagination.page} totalPages={pagination.totalPages} onPageChange={onPageChange} /></Box>}</HStack></>}
+              {isLoading ? <Box p={4}><LoadingState showFolder={showFolderColumn} /></Box> : error ? <Box p={4}><ErrorState /></Box> : scenarios.length === 0 ? <EmptyState /> : <><ScenarioTable scenarios={scenarios} selectedIds={selectedIds} onToggleSelected={toggleSelected} onContextMenu={onContextMenu} showFolder={showFolderColumn} folderPathById={folderPathById} /><HStack justify="space-between" flexWrap="wrap" p={3} borderTopWidth="1px" borderColor="border.main"><PaginationSummary pagination={pagination} />{pagination.totalPages > 1 && <Box as="nav" aria-label="Test Scenario pagination"><Pagination currentPage={pagination.page} totalPages={pagination.totalPages} onPageChange={onPageChange} /></Box>}</HStack></>}
             </Box>
           </VStack>
         </Grid>

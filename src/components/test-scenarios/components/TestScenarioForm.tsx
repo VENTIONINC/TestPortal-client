@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FiArrowLeft, FiChevronDown, FiChevronUp, FiTrash2 } from 'react-icons/fi';
 
-import { Input, Textarea } from '@/components/ui';
+import { Input, NativeSelect, Textarea } from '@/components/ui';
 import {
   testScenarioAuthoringSchema,
   testScenarioStepSchema,
@@ -270,13 +270,16 @@ export const TestScenarioForm = ({
           </Alert.Root>
         )}
 
-        <label>
-          Folder
-          <select aria-label="Scenario folder" value={folderId ?? ''} onChange={(event) => setFolderId(event.currentTarget.value || null)}>
+        <NativeSelect
+          name="scenario-folder"
+          label="Folder"
+          aria-label="Scenario folder"
+          value={folderId ?? ''}
+          onChange={(event) => setFolderId(event.currentTarget.value || null)}
+        >
             <option value="">Unfiled</option>
             {folders.map((folder) => <option key={folder.id} value={folder.id}>{'　'.repeat(folder.depth ?? 0)}{folder.name}</option>)}
-          </select>
-        </label>
+        </NativeSelect>
 
         <Input
           {...register('scenarioKey')}
