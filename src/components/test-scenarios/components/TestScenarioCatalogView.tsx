@@ -71,7 +71,18 @@ export interface TestScenarioCatalogViewProps {
   onIncludeDescendantsChange: (value: boolean) => void;
 }
 
-const formatScenarioDate = (timestamp: string) => new Date(timestamp).toLocaleString('en-US');
+const formatScenarioDate = (timestamp: string) => {
+  const date = new Date(timestamp);
+  return {
+    date: date.toLocaleDateString('en-US'),
+    time: date.toLocaleTimeString('en-US'),
+  };
+};
+
+const ScenarioTimestamp = ({ timestamp }: { timestamp: string }) => {
+  const { date, time } = formatScenarioDate(timestamp);
+  return <VStack align="start" gap={0} whiteSpace="nowrap"><Text>{date}</Text><Text>{time}</Text></VStack>;
+};
 
 const TABLE_CELL_PADDING = { px: 4, py: 4 } as const;
 const UNFILED_DESTINATION = '__unfiled__';
@@ -234,11 +245,11 @@ const ScenarioTable = ({
                 </Text>
               </VStack>
             </Table.Cell>
-            <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary" whiteSpace="nowrap" fontSize="sm">
-              {formatScenarioDate(scenario.createdAt)}
+            <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary" fontSize="sm">
+              <ScenarioTimestamp timestamp={scenario.createdAt} />
             </Table.Cell>
-            <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary" whiteSpace="nowrap" fontSize="sm">
-              {formatScenarioDate(scenario.updatedAt)}
+            <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary" fontSize="sm">
+              <ScenarioTimestamp timestamp={scenario.updatedAt} />
             </Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING} textAlign="end" w="1%">
               <ContextMenuButton
