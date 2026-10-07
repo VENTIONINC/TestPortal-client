@@ -22,6 +22,10 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
 
   return { ...actual, usePostApiV2TestScenariosMutation: vi.fn() };
 });
+vi.mock('@/redux/apis/extendedApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/redux/apis/extendedApi')>()),
+  useGetApiV2TestScenarioFoldersQuery: vi.fn(() => ({ currentData: [{ id: 'folder-42', name: 'Authentication' }] })),
+}));
 
 const mockedCreateMutation = vi.mocked(usePostApiV2TestScenariosMutation);
 
@@ -54,6 +58,7 @@ describe('TestScenarioCreateContainer', () => {
     expect(createScenario).toHaveBeenCalledWith({
       createTestScenarioRequest: {
         projectId: 'project-1',
+        folderId: null,
         title: 'Checkout flow',
         details: 'Details\n  here',
         objective: 'Complete checkout',
@@ -77,12 +82,27 @@ describe('TestScenarioCreateContainer', () => {
     expect(createScenario).toHaveBeenCalledWith({
       createTestScenarioRequest: {
         projectId: 'project-1',
+        folderId: null,
         title: 'Checkout flow',
         steps: [{ action: 'Open checkout', expectedResult: 'Form is shown' }],
       },
     });
     expect(createScenario.mock.calls[0]?.[0].createTestScenarioRequest.steps?.[0]).not.toHaveProperty('id');
     expect(createScenario.mock.calls[0]?.[0].createTestScenarioRequest.steps?.[0]).not.toHaveProperty('position');
+  });
+
+  it('submits the selected folder UUID when creating from a folder', async () => {
+    const user = userEvent.setup();
+    createScenario.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'scenario-foldered' }) });
+
+    renderContainer();
+    await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Folder scenario');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Scenario folder' }), 'folder-42');
+    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
+
+    await waitFor(() => expect(createScenario).toHaveBeenCalledWith({
+      createTestScenarioRequest: expect.objectContaining({ projectId: 'project-1', title: 'Folder scenario', folderId: 'folder-42' }),
+    }));
   });
 
   it('retains all drafts, shows API feedback and permits an explicit retry', async () => {

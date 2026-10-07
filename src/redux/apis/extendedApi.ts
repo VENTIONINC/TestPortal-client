@@ -100,8 +100,53 @@ const createSkillPackageFormData = ({
 
 export const extendedApi = generatedApi
   .enhanceEndpoints({
-    addTagTypes: ['Results', 'ResultSpecCoverage', 'ScenarioCatalog', 'ScenarioSpecLink'],
+    addTagTypes: ['Results', 'ResultSpecCoverage', 'ScenarioCatalog', 'ScenarioSpecLink', 'ScenarioFolders', 'ScenarioSuites'],
     endpoints: {
+      getApiV2TestScenarioFolders: {
+        providesTags: (_result, _error, arg) => [{ type: 'ScenarioFolders', id: arg.projectId }],
+      },
+      getApiV2TestSuites: {
+        providesTags: (_result, _error, arg) => [{ type: 'ScenarioSuites', id: arg.projectId }],
+      },
+      getApiV2TestScenarios: {
+        providesTags: (_result, _error, arg) => [TAGS.TestScenario, scenarioCatalogTag(arg.projectId)],
+      },
+      postApiV2TestScenarios: {
+        invalidatesTags: (result, _error, arg) => result ? [TAGS.TestScenario, scenarioCatalogTag(arg.createTestScenarioRequest.projectId), { type: 'ScenarioFolders', id: arg.createTestScenarioRequest.projectId }] : [],
+      },
+      patchApiV2TestScenariosByScenarioId: {
+        invalidatesTags: (result, _error, arg) => result ? [TAGS.TestScenario, 'Results', scenarioCatalogTag(arg.projectId), { type: 'ScenarioFolders', id: arg.projectId }, { type: 'ScenarioSuites', id: arg.projectId }] : [],
+      },
+      postApiV2TestScenarioFolders: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }] : [],
+      },
+      patchApiV2TestScenarioFoldersByFolderId: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.projectId }, scenarioCatalogTag(arg.projectId)] : [],
+      },
+      deleteApiV2TestScenarioFoldersByFolderId: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.projectId }, scenarioCatalogTag(arg.projectId)] : [],
+      },
+      postApiV2TestSuites: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }] : [],
+      },
+      patchApiV2TestSuitesBySuiteId: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.projectId }] : [],
+      },
+      deleteApiV2TestSuitesBySuiteId: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.projectId }, scenarioCatalogTag(arg.projectId)] : [],
+      },
+      postApiV2TestSuitesBySuiteIdMembers: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+      },
+      deleteApiV2TestSuitesBySuiteIdMembers: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+      },
+      putApiV2TestSuitesBySuiteIdMembersOrder: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }] : [],
+      },
+      patchApiV2TestScenariosBulkFolder: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId), { type: 'ScenarioSuites', id: arg.body.projectId }] : [],
+      },
       postApiV2TestScenariosByScenarioIdSpecLinks: {
         extraOptions: { maxRetries: 0 },
         invalidatesTags: (_result, _error, arg: PostApiV2TestScenariosByScenarioIdSpecLinksApiArg) => [
@@ -120,9 +165,6 @@ export const extendedApi = generatedApi
         providesTags: (_result, _error, arg: GetApiV2TestScenariosByScenarioIdSpecLinksApiArg) => [
           scenarioSpecLinkTag(arg.projectId, arg.scenarioId),
         ],
-      },
-      patchApiV2TestScenariosByScenarioId: {
-        invalidatesTags: ['Test Scenarios', 'Results'],
       },
       postApiV2Assumptions: {
         invalidatesTags: [TAGS.Assumption, TAGS.Issues, TAGS.Result, TAGS.ResultError],
@@ -338,6 +380,19 @@ export const {
   usePostApiV2UploadCtrfReportMutation,
   useDeleteApiV2TestScenariosByScenarioIdMutation,
   usePostApiV2TestScenariosByScenarioIdManualRunsMutation,
+  useGetApiV2TestScenarioFoldersQuery,
+  usePostApiV2TestScenarioFoldersMutation,
+  usePatchApiV2TestScenarioFoldersByFolderIdMutation,
+  useDeleteApiV2TestScenarioFoldersByFolderIdMutation,
+  useGetApiV2TestSuitesQuery,
+  usePostApiV2TestSuitesMutation,
+  useGetApiV2TestSuitesBySuiteIdQuery,
+  usePatchApiV2TestSuitesBySuiteIdMutation,
+  useDeleteApiV2TestSuitesBySuiteIdMutation,
+  usePostApiV2TestSuitesBySuiteIdMembersMutation,
+  useDeleteApiV2TestSuitesBySuiteIdMembersMutation,
+  usePutApiV2TestSuitesBySuiteIdMembersOrderMutation,
+  usePatchApiV2TestScenariosBulkFolderMutation,
   useGetApiV2TestScenariosByScenarioIdManualRunsQuery,
   useLazyGetApiV2TestScenariosByScenarioIdManualRunsQuery,
   useGetApiV2ManualTestRunsQuery,

@@ -97,6 +97,41 @@ describe('Results endpoint', () => {
   });
 });
 
+describe('Test Scenario organization cache', () => {
+  it('refreshes folder, suite and catalog queries only after a successful bulk folder move', async () => {
+    const requestCounts = new Map<string, number>();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const request = input as Request;
+      const path = new URL(request.url).pathname;
+      requestCounts.set(path, (requestCounts.get(path) ?? 0) + 1);
+      const body = path === '/api/v2/test-scenarios'
+        ? { scenarios: [], total: 0, page: 1, limit: 10, totalPages: 0 }
+        : path === '/api/v2/test-scenarios/bulk-folder'
+          ? { moved: 1 }
+          : [];
+      return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+    });
+
+    const catalog = store.dispatch(extendedApi.endpoints.getApiV2TestScenarios.initiate({ projectId: 'project-1', page: 1, limit: 10 }));
+    const folders = store.dispatch(extendedApi.endpoints.getApiV2TestScenarioFolders.initiate({ projectId: 'project-1' }));
+    const suites = store.dispatch(extendedApi.endpoints.getApiV2TestSuites.initiate({ projectId: 'project-1' }));
+    await Promise.all([catalog, folders, suites]);
+
+    await store.dispatch(extendedApi.endpoints.patchApiV2TestScenariosBulkFolder.initiate({
+      body: { projectId: 'project-1', scenarioIds: ['scenario-1'], folderId: null },
+    })).unwrap();
+
+    await vi.waitFor(() => {
+      expect(requestCounts.get('/api/v2/test-scenarios')).toBe(2);
+      expect(requestCounts.get('/api/v2/test-scenario-folders')).toBe(2);
+      expect(requestCounts.get('/api/v2/test-suites')).toBe(2);
+    });
+    catalog.unsubscribe();
+    folders.unsubscribe();
+    suites.unsubscribe();
+  });
+});
+
 describe('Category source-of-truth API contracts', () => {
   it('serializes an exact lowercase persisted category filter on the generated issue list', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(

@@ -11,6 +11,10 @@ import {
   type GetApiV2TestScenariosByScenarioIdApiArg,
   type GetApiV2TestScenariosByScenarioIdApiResponse,
   type GetApiV2TestScenariosApiArg,
+  type GetApiV2TestScenarioFoldersApiArg,
+  type PatchApiV2TestScenariosBulkFolderApiArg,
+  type TestScenarioFolder,
+  type GetApiV2TestSuitesApiArg,
   type PatchApiV2TestScenariosByScenarioIdApiArg,
   type PatchApiV2TestScenariosByScenarioIdApiResponse,
   type PostApiV2TestScenariosApiArg,
@@ -35,6 +39,7 @@ const creator: TestScenarioCreatorSummary = {
 };
 
 const scenario: TestScenario = {
+  folderId: null,
   id: 'scenario-1',
   projectId: 'project-1',
   createdById: 'user-1',
@@ -57,6 +62,8 @@ const scenario: TestScenario = {
 const summary: TestScenarioSummary = {
   id: scenario.id,
   projectId: scenario.projectId,
+  folderId: null,
+  folderName: null,
   createdById: scenario.createdById,
   title: scenario.title,
   scenarioKey: scenario.scenarioKey,
@@ -111,6 +118,24 @@ describe('generated Test Scenario list contract', () => {
       totalPages: 2,
     });
     expect(listArgs).toEqual({ projectId: 'project-1', page: 2, limit: 30 });
+  });
+
+  it('exposes typed organization and combined list contracts', () => {
+    const scopedList: GetApiV2TestScenariosApiArg = {
+      projectId: 'project-1', page: 1, limit: 10, search: 'login',
+      folderId: 'unfiled', includeDescendants: false,
+    };
+    const folderQuery: GetApiV2TestScenarioFoldersApiArg = { projectId: 'project-1' };
+    const suiteQuery: GetApiV2TestSuitesApiArg = { projectId: 'project-1' };
+    const bulkFolder: PatchApiV2TestScenariosBulkFolderApiArg = {
+      body: { projectId: 'project-1', scenarioIds: ['scenario-1'], folderId: null },
+    };
+
+    expectTypeOf(scopedList.folderId).toEqualTypeOf<string | 'unfiled' | undefined>();
+    expectTypeOf(folderQuery.projectId).toEqualTypeOf<string>();
+    expectTypeOf(suiteQuery.projectId).toEqualTypeOf<string>();
+    expectTypeOf(bulkFolder.body.scenarioIds).toEqualTypeOf<string[]>();
+    expectTypeOf<TestScenarioFolder['children']>().toEqualTypeOf<TestScenarioFolder[] | undefined>();
   });
 });
 

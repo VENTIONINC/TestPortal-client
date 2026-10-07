@@ -16,6 +16,7 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
 const mockedDetailQuery = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
 
 const scenario: TestScenario = {
+  folderId: null,
   id: 'scenario-1',
   projectId: 'project-1',
   createdById: 'user-1',

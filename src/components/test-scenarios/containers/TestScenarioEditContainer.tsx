@@ -8,13 +8,14 @@ import { useNavigate } from 'react-router';
 
 import { toaster } from '@/components/ui';
 import { usePatchApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
+import { useGetApiV2TestScenarioFoldersQuery } from '@/redux/apis/extendedApi';
 import { type TestScenarioAuthoringFormData } from '@/schemas';
 import { PATHS } from '@/types/paths';
 import { extractApiError } from '@/utils/apiErrors';
 
 import { TestScenarioDetailStateView, TestScenarioForm, TestScenarioStepsEditor } from '../components';
 import { useTestScenarioDetail } from '../hooks/useTestScenarioDetail';
-import { getTestScenarioEditableValues, getTestScenarioPatchPayload } from '../utils';
+import { flattenScenarioFolders, getTestScenarioEditableValues, getTestScenarioPatchPayload } from '../utils';
 import type { TestScenarioEditableField } from '../types';
 
 export interface TestScenarioEditContainerProps {
@@ -25,6 +26,7 @@ export interface TestScenarioEditContainerProps {
 export const TestScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEditContainerProps) => {
   const navigate = useNavigate();
   const detail = useTestScenarioDetail(projectId, scenarioId);
+  const { currentData: folders = [] } = useGetApiV2TestScenarioFoldersQuery({ projectId });
   const [updateScenario, { isLoading: isMutationLoading }] = usePatchApiV2TestScenariosByScenarioIdMutation();
   const [apiError, setApiError] = useState<string>();
   const [successMessage, setSuccessMessage] = useState<string>();
@@ -49,15 +51,19 @@ export const TestScenarioEditContainer = ({ projectId, scenarioId }: TestScenari
     [projectId, scenarioId],
   );
 
-  const handleSubmit = async (values: TestScenarioAuthoringFormData) => {
+  const handleSubmit = async (values: TestScenarioAuthoringFormData, _steps: unknown, folderId?: string | null) => {
     if (submitInFlight.current || !detail.scenario) return;
 
     const savedValues = getTestScenarioEditableValues(detail.scenario);
-    const payload = getTestScenarioPatchPayload(values, savedValues);
+    const structuredPayload = getTestScenarioPatchPayload(values, savedValues);
+    const payload = {
+      ...structuredPayload,
+      ...(folderId !== undefined && folderId !== detail.scenario.folderId ? { folderId } : {}),
+    };
     setApiError(undefined);
     setSuccessMessage(undefined);
 
-    if (!payload) {
+    if (Object.keys(payload).length === 0) {
       setSuccessMessage('No changes to save.');
       return;
     }
@@ -77,7 +83,7 @@ export const TestScenarioEditContainer = ({ projectId, scenarioId }: TestScenari
       setReconciliation({
         token: Date.now(),
         values: getTestScenarioEditableValues(response),
-        submittedFields: Object.keys(payload) as TestScenarioEditableField[],
+        submittedFields: Object.keys(payload).filter((field): field is TestScenarioEditableField => field !== 'folderId') as TestScenarioEditableField[],
       });
       setSuccessMessage('Test Scenario saved successfully.');
       toaster.create({ title: 'Test Scenario saved successfully.', type: 'success' });
@@ -118,6 +124,8 @@ export const TestScenarioEditContainer = ({ projectId, scenarioId }: TestScenari
           <TestScenarioForm
             mode="edit"
             initialValues={scenario}
+            folders={flattenScenarioFolders(folders)}
+            initialFolderId={scenario.folderId}
             reconciliation={reconciliation}
             isSubmitting={isSubmitting || isMutationLoading}
             apiError={apiError}
