@@ -26,6 +26,7 @@ export const TestScenarioCatalogContainer = ({ projectId }: TestScenarioCatalogC
   return (
     <TestScenarioCatalogView
       {...catalog}
+      projectId={projectId}
       onMoveSelected={catalog.moveSelected}
       onAddSelectedToSuite={catalog.addSelectedToSuite}
       onRemoveSelectedFromSuite={catalog.removeSelectedFromSuite}
