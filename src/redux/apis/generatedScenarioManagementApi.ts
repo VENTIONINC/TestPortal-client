@@ -19,6 +19,13 @@ const injectedRtkApi = api
             search: queryArg.search,
             createdById: queryArg.createdById,
             sort: queryArg.sort,
+            sortField: queryArg.sortField,
+            sortDirection: queryArg.sortDirection,
+            scenarioKey: queryArg.scenarioKey,
+            title: queryArg.title,
+            details: queryArg.details,
+            folder: queryArg.folder,
+            createdBy: queryArg.createdBy,
             folderId: queryArg.folderId,
             includeDescendants: queryArg.includeDescendants,
             suiteId: queryArg.suiteId,
@@ -196,6 +203,20 @@ export type GetApiV2TestScenariosForResultLinkManagementApiArg = {
   search?: string;
   createdById?: string;
   sort?: "recently_created" | "recently_updated" | "title_asc";
+  sortField?:
+    | "scenarioKey"
+    | "title"
+    | "details"
+    | "folder"
+    | "createdBy"
+    | "createdAt"
+    | "updatedAt";
+  sortDirection?: "asc" | "desc";
+  scenarioKey?: string;
+  title?: string;
+  details?: string;
+  folder?: string;
+  createdBy?: string;
   folderId?: string | "unfiled";
   includeDescendants?: boolean;
   suiteId?: string;

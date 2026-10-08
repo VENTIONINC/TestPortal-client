@@ -39,8 +39,11 @@ const pagination = {
 const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination' | 'isLoading' | 'onPageChange'> = {
   search: '',
   onSearchChange: vi.fn(),
-  sort: 'recently_created',
+  sort: undefined,
+  sortDirection: 'desc',
   onSortChange: vi.fn(),
+  columnFilters: { scenarioKey: '', title: '', details: '', folder: '', createdBy: '' },
+  onColumnFilterChange: vi.fn(),
   scope: { kind: 'all' },
   onScopeChange: vi.fn(),
   folders: [],
@@ -108,13 +111,14 @@ describe('TestScenarioCatalogView', () => {
     renderView({ onContextMenu });
 
     expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getAllByRole('columnheader')).toHaveLength(8);
+    expect(screen.getAllByRole('columnheader')).toHaveLength(9);
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
       'Select',
-      'Scenario key',
-      'Title',
-      'Details',
-      'Created by',
+      'Scenario keySearch Scenario key',
+      'TitleSearch Title',
+      'DetailsSearch Details',
+      'FolderSearch Folder',
+      'Created bySearch Created by',
       'Created',
       'Updated',
       '',
@@ -138,11 +142,34 @@ describe('TestScenarioCatalogView', () => {
     expect(onContextMenu).toHaveBeenCalledWith(expect.anything(), scenarios[0]);
   });
 
+  it('offers sort and filter controls on the supported columns and removes the global sort selector', async () => {
+    const user = userEvent.setup();
+    const onSortChange = vi.fn();
+    const onColumnFilterChange = vi.fn();
+    renderView({ onSortChange, onColumnFilterChange });
+
+    expect(screen.queryByLabelText('Sort scenarios')).not.toBeInTheDocument();
+    for (const column of ['Scenario key', 'Title', 'Details', 'Folder', 'Created by', 'Created', 'Updated']) {
+      expect(screen.getByRole('button', { name: `Sort by ${column}` })).toBeInTheDocument();
+    }
+    for (const column of ['Scenario key', 'Title', 'Details', 'Folder', 'Created by']) {
+      expect(screen.getByRole('button', { name: `Filter by ${column}` })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole('button', { name: 'Filter by Created' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Filter by Updated' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Sort by Title' }));
+    expect(onSortChange).toHaveBeenCalledWith('title');
+    await user.click(screen.getByRole('button', { name: 'Filter by Title' }));
+    await user.type(screen.getByRole('textbox', { name: 'Title filter' }), 'checkout');
+    expect(onColumnFilterChange).toHaveBeenCalledWith('title', 't');
+  });
+
   it('renders a fallback for null details', () => {
     renderView({ scenarios: [{ ...scenarios[0], scenarioKey: null, details: null }] });
 
     expect(screen.getByText('No details')).toBeInTheDocument();
-    expect(screen.getByText('N/A')).toBeInTheDocument();
+    expect(screen.getByText('—')).toBeInTheDocument();
   });
 
   it('maps every scenario title to its own detail route while keeping actions separate', () => {

@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   useGetApiV2TestScenarioFoldersQuery,
@@ -17,15 +17,21 @@ import {
   useDeleteApiV2TestSuitesBySuiteIdMembersMutation,
   usePutApiV2TestSuitesBySuiteIdMembersOrderMutation,
 } from '@/redux/apis/extendedApi';
-import { useGetApiV2TestScenariosQuery } from '@/redux/apis/generatedApi';
+import { useGetApiV2TestScenariosQuery, type GetApiV2TestScenariosApiArg } from '@/redux/apis/generatedApi';
 
 import { TEST_SCENARIO_PAGE_LIMIT } from '../constants';
 import { toggleScenarioSelection } from '../utils';
 
+const SEARCH_DEBOUNCE_MS = 500;
+
 export const useTestScenarioCatalog = (projectId: string) => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<'recently_created' | 'recently_updated' | 'title_asc'>('recently_created');
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [sortField, setSortField] = useState<GetApiV2TestScenariosApiArg['sortField']>();
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [columnFilters, setColumnFilters] = useState({ scenarioKey: '', title: '', details: '', folder: '', createdBy: '' });
+  const [debouncedColumnFilters, setDebouncedColumnFilters] = useState(columnFilters);
   const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>({ kind: 'all' });
   const [includeDescendants, setIncludeDescendants] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -45,12 +51,25 @@ export const useTestScenarioCatalog = (projectId: string) => {
     projectId,
     page,
     limit: TEST_SCENARIO_PAGE_LIMIT,
-    sort,
-    ...(search.trim() ? { search: search.trim() } : {}),
+    ...(sortField ? { sortField, sortDirection } : {}),
+    ...(debouncedColumnFilters.scenarioKey.trim() ? { scenarioKey: debouncedColumnFilters.scenarioKey.trim() } : {}),
+    ...(debouncedColumnFilters.title.trim() ? { title: debouncedColumnFilters.title.trim() } : {}),
+    ...(debouncedColumnFilters.details.trim() ? { details: debouncedColumnFilters.details.trim() } : {}),
+    ...(debouncedColumnFilters.folder.trim() ? { folder: debouncedColumnFilters.folder.trim() } : {}),
+    ...(debouncedColumnFilters.createdBy.trim() ? { createdBy: debouncedColumnFilters.createdBy.trim() } : {}),
+    ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
     ...(scope.kind === 'unfiled' ? { folderId: 'unfiled' as const } : {}),
     ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants } : {}),
     ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
-  }), [includeDescendants, page, projectId, scope, search, sort]);
+  }), [debouncedColumnFilters, debouncedSearch, includeDescendants, page, projectId, scope, sortDirection, sortField]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(search);
+      setDebouncedColumnFilters(columnFilters);
+      setPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timeout);
+  }, [columnFilters, search]);
   const { currentData, isLoading: isQueryLoading, isFetching, error } = useGetApiV2TestScenariosQuery(queryArgs);
 
   const scenarios = currentData?.scenarios ?? [];
@@ -70,7 +89,21 @@ export const useTestScenarioCatalog = (projectId: string) => {
   const isLoading = isQueryLoading || (isFetching && !currentData);
   const onPageChange = useCallback((nextPage: number) => setPage(nextPage), []);
   const onSearchChange = useCallback((value: string) => { setSearch(value); setPage(1); }, []);
-  const onSortChange = useCallback((value: 'recently_created' | 'recently_updated' | 'title_asc') => { setSort(value); setPage(1); }, []);
+  const onSortChange = useCallback((field: NonNullable<GetApiV2TestScenariosApiArg['sortField']>) => {
+    if (sortField === field) setSortDirection((direction) => direction === 'asc' ? 'desc' : 'asc');
+    else if (!sortField && field === 'createdAt') {
+      setSortField(field);
+      setSortDirection('asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+    setPage(1);
+  }, [sortField]);
+  const onColumnFilterChange = useCallback((field: keyof typeof columnFilters, value: string) => {
+    setColumnFilters((current) => ({ ...current, [field]: value }));
+    setPage(1);
+  }, []);
   const onScopeChange = useCallback((nextScope: typeof scope) => {
     setScope(nextScope);
     setPage(1);
@@ -78,6 +111,7 @@ export const useTestScenarioCatalog = (projectId: string) => {
   }, []);
   const onIncludeDescendantsChange = useCallback((value: boolean) => { setIncludeDescendants(value); setPage(1); }, []);
   const toggleSelected = useCallback((id: string) => setSelectedIds((current) => toggleScenarioSelection(current, id)), []);
+  const selectOnlyScenario = useCallback((id: string) => setSelectedIds([id]), []);
   const moveSelected = useCallback(async (folderId: string | null) => {
     if (selectedIds.length === 0 || selectedIds.length > 100) return;
     await moveScenarios({ body: { projectId, scenarioIds: selectedIds, folderId } }).unwrap();
@@ -121,8 +155,11 @@ export const useTestScenarioCatalog = (projectId: string) => {
     onPageChange,
     search,
     onSearchChange,
-    sort,
+    sort: sortField,
+    sortDirection,
     onSortChange,
+    columnFilters,
+    onColumnFilterChange,
     scope,
     onScopeChange,
     includeDescendants,
@@ -133,6 +170,7 @@ export const useTestScenarioCatalog = (projectId: string) => {
     organizationError: foldersQuery.error ?? suitesQuery.error,
     selectedIds,
     toggleSelected,
+    selectOnlyScenario,
     moveSelected,
     addSelectedToSuite,
     removeSelectedFromSuite,

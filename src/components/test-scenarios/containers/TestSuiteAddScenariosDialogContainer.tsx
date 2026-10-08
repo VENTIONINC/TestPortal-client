@@ -25,6 +25,7 @@ interface TestSuiteAddScenariosDialogContainerProps {
 
 const FOLDER_UNFILED_FILTER = '__unfiled__';
 const MAX_SCENARIOS_PER_ADD = 100;
+const FETCH_LIMIT = 100;
 
 const getErrorMessage = (error: unknown) => {
   if (error && typeof error === 'object' && ('data' in error || 'status' in error)) {
@@ -42,8 +43,8 @@ export const TestSuiteAddScenariosDialogContainer = ({ projectId, suite, folderO
   const [addMembers, { isLoading: isAdding }] = usePostApiV2TestSuitesBySuiteIdMembersMutation();
   const queryArgs = useMemo(() => ({
     projectId,
-    page,
-    limit: TEST_SCENARIO_PAGE_LIMIT,
+    page: 1,
+    limit: FETCH_LIMIT,
     sort: 'title_asc' as const,
     ...(search.trim() ? { search: search.trim() } : {}),
     ...(folderId === FOLDER_UNFILED_FILTER
@@ -55,8 +56,10 @@ export const TestSuiteAddScenariosDialogContainer = ({ projectId, suite, folderO
   const { currentData, isLoading, isFetching, error } = useGetApiV2TestScenariosQuery(queryArgs);
   const existingIds = useMemo(() => new Set((suite.members ?? []).map((member) => member.testScenarioId)), [suite.members]);
   const matchingScenarios = currentData?.scenarios ?? [];
-  const scenarios = matchingScenarios.filter((scenario) => !existingIds.has(scenario.id));
-  const emptyState = matchingScenarios.length > 0 && scenarios.length === 0 ? 'already-added' : 'no-results';
+  const availableScenarios = matchingScenarios.filter((scenario) => !existingIds.has(scenario.id));
+  const totalPages = Math.max(1, Math.ceil(availableScenarios.length / TEST_SCENARIO_PAGE_LIMIT));
+  const scenarios = availableScenarios.slice((page - 1) * TEST_SCENARIO_PAGE_LIMIT, page * TEST_SCENARIO_PAGE_LIMIT);
+  const emptyState = matchingScenarios.length > 0 && availableScenarios.length === 0 ? 'already-added' : 'no-results';
   const allPageSelected = scenarios.length > 0 && scenarios.every((scenario) => selectedIds.includes(scenario.id));
   const somePageSelected = scenarios.some((scenario) => selectedIds.includes(scenario.id)) && !allPageSelected;
   const isInitialLoading = isLoading || (isFetching && !currentData);
@@ -105,7 +108,7 @@ export const TestSuiteAddScenariosDialogContainer = ({ projectId, suite, folderO
       allPageSelected={allPageSelected}
       somePageSelected={somePageSelected}
       page={page}
-      totalPages={currentData?.totalPages ?? 0}
+      totalPages={totalPages}
       onPageChange={setPage}
       isLoading={isInitialLoading}
       error={error ? getErrorMessage(error) : addError}

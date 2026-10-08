@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router';
 import { PATHS } from '@/types/paths';
 
 import { TestScenarioCatalogView } from '../components/TestScenarioCatalogView';
-import { useTestScenarioContextMenu } from '../hooks/useTestScenarioContextMenu';
 import { useTestScenarioCatalog } from '../hooks/useTestScenarioCatalog';
 
 export interface TestScenarioCatalogContainerProps {
@@ -17,7 +16,6 @@ export interface TestScenarioCatalogContainerProps {
 export const TestScenarioCatalogContainer = ({ projectId }: TestScenarioCatalogContainerProps) => {
   const catalog = useTestScenarioCatalog(projectId);
   const navigate = useNavigate();
-  const onContextMenu = useTestScenarioContextMenu(projectId);
   const onCreateScenario = useCallback(() => {
     const folderId = catalog.scope.kind === 'folder' ? catalog.scope.id : undefined;
     navigate(folderId ? `${PATHS.TEST_SCENARIO_NEW}?folderId=${encodeURIComponent(folderId)}` : PATHS.TEST_SCENARIO_NEW);
@@ -40,7 +38,6 @@ export const TestScenarioCatalogContainer = ({ projectId }: TestScenarioCatalogC
       includeDescendants={catalog.includeDescendants}
       onIncludeDescendantsChange={catalog.onIncludeDescendantsChange}
       onCreateScenario={onCreateScenario}
-      onContextMenu={onContextMenu}
     />
   );
 };

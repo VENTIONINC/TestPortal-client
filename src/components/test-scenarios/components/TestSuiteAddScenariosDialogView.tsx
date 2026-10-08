@@ -72,7 +72,7 @@ export const TestSuiteAddScenariosDialogView = ({
     contentProps={{ maxW: '820px', w: 'calc(100vw - 2rem)', maxH: '86vh' }}
   >
     <DialogBody overflowY="auto">
-      <VStack align="stretch" gap={4}>
+      <VStack align="stretch" gap={3}>
         <Text color="text.secondary">Choose project scenarios to include in this suite.</Text>
         <Grid templateColumns={{ base: '1fr', md: 'minmax(0, 1fr) 240px' }} alignItems="end" gap={3}>
           <Input
@@ -84,7 +84,6 @@ export const TestSuiteAddScenariosDialogView = ({
             minW="0"
           />
           <NativeSelect
-            label="Folder"
             aria-label="Filter scenarios by folder"
             value={folderId}
             onChange={(event) => onFolderChange(event.currentTarget.value)}

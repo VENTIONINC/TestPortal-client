@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -112,7 +112,7 @@ describe('TestScenarioCatalogContainer', () => {
       </ChakraProvider>,
     );
 
-    expect(mockedScenarioQuery).toHaveBeenCalledWith({ projectId: 'project-1', page: 1, limit: 10, sort: 'recently_created' });
+    expect(mockedScenarioQuery).toHaveBeenCalledWith({ projectId: 'project-1', page: 1, limit: 10 });
     expect(mockedDetailQuery).not.toHaveBeenCalled();
     expect(screen.getByText('Scenario page 1')).toBeInTheDocument();
   });
@@ -130,7 +130,7 @@ describe('TestScenarioCatalogContainer', () => {
 
     await user.click(screen.getByRole('button', { name: /^2$/ }));
 
-    expect(mockedScenarioQuery).toHaveBeenLastCalledWith({ projectId: 'project-1', page: 2, limit: 10, sort: 'recently_created' });
+    expect(mockedScenarioQuery).toHaveBeenLastCalledWith({ projectId: 'project-1', page: 2, limit: 10 });
     expect(screen.getByText('Scenario page 2')).toBeInTheDocument();
     expect(screen.queryByText('# Scenario page 2')).not.toBeInTheDocument();
   });
@@ -161,14 +161,42 @@ describe('TestScenarioCatalogContainer', () => {
       </ChakraProvider>,
     );
 
-    await user.click(screen.getByRole('button', { name: /Authentication \(3\)/ }));
+    await user.click(screen.getByRole('button', { name: /Authentication 3/ }));
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
-      projectId: 'project-1', page: 1, limit: 10, sort: 'recently_created', folderId: 'folder-a', includeDescendants: true,
+      projectId: 'project-1', page: 1, limit: 10, folderId: 'folder-a', includeDescendants: true,
     });
 
     await user.type(screen.getByRole('textbox', { name: 'Search scenarios' }), 'login');
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
-      projectId: 'project-1', page: 1, limit: 10, sort: 'recently_created', folderId: 'folder-a', includeDescendants: true, search: 'login',
+      projectId: 'project-1', page: 1, limit: 10, folderId: 'folder-a', includeDescendants: true, search: 'login',
+    });
+  });
+
+  it('keeps a selected sort while applying a debounced filter from another column', async () => {
+    const user = userEvent.setup();
+    render(
+      <ChakraProvider>
+        <MemoryRouter>
+          <TestScenarioCatalogContainer projectId="project-1" />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Sort by Title' }));
+    await user.click(screen.getByRole('button', { name: 'Sort by Title descending' }));
+    await user.click(screen.getByRole('button', { name: 'Filter by Folder' }));
+    await user.type(screen.getByRole('textbox', { name: 'Folder filter' }), 'Auth');
+    await user.click(screen.getByRole('button', { name: 'Filter by Created by' }));
+    await user.type(screen.getByRole('textbox', { name: 'Created by filter' }), 'Ada');
+
+    await waitFor(() => expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
+      projectId: 'project-1', page: 1, limit: 10, sortField: 'title', sortDirection: 'asc', folder: 'Auth', createdBy: 'Ada',
+    }));
+    await user.click(screen.getByRole('button', { name: 'Clear Folder filter' }));
+    await waitFor(() => {
+      const latestArgs = mockedScenarioQuery.mock.calls.at(-1)?.[0];
+      expect(latestArgs).toMatchObject({ sortField: 'title', sortDirection: 'asc', createdBy: 'Ada' });
+      expect(latestArgs).not.toHaveProperty('folder');
     });
   });
 
@@ -184,7 +212,7 @@ describe('TestScenarioCatalogContainer', () => {
 
     await user.click(screen.getByRole('button', { name: 'Unfiled' }));
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
-      projectId: 'project-1', page: 1, limit: 10, sort: 'recently_created', folderId: 'unfiled',
+      projectId: 'project-1', page: 1, limit: 10, folderId: 'unfiled',
     });
   });
 
@@ -198,9 +226,9 @@ describe('TestScenarioCatalogContainer', () => {
       </ChakraProvider>,
     );
 
-    await user.click(screen.getByRole('button', { name: /Regression \(0\)/ }));
+    await user.click(screen.getByRole('button', { name: /Regression 0/ }));
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
-      projectId: 'project-1', page: 1, limit: 10, sort: 'recently_created', suiteId: 'suite-a',
+      projectId: 'project-1', page: 1, limit: 10, suiteId: 'suite-a',
     });
   });
 });
