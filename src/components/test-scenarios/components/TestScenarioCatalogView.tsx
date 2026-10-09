@@ -1440,7 +1440,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       maxLength={120}
                       value={createName}
                       onChange={(event) => setCreateName(event.currentTarget.value)}
-                      bg={createDialog === 'edit-suite' ? 'bg.card' : undefined}
+                      bg={createDialog === 'rename-folder' || createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined}
                     />
                   </label>
                 )}
@@ -1451,7 +1451,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       <Input
                         value={createPurpose}
                         onChange={(event) => setCreatePurpose(event.currentTarget.value)}
-                        bg={createDialog === 'edit-suite' ? 'bg.card' : undefined}
+                        bg={createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined}
                       />
                     </label>
                     <label>
@@ -1459,7 +1459,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       <Input
                         value={createRelease}
                         onChange={(event) => setCreateRelease(event.currentTarget.value)}
-                        bg={createDialog === 'edit-suite' ? 'bg.card' : undefined}
+                        bg={createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined}
                       />
                     </label>
                     <label>
@@ -1467,7 +1467,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       <Textarea
                         value={createDescription}
                         onChange={(event) => setCreateDescription(event.currentTarget.value)}
-                        bg={createDialog === 'edit-suite' ? 'bg.card' : undefined}
+                        bg={createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined}
                       />
                     </label>
                   </>
