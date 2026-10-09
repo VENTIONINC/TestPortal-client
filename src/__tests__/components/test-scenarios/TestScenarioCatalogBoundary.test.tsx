@@ -26,6 +26,26 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
     useGetApiV2TestScenariosQuery: vi.fn(),
   };
 });
+vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
+  const query = vi.fn(() => ({ currentData: [], isLoading: false, error: undefined }));
+  const mutation = vi.fn(() => [vi.fn(() => ({ unwrap: () => Promise.resolve({}) })), { isLoading: false }]);
+  return {
+    ...actual,
+    useGetApiV2TestScenarioFoldersQuery: query,
+    useGetApiV2TestSuitesQuery: query,
+    usePatchApiV2TestScenariosBulkFolderMutation: mutation,
+    usePostApiV2TestSuitesBySuiteIdMembersMutation: mutation,
+    useDeleteApiV2TestSuitesBySuiteIdMembersMutation: mutation,
+    usePutApiV2TestSuitesBySuiteIdMembersOrderMutation: mutation,
+    usePostApiV2TestScenarioFoldersMutation: mutation,
+    usePatchApiV2TestScenarioFoldersByFolderIdMutation: mutation,
+    useDeleteApiV2TestScenarioFoldersByFolderIdMutation: mutation,
+    usePostApiV2TestSuitesMutation: mutation,
+    usePatchApiV2TestSuitesBySuiteIdMutation: mutation,
+    useDeleteApiV2TestSuitesBySuiteIdMutation: mutation,
+  };
+});
 vi.mock('@/components/test-scenarios/hooks/useTestScenarioContextMenu', () => ({
   useTestScenarioContextMenu: () => vi.fn(),
 }));
@@ -39,6 +59,8 @@ const createResponse = (projectId: string, page: number) => ({
     {
       id: `${projectId}-scenario`,
       projectId,
+      folderId: null,
+      folderName: null,
       createdById: 'user-1',
       scenarioKey: null,
       title: `${projectId} scenario`,

@@ -8,16 +8,18 @@ import { useNavigate } from 'react-router';
 
 import { toaster } from '@/components/ui';
 import { usePostApiV2TestScenariosMutation } from '@/redux/apis/generatedApi';
+import { useGetApiV2TestScenarioFoldersQuery } from '@/redux/apis/extendedApi';
 import { type TestScenarioAuthoringFormData } from '@/schemas';
 import { extractApiError } from '@/utils/apiErrors';
 import { PATHS } from '@/types/paths';
 
 import { TestScenarioForm } from '../components/TestScenarioForm';
 import { getTestScenarioDetailPath } from '../constants';
-import { getTestScenarioCreatePayload } from '../utils';
+import { flattenScenarioFolders, getTestScenarioCreatePayload } from '../utils';
 
 export interface TestScenarioCreateContainerProps {
   projectId: string;
+  initialFolderId?: string | null;
 }
 
 const EMPTY_VALUES = {
@@ -31,9 +33,10 @@ const EMPTY_VALUES = {
   notes: null,
 } as const;
 
-export const TestScenarioCreateContainer = ({ projectId }: TestScenarioCreateContainerProps) => {
+export const TestScenarioCreateContainer = ({ projectId, initialFolderId = null }: TestScenarioCreateContainerProps) => {
   const navigate = useNavigate();
   const [createScenario, { isLoading: isMutationLoading }] = usePostApiV2TestScenariosMutation();
+  const { currentData: folders = [] } = useGetApiV2TestScenarioFoldersQuery({ projectId });
   const [apiError, setApiError] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitInFlight = useRef(false);
@@ -48,6 +51,7 @@ export const TestScenarioCreateContainer = ({ projectId }: TestScenarioCreateCon
   const handleSubmit = async (
     values: TestScenarioAuthoringFormData,
     steps: Parameters<ComponentProps<typeof TestScenarioForm>['onSubmit']>[1],
+    folderId?: string | null,
   ) => {
     if (submitInFlight.current) return;
 
@@ -57,7 +61,7 @@ export const TestScenarioCreateContainer = ({ projectId }: TestScenarioCreateCon
 
     try {
       const scenario = await createScenario({
-        createTestScenarioRequest: getTestScenarioCreatePayload(projectId, values, steps),
+        createTestScenarioRequest: getTestScenarioCreatePayload(projectId, values, steps, folderId),
       }).unwrap();
 
       if (!mountedRef.current || latestProjectId.current !== projectId) return;
@@ -80,6 +84,8 @@ export const TestScenarioCreateContainer = ({ projectId }: TestScenarioCreateCon
     <TestScenarioForm
       mode="create"
       initialValues={EMPTY_VALUES}
+      folders={flattenScenarioFolders(folders)}
+      initialFolderId={initialFolderId}
       isSubmitting={isSubmitting || isMutationLoading}
       apiError={apiError}
       onSubmit={handleSubmit}

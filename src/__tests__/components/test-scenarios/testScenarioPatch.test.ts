@@ -9,6 +9,7 @@ import {
   getTestScenarioStepAppendPayload,
   getTestScenarioStepPatchPayload,
   serializeInitialSteps,
+  toggleScenarioSelection,
 } from '@/components/test-scenarios/utils';
 
 const persisted = {
@@ -22,6 +23,12 @@ const persisted = {
 };
 
 describe('Test Scenario structured payload helpers', () => {
+  it('caps bulk selection at 100 and still allows removing selected scenarios', () => {
+    const selected = Array.from({ length: 100 }, (_value, index) => `scenario-${index}`);
+
+    expect(toggleScenarioSelection(selected, 'scenario-over-limit')).toBe(selected);
+    expect(toggleScenarioSelection(selected, 'scenario-0')).toHaveLength(99);
+  });
   it('returns only normalized changed structured fields', () => {
     expect(
       getTestScenarioPatchPayload(

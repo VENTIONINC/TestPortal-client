@@ -30,14 +30,38 @@ export const normalizeOptionalScenarioText = (value: string | null | undefined) 
   return normalized || null;
 };
 
+interface FolderOptionNode {
+  id?: string;
+  name?: string;
+  children?: FolderOptionNode[];
+}
+
+export const flattenScenarioFolders = (folders: FolderOptionNode[]) => {
+  const flattened: Array<{ id: string; name: string; depth: number }> = [];
+  const visit = (folder: FolderOptionNode, depth: number) => {
+    if (!folder.id || !folder.name) return;
+    flattened.push({ id: folder.id, name: folder.name, depth });
+    folder.children?.forEach((child) => visit(child, depth + 1));
+  };
+  folders.forEach((folder) => visit(folder, 0));
+  return flattened;
+};
+
+export const toggleScenarioSelection = (selectedIds: string[], scenarioId: string): string[] => {
+  if (selectedIds.includes(scenarioId)) return selectedIds.filter((selectedId) => selectedId !== scenarioId);
+  return selectedIds.length < 100 ? [...selectedIds, scenarioId] : selectedIds;
+};
+
 export const getTestScenarioCreatePayload = (
   projectId: string,
   values: TestScenarioEditableValues,
   steps: TestScenarioInitialStepDraft[] = [],
+  folderId?: string | null,
 ): CreateTestScenarioRequest => {
   const payload: CreateTestScenarioRequest = {
     projectId,
     title: normalizeScenarioText(values.title),
+    ...(folderId !== undefined ? { folderId } : {}),
   };
 
   for (const field of TEST_SCENARIO_EDITABLE_FIELDS) {

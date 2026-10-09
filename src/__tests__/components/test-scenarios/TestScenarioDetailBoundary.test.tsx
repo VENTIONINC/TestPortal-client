@@ -55,6 +55,7 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
   return {
     ...actual,
     usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn(),
+    useGetApiV2TestScenarioFoldersQuery: vi.fn(() => ({ currentData: [] })),
     usePostApiV2TestScenariosByScenarioIdManualRunsMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
   };
 });

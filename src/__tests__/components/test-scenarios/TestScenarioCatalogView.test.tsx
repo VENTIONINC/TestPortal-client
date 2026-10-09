@@ -17,6 +17,8 @@ const scenarios: TestScenarioSummary[] = [
   {
     id: 'scenario-1',
     projectId: 'project-1',
+    folderId: null,
+    folderName: null,
     createdById: 'user-1',
     scenarioKey: 'AUTH-1',
     title: 'Checkout flow',
@@ -34,6 +36,35 @@ const pagination = {
   totalPages: 1,
 };
 
+const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination' | 'isLoading' | 'onPageChange'> = {
+  search: '',
+  onSearchChange: vi.fn(),
+  sort: undefined,
+  sortDirection: 'desc',
+  onSortChange: vi.fn(),
+  columnFilters: { scenarioKey: '', title: '', details: '', folder: '', createdBy: '' },
+  onColumnFilterChange: vi.fn(),
+  scope: { kind: 'all' },
+  onScopeChange: vi.fn(),
+  folders: [],
+  suites: [],
+  organizationLoading: false,
+  selectedIds: [],
+  toggleSelected: vi.fn(),
+  onMoveSelected: vi.fn(async () => {}),
+  onAddSelectedToSuite: vi.fn(async () => {}),
+  onRemoveSelectedFromSuite: vi.fn(async () => {}),
+  onReorderSuite: vi.fn(async () => {}),
+  onCreateFolder: vi.fn(async () => {}),
+  onUpdateFolder: vi.fn(async () => {}),
+  onDeleteFolder: vi.fn(async () => {}),
+  onCreateSuite: vi.fn(async () => {}),
+  onUpdateSuite: vi.fn(async () => {}),
+  onDeleteSuite: vi.fn(async () => {}),
+  includeDescendants: true,
+  onIncludeDescendantsChange: vi.fn(),
+};
+
 const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>
   render(
     <ChakraProvider>
@@ -43,6 +74,7 @@ const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>
           pagination={pagination}
           isLoading={false}
           onPageChange={vi.fn()}
+          {...defaultProps}
           {...props}
         />
       </MemoryRouter>
@@ -79,12 +111,14 @@ describe('TestScenarioCatalogView', () => {
     renderView({ onContextMenu });
 
     expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getAllByRole('columnheader')).toHaveLength(7);
+    expect(screen.getAllByRole('columnheader')).toHaveLength(9);
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
-      'Scenario key',
-      'Title',
-      'Details',
-      'Created by',
+      'Select',
+      'Scenario keySearch Scenario key',
+      'TitleSearch Title',
+      'DetailsSearch Details',
+      'FolderSearch Folder',
+      'Created bySearch Created by',
       'Created',
       'Updated',
       '',
@@ -108,11 +142,34 @@ describe('TestScenarioCatalogView', () => {
     expect(onContextMenu).toHaveBeenCalledWith(expect.anything(), scenarios[0]);
   });
 
+  it('offers sort and filter controls on the supported columns and removes the global sort selector', async () => {
+    const user = userEvent.setup();
+    const onSortChange = vi.fn();
+    const onColumnFilterChange = vi.fn();
+    renderView({ onSortChange, onColumnFilterChange });
+
+    expect(screen.queryByLabelText('Sort scenarios')).not.toBeInTheDocument();
+    for (const column of ['Scenario key', 'Title', 'Details', 'Folder', 'Created by', 'Created', 'Updated']) {
+      expect(screen.getByRole('button', { name: `Sort by ${column}` })).toBeInTheDocument();
+    }
+    for (const column of ['Scenario key', 'Title', 'Details', 'Folder', 'Created by']) {
+      expect(screen.getByRole('button', { name: `Filter by ${column}` })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole('button', { name: 'Filter by Created' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Filter by Updated' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Sort by Title' }));
+    expect(onSortChange).toHaveBeenCalledWith('title');
+    await user.click(screen.getByRole('button', { name: 'Filter by Title' }));
+    await user.type(screen.getByRole('textbox', { name: 'Title filter' }), 'checkout');
+    expect(onColumnFilterChange).toHaveBeenCalledWith('title', 't');
+  });
+
   it('renders a fallback for null details', () => {
     renderView({ scenarios: [{ ...scenarios[0], scenarioKey: null, details: null }] });
 
     expect(screen.getByText('No details')).toBeInTheDocument();
-    expect(screen.getByText('N/A')).toBeInTheDocument();
+    expect(screen.getByText('—')).toBeInTheDocument();
   });
 
   it('maps every scenario title to its own detail route while keeping actions separate', () => {
@@ -122,6 +179,8 @@ describe('TestScenarioCatalogView', () => {
         {
           id: 'scenario-2',
           projectId: 'project-1',
+          folderId: null,
+          folderName: null,
           createdById: 'user-2',
           scenarioKey: null,
           title: 'Refund flow',
@@ -149,6 +208,49 @@ describe('TestScenarioCatalogView', () => {
     await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
 
     expect(onCreateScenario).toHaveBeenCalledTimes(1);
+  });
+
+  it('requires a deletion disposition and explains child-folder promotion', async () => {
+    const user = userEvent.setup();
+    const onDeleteFolder = vi.fn(async () => {});
+    const prompt = vi.spyOn(window, 'prompt').mockReturnValue('unfiled');
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    renderView({
+      folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, position: 0, scenarioCount: 2, children: [] }],
+      scope: { kind: 'folder', id: 'folder-1' },
+      onDeleteFolder,
+    });
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    expect(prompt).toHaveBeenCalledWith(expect.stringContaining('parent or unfiled'), 'parent');
+    expect(prompt).toHaveBeenCalledWith(expect.stringContaining('Child folders will be promoted.'), 'parent');
+    expect(onDeleteFolder).toHaveBeenCalledWith('folder-1', 'unfiled');
+  });
+
+  it('confirms suite membership changes and submits the ordered member UUID list', async () => {
+    const user = userEvent.setup();
+    const onAddSelectedToSuite = vi.fn(async () => {});
+    const onReorderSuite = vi.fn(async () => {});
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const members = [
+      { suiteId: 'suite-1', testScenarioId: 'scenario-1', position: 0, createdAt: '' },
+      { suiteId: 'suite-1', testScenarioId: 'scenario-2', position: 1, createdAt: '' },
+    ];
+
+    renderView({
+      suites: [{ id: 'suite-1', name: 'Regression', description: null, purpose: null, release: null, members }],
+      scope: { kind: 'suite', id: 'suite-1' },
+      selectedIds: ['scenario-1'],
+      onAddSelectedToSuite,
+      onReorderSuite,
+    });
+    await user.click(screen.getByRole('button', { name: 'Move member 1 down' }));
+    expect(onReorderSuite).toHaveBeenCalledWith('suite-1', ['scenario-2', 'scenario-1']);
+
+    await user.click(screen.getByRole('button', { name: 'Add to suite' }));
+    expect(confirm).toHaveBeenCalledWith('Add 1 scenarios to this suite?');
+    expect(onAddSelectedToSuite).toHaveBeenCalledWith('suite-1');
   });
 
   it('renders pagination from the response metadata and reports page selection', async () => {

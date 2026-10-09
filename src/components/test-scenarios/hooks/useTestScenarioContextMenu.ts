@@ -19,7 +19,10 @@ export type TestScenarioContextMenuHandler = (
   scenario: TestScenarioContextMenuScenario,
 ) => void;
 
-export const useTestScenarioContextMenu = (projectId?: string): TestScenarioContextMenuHandler => {
+export const useTestScenarioContextMenu = (
+  projectId?: string,
+  onRemoveFromSuite?: (scenario: TestScenarioContextMenuScenario) => void,
+): TestScenarioContextMenuHandler => {
   const openContextMenu = useOpenContextMenu();
   const openDeleteDialog = useDeleteTestScenarioDialog();
   const navigate = useNavigate();
@@ -35,16 +38,22 @@ export const useTestScenarioContextMenu = (projectId?: string): TestScenarioCont
           icon: FiEdit,
           onClick: () => navigate(getTestScenarioEditPath(scenario.id)),
         },
+        ...(onRemoveFromSuite
+          ? [{
+              title: 'Remove from suite',
+              icon: FiTrash2,
+              onClick: () => onRemoveFromSuite(scenario),
+            }]
+          : []),
         {
           title: 'Delete Scenario',
           icon: FiTrash2,
-          divider: true,
           onClick: () => {
             if (currentProjectId) openDeleteDialog(scenario.id, currentProjectId, scenario.title, onDeleted);
           },
         },
       ]);
     },
-    [currentProjectId, navigate, onDeleted, openContextMenu, openDeleteDialog],
+    [currentProjectId, navigate, onDeleted, onRemoveFromSuite, openContextMenu, openDeleteDialog],
   );
 };

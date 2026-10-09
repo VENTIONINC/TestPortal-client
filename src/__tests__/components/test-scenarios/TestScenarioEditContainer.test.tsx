@@ -44,7 +44,11 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
 });
 vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
-  return { ...actual, usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn() };
+  return {
+    ...actual,
+    usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn(),
+    useGetApiV2TestScenarioFoldersQuery: vi.fn(() => ({ currentData: [{ id: 'folder-42', name: 'Authentication' }] })),
+  };
 });
 
 const mockedGetScenario = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
@@ -57,6 +61,7 @@ const mockedReorderMutation = vi.mocked(usePutApiV2TestScenariosByScenarioIdStep
 const scenario = (overrides: Record<string, unknown> = {}) => ({
   id: 'scenario-1',
   projectId: 'project-1',
+  folderId: null,
   createdById: 'user-1',
   scenarioKey: 'AUTH-1',
   title: 'Checkout flow',
@@ -169,6 +174,21 @@ describe('TestScenarioEditContainer', () => {
 
     expect(updateScenario).not.toHaveBeenCalled();
     expect(screen.getByRole('status')).toHaveTextContent('No changes to save.');
+  });
+
+  it('sends folder assignment while preserving unchanged scenario fields', async () => {
+    const user = userEvent.setup();
+    updateScenario.mockReturnValue({ unwrap: () => Promise.resolve(scenario({ folderId: 'folder-42' })) });
+
+    renderContainer();
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Scenario folder' }), 'folder-42');
+    await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
+
+    await waitFor(() => expect(updateScenario).toHaveBeenCalledWith({
+      scenarioId: 'scenario-1',
+      projectId: 'project-1',
+      updateTestScenarioRequest: { folderId: 'folder-42' },
+    }));
   });
 
   it('retains unrelated dirty fields after a successful step save', async () => {

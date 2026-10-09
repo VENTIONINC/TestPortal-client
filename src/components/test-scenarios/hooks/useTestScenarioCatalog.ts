@@ -1,15 +1,75 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useGetApiV2TestScenariosQuery } from '@/redux/apis/generatedApi';
+import {
+  useGetApiV2TestScenarioFoldersQuery,
+  useGetApiV2TestSuitesQuery,
+  usePostApiV2TestScenarioFoldersMutation,
+  usePatchApiV2TestScenarioFoldersByFolderIdMutation,
+  useDeleteApiV2TestScenarioFoldersByFolderIdMutation,
+  usePostApiV2TestSuitesMutation,
+  usePatchApiV2TestSuitesBySuiteIdMutation,
+  useDeleteApiV2TestSuitesBySuiteIdMutation,
+  usePatchApiV2TestScenariosBulkFolderMutation,
+  usePostApiV2TestSuitesBySuiteIdMembersMutation,
+  useDeleteApiV2TestSuitesBySuiteIdMembersMutation,
+  usePutApiV2TestSuitesBySuiteIdMembersOrderMutation,
+} from '@/redux/apis/extendedApi';
+import { useGetApiV2TestScenariosQuery, type GetApiV2TestScenariosApiArg } from '@/redux/apis/generatedApi';
 
 import { TEST_SCENARIO_PAGE_LIMIT } from '../constants';
+import { toggleScenarioSelection } from '../utils';
+
+const SEARCH_DEBOUNCE_MS = 500;
 
 export const useTestScenarioCatalog = (projectId: string) => {
   const [page, setPage] = useState(1);
-  const queryArgs = useMemo(() => ({ projectId, page, limit: TEST_SCENARIO_PAGE_LIMIT }), [page, projectId]);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [sortField, setSortField] = useState<GetApiV2TestScenariosApiArg['sortField']>();
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [columnFilters, setColumnFilters] = useState({ scenarioKey: '', title: '', details: '', folder: '', createdBy: '' });
+  const [debouncedColumnFilters, setDebouncedColumnFilters] = useState(columnFilters);
+  const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>({ kind: 'all' });
+  const [includeDescendants, setIncludeDescendants] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [moveScenarios] = usePatchApiV2TestScenariosBulkFolderMutation();
+  const [addSuiteMembers] = usePostApiV2TestSuitesBySuiteIdMembersMutation();
+  const [removeSuiteMembers] = useDeleteApiV2TestSuitesBySuiteIdMembersMutation();
+  const [reorderSuiteMembers] = usePutApiV2TestSuitesBySuiteIdMembersOrderMutation();
+  const [createFolderRequest] = usePostApiV2TestScenarioFoldersMutation();
+  const [updateFolderRequest] = usePatchApiV2TestScenarioFoldersByFolderIdMutation();
+  const [deleteFolderRequest] = useDeleteApiV2TestScenarioFoldersByFolderIdMutation();
+  const [createSuiteRequest] = usePostApiV2TestSuitesMutation();
+  const [updateSuiteRequest] = usePatchApiV2TestSuitesBySuiteIdMutation();
+  const [deleteSuiteRequest] = useDeleteApiV2TestSuitesBySuiteIdMutation();
+  const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
+  const suitesQuery = useGetApiV2TestSuitesQuery({ projectId });
+  const queryArgs = useMemo(() => ({
+    projectId,
+    page,
+    limit: TEST_SCENARIO_PAGE_LIMIT,
+    ...(sortField ? { sortField, sortDirection } : {}),
+    ...(debouncedColumnFilters.scenarioKey.trim() ? { scenarioKey: debouncedColumnFilters.scenarioKey.trim() } : {}),
+    ...(debouncedColumnFilters.title.trim() ? { title: debouncedColumnFilters.title.trim() } : {}),
+    ...(debouncedColumnFilters.details.trim() ? { details: debouncedColumnFilters.details.trim() } : {}),
+    ...(debouncedColumnFilters.folder.trim() ? { folder: debouncedColumnFilters.folder.trim() } : {}),
+    ...(debouncedColumnFilters.createdBy.trim() ? { createdBy: debouncedColumnFilters.createdBy.trim() } : {}),
+    ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
+    ...(scope.kind === 'unfiled' ? { folderId: 'unfiled' as const } : {}),
+    ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants } : {}),
+    ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
+  }), [debouncedColumnFilters, debouncedSearch, includeDescendants, page, projectId, scope, sortDirection, sortField]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(search);
+      setDebouncedColumnFilters(columnFilters);
+      setPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timeout);
+  }, [columnFilters, search]);
   const { currentData, isLoading: isQueryLoading, isFetching, error } = useGetApiV2TestScenariosQuery(queryArgs);
 
   const scenarios = currentData?.scenarios ?? [];
@@ -28,6 +88,64 @@ export const useTestScenarioCatalog = (projectId: string) => {
       };
   const isLoading = isQueryLoading || (isFetching && !currentData);
   const onPageChange = useCallback((nextPage: number) => setPage(nextPage), []);
+  const onSearchChange = useCallback((value: string) => { setSearch(value); setPage(1); }, []);
+  const onSortChange = useCallback((field: NonNullable<GetApiV2TestScenariosApiArg['sortField']>) => {
+    if (sortField === field) setSortDirection((direction) => direction === 'asc' ? 'desc' : 'asc');
+    else if (!sortField && field === 'createdAt') {
+      setSortField(field);
+      setSortDirection('asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+    setPage(1);
+  }, [sortField]);
+  const onColumnFilterChange = useCallback((field: keyof typeof columnFilters, value: string) => {
+    setColumnFilters((current) => ({ ...current, [field]: value }));
+    setPage(1);
+  }, []);
+  const onScopeChange = useCallback((nextScope: typeof scope) => {
+    setScope(nextScope);
+    setPage(1);
+    setSelectedIds([]);
+  }, []);
+  const onIncludeDescendantsChange = useCallback((value: boolean) => { setIncludeDescendants(value); setPage(1); }, []);
+  const toggleSelected = useCallback((id: string) => setSelectedIds((current) => toggleScenarioSelection(current, id)), []);
+  const selectOnlyScenario = useCallback((id: string) => setSelectedIds([id]), []);
+  const moveSelected = useCallback(async (folderId: string | null) => {
+    if (selectedIds.length === 0 || selectedIds.length > 100) return;
+    await moveScenarios({ body: { projectId, scenarioIds: selectedIds, folderId } }).unwrap();
+    setSelectedIds([]);
+  }, [moveScenarios, projectId, selectedIds]);
+  const addSelectedToSuite = useCallback(async (suiteId: string) => {
+    if (selectedIds.length === 0 || selectedIds.length > 100) return;
+    await addSuiteMembers({ suiteId, body: { projectId, scenarioIds: selectedIds } }).unwrap();
+    setSelectedIds([]);
+  }, [addSuiteMembers, projectId, selectedIds]);
+  const removeSelectedFromSuite = useCallback(async () => {
+    if (scope.kind !== 'suite' || !scope.id || selectedIds.length === 0 || selectedIds.length > 100) return;
+    await removeSuiteMembers({ suiteId: scope.id, body: { projectId, scenarioIds: selectedIds } }).unwrap();
+    setSelectedIds([]);
+  }, [projectId, removeSuiteMembers, scope, selectedIds]);
+  const reorderSuite = useCallback(async (suiteId: string, scenarioIds: string[]) => {
+    await reorderSuiteMembers({ suiteId, body: { projectId, scenarioIds } }).unwrap();
+  }, [projectId, reorderSuiteMembers]);
+  const createFolder = useCallback(async (name: string, parentId: string | null) =>
+    createFolderRequest({ body: { projectId, name, parentId } }).unwrap(), [createFolderRequest, projectId]);
+  const updateFolder = useCallback(async (folderId: string, body: { name?: string; parentId?: string | null; position?: number }) =>
+    updateFolderRequest({ folderId, projectId, body }).unwrap(), [projectId, updateFolderRequest]);
+  const deleteFolder = useCallback(async (folderId: string, disposition: 'parent' | 'unfiled') => {
+    await deleteFolderRequest({ folderId, projectId, disposition }).unwrap();
+    if (scope.id === folderId) onScopeChange({ kind: 'all' });
+  }, [deleteFolderRequest, onScopeChange, projectId, scope.id]);
+  const createSuite = useCallback(async (body: { name: string; description?: string | null; purpose?: string | null; release?: string | null }) =>
+    createSuiteRequest({ body: { projectId, ...body } }).unwrap(), [createSuiteRequest, projectId]);
+  const updateSuite = useCallback(async (suiteId: string, body: { name?: string; description?: string | null; purpose?: string | null; release?: string | null }) =>
+    updateSuiteRequest({ suiteId, projectId, body }).unwrap(), [projectId, updateSuiteRequest]);
+  const deleteSuite = useCallback(async (suiteId: string) => {
+    await deleteSuiteRequest({ suiteId, projectId }).unwrap();
+    if (scope.id === suiteId) onScopeChange({ kind: 'all' });
+  }, [deleteSuiteRequest, onScopeChange, projectId, scope.id]);
 
   return {
     scenarios,
@@ -35,5 +153,33 @@ export const useTestScenarioCatalog = (projectId: string) => {
     isLoading,
     error,
     onPageChange,
+    search,
+    onSearchChange,
+    sort: sortField,
+    sortDirection,
+    onSortChange,
+    columnFilters,
+    onColumnFilterChange,
+    scope,
+    onScopeChange,
+    includeDescendants,
+    onIncludeDescendantsChange,
+    folders: foldersQuery.currentData ?? [],
+    suites: suitesQuery.currentData ?? [],
+    organizationLoading: foldersQuery.isLoading || suitesQuery.isLoading,
+    organizationError: foldersQuery.error ?? suitesQuery.error,
+    selectedIds,
+    toggleSelected,
+    selectOnlyScenario,
+    moveSelected,
+    addSelectedToSuite,
+    removeSelectedFromSuite,
+    reorderSuite,
+    createFolder,
+    updateFolder,
+    deleteFolder,
+    createSuite,
+    updateSuite,
+    deleteSuite,
   };
 };
