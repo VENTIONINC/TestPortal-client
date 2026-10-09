@@ -215,91 +215,228 @@ const ScenarioTable = ({
     setAnchorScenarioId(scenarioId);
   };
   return (
-  <Box overflowX="auto">
-    <Table.Root size="sm" variant="outline" w="100%" minW={showFolder ? '1100px' : '960px'} tableLayout="fixed">
-      <Table.Header>
-        <Table.Row bg="bg.subtle">
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w="48px">
-            <input
-              type="checkbox"
-              aria-label="Select all scenarios on this page"
-              checked={scenarios.length > 0 && scenarios.every((scenario) => selectedIds.includes(scenario.id))}
-              ref={(element) => {
-                if (element) element.indeterminate = scenarios.some((scenario) => selectedIds.includes(scenario.id)) && !scenarios.every((scenario) => selectedIds.includes(scenario.id));
-              }}
-              onChange={() => {
-                const allSelected = scenarios.every((scenario) => selectedIds.includes(scenario.id));
-                scenarios.filter((scenario) => selectedIds.includes(scenario.id) === allSelected).forEach((scenario) => onToggleSelected(scenario.id));
-              }}
-            />
-            <Text srOnly>Select</Text>
-          </Table.ColumnHeader>
-          <Table.ColumnHeader px={1} py={2} w="150px"><ScenarioColumnHeader label="Scenario key" field="scenarioKey" sort={sort} sortDirection={sortDirection} onSortChange={onSortChange} filterValue={columnFilters.scenarioKey} onFilterChange={(value) => onColumnFilterChange('scenarioKey', value)} openFilter={openFilter} onFilterDisclosureChange={onFilterDisclosureChange} /></Table.ColumnHeader>
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w={{ base: '29%', xl: '20%' }}><ScenarioColumnHeader label="Title" field="title" sort={sort} sortDirection={sortDirection} onSortChange={onSortChange} filterValue={columnFilters.title} onFilterChange={(value) => onColumnFilterChange('title', value)} openFilter={openFilter} onFilterDisclosureChange={onFilterDisclosureChange} /></Table.ColumnHeader>
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w={{ base: '31%', xl: '22%' }}><ScenarioColumnHeader label="Details" field="details" sort={sort} sortDirection={sortDirection} onSortChange={onSortChange} filterValue={columnFilters.details} onFilterChange={(value) => onColumnFilterChange('details', value)} openFilter={openFilter} onFilterDisclosureChange={onFilterDisclosureChange} /></Table.ColumnHeader>
-          {showFolder && <Table.ColumnHeader px={1} py={2} w="180px"><ScenarioColumnHeader label="Folder" field="folder" sort={sort} sortDirection={sortDirection} onSortChange={onSortChange} filterValue={columnFilters.folder} onFilterChange={(value) => onColumnFilterChange('folder', value)} openFilter={openFilter} onFilterDisclosureChange={onFilterDisclosureChange} /></Table.ColumnHeader>}
-          <Table.ColumnHeader {...TABLE_CELL_PADDING} w="18%"><ScenarioColumnHeader label="Created by" field="createdBy" sort={sort} sortDirection={sortDirection} onSortChange={onSortChange} filterValue={columnFilters.createdBy} onFilterChange={(value) => onColumnFilterChange('createdBy', value)} openFilter={openFilter} onFilterDisclosureChange={onFilterDisclosureChange} /></Table.ColumnHeader>
-          <Table.ColumnHeader px={1} py={2} w="10%"><ScenarioColumnHeader label="Created" field="createdAt" sort={sort} sortDirection={sortDirection} onSortChange={onSortChange} openFilter={openFilter} onFilterDisclosureChange={onFilterDisclosureChange} /></Table.ColumnHeader>
-          <Table.ColumnHeader px={1} py={2} w="10%"><ScenarioColumnHeader label="Updated" field="updatedAt" sort={sort} sortDirection={sortDirection} onSortChange={onSortChange} openFilter={openFilter} onFilterDisclosureChange={onFilterDisclosureChange} /></Table.ColumnHeader>
-          <Table.ColumnHeader px={1} py={4} w="44px" />
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        {scenarios.length === 0 ? <Table.Row><Table.Cell colSpan={showFolder ? 9 : 8} py={8} textAlign="center">
-          {isLoading ? <Text role="status" color="text.muted">Searching scenarios…</Text> : <EmptyState searchActive={searchActive} />}
-        </Table.Cell></Table.Row> : scenarios.map((scenario, index) => (
-          <Table.Row key={scenario.id} data-testid={`test-scenario-${scenario.id}`} bg={selectedIds.includes(scenario.id) ? 'bg.subtle' : undefined} borderStartWidth={selectedIds.includes(scenario.id) ? '3px' : undefined} borderStartColor={selectedIds.includes(scenario.id) ? 'border.focus' : undefined} _hover={{ bg: 'bg.subtle' }}>
-            <Table.Cell {...TABLE_CELL_PADDING}><input type="checkbox" aria-label={`Select ${scenario.title}`} checked={selectedIds.includes(scenario.id)} onClick={(event) => { extendSelectionRef.current = event.shiftKey; }} onChange={() => { handleScenarioSelection(scenario.id, index, extendSelectionRef.current); extendSelectionRef.current = false; }} /></Table.Cell>
-            <Table.Cell px={2} py={4} maxW="180px" whiteSpace="pre-wrap" overflowWrap="anywhere">
-              {scenario.scenarioKey ?? <Text as="span" color="text.muted">—</Text>}
-            </Table.Cell>
-            <Table.Cell {...TABLE_CELL_PADDING}>
-              <ChakraLink asChild fontWeight="semibold" color="text.main" lineClamp={2}>
-                <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
-              </ChakraLink>
-            </Table.Cell>
-            <Table.Cell {...TABLE_CELL_PADDING} maxW="320px" whiteSpace="pre-wrap" overflowWrap="anywhere" color="text.secondary">
-              {scenario.details ?? 'No details'}
-            </Table.Cell>
-            {showFolder && (() => {
-              const folderPath = scenario.folderId
-                ? folderPathById.get(scenario.folderId) ?? scenario.folderName ?? 'Unknown folder'
-                : 'Unfiled';
-              return (
-                <Table.Cell px={2} py={4} w="180px" maxW="180px">
-                  <Tooltip content={folderPath} openDelay={300} closeDelay={100}>
-                    <Text display="block" maxW="148px" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={folderPath}>
-                      {folderPath}
-                    </Text>
-                  </Tooltip>
-                </Table.Cell>
-              );
-            })()}
-            <Table.Cell {...TABLE_CELL_PADDING}>
-              <VStack align="start" gap={0}>
-                <Text>{scenario.createdBy.name}</Text>
-                <Text color="text.secondary" fontSize="sm" overflowWrap="anywhere">
-                  {scenario.createdBy.email}
-                </Text>
-              </VStack>
-            </Table.Cell>
-            <Table.Cell px={1} py={4} color="text.secondary" fontSize="sm">
-              <ScenarioTimestamp timestamp={scenario.createdAt} />
-            </Table.Cell>
-            <Table.Cell px={1} py={4} color="text.secondary" fontSize="sm">
-              <ScenarioTimestamp timestamp={scenario.updatedAt} />
-            </Table.Cell>
-            <Table.Cell px={1} py={4} textAlign="end" w="44px">
-              <ContextMenuButton
-                aria-label={`Actions for ${scenario.title}`}
-                onClick={(event) => onContextMenu?.(event, scenario)}
+    <Box overflowX="auto">
+      <Table.Root size="sm" variant="outline" w="100%" minW={showFolder ? '1100px' : '960px'} tableLayout="fixed">
+        <Table.Header>
+          <Table.Row bg="bg.subtle">
+            <Table.ColumnHeader {...TABLE_CELL_PADDING} w="48px">
+              <input
+                type="checkbox"
+                aria-label="Select all scenarios on this page"
+                checked={scenarios.length > 0 && scenarios.every((scenario) => selectedIds.includes(scenario.id))}
+                ref={(element) => {
+                  if (element)
+                    element.indeterminate =
+                      scenarios.some((scenario) => selectedIds.includes(scenario.id)) &&
+                      !scenarios.every((scenario) => selectedIds.includes(scenario.id));
+                }}
+                onChange={() => {
+                  const allSelected = scenarios.every((scenario) => selectedIds.includes(scenario.id));
+                  scenarios
+                    .filter((scenario) => selectedIds.includes(scenario.id) === allSelected)
+                    .forEach((scenario) => onToggleSelected(scenario.id));
+                }}
               />
-            </Table.Cell>
+              <Text srOnly>Select</Text>
+            </Table.ColumnHeader>
+            <Table.ColumnHeader px={0} py={2} w="130px">
+              <ScenarioColumnHeader
+                label="Scenario key"
+                field="scenarioKey"
+                sort={sort}
+                sortDirection={sortDirection}
+                onSortChange={onSortChange}
+                filterValue={columnFilters.scenarioKey}
+                onFilterChange={(value) => onColumnFilterChange('scenarioKey', value)}
+                openFilter={openFilter}
+                onFilterDisclosureChange={onFilterDisclosureChange}
+              />
+            </Table.ColumnHeader>
+            <Table.ColumnHeader {...TABLE_CELL_PADDING} w={{ base: '29%', xl: '20%' }}>
+              <ScenarioColumnHeader
+                label="Title"
+                field="title"
+                sort={sort}
+                sortDirection={sortDirection}
+                onSortChange={onSortChange}
+                filterValue={columnFilters.title}
+                onFilterChange={(value) => onColumnFilterChange('title', value)}
+                openFilter={openFilter}
+                onFilterDisclosureChange={onFilterDisclosureChange}
+              />
+            </Table.ColumnHeader>
+            <Table.ColumnHeader {...TABLE_CELL_PADDING} w={{ base: '31%', xl: '22%' }}>
+              <ScenarioColumnHeader
+                label="Details"
+                field="details"
+                sort={sort}
+                sortDirection={sortDirection}
+                onSortChange={onSortChange}
+                filterValue={columnFilters.details}
+                onFilterChange={(value) => onColumnFilterChange('details', value)}
+                openFilter={openFilter}
+                onFilterDisclosureChange={onFilterDisclosureChange}
+              />
+            </Table.ColumnHeader>
+            {showFolder && (
+              <Table.ColumnHeader px={1} py={2} w="180px">
+                <ScenarioColumnHeader
+                  label="Folder"
+                  field="folder"
+                  sort={sort}
+                  sortDirection={sortDirection}
+                  onSortChange={onSortChange}
+                  filterValue={columnFilters.folder}
+                  onFilterChange={(value) => onColumnFilterChange('folder', value)}
+                  openFilter={openFilter}
+                  onFilterDisclosureChange={onFilterDisclosureChange}
+                />
+              </Table.ColumnHeader>
+            )}
+            <Table.ColumnHeader {...TABLE_CELL_PADDING} w="18%">
+              <ScenarioColumnHeader
+                label="Created by"
+                field="createdBy"
+                sort={sort}
+                sortDirection={sortDirection}
+                onSortChange={onSortChange}
+                filterValue={columnFilters.createdBy}
+                onFilterChange={(value) => onColumnFilterChange('createdBy', value)}
+                openFilter={openFilter}
+                onFilterDisclosureChange={onFilterDisclosureChange}
+              />
+            </Table.ColumnHeader>
+            <Table.ColumnHeader px={1} py={2} w="90px">
+              <ScenarioColumnHeader
+                label="Created"
+                field="createdAt"
+                sort={sort}
+                sortDirection={sortDirection}
+                onSortChange={onSortChange}
+                openFilter={openFilter}
+                onFilterDisclosureChange={onFilterDisclosureChange}
+              />
+            </Table.ColumnHeader>
+            <Table.ColumnHeader px={1} py={2} w="90px">
+              <ScenarioColumnHeader
+                label="Updated"
+                field="updatedAt"
+                sort={sort}
+                sortDirection={sortDirection}
+                onSortChange={onSortChange}
+                openFilter={openFilter}
+                onFilterDisclosureChange={onFilterDisclosureChange}
+              />
+            </Table.ColumnHeader>
+            <Table.ColumnHeader px={1} py={4} w="35px" />
           </Table.Row>
-        ))}
-      </Table.Body>
-    </Table.Root>
-  </Box>
+        </Table.Header>
+        <Table.Body>
+          {scenarios.length === 0 ? (
+            <Table.Row>
+              <Table.Cell colSpan={showFolder ? 9 : 8} py={8} textAlign="center">
+                {isLoading ? (
+                  <Text role="status" color="text.muted">
+                    Searching scenarios…
+                  </Text>
+                ) : (
+                  <EmptyState searchActive={searchActive} />
+                )}
+              </Table.Cell>
+            </Table.Row>
+          ) : (
+            scenarios.map((scenario, index) => (
+              <Table.Row
+                key={scenario.id}
+                data-testid={`test-scenario-${scenario.id}`}
+                bg={selectedIds.includes(scenario.id) ? 'bg.subtle' : undefined}
+                borderStartWidth={selectedIds.includes(scenario.id) ? '3px' : undefined}
+                borderStartColor={selectedIds.includes(scenario.id) ? 'border.focus' : undefined}
+                _hover={{ bg: 'bg.subtle' }}
+              >
+                <Table.Cell {...TABLE_CELL_PADDING}>
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${scenario.title}`}
+                    checked={selectedIds.includes(scenario.id)}
+                    onClick={(event) => {
+                      extendSelectionRef.current = event.shiftKey;
+                    }}
+                    onChange={() => {
+                      handleScenarioSelection(scenario.id, index, extendSelectionRef.current);
+                      extendSelectionRef.current = false;
+                    }}
+                  />
+                </Table.Cell>
+                <Table.Cell px={2} py={4} maxW="180px" whiteSpace="pre-wrap" overflowWrap="anywhere">
+                  {scenario.scenarioKey ?? (
+                    <Text as="span" color="text.muted">
+                      —
+                    </Text>
+                  )}
+                </Table.Cell>
+                <Table.Cell {...TABLE_CELL_PADDING}>
+                  <ChakraLink asChild fontWeight="semibold" color="text.main" lineClamp={2}>
+                    <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
+                  </ChakraLink>
+                </Table.Cell>
+                <Table.Cell
+                  {...TABLE_CELL_PADDING}
+                  maxW="320px"
+                  whiteSpace="pre-wrap"
+                  overflowWrap="anywhere"
+                  color="text.secondary"
+                >
+                  {scenario.details ?? 'No details'}
+                </Table.Cell>
+                {showFolder &&
+                  (() => {
+                    const folderPath = scenario.folderId
+                      ? (folderPathById.get(scenario.folderId) ?? scenario.folderName ?? 'Unknown folder')
+                      : 'Unfiled';
+                    return (
+                      <Table.Cell px={2} py={4} w="180px" maxW="180px">
+                        <Tooltip content={folderPath} openDelay={300} closeDelay={100}>
+                          <Text
+                            display="block"
+                            maxW="148px"
+                            overflow="hidden"
+                            textOverflow="ellipsis"
+                            whiteSpace="nowrap"
+                            title={folderPath}
+                          >
+                            {folderPath}
+                          </Text>
+                        </Tooltip>
+                      </Table.Cell>
+                    );
+                  })()}
+                <Table.Cell {...TABLE_CELL_PADDING}>
+                  <VStack align="start" gap={0}>
+                    <Text>{scenario.createdBy.name}</Text>
+                    <Text color="text.secondary" fontSize="sm" overflowWrap="anywhere">
+                      {scenario.createdBy.email}
+                    </Text>
+                  </VStack>
+                </Table.Cell>
+                <Table.Cell px={1} py={4} color="text.secondary" fontSize="sm">
+                  <ScenarioTimestamp timestamp={scenario.createdAt} />
+                </Table.Cell>
+                <Table.Cell px={1} py={4} color="text.secondary" fontSize="sm">
+                  <ScenarioTimestamp timestamp={scenario.updatedAt} />
+                </Table.Cell>
+                <Table.Cell px={0} py={4} textAlign="start" w="35px">
+                  <ContextMenuButton
+                    aria-label={`Actions for ${scenario.title}`}
+                    onClick={(event) => onContextMenu?.(event, scenario)}
+                  />
+                </Table.Cell>
+              </Table.Row>
+            ))
+          )}
+        </Table.Body>
+      </Table.Root>
+    </Box>
   );
 };
 
@@ -602,173 +739,808 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   return (
     <Wrap my={4} mx={6} p={{ base: 3, md: 5 }}>
       <VStack align="stretch" gap={5} w="100%">
-        <Grid templateColumns={{ base: '1fr', lg: '250px minmax(0, 1fr)' }} gap={{ base: 4, lg: 6 }} alignItems="stretch">
-          <VStack align="stretch" gap={4} pe={{ base: 0, lg: 4 }} borderEndWidth={{ base: 0, lg: '1px' }} borderColor="border.main" aria-label="Scenario organization">
+        <Grid
+          templateColumns={{ base: '1fr', lg: '250px minmax(0, 1fr)' }}
+          gap={{ base: 4, lg: 6 }}
+          alignItems="stretch"
+        >
+          <VStack
+            align="stretch"
+            gap={4}
+            pe={{ base: 0, lg: 4 }}
+            borderEndWidth={{ base: 0, lg: '1px' }}
+            borderColor="border.main"
+            aria-label="Scenario organization"
+          >
             <VStack align="stretch" gap={1}>
-              <Button size="sm" justifyContent="flex-start" variant={scope.kind === 'all' ? 'subtle' : 'ghost'} colorPalette={scope.kind === 'all' ? 'blue' : undefined} borderStartWidth="3px" borderStartColor={scope.kind === 'all' ? 'blue.500' : 'transparent'} aria-current={scope.kind === 'all' ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'all' })}><FiLayers />All scenarios{scope.kind === 'all' && <Text ml="auto" color="text.muted" fontSize="xs">{pagination.total}</Text>}</Button>
-              <Button size="sm" justifyContent="flex-start" variant={scope.kind === 'unfiled' ? 'subtle' : 'ghost'} colorPalette={scope.kind === 'unfiled' ? 'blue' : undefined} borderStartWidth="3px" borderStartColor={scope.kind === 'unfiled' ? 'blue.500' : 'transparent'} aria-current={scope.kind === 'unfiled' ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'unfiled' })}><FiFolder />Unfiled</Button>
+              <Button
+                size="sm"
+                justifyContent="flex-start"
+                variant={scope.kind === 'all' ? 'subtle' : 'ghost'}
+                colorPalette={scope.kind === 'all' ? 'blue' : undefined}
+                borderStartWidth="3px"
+                borderStartColor={scope.kind === 'all' ? 'blue.500' : 'transparent'}
+                aria-current={scope.kind === 'all' ? 'page' : undefined}
+                onClick={() => onScopeChange({ kind: 'all' })}
+              >
+                <FiLayers />
+                All scenarios
+                {scope.kind === 'all' && (
+                  <Text ml="auto" color="text.muted" fontSize="xs">
+                    {pagination.total}
+                  </Text>
+                )}
+              </Button>
+              <Button
+                size="sm"
+                justifyContent="flex-start"
+                variant={scope.kind === 'unfiled' ? 'subtle' : 'ghost'}
+                colorPalette={scope.kind === 'unfiled' ? 'blue' : undefined}
+                borderStartWidth="3px"
+                borderStartColor={scope.kind === 'unfiled' ? 'blue.500' : 'transparent'}
+                aria-current={scope.kind === 'unfiled' ? 'page' : undefined}
+                onClick={() => onScopeChange({ kind: 'unfiled' })}
+              >
+                <FiFolder />
+                Unfiled
+              </Button>
             </VStack>
             <Box>
-              <HStack justify="space-between" px={2} mb={1}><Text fontSize="xs" fontWeight="bold" letterSpacing="wider" color="text.muted" textTransform="uppercase">Folders</Text><IconButton size="xs" variant="ghost" aria-label={selectedFolder ? 'Create subfolder' : 'Create folder'} title={selectedFolder ? 'Create inside selected folder' : 'Create folder'} onClick={() => openCreateDialog('folder')}><FiPlus /></IconButton></HStack>
-              {organizationLoading ? <Text px={2} color="text.muted" fontSize="sm">Loading folders…</Text> : organizationError ? <Text px={2} color="fg.error" fontSize="sm" role="alert">Folders could not be loaded.</Text> : folders.length === 0 ? <Text px={2} color="text.muted" fontSize="sm">No folders yet</Text> : <VStack align="stretch" gap={0}>{folders.map(renderFolder)}</VStack>}
+              <HStack justify="space-between" px={2} mb={1}>
+                <Text
+                  fontSize="xs"
+                  fontWeight="bold"
+                  letterSpacing="wider"
+                  color="text.muted"
+                  textTransform="uppercase"
+                >
+                  Folders
+                </Text>
+                <IconButton
+                  size="xs"
+                  variant="ghost"
+                  aria-label={selectedFolder ? 'Create subfolder' : 'Create folder'}
+                  title={selectedFolder ? 'Create inside selected folder' : 'Create folder'}
+                  onClick={() => openCreateDialog('folder')}
+                >
+                  <FiPlus />
+                </IconButton>
+              </HStack>
+              {organizationLoading ? (
+                <Text px={2} color="text.muted" fontSize="sm">
+                  Loading folders…
+                </Text>
+              ) : organizationError ? (
+                <Text px={2} color="fg.error" fontSize="sm" role="alert">
+                  Folders could not be loaded.
+                </Text>
+              ) : folders.length === 0 ? (
+                <Text px={2} color="text.muted" fontSize="sm">
+                  No folders yet
+                </Text>
+              ) : (
+                <VStack align="stretch" gap={0}>
+                  {folders.map(renderFolder)}
+                </VStack>
+              )}
             </Box>
             <Box>
-              <HStack justify="space-between" px={2} mb={1}><Text fontSize="xs" fontWeight="bold" letterSpacing="wider" color="text.muted" textTransform="uppercase">Suites</Text><IconButton size="xs" variant="ghost" aria-label="Create suite" onClick={() => openCreateDialog('suite')}><FiPlus /></IconButton></HStack>
-              {organizationLoading ? <Text px={2} color="text.muted" fontSize="sm">Loading suites…</Text> : organizationError ? <Text px={2} color="fg.error" fontSize="sm" role="alert">Suites could not be loaded.</Text> : suites.length === 0 ? <Text px={2} color="text.muted" fontSize="sm">No suites yet</Text> : <VStack align="stretch" gap={0}>{suites.map((suite) => {
-                const selected = scope.kind === 'suite' && scope.id === suite.id;
-                return <Button key={suite.id} size="sm" variant={selected ? 'subtle' : 'ghost'} colorPalette={selected ? 'blue' : undefined} borderStartWidth="3px" borderStartColor={selected ? 'blue.500' : 'transparent'} justifyContent="flex-start" aria-current={selected ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'suite', id: suite.id })}><FiLayers /><Text flex="1" textAlign="left" lineClamp={1}>{suite.name}</Text><Text color="text.muted" fontSize="xs">{suite.members?.length ?? 0}</Text></Button>;
-              })}</VStack>}
+              <HStack justify="space-between" px={2} mb={1}>
+                <Text
+                  fontSize="xs"
+                  fontWeight="bold"
+                  letterSpacing="wider"
+                  color="text.muted"
+                  textTransform="uppercase"
+                >
+                  Suites
+                </Text>
+                <IconButton
+                  size="xs"
+                  variant="ghost"
+                  aria-label="Create suite"
+                  onClick={() => openCreateDialog('suite')}
+                >
+                  <FiPlus />
+                </IconButton>
+              </HStack>
+              {organizationLoading ? (
+                <Text px={2} color="text.muted" fontSize="sm">
+                  Loading suites…
+                </Text>
+              ) : organizationError ? (
+                <Text px={2} color="fg.error" fontSize="sm" role="alert">
+                  Suites could not be loaded.
+                </Text>
+              ) : suites.length === 0 ? (
+                <Text px={2} color="text.muted" fontSize="sm">
+                  No suites yet
+                </Text>
+              ) : (
+                <VStack align="stretch" gap={0}>
+                  {suites.map((suite) => {
+                    const selected = scope.kind === 'suite' && scope.id === suite.id;
+                    return (
+                      <Button
+                        key={suite.id}
+                        size="sm"
+                        variant={selected ? 'subtle' : 'ghost'}
+                        colorPalette={selected ? 'blue' : undefined}
+                        borderStartWidth="3px"
+                        borderStartColor={selected ? 'blue.500' : 'transparent'}
+                        justifyContent="flex-start"
+                        aria-current={selected ? 'page' : undefined}
+                        onClick={() => onScopeChange({ kind: 'suite', id: suite.id })}
+                      >
+                        <FiLayers />
+                        <Text flex="1" textAlign="left" lineClamp={1}>
+                          {suite.name}
+                        </Text>
+                        <Text color="text.muted" fontSize="xs">
+                          {suite.members?.length ?? 0}
+                        </Text>
+                      </Button>
+                    );
+                  })}
+                </VStack>
+              )}
             </Box>
           </VStack>
 
           <VStack align="stretch" gap={4} minW="0">
             <Box>
-              {selectedFolder && <HStack aria-label="Folder breadcrumbs" mb={2} gap={1} flexWrap="wrap"><Button size="xs" variant="ghost" onClick={() => onScopeChange({ kind: 'all' })}>All scenarios</Button>{breadcrumbs.map((folder) => <HStack key={folder.id} gap={1}><Text color="text.muted">/</Text><Button size="xs" variant="ghost" aria-current={folder.id === selectedFolder.id ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'folder', id: folder.id })}>{folder.name}</Button></HStack>)}</HStack>}
-            <HStack justify="space-between" align="start" gap={3} flexWrap="wrap">
-                <Box><Heading fontSize="lg">{selectedFolder?.name ?? selectedSuite?.name ?? (scope.kind === 'unfiled' ? 'Unfiled scenarios' : 'All scenarios')}</Heading><Text mt={1} color="text.muted" fontSize="sm">{selectedFolder ? `${pagination.total} scenarios${includeDescendants ? ' in this folder and subfolders' : ' directly in this folder'}` : selectedSuite ? `${selectedSuite.members?.length ?? 0} scenarios${selectedSuite.release ? ` · ${selectedSuite.release}` : ''}` : `${pagination.total} scenarios`}</Text></Box>
-                {selectedFolder && <Menu.Root><Menu.Trigger asChild><Button size="sm" variant="outline">Folder actions<FiMoreHorizontal /></Button></Menu.Trigger><Menu.Positioner><Menu.Content><Menu.Item value="rename" onClick={() => openEditFolderDialog(selectedFolder)}>Rename</Menu.Item><Menu.Item value="move" onClick={() => openFolderActionDialog('move-folder', selectedFolder)}>Move</Menu.Item><Menu.Item value="delete" color="fg.error" onClick={() => openFolderActionDialog('delete-folder', selectedFolder)}>Delete</Menu.Item></Menu.Content></Menu.Positioner></Menu.Root>}
-                {selectedSuite && <HStack><Button size="sm" variant="outline" onClick={() => setAddScenariosToSuiteOpen(true)}><FiPlus />Add scenarios</Button><Menu.Root><Menu.Trigger asChild><IconButton aria-label="Suite actions" variant="ghost"><FiMoreHorizontal /></IconButton></Menu.Trigger><Menu.Positioner><Menu.Content>
-                  <Menu.Item value="edit" onClick={openEditSuiteDialog}><HStack justify="space-between" w="full"><Text>Edit suite</Text><FiEdit aria-hidden="true" /></HStack></Menu.Item>
-                  <Menu.Item value="delete" color="fg.error" onClick={() => { setTargetSuite(selectedSuite); setCreateError(null); setCreateDialog('delete-suite'); }}><HStack justify="space-between" w="full"><Text>Delete suite</Text><FiTrash2 aria-hidden="true" /></HStack></Menu.Item>
-                </Menu.Content></Menu.Positioner></Menu.Root></HStack>}
-                <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}><FiPlus />Create scenario</Button>
+              {selectedFolder && (
+                <HStack aria-label="Folder breadcrumbs" mb={2} gap={1} flexWrap="wrap">
+                  <Button size="xs" variant="ghost" onClick={() => onScopeChange({ kind: 'all' })}>
+                    All scenarios
+                  </Button>
+                  {breadcrumbs.map((folder) => (
+                    <HStack key={folder.id} gap={1}>
+                      <Text color="text.muted">/</Text>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        aria-current={folder.id === selectedFolder.id ? 'page' : undefined}
+                        onClick={() => onScopeChange({ kind: 'folder', id: folder.id })}
+                      >
+                        {folder.name}
+                      </Button>
+                    </HStack>
+                  ))}
+                </HStack>
+              )}
+              <HStack justify="space-between" align="start" gap={3} flexWrap="wrap">
+                <Box>
+                  <Heading fontSize="lg">
+                    {selectedFolder?.name ??
+                      selectedSuite?.name ??
+                      (scope.kind === 'unfiled' ? 'Unfiled scenarios' : 'All scenarios')}
+                  </Heading>
+                  <Text mt={1} color="text.muted" fontSize="sm">
+                    {selectedFolder
+                      ? `${pagination.total} scenarios${includeDescendants ? ' in this folder and subfolders' : ' directly in this folder'}`
+                      : selectedSuite
+                        ? `${selectedSuite.members?.length ?? 0} scenarios${selectedSuite.release ? ` · ${selectedSuite.release}` : ''}`
+                        : `${pagination.total} scenarios`}
+                  </Text>
+                </Box>
+                {selectedFolder && (
+                  <Menu.Root>
+                    <Menu.Trigger asChild>
+                      <Button size="sm" variant="outline">
+                        Folder actions
+                        <FiMoreHorizontal />
+                      </Button>
+                    </Menu.Trigger>
+                    <Menu.Positioner>
+                      <Menu.Content>
+                        <Menu.Item value="rename" onClick={() => openEditFolderDialog(selectedFolder)}>
+                          Rename
+                        </Menu.Item>
+                        <Menu.Item value="move" onClick={() => openFolderActionDialog('move-folder', selectedFolder)}>
+                          Move
+                        </Menu.Item>
+                        <Menu.Item
+                          value="delete"
+                          color="fg.error"
+                          onClick={() => openFolderActionDialog('delete-folder', selectedFolder)}
+                        >
+                          Delete
+                        </Menu.Item>
+                      </Menu.Content>
+                    </Menu.Positioner>
+                  </Menu.Root>
+                )}
+                {selectedSuite && (
+                  <HStack>
+                    <Button size="sm" variant="outline" onClick={() => setAddScenariosToSuiteOpen(true)}>
+                      <FiPlus />
+                      Add scenarios
+                    </Button>
+                    <Menu.Root>
+                      <Menu.Trigger asChild>
+                        <IconButton aria-label="Suite actions" variant="ghost">
+                          <FiMoreHorizontal />
+                        </IconButton>
+                      </Menu.Trigger>
+                      <Menu.Positioner>
+                        <Menu.Content>
+                          <Menu.Item value="edit" onClick={openEditSuiteDialog}>
+                            <HStack justify="space-between" w="full">
+                              <Text>Edit suite</Text>
+                              <FiEdit aria-hidden="true" />
+                            </HStack>
+                          </Menu.Item>
+                          <Menu.Item
+                            value="delete"
+                            color="fg.error"
+                            onClick={() => {
+                              setTargetSuite(selectedSuite);
+                              setCreateError(null);
+                              setCreateDialog('delete-suite');
+                            }}
+                          >
+                            <HStack justify="space-between" w="full">
+                              <Text>Delete suite</Text>
+                              <FiTrash2 aria-hidden="true" />
+                            </HStack>
+                          </Menu.Item>
+                        </Menu.Content>
+                      </Menu.Positioner>
+                    </Menu.Root>
+                  </HStack>
+                )}
+                <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}>
+                  <FiPlus />
+                  Create scenario
+                </Button>
               </HStack>
             </Box>
 
             <VStack align="stretch" gap={2}>
               <HStack gap={2} flexWrap="wrap">
-                <Box position="relative" flex={{ base: '1 1 100%', md: '0 1 260px' }} w={{ base: '100%', md: '260px' }} maxW="100%">
-                  <Box position="absolute" insetStart={3} top="50%" transform="translateY(-50%)" color="text.muted" pointerEvents="none"><FiSearch /></Box>
-                  <Input aria-label="Search scenarios" placeholder="Search title or scenario key" value={search} onChange={(event) => onSearchChange(event.currentTarget.value)} ps={9} pe={search ? 9 : 3} bg="bg.card" />
-                  {search && <IconButton position="absolute" insetEnd={1} top="50%" transform="translateY(-50%)" size="xs" variant="ghost" aria-label="Clear scenario search" onClick={() => onSearchChange('')}><FiX /></IconButton>}
+                <Box
+                  position="relative"
+                  flex={{ base: '1 1 100%', md: '0 1 260px' }}
+                  w={{ base: '100%', md: '260px' }}
+                  maxW="100%"
+                >
+                  <Box
+                    position="absolute"
+                    insetStart={3}
+                    top="50%"
+                    transform="translateY(-50%)"
+                    color="text.muted"
+                    pointerEvents="none"
+                  >
+                    <FiSearch />
+                  </Box>
+                  <Input
+                    aria-label="Search scenarios"
+                    placeholder="Search title or scenario key"
+                    value={search}
+                    onChange={(event) => onSearchChange(event.currentTarget.value)}
+                    ps={9}
+                    pe={search ? 9 : 3}
+                    bg="bg.card"
+                  />
+                  {search && (
+                    <IconButton
+                      position="absolute"
+                      insetEnd={1}
+                      top="50%"
+                      transform="translateY(-50%)"
+                      size="xs"
+                      variant="ghost"
+                      aria-label="Clear scenario search"
+                      onClick={() => onSearchChange('')}
+                    >
+                      <FiX />
+                    </IconButton>
+                  )}
                 </Box>
-                {(search.trim() || activeColumnFilters.length > 0) && <Text fontSize="xs" color="text.muted">{activeColumnFilters.length + Number(Boolean(search.trim()))} search {activeColumnFilters.length + Number(Boolean(search.trim())) === 1 ? 'term' : 'terms'} active</Text>}
+                {(search.trim() || activeColumnFilters.length > 0) && (
+                  <Text fontSize="xs" color="text.muted">
+                    {activeColumnFilters.length + Number(Boolean(search.trim()))} search{' '}
+                    {activeColumnFilters.length + Number(Boolean(search.trim())) === 1 ? 'term' : 'terms'} active
+                  </Text>
+                )}
               </HStack>
-              {(activeColumnFilters.length > 0 || search.trim()) && <HStack gap={2} flexWrap="wrap" aria-label="Active scenario filters">
-                {search.trim() && <Button size="xs" variant="subtle" colorPalette="blue" borderRadius="full" onClick={() => onSearchChange('')}>All fields: {search}<FiX aria-hidden="true" /></Button>}
-                {activeColumnFilters.map(([field, value]) => <Button key={field} size="xs" variant="subtle" colorPalette="blue" borderRadius="full" onClick={() => onColumnFilterChange(field, '')}>{filterLabels[field]}: {value}<FiX aria-hidden="true" /></Button>)}
-                {activeColumnFilters.length + Number(Boolean(search.trim())) > 1 && <Button size="xs" variant="ghost" color="text.muted" onClick={() => { activeColumnFilters.forEach(([field]) => onColumnFilterChange(field, '')); onSearchChange(''); }}>Clear all</Button>}
-              </HStack>}
+              {(activeColumnFilters.length > 0 || search.trim()) && (
+                <HStack gap={2} flexWrap="wrap" aria-label="Active scenario filters">
+                  {search.trim() && (
+                    <Button
+                      size="xs"
+                      variant="subtle"
+                      colorPalette="blue"
+                      borderRadius="full"
+                      onClick={() => onSearchChange('')}
+                    >
+                      All fields: {search}
+                      <FiX aria-hidden="true" />
+                    </Button>
+                  )}
+                  {activeColumnFilters.map(([field, value]) => (
+                    <Button
+                      key={field}
+                      size="xs"
+                      variant="subtle"
+                      colorPalette="blue"
+                      borderRadius="full"
+                      onClick={() => onColumnFilterChange(field, '')}
+                    >
+                      {filterLabels[field]}: {value}
+                      <FiX aria-hidden="true" />
+                    </Button>
+                  ))}
+                  {activeColumnFilters.length + Number(Boolean(search.trim())) > 1 && (
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      color="text.muted"
+                      onClick={() => {
+                        activeColumnFilters.forEach(([field]) => onColumnFilterChange(field, ''));
+                        onSearchChange('');
+                      }}
+                    >
+                      Clear all
+                    </Button>
+                  )}
+                </HStack>
+              )}
             </VStack>
 
-            {selectedSuite?.members && selectedSuite.members.length > 0 && <Collapsible.Root><Collapsible.Trigger asChild><Button variant="ghost" size="sm" alignSelf="flex-start">Manage suite order ({selectedSuite.members.length})<FiChevronDown /></Button></Collapsible.Trigger><Collapsible.Content><VStack align="stretch" gap={1} p={3} mt={2} borderWidth="1px" borderColor="border.main" borderRadius="md" maxH="240px" overflowY="auto">{selectedSuite.members.map((member, index, members) => <HStack key={member.testScenarioId}><Text flex="1" fontSize="sm" lineClamp={1}>{index + 1}. {scenarios.find((scenario) => scenario.id === member.testScenarioId)?.title ?? member.testScenarioId}</Text><Button size="xs" variant="ghost" aria-label={`Move member ${index + 1} up`} disabled={index === 0} onClick={() => { const ids = members.map((item) => item.testScenarioId); [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]]; void onReorderSuite(selectedSuite.id, ids).catch((error: unknown) => window.alert(String(error))); }}>↑</Button><Button size="xs" variant="ghost" aria-label={`Move member ${index + 1} down`} disabled={index === members.length - 1} onClick={() => { const ids = members.map((item) => item.testScenarioId); [ids[index + 1], ids[index]] = [ids[index], ids[index + 1]]; void onReorderSuite(selectedSuite.id, ids).catch((error: unknown) => window.alert(String(error))); }}>↓</Button></HStack>)}</VStack></Collapsible.Content></Collapsible.Root>}
+            {selectedSuite?.members && selectedSuite.members.length > 0 && (
+              <Collapsible.Root>
+                <Collapsible.Trigger asChild>
+                  <Button variant="ghost" size="sm" alignSelf="flex-start">
+                    Manage suite order ({selectedSuite.members.length})<FiChevronDown />
+                  </Button>
+                </Collapsible.Trigger>
+                <Collapsible.Content>
+                  <VStack
+                    align="stretch"
+                    gap={1}
+                    p={3}
+                    mt={2}
+                    borderWidth="1px"
+                    borderColor="border.main"
+                    borderRadius="md"
+                    maxH="240px"
+                    overflowY="auto"
+                  >
+                    {selectedSuite.members.map((member, index, members) => (
+                      <HStack key={member.testScenarioId}>
+                        <Text flex="1" fontSize="sm" lineClamp={1}>
+                          {index + 1}.{' '}
+                          {scenarios.find((scenario) => scenario.id === member.testScenarioId)?.title ??
+                            member.testScenarioId}
+                        </Text>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          aria-label={`Move member ${index + 1} up`}
+                          disabled={index === 0}
+                          onClick={() => {
+                            const ids = members.map((item) => item.testScenarioId);
+                            [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]];
+                            void onReorderSuite(selectedSuite.id, ids).catch((error: unknown) =>
+                              window.alert(String(error)),
+                            );
+                          }}
+                        >
+                          ↑
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          aria-label={`Move member ${index + 1} down`}
+                          disabled={index === members.length - 1}
+                          onClick={() => {
+                            const ids = members.map((item) => item.testScenarioId);
+                            [ids[index + 1], ids[index]] = [ids[index], ids[index + 1]];
+                            void onReorderSuite(selectedSuite.id, ids).catch((error: unknown) =>
+                              window.alert(String(error)),
+                            );
+                          }}
+                        >
+                          ↓
+                        </Button>
+                      </HStack>
+                    ))}
+                  </VStack>
+                </Collapsible.Content>
+              </Collapsible.Root>
+            )}
 
-            {scope.kind === 'folder' && <HStack align="end" gap={3} flexWrap="wrap">
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 40 }}><input type="checkbox" checked={includeDescendants} onChange={(event) => onIncludeDescendantsChange(event.currentTarget.checked)} />Include subfolders</label>
-            </HStack>}
-            {selectedIds.length > 0 && <HStack flexWrap="wrap" gap={2} p={3} bg="bg.subtle" borderRadius="md" borderStartWidth="3px" borderStartColor="border.focus" aria-label="Bulk scenario actions">
-              <Text fontWeight="semibold" whiteSpace="nowrap">{selectedIds.length} selected</Text>
-              <Button size="sm" variant="ghost" onClick={clearSelection}>Clear selection</Button>
-              <Box flex="1" />
-              <Button size="sm" variant="outline" onClick={() => { setMoveScenariosTarget(''); setMoveScenariosError(null); setMoveScenariosOpen(true); }}>Move…</Button>
-              <Button size="sm" variant="outline" disabled={suites.length === 0} onClick={() => { setBulkSuiteId(''); setAddToSuiteError(null); setAddToSuiteOpen(true); }}>Add to suite…</Button>
-              {scope.kind === 'suite' && <Button size="sm" variant="outline" onClick={() => { setRemoveFromSuiteError(null); setRemoveFromSuiteOpen(true); }}>Remove from suite</Button>}
-              {selectedIds.length >= 100 && <Text role="status" color="text.muted" fontSize="sm">Limit reached: 100 scenarios per action.</Text>}
-            </HStack>}
+            {scope.kind === 'folder' && (
+              <HStack align="end" gap={3} flexWrap="wrap">
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 40 }}>
+                  <input
+                    type="checkbox"
+                    checked={includeDescendants}
+                    onChange={(event) => onIncludeDescendantsChange(event.currentTarget.checked)}
+                  />
+                  Include subfolders
+                </label>
+              </HStack>
+            )}
+            {selectedIds.length > 0 && (
+              <HStack
+                flexWrap="wrap"
+                gap={2}
+                p={3}
+                bg="bg.subtle"
+                borderRadius="md"
+                borderStartWidth="3px"
+                borderStartColor="border.focus"
+                aria-label="Bulk scenario actions"
+              >
+                <Text fontWeight="semibold" whiteSpace="nowrap">
+                  {selectedIds.length} selected
+                </Text>
+                <Button size="sm" variant="ghost" onClick={clearSelection}>
+                  Clear selection
+                </Button>
+                <Box flex="1" />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setMoveScenariosTarget('');
+                    setMoveScenariosError(null);
+                    setMoveScenariosOpen(true);
+                  }}
+                >
+                  Move…
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={suites.length === 0}
+                  onClick={() => {
+                    setBulkSuiteId('');
+                    setAddToSuiteError(null);
+                    setAddToSuiteOpen(true);
+                  }}
+                >
+                  Add to suite…
+                </Button>
+                {scope.kind === 'suite' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setRemoveFromSuiteError(null);
+                      setRemoveFromSuiteOpen(true);
+                    }}
+                  >
+                    Remove from suite
+                  </Button>
+                )}
+                {selectedIds.length >= 100 && (
+                  <Text role="status" color="text.muted" fontSize="sm">
+                    Limit reached: 100 scenarios per action.
+                  </Text>
+                )}
+              </HStack>
+            )}
 
             <Box borderWidth="1px" borderColor="border.main" borderRadius="lg" overflow="hidden" bg="bg.card">
-              {error ? <Box p={4}><ErrorState /></Box> : <><ScenarioTable scenarios={scenarios} isLoading={isLoading} selectedIds={selectedIds} onToggleSelected={toggleSelected} onContextMenu={onContextMenu} showFolder={showFolderColumn} folderPathById={folderPathById} sort={sort} sortDirection={sortDirection} onSortChange={onSortChange} columnFilters={columnFilters} onColumnFilterChange={onColumnFilterChange} openFilter={openFilter} onFilterDisclosureChange={setOpenFilter} searchActive={Boolean(search.trim()) || activeColumnFilters.length > 0} />{scenarios.length > 0 && <HStack justify="space-between" flexWrap="wrap" p={3} borderTopWidth="1px" borderColor="border.main"><PaginationSummary pagination={pagination} />{pagination.totalPages > 1 && <Box as="nav" aria-label="Test Scenario pagination"><Pagination currentPage={pagination.page} totalPages={pagination.totalPages} onPageChange={onPageChange} /></Box>}</HStack>}</>}
+              {error ? (
+                <Box p={4}>
+                  <ErrorState />
+                </Box>
+              ) : (
+                <>
+                  <ScenarioTable
+                    scenarios={scenarios}
+                    isLoading={isLoading}
+                    selectedIds={selectedIds}
+                    onToggleSelected={toggleSelected}
+                    onContextMenu={onContextMenu}
+                    showFolder={showFolderColumn}
+                    folderPathById={folderPathById}
+                    sort={sort}
+                    sortDirection={sortDirection}
+                    onSortChange={onSortChange}
+                    columnFilters={columnFilters}
+                    onColumnFilterChange={onColumnFilterChange}
+                    openFilter={openFilter}
+                    onFilterDisclosureChange={setOpenFilter}
+                    searchActive={Boolean(search.trim()) || activeColumnFilters.length > 0}
+                  />
+                  {scenarios.length > 0 && (
+                    <HStack
+                      justify="space-between"
+                      flexWrap="wrap"
+                      p={3}
+                      borderTopWidth="1px"
+                      borderColor="border.main"
+                    >
+                      <PaginationSummary pagination={pagination} />
+                      {pagination.totalPages > 1 && (
+                        <Box as="nav" aria-label="Test Scenario pagination">
+                          <Pagination
+                            currentPage={pagination.page}
+                            totalPages={pagination.totalPages}
+                            onPageChange={onPageChange}
+                          />
+                        </Box>
+                      )}
+                    </HStack>
+                  )}
+                </>
+              )}
             </Box>
           </VStack>
         </Grid>
       </VStack>
-      {addScenariosToSuiteOpen && selectedSuite && projectId && <TestSuiteAddScenariosDialogContainer
-        projectId={projectId}
-        suite={selectedSuite}
-        folderOptions={folderRows.map(({ id, name, depth }) => ({ id, name, depth }))}
-        onClose={() => setAddScenariosToSuiteOpen(false)}
-      />}
-      {moveScenariosOpen && <Dialog title={`Move ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'}`} onClose={() => setMoveScenariosOpen(false)}>
-        <form onSubmit={(event) => void submitMoveScenarios(event)}>
-          <DialogBody>
-            <VStack align="stretch" gap={4}>
-              <Text color="text.secondary">Choose where to move the selected scenarios.</Text>
-              <NativeSelect label="Destination folder" placeholder="Choose destination" value={moveScenariosTarget} onChange={(event) => setMoveScenariosTarget(event.currentTarget.value)}>
-                <option value={UNFILED_DESTINATION}>Unfiled</option>
-                {folderRows.map((folder) => <option key={folder.id} value={folder.id}>{'　'.repeat(folder.depth)}{folder.name}</option>)}
-              </NativeSelect>
-              {moveScenariosError && <Text role="alert" color="fg.error">{moveScenariosError}</Text>}
-            </VStack>
-          </DialogBody>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setMoveScenariosOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={isMovingScenarios} disabled={!moveScenariosTarget || isMovingScenarios}>Move {selectedIds.length} scenario{selectedIds.length === 1 ? '' : 's'}</Button>
-          </DialogFooter>
-        </form>
-      </Dialog>}
-      {addToSuiteOpen && <Dialog title={`Add ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'} to suite`} onClose={() => setAddToSuiteOpen(false)}>
-        <form onSubmit={(event) => void submitAddToSuite(event)}>
-          <DialogBody>
-            <VStack align="stretch" gap={4}>
-              <Text color="text.secondary">Choose the suite that should include the selected scenarios.</Text>
-              <NativeSelect label="Suite" value={bulkSuiteId} onChange={(event) => setBulkSuiteId(event.currentTarget.value)}>
-                <option value="">Select a suite</option>
-                {suites.map((suite) => <option key={suite.id} value={suite.id}>{suite.name}{suite.release ? ` · ${suite.release}` : ''}</option>)}
-              </NativeSelect>
-              {addToSuiteError && <Text role="alert" color="fg.error">{addToSuiteError}</Text>}
-            </VStack>
-          </DialogBody>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setAddToSuiteOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={isAddingToSuite} disabled={!bulkSuiteId || isAddingToSuite}>Add to suite</Button>
-          </DialogFooter>
-        </form>
-      </Dialog>}
-      {removeFromSuiteOpen && <Dialog title={`Remove ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'} from suite`} onClose={() => setRemoveFromSuiteOpen(false)}>
-        <form onSubmit={(event) => void submitRemoveFromSuite(event)}>
-          <DialogBody>
-            <VStack align="stretch" gap={4}>
-              <Text color="text.secondary">The selected scenarios will remain in the project and other suites.</Text>
-              {removeFromSuiteError && <Text role="alert" color="fg.error">{removeFromSuiteError}</Text>}
-            </VStack>
-          </DialogBody>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setRemoveFromSuiteOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={isRemovingFromSuite} disabled={isRemovingFromSuite || selectedIds.length === 0}>Remove {selectedIds.length} scenario{selectedIds.length === 1 ? '' : 's'}</Button>
-          </DialogFooter>
-        </form>
-      </Dialog>}
-      {createDialog && <Dialog title={
-        createDialog === 'folder' ? selectedFolder ? `Create folder inside ${selectedFolder.name}` : 'Create folder' : createDialog === 'suite' ? 'Create suite' :
-          createDialog === 'rename-folder' ? 'Rename folder' : createDialog === 'edit-suite' ? 'Edit suite' :
-            createDialog === 'move-folder' ? `Move ${targetFolder?.name ?? 'folder'}` :
-              createDialog === 'delete-folder' ? 'Delete folder' : 'Delete suite'
-      } onClose={() => setCreateDialog(null)}>
-        <form onSubmit={(event) => void submitCreate(event)}>
-          <DialogBody>
-            <VStack align="stretch" gap={4}>
-              {['folder', 'suite', 'rename-folder', 'edit-suite'].includes(createDialog) && <label>
-                <Text mb={1}>Name</Text>
-                <Input autoFocus required maxLength={120} value={createName} onChange={(event) => setCreateName(event.currentTarget.value)} bg={createDialog === 'edit-suite' ? 'bg.card' : undefined} />
-              </label>}
-              {(createDialog === 'suite' || createDialog === 'edit-suite') && <>
-                <label><Text mb={1}>Purpose (optional)</Text><Input value={createPurpose} onChange={(event) => setCreatePurpose(event.currentTarget.value)} bg={createDialog === 'edit-suite' ? 'bg.card' : undefined} /></label>
-                <label><Text mb={1}>Release (optional)</Text><Input value={createRelease} onChange={(event) => setCreateRelease(event.currentTarget.value)} bg={createDialog === 'edit-suite' ? 'bg.card' : undefined} /></label>
-                <label><Text mb={1}>Description (optional)</Text><Textarea value={createDescription} onChange={(event) => setCreateDescription(event.currentTarget.value)} bg={createDialog === 'edit-suite' ? 'bg.card' : undefined} /></label>
-              </>}
-              {createDialog === 'move-folder' && targetFolder && <NativeSelect label="Parent folder" value={moveParentId} onChange={(event) => setMoveParentId(event.currentTarget.value)}>
-                <option value="">Root level</option>
-                {folderRows.filter((folder) => !isInFolderSubtree(folder.id, targetFolder.id)).map((folder) => <option key={folder.id} value={folder.id}>{'　'.repeat(folder.depth)}{folder.name}</option>)}
-              </NativeSelect>}
-              {createDialog === 'delete-folder' && targetFolder && <>
-                <Text>Direct scenarios will move to the selected destination. Child folders will be promoted to this folder’s parent.</Text>
-                <NativeSelect label="Move direct scenarios to" value={deleteDisposition} onChange={(event) => setDeleteDisposition(event.currentTarget.value as 'parent' | 'unfiled')}>
-                  <option value="parent">Parent folder</option><option value="unfiled">Unfiled</option>
+      {addScenariosToSuiteOpen && selectedSuite && projectId && (
+        <TestSuiteAddScenariosDialogContainer
+          projectId={projectId}
+          suite={selectedSuite}
+          folderOptions={folderRows.map(({ id, name, depth }) => ({ id, name, depth }))}
+          onClose={() => setAddScenariosToSuiteOpen(false)}
+        />
+      )}
+      {moveScenariosOpen && (
+        <Dialog
+          title={`Move ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'}`}
+          onClose={() => setMoveScenariosOpen(false)}
+        >
+          <form onSubmit={(event) => void submitMoveScenarios(event)}>
+            <DialogBody>
+              <VStack align="stretch" gap={4}>
+                <Text color="text.secondary">Choose where to move the selected scenarios.</Text>
+                <NativeSelect
+                  label="Destination folder"
+                  placeholder="Choose destination"
+                  value={moveScenariosTarget}
+                  onChange={(event) => setMoveScenariosTarget(event.currentTarget.value)}
+                >
+                  <option value={UNFILED_DESTINATION}>Unfiled</option>
+                  {folderRows.map((folder) => (
+                    <option key={folder.id} value={folder.id}>
+                      {'　'.repeat(folder.depth)}
+                      {folder.name}
+                    </option>
+                  ))}
                 </NativeSelect>
-              </>}
-              {createDialog === 'delete-suite' && <Text>Delete “{targetSuite?.name}”? Its scenarios will remain unchanged.</Text>}
-              {createError && <Text role="alert" color="fg.error">{createError}</Text>}
-            </VStack>
-          </DialogBody>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setCreateDialog(null)}>Cancel</Button>
-            <Button type="submit" variant={['delete-folder', 'delete-suite'].includes(createDialog) ? 'solid' : 'primary'} colorPalette={['delete-folder', 'delete-suite'].includes(createDialog) ? 'red' : undefined}
-              disabled={isCreating || (['folder', 'suite', 'rename-folder', 'edit-suite'].includes(createDialog) && !createName.trim())} loading={isCreating}>
-              {createDialog === 'folder' || createDialog === 'suite' ? 'Create' : createDialog === 'move-folder' ? 'Move' : ['delete-folder', 'delete-suite'].includes(createDialog) ? 'Delete' : 'Save'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </Dialog>}
+                {moveScenariosError && (
+                  <Text role="alert" color="fg.error">
+                    {moveScenariosError}
+                  </Text>
+                )}
+              </VStack>
+            </DialogBody>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setMoveScenariosOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                loading={isMovingScenarios}
+                disabled={!moveScenariosTarget || isMovingScenarios}
+              >
+                Move {selectedIds.length} scenario{selectedIds.length === 1 ? '' : 's'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Dialog>
+      )}
+      {addToSuiteOpen && (
+        <Dialog
+          title={`Add ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'} to suite`}
+          onClose={() => setAddToSuiteOpen(false)}
+        >
+          <form onSubmit={(event) => void submitAddToSuite(event)}>
+            <DialogBody>
+              <VStack align="stretch" gap={4}>
+                <Text color="text.secondary">Choose the suite that should include the selected scenarios.</Text>
+                <NativeSelect
+                  label="Suite"
+                  value={bulkSuiteId}
+                  onChange={(event) => setBulkSuiteId(event.currentTarget.value)}
+                >
+                  <option value="">Select a suite</option>
+                  {suites.map((suite) => (
+                    <option key={suite.id} value={suite.id}>
+                      {suite.name}
+                      {suite.release ? ` · ${suite.release}` : ''}
+                    </option>
+                  ))}
+                </NativeSelect>
+                {addToSuiteError && (
+                  <Text role="alert" color="fg.error">
+                    {addToSuiteError}
+                  </Text>
+                )}
+              </VStack>
+            </DialogBody>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setAddToSuiteOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                loading={isAddingToSuite}
+                disabled={!bulkSuiteId || isAddingToSuite}
+              >
+                Add to suite
+              </Button>
+            </DialogFooter>
+          </form>
+        </Dialog>
+      )}
+      {removeFromSuiteOpen && (
+        <Dialog
+          title={`Remove ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'} from suite`}
+          onClose={() => setRemoveFromSuiteOpen(false)}
+        >
+          <form onSubmit={(event) => void submitRemoveFromSuite(event)}>
+            <DialogBody>
+              <VStack align="stretch" gap={4}>
+                <Text color="text.secondary">The selected scenarios will remain in the project and other suites.</Text>
+                {removeFromSuiteError && (
+                  <Text role="alert" color="fg.error">
+                    {removeFromSuiteError}
+                  </Text>
+                )}
+              </VStack>
+            </DialogBody>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setRemoveFromSuiteOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                loading={isRemovingFromSuite}
+                disabled={isRemovingFromSuite || selectedIds.length === 0}
+              >
+                Remove {selectedIds.length} scenario{selectedIds.length === 1 ? '' : 's'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Dialog>
+      )}
+      {createDialog && (
+        <Dialog
+          title={
+            createDialog === 'folder'
+              ? selectedFolder
+                ? `Create folder inside ${selectedFolder.name}`
+                : 'Create folder'
+              : createDialog === 'suite'
+                ? 'Create suite'
+                : createDialog === 'rename-folder'
+                  ? 'Rename folder'
+                  : createDialog === 'edit-suite'
+                    ? 'Edit suite'
+                    : createDialog === 'move-folder'
+                      ? `Move ${targetFolder?.name ?? 'folder'}`
+                      : createDialog === 'delete-folder'
+                        ? 'Delete folder'
+                        : 'Delete suite'
+          }
+          onClose={() => setCreateDialog(null)}
+        >
+          <form onSubmit={(event) => void submitCreate(event)}>
+            <DialogBody>
+              <VStack align="stretch" gap={4}>
+                {['folder', 'suite', 'rename-folder', 'edit-suite'].includes(createDialog) && (
+                  <label>
+                    <Text mb={1}>Name</Text>
+                    <Input
+                      autoFocus
+                      required
+                      maxLength={120}
+                      value={createName}
+                      onChange={(event) => setCreateName(event.currentTarget.value)}
+                      bg={createDialog === 'edit-suite' ? 'bg.card' : undefined}
+                    />
+                  </label>
+                )}
+                {(createDialog === 'suite' || createDialog === 'edit-suite') && (
+                  <>
+                    <label>
+                      <Text mb={1}>Purpose (optional)</Text>
+                      <Input
+                        value={createPurpose}
+                        onChange={(event) => setCreatePurpose(event.currentTarget.value)}
+                        bg={createDialog === 'edit-suite' ? 'bg.card' : undefined}
+                      />
+                    </label>
+                    <label>
+                      <Text mb={1}>Release (optional)</Text>
+                      <Input
+                        value={createRelease}
+                        onChange={(event) => setCreateRelease(event.currentTarget.value)}
+                        bg={createDialog === 'edit-suite' ? 'bg.card' : undefined}
+                      />
+                    </label>
+                    <label>
+                      <Text mb={1}>Description (optional)</Text>
+                      <Textarea
+                        value={createDescription}
+                        onChange={(event) => setCreateDescription(event.currentTarget.value)}
+                        bg={createDialog === 'edit-suite' ? 'bg.card' : undefined}
+                      />
+                    </label>
+                  </>
+                )}
+                {createDialog === 'move-folder' && targetFolder && (
+                  <NativeSelect
+                    label="Parent folder"
+                    value={moveParentId}
+                    onChange={(event) => setMoveParentId(event.currentTarget.value)}
+                  >
+                    <option value="">Root level</option>
+                    {folderRows
+                      .filter((folder) => !isInFolderSubtree(folder.id, targetFolder.id))
+                      .map((folder) => (
+                        <option key={folder.id} value={folder.id}>
+                          {'　'.repeat(folder.depth)}
+                          {folder.name}
+                        </option>
+                      ))}
+                  </NativeSelect>
+                )}
+                {createDialog === 'delete-folder' && targetFolder && (
+                  <>
+                    <Text>
+                      Direct scenarios will move to the selected destination. Child folders will be promoted to this
+                      folder’s parent.
+                    </Text>
+                    <NativeSelect
+                      label="Move direct scenarios to"
+                      value={deleteDisposition}
+                      onChange={(event) => setDeleteDisposition(event.currentTarget.value as 'parent' | 'unfiled')}
+                    >
+                      <option value="parent">Parent folder</option>
+                      <option value="unfiled">Unfiled</option>
+                    </NativeSelect>
+                  </>
+                )}
+                {createDialog === 'delete-suite' && (
+                  <Text>Delete “{targetSuite?.name}”? Its scenarios will remain unchanged.</Text>
+                )}
+                {createError && (
+                  <Text role="alert" color="fg.error">
+                    {createError}
+                  </Text>
+                )}
+              </VStack>
+            </DialogBody>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setCreateDialog(null)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant={['delete-folder', 'delete-suite'].includes(createDialog) ? 'solid' : 'primary'}
+                colorPalette={['delete-folder', 'delete-suite'].includes(createDialog) ? 'red' : undefined}
+                disabled={
+                  isCreating ||
+                  (['folder', 'suite', 'rename-folder', 'edit-suite'].includes(createDialog) && !createName.trim())
+                }
+                loading={isCreating}
+              >
+                {createDialog === 'folder' || createDialog === 'suite'
+                  ? 'Create'
+                  : createDialog === 'move-folder'
+                    ? 'Move'
+                    : ['delete-folder', 'delete-suite'].includes(createDialog)
+                      ? 'Delete'
+                      : 'Save'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Dialog>
+      )}
     </Wrap>
   );
 });
