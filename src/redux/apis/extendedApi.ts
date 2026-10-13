@@ -47,6 +47,11 @@ export const manualTestRunScenarioHistoryTag = (projectId: string, scenarioId: s
 export const manualTestRunProjectDetailsTag = (projectId: string) =>
   manualTestRunTag(`project-details:${projectId}`);
 
+export const manualRunEnvironmentProfilesTag = (projectId: string) => ({
+  type: 'Manual Run Environment Profiles',
+  id: projectId,
+} as const);
+
 export const resultSpecCoverageTag = (projectId: string) => ({ type: 'ResultSpecCoverage', id: projectId } as const);
 export const scenarioCatalogTag = (projectId: string) => ({ type: 'ScenarioCatalog', id: projectId } as const);
 export const scenarioSpecLinkTag = (projectId: string, scenarioId: string) => ({
@@ -100,7 +105,7 @@ const createSkillPackageFormData = ({
 
 export const extendedApi = generatedApi
   .enhanceEndpoints({
-    addTagTypes: ['Results', 'ResultSpecCoverage', 'ScenarioCatalog', 'ScenarioSpecLink', 'ScenarioFolders', 'ScenarioSuites'],
+    addTagTypes: ['Results', 'ResultSpecCoverage', 'ScenarioCatalog', 'ScenarioSpecLink', 'ScenarioFolders', 'ScenarioSuites', 'Manual Run Environment Profiles'],
     endpoints: {
       getApiV2TestScenarioFolders: {
         providesTags: (_result, _error, arg) => [{ type: 'ScenarioFolders', id: arg.projectId }],
@@ -239,6 +244,18 @@ export const extendedApi = generatedApi
         providesTags: (_result, _error, arg: GetApiV2ManualTestRunsApiArg) => [
           manualTestRunProjectHistoryTag(arg.projectId),
         ],
+      },
+      getApiV2ProjectsByProjectIdManualRunEnvironmentProfiles: {
+        providesTags: (_result, _error, arg) => [manualRunEnvironmentProfilesTag(arg.projectId)],
+      },
+      postApiV2ProjectsByProjectIdManualRunEnvironmentProfiles: {
+        invalidatesTags: (result, _error, arg) => result ? [manualRunEnvironmentProfilesTag(arg.projectId)] : [],
+      },
+      patchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileId: {
+        invalidatesTags: (result, _error, arg) => result ? [manualRunEnvironmentProfilesTag(arg.projectId)] : [],
+      },
+      deleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileId: {
+        invalidatesTags: (_result, error, arg) => error ? [] : [manualRunEnvironmentProfilesTag(arg.projectId)],
       },
       getApiV2ManualTestRunsByRunId: {
         providesTags: (result: GetApiV2ManualTestRunsByRunIdApiResponse | undefined, _error, arg: GetApiV2ManualTestRunsByRunIdApiArg) =>
@@ -403,4 +420,8 @@ export const {
   usePatchApiV2ManualTestRunsByRunIdExecutorMutation,
   usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
   usePostApiV2ManualTestRunsByRunIdCompleteMutation,
+  useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery,
+  usePostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesMutation,
+  usePatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation,
+  useDeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation,
 } = extendedApi;

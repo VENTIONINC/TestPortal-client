@@ -22,6 +22,7 @@ export const addTagTypes = [
   "Exports",
   "Test Scenarios",
   "Manual Test Runs",
+  "Manual Run Environment Profiles",
 ] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
@@ -1295,6 +1296,49 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Manual Test Runs"],
       }),
+      getApiV2ProjectsByProjectIdManualRunEnvironmentProfiles: build.query<
+        GetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesApiResponse,
+        GetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/manual-run-environment-profiles`,
+        }),
+        providesTags: ["Manual Run Environment Profiles"],
+      }),
+      postApiV2ProjectsByProjectIdManualRunEnvironmentProfiles: build.mutation<
+        PostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesApiResponse,
+        PostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/manual-run-environment-profiles`,
+          method: "POST",
+          body: queryArg.manualRunEnvironmentProfileCreateRequest,
+        }),
+        invalidatesTags: ["Manual Run Environment Profiles"],
+      }),
+      patchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileId:
+        build.mutation<
+          PatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdApiResponse,
+          PatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdApiArg
+        >({
+          query: (queryArg) => ({
+            url: `/api/v2/projects/${queryArg.projectId}/manual-run-environment-profiles/${queryArg.profileId}`,
+            method: "PATCH",
+            body: queryArg.manualRunEnvironmentProfileUpdateRequest,
+          }),
+          invalidatesTags: ["Manual Run Environment Profiles"],
+        }),
+      deleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileId:
+        build.mutation<
+          DeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdApiResponse,
+          DeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdApiArg
+        >({
+          query: (queryArg) => ({
+            url: `/api/v2/projects/${queryArg.projectId}/manual-run-environment-profiles/${queryArg.profileId}`,
+            method: "DELETE",
+          }),
+          invalidatesTags: ["Manual Run Environment Profiles"],
+        }),
     }),
     overrideExisting: false,
   });
@@ -1890,7 +1934,7 @@ export type GetApiV2TestScenarioFoldersApiResponse =
     _count: {
       scenarios: number;
     };
-    children: TestScenarioFolder[];
+    children: any[];
   }[];
 export type GetApiV2TestScenarioFoldersApiArg = {
   projectId: string;
@@ -2164,6 +2208,32 @@ export type PostApiV2ManualTestRunsByRunIdCompleteApiArg = {
   projectId: string;
   manualTestRunCompleteRequest: ManualTestRunCompleteRequest;
 };
+export type GetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesApiResponse =
+  /** status 200 Owned profiles in the project */ ManualRunEnvironmentProfile[];
+export type GetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesApiArg = {
+  projectId: string;
+};
+export type PostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesApiResponse =
+  /** status 201 Created profile */ ManualRunEnvironmentProfile;
+export type PostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesApiArg = {
+  projectId: string;
+  manualRunEnvironmentProfileCreateRequest: ManualRunEnvironmentProfileCreateRequest;
+};
+export type PatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdApiResponse =
+  /** status 200 Updated profile */ ManualRunEnvironmentProfile;
+export type PatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdApiArg =
+  {
+    projectId: string;
+    profileId: string;
+    manualRunEnvironmentProfileUpdateRequest: ManualRunEnvironmentProfileUpdateRequest;
+  };
+export type DeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdApiResponse =
+  unknown;
+export type DeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdApiArg =
+  {
+    projectId: string;
+    profileId: string;
+  };
 export type StatusResponse = {
   status: string;
   version: string;
@@ -3122,6 +3192,12 @@ export type ManualTestRun = {
   executedBy: ManualTestRunExecutor;
   status: ManualTestRunStatus;
   notes: string | null;
+  browser: string | null;
+  operatingSystem: string | null;
+  device: string | null;
+  apiEnvironment: string | null;
+  build: string | null;
+  deployment: string | null;
 };
 export type ManualTestRunStepStatus =
   | "not_started"
@@ -3165,16 +3241,35 @@ export type ManualTestRunRead = {
   expectedResult: string | null;
   scenarioNotes: string | null;
   notes: string | null;
+  browser: string | null;
+  operatingSystem: string | null;
+  device: string | null;
+  apiEnvironment: string | null;
+  build: string | null;
+  deployment: string | null;
   steps: ManualTestRunStepRead[];
 };
 export type ManualTestRunStartRequest = {
   notes?: string | null;
   runKey?: string | null;
+  environmentProfileId?: string;
+  browser?: string | null;
+  operatingSystem?: string | null;
+  device?: string | null;
+  apiEnvironment?: string | null;
+  build?: string | null;
+  deployment?: string | null;
 };
 export type ManualTestRunSummary = {
   /** Editable nonunique label; UUIDs remain entity identifiers */
   runKey: string | null;
   executedBy: ManualTestRunExecutor;
+  browser: string | null;
+  operatingSystem: string | null;
+  device: string | null;
+  apiEnvironment: string | null;
+  build: string | null;
+  deployment: string | null;
   status: ManualTestRunStatus;
 };
 export type ManualTestRunSummaryRead = {
@@ -3189,6 +3284,12 @@ export type ManualTestRunSummaryRead = {
   executedById: string | null;
   executedBy: ManualTestRunExecutor;
   title: string;
+  browser: string | null;
+  operatingSystem: string | null;
+  device: string | null;
+  apiEnvironment: string | null;
+  build: string | null;
+  deployment: string | null;
   status: ManualTestRunStatus;
   startedAt: string;
   completedAt: string | null;
@@ -3223,6 +3324,32 @@ export type ManualTestRunStepUpdateRequest = {
 export type ManualTestRunCompleteRequest = {
   status: "passed" | "failed" | "blocked" | "skipped";
   notes?: string | null;
+};
+export type ManualRunEnvironmentProfile = {
+  id: string;
+  projectId: string;
+  ownerId: string;
+  name: string;
+  browser: string | null;
+  operatingSystem: string | null;
+  device: string | null;
+  apiEnvironment: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+export type ManualRunEnvironmentProfileCreateRequest = {
+  name: string;
+  browser?: string | null;
+  operatingSystem?: string | null;
+  device?: string | null;
+  apiEnvironment?: string | null;
+};
+export type ManualRunEnvironmentProfileUpdateRequest = {
+  name?: string;
+  browser?: string | null;
+  operatingSystem?: string | null;
+  device?: string | null;
+  apiEnvironment?: string | null;
 };
 export const {
   useGetApiV2StatusQuery,
@@ -3370,4 +3497,9 @@ export const {
   usePatchApiV2ManualTestRunsByRunIdExecutorMutation,
   usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
   usePostApiV2ManualTestRunsByRunIdCompleteMutation,
+  useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery,
+  useLazyGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery,
+  usePostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesMutation,
+  usePatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation,
+  useDeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation,
 } = injectedRtkApi;

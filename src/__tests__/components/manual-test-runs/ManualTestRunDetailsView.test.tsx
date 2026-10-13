@@ -62,6 +62,12 @@ const runFor = (overrides: Partial<ManualTestRunRead> = {}): ManualTestRunRead =
   expectedResult: 'Order is created',
   scenarioNotes: 'Author note',
   notes: null,
+  browser: null,
+  operatingSystem: null,
+  device: null,
+  apiEnvironment: null,
+  build: null,
+  deployment: null,
   steps: [
     {
       id: 'step-1',
@@ -126,6 +132,19 @@ beforeEach(() => {
   });
 
 describe('ManualTestRunDetailsView', () => {
+  it('shows the saved environment snapshot and an explicit empty state', () => {
+    const rendered = renderView(runFor({ browser: 'Chrome 129', apiEnvironment: 'Staging', build: 'build-42' }));
+
+    expect(screen.getByRole('heading', { name: 'Environment' })).toBeInTheDocument();
+    expect(screen.getByText('Chrome 129')).toBeInTheDocument();
+    expect(screen.getByText('Staging')).toBeInTheDocument();
+    expect(screen.getByText('build-42')).toBeInTheDocument();
+    expect(screen.queryByText('No environment was recorded for this run.')).not.toBeInTheDocument();
+
+    rendered.rerender(getView(runFor()));
+    expect(screen.getByText('No environment was recorded for this run.')).toBeInTheDocument();
+  });
+
   it('allows any active user to reassign a completed run without unlocking execution fields', async () => {
     const completedRun = runFor({
       status: 'passed',
@@ -359,7 +378,7 @@ describe('ManualTestRunDetailsView', () => {
     await user.click(screen.getByRole('button', { name: 'Complete run' }));
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Final outcome' }), 'passed');
-    await user.click(screen.getByRole('button', { name: 'Complete run' }));
+    await user.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Complete run' }));
 
     expect(completeRun).toHaveBeenCalledWith({
       projectId: 'project-1',

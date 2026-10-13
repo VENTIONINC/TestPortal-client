@@ -31,6 +31,12 @@ const run: ManualTestRunSummaryRead = {
   executedById: null,
   executedBy: null,
   title: 'Deleted source snapshot',
+  browser: null,
+  operatingSystem: null,
+  device: null,
+  apiEnvironment: null,
+  build: null,
+  deployment: null,
   status: 'in_progress',
   startedAt: '2026-09-18T10:00:00.000Z',
   completedAt: null,
@@ -78,6 +84,7 @@ describe('ManualTestRunHistoryView', () => {
     expect(screen.getByRole('columnheader', { name: 'Run key' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Scenario key' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Source' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Environment' })).toBeInTheDocument();
     const headers = screen.getAllByRole('columnheader').map((header) => header.textContent);
     expect(headers.indexOf('Run key')).toBe(0);
     expect(headers.indexOf('Title')).toBe(1);
@@ -86,6 +93,7 @@ describe('ManualTestRunHistoryView', () => {
     expect(within(row.cells[1]).getByRole('link', { name: 'Deleted source snapshot' })).toBeInTheDocument();
     expect(row.cells[3]).toHaveTextContent('N/A');
     expect(within(row.cells[4]).getByText('Source deleted')).toBeInTheDocument();
+    expect(row.cells[8]).toHaveTextContent('No environment');
     expect(screen.getByText('Source deleted')).toBeInTheDocument();
     expect(screen.getByText('Executor unavailable')).toBeInTheDocument();
     expect(screen.getAllByText('Not available')).toHaveLength(1);
@@ -94,6 +102,18 @@ describe('ManualTestRunHistoryView', () => {
 
     await user.click(screen.getByRole('button', { name: 'Next Page' }));
     expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
+  it('summarizes the recorded environment in history rows', () => {
+    renderView({
+      data: {
+        runs: [{ ...run, browser: 'Chrome 129', operatingSystem: 'macOS 15', apiEnvironment: 'Staging', build: 'build-42' }],
+        total: 1, page: 1, limit: 30, totalPages: 1,
+      },
+    });
+
+    const row = screen.getByTestId<HTMLTableRowElement>('manual-test-run-run-1');
+    expect(row.cells[8]).toHaveTextContent('Chrome 129 · macOS 15 · Staging · build-42');
   });
 
   it('shows the project key filter and applies it explicitly', async () => {

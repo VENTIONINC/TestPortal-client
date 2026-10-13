@@ -20,6 +20,14 @@ const TABLE_CELL_PADDING = { px: 4, py: 4 } as const;
 const HISTORY_DESCRIPTION = 'Review saved run snapshots, resume active runs, and inspect completed results.';
 const formatDate = (timestamp: string | null) => (timestamp ? new Date(timestamp).toLocaleString('en-US') : 'Not available');
 const formatStatus = (status: string) => status.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+const getEnvironmentSummary = (run: ManualTestRunSummaryRead) => [
+  run.browser,
+  run.operatingSystem,
+  run.device,
+  run.apiEnvironment,
+  run.build,
+  run.deployment,
+].filter((value): value is string => Boolean(value)).join(' · ') || 'No environment';
 const statusVisuals: Record<ManualTestRunStatus, { Icon: IconType; color: string }> = {
   in_progress: { Icon: LuClock3, color: 'status.info.icon' },
   passed: { Icon: LuCheck, color: 'status.success.icon' },
@@ -67,9 +75,9 @@ const LoadingState = () => (
   <VStack align="stretch" gap={4} aria-label="Loading Manual Test Runs">
     <Text color="text.secondary">Loading Manual Test Runs...</Text>
     <Box overflowX="auto">
-      <Table.Root size="sm" variant="outline" minW="1150px">
-        <Table.Header><Table.Row>{['Run key', 'Title', 'Status', 'Scenario key', 'Source', 'Executor', 'Started', 'Completed', ''].map((label) => <Table.ColumnHeader key={label} {...TABLE_CELL_PADDING}>{label}</Table.ColumnHeader>)}</Table.Row></Table.Header>
-        <Table.Body>{[1, 2, 3].map((index) => <Table.Row key={index}>{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((cell) => <Table.Cell key={cell} {...TABLE_CELL_PADDING}><Skeleton h="5" loading={true} /></Table.Cell>)}</Table.Row>)}</Table.Body>
+      <Table.Root size="sm" variant="outline" minW="1300px">
+        <Table.Header><Table.Row>{['Run key', 'Title', 'Status', 'Scenario key', 'Source', 'Executor', 'Started', 'Completed', 'Environment', ''].map((label) => <Table.ColumnHeader key={label} {...TABLE_CELL_PADDING}>{label}</Table.ColumnHeader>)}</Table.Row></Table.Header>
+        <Table.Body>{[1, 2, 3].map((index) => <Table.Row key={index}>{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((cell) => <Table.Cell key={cell} {...TABLE_CELL_PADDING}><Skeleton h="5" loading={true} /></Table.Cell>)}</Table.Row>)}</Table.Body>
       </Table.Root>
     </Box>
   </VStack>
@@ -137,8 +145,8 @@ const Filters = ({
 
 const RunTable = ({ runs, onSourceHistory, currentUserId }: { currentUserId?: string | null; runs: ManualTestRunSummaryRead[]; onSourceHistory: ManualTestRunHistoryViewProps['onSourceHistory'] }) => (
   <Box overflowX="auto">
-    <Table.Root size="sm" variant="outline" minW="1150px">
-      <Table.Header><Table.Row><Table.ColumnHeader {...TABLE_CELL_PADDING}>Run key</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Status</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Scenario key</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Source</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Executor</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Started</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Completed</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING} /></Table.Row></Table.Header>
+    <Table.Root size="sm" variant="outline" minW="1300px">
+      <Table.Header><Table.Row><Table.ColumnHeader {...TABLE_CELL_PADDING}>Run key</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Title</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Status</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Scenario key</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Source</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Executor</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Started</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Completed</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING}>Environment</Table.ColumnHeader><Table.ColumnHeader {...TABLE_CELL_PADDING} /></Table.Row></Table.Header>
       <Table.Body>
         {runs.map((run) => (
           <Table.Row key={run.id} data-testid={`manual-test-run-${run.id}`}>
@@ -150,6 +158,7 @@ const RunTable = ({ runs, onSourceHistory, currentUserId }: { currentUserId?: st
             <Table.Cell {...TABLE_CELL_PADDING}>{run.executedBy?.name ?? 'Executor unavailable'}</Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary">{formatDate(run.startedAt)}</Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING} color="text.secondary">{formatDate(run.completedAt)}</Table.Cell>
+            <Table.Cell {...TABLE_CELL_PADDING} maxW="280px" overflowWrap="anywhere" color="text.secondary">{getEnvironmentSummary(run)}</Table.Cell>
             <Table.Cell {...TABLE_CELL_PADDING} textAlign="end" w="1%"><RouterLink to={getManualTestRunPath(run.id)} state={{ from: 'manual-test-run-history' }}>{run.status === 'in_progress' && currentUserId && run.executedById === currentUserId ? 'Resume' : 'View'}</RouterLink></Table.Cell>
           </Table.Row>
         ))}

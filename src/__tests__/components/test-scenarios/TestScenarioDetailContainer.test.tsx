@@ -55,8 +55,14 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
 });
 vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
-
-  return { ...actual, usePostApiV2TestScenariosByScenarioIdManualRunsMutation: vi.fn() };
+  return {
+    ...actual,
+    usePostApiV2TestScenariosByScenarioIdManualRunsMutation: vi.fn(),
+    useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery: vi.fn(() => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() })),
+    usePostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
+    usePatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
+    useDeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
+  };
 });
 
 const mockedGetScenario = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);

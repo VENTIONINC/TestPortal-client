@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { useNavigate } from 'react-router';
 
-import { RunKeyStartDialog } from '@/components/manual-test-runs/components';
+import { RunKeyStartDialog, type ManualTestRunStartValues } from '@/components/manual-test-runs/components';
 import { toaster } from '@/components/ui';
 import { usePostApiV2TestScenariosByScenarioIdManualRunsMutation } from '@/redux/apis/extendedApi';
 import { PATHS } from '@/types/paths';
@@ -83,7 +83,7 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
     setIsRetryConfirmationRequired(false);
   };
 
-  const handleStartManualRun = async (runKey?: string) => {
+  const handleStartManualRun = async ({ runKey, environment }: ManualTestRunStartValues) => {
     if (startInFlight.current || !detail.scenario) return;
 
     startInFlight.current = true;
@@ -95,7 +95,7 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
       const run = await startManualRun({
         scenarioId,
         projectId,
-        manualTestRunStartRequest: runKey ? { runKey } : {},
+        manualTestRunStartRequest: { ...(runKey ? { runKey } : {}), ...environment },
       }).unwrap();
 
       if (!isCurrentScope()) return;
@@ -137,6 +137,7 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
         )}
       </TestScenarioDetailStateView>
       <RunKeyStartDialog
+        projectId={projectId}
         isOpen={isStartDialogOpen}
         context="start"
         value={runKeyDraft}

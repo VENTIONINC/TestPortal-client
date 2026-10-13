@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { useLocation, useNavigate } from 'react-router';
 
-import { RunKeyStartDialog } from '@/components/manual-test-runs/components';
+import { RunKeyStartDialog, type ManualTestRunStartValues } from '@/components/manual-test-runs/components';
 import { toaster } from '@/components/ui';
 import {
   useLazyGetApiV2UsersQuery,
@@ -121,7 +121,7 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
     setIsRetryConfirmationRequired(false);
   }, []);
 
-  const handleRetest = useCallback(async (runKey?: string) => {
+  const handleRetest = useCallback(async ({ runKey, environment }: ManualTestRunStartValues) => {
     const historicalRun = detail.run;
     const sourceScenarioId = historicalRun?.testScenarioId;
     if (!historicalRun || !sourceScenarioId || historicalRun.status === 'in_progress' || retestInFlight.current) return;
@@ -135,7 +135,7 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
       const run = await startManualRun({
         scenarioId: sourceScenarioId,
         projectId,
-        manualTestRunStartRequest: runKey ? { runKey } : {},
+        manualTestRunStartRequest: { ...(runKey ? { runKey } : {}), ...environment },
       }).unwrap();
       if (!isCurrentScope()) return;
       setIsRetestDialogOpen(false);
@@ -202,6 +202,7 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
       )}
     </ManualTestRunDetailStateView>
     <RunKeyStartDialog
+      projectId={projectId}
       isOpen={isRetestDialogOpen}
       context="retest"
       value={runKeyDraft}
