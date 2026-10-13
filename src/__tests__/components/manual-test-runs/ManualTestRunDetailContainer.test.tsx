@@ -42,6 +42,12 @@ const run: ManualTestRunRead = {
   expectedResult: null,
   scenarioNotes: null,
   notes: null,
+  browser: null,
+  operatingSystem: null,
+  device: null,
+  apiEnvironment: null,
+  build: null,
+  deployment: null,
   steps: [],
 };
 
@@ -59,6 +65,10 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     useLazyGetApiV2UsersQuery: vi.fn(),
     usePatchApiV2ManualTestRunsByRunIdExecutorMutation: vi.fn(),
     usePostApiV2TestScenariosByScenarioIdManualRunsMutation: vi.fn(),
+    useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery: vi.fn(() => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() })),
+    usePostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
+    usePatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
+    useDeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
   };
 });
 vi.mock('@/components/manual-test-runs/hooks/useManualTestRunExecution', () => ({

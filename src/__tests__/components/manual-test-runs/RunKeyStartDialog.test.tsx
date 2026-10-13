@@ -3,10 +3,29 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunKeyStartDialog } from '@/components/manual-test-runs/components/RunKeyStartDialog';
 import { ChakraProvider } from '@/components/ui';
+
+const profileApi = vi.hoisted(() => ({
+  profiles: [] as Array<{ id: string; projectId: string; ownerId: string; name: string; browser: string | null; operatingSystem: string | null; device: string | null; apiEnvironment: string | null; createdAt: string; updatedAt: string }>,
+  create: vi.fn(),
+  update: vi.fn(),
+  remove: vi.fn(),
+  refetch: vi.fn(),
+}));
+
+vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
+  return {
+    ...actual,
+    useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery: vi.fn(() => ({ data: profileApi.profiles, isLoading: false, isError: false, refetch: profileApi.refetch })),
+    usePostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesMutation: vi.fn(() => [profileApi.create, { isLoading: false }]),
+    usePatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [profileApi.update, { isLoading: false }]),
+    useDeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [profileApi.remove, { isLoading: false }]),
+  };
+});
 
 const renderDialog = (props: Partial<React.ComponentProps<typeof RunKeyStartDialog>> = {}) => {
   const onCancel = vi.fn();
@@ -16,6 +35,7 @@ const renderDialog = (props: Partial<React.ComponentProps<typeof RunKeyStartDial
   const view = render(
     <ChakraProvider>
       <RunKeyStartDialog
+        projectId="project-1"
         isOpen
         context="start"
         value=""
@@ -32,6 +52,14 @@ const renderDialog = (props: Partial<React.ComponentProps<typeof RunKeyStartDial
 };
 
 describe('RunKeyStartDialog', () => {
+  beforeEach(() => {
+    profileApi.profiles = [];
+    profileApi.create.mockReset();
+    profileApi.update.mockReset();
+    profileApi.remove.mockReset();
+    profileApi.refetch.mockReset();
+  });
+
   it('opens with an empty optional key input and shows Retest context', () => {
     renderDialog({ context: 'retest' });
 
@@ -48,7 +76,7 @@ describe('RunKeyStartDialog', () => {
     const user = userEvent.setup();
     const { onSubmit, unmount } = renderDialog({ value: '  RUN-1  ' });
     await user.click(screen.getByRole('button', { name: 'Start run' }));
-    expect(onSubmit).toHaveBeenCalledWith('RUN-1');
+    expect(onSubmit).toHaveBeenCalledWith({ runKey: 'RUN-1', environment: {} });
     unmount();
 
     const invalid = renderDialog({ value: 'RUN\n1' });
@@ -63,7 +91,68 @@ describe('RunKeyStartDialog', () => {
     const { onSubmit } = renderDialog({ value: '  \t ' });
 
     await user.click(screen.getByRole('button', { name: 'Start run' }));
-    expect(onSubmit).toHaveBeenCalledWith(undefined);
+    expect(onSubmit).toHaveBeenCalledWith({ runKey: undefined, environment: {} });
+  });
+
+  it('applies a saved profile and submits per-run environment values', async () => {
+    const user = userEvent.setup();
+    profileApi.profiles = [{
+      id: 'profile-1', projectId: 'project-1', ownerId: 'user-1', name: 'Chrome staging',
+      browser: 'Chrome 129', operatingSystem: 'macOS 15', device: 'Desktop', apiEnvironment: 'Staging',
+      createdAt: '', updatedAt: '',
+    }];
+    const { onSubmit } = renderDialog();
+
+    await user.click(screen.getByRole('button', { name: /Environment \(optional\)/ }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Saved profile (optional)' }), 'profile-1');
+    expect(screen.getByRole('textbox', { name: 'Browser and version' })).toHaveValue('Chrome 129');
+    expect(screen.getByRole('textbox', { name: 'API environment' })).toHaveValue('Staging');
+    await user.clear(screen.getByRole('textbox', { name: 'Browser and version' }));
+    await user.type(screen.getByRole('textbox', { name: 'Build' }), 'build-42');
+    await user.click(screen.getByRole('button', { name: 'Start run' }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      runKey: undefined,
+      environment: {
+        environmentProfileId: 'profile-1',
+        browser: null,
+        operatingSystem: 'macOS 15',
+        device: 'Desktop',
+        apiEnvironment: 'Staging',
+        build: 'build-42',
+        deployment: null,
+      },
+    });
+  });
+
+  it('creates, updates, and deletes personal project profiles', async () => {
+    const user = userEvent.setup();
+    const profile = {
+      id: 'profile-1', projectId: 'project-1', ownerId: 'user-1', name: 'Chrome staging',
+      browser: 'Chrome 129', operatingSystem: null, device: null, apiEnvironment: 'Staging', createdAt: '', updatedAt: '',
+    };
+    profileApi.create.mockReturnValue({ unwrap: () => Promise.resolve(profile) });
+    profileApi.update.mockReturnValue({ unwrap: () => Promise.resolve({ ...profile, name: 'Chrome staging updated' }) });
+    profileApi.remove.mockReturnValue({ unwrap: () => Promise.resolve(undefined) });
+    profileApi.profiles = [profile];
+    renderDialog();
+
+    await user.click(screen.getByRole('button', { name: /Environment \(optional\)/ }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Saved profile (optional)' }), 'profile-1');
+    await user.click(screen.getByRole('button', { name: 'Save as new profile' }));
+    expect(profileApi.create).toHaveBeenCalledWith({
+      projectId: 'project-1',
+      manualRunEnvironmentProfileCreateRequest: {
+        name: 'Chrome staging', browser: 'Chrome 129', operatingSystem: null, device: null, apiEnvironment: 'Staging',
+      },
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Update selected profile' }));
+    expect(profileApi.update).toHaveBeenCalledWith(expect.objectContaining({ projectId: 'project-1', profileId: 'profile-1' }));
+
+    await user.click(screen.getByRole('button', { name: 'Delete selected profile' }));
+    await user.click(screen.getByRole('button', { name: 'Delete profile' }));
+    expect(profileApi.remove).toHaveBeenCalledWith({ projectId: 'project-1', profileId: 'profile-1' });
   });
 
   it('requires explicit confirmation before retrying an uncertain start', async () => {

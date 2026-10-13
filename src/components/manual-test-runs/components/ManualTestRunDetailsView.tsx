@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Box, Button, Heading, HStack, Icon, Text, VStack } from '@chakra-ui/react';
+import { Alert, Box, Button, Grid, Heading, HStack, Icon, Text, VStack } from '@chakra-ui/react';
 import { FiArrowLeft, FiEdit2 } from 'react-icons/fi';
 import { LuBan, LuCheck, LuCircleHelp, LuCircleX, LuSkipForward } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
@@ -28,6 +28,14 @@ const snapshotFields = [
   ['Test data', 'testData'],
   ['Expected result', 'expectedResult'],
   ['Scenario notes', 'scenarioNotes'],
+] as const;
+const environmentFields = [
+  ['Browser', 'browser'],
+  ['Operating system', 'operatingSystem'],
+  ['Device', 'device'],
+  ['API environment', 'apiEnvironment'],
+  ['Build', 'build'],
+  ['Deployment', 'deployment'],
 ] as const;
 
 const stepStatusVisuals: Record<ManualTestRunStepStatus, { Icon: IconType; color: string; label: string }> = {
@@ -351,6 +359,24 @@ export const ManualTestRunDetailsView = ({
           )}
         </HStack>
       </HStack>
+
+      <Box as="section" aria-labelledby="manual-test-run-environment-heading" p={{ base: 4, md: 5 }} borderWidth="1px" borderColor="border.subtle" borderRadius="md">
+        <VStack align="stretch" gap={3}>
+          <Heading id="manual-test-run-environment-heading" size="md">Environment</Heading>
+          {environmentFields.some(([, key]) => execution.savedRun[key]) ? (
+            <Grid templateColumns={{ base: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }} gap={3}>
+              {environmentFields.filter(([, key]) => execution.savedRun[key]).map(([label, key]) => (
+                <HStack key={key} align="start" gap={2}>
+                  <Text fontWeight="semibold" color="text.main">{label}:</Text>
+                  <Text color="text.secondary" overflowWrap="anywhere">{execution.savedRun[key]}</Text>
+                </HStack>
+              ))}
+            </Grid>
+          ) : (
+            <Text color="text.secondary">No environment was recorded for this run.</Text>
+          )}
+        </VStack>
+      </Box>
 
       {isExecutorEditorOpen && (
         <Box id="manual-test-run-executor-editor" as="section" aria-labelledby="manual-test-run-executor-heading" p={{ base: 4, md: 5 }} borderWidth="1px" borderColor="border.subtle" borderRadius="md">

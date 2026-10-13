@@ -25,11 +25,19 @@ describe('Manual Test Run API integration', () => {
       extendedApi.endpoints.postApiV2TestScenariosByScenarioIdManualRuns.initiate({
         scenarioId: 'scenario-1',
         projectId: 'project-1',
-        manualTestRunStartRequest: {},
+        manualTestRunStartRequest: {
+          environmentProfileId: 'profile-1',
+          browser: 'Chrome 129',
+          operatingSystem: null,
+          build: 'build-42',
+        },
       }),
     );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(await (fetchMock.mock.calls[0][0] as Request).json()).toEqual({
+      environmentProfileId: 'profile-1', browser: 'Chrome 129', operatingSystem: null, build: 'build-42',
+    });
   });
 
   it('serializes the selected project and run identity on detail retrieval', async () => {
@@ -47,6 +55,52 @@ describe('Manual Test Run API integration', () => {
     const url = new URL(request.url);
     expect(url.pathname).toBe('/api/v2/manual-test-runs/run-1');
     expect(url.searchParams.get('projectId')).toBe('project-1');
+  });
+
+  it('scopes environment profile CRUD and cache refreshes to the selected project', async () => {
+    const profile = {
+      id: 'profile-1', projectId: 'project-1', ownerId: 'user-1', name: 'Chrome staging',
+      browser: 'Chrome 129', operatingSystem: null, device: null, apiEnvironment: 'Staging',
+      createdAt: '2026-10-09T10:00:00.000Z', updatedAt: '2026-10-09T10:00:00.000Z',
+    };
+    const counts = new Map<string, number>();
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const request = input as Request;
+      const url = new URL(request.url);
+      const key = `${request.method}:${url.pathname}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+      if (request.method === 'DELETE') return new Response(null, { status: 204 });
+      return new Response(JSON.stringify(request.method === 'GET' ? [profile] : profile), {
+        headers: { 'content-type': 'application/json' },
+      });
+    });
+
+    const projectOneProfiles = store.dispatch(extendedApi.endpoints.getApiV2ProjectsByProjectIdManualRunEnvironmentProfiles.initiate({ projectId: 'project-1' }));
+    const projectTwoProfiles = store.dispatch(extendedApi.endpoints.getApiV2ProjectsByProjectIdManualRunEnvironmentProfiles.initiate({ projectId: 'project-2' }));
+    await Promise.all([projectOneProfiles, projectTwoProfiles]);
+    await store.dispatch(extendedApi.endpoints.postApiV2ProjectsByProjectIdManualRunEnvironmentProfiles.initiate({
+      projectId: 'project-1',
+      manualRunEnvironmentProfileCreateRequest: { name: 'Chrome staging', browser: 'Chrome 129', apiEnvironment: 'Staging' },
+    }));
+    await vi.waitFor(() => expect(counts.get('GET:/api/v2/projects/project-1/manual-run-environment-profiles')).toBeGreaterThanOrEqual(2));
+    expect(counts.get('GET:/api/v2/projects/project-2/manual-run-environment-profiles')).toBe(1);
+
+    await store.dispatch(extendedApi.endpoints.patchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileId.initiate({
+      projectId: 'project-1', profileId: 'profile-1',
+      manualRunEnvironmentProfileUpdateRequest: { name: 'Chrome staging updated' },
+    }));
+    await vi.waitFor(() => expect(counts.get('GET:/api/v2/projects/project-1/manual-run-environment-profiles')).toBeGreaterThanOrEqual(3));
+    await store.dispatch(extendedApi.endpoints.deleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileId.initiate({ projectId: 'project-1', profileId: 'profile-1' }));
+    await vi.waitFor(() => expect(counts.get('GET:/api/v2/projects/project-1/manual-run-environment-profiles')).toBeGreaterThanOrEqual(4));
+
+    const createRequest = fetchMock.mock.calls.find(([input]) => {
+      const request = input as Request;
+      return request.method === 'POST';
+    })?.[0] as Request;
+    expect(new URL(createRequest.url).pathname).toBe('/api/v2/projects/project-1/manual-run-environment-profiles');
+    expect(await createRequest.json()).toEqual({ name: 'Chrome staging', browser: 'Chrome 129', apiEnvironment: 'Staging' });
+    projectOneProfiles.unsubscribe();
+    projectTwoProfiles.unsubscribe();
   });
 
   it('loads the authenticated active-user directory', async () => {
