@@ -8,6 +8,7 @@ export { useConfirmIssueDeletionDialog } from './confirm-issue-deteletion';
 export { useConfirmResultDeletionDialog } from './confirm-result-deletion';
 export { useCreateProjectDialog } from './create-project';
 export { useDeleteProjectDialog } from './delete-project';
+export { DeleteTestScenarioDialog, useDeleteTestScenarioDialog } from './delete-test-scenario';
 export { useGenerateApiKeyDialog } from './generate-api-key';
 export { useResultAnalysisDialog } from './result-analysis';
 export { useResultsAnalysisExportDialog } from './analysis-export';

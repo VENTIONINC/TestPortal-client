@@ -13,6 +13,8 @@ describe('NavigationMenu', () => {
     ['Dashboard', '/dashboard'],
     ['Results', '/results'],
     ['Issues', '/issues'],
+    ['Test Scenarios', '/test-scenarios'],
+    ['Manual Test Runs', '/manual-test-runs'],
     ['Prompts', '/prompts'],
     ['Skills', '/skills'],
     ['Settings', '/settings'],
@@ -26,5 +28,17 @@ describe('NavigationMenu', () => {
     );
 
     expect(screen.getByRole('link', { name: label })).toHaveAttribute('href', path);
+  });
+
+  it('marks Test Scenarios active on its route', () => {
+    render(
+      <ChakraProvider>
+        <MemoryRouter initialEntries={['/test-scenarios']}>
+          <NavigationMenu collapsed={false} />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Test Scenarios' })).toHaveAttribute('aria-current', 'page');
   });
 });

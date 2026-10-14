@@ -56,6 +56,7 @@ import {
 } from './assignIssueModalState';
 import { useAssignIssueModal } from './useAssignIssueModal';
 import { SourceSnippet } from './sourceSnippet';
+import { ResultRelatedScenarios } from './ResultRelatedScenarios';
 
 export interface AssignIssueModalProps extends DefaultDialogProps {
   resultErrorId: string;
@@ -169,7 +170,7 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssum
               >
                 <Flex h="full" minH={0}>
                   <Box flex="1" minW={0} minH={0}>
-                    <ContextTabs context={context} />
+                    <ContextTabs context={context} projectId={projectId} />
                   </Box>
                   {!isContextOnly && (
                     <Flex
@@ -424,23 +425,22 @@ const ContextLoading = ({ isError, onRetry }: { isError: boolean; onRetry: () =>
   </VStack>
 );
 
-const ContextTabs = ({ context }: { context: NonNullable<ReturnType<typeof useAssignIssueModal>['context']> }) => {
+export const ContextTabs = ({
+  context,
+  projectId,
+}: {
+  context: NonNullable<ReturnType<typeof useAssignIssueModal>['context']>;
+  projectId: string;
+}) => {
   const hasLogs = context.error.logs.length > 0;
   const hasSnippet = Boolean(context.error.sourceSnippet);
   const hasTestCase = Boolean(context.error.generatedTestCase?.trim());
-  const hasOptionalTabs = hasLogs || hasSnippet || hasTestCase;
-
-  if (!hasOptionalTabs) {
-    return (
-      <Box h="full" minH={0} p={{ base: 4, md: 6 }} overflow="hidden">
-        <ErrorContext context={context} />
-      </Box>
-    );
-  }
+  const [activeTab, setActiveTab] = useState('error');
 
   return (
     <Tabs.Root
-      defaultValue="error"
+      value={activeTab}
+      onValueChange={(details) => setActiveTab(details.value)}
       orientation="vertical"
       display="grid"
       gridTemplateColumns="56px minmax(0, 1fr)"
@@ -461,6 +461,7 @@ const ContextTabs = ({ context }: { context: NonNullable<ReturnType<typeof useAs
       >
         <ContextTab value="error" icon={<LuFileText />} label="Error" />
         {hasLogs && <ContextTab value="logs" icon={<LuScrollText />} label="Logs" />}
+        <ContextTab value="test-scenarios" icon={<LuTestTube />} label="Test Scenarios" />
         {hasSnippet && <ContextTab value="snippet" icon={<LuFileCode2 />} label="Snippet" />}
         {hasTestCase && <ContextTab value="test-case" icon={<LuTestTube />} label="Test Case" />}
       </Tabs.List>
@@ -473,6 +474,13 @@ const ContextTabs = ({ context }: { context: NonNullable<ReturnType<typeof useAs
             <CodeSection title="Logs" value={context.error.logs.join('\n')} h="full" />
           </Tabs.Content>
         )}
+        <Tabs.Content value="test-scenarios" aria-label="Test Scenarios" h="full" minH={0} overflow="hidden">
+          <ResultRelatedScenarios
+            resultId={String(context.result.id)}
+            projectId={projectId}
+            isActive={activeTab === 'test-scenarios'}
+          />
+        </Tabs.Content>
         {hasSnippet && context.error.sourceSnippet && (
           <Tabs.Content value="snippet" aria-label="Snippet" p={{ base: 4, md: 6 }}>
             <SourceSnippet snippet={context.error.sourceSnippet} />

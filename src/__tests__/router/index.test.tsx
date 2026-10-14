@@ -1,0 +1,78 @@
+// Copyright 2026 VENSOLUTIONSGROUP LTD
+// SPDX-License-Identifier: Apache-2.0
+
+import { isValidElement, type ReactElement } from 'react';
+import { describe, expect, it } from 'vitest';
+
+import { ProjectGuard, ProtectedRoute } from '@/components';
+import { ManualTestRunHistoryPage, ManualTestRunPage, TestScenarioCreatePage, TestScenarioDetailPage, TestScenarioEditPage, TestScenariosPage } from '@/pages';
+import { router } from '@/router';
+import { PATHS } from '@/types/paths';
+
+describe('Test Scenarios route', () => {
+  it('registers the catalog page behind authentication and project guards', () => {
+    const route = router.routes.find((candidate) => candidate.path === PATHS.TEST_SCENARIOS) as
+      | { element?: ReactElement; path?: string }
+      | undefined;
+
+    expect(route).toBeDefined();
+    expect(isValidElement(route?.element)).toBe(true);
+
+    const protectedElement = route?.element as ReactElement<{ children: ReactElement }>;
+    expect(protectedElement.type).toBe(ProtectedRoute);
+    expect(isValidElement(protectedElement.props.children)).toBe(true);
+
+    const projectGuardElement = protectedElement.props.children as ReactElement<{ children: ReactElement }>;
+    expect(projectGuardElement.type).toBe(ProjectGuard);
+    expect(projectGuardElement.props.children.type).toBe(TestScenariosPage);
+  });
+
+  it('registers the manual test run page behind authentication and project guards', () => {
+    const route = router.routes.find((candidate) => candidate.path === PATHS.MANUAL_TEST_RUN_DETAILS) as
+      | { element?: ReactElement; path?: string }
+      | undefined;
+
+    expect(route).toBeDefined();
+    const protectedElement = route?.element as ReactElement<{ children: ReactElement }>;
+    expect(protectedElement.type).toBe(ProtectedRoute);
+    const projectGuardElement = protectedElement.props.children as ReactElement<{ children: ReactElement }>;
+    expect(projectGuardElement.type).toBe(ProjectGuard);
+    expect(projectGuardElement.props.children.type).toBe(ManualTestRunPage);
+  });
+
+  it.each([
+    [PATHS.MANUAL_TEST_RUNS, ManualTestRunHistoryPage],
+    [PATHS.TEST_SCENARIO_MANUAL_RUNS, ManualTestRunHistoryPage],
+  ])('registers history route %s behind authentication and project guards', (path, Page) => {
+    const route = router.routes.find((candidate) => candidate.path === path) as
+      | { element?: ReactElement; path?: string }
+      | undefined;
+
+    expect(route).toBeDefined();
+    const protectedElement = route?.element as ReactElement<{ children: ReactElement }>;
+    expect(protectedElement.type).toBe(ProtectedRoute);
+    const projectGuardElement = protectedElement.props.children as ReactElement<{ children: ReactElement }>;
+    expect(projectGuardElement.type).toBe(ProjectGuard);
+    expect(projectGuardElement.props.children.type).toBe(Page);
+  });
+
+  it.each([
+    [PATHS.TEST_SCENARIO_NEW, TestScenarioCreatePage],
+    [PATHS.TEST_SCENARIO_DETAILS, TestScenarioDetailPage],
+    [PATHS.TEST_SCENARIO_EDIT, TestScenarioEditPage],
+  ])('registers %s behind authentication and project guards', (path, Page) => {
+    const route = router.routes.find((candidate) => candidate.path === path) as
+      | { element?: ReactElement; path?: string }
+      | undefined;
+
+    expect(route).toBeDefined();
+    expect(isValidElement(route?.element)).toBe(true);
+
+    const protectedElement = route?.element as ReactElement<{ children: ReactElement }>;
+    expect(protectedElement.type).toBe(ProtectedRoute);
+
+    const projectGuardElement = protectedElement.props.children as ReactElement<{ children: ReactElement }>;
+    expect(projectGuardElement.type).toBe(ProjectGuard);
+    expect(projectGuardElement.props.children.type).toBe(Page);
+  });
+});
