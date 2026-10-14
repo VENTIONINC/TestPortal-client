@@ -1,8 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { memo, useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from 'react';
-import { Box, Button, Collapsible, Grid, Heading, HStack, IconButton, Input, Link as ChakraLink, Menu, Table, Text, Textarea, VStack } from '@chakra-ui/react';
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from 'react';
+import { Box, Button, Collapsible, Grid, Heading, HStack, IconButton, Input, Link as ChakraLink, Menu, Portal, Table, Text, Textarea, VStack } from '@chakra-ui/react';
 import { FiArrowDown, FiArrowUp, FiChevronsUp, FiChevronDown, FiChevronRight, FiEdit, FiFolder, FiLayers, FiMoreHorizontal, FiPlus, FiSearch, FiTrash2, FiX } from 'react-icons/fi';
 import { Link as RouterLink } from 'react-router';
 
@@ -109,17 +109,42 @@ const ScenarioColumnHeader = ({
   // even while the request leaves the default sort parameters out.
   const activeSort = sort === field || (!sort && field === 'createdAt');
   const activeDirection = sortDirection;
+  const filterRef = useRef<HTMLDetailsElement>(null);
+  const filterInputRef = useRef<HTMLInputElement>(null);
+  const [filterPosition, setFilterPosition] = useState<{ top: number; left: number } | null>(null);
+  useLayoutEffect(() => {
+    if (openFilter !== field || !filterRef.current) return;
+    const updatePosition = () => {
+      const anchor = filterRef.current?.querySelector('summary')?.getBoundingClientRect();
+      if (!anchor) return;
+      const width = 260;
+      setFilterPosition({
+        top: Math.min(anchor.bottom + 6, window.innerHeight - 170),
+        left: Math.max(8, Math.min(anchor.left, window.innerWidth - width - 8)),
+      });
+    };
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [field, filterValue, openFilter]);
+  useEffect(() => {
+    if (openFilter === field && filterPosition) filterInputRef.current?.focus();
+  }, [field, filterPosition, openFilter]);
   return (
     <HStack gap={1} minW={0} justify="flex-start" flexWrap="nowrap">
       <Button size="xs" variant="ghost" px={1} minW={0} flex="1" h="auto" whiteSpace="nowrap" textAlign="start" justifyContent="flex-start" aria-label={`Sort by ${label}${activeSort ? ` ${activeDirection === 'asc' ? 'ascending' : 'descending'}` : ''}`} onClick={() => onSortChange(field)}>
         <Text as="span" overflow="hidden" textOverflow="ellipsis">{label}</Text>{activeSort ? (activeDirection === 'asc' ? <FiArrowUp aria-hidden="true" /> : <FiArrowDown aria-hidden="true" />) : <FiChevronsUp aria-hidden="true" />}
       </Button>
-      {onFilterChange && <details data-filter-field={field} open={openFilter === field} onToggle={(event) => onFilterDisclosureChange(event.currentTarget.open ? field : null)} style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
+      {onFilterChange && <details ref={filterRef} data-filter-field={field} open={openFilter === field} onToggle={(event) => onFilterDisclosureChange(event.currentTarget.open ? field : null)} style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
         <Box as="summary" role="button" aria-label={`Filter by ${label}${filterValue ? ', filter active' : ''}`} aria-pressed={Boolean(filterValue)} display="inline-flex" alignItems="center" justifyContent="center" listStyleType="none" cursor="pointer" borderRadius="md" w="24px" h="24px" color={filterValue ? 'blue.600' : 'text.muted'} bg={filterValue ? 'blue.subtle' : undefined} _hover={{ bg: 'bg.subtle', color: 'text.main' }}><FiSearch aria-hidden="true" /></Box>
-        <VStack align="stretch" gap={2} position="absolute" zIndex="popover" top="calc(100% + 6px)" insetStart="0" p={3} w="260px" bg="bg.panel" borderWidth="1px" borderColor="border.main" borderRadius="md" boxShadow="lg" fontWeight="normal">
-          <Box><Text fontSize="sm" fontWeight="semibold">Search {label}</Text><Text fontSize="xs" color="text.muted">Match text anywhere in this column</Text></Box>
+        {openFilter === field && filterPosition && <Portal><VStack data-filter-panel={field} align="stretch" gap={2} position="fixed" zIndex="popover" top={`${filterPosition.top}px`} left={`${filterPosition.left}px`} p={3} w="260px" bg="bg.panel" borderWidth="1px" borderColor="border.main" borderRadius="md" boxShadow="lg" fontWeight="normal">
+          <Box><Text fontSize="sm" fontWeight="medium">Search {label}</Text><Text fontSize="xs" color="text.muted">Match text anywhere in this column</Text></Box>
           <HStack>
-            <Input size="sm" aria-label={`${label} filter`} placeholder={`Search ${label.toLowerCase()}`} value={filterValue ?? ''} onChange={(event) => onFilterChange(event.currentTarget.value)} onKeyDown={(event) => {
+            <Input ref={filterInputRef} size="sm" aria-label={`${label} filter`} placeholder={`Search ${label.toLowerCase()}`} value={filterValue ?? ''} onChange={(event) => onFilterChange(event.currentTarget.value)} onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === 'Escape') {
                 event.preventDefault();
                 event.stopPropagation();
@@ -128,7 +153,7 @@ const ScenarioColumnHeader = ({
             }} autoFocus />
             {filterValue && <IconButton size="sm" variant="ghost" aria-label={`Clear ${label} filter`} onClick={() => onFilterChange('')}><FiX /></IconButton>}
           </HStack>
-        </VStack>
+        </VStack></Portal>}
       </details>}
     </HStack>
   );
@@ -497,7 +522,12 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     if (!openFilter) return;
     const handleOutsidePointerDown = (event: PointerEvent) => {
       const filterElement = document.querySelector(`[data-filter-field="${openFilter}"]`);
-      if (filterElement && !filterElement.contains(event.target as Node)) setOpenFilter(null);
+      const filterPanel = document.querySelector(`[data-filter-panel="${openFilter}"]`);
+      if (
+        filterElement &&
+        !filterElement.contains(event.target as Node) &&
+        !filterPanel?.contains(event.target as Node)
+      ) setOpenFilter(null);
     };
     document.addEventListener('pointerdown', handleOutsidePointerDown);
     return () => document.removeEventListener('pointerdown', handleOutsidePointerDown);
