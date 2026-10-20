@@ -140,6 +140,7 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
         projectId={projectId}
         isOpen={isStartDialogOpen}
         context="start"
+        scenarioStepCount={detail.scenario?.steps.length}
         value={runKeyDraft}
         error={startError}
         isUncertain={startUncertain}

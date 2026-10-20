@@ -58,6 +58,7 @@ export interface RunKeyStartDialogProps {
   projectId: string;
   isOpen: boolean;
   context: 'start' | 'retest';
+  scenarioStepCount?: number;
   value: string;
   error?: string;
   isUncertain?: boolean;
@@ -73,6 +74,7 @@ export const RunKeyStartDialog = ({
   projectId,
   isOpen,
   context,
+  scenarioStepCount,
   value,
   error,
   isUncertain = false,
@@ -240,7 +242,7 @@ export const RunKeyStartDialog = ({
           <Text color="text.secondary">
             {context === 'retest'
               ? 'This starts a new run using the current saved scenario content and steps. It does not change this historical run.'
-              : 'Start a new run from the current saved scenario content and steps.'}
+              : `Start a new run from the current saved scenario snapshot${scenarioStepCount === undefined ? '' : `, including ${scenarioStepCount} ${scenarioStepCount === 1 ? 'step' : 'steps'}`}. Later changes to the scenario will not affect this run.`}
           </Text>
           {error && (
             <Alert.Root status={isUncertain ? 'warning' : 'error'} role="alert">
