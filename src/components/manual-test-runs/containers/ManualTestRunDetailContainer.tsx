@@ -187,6 +187,7 @@ export const ManualTestRunDetailContainer = ({ projectId, runId }: ManualTestRun
           run={run}
           setPersistedRun={detail.setPersistedRun}
           refetch={detail.refetch}
+          backHref={location.state?.from === 'manual-test-run-history' ? PATHS.MANUAL_TEST_RUNS : PATHS.TEST_SCENARIOS}
           onBack={goToScenarios}
           onRetest={openRetestDialog}
           isRetesting={isRetesting}

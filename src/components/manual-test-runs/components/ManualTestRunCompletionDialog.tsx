@@ -5,18 +5,22 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, Text } from '@chakra-ui/react';
 
 import { Dialog, DialogBody, DialogFooter, NativeSelect } from '@/components/ui';
+import type { ManualTestRunStepRead } from '@/redux/apis/generatedApi';
 
+import { getManualTestRunProgressCounts } from '../utils';
 import { MANUAL_TEST_RUN_OUTCOMES, type ManualTestRunOutcome } from '../types';
 
 const outcomeLabel = (outcome: ManualTestRunOutcome) => outcome[0].toUpperCase() + outcome.slice(1);
 
 export interface ManualTestRunCompletionDialogProps {
+  steps?: ManualTestRunStepRead[];
   isPassedEligible: boolean;
   onCancel: () => void;
   onConfirm: (outcome: ManualTestRunOutcome) => void | Promise<void>;
 }
 
 export const ManualTestRunCompletionDialog = ({
+  steps = [],
   isPassedEligible,
   onCancel,
   onConfirm,
@@ -27,6 +31,7 @@ export const ManualTestRunCompletionDialog = ({
     setOutcome('');
   }, []);
 
+  const counts = getManualTestRunProgressCounts(steps);
   const isPassed = outcome === 'passed';
 
   return (
@@ -37,9 +42,21 @@ export const ManualTestRunCompletionDialog = ({
           <Alert.Indicator />
           <Alert.Content>
             <Alert.Title>This result is immutable</Alert.Title>
-            <Alert.Description>After completion, the run cannot be edited or reopened.</Alert.Description>
+            <Alert.Description>
+              After completion, step results and execution notes are read-only. The Run key and Executor can still be
+              changed.
+            </Alert.Description>
           </Alert.Content>
         </Alert.Root>
+        <Text color="text.secondary">
+          Saved results: {counts.passed} passed, {counts.failed} failed, {counts.blocked} blocked, {counts.skipped}{' '}
+          skipped · {counts.submitted} of {counts.total} steps submitted
+        </Text>
+        {!isPassedEligible && !isPassed && (
+          <Text fontSize="sm" color="text.secondary">
+            Passed requires every step to be passed or skipped, with at least one passed step.
+          </Text>
+        )}
         <NativeSelect
           name="completion-outcome"
           label="Final outcome"
@@ -53,13 +70,17 @@ export const ManualTestRunCompletionDialog = ({
             <Alert.Indicator />
             <Alert.Content>
               <Alert.Title>Passed completion is not eligible</Alert.Title>
-              <Alert.Description>Every step must be passed or skipped, with at least one passed step. Other outcomes remain available.</Alert.Description>
+              <Alert.Description>
+                Every step must be passed or skipped, with at least one passed step. Other outcomes remain available.
+              </Alert.Description>
             </Alert.Content>
           </Alert.Root>
         )}
       </DialogBody>
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
         <Button
           type="button"
           onClick={() => {

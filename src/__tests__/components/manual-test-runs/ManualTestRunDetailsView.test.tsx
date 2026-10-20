@@ -17,8 +17,9 @@ import {
 } from '@/redux/apis/extendedApi';
 
 vi.mock('react-redux', async (importOriginal) => ({
-  ...await importOriginal<typeof import('react-redux')>(),
-  useSelector: (selector: (state: unknown) => unknown) => selector({ auth: { accessToken: `header.${btoa(JSON.stringify({ userId: 'user-1' }))}.signature` } }),
+  ...(await importOriginal<typeof import('react-redux')>()),
+  useSelector: (selector: (state: unknown) => unknown) =>
+    selector({ auth: { accessToken: `header.${btoa(JSON.stringify({ userId: 'user-1' }))}.signature` } }),
 }));
 
 const patchRun = vi.fn();
@@ -88,48 +89,55 @@ const getView = (
   refetch = vi.fn().mockResolvedValue(run),
   options: { onRetest?: () => void; onViewSourceHistory?: () => void } = {},
 ) => (
-    <ChakraProvider>
-      <MemoryRouter>
-        <ManualTestRunDetailsView
-          projectId="project-1"
-          runId="run-1"
-          run={run}
-          setPersistedRun={setPersistedRun}
-          refetch={refetch}
-          onBack={vi.fn()}
-          onRetest={options.onRetest}
-          activeUsers={[
-            { id: 'user-1', name: 'Current User', email: 'current@example.com' },
-            { id: 'user-2', name: 'Next User', email: 'next@example.com' },
-          ]}
-          isLoadingActiveUsers={false}
-          isActiveUsersError={false}
-          onLoadActiveUsers={vi.fn()}
-          onRetryActiveUsers={refetchUsers}
-          isReassigningExecutor={false}
-          onReassignExecutor={reassignExecutor}
-          onViewSourceHistory={options.onViewSourceHistory}
-        />
-      </MemoryRouter>
-    </ChakraProvider>
-  );
+  <ChakraProvider>
+    <MemoryRouter>
+      <ManualTestRunDetailsView
+        projectId="project-1"
+        runId="run-1"
+        run={run}
+        setPersistedRun={setPersistedRun}
+        refetch={refetch}
+        onBack={vi.fn()}
+        onRetest={options.onRetest}
+        activeUsers={[
+          { id: 'user-1', name: 'Current User', email: 'current@example.com' },
+          { id: 'user-2', name: 'Next User', email: 'next@example.com' },
+        ]}
+        isLoadingActiveUsers={false}
+        isActiveUsersError={false}
+        onLoadActiveUsers={vi.fn()}
+        onRetryActiveUsers={refetchUsers}
+        isReassigningExecutor={false}
+        onReassignExecutor={reassignExecutor}
+        onViewSourceHistory={options.onViewSourceHistory}
+      />
+    </MemoryRouter>
+  </ChakraProvider>
+);
 const renderView = (
   run = runFor(),
   setPersistedRun = vi.fn(),
   refetch = vi.fn().mockResolvedValue(run),
   options: { onRetest?: () => void; onViewSourceHistory?: () => void } = {},
-) => render(getView(run, setPersistedRun, refetch, options));
+) => {
+  const view = render(getView(run, setPersistedRun, refetch, options));
+  const editor = screen.queryByRole('button', { name: 'Edit Run key' });
+  if (editor) fireEvent.click(editor);
+  const context = screen.getByText('Scenario context & environment').closest('details');
+  context?.setAttribute('open', '');
+  return view;
+};
 
 beforeEach(() => {
   patchRun.mockReset();
   reassignExecutor.mockReset();
   refetchUsers.mockReset();
-    patchStep.mockReset();
-    completeRun.mockReset();
+  patchStep.mockReset();
+  completeRun.mockReset();
   mockedPatchRun.mockReturnValue([patchRun, { isLoading: false }] as never);
-    mockedPatchStep.mockReturnValue([patchStep, { isLoading: false }] as never);
-    mockedCompleteRun.mockReturnValue([completeRun, { isLoading: false }] as never);
-  });
+  mockedPatchStep.mockReturnValue([patchStep, { isLoading: false }] as never);
+  mockedCompleteRun.mockReturnValue([completeRun, { isLoading: false }] as never);
+});
 
 describe('ManualTestRunDetailsView', () => {
   it('shows the saved environment snapshot and an explicit empty state', () => {
@@ -189,8 +197,10 @@ describe('ManualTestRunDetailsView', () => {
     expect(screen.getByText('Snapshot details')).toBeInTheDocument();
     expect(screen.getByText('Complete checkout')).toBeInTheDocument();
     expect(screen.getByText('Author note')).toBeInTheDocument();
-    expect(screen.getByText('Run key: N/A')).toBeInTheDocument();
-    expect(within(screen.getByText('Source scenario key at start').parentElement!).getByText('N/A')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Edit Run key' })).toHaveValue('');
+    expect(
+      within(screen.getByText('Source scenario key at start').parentElement!).getByText('N/A'),
+    ).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Execution notes' })).toBeInTheDocument();
     expect(screen.getByText('Submit checkout')).toBeInTheDocument();
     expect(screen.getByText('Executor unavailable')).toBeInTheDocument();
@@ -200,7 +210,7 @@ describe('ManualTestRunDetailsView', () => {
   it('renders persisted run labels from the historical response after the source is deleted', () => {
     renderView(runFor({ runKey: 'RUN-7', sourceScenarioKey: 'R1', testScenarioId: null }));
 
-    expect(screen.getByText('Run key: RUN-7')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Edit Run key' })).toHaveValue('RUN-7');
     expect(screen.getByText('Source scenario key at start')).toBeInTheDocument();
     expect(screen.getByText('R1')).toBeInTheDocument();
     expect(screen.getByText('Source deleted')).toBeInTheDocument();
@@ -214,33 +224,42 @@ describe('ManualTestRunDetailsView', () => {
     await user.type(screen.getByRole('textbox', { name: 'Execution notes' }), 'unsaved execution draft');
     const input = screen.getByRole('textbox', { name: 'Edit Run key' });
     expect(input).toHaveValue('RUN-1');
-    expect(screen.queryByRole('button', { name: 'Discard Run key' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     fireEvent.change(input, { target: { value: '  RUN-2  ' } });
-    expect(screen.getByRole('button', { name: 'Discard Run key' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Save Run key' }));
 
-    await waitFor(() => expect(patchRun).toHaveBeenCalledWith({
-      projectId: 'project-1',
-      runId: 'run-1',
-      manualTestRunUpdateRequest: { runKey: 'RUN-2' },
-    }));
+    await waitFor(() =>
+      expect(patchRun).toHaveBeenCalledWith({
+        projectId: 'project-1',
+        runId: 'run-1',
+        manualTestRunUpdateRequest: { runKey: 'RUN-2' },
+      }),
+    );
     expect(screen.getByText('Run key: RUN-2')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveValue('unsaved execution draft');
   });
 
   it('allows completed-run key edits while execution controls stay frozen', async () => {
     const user = userEvent.setup();
-    patchRun.mockReturnValue({ unwrap: () => Promise.resolve(runFor({
-      runKey: 'RUN-COMPLETE-2',
-      status: 'passed',
-      completedAt: '2026-09-17T11:00:00.000Z',
-    })) });
+    patchRun.mockReturnValue({
+      unwrap: () =>
+        Promise.resolve(
+          runFor({
+            runKey: 'RUN-COMPLETE-2',
+            status: 'passed',
+            completedAt: '2026-09-17T11:00:00.000Z',
+          }),
+        ),
+    });
 
-    renderView(runFor({
-      runKey: 'RUN-COMPLETE-1',
-      status: 'passed',
-      completedAt: '2026-09-17T11:00:00.000Z',
-    }));
+    renderView(
+      runFor({
+        runKey: 'RUN-COMPLETE-1',
+        status: 'passed',
+        completedAt: '2026-09-17T11:00:00.000Z',
+      }),
+    );
     expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveAttribute('readonly');
     expect(screen.queryByRole('button', { name: 'Complete run' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Edit Run key' })).not.toHaveAttribute('readonly');
@@ -248,42 +267,62 @@ describe('ManualTestRunDetailsView', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: 'RUN-COMPLETE-2' } });
     await user.click(screen.getByRole('button', { name: 'Save Run key' }));
 
-    await waitFor(() => expect(patchRun).toHaveBeenCalledWith({
-      projectId: 'project-1',
-      runId: 'run-1',
-      manualTestRunUpdateRequest: { runKey: 'RUN-COMPLETE-2' },
-    }));
+    await waitFor(() =>
+      expect(patchRun).toHaveBeenCalledWith({
+        projectId: 'project-1',
+        runId: 'run-1',
+        manualTestRunUpdateRequest: { runKey: 'RUN-COMPLETE-2' },
+      }),
+    );
   });
 
   it('retains a failed Run key draft and preserves independent execution drafts on label save', async () => {
     const user = userEvent.setup();
     const onRetest = vi.fn();
     patchRun.mockReturnValue({ unwrap: () => Promise.reject({ status: 503, data: { message: 'Unavailable' } }) });
-    renderView(runFor({ runKey: 'RUN-1', status: 'passed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: 'scenario-live' }), vi.fn(), vi.fn().mockResolvedValue(runFor({ runKey: 'RUN-1' })), { onRetest });
+    renderView(
+      runFor({
+        runKey: 'RUN-1',
+        status: 'passed',
+        completedAt: '2026-09-17T11:00:00.000Z',
+        testScenarioId: 'scenario-live',
+      }),
+      vi.fn(),
+      vi.fn().mockResolvedValue(runFor({ runKey: 'RUN-1' })),
+      { onRetest },
+    );
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: 'RUN-2' } });
     await user.click(screen.getByRole('button', { name: 'Save Run key' }));
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Run key was not saved.'));
     expect(screen.getByRole('textbox', { name: 'Edit Run key' })).toHaveValue('RUN-2');
 
-    await user.click(screen.getByRole('button', { name: 'Discard Run key' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
     await user.click(screen.getByRole('button', { name: 'Retest' }));
     expect(onRetest).toHaveBeenCalledOnce();
   });
 
   it('recovers a Run key conflict from authoritative state without replaying or losing rejected input', async () => {
     const user = userEvent.setup();
-    const authoritative = runFor({ runKey: 'RUN-AUTHORITATIVE', status: 'passed', completedAt: '2026-09-17T11:00:00.000Z' });
+    const authoritative = runFor({
+      runKey: 'RUN-AUTHORITATIVE',
+      status: 'passed',
+      completedAt: '2026-09-17T11:00:00.000Z',
+    });
     const refetch = vi.fn().mockResolvedValue(authoritative);
     patchRun.mockReturnValue({ unwrap: () => Promise.reject({ status: 409, data: { error: 'run key changed' } }) });
-    renderView(runFor({ runKey: 'RUN-OLD', status: 'passed', completedAt: '2026-09-17T11:00:00.000Z' }), vi.fn(), refetch);
+    renderView(
+      runFor({ runKey: 'RUN-OLD', status: 'passed', completedAt: '2026-09-17T11:00:00.000Z' }),
+      vi.fn(),
+      refetch,
+    );
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: 'RUN-REJECTED' } });
     await user.click(screen.getByRole('button', { name: 'Save Run key' }));
 
     expect(refetch).toHaveBeenCalledOnce();
     expect(patchRun).toHaveBeenCalledOnce();
-    expect(screen.getByText('Run key: RUN-AUTHORITATIVE')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Edit Run key' })).toHaveValue('RUN-REJECTED');
     expect(screen.getByRole('textbox', { name: 'Edit Run key' })).toHaveValue('RUN-REJECTED');
     expect(screen.getByRole('alert')).toHaveTextContent('Run key was not saved.');
   });
@@ -300,7 +339,12 @@ describe('ManualTestRunDetailsView', () => {
     expect(completeRun).not.toHaveBeenCalled();
     activeView.unmount();
 
-    const completedView = renderView(runFor({ status: 'passed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: 'scenario-live' }), vi.fn(), undefined, { onRetest });
+    const completedView = renderView(
+      runFor({ status: 'passed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: 'scenario-live' }),
+      vi.fn(),
+      undefined,
+      { onRetest },
+    );
     fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: 'RUN-DRAFT' } });
     await user.click(screen.getByRole('button', { name: 'Retest' }));
     expect(onRetest).not.toHaveBeenCalled();
@@ -319,11 +363,13 @@ describe('ManualTestRunDetailsView', () => {
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Edit Run key' }), { target: { value: '' } });
     await user.click(screen.getByRole('button', { name: 'Save Run key' }));
-    await waitFor(() => expect(patchRun).toHaveBeenCalledWith({
-      projectId: 'project-1',
-      runId: 'run-1',
-      manualTestRunUpdateRequest: { runKey: null },
-    }));
+    await waitFor(() =>
+      expect(patchRun).toHaveBeenCalledWith({
+        projectId: 'project-1',
+        runId: 'run-1',
+        manualTestRunUpdateRequest: { runKey: null },
+      }),
+    );
   });
 
   it.each(['user-2', null])('keeps the Run key view-only when the executor is %s', (executedById) => {
@@ -337,13 +383,16 @@ describe('ManualTestRunDetailsView', () => {
   it('saves only changed execution fields and keeps the run-note endpoint separate from step saves', async () => {
     const user = userEvent.setup();
     const savedRun = runFor({ notes: 'run note' });
-    const savedStepRun = runFor({ notes: 'run note', steps: [{ ...runFor().steps[0], status: 'passed', notes: 'Saved step note' }] });
+    const savedStepRun = runFor({
+      notes: 'run note',
+      steps: [{ ...runFor().steps[0], status: 'passed', notes: 'Saved step note' }],
+    });
     patchRun.mockReturnValue({ unwrap: () => Promise.resolve(savedRun) });
     patchStep.mockReturnValue({ unwrap: () => Promise.resolve(savedStepRun) });
 
     renderView(runFor());
     expect(screen.getByRole('button', { name: 'Save execution notes' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save step result' })).toBeDisabled();
     await user.type(screen.getByRole('textbox', { name: 'Execution notes' }), 'run note');
     await user.click(screen.getByRole('button', { name: 'Save execution notes' }));
 
@@ -354,7 +403,7 @@ describe('ManualTestRunDetailsView', () => {
     });
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'passed');
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Save step result' }));
     expect(patchStep).toHaveBeenCalledWith({
       projectId: 'project-1',
       runId: 'run-1',
@@ -366,7 +415,9 @@ describe('ManualTestRunDetailsView', () => {
   it('requires saved drafts before opening completion and allows zero-step passed completion', async () => {
     const user = userEvent.setup();
     const zeroStepRun = runFor({ steps: [] });
-    completeRun.mockReturnValue({ unwrap: () => Promise.resolve({ ...zeroStepRun, status: 'passed', completedAt: '2026-09-17T11:00:00.000Z' }) });
+    completeRun.mockReturnValue({
+      unwrap: () => Promise.resolve({ ...zeroStepRun, status: 'passed', completedAt: '2026-09-17T11:00:00.000Z' }),
+    });
 
     renderView(zeroStepRun);
     await user.type(screen.getByRole('textbox', { name: 'Execution notes' }), 'draft');
@@ -403,23 +454,26 @@ describe('ManualTestRunDetailsView', () => {
     expect(dialog.querySelector('button:not([disabled])')).not.toBeNull();
   });
 
-  it.each(['failed', 'blocked', 'skipped'] as const)('uses the dedicated completion request for %s', async (outcome) => {
-    const user = userEvent.setup();
-    const completedRun = runFor({ status: outcome, completedAt: '2026-09-17T11:00:00.000Z' });
-    completeRun.mockReturnValue({ unwrap: () => Promise.resolve(completedRun) });
+  it.each(['failed', 'blocked', 'skipped'] as const)(
+    'uses the dedicated completion request for %s',
+    async (outcome) => {
+      const user = userEvent.setup();
+      const completedRun = runFor({ status: outcome, completedAt: '2026-09-17T11:00:00.000Z' });
+      completeRun.mockReturnValue({ unwrap: () => Promise.resolve(completedRun) });
 
-    renderView(runFor());
-    await user.click(screen.getByRole('button', { name: 'Complete run' }));
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Final outcome' }), outcome);
-    await user.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Complete run' }));
+      renderView(runFor());
+      await user.click(screen.getByRole('button', { name: 'Complete run' }));
+      await user.selectOptions(screen.getByRole('combobox', { name: 'Final outcome' }), outcome);
+      await user.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Complete run' }));
 
-    expect(completeRun).toHaveBeenCalledWith({
-      projectId: 'project-1',
-      runId: 'run-1',
-      manualTestRunCompleteRequest: { status: outcome },
-    });
-    expect(patchRun).not.toHaveBeenCalled();
-  });
+      expect(completeRun).toHaveBeenCalledWith({
+        projectId: 'project-1',
+        runId: 'run-1',
+        manualTestRunCompleteRequest: { status: outcome },
+      });
+      expect(patchRun).not.toHaveBeenCalled();
+    },
+  );
 
   it('cancels completion without a request and restores focus to the trigger', async () => {
     const user = userEvent.setup();
@@ -438,8 +492,8 @@ describe('ManualTestRunDetailsView', () => {
 
     expect(screen.queryByRole('button', { name: 'Complete run' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save execution notes' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Submit changes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save step result' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save step result' })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Execution notes' })).toHaveAttribute('readonly');
   });
 
@@ -448,8 +502,16 @@ describe('ManualTestRunDetailsView', () => {
     const onViewSourceHistory = vi.fn();
     const user = userEvent.setup();
 
-    const { unmount } = renderView(runFor({ status: 'passed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: 'scenario-live' }), vi.fn(), undefined, { onRetest, onViewSourceHistory });
-    expect(screen.getByRole('link', { name: 'View current scenario' })).toHaveAttribute('href', '/test-scenarios/scenario-live');
+    const { unmount } = renderView(
+      runFor({ status: 'passed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: 'scenario-live' }),
+      vi.fn(),
+      undefined,
+      { onRetest, onViewSourceHistory },
+    );
+    expect(screen.getByRole('link', { name: 'View current scenario' })).toHaveAttribute(
+      'href',
+      '/test-scenarios/scenario-live',
+    );
     expect(screen.getByText('Retest uses the current scenario')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Retest' }));
     await user.click(screen.getByRole('button', { name: 'View source history' }));
@@ -457,7 +519,12 @@ describe('ManualTestRunDetailsView', () => {
     expect(onViewSourceHistory).toHaveBeenCalledTimes(1);
 
     unmount();
-    renderView(runFor({ status: 'failed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: null }), vi.fn(), undefined, { onRetest });
+    renderView(
+      runFor({ status: 'failed', completedAt: '2026-09-17T11:00:00.000Z', testScenarioId: null }),
+      vi.fn(),
+      undefined,
+      { onRetest },
+    );
     expect(screen.getAllByText('Source deleted')).toHaveLength(2);
     expect(screen.getByRole('button', { name: 'Retest' })).toBeDisabled();
   });
@@ -469,7 +536,7 @@ describe('ManualTestRunDetailsView', () => {
 
     renderView(runFor(), vi.fn(), refetch);
     await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'passed');
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Save step result' }));
 
     expect(refetch).toHaveBeenCalledTimes(1);
     expect(patchStep).toHaveBeenCalledTimes(1);
@@ -483,7 +550,7 @@ describe('ManualTestRunDetailsView', () => {
     patchStep.mockReturnValue({ unwrap: () => Promise.resolve(savedRun) });
 
     renderView();
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save step result' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Discard changes' })).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'passed');
@@ -492,7 +559,7 @@ describe('ManualTestRunDetailsView', () => {
       'Step 1 · Not started · Unsaved changes',
     );
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Save step result' }));
 
     expect(await screen.findByText('Submitted: Passed')).toBeInTheDocument();
     expect(screen.getByText('1 of 1 steps submitted')).toBeInTheDocument();
@@ -506,7 +573,7 @@ describe('ManualTestRunDetailsView', () => {
 
     renderView();
     await user.type(screen.getByRole('textbox', { name: 'Notes for step 1' }), 'Saved note');
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Save step result' }));
 
     expect(await screen.findByText('Saved notes')).toBeInTheDocument();
     expect(screen.queryByText(/Submitted:/)).not.toBeInTheDocument();
@@ -524,9 +591,9 @@ describe('ManualTestRunDetailsView', () => {
 
     renderView();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'passed');
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Save step result' }));
 
-    expect(screen.getByText('Saving')).toBeInTheDocument();
+    expect(screen.getAllByText('Saving…')[0]).toBeInTheDocument();
     resolveResponse(savedRun);
     await waitFor(() => expect(screen.getByText('Submitted: Passed')).toBeInTheDocument());
   });
@@ -536,10 +603,10 @@ describe('ManualTestRunDetailsView', () => {
     const submittedRun = runFor({ steps: [{ ...runFor().steps[0], status: 'passed', notes: 'Saved note' }] });
 
     renderView(submittedRun);
-    expect(screen.getByRole('button', { name: 'Submit changes' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save step result' })).toBeDisabled();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'failed');
 
-    expect(screen.getByRole('button', { name: 'Submit changes' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save step result' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Discard changes' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Step 1 · Passed · Unsaved changes' })).toBeInTheDocument();
     expect(screen.getByText('Passed: 1')).toBeInTheDocument();
@@ -557,7 +624,7 @@ describe('ManualTestRunDetailsView', () => {
 
     renderView();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'failed');
-    await user.click(screen.getByRole('button', { name: 'Submit' }));
+    await user.click(screen.getByRole('button', { name: 'Save step result' }));
 
     expect(await screen.findByText('Not saved')).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Outcome' })).toHaveValue('failed');
@@ -568,10 +635,7 @@ describe('ManualTestRunDetailsView', () => {
   it('focuses the step heading when a progress dot is activated', async () => {
     const user = userEvent.setup();
     const twoStepRun = runFor({
-      steps: [
-        ...runFor().steps,
-        { ...runFor().steps[0], id: 'step-2', position: 1, action: 'Confirm order' },
-      ],
+      steps: [...runFor().steps, { ...runFor().steps[0], id: 'step-2', position: 1, action: 'Confirm order' }],
     });
 
     renderView(twoStepRun);
@@ -584,7 +648,11 @@ describe('ManualTestRunDetailsView', () => {
 
   it('shows authoritative completed state after a 409 while retaining rejected note text for review', async () => {
     const user = userEvent.setup();
-    const completedRun = runFor({ status: 'passed', notes: 'authoritative note', completedAt: '2026-09-17T11:00:00.000Z' });
+    const completedRun = runFor({
+      status: 'passed',
+      notes: 'authoritative note',
+      completedAt: '2026-09-17T11:00:00.000Z',
+    });
     const refetch = vi.fn().mockResolvedValue(completedRun);
     patchRun.mockReturnValue({ unwrap: () => Promise.reject({ status: 409, data: { error: 'run completed' } }) });
 
@@ -611,7 +679,6 @@ describe('ManualTestRunDetailsView', () => {
     expect(screen.getByRole('button', { name: 'Retry refresh' })).toBeInTheDocument();
   });
 });
-
 
 describe('run executor access', () => {
   it.each(['other-user', null])('renders an active run owned by %s as view-only', (executedById) => {
@@ -649,7 +716,9 @@ describe('run executor access', () => {
     reassignExecutor.mockResolvedValue(reassignedRun);
     const view = renderView(originalRun);
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Execution notes' }), { target: { value: 'unsaved local note' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Execution notes' }), {
+      target: { value: 'unsaved local note' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Change Executor' }));
     fireEvent.change(screen.getByRole('combobox', { name: 'Executor' }), { target: { value: 'user-2' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save Executor' }));
@@ -682,10 +751,17 @@ describe('run executor access', () => {
   });
 });
 
-
 it('blocks execution callbacks for a foreign run', async () => {
   const run = runFor({ executedById: 'other-user' });
-  const { result } = renderHook(() => useManualTestRunExecution({ projectId: run.projectId, runId: run.id, run, setPersistedRun: vi.fn(), refetch: vi.fn() }));
+  const { result } = renderHook(() =>
+    useManualTestRunExecution({
+      projectId: run.projectId,
+      runId: run.id,
+      run,
+      setPersistedRun: vi.fn(),
+      refetch: vi.fn(),
+    }),
+  );
   act(() => {
     result.current.setRunNotesDraft('Changed notes');
     result.current.setStepStatus('step-1', 'passed');
@@ -702,4 +778,44 @@ it('blocks execution callbacks for a foreign run', async () => {
   expect(patchRun).not.toHaveBeenCalled();
   expect(patchStep).not.toHaveBeenCalled();
   expect(completeRun).not.toHaveBeenCalled();
+});
+
+it('keeps metadata editing collapsed until requested and places steps before execution notes', () => {
+  render(getView());
+  expect(screen.queryByRole('textbox', { name: 'Edit Run key' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Edit Run key' }));
+  expect(screen.getByRole('textbox', { name: 'Edit Run key' })).toBeInTheDocument();
+  const step = screen.getByRole('heading', { name: 'Step 1' });
+  const notes = screen.getByRole('heading', { name: 'Execution notes' });
+  expect(step.compareDocumentPosition(notes) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
+it('edits the key beside the title and restores focus after cancelling with Escape', async () => {
+  const user = userEvent.setup();
+  render(getView(runFor({ runKey: 'R-1' })));
+  await user.click(screen.getByRole('button', { name: 'Edit Run key' }));
+  const input = screen.getByRole('textbox', { name: 'Edit Run key' });
+  expect(input).toHaveFocus();
+  expect(screen.getByRole('heading', { name: 'Checkout snapshot' }).parentElement?.parentElement).toContainElement(
+    input,
+  );
+  await user.clear(input);
+  await user.type(input, 'Changed{Escape}');
+  expect(screen.queryByRole('textbox', { name: 'Edit Run key' })).not.toBeInTheDocument();
+  expect(screen.getByText('Run key: R-1')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Edit Run key' })).toHaveFocus();
+  expect(patchRun).not.toHaveBeenCalled();
+});
+
+it('saves the inline key with Enter and closes the editor after success', async () => {
+  const user = userEvent.setup();
+  patchRun.mockReturnValue({ unwrap: () => Promise.resolve(runFor({ runKey: 'R-2' })) });
+  render(getView(runFor({ runKey: 'R-1' })));
+  await user.click(screen.getByRole('button', { name: 'Edit Run key' }));
+  const input = screen.getByRole('textbox', { name: 'Edit Run key' });
+  await user.clear(input);
+  await user.type(input, 'R-2{Enter}');
+  await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Edit Run key' })).not.toBeInTheDocument());
+  expect(screen.getByText('Run key: R-2')).toBeInTheDocument();
+  expect(patchRun).toHaveBeenCalledTimes(1);
 });
