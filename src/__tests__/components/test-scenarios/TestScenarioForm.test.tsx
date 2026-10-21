@@ -30,7 +30,8 @@ describe('TestScenarioForm', () => {
   it('renders structured fields and has no editable Markdown source', () => {
     renderForm();
 
-    expect(screen.getByRole('heading', { name: 'Create Test Scenario' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Create Test Scenario' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Scenario fields' })).toBeInTheDocument();
     for (const label of [
       'Scenario key (optional)',
       'Title',

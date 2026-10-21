@@ -556,7 +556,7 @@ export const ManualTestRunDetailsView = ({
           aria-labelledby="manual-test-run-executor-heading"
           p={{ base: 4, md: 5 }}
           borderWidth="1px"
-          borderColor="border.subtle"
+          borderColor="border.main"
           borderRadius="md"
         >
           <VStack align="stretch" gap={3} maxW="560px">

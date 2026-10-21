@@ -84,7 +84,7 @@ describe('ManualTestRunHistoryView', () => {
     expect(screen.getByRole('columnheader', { name: 'Run key' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Scenario key' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Source' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'Environment' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'Environment' })).not.toBeInTheDocument();
     const headers = screen.getAllByRole('columnheader').map((header) => header.textContent);
     expect(headers.indexOf('Run key')).toBe(0);
     expect(headers.indexOf('Title')).toBe(1);
@@ -93,7 +93,6 @@ describe('ManualTestRunHistoryView', () => {
     expect(within(row.cells[1]).getByRole('link', { name: 'Deleted source snapshot' })).toBeInTheDocument();
     expect(row.cells[3]).toHaveTextContent('N/A');
     expect(within(row.cells[4]).getByText('Source deleted')).toBeInTheDocument();
-    expect(row.cells[8]).toHaveTextContent('No environment');
     expect(screen.getByText('Source deleted')).toBeInTheDocument();
     expect(screen.getByText('Executor unavailable')).toBeInTheDocument();
     expect(screen.getAllByText('Not available')).toHaveLength(1);
@@ -104,7 +103,7 @@ describe('ManualTestRunHistoryView', () => {
     expect(onPageChange).toHaveBeenCalledWith(2);
   });
 
-  it('summarizes the recorded environment in history rows', () => {
+  it('does not render environment details in history rows', () => {
     renderView({
       data: {
         runs: [{ ...run, browser: 'Chrome 129', operatingSystem: 'macOS 15', apiEnvironment: 'Staging', build: 'build-42' }],
@@ -112,8 +111,7 @@ describe('ManualTestRunHistoryView', () => {
       },
     });
 
-    const row = screen.getByTestId<HTMLTableRowElement>('manual-test-run-run-1');
-    expect(row.cells[8]).toHaveTextContent('Chrome 129 · macOS 15 · Staging · build-42');
+    expect(screen.queryByText('Chrome 129 · macOS 15 · Staging · build-42')).not.toBeInTheDocument();
   });
 
   it('shows the project key filter and applies it explicitly', async () => {

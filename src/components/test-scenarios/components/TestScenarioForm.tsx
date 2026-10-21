@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Button, Heading, HStack, IconButton, Text, VStack } from '@chakra-ui/react';
+import { Alert, Box, Button, Grid, Heading, HStack, IconButton, Text, VStack } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -226,7 +226,7 @@ export const TestScenarioForm = ({
     <Box
       as="form"
       onSubmit={handleSubmit(handleValidSubmit)}
-      maxW="900px"
+      maxW={isCreate ? undefined : '900px'}
       mx={{ base: 4, md: 6 }}
       my={4}
       p={{ base: 4, md: 6 }}
@@ -235,8 +235,8 @@ export const TestScenarioForm = ({
       shadow="sm"
     >
       <VStack align="stretch" gap={6}>
-        <HStack align="center" gap={2}>
-          {!isCreate && (
+        {!isCreate && (
+          <HStack align="center" gap={2}>
             <IconButton
               type="button"
               aria-label="Return to Test Scenarios"
@@ -248,9 +248,9 @@ export const TestScenarioForm = ({
             >
               <FiArrowLeft size={18} aria-hidden="true" />
             </IconButton>
-          )}
-          <Heading size="lg">{isCreate ? 'Create Test Scenario' : 'Edit Test Scenario'}</Heading>
-        </HStack>
+            <Heading size="lg">Edit Test Scenario</Heading>
+          </HStack>
+        )}
 
         {displayedError && (
           <Alert.Root status="error" role="alert">
@@ -270,44 +270,86 @@ export const TestScenarioForm = ({
           </Alert.Root>
         )}
 
-        <NativeSelect
-          name="scenario-folder"
-          label="Folder"
-          aria-label="Scenario folder"
-          value={folderId ?? ''}
-          onChange={(event) => setFolderId(event.currentTarget.value || null)}
-        >
-            <option value="">Unfiled</option>
-            {folders.map((folder) => <option key={folder.id} value={folder.id}>{'　'.repeat(folder.depth ?? 0)}{folder.name}</option>)}
-        </NativeSelect>
-
-        <Input
-          {...register('scenarioKey')}
-          name="scenarioKey"
-          label="Scenario key (optional)"
-          placeholder="e.g. R1 or AUTH-LOGIN"
-          fieldProps={{ helperText: 'Up to 100 characters. Duplicate keys are allowed.' }}
-          error={errors.scenarioKey?.message}
-        />
-
-        <Input {...register('title')} name="title" label="Title" error={errors.title?.message} />
-
-        {(Object.keys(fieldLabels) as Exclude<TestScenarioEditableField, 'title' | 'scenarioKey'>[]).map((field) => (
-          <Textarea
-            key={field}
-            {...register(field)}
-            name={field}
-            label={fieldLabels[field]}
-            resize="vertical"
-            error={errors[field]?.message}
-          />
-        ))}
+        {isCreate ? (
+          <VStack align="stretch" gap={4}>
+            <Heading size="md" pb={3} borderBottomWidth="1px" borderColor="border.main">
+              Scenario fields
+            </Heading>
+            <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
+              <NativeSelect
+                name="scenario-folder"
+                label="Folder"
+                aria-label="Scenario folder"
+                value={folderId ?? ''}
+                onChange={(event) => setFolderId(event.currentTarget.value || null)}
+              >
+                <option value="">Unfiled</option>
+                {folders.map((folder) => <option key={folder.id} value={folder.id}>{'　'.repeat(folder.depth ?? 0)}{folder.name}</option>)}
+              </NativeSelect>
+              <Input
+                {...register('scenarioKey')}
+                name="scenarioKey"
+                label="Scenario key (optional)"
+                placeholder="e.g. R1 or AUTH-LOGIN"
+                fieldProps={{ helperText: 'Up to 100 characters. Duplicate keys are allowed.' }}
+                error={errors.scenarioKey?.message}
+              />
+              <Box gridColumn={{ base: 'auto', md: '1 / -1' }}>
+                <Input {...register('title')} name="title" label="Title" error={errors.title?.message} />
+              </Box>
+            </Grid>
+            <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
+              {(Object.keys(fieldLabels) as Exclude<TestScenarioEditableField, 'title' | 'scenarioKey'>[]).map((field) => (
+                <Textarea
+                  key={field}
+                  {...register(field)}
+                  name={field}
+                  label={fieldLabels[field]}
+                  resize="vertical"
+                  error={errors[field]?.message}
+                />
+              ))}
+            </Grid>
+          </VStack>
+        ) : (
+          <>
+            <NativeSelect
+              name="scenario-folder"
+              label="Folder"
+              aria-label="Scenario folder"
+              value={folderId ?? ''}
+              onChange={(event) => setFolderId(event.currentTarget.value || null)}
+            >
+              <option value="">Unfiled</option>
+              {folders.map((folder) => <option key={folder.id} value={folder.id}>{'　'.repeat(folder.depth ?? 0)}{folder.name}</option>)}
+            </NativeSelect>
+            <Input
+              {...register('scenarioKey')}
+              name="scenarioKey"
+              label="Scenario key (optional)"
+              placeholder="e.g. R1 or AUTH-LOGIN"
+              fieldProps={{ helperText: 'Up to 100 characters. Duplicate keys are allowed.' }}
+              error={errors.scenarioKey?.message}
+            />
+            <Input {...register('title')} name="title" label="Title" error={errors.title?.message} />
+            {(Object.keys(fieldLabels) as Exclude<TestScenarioEditableField, 'title' | 'scenarioKey'>[]).map((field) => (
+              <Textarea
+                key={field}
+                {...register(field)}
+                name={field}
+                label={fieldLabels[field]}
+                resize="vertical"
+                error={errors[field]?.message}
+              />
+            ))}
+          </>
+        )}
 
         {isCreate && (
-          <VStack align="stretch" gap={4} borderTopWidth="1px" borderColor="border.subtle" pt={5}>
+          <VStack align="stretch" gap={3} pt={5} borderTopWidth="1px" borderColor="border.main">
             <HStack justify="space-between" align="center">
               <VStack align="start" gap={0}>
-                <Heading size="md">Initial steps</Heading>
+                <Heading size="md">Scenario steps ({initialStepDrafts.length})</Heading>
                 <Text color="text.secondary" fontSize="sm">
                   Add optional ordered steps. They are saved atomically with the scenario.
                 </Text>
@@ -320,63 +362,100 @@ export const TestScenarioForm = ({
             {initialStepDrafts.length === 0 ? (
               <Text color="text.muted">No initial steps. You can add them later.</Text>
             ) : (
-              initialStepDrafts.map((step, index) => (
-                <Box key={step.key} p={4} borderWidth="1px" borderColor="border.subtle" borderRadius="md">
-                  <VStack align="stretch" gap={3}>
-                    <HStack justify="space-between" align="center">
-                      <Heading size="sm">Step {index + 1}</Heading>
-                      <HStack gap={1}>
-                        <IconButton
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          aria-label={`Move step ${index + 1} up`}
-                          onClick={() => moveStep(index, -1)}
-                          disabled={pending || index === 0}
+              <VStack as="ol" aria-label="Scenario steps" align="stretch" gap={0} m={0} p={0}>
+                {initialStepDrafts.map((step, index) => (
+                  <Box
+                    as="li"
+                    key={step.key}
+                    listStyle="none"
+                    py={5}
+                    borderTopWidth="1px"
+                    borderColor="border.main"
+                    _last={{ borderBottomWidth: '1px' }}
+                  >
+                    <VStack align="stretch" gap={3}>
+                      <HStack align="center" gap={2}>
+                        <Box
+                          aria-hidden="true"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          flexShrink={0}
+                          w="34px"
+                          h="34px"
+                          borderRadius="full"
+                          bg="bg.active"
+                          borderWidth="1px"
+                          borderColor="border.main"
+                          color="text.active"
+                          fontWeight="semibold"
+                          fontSize="sm"
                         >
-                          <FiChevronUp aria-hidden="true" />
-                        </IconButton>
-                        <IconButton
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          aria-label={`Move step ${index + 1} down`}
-                          onClick={() => moveStep(index, 1)}
-                          disabled={pending || index === initialStepDrafts.length - 1}
-                        >
-                          <FiChevronDown aria-hidden="true" />
-                        </IconButton>
-                        <IconButton
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          aria-label={`Remove step ${index + 1}`}
-                          onClick={() => setInitialStepDrafts((steps) => steps.filter(({ key }) => key !== step.key))}
-                          disabled={pending}
-                        >
-                          <FiTrash2 aria-hidden="true" />
-                        </IconButton>
+                          {index + 1}
+                        </Box>
+                        <HStack gap={0}>
+                          <IconButton
+                            type="button"
+                            size="xs"
+                            variant="ghost"
+                            aria-label={`Move step ${index + 1} up`}
+                            title={`Move step ${index + 1} up`}
+                            onClick={() => moveStep(index, -1)}
+                            disabled={pending || index === 0}
+                          >
+                            <FiChevronUp aria-hidden="true" />
+                          </IconButton>
+                          <IconButton
+                            type="button"
+                            size="xs"
+                            variant="ghost"
+                            aria-label={`Move step ${index + 1} down`}
+                            title={`Move step ${index + 1} down`}
+                            onClick={() => moveStep(index, 1)}
+                            disabled={pending || index === initialStepDrafts.length - 1}
+                          >
+                            <FiChevronDown aria-hidden="true" />
+                          </IconButton>
+                          <IconButton
+                            type="button"
+                            size="xs"
+                            variant="ghost"
+                            aria-label={`Remove step ${index + 1}`}
+                            title={`Remove step ${index + 1}`}
+                            onClick={() => setInitialStepDrafts((steps) => steps.filter(({ key }) => key !== step.key))}
+                            disabled={pending}
+                          >
+                            <FiTrash2 aria-hidden="true" />
+                          </IconButton>
+                        </HStack>
                       </HStack>
-                    </HStack>
-                    <Input
-                      name={`initial-step-${step.key}-action`}
-                      label={`Step ${index + 1} action`}
-                      value={step.action}
-                      onChange={(event) => updateStepDraft(step.key, 'action', event.target.value)}
-                      error={stepErrors[step.key]}
-                      disabled={pending}
-                    />
-                    <Textarea
-                      name={`initial-step-${step.key}-expected-result`}
-                      label={`Step ${index + 1} expected result`}
-                      value={step.expectedResult}
-                      onChange={(event) => updateStepDraft(step.key, 'expectedResult', event.target.value)}
-                      resize="vertical"
-                      disabled={pending}
-                    />
-                  </VStack>
-                </Box>
-              ))
+                      <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 3, md: 6 }}>
+                        <Textarea
+                          name={`initial-step-${step.key}-action`}
+                          label="Action"
+                          aria-label={`Step ${index + 1} action`}
+                          value={step.action}
+                          onChange={(event) => updateStepDraft(step.key, 'action', event.target.value)}
+                          error={stepErrors[step.key]}
+                          resize="vertical"
+                          disabled={pending}
+                          fieldProps={{ labelProps: { fontSize: 'md', fontWeight: 'semibold' } }}
+                        />
+                        <Textarea
+                          name={`initial-step-${step.key}-expected-result`}
+                          label="Expected result"
+                          aria-label={`Step ${index + 1} expected result`}
+                          value={step.expectedResult}
+                          onChange={(event) => updateStepDraft(step.key, 'expectedResult', event.target.value)}
+                          resize="vertical"
+                          disabled={pending}
+                          fieldProps={{ labelProps: { fontSize: 'md', fontWeight: 'semibold' } }}
+                        />
+                      </Grid>
+                    </VStack>
+                  </Box>
+                ))}
+              </VStack>
             )}
           </VStack>
         )}
