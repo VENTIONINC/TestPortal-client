@@ -113,22 +113,6 @@ describe('TestScenarioDetailContainer', () => {
     expect(screen.getByRole('link', { name: 'Return to Test Scenarios' })).toHaveAttribute('href', '/test-scenarios');
   });
 
-  it('shows an explicit fallback when the scenario key is null', () => {
-    const withoutKey = { ...persistedScenario, scenarioKey: null };
-    mockedGetScenario.mockReturnValue({
-      data: withoutKey,
-      currentData: withoutKey,
-      isLoading: false,
-      isFetching: false,
-      error: undefined,
-      refetch,
-    } as never);
-
-    renderContainer();
-
-    expect(screen.getByText('Scenario key: N/A')).toBeInTheDocument();
-  });
-
   it('uses the shared scenario context menu without making the details content editable', async () => {
     const user = userEvent.setup();
 

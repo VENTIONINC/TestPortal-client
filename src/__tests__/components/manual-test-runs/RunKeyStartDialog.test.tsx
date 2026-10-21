@@ -103,11 +103,11 @@ describe('RunKeyStartDialog', () => {
     }];
     const { onSubmit } = renderDialog();
 
-    await user.click(screen.getByRole('button', { name: /Environment \(optional\)/ }));
+    await user.click(screen.getByRole('button', { name: 'Environment Optional' }));
     await user.selectOptions(screen.getByRole('combobox', { name: 'Saved profile (optional)' }), 'profile-1');
-    expect(screen.getByRole('textbox', { name: 'Browser and version' })).toHaveValue('Chrome 129');
+    expect(screen.getByRole('textbox', { name: 'Browser' })).toHaveValue('Chrome 129');
     expect(screen.getByRole('textbox', { name: 'API environment' })).toHaveValue('Staging');
-    await user.clear(screen.getByRole('textbox', { name: 'Browser and version' }));
+    await user.clear(screen.getByRole('textbox', { name: 'Browser' }));
     await user.type(screen.getByRole('textbox', { name: 'Build' }), 'build-42');
     await user.click(screen.getByRole('button', { name: 'Start run' }));
 
@@ -137,8 +137,9 @@ describe('RunKeyStartDialog', () => {
     profileApi.profiles = [profile];
     renderDialog();
 
-    await user.click(screen.getByRole('button', { name: /Environment \(optional\)/ }));
+    await user.click(screen.getByRole('button', { name: 'Environment Optional' }));
     await user.selectOptions(screen.getByRole('combobox', { name: 'Saved profile (optional)' }), 'profile-1');
+    await user.click(screen.getByRole('button', { name: 'Manage profile' }));
     await user.click(screen.getByRole('button', { name: 'Save as new profile' }));
     expect(profileApi.create).toHaveBeenCalledWith({
       projectId: 'project-1',

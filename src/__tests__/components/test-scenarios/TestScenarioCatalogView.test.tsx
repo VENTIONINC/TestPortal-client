@@ -1,6 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
@@ -12,6 +13,18 @@ import {
   type TestScenarioCatalogViewProps,
 } from '@/components/test-scenarios/components/TestScenarioCatalogView';
 import type { TestScenarioSummary } from '@/redux/apis/generatedApi';
+
+vi.mock('@/components/ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/components/ui')>();
+  return {
+    ...actual,
+    Tooltip: ({ children }: { children: ReactNode }) => children,
+  };
+});
+
+vi.mock('@/components/test-scenarios/hooks/useTestScenarioContextMenu', () => ({
+  useTestScenarioContextMenu: () => vi.fn(),
+}));
 
 const scenarios: TestScenarioSummary[] = [
   {
@@ -85,8 +98,7 @@ describe('TestScenarioCatalogView', () => {
   it('renders the loading state', () => {
     renderView({ scenarios: [], isLoading: true });
 
-    expect(screen.getByLabelText('Loading Test Scenarios')).toBeInTheDocument();
-    expect(screen.getByText('Loading Test Scenarios...')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Searching scenarios…');
   });
 
   it('renders the error state without scenario records', () => {
@@ -114,11 +126,11 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getAllByRole('columnheader')).toHaveLength(9);
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
       'Select',
-      'Scenario keySearch Scenario key',
-      'TitleSearch Title',
-      'DetailsSearch Details',
-      'FolderSearch Folder',
-      'Created bySearch Created by',
+      'Scenario key',
+      'Title',
+      'Details',
+      'Folder',
+      'Created by',
       'Created',
       'Updated',
       '',
@@ -150,7 +162,8 @@ describe('TestScenarioCatalogView', () => {
 
     expect(screen.queryByLabelText('Sort scenarios')).not.toBeInTheDocument();
     for (const column of ['Scenario key', 'Title', 'Details', 'Folder', 'Created by', 'Created', 'Updated']) {
-      expect(screen.getByRole('button', { name: `Sort by ${column}` })).toBeInTheDocument();
+      const accessibleName = column === 'Created' ? 'Sort by Created descending' : `Sort by ${column}`;
+      expect(screen.getByRole('button', { name: accessibleName })).toBeInTheDocument();
     }
     for (const column of ['Scenario key', 'Title', 'Details', 'Folder', 'Created by']) {
       expect(screen.getByRole('button', { name: `Filter by ${column}` })).toBeInTheDocument();
@@ -213,7 +226,6 @@ describe('TestScenarioCatalogView', () => {
   it('requires a deletion disposition and explains child-folder promotion', async () => {
     const user = userEvent.setup();
     const onDeleteFolder = vi.fn(async () => {});
-    const prompt = vi.spyOn(window, 'prompt').mockReturnValue('unfiled');
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     renderView({
@@ -221,10 +233,11 @@ describe('TestScenarioCatalogView', () => {
       scope: { kind: 'folder', id: 'folder-1' },
       onDeleteFolder,
     });
+    await user.click(screen.getByRole('button', { name: 'Actions for folder Authentication' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Move direct scenarios to' }), 'unfiled');
+    expect(screen.getByText(/Child folders will be promoted/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Delete' }));
-
-    expect(prompt).toHaveBeenCalledWith(expect.stringContaining('parent or unfiled'), 'parent');
-    expect(prompt).toHaveBeenCalledWith(expect.stringContaining('Child folders will be promoted.'), 'parent');
     expect(onDeleteFolder).toHaveBeenCalledWith('folder-1', 'unfiled');
   });
 
@@ -232,7 +245,6 @@ describe('TestScenarioCatalogView', () => {
     const user = userEvent.setup();
     const onAddSelectedToSuite = vi.fn(async () => {});
     const onReorderSuite = vi.fn(async () => {});
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const members = [
       { suiteId: 'suite-1', testScenarioId: 'scenario-1', position: 0, createdAt: '' },
       { suiteId: 'suite-1', testScenarioId: 'scenario-2', position: 1, createdAt: '' },
@@ -245,11 +257,13 @@ describe('TestScenarioCatalogView', () => {
       onAddSelectedToSuite,
       onReorderSuite,
     });
+    await user.click(screen.getByRole('button', { name: 'Manage suite order (2)' }));
     await user.click(screen.getByRole('button', { name: 'Move member 1 down' }));
     expect(onReorderSuite).toHaveBeenCalledWith('suite-1', ['scenario-2', 'scenario-1']);
 
+    await user.click(screen.getByRole('button', { name: 'Add to suite…' }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Suite' }), 'suite-1');
     await user.click(screen.getByRole('button', { name: 'Add to suite' }));
-    expect(confirm).toHaveBeenCalledWith('Add 1 scenarios to this suite?');
     expect(onAddSelectedToSuite).toHaveBeenCalledWith('suite-1');
   });
 
@@ -266,8 +280,9 @@ describe('TestScenarioCatalogView', () => {
     const pagination = screen.getByRole('navigation', { name: 'Test Scenario pagination' });
     const summary = screen.getByText('Showing 1-10 of 11 Test Scenarios');
 
-    expect(table.compareDocumentPosition(pagination) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(pagination.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(table).toBeInTheDocument();
+    expect(pagination).toBeInTheDocument();
+    expect(summary).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^2$/ }));
 

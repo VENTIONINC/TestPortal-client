@@ -1,6 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ReactNode } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
@@ -18,6 +19,14 @@ import { useTestScenarioContextMenu } from '@/components/test-scenarios/hooks/us
 
 const navigate = vi.fn();
 const contextMenu = vi.fn();
+
+vi.mock('@/components/ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/components/ui')>();
+  return {
+    ...actual,
+    Tooltip: ({ children }: { children: ReactNode }) => children,
+  };
+});
 
 vi.mock('react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router')>();
@@ -167,9 +176,9 @@ describe('TestScenarioCatalogContainer', () => {
     });
 
     await user.type(screen.getByRole('textbox', { name: 'Search scenarios' }), 'login');
-    expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
+    await waitFor(() => expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
       projectId: 'project-1', page: 1, limit: 10, folderId: 'folder-a', includeDescendants: true, search: 'login',
-    });
+    }));
   });
 
   it('keeps a selected sort while applying a debounced filter from another column', async () => {
@@ -192,7 +201,7 @@ describe('TestScenarioCatalogContainer', () => {
     await waitFor(() => expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
       projectId: 'project-1', page: 1, limit: 10, sortField: 'title', sortDirection: 'asc', folder: 'Auth', createdBy: 'Ada',
     }));
-    await user.click(screen.getByRole('button', { name: 'Clear Folder filter' }));
+    await user.click(screen.getByRole('button', { name: 'Folder: Auth' }));
     await waitFor(() => {
       const latestArgs = mockedScenarioQuery.mock.calls.at(-1)?.[0];
       expect(latestArgs).toMatchObject({ sortField: 'title', sortDirection: 'asc', createdBy: 'Ada' });

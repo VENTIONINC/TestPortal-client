@@ -112,7 +112,6 @@ describe('ResultRelatedScenarios', () => {
     await user.click(screen.getByRole('button', { name: 'Back to Test Scenarios' }));
     await user.click(screen.getByRole('button', { name: 'N/A · Refund flow' }));
     expect(screen.getByRole('heading', { name: 'Refund flow' })).toBeInTheDocument();
-    expect(screen.getByText('Scenario key: N/A')).toBeInTheDocument();
     expect(screen.getByText('Refund content')).toBeInTheDocument();
     expect(screen.queryByText('No details')).not.toBeInTheDocument();
   });

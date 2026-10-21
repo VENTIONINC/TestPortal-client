@@ -1,6 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
@@ -14,6 +15,14 @@ import {
   type GetApiV2TestScenariosApiArg,
   type TestScenarioSummary,
 } from '@/redux/apis/generatedApi';
+
+vi.mock('@/components/ui', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/components/ui')>();
+  return {
+    ...actual,
+    Tooltip: ({ children }: { children: ReactNode }) => children,
+  };
+});
 
 vi.mock('@/hooks/useSelectedProject', () => ({
   useSelectedProject: vi.fn(),
@@ -128,6 +137,6 @@ describe('TestScenarioCatalog project boundary', () => {
     expect(screen.queryByText('project-a scenario')).not.toBeInTheDocument();
     expect(screen.queryByText('project-a details')).not.toBeInTheDocument();
     expect(screen.queryByText('project-a creator')).not.toBeInTheDocument();
-    expect(screen.getByText('Loading Test Scenarios...')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Searching scenarios…');
   });
 });
