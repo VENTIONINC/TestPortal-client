@@ -75,11 +75,59 @@ src/schemas/testScenarioSchemas.ts
       },
       "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
     },
+    "s_55e6d0f0548487": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ae69-825d-7e13-bea1-e3c2f13a80df",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_78f64b72f25fda": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0ae68-6545-7961-bbc9-db12cfe07707",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_9110c734229281": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b3d5-5a69-7711-947e-60c320c972ac",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_a29e61c4f16990": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b393-9911-7491-84b2-b68c7e33c057",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_a972d525e4651a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0aeac-8a46-79f0-830d-96c2815b8a3b",
+        "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
     "s_d8deca07c3545f": {
       "agent_id": {
         "tool": "codex",
         "id": "01a07b14-a3e7-7ac3-8666-849964b94011",
         "model": "gpt-6-astra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_f445facb9fdd3c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b36d-a120-7120-ae97-5d9f17de3e26",
+        "model": "gpt-5.6-sol"
       },
       "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
     }
