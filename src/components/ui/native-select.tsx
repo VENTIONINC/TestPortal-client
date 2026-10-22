@@ -11,11 +11,11 @@ export interface NativeSelectProps extends NativeSelectField {
   error?: string;
 }
 
-export const NativeSelect = ({ label, error, ...props }: NativeSelectProps) => {
+export const NativeSelect = ({ label, error, w, minW, maxW, ...props }: NativeSelectProps) => {
   return (
     <Field label={label} errorText={error} invalid={Boolean(error)}>
-      <NativeSelectRoot>
-        <NativeSelectField {...props}></NativeSelectField>
+      <NativeSelectRoot w={w ?? '100%'} minW={minW} maxW={maxW}>
+        <NativeSelectField {...props} w={w ?? '100%'} minW={minW} maxW={maxW}></NativeSelectField>
       </NativeSelectRoot>
     </Field>
   );

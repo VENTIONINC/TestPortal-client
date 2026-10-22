@@ -18,5 +18,7 @@
 
 ## 4. Validation
 
-- [ ] 4.1 Verify the flow manually against the local backend with pending, active admin, and non-admin accounts
+- [x] 4.1 Verify the flow manually against the local backend with pending, active admin, and non-admin accounts
 - [x] 4.2 Run the relevant client checks such as lint and TypeScript validation after implementation
+
+Manual QA confirmed by the user on 2026-09-07.

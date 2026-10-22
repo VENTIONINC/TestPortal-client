@@ -17,6 +17,12 @@ import {
   SkillDetailsPage,
   SkillsPage,
   SignupPage,
+  TestScenarioCreatePage,
+  TestScenarioDetailPage,
+  TestScenarioEditPage,
+  TestScenariosPage,
+  ManualTestRunPage,
+  ManualTestRunHistoryPage,
   UserSettingsPage,
 } from '@/pages';
 import { MCPSettings } from '@/pages/UserSettings/MCPSettings';
@@ -96,6 +102,83 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <ProjectGuard>
           <IssuesPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.TEST_SCENARIOS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <TestScenariosPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.TEST_SCENARIO_MANUAL_RUNS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <ManualTestRunHistoryPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.TEST_SCENARIO_NEW,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <TestScenarioCreatePage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.TEST_SCENARIO_DETAILS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <TestScenarioDetailPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.TEST_SCENARIO_EDIT,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <TestScenarioEditPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.MANUAL_TEST_RUNS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <ManualTestRunHistoryPage />
+        </ProjectGuard>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: PATHS.MANUAL_TEST_RUN_DETAILS,
+    errorElement: <RouterErrorFallback />,
+    element: (
+      <ProtectedRoute>
+        <ProjectGuard>
+          <ManualTestRunPage />
         </ProjectGuard>
       </ProtectedRoute>
     ),
