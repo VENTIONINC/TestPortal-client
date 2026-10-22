@@ -52,7 +52,7 @@ export const TestSuiteAddScenariosDialogContainer = ({ projectId, suite, folderO
       : folderId
         ? { folderId, includeDescendants: true }
         : {}),
-  }), [folderId, page, projectId, search]);
+  }), [folderId, projectId, search]);
   const { currentData, isLoading, isFetching, error } = useGetApiV2TestScenariosQuery(queryArgs);
   const existingIds = useMemo(() => new Set((suite.members ?? []).map((member) => member.testScenarioId)), [suite.members]);
   const matchingScenarios = currentData?.scenarios ?? [];
