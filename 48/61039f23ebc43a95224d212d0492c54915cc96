@@ -25,11 +25,27 @@ src/components/manual-test-runs/hooks/useManualTestRunExecution.ts
   "base_commit_sha": "4861039f23ebc43a95224d212d0492c54915cc96",
   "prompts": {},
   "sessions": {
+    "s_678554852b6dde": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b4f2-a3ec-7b43-b027-7e741d33c193",
+        "model": "unknown"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
     "s_9110c734229281": {
       "agent_id": {
         "tool": "codex",
         "id": "01a0b3d5-5a69-7711-947e-60c320c972ac",
         "model": "gpt-5.6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_ef139ecd33a3e8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0b505-ec9f-7b93-b81e-178d6c0df789",
+        "model": "gpt-5.6-luna"
       },
       "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
     }
