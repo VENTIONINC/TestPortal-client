@@ -1,0 +1,19 @@
+README.md
+  s_cbb368511ef5dd::t_db790b54a5d1aa 42,44-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "196ff1d657d529cd61e520d0ca4971d638de2814",
+  "prompts": {},
+  "sessions": {
+    "s_cbb368511ef5dd": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0c3fb-aa33-7ac0-a12a-2fe6a5f23d89",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
