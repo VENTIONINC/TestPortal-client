@@ -1,7 +1,7 @@
 openspec/changes/show-related-scenarios-in-result-modal/.openspec.yaml
   s_53d82d1b2f45e8::t_d1b9712be27022 1-2
 src/redux/apis/generatedResultDetailApi.ts
-  s_b582d29ea8c85d::t_5145ef88fd742e 1-113
+  s_b582d29ea8c85d::t_5145ef88fd742e 1-113,1-99,100-113
 openspec/changes/show-related-scenarios-in-result-modal/design.md
   s_53d82d1b2f45e8::t_ec137d3cfd5c94 1-44
 openspec/changes/show-related-scenarios-in-result-modal/proposal.md
@@ -21,11 +21,13 @@ scripts/generate-result-detail-api.cjs
 src/__tests__/components/results/assign-issue-modal/AssignIssueModalEvidenceTabs.test.tsx
   s_b582d29ea8c85d::t_60057b4bdd0f6c 1-114
 src/__tests__/components/results/assign-issue-modal/ResultRelatedScenarios.test.tsx
-  s_b582d29ea8c85d::t_fd75d427afffa2 1-182
+  s_b582d29ea8c85d::t_fd75d427afffa2 1-182,1-22,23-29,30-68,70,72,73-78,80,81-151,153-178
+  s_b582d29ea8c85d::t_21403bf0e6e4d4 179-181
 src/components/results/assign-issue-modal/AssignIssueModal.tsx
   s_b582d29ea8c85d::t_fdbc16e9cd9034 59,173,428-434,438,442-443,464,477-483
 src/components/results/assign-issue-modal/ResultRelatedScenarios.tsx
-  s_b582d29ea8c85d::t_a57f644b06e844 1-157
+  s_b582d29ea8c85d::t_a57f644b06e844 1-157,1-112,114-134,135-154
+  s_b582d29ea8c85d::t_ce746cad09261e 155-157
 ---
 {
   "schema_version": "authorship/3.0.0",
