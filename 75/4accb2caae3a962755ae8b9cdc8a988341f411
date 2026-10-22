@@ -75,6 +75,14 @@ src/schemas/testScenarioSchemas.ts
       },
       "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
     },
+    "s_53d82d1b2f45e8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0cef8-c8f2-7741-877a-426b536c8567",
+        "model": "gpt-6-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
     "s_55e6d0f0548487": {
       "agent_id": {
         "tool": "codex",
@@ -112,6 +120,14 @@ src/schemas/testScenarioSchemas.ts
         "tool": "codex",
         "id": "01a0aeac-8a46-79f0-830d-96c2815b8a3b",
         "model": "gpt-5.6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    },
+    "s_b582d29ea8c85d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0d876-8fc8-7811-a196-acf777851875",
+        "model": "gpt-6-luna"
       },
       "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
     },
