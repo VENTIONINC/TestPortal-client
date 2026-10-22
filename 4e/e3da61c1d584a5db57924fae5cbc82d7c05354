@@ -1,0 +1,19 @@
+CONTRIBUTING.md
+  s_2d52cf123cad66::t_ac08bf7d4f1288 8-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "4ee3da61c1d584a5db57924fae5cbc82d7c05354",
+  "prompts": {},
+  "sessions": {
+    "s_2d52cf123cad66": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a16308-475a-7c00-b0c6-ccbc32ad4ccc",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
