@@ -12,11 +12,11 @@ const initialValues = {
   scenarioKey: 'AUTH-LOGIN',
   title: 'Checkout flow',
   details: 'Existing scenario details',
-  objective: 'Complete checkout',
+  priority: 'high' as const,
+  relatedIssueUrl: 'https://example.test/TP-20',
   preconditions: 'Signed in',
   testData: 'Account 1',
-  expectedResult: 'Order exists',
-  notes: 'Keep an eye on totals',
+
 };
 
 const renderForm = (props: Partial<React.ComponentProps<typeof TestScenarioForm>> = {}) =>
@@ -36,11 +36,10 @@ describe('TestScenarioForm', () => {
       'Scenario key (optional)',
       'Title',
       'Details',
-      'Objective',
+      'Related issue URL',
       'Preconditions',
       'Test data',
-      'Expected result',
-      'Notes',
+
     ]) {
       expect(screen.getByRole('textbox', { name: label })).toBeInTheDocument();
     }
@@ -61,7 +60,7 @@ describe('TestScenarioForm', () => {
     expect(screen.getByRole('heading', { name: 'Edit Test Scenario' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Scenario key (optional)' })).toHaveValue(initialValues.scenarioKey);
     expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue(initialValues.details);
-    expect(screen.getByRole('textbox', { name: 'Objective' })).toHaveValue(initialValues.objective);
+    expect(screen.getByRole('combobox', { name: 'Priority' })).toHaveValue(initialValues.priority);
     expect(screen.queryByRole('heading', { name: 'Saved Markdown preview' })).not.toBeInTheDocument();
     expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: 'Markdown' })).not.toBeInTheDocument();
@@ -74,7 +73,7 @@ describe('TestScenarioForm', () => {
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: '  Scenario  ' } });
     fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: '  First\n  Second  ' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Objective' }), { target: { value: '  Objective  ' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Related issue URL' }), { target: { value: ' https://example.test/TP-20 ' } });
     await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
@@ -82,11 +81,11 @@ describe('TestScenarioForm', () => {
       scenarioKey: '',
       title: 'Scenario',
       details: 'First\n  Second',
-      objective: 'Objective',
+      priority: '',
+      relatedIssueUrl: 'https://example.test/TP-20',
       preconditions: '',
       testData: '',
-      expectedResult: '',
-      notes: '',
+
     });
     expect(onSubmit.mock.calls[0]?.[1]).toEqual([]);
   });
@@ -151,7 +150,7 @@ describe('TestScenarioForm', () => {
     const user = userEvent.setup();
     const { rerender } = renderForm({ mode: 'edit', initialValues });
 
-    await user.type(screen.getByRole('textbox', { name: 'Notes' }), ' (draft)');
+    await user.type(screen.getByRole('textbox', { name: 'Test data' }), ' (draft)');
     rerender(
       <ChakraProvider>
         <TestScenarioForm
@@ -164,6 +163,27 @@ describe('TestScenarioForm', () => {
     );
 
     await waitFor(() => expect(screen.getByRole('textbox', { name: 'Scenario key (optional)' })).toHaveValue('AUTH-LOGIN-2'));
-    expect(screen.getByRole('textbox', { name: 'Notes' })).toHaveValue('Keep an eye on totals (draft)');
+    expect(screen.getByRole('textbox', { name: 'Test data' })).toHaveValue('Account 1 (draft)');
   });
+  it.each(['create', 'edit'] as const)('shows TP-20 sections and metadata choices in %s mode', (mode) => {
+    renderForm({ mode, initialValues });
+    const fields = screen.getByRole('heading', { name: 'Scenario fields' });
+    const setup = screen.getByRole('heading', { name: 'Test setup' });
+    expect(fields.compareDocumentPosition(setup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole('textbox', { name: 'Details' })).toBeInTheDocument();
+    for (const name of ['Objective', 'Notes', 'Expected result']) expect(screen.queryByRole('textbox', { name })).not.toBeInTheDocument();
+    expect(Array.from(screen.getByRole('combobox', { name: 'Priority' }).querySelectorAll('option')).map((option) => option.textContent)).toEqual(['Unset', 'Low', 'Medium', 'High']);
+    if (mode === 'create') expect(setup.compareDocumentPosition(screen.getByRole('heading', { name: /Scenario steps/ })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+  it('keeps invalid URL drafts with field feedback and does not submit', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    renderForm({ initialValues, onSubmit });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Related issue URL' }), { target: { value: '/relative' } });
+    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText('Enter an absolute HTTP(S) URL')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Related issue URL' })).toHaveValue('/relative');
+  });
+
 });

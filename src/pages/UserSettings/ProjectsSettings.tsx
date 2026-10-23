@@ -10,7 +10,7 @@ import { useCreateProjectDialog } from '@/components/ui/components/Dialogs';
 import { useProjectContextMenu } from '@/hooks';
 import { Alert } from '@/components/ui';
 export function ProjectsSettings() {
-  const { data: projects } = useGetApiV2ProjectsQuery({});
+  const { data: projects } = useGetApiV2ProjectsQuery();
   const openCreateProjectDialog = useCreateProjectDialog();
   const handleProjectContextMenu = useProjectContextMenu();
 

@@ -541,6 +541,17 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [moveScenariosOpen, setMoveScenariosOpen] = useState(false);
   const [moveScenariosTarget, setMoveScenariosTarget] = useState('');
   const [moveScenariosError, setMoveScenariosError] = useState<string | null>(null);
+  const scopeKey = `${scope.kind}:${scope.id ?? ''}`;
+  const latestScope = useRef(scopeKey);
+  const moveDialogScope = useRef<string | null>(null);
+  latestScope.current = scopeKey;
+  useEffect(() => {
+    moveDialogScope.current = null;
+    setMoveScenariosOpen(false);
+    setMoveScenariosTarget('');
+    setMoveScenariosError(null);
+  }, [scopeKey]);
+
   const [isMovingScenarios, setIsMovingScenarios] = useState(false);
   const [addToSuiteOpen, setAddToSuiteOpen] = useState(false);
   const [addToSuiteError, setAddToSuiteError] = useState<string | null>(null);
@@ -639,7 +650,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   };
   const submitCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!createDialog || isCreating || (!['delete-folder', 'delete-suite'].includes(createDialog) && !createName.trim())) return;
+    if (!createDialog || isCreating || (['folder', 'suite', 'rename-folder', 'edit-suite'].includes(createDialog) && !createName.trim())) return;
     setIsCreating(true);
     setCreateError(null);
     try {
@@ -677,7 +688,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   };
   const submitMoveScenarios = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isMovingScenarios || selectedIds.length === 0) return;
+    if (isMovingScenarios || selectedIds.length === 0 || scope.kind === 'suite' || moveDialogScope.current !== latestScope.current) return;
     setIsMovingScenarios(true);
     setMoveScenariosError(null);
     try {
@@ -1213,17 +1224,18 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   Clear selection
                 </Button>
                 <Box flex="1" />
-                <Button
+                {scope.kind !== 'suite' && <Button
                   size="sm"
                   variant="outline"
                   onClick={() => {
+                    moveDialogScope.current = scopeKey;
                     setMoveScenariosTarget('');
                     setMoveScenariosError(null);
                     setMoveScenariosOpen(true);
                   }}
                 >
                   Move…
-                </Button>
+                </Button>}
                 <Button
                   size="sm"
                   variant="outline"
@@ -1314,7 +1326,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           onClose={() => setAddScenariosToSuiteOpen(false)}
         />
       )}
-      {moveScenariosOpen && (
+      {moveScenariosOpen && scope.kind !== 'suite' && moveDialogScope.current === scopeKey && (
         <Dialog
           title={`Move ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'}`}
           onClose={() => setMoveScenariosOpen(false)}

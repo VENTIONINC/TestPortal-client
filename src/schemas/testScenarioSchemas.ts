@@ -14,11 +14,14 @@ export const testScenarioAuthoringSchema = z.object({
   scenarioKey: createReadableLabelSchema('Scenario key').optional(),
   title: z.string().trim().min(1, 'Title is required'),
   details: z.string().trim().optional(),
-  objective: z.string().trim().optional(),
+  priority: z.enum(['', 'low', 'medium', 'high']).optional(),
+  relatedIssueUrl: z.string().trim().refine((value) => {
+    if (!value) return true;
+    if (!/^https?:\/\//i.test(value)) return false;
+    try { const url = new URL(value); return url.protocol === 'http:' || url.protocol === 'https:'; } catch { return false; }
+  }, 'Enter an absolute HTTP(S) URL').optional(),
   preconditions: z.string().trim().optional(),
   testData: z.string().trim().optional(),
-  expectedResult: z.string().trim().optional(),
-  notes: z.string().trim().optional(),
 });
 
 export type TestScenarioAuthoringFormData = z.infer<typeof testScenarioAuthoringSchema>;

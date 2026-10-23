@@ -47,11 +47,10 @@ const EMPTY_VALUES: TestScenarioEditableValues = {
   scenarioKey: '',
   title: '',
   details: null,
-  objective: null,
+  priority: null,
   preconditions: null,
   testData: null,
-  expectedResult: null,
-  notes: null,
+  relatedIssueUrl: null,
 };
 
 const EMPTY_INITIAL_STEPS: TestScenarioInitialStepDraft[] = [];
@@ -68,21 +67,11 @@ const toFormValues = (values: Partial<TestScenarioEditableValues> & Pick<TestSce
   scenarioKey: values.scenarioKey ?? '',
   title: values.title ?? '',
   details: values.details ?? '',
-  objective: values.objective ?? '',
+  priority: values.priority ?? '',
   preconditions: values.preconditions ?? '',
   testData: values.testData ?? '',
-  expectedResult: values.expectedResult ?? '',
-  notes: values.notes ?? '',
+  relatedIssueUrl: values.relatedIssueUrl ?? '',
 });
-
-const fieldLabels: Record<Exclude<TestScenarioEditableField, 'title' | 'scenarioKey'>, string> = {
-  details: 'Details',
-  objective: 'Objective',
-  preconditions: 'Preconditions',
-  testData: 'Test data',
-  expectedResult: 'Expected result',
-  notes: 'Notes',
-};
 
 export const TestScenarioForm = ({
   mode,
@@ -106,27 +95,24 @@ export const TestScenarioForm = ({
   const initialScenarioKey = initialValues.scenarioKey;
   const initialTitle = initialValues.title;
   const initialDetails = initialValues.details;
-  const initialObjective = initialValues.objective;
+  const initialPriority = initialValues.priority;
   const initialPreconditions = initialValues.preconditions;
   const initialTestData = initialValues.testData;
-  const initialExpectedResult = initialValues.expectedResult;
-  const initialNotes = initialValues.notes;
+  const initialRelatedIssueUrl = initialValues.relatedIssueUrl;
   const formValues = useMemo(
     () => toFormValues({
       scenarioKey: initialScenarioKey,
       title: initialTitle,
       details: initialDetails,
-      objective: initialObjective,
+      priority: initialPriority,
       preconditions: initialPreconditions,
       testData: initialTestData,
-      expectedResult: initialExpectedResult,
-      notes: initialNotes,
+      relatedIssueUrl: initialRelatedIssueUrl,
     }),
     [
       initialDetails,
-      initialExpectedResult,
-      initialNotes,
-      initialObjective,
+      initialRelatedIssueUrl,
+      initialPriority,
       initialPreconditions,
       initialScenarioKey,
       initialTestData,
@@ -168,7 +154,8 @@ export const TestScenarioForm = ({
 
     for (const field of Object.keys(nextValues) as TestScenarioEditableField[]) {
       if (dirty[field] && !reconciliation.submittedFields.includes(field)) {
-        nextValues[field] = currentValues[field] ?? '';
+        if (field === 'priority') nextValues.priority = currentValues.priority ?? '';
+        else nextValues[field] = currentValues[field] ?? '';
       }
     }
 
@@ -270,80 +257,31 @@ export const TestScenarioForm = ({
           </Alert.Root>
         )}
 
-        {isCreate ? (
-          <VStack align="stretch" gap={4}>
-            <Heading size="md" pb={3} borderBottomWidth="1px" borderColor="border.main">
-              Scenario fields
-            </Heading>
-            <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
-              <NativeSelect
-                name="scenario-folder"
-                label="Folder"
-                aria-label="Scenario folder"
-                value={folderId ?? ''}
-                onChange={(event) => setFolderId(event.currentTarget.value || null)}
-              >
-                <option value="">Unfiled</option>
-                {folders.map((folder) => <option key={folder.id} value={folder.id}>{'　'.repeat(folder.depth ?? 0)}{folder.name}</option>)}
-              </NativeSelect>
-              <Input
-                {...register('scenarioKey')}
-                name="scenarioKey"
-                label="Scenario key (optional)"
-                placeholder="e.g. R1 or AUTH-LOGIN"
-                fieldProps={{ helperText: 'Up to 100 characters. Duplicate keys are allowed.' }}
-                error={errors.scenarioKey?.message}
-              />
-              <Box gridColumn={{ base: 'auto', md: '1 / -1' }}>
-                <Input {...register('title')} name="title" label="Title" error={errors.title?.message} />
-              </Box>
-            </Grid>
-            <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
-              {(Object.keys(fieldLabels) as Exclude<TestScenarioEditableField, 'title' | 'scenarioKey'>[]).map((field) => (
-                <Textarea
-                  key={field}
-                  {...register(field)}
-                  name={field}
-                  label={fieldLabels[field]}
-                  resize="vertical"
-                  error={errors[field]?.message}
-                />
-              ))}
-            </Grid>
-          </VStack>
-        ) : (
-          <>
-            <NativeSelect
-              name="scenario-folder"
-              label="Folder"
-              aria-label="Scenario folder"
-              value={folderId ?? ''}
-              onChange={(event) => setFolderId(event.currentTarget.value || null)}
-            >
+        <VStack align="stretch" gap={4}>
+          <Heading size="md" pb={3} borderBottomWidth="1px" borderColor="border.main">Scenario fields</Heading>
+          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
+            <NativeSelect name="scenario-folder" label="Folder" aria-label="Scenario folder" value={folderId ?? ''}
+              onChange={(event) => setFolderId(event.currentTarget.value || null)}>
               <option value="">Unfiled</option>
               {folders.map((folder) => <option key={folder.id} value={folder.id}>{'　'.repeat(folder.depth ?? 0)}{folder.name}</option>)}
             </NativeSelect>
-            <Input
-              {...register('scenarioKey')}
-              name="scenarioKey"
-              label="Scenario key (optional)"
-              placeholder="e.g. R1 or AUTH-LOGIN"
-              fieldProps={{ helperText: 'Up to 100 characters. Duplicate keys are allowed.' }}
-              error={errors.scenarioKey?.message}
-            />
+            <Input {...register('scenarioKey')} name="scenarioKey" label="Scenario key (optional)"
+              placeholder="e.g. R1 or AUTH-LOGIN" fieldProps={{ helperText: 'Up to 100 characters. Duplicate keys are allowed.' }} error={errors.scenarioKey?.message} />
             <Input {...register('title')} name="title" label="Title" error={errors.title?.message} />
-            {(Object.keys(fieldLabels) as Exclude<TestScenarioEditableField, 'title' | 'scenarioKey'>[]).map((field) => (
-              <Textarea
-                key={field}
-                {...register(field)}
-                name={field}
-                label={fieldLabels[field]}
-                resize="vertical"
-                error={errors[field]?.message}
-              />
-            ))}
-          </>
-        )}
+            <NativeSelect {...register('priority')} name="priority" label="Priority" error={errors.priority?.message}>
+              <option value="">Unset</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+            </NativeSelect>
+            <Input {...register('relatedIssueUrl')} name="relatedIssueUrl" label="Related issue URL" error={errors.relatedIssueUrl?.message} />
+            <Textarea {...register('details')} name="details" label="Details" resize="vertical" error={errors.details?.message} />
+          </Grid>
+        </VStack>
+        <VStack align="stretch" gap={4}>
+          <Heading size="md" pb={3} borderBottomWidth="1px" borderColor="border.main">Test setup</Heading>
+          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
+            <Textarea {...register('preconditions')} name="preconditions" label="Preconditions" resize="vertical" error={errors.preconditions?.message} />
+            <Textarea {...register('testData')} name="testData" label="Test data" resize="vertical" error={errors.testData?.message} />
+          </Grid>
+        </VStack>
 
         {isCreate && (
           <VStack align="stretch" gap={3} pt={5} borderTopWidth="1px" borderColor="border.main">

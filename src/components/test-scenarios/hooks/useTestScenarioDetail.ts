@@ -22,11 +22,10 @@ const isSameScenario = (left: TestScenario | undefined, right: TestScenario) =>
   left.title === right.title &&
   left.contentMd === right.contentMd &&
   left.details === right.details &&
-  left.objective === right.objective &&
+  left.priority === right.priority &&
+  left.relatedIssueUrl === right.relatedIssueUrl &&
   left.preconditions === right.preconditions &&
   left.testData === right.testData &&
-  left.expectedResult === right.expectedResult &&
-  left.notes === right.notes &&
   left.contentMdHash === right.contentMdHash &&
   left.contentMdFormatVersion === right.contentMdFormatVersion &&
   left.createdAt === right.createdAt &&

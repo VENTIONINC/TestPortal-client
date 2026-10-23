@@ -16,7 +16,7 @@ export interface UpdateProjectDialogParams {
 }
 
 export const useUpdateProject = (closeDialog: () => void, params: UpdateProjectDialogParams) => {
-  const { data: projects } = useGetApiV2ProjectsQuery({});
+  const { data: projects } = useGetApiV2ProjectsQuery();
   const project = projects!.find((p) => p.id === params.projectId);
 
   if (!project) {

@@ -1,11 +1,12 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Alert, Badge, Box, Button, Grid, Heading, HStack, Icon, Text, VStack } from '@chakra-ui/react';
 import { FiArrowLeft, FiClock, FiEdit2, FiFileText } from 'react-icons/fi';
 import { LuBan, LuCheck, LuCircleHelp, LuCircleX, LuSkipForward } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
+import { UNSAFE_DataRouterContext, useBlocker } from 'react-router';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
 import { Input, Link, NativeSelect, Textarea, Tooltip, Wrap } from '@/components/ui';
@@ -24,17 +25,34 @@ import { getManualTestRunProgressCounts, isManualTestRunPassedEligible } from '.
 import { ManualTestRunCompletionDialog } from './ManualTestRunCompletionDialog';
 import { useManualTestRunExecution } from '../hooks/useManualTestRunExecution';
 
+const StepSavedConfirmation = ({ savedAt }: { savedAt: number }) => {
+  const [visible, setVisible] = useState(() => Date.now() - savedAt < 3000);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setVisible(false), Math.max(0, savedAt + 3000 - Date.now()));
+    return () => window.clearTimeout(timeout);
+  }, [savedAt]);
+  return visible ? (
+    <HStack gap={1} color="text.secondary" fontSize="sm" whiteSpace="nowrap">
+      <Icon as={LuCheck} aria-hidden="true" />
+      <Text>Saved</Text>
+    </HStack>
+  ) : null;
+};
+
+const RunNavigationGuard = ({ dirty }: { dirty: boolean }) => {
+  const blocker = useBlocker(dirty);
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return;
+    if (window.confirm('Leave this run? Unsaved execution changes will be lost.')) blocker.proceed();
+    else blocker.reset();
+  }, [blocker]);
+  return null;
+};
+
 const formatDate = (timestamp: string | null) =>
   timestamp ? new Date(timestamp).toLocaleString('en-US') : 'Not available';
 const formatLabel = (value: string) => value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
-const snapshotFields = [
-  ['Details', 'details'],
-  ['Objective', 'objective'],
-  ['Preconditions', 'preconditions'],
-  ['Test data', 'testData'],
-  ['Expected result', 'expectedResult'],
-  ['Scenario notes', 'scenarioNotes'],
-] as const;
+const snapshotFields = [['Details', 'details']] as const;
 const environmentFields = [
   ['Browser', 'browser'],
   ['Operating system', 'operatingSystem'],
@@ -50,6 +68,14 @@ const stepStatusVisuals: Record<ManualTestRunStepStatus, { Icon: IconType; color
   failed: { Icon: LuCircleX, color: 'status.error.icon', label: 'Failed' },
   blocked: { Icon: LuBan, color: 'status.warning.icon', label: 'Blocked' },
   skipped: { Icon: LuSkipForward, color: 'status.neutral.icon', label: 'Skipped' },
+};
+
+const stepStatusPalettes: Record<ManualTestRunStepStatus, string> = {
+  not_started: 'gray',
+  passed: 'green',
+  failed: 'red',
+  blocked: 'orange',
+  skipped: 'gray',
 };
 
 interface ManualTestRunProgressProps {
@@ -174,7 +200,9 @@ export const ManualTestRunDetailsView = ({
   onReassignExecutor,
   onViewSourceHistory,
 }: ManualTestRunDetailsViewProps) => {
+  const dataRouter = useContext(UNSAFE_DataRouterContext);
   const stepsDisclosureInitialized = useRef(false);
+  const testSetupDisclosureInitialized = useRef(false);
   const runKeyInputRef = useRef<HTMLInputElement>(null);
   const runKeyTriggerRef = useRef<HTMLButtonElement>(null);
   const wasSavingRunKey = useRef(false);
@@ -278,7 +306,7 @@ export const ManualTestRunDetailsView = ({
 
     setExecutorFeedback(undefined);
     try {
-      const response = await onReassignExecutor(executorDraft);
+      const response = await execution.coordinateExternalWrite(() => onReassignExecutor(executorDraft));
       if (!response) return;
       if (
         !isMounted.current ||
@@ -338,6 +366,16 @@ export const ManualTestRunDetailsView = ({
 
   return (
     <VStack align="stretch" gap={6} mx={{ base: 4, md: 6 }} my={4}>
+      {dataRouter && <RunNavigationGuard dirty={execution.isDirty || execution.isRunKeyDirty || isPending} />}
+      {readOnly && execution.isDirty && (
+        <Alert.Root status="warning" role="alert">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Local execution changes were not saved.</Alert.Title>
+            <Alert.Description>Draft text remains available for review. Progress shows the saved result.</Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
       <HStack justify="space-between" align="start" gap={4} flexWrap="wrap">
         <HStack align="start" gap={2}>
           <Link
@@ -796,6 +834,47 @@ export const ManualTestRunDetailsView = ({
       <Box
         as="details"
         ref={(element: HTMLDivElement | null) => {
+          if (element && !testSetupDisclosureInitialized.current) {
+            (element as unknown as HTMLDetailsElement).open = true;
+            testSetupDisclosureInitialized.current = true;
+          }
+        }}
+        w="100%"
+        p={{ base: 4, md: 6 }}
+        bg="bg.section"
+        shadow="sm"
+        borderRadius="12px"
+      >
+        <Box
+          as="summary"
+          cursor="pointer"
+          fontWeight="semibold"
+          _focusVisible={{ outline: '2px solid', outlineColor: 'text.active', outlineOffset: '4px' }}
+        >
+          Test setup
+        </Box>
+        <Grid
+          id="manual-test-run-test-setup-content"
+          templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }}
+          gap={6}
+          pt={5}
+        >
+          {([
+            ['Preconditions', execution.savedRun.preconditions],
+            ['Test data', execution.savedRun.testData],
+          ] as const).map(([label, value]) => (
+            <Box key={label} minW={0}>
+              <Text fontWeight="semibold">{label}</Text>
+              <Text whiteSpace="pre-wrap" color="text.secondary">
+                {value ?? 'No value'}
+              </Text>
+            </Box>
+          ))}
+        </Grid>
+      </Box>
+      <Box
+        as="details"
+        ref={(element: HTMLDivElement | null) => {
           if (element && !stepsDisclosureInitialized.current) {
             (element as unknown as HTMLDetailsElement).open = true;
             stepsDisclosureInitialized.current = true;
@@ -816,7 +895,7 @@ export const ManualTestRunDetailsView = ({
           Steps
         </Box>
         <VStack id="manual-test-run-steps-content" align="stretch" w="100%" gap={6} pt={5}>
-          <VStack align="stretch" gap={5}>
+          <Box display="flex" flexWrap="wrap" alignItems="stretch" gap={5}>
             {orderedSteps.length === 0 ? (
               <Text color="text.muted">No copied steps in this run.</Text>
             ) : (
@@ -829,7 +908,10 @@ export const ManualTestRunDetailsView = ({
                 return (
                   <Box
                     key={step.id}
-                    p={{ base: 4, md: 6 }}
+                    flex="1 1 calc(50% - 10px)"
+                    minW="min(100%, 480px)"
+                    maxW={{ base: '100%', xl: 'calc(50% - 10px)' }}
+                    p={{ base: 4, md: 5 }}
                     borderWidth="1px"
                     borderColor={activeStepId === step.id ? 'text.active' : 'border.main'}
                     borderRadius="lg"
@@ -869,26 +951,28 @@ export const ManualTestRunDetailsView = ({
                           </Heading>
                           <Badge
                             variant="subtle"
-                            colorPalette={
-                              step.status === 'passed'
-                                ? 'green'
-                                : step.status === 'failed'
-                                  ? 'red'
-                                  : step.status === 'blocked'
-                                    ? 'orange'
-                                    : 'gray'
-                            }
+                            colorPalette={stepStatusPalettes[step.status]}
                           >
                             <Icon as={stepStatusVisuals[step.status].Icon} aria-hidden="true" />
                             {stepStatusVisuals[step.status].label}
                           </Badge>
                         </HStack>
-                        <HStack gap={3}>
-                          {stepDirty && (
-                            <Text fontSize="sm" color="status.warning.text">
-                              Unsaved draft
-                            </Text>
-                          )}
+                        <HStack gap={2} minH={9} aria-live="polite" flexShrink={0}>
+                          {!readOnly && execution.stepSaveStates[step.id] === 'not_saved' ? (
+                            <>
+                              <Text fontSize="sm" color="status.error.text">Not saved</Text>
+                              <Button type="button" size="xs" variant="ghost"
+                                onClick={() => void execution.saveStep(step.id)}
+                                disabled={isPending || execution.recoveryBlocked}>Retry</Button>
+                            </>
+                          ) : stepDirty ? (
+                            <Text fontSize="sm" color="status.warning.text">Unsaved draft</Text>
+                          ) : !readOnly && !stepPending && execution.stepSavedAt[step.id] ? (
+                            <StepSavedConfirmation
+                              key={execution.stepSavedAt[step.id]}
+                              savedAt={execution.stepSavedAt[step.id]}
+                            />
+                          ) : null}
                         </HStack>
                       </HStack>
                       <Grid
@@ -916,32 +1000,22 @@ export const ManualTestRunDetailsView = ({
                         </Box>
                       </Grid>
                       {!readOnly && (
-                        <HStack align="end" gap={3} w={{ base: '100%', sm: '260px' }}>
-                          <Box flex="1" minW={0}>
-                            <NativeSelect
-                              name={`step-${step.id}-status`}
-                              label="Outcome"
-                              value={draft.status}
-                              onChange={(event) =>
-                                execution.setStepStatus(step.id, event.target.value as typeof draft.status)
-                              }
-                              disabled={readOnly || execution.recoveryBlocked || stepPending}
-                              items={MANUAL_TEST_RUN_STEP_STATUSES.map((status) => ({
-                                value: status,
-                                label: formatLabel(status),
-                              }))}
-                              w="100%"
-                            />
-                          </Box>
-                          <Icon
-                            as={stepStatusVisuals[draft.status].Icon}
-                            aria-label={`${stepStatusVisuals[draft.status].label} outcome`}
-                            aria-hidden={false}
-                            color={stepStatusVisuals[draft.status].color}
-                            boxSize={5}
-                            mb={2}
-                            flexShrink={0}
-                          />
+                        <HStack gap={2} flexWrap="wrap" aria-label={`Outcome for step ${index + 1}`}>
+                          {MANUAL_TEST_RUN_STEP_STATUSES.map((status) => (
+                            <Button key={status} type="button" size="sm" px={2} gap={1}
+                              aria-pressed={draft.status === status}
+                              variant="outline"
+                              colorPalette={stepStatusPalettes[status]}
+                              color="colorPalette.fg"
+                              borderColor={draft.status === status ? 'colorPalette.fg' : 'colorPalette.muted'}
+                              bg={draft.status === status ? 'colorPalette.subtle' : 'transparent'}
+                              _hover={{ bg: 'colorPalette.subtle' }}
+                              disabled={readOnly || execution.recoveryBlocked}
+                              onClick={() => execution.setStepStatus(step.id, status)}>
+                              <Icon as={stepStatusVisuals[status].Icon} aria-hidden="true" />
+                              {stepStatusVisuals[status].label}
+                            </Button>
+                          ))}
                         </HStack>
                       )}
                       <Textarea
@@ -950,7 +1024,8 @@ export const ManualTestRunDetailsView = ({
                         label="Step notes"
                         value={draft.notes}
                         onChange={(event) => execution.setStepNotes(step.id, event.target.value)}
-                        readOnly={readOnly || execution.recoveryBlocked || stepPending}
+                        onBlur={() => execution.flushStepNotes(step.id)}
+                        readOnly={readOnly || execution.recoveryBlocked}
                         onKeyDown={(event) => {
                           if (
                             !readOnly &&
@@ -967,56 +1042,13 @@ export const ManualTestRunDetailsView = ({
                         rows={3}
                         maxW={{ base: '100%', md: '560px' }}
                       />
-                      {!readOnly && (
-                        <HStack
-                          justify="start"
-                          align="center"
-                          gap={3}
-                          w={{ base: '100%', md: '560px' }}
-                          flexWrap="wrap"
-                        >
-                          <Button
-                            type="button"
-                            onClick={() => void execution.saveStep(step.id)}
-                            loading={stepPending}
-                            loadingText="Saving…"
-                            disabled={isPending || execution.recoveryBlocked || !stepDirty}
-                          >
-                            Save step result
-                          </Button>
-                          {stepPending ? (
-                            <Text color="text.secondary" aria-live="polite">
-                              Saving…
-                            </Text>
-                          ) : execution.stepSaveStates[step.id] === 'not_saved' ? (
-                            <Text color="status.error.text" aria-live="polite">
-                              Not saved
-                            </Text>
-                          ) : stepDirty ? (
-                            <Text color="text.secondary">Unsaved changes</Text>
-                          ) : execution.stepSaveStates[step.id] === 'submitted' ? (
-                            <Text color="status.success.text">Submitted: {formatLabel(step.status)}</Text>
-                          ) : execution.stepSaveStates[step.id] === 'saved_notes' ? (
-                            <Text color="status.success.text">Saved notes</Text>
-                          ) : null}
-                          {stepDirty && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={() => execution.discardStep(step.id)}
-                              disabled={isPending || execution.recoveryBlocked}
-                            >
-                              Discard changes
-                            </Button>
-                          )}
-                        </HStack>
-                      )}
+
                     </VStack>
                   </Box>
                 );
               })
             )}
-          </VStack>
+          </Box>
         </VStack>
       </Box>
       <Wrap w="100%" p={{ base: 4, md: 6 }}>

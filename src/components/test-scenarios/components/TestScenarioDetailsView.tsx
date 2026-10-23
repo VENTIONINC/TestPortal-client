@@ -18,18 +18,10 @@ export interface TestScenarioDetailsViewProps {
   isStartingManualRun?: boolean;
 }
 
-const fieldGroups = [
-  {
-    fields: [
-      ['Details', 'details'],
-      ['Objective', 'objective'],
-      ['Preconditions', 'preconditions'],
-      ['Test data', 'testData'],
-      ['Expected result', 'expectedResult'],
-      ['Notes', 'notes'],
-    ],
-  },
-] as const;
+const safeIssueUrl = (value: string | null) => {
+  if (!value) return null;
+  try { const url = new URL(value); return url.protocol === 'http:' || url.protocol === 'https:' ? value : null; } catch { return null; }
+};
 
 const orderedSteps = (scenario: TestScenario) =>
   [...scenario.steps].sort((left, right) => left.position - right.position);
@@ -42,6 +34,7 @@ export const TestScenarioDetailsView = ({
 }: TestScenarioDetailsViewProps) => {
   const scenarioKey = scenario.scenarioKey?.trim();
   const steps = orderedSteps(scenario);
+  const issueUrl = safeIssueUrl(scenario.relatedIssueUrl);
 
   return (
     <VStack align="stretch" gap={6} mx={{ base: 4, md: 6 }} my={4}>
@@ -98,20 +91,25 @@ export const TestScenarioDetailsView = ({
             >
               <Heading size="md">Scenario fields</Heading>
             </Box>
-            {fieldGroups.map(({ fields }) => (
-              <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
-                {fields.map(([label, field]) => (
-                  <Box key={field} minW={0} maxW="68ch">
-                    <Text fontWeight="semibold" mb={1}>
-                      {label}
-                    </Text>
-                    <Text whiteSpace="pre-wrap" overflowWrap="anywhere" color="text.secondary" lineHeight="1.65">
-                      {scenario[field] ?? 'No value'}
-                    </Text>
-                  </Box>
-                ))}
-              </Grid>
-            ))}
+            <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
+              {([['Details', scenario.details], ['Priority', scenario.priority ? ({ low: 'Low', medium: 'Medium', high: 'High' })[scenario.priority] : null]] as const).map(([label, value]) => (
+                <Box key={label} minW={0}><Text fontWeight="semibold" mb={1}>{label}</Text><Text whiteSpace="pre-wrap" overflowWrap="anywhere" color="text.secondary">{value ?? 'No value'}</Text></Box>
+              ))}
+              <Box minW={0}>
+                <Text fontWeight="semibold" mb={1}>Related issue URL</Text>
+                {issueUrl ? <Link href={issueUrl} target="_blank" rel="noopener noreferrer" overflowWrap="anywhere">{scenario.relatedIssueUrl}</Link> : <Text color="text.secondary" overflowWrap="anywhere">{scenario.relatedIssueUrl ?? 'No value'}</Text>}
+              </Box>
+            </Grid>
+          </VStack>
+          <VStack align="stretch" gap={4} pt={5}>
+            <Heading size="md" pb={3} borderBottomWidth="1px" borderColor="border.main">
+              Test setup
+            </Heading>
+            <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
+              {([['Preconditions', scenario.preconditions], ['Test data', scenario.testData]] as const).map(([label, value]) => (
+                <Box key={label} minW={0}><Text fontWeight="semibold" mb={1}>{label}</Text><Text whiteSpace="pre-wrap" overflowWrap="anywhere" color="text.secondary">{value ?? 'No value'}</Text></Box>
+              ))}
+            </Grid>
           </VStack>
 
           <VStack align="stretch" gap={3} pt={5}>

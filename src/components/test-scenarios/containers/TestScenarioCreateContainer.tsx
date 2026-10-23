@@ -26,11 +26,8 @@ const EMPTY_VALUES = {
   scenarioKey: '',
   title: '',
   details: null,
-  objective: null,
   preconditions: null,
   testData: null,
-  expectedResult: null,
-  notes: null,
 } as const;
 
 export const TestScenarioCreateContainer = ({ projectId, initialFolderId = null }: TestScenarioCreateContainerProps) => {

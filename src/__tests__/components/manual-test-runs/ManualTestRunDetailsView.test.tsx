@@ -3,7 +3,7 @@
 
 import { act, fireEvent, renderHook, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useManualTestRunExecution } from '@/components/manual-test-runs/hooks/useManualTestRunExecution';
@@ -57,11 +57,8 @@ const runFor = (overrides: Partial<ManualTestRunRead> = {}): ManualTestRunRead =
   updatedAt: '2026-09-17T10:00:00.000Z',
   title: 'Checkout snapshot',
   details: 'Snapshot details',
-  objective: 'Complete checkout',
   preconditions: null,
   testData: 'Card 4242',
-  expectedResult: 'Order is created',
-  scenarioNotes: 'Author note',
   notes: null,
   browser: null,
   operatingSystem: null,
@@ -191,12 +188,12 @@ describe('ManualTestRunDetailsView', () => {
     expect(screen.getByRole('combobox', { name: 'Executor' })).toHaveValue('user-2');
   });
 
-  it('renders the persisted snapshot and distinguishes scenario notes from execution notes', () => {
+  it('renders supported snapshot content and separate execution notes', () => {
     renderView();
 
     expect(screen.getByText('Snapshot details')).toBeInTheDocument();
-    expect(screen.getByText('Complete checkout')).toBeInTheDocument();
-    expect(screen.getByText('Author note')).toBeInTheDocument();
+    expect(screen.queryByText('Objective')).not.toBeInTheDocument();
+    expect(screen.queryByText('Scenario notes')).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Edit Run key' })).toHaveValue('');
     expect(
       within(screen.getByText('Source scenario key at start').parentElement!).getByText('N/A'),
@@ -204,7 +201,7 @@ describe('ManualTestRunDetailsView', () => {
     expect(screen.getByRole('textbox', { name: 'Execution notes' })).toBeInTheDocument();
     expect(screen.getByText('Submit checkout')).toBeInTheDocument();
     expect(screen.getByText('Executor unavailable')).toBeInTheDocument();
-    expect(screen.getByLabelText('Not started outcome')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Not started$/ })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('renders persisted run labels from the historical response after the source is deleted', () => {
@@ -392,7 +389,7 @@ describe('ManualTestRunDetailsView', () => {
 
     renderView(runFor());
     expect(screen.getByRole('button', { name: 'Save execution notes' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Save step result' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Save step result' })).not.toBeInTheDocument();
     await user.type(screen.getByRole('textbox', { name: 'Execution notes' }), 'run note');
     await user.click(screen.getByRole('button', { name: 'Save execution notes' }));
 
@@ -402,8 +399,8 @@ describe('ManualTestRunDetailsView', () => {
       manualTestRunUpdateRequest: { notes: 'run note' },
     });
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'passed');
-    await user.click(screen.getByRole('button', { name: 'Save step result' }));
+    await user.click(screen.getByRole('button', { name: /^Passed$/ }));
+    await waitFor(() => expect(patchStep).toHaveBeenCalled());
     expect(patchStep).toHaveBeenCalledWith({
       projectId: 'project-1',
       runId: 'run-1',
@@ -535,52 +532,72 @@ describe('ManualTestRunDetailsView', () => {
     patchStep.mockReturnValue({ unwrap: () => Promise.reject({ status: 409, data: { error: 'invalid transition' } }) });
 
     renderView(runFor(), vi.fn(), refetch);
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'passed');
-    await user.click(screen.getByRole('button', { name: 'Save step result' }));
+    await user.click(screen.getByRole('button', { name: /^Passed$/ }));
+    await waitFor(() => expect(patchStep).toHaveBeenCalled());
 
     expect(refetch).toHaveBeenCalledTimes(1);
     expect(patchStep).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('combobox', { name: 'Outcome' })).toHaveValue('passed');
+    expect(screen.getByRole('button', { name: /^Passed$/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('Step result was not saved.')).toBeInTheDocument();
   });
 
-  it('keeps unchanged steps disabled and reports submitted progress from saved values', async () => {
+  it('uses accessible outcome buttons and reports progress only after acknowledgement', async () => {
     const user = userEvent.setup();
-    const savedRun = runFor({ steps: [{ ...runFor().steps[0], status: 'passed', notes: 'Saved step note' }] });
-    patchStep.mockReturnValue({ unwrap: () => Promise.resolve(savedRun) });
-
+    let acknowledge!: (run: ManualTestRunRead) => void;
+    patchStep.mockReturnValue({ unwrap: () => new Promise<ManualTestRunRead>((resolve) => { acknowledge = resolve; }) });
     renderView();
-    expect(screen.getByRole('button', { name: 'Save step result' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Discard changes' })).not.toBeInTheDocument();
-
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'passed');
-    expect(screen.getByRole('button', { name: 'Step 1 · Not started · Unsaved changes' })).toHaveAttribute(
-      'title',
-      'Step 1 · Not started · Unsaved changes',
-    );
-    expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save step result' }));
-
-    expect(await screen.findByText('Submitted: Passed')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Outcome' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save step result' })).not.toBeInTheDocument();
+    const passed = screen.getByRole('button', { name: /^Passed$/ });
+    expect(passed.parentElement).toHaveStyle({ flexWrap: 'wrap' });
+    passed.focus(); await user.keyboard('{Enter}');
+    expect(passed).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Step 1 · Not started · Unsaved changes' })).toBeInTheDocument();
+    expect(screen.getByText('0 of 1 steps submitted')).toBeInTheDocument();
+    await act(async () => acknowledge(runFor({ steps: [{ ...runFor().steps[0], status: 'passed' }] })));
+    expect(await screen.findByText('Saved', { selector: 'p:not([role="status"])' })).toBeInTheDocument();
     expect(screen.getByText('1 of 1 steps submitted')).toBeInTheDocument();
     expect(screen.getByText('Passed: 1')).toBeInTheDocument();
   });
 
-  it('uses Saved notes for a note-only submission and does not advance progress', async () => {
+  it('warns before route navigation with debounced notes and preserves drafts when staying', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const user = userEvent.setup();
+    const run = runFor();
+    const router = createMemoryRouter([
+      { path: '/run', element: <ManualTestRunDetailsView projectId="project-1" runId="run-1" run={run}
+        setPersistedRun={vi.fn()} refetch={vi.fn().mockResolvedValue(run)}
+        onBack={() => { void router.navigate('/away'); }}
+        activeUsers={[]} isLoadingActiveUsers={false} isActiveUsersError={false}
+        onLoadActiveUsers={vi.fn()} onRetryActiveUsers={vi.fn()}
+        isReassigningExecutor={false} onReassignExecutor={vi.fn()} /> },
+      { path: '/away', element: <p>Another page</p> },
+    ], { initialEntries: ['/run'] });
+    render(<ChakraProvider><RouterProvider router={router} /></ChakraProvider>);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Notes for step 1' }), { target: { value: 'keep draft' } });
+    await user.click(screen.getByRole('link', { name: 'Return to Test Scenarios' }));
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(router.state.location.pathname).toBe('/run');
+    expect(screen.getByRole('textbox', { name: 'Notes for step 1' })).toHaveValue('keep draft');
+    confirm.mockRestore();
+  });
+
+  it('shows transient Saved for a note-only submission without advancing progress', async () => {
     const user = userEvent.setup();
     const savedRun = runFor({ steps: [{ ...runFor().steps[0], notes: 'Saved note' }] });
     patchStep.mockReturnValue({ unwrap: () => Promise.resolve(savedRun) });
 
     renderView();
     await user.type(screen.getByRole('textbox', { name: 'Notes for step 1' }), 'Saved note');
-    await user.click(screen.getByRole('button', { name: 'Save step result' }));
+    fireEvent.blur(screen.getByRole('textbox', { name: 'Notes for step 1' }));
+    await waitFor(() => expect(patchStep).toHaveBeenCalled());
 
-    expect(await screen.findByText('Saved notes')).toBeInTheDocument();
+    expect(await screen.findByText('Saved', { selector: 'p:not([role="status"])' })).toBeInTheDocument();
     expect(screen.queryByText(/Submitted:/)).not.toBeInTheDocument();
     expect(screen.getByText('0 of 1 steps submitted')).toBeInTheDocument();
   });
 
-  it('shows local Saving feedback while a step submission is pending', async () => {
+  it('shows no save status while pending, then briefly confirms the saved step', async () => {
     const user = userEvent.setup();
     let resolveResponse!: (value: ManualTestRunRead) => void;
     const response = new Promise<ManualTestRunRead>((resolve) => {
@@ -590,31 +607,30 @@ describe('ManualTestRunDetailsView', () => {
     patchStep.mockReturnValue({ unwrap: () => response });
 
     renderView();
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'passed');
-    await user.click(screen.getByRole('button', { name: 'Save step result' }));
+    await user.click(screen.getByRole('button', { name: /^Passed$/ }));
+    await waitFor(() => expect(patchStep).toHaveBeenCalled());
 
-    expect(screen.getAllByText('Saving…')[0]).toBeInTheDocument();
+    expect(screen.queryByText('Saving…')).not.toBeInTheDocument();
+    expect(screen.queryByText('Saved', { selector: 'p:not([role="status"])' })).not.toBeInTheDocument();
     resolveResponse(savedRun);
-    await waitFor(() => expect(screen.getByText('Submitted: Passed')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Saved', { selector: 'p:not([role="status"])' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('Saved', { selector: 'p:not([role="status"])' })).not.toBeInTheDocument(), { timeout: 4000 });
   });
 
-  it('restores a submitted result with Discard changes without changing persisted progress', async () => {
+  it('retains a failed correction with Retry without changing persisted progress', async () => {
     const user = userEvent.setup();
     const submittedRun = runFor({ steps: [{ ...runFor().steps[0], status: 'passed', notes: 'Saved note' }] });
 
+    patchStep.mockReturnValue({ unwrap: () => Promise.reject({ status: 500 }) });
     renderView(submittedRun);
-    expect(screen.getByRole('button', { name: 'Save step result' })).toBeDisabled();
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'failed');
+    expect(screen.queryByRole('button', { name: 'Save step result' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Failed$/ }));
 
-    expect(screen.getByRole('button', { name: 'Save step result' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Discard changes' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Step 1 · Passed · Unsaved changes' })).toBeInTheDocument();
     expect(screen.getByText('Passed: 1')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
-
-    expect(screen.getByRole('combobox', { name: 'Outcome' })).toHaveValue('passed');
-    expect(screen.queryByRole('button', { name: 'Discard changes' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Failed$/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('Passed: 1')).toBeInTheDocument();
   });
 
@@ -623,11 +639,11 @@ describe('ManualTestRunDetailsView', () => {
     patchStep.mockReturnValue({ unwrap: () => Promise.reject(new Error('network')) });
 
     renderView();
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Outcome' }), 'failed');
-    await user.click(screen.getByRole('button', { name: 'Save step result' }));
+    await user.click(screen.getByRole('button', { name: /^Failed$/ }));
+    await waitFor(() => expect(patchStep).toHaveBeenCalled());
 
     expect(await screen.findByText('Not saved')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Outcome' })).toHaveValue('failed');
+    expect(screen.getByRole('button', { name: /^Failed$/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByText('0 of 1 steps submitted')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Step 1 · Not started · Unsaved changes' })).toBeInTheDocument();
   });
