@@ -192,11 +192,8 @@ describe('Manual Test Run API integration', () => {
       updatedAt: '2026-09-17T10:00:00.000Z',
       title: 'Snapshot',
       details: null,
-      objective: null,
       preconditions: null,
       testData: null,
-      expectedResult: null,
-      scenarioNotes: null,
       notes: null,
       steps: [],
     };
@@ -251,11 +248,8 @@ describe('Manual Test Run API integration', () => {
       updatedAt: '2026-09-17T10:00:00.000Z',
       title: 'Snapshot',
       details: null,
-      objective: null,
       preconditions: null,
       testData: null,
-      expectedResult: null,
-      scenarioNotes: null,
       notes: null,
       steps: [],
     };

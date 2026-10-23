@@ -47,11 +47,11 @@ const scenario: TestScenario = {
   scenarioKey: null,
   title: 'Checkout flow',
   details: 'Details',
-  objective: 'Objective',
+  priority: null,
+  relatedIssueUrl: null,
   preconditions: null,
   testData: null,
-  expectedResult: null,
-  notes: null,
+
   steps: [
     { id: 'step-1', position: 1, action: 'Open checkout', expectedResult: 'Form is shown' },
     { id: 'step-2', position: 2, action: 'Submit order', expectedResult: null },

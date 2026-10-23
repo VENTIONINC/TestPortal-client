@@ -44,6 +44,17 @@ describe('TestScenarioCreateContainer', () => {
     mockedCreateMutation.mockReturnValue([createScenario, { isLoading: false }] as never);
   });
 
+  it.each(['https:example.test/TP-20', 'https:/example.test/TP-20'])('rejects malformed absolute issue URL %s before mutation', async (relatedIssueUrl) => {
+    const user = userEvent.setup();
+    renderContainer();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'Scenario' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Related issue URL' }), { target: { value: relatedIssueUrl } });
+    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
+    expect(await screen.findByText('Enter an absolute HTTP(S) URL')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Related issue URL' })).toHaveValue(relatedIssueUrl);
+    expect(createScenario).not.toHaveBeenCalled();
+  });
+
   it('submits the selected project and structured fields without generated Markdown', async () => {
     const user = userEvent.setup();
     createScenario.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'scenario-1' }) });
@@ -51,7 +62,7 @@ describe('TestScenarioCreateContainer', () => {
     renderContainer();
     await user.type(screen.getByRole('textbox', { name: 'Title' }), '  Checkout flow  ');
     fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: '  Details\n  here  ' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Objective' }), { target: { value: '  Complete checkout  ' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Related issue URL' }), { target: { value: ' https://example.test/TP-20 ' } });
     await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
 
     await waitFor(() => expect(createScenario).toHaveBeenCalledTimes(1));
@@ -61,7 +72,7 @@ describe('TestScenarioCreateContainer', () => {
         folderId: null,
         title: 'Checkout flow',
         details: 'Details\n  here',
-        objective: 'Complete checkout',
+        relatedIssueUrl: 'https://example.test/TP-20',
       },
     });
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1', { replace: true }));

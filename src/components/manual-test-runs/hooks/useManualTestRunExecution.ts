@@ -32,6 +32,7 @@ import type { ManualTestRunOutcome, ManualTestRunStepDrafts, ManualTestRunStepSa
 export type ManualTestRunPendingWrite =
   | { kind: 'run' }
   | { kind: 'metadata' }
+  | { kind: 'executor' }
   | { kind: 'step'; stepId: string }
   | { kind: 'completion' }
   | null;
@@ -66,6 +67,7 @@ export interface UseManualTestRunExecutionResult {
   isRunKeyDirty: boolean;
   dirtyStepIds: string[];
   stepSaveStates: Record<string, ManualTestRunStepSaveState>;
+  stepSavedAt: Record<string, number>;
   setRunNotesDraft: (value: string) => void;
   setRunKeyDraft: (value: string) => void;
   setStepStatus: (stepId: string, status: ManualTestRunStepStatus) => void;
@@ -73,6 +75,8 @@ export interface UseManualTestRunExecutionResult {
   saveRunNotes: () => Promise<void>;
   saveRunKey: () => Promise<void>;
   saveStep: (stepId: string) => Promise<void>;
+  flushStepNotes: (stepId: string) => void;
+  coordinateExternalWrite: (write: () => Promise<ManualTestRunRead | undefined>) => Promise<ManualTestRunRead | undefined>;
   discardRunNotes: () => void;
   discardRunKey: () => void;
   discardStep: (stepId: string) => void;
@@ -102,6 +106,7 @@ const reconcileDrafts = (
   runNotesDraft: string,
   runKeyDraft: string,
   stepDrafts: ManualTestRunStepDrafts,
+  hasUnacknowledgedRevision: (stepId: string) => boolean,
 ) => {
   const nextRunNotesDraft =
     normalizeManualTestRunNote(runNotesDraft) === normalizeManualTestRunNote(baseline.notes)
@@ -118,7 +123,9 @@ const reconcileDrafts = (
     const draft = stepDrafts[step.id];
     const isDirty = previousSaved ? draft && getManualTestRunStepPatchPayload(draft, previousSaved) !== null : false;
 
-    if (!isDirty || !draft) nextStepDrafts[step.id] = { status: step.status, notes: step.notes ?? '' };
+    if (!draft || (!isDirty && !hasUnacknowledgedRevision(step.id))) {
+      nextStepDrafts[step.id] = { status: step.status, notes: step.notes ?? '' };
+    }
   }
 
   return { nextRunNotesDraft, nextRunKeyDraft, nextStepDrafts };
@@ -140,6 +147,7 @@ export const useManualTestRunExecution = ({
   const [runKeyDraft, setRunKeyDraftState] = useState(run.runKey ?? '');
   const [runKeyError, setRunKeyError] = useState<string>();
   const [stepDrafts, setStepDrafts] = useState<ManualTestRunStepDrafts>(() => getManualTestRunStepDrafts(run.steps));
+  const [stepSavedAt, setStepSavedAt] = useState<Record<string, number>>({});
   const [stepSaveStates, setStepSaveStates] = useState<Record<string, ManualTestRunStepSaveState>>({});
   const [pendingWrite, setPendingWrite] = useState<ManualTestRunPendingWrite>(null);
   const [feedback, setFeedback] = useState<ManualTestRunFeedback>();
@@ -150,20 +158,47 @@ export const useManualTestRunExecution = ({
   const mountedRef = useRef(true);
   const latestScopeRef = useRef(`${projectId}:${runId}`);
   const writeInFlightRef = useRef(false);
+  const queuedSteps = useRef(new Set<string>());
+  const noteTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const revisions = useRef<Record<string, number>>({});
+  const acknowledgedRevisions = useRef<Record<string, number>>({});
+  const failedSteps = useRef(new Set<string>());
+  const pumpRef = useRef<() => void>(() => {});
+  const editableRef = useRef(!isReadOnly);
+  const executionEpochRef = useRef(0);
+  if (editableRef.current !== !isReadOnly) executionEpochRef.current += 1;
+  editableRef.current = !isReadOnly;
+  const cancelAutomaticWrites = useCallback(() => {
+    noteTimers.current.forEach(clearTimeout);
+    noteTimers.current.clear();
+    queuedSteps.current.clear();
+  }, []);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; cancelAutomaticWrites(); };
+  }, [cancelAutomaticWrites]);
+  useEffect(() => {
+    cancelAutomaticWrites();
+    failedSteps.current.clear();
+    revisions.current = {};
+    acknowledgedRevisions.current = {};
+    writeInFlightRef.current = false;
+    setPendingWrite(null);
+    setRecoveryBlocked(false);
+    setIsCompletionOpen(false);
+  }, [projectId, runId, cancelAutomaticWrites]);
+  useEffect(() => { if (isReadOnly) cancelAutomaticWrites(); }, [isReadOnly, cancelAutomaticWrites]);
+
+  const scopeEpochRef = useRef(0);
+  if (latestScopeRef.current !== `${projectId}:${runId}`) scopeEpochRef.current += 1;
+  const scopeEpoch = scopeEpochRef.current;
   latestScopeRef.current = `${projectId}:${runId}`;
   draftStateRef.current = { runNotesDraft, runKeyDraft, stepDrafts };
 
-  useEffect(
-    () => () => {
-      mountedRef.current = false;
-    },
-    [],
-  );
-
   const isCurrentScope = useCallback(
-    () => mountedRef.current && latestScopeRef.current === `${projectId}:${runId}`,
-    [projectId, runId],
+    () => mountedRef.current && scopeEpochRef.current === scopeEpoch && latestScopeRef.current === `${projectId}:${runId}`,
+    [projectId, runId, scopeEpoch],
   );
 
   useEffect(() => {
@@ -185,6 +220,7 @@ export const useManualTestRunExecution = ({
       draftStateRef.current.runNotesDraft,
       draftStateRef.current.runKeyDraft,
       draftStateRef.current.stepDrafts,
+      (stepId) => (revisions.current[stepId] ?? 0) > (acknowledgedRevisions.current[stepId] ?? 0),
     );
     savedRunRef.current = run;
     setSavedRun(run);
@@ -203,8 +239,13 @@ export const useManualTestRunExecution = ({
         currentDrafts.runNotesDraft,
         currentDrafts.runKeyDraft,
         currentDrafts.stepDrafts,
+        (stepId) => (revisions.current[stepId] ?? 0) > (acknowledgedRevisions.current[stepId] ?? 0),
       );
       savedRunRef.current = response;
+      const nextEditable = response.status === 'in_progress' && response.executedById === currentUserId;
+      if (editableRef.current !== nextEditable) executionEpochRef.current += 1;
+      editableRef.current = nextEditable;
+      if (!editableRef.current) cancelAutomaticWrites();
       setSavedRun(response);
       setRunNotesDraftState(reconciled.nextRunNotesDraft);
       setRunKeyDraftState(reconciled.nextRunKeyDraft);
@@ -216,17 +257,18 @@ export const useManualTestRunExecution = ({
       };
       setPersistedRun(response);
     },
-    [isCurrentScope, projectId, runId, setPersistedRun],
+    [cancelAutomaticWrites, currentUserId, isCurrentScope, projectId, runId, setPersistedRun],
   );
 
   const recoverAuthoritativeState = useCallback(
     async (reason: 'conflict' | 'uncertain-completion' | 'run-key-conflict') => {
       if (!isCurrentScope()) return undefined;
       setRecoveryBlocked(true);
-      const response = await refetch();
+      let response: ManualTestRunRead | undefined;
+      try { response = await refetch(); } catch { response = undefined; }
       if (!isCurrentScope()) return undefined;
 
-      if (!response) {
+      if (!response || response.id !== runId || response.projectId !== projectId) {
         setFeedback({
           status: 'error',
           title: 'Could not refresh the saved run',
@@ -255,7 +297,7 @@ export const useManualTestRunExecution = ({
       }
       return response;
     },
-    [applySavedResponse, isCurrentScope, refetch],
+    [applySavedResponse, isCurrentScope, projectId, refetch, runId],
   );
 
   const [patchRun] = usePatchApiV2ManualTestRunsByRunIdMutation();
@@ -266,10 +308,11 @@ export const useManualTestRunExecution = ({
     (write: Exclude<ManualTestRunPendingWrite, null>) => {
       if (
         writeInFlightRef.current ||
+        (write.kind !== 'step' && (queuedSteps.current.size > 0 || noteTimers.current.size > 0 || failedSteps.current.size > 0)) ||
         !isCurrentScope() ||
-        (write.kind !== 'metadata' && savedRunRef.current.status !== 'in_progress') ||
+        (write.kind !== 'metadata' && write.kind !== 'executor' && savedRunRef.current.status !== 'in_progress') ||
         !currentUserId ||
-        savedRunRef.current.executedById !== currentUserId ||
+        (write.kind !== 'executor' && savedRunRef.current.executedById !== currentUserId) ||
         recoveryBlocked
       ) {
         return false;
@@ -286,6 +329,7 @@ export const useManualTestRunExecution = ({
     if (!isCurrentScope()) return;
     writeInFlightRef.current = false;
     setPendingWrite(null);
+    queueMicrotask(() => pumpRef.current());
   }, [isCurrentScope]);
 
   const updateStepSaveState = useCallback((stepId: string, state: ManualTestRunStepSaveState | undefined) => {
@@ -300,6 +344,7 @@ export const useManualTestRunExecution = ({
   const setRunNotesDraft = useCallback(
     (value: string) => {
       if (isReadOnly || pendingWrite?.kind === 'run') return;
+      draftStateRef.current = { ...draftStateRef.current, runNotesDraft: value };
       setRunNotesDraftState(value);
     },
     [isReadOnly, pendingWrite],
@@ -309,33 +354,52 @@ export const useManualTestRunExecution = ({
     (value: string) => {
       if (!canEditRunKey || pendingWrite?.kind === 'metadata') return;
       setRunKeyError(undefined);
+      draftStateRef.current = { ...draftStateRef.current, runKeyDraft: value };
       setRunKeyDraftState(value);
     },
     [canEditRunKey, pendingWrite],
   );
 
-  const setStepStatus = useCallback(
-    (stepId: string, status: ManualTestRunStepStatus) => {
-      if (isReadOnly || (pendingWrite?.kind === 'step' && pendingWrite.stepId === stepId)) return;
-      setStepDrafts((current) => ({ ...current, [stepId]: { ...(current[stepId] ?? { notes: '' }), status } }));
-    },
-    [isReadOnly, pendingWrite],
-  );
+  const enqueueStep = useCallback((stepId: string) => {
+    if (!editableRef.current || failedSteps.current.has(stepId)) return;
+    queuedSteps.current.add(stepId);
+    queueMicrotask(() => pumpRef.current());
+  }, []);
 
-  const setStepNotes = useCallback(
-    (stepId: string, notes: string) => {
-      if (isReadOnly || (pendingWrite?.kind === 'step' && pendingWrite.stepId === stepId)) return;
-      setStepDrafts((current) => ({
-        ...current,
-        [stepId]: { ...(current[stepId] ?? { status: 'not_started' }), notes },
-      }));
-    },
-    [isReadOnly, pendingWrite],
-  );
+  const flushStepNotes = useCallback((stepId: string) => {
+    clearTimeout(noteTimers.current.get(stepId));
+    noteTimers.current.delete(stepId);
+    enqueueStep(stepId);
+  }, [enqueueStep]);
+
+  const changeStep = useCallback((stepId: string, changes: Partial<ManualTestRunStepDrafts[string]>) => {
+    if (!editableRef.current || !isCurrentScope()) return false;
+    const current = draftStateRef.current.stepDrafts;
+    if (!current[stepId]) return false;
+    const next = { ...current, [stepId]: { ...current[stepId], ...changes } };
+    revisions.current[stepId] = (revisions.current[stepId] ?? 0) + 1;
+    draftStateRef.current = { ...draftStateRef.current, stepDrafts: next };
+    setStepDrafts(next);
+    return true;
+  }, [isCurrentScope]);
+
+  const setStepStatus = useCallback((stepId: string, status: ManualTestRunStepStatus) => {
+    if (!changeStep(stepId, { status })) return;
+    flushStepNotes(stepId);
+  }, [changeStep, flushStepNotes]);
+
+  const setStepNotes = useCallback((stepId: string, notes: string) => {
+    if (!changeStep(stepId, { notes })) return;
+    clearTimeout(noteTimers.current.get(stepId));
+    noteTimers.current.set(stepId, setTimeout(() => {
+      noteTimers.current.delete(stepId);
+      enqueueStep(stepId);
+    }, 500));
+  }, [changeStep, enqueueStep]);
 
   const saveRunNotes = useCallback(async () => {
     const baseline = savedRunRef.current;
-    const payload = getManualTestRunNotePatchPayload(runNotesDraft, baseline.notes);
+    const payload = getManualTestRunNotePatchPayload(draftStateRef.current.runNotesDraft, baseline.notes);
     if (!payload) {
       setFeedback({ status: 'info', title: 'No execution note changes to save.' });
       return;
@@ -385,12 +449,11 @@ export const useManualTestRunExecution = ({
     projectId,
     recoverAuthoritativeState,
     runId,
-    runNotesDraft,
   ]);
 
   const saveRunKey = useCallback(async () => {
     const baseline = savedRunRef.current;
-    const validation = createReadableLabelSchema('Run key').safeParse(runKeyDraft);
+    const validation = createReadableLabelSchema('Run key').safeParse(draftStateRef.current.runKeyDraft);
     if (!validation.success) {
       const message = validation.error.issues[0]?.message ?? 'Enter a valid Run key.';
       setRunKeyError(message);
@@ -442,17 +505,21 @@ export const useManualTestRunExecution = ({
     } finally {
       endWrite();
     }
-  }, [applySavedResponse, beginWrite, endWrite, isCurrentScope, patchRun, projectId, recoverAuthoritativeState, runId, runKeyDraft]);
+  }, [applySavedResponse, beginWrite, endWrite, isCurrentScope, patchRun, projectId, recoverAuthoritativeState, runId]);
 
   const saveStep = useCallback(
     async (stepId: string) => {
       const baseline = savedRunRef.current;
       const savedStep = baseline.steps.find((step) => step.id === stepId);
-      const draft = stepDrafts[stepId];
+      const draft = draftStateRef.current.stepDrafts[stepId];
+      const revision = revisions.current[stepId] ?? 0;
+      const executionEpoch = executionEpochRef.current;
       if (!savedStep || !draft) return;
       const payload = getManualTestRunStepPatchPayload(draft, savedStep);
       if (!payload) {
-        setFeedback({ status: 'info', title: 'No step changes to save.' });
+        failedSteps.current.delete(stepId);
+        acknowledgedRevisions.current[stepId] = revision;
+        updateStepSaveState(stepId, getStepSaveState(savedStep));
         return;
       }
       if (!beginWrite({ kind: 'step', stepId })) {
@@ -471,17 +538,23 @@ export const useManualTestRunExecution = ({
           stepId,
           manualTestRunStepUpdateRequest: payload,
         }).unwrap();
-        if (!isCurrentScope()) return;
+        if (!isCurrentScope() || !editableRef.current || executionEpochRef.current !== executionEpoch) return;
+        acknowledgedRevisions.current[stepId] = revision;
         applySavedResponse(response, baseline);
         const responseStep = response.steps.find((step) => step.id === stepId) ?? savedStep;
-        setStepDrafts((current) => ({
-          ...current,
-          [stepId]: { status: responseStep.status, notes: responseStep.notes ?? '' },
-        }));
+        if ((revisions.current[stepId] ?? 0) === revision) {
+          const next = { ...draftStateRef.current.stepDrafts,
+            [stepId]: { status: responseStep.status, notes: responseStep.notes ?? '' } };
+          draftStateRef.current = { ...draftStateRef.current, stepDrafts: next };
+          setStepDrafts(next);
+        }
+        failedSteps.current.delete(stepId);
         updateStepSaveState(stepId, getStepSaveState(responseStep));
-        setFeedback({ status: 'success', title: 'Step result saved.' });
+        setStepSavedAt((current) => ({ ...current, [stepId]: Date.now() }));
       } catch (error) {
-        if (!isCurrentScope()) return;
+        if (!isCurrentScope() || !editableRef.current || executionEpochRef.current !== executionEpoch) return;
+        failedSteps.current.add(stepId);
+        queuedSteps.current.delete(stepId);
         if (isConflict(error)) {
           updateStepSaveState(stepId, 'not_saved');
           const authoritative = await recoverAuthoritativeState('conflict');
@@ -513,13 +586,46 @@ export const useManualTestRunExecution = ({
       projectId,
       recoverAuthoritativeState,
       runId,
-      stepDrafts,
       updateStepSaveState,
     ],
   );
 
+  pumpRef.current = () => {
+    if (!isCurrentScope() || !editableRef.current || recoveryBlocked || failedSteps.current.size > 0 || writeInFlightRef.current) return;
+    const stepId = queuedSteps.current.values().next().value;
+    if (!stepId) return;
+    queuedSteps.current.delete(stepId);
+    if (failedSteps.current.has(stepId)) return;
+    void saveStep(stepId).finally(() => { if (isCurrentScope()) pumpRef.current(); });
+  };
+
+  const retryStep = useCallback(async (stepId: string) => {
+    if (writeInFlightRef.current || recoveryBlocked) return;
+    failedSteps.current.delete(stepId);
+    clearTimeout(noteTimers.current.get(stepId));
+    noteTimers.current.delete(stepId);
+    try {
+      await saveStep(stepId);
+    } finally {
+      if (isCurrentScope()) queueMicrotask(() => pumpRef.current());
+    }
+  }, [isCurrentScope, recoveryBlocked, saveStep]);
+
+  const coordinateExternalWrite = useCallback(async (write: () => Promise<ManualTestRunRead | undefined>) => {
+    if (queuedSteps.current.size || noteTimers.current.size || !beginWrite({ kind: 'executor' })) return undefined;
+    try {
+      const response = await write();
+      if (!isCurrentScope() || (response && (response.id !== runId || response.projectId !== projectId))) return undefined;
+      if (response) applySavedResponse(response);
+      return response;
+    } finally {
+      endWrite();
+    }
+  }, [applySavedResponse, beginWrite, endWrite, isCurrentScope, projectId, runId]);
+
   const discardRunNotes = useCallback(() => {
     if (isReadOnly || pendingWrite) return;
+    draftStateRef.current = { ...draftStateRef.current, runNotesDraft: savedRunRef.current.notes ?? '' };
     setRunNotesDraftState(savedRunRef.current.notes ?? '');
     setFeedback(undefined);
   }, [isReadOnly, pendingWrite]);
@@ -538,12 +644,19 @@ export const useManualTestRunExecution = ({
       if (isReadOnly || pendingWrite) return;
       const savedStep = savedRunRef.current.steps.find((step) => step.id === stepId);
       if (!savedStep) return;
-      setStepDrafts((current) => ({
-        ...current,
-        [stepId]: { status: savedStep.status, notes: savedStep.notes ?? '' },
-      }));
+      clearTimeout(noteTimers.current.get(stepId));
+      noteTimers.current.delete(stepId);
+      queuedSteps.current.delete(stepId);
+      failedSteps.current.delete(stepId);
+      revisions.current[stepId] = (revisions.current[stepId] ?? 0) + 1;
+      acknowledgedRevisions.current[stepId] = revisions.current[stepId];
+      const next = { ...draftStateRef.current.stepDrafts,
+        [stepId]: { status: savedStep.status, notes: savedStep.notes ?? '' } };
+      draftStateRef.current = { ...draftStateRef.current, stepDrafts: next };
+      setStepDrafts(next);
       updateStepSaveState(stepId, getStepSaveState(savedStep));
       setFeedback(undefined);
+      queueMicrotask(() => pumpRef.current());
     },
     [pendingWrite, updateStepSaveState, isReadOnly],
   );
@@ -554,6 +667,13 @@ export const useManualTestRunExecution = ({
     .filter((step) => getManualTestRunStepPatchPayload(stepDrafts[step.id] ?? { status: step.status, notes: '' }, step))
     .map((step) => step.id);
   const isDirty = hasManualTestRunDraftChanges(savedRun, runNotesDraft, stepDrafts);
+
+  useEffect(() => {
+    if (!isDirty && !isRunKeyDirty && !pendingWrite) return;
+    const preventLeave = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', preventLeave);
+    return () => window.removeEventListener('beforeunload', preventLeave);
+  }, [isDirty, isRunKeyDirty, pendingWrite]);
 
   const canStartRetest = useCallback(() => {
     if (isRunKeyDirty) {
@@ -595,7 +715,8 @@ export const useManualTestRunExecution = ({
       });
       return;
     }
-    if (isDirty || isRunKeyDirty) {
+    if (hasManualTestRunDraftChanges(savedRunRef.current, draftStateRef.current.runNotesDraft,
+      draftStateRef.current.stepDrafts) || getManualTestRunKeyPatchPayload(draftStateRef.current.runKeyDraft, savedRunRef.current.runKey)) {
       setFeedback({
         status: 'warning',
         title: 'Save or discard drafts before completing.',
@@ -606,14 +727,15 @@ export const useManualTestRunExecution = ({
     if (savedRun.status !== 'in_progress') return;
     setFeedback(undefined);
     setIsCompletionOpen(true);
-  }, [isDirty, isReadOnly, isRunKeyDirty, pendingWrite, recoveryBlocked, savedRun.status]);
+  }, [isReadOnly, pendingWrite, recoveryBlocked, savedRun.status]);
 
   const closeCompletion = useCallback(() => setIsCompletionOpen(false), []);
 
   const confirmCompletion = useCallback(
     async (outcome: ManualTestRunOutcome) => {
       if (!isManualOutcome(outcome)) return;
-      if (isDirty || isRunKeyDirty) {
+      if (hasManualTestRunDraftChanges(savedRunRef.current, draftStateRef.current.runNotesDraft,
+      draftStateRef.current.stepDrafts) || getManualTestRunKeyPatchPayload(draftStateRef.current.runKeyDraft, savedRunRef.current.runKey)) {
         setFeedback({
           status: 'warning',
           title: 'Save or discard drafts before completing.',
@@ -701,8 +823,6 @@ export const useManualTestRunExecution = ({
       recoverAuthoritativeState,
       runId,
       savedRun.steps,
-      isDirty,
-      isRunKeyDirty,
       recoveryBlocked,
     ],
   );
@@ -727,13 +847,16 @@ export const useManualTestRunExecution = ({
     isRunKeyDirty,
     dirtyStepIds,
     stepSaveStates,
+    stepSavedAt,
     setRunNotesDraft,
     setRunKeyDraft,
     setStepStatus,
     setStepNotes,
     saveRunNotes,
     saveRunKey,
-    saveStep,
+    saveStep: retryStep,
+    flushStepNotes,
+    coordinateExternalWrite,
     discardRunNotes,
     discardRunKey,
     discardStep,

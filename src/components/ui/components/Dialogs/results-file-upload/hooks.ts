@@ -40,7 +40,7 @@ export const useResultsFileUpload = (closeDialog: () => void, reportType: 'playw
   const [uploadProgress, setUploadProgress] = useState(0);
   const [fileSelectionError, setFileSelectionError] = useState<string | null>(null);
   const selectedProjectId = useSelectedProjectId();
-  const { data: projects = [] } = useGetApiV2ProjectsQuery({});
+  const { data: projects = [] } = useGetApiV2ProjectsQuery();
   const selectedProject = projects.find((project) => project.id === selectedProjectId);
   const uploadProjectId = selectedProject?.id ?? projects.find((project) => project.isActive)?.id;
 

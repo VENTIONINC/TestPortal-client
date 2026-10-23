@@ -14,7 +14,7 @@ interface ProjectGuardProps {
 }
 
 export function ProjectGuard({ children }: ProjectGuardProps) {
-  const { data: projects, isLoading } = useGetApiV2ProjectsQuery({});
+  const { data: projects, isLoading } = useGetApiV2ProjectsQuery();
   const selectedProjectId = useSelectedProjectId();
   const isInitialized = useIsInitialized();
   const { setSelectedProjectId, setIsInitialized } = useProjectsActions();

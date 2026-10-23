@@ -669,14 +669,7 @@ const injectedRtkApi = api
         GetApiV2ProjectsApiResponse,
         GetApiV2ProjectsApiArg
       >({
-        query: (queryArg) => ({
-          url: `/api/v2/projects`,
-          params: {
-            ownerId: queryArg.ownerId,
-            isActive: queryArg.isActive,
-            name: queryArg.name,
-          },
-        }),
+        query: () => ({ url: `/api/v2/projects` }),
         providesTags: ["Projects"],
       }),
       postApiV2Projects: build.mutation<
@@ -1379,7 +1372,7 @@ export type GetApiV2IssuesByIssueIdApiResponse =
   /** status 200 Issue details with derived category summary */ IssueRead;
 export type GetApiV2IssuesByIssueIdApiArg = {
   issueId: string;
-  /** Project ID to verify ownership of the issue */
+  /** Project ID used to scope the issue lookup */
   projectId: string;
 };
 export type PatchApiV2IssuesByIssueIdApiResponse =
@@ -1395,7 +1388,7 @@ export type DeleteApiV2IssuesByIssueIdApiResponse =
   };
 export type DeleteApiV2IssuesByIssueIdApiArg = {
   issueId: string;
-  /** Project ID to verify ownership of the issue */
+  /** Project ID used to scope the issue lookup */
   projectId: string;
 };
 export type GetApiV2ResultsApiResponse =
@@ -1424,13 +1417,13 @@ export type GetApiV2ResultsByResultIdApiResponse =
   /** status 200 Result details */ ResultDetail;
 export type GetApiV2ResultsByResultIdApiArg = {
   resultId: string;
-  /** Project ID to verify ownership of the result */
+  /** Project ID used to scope the result lookup */
   projectId: string;
 };
 export type DeleteApiV2ResultsByResultIdApiResponse = unknown;
 export type DeleteApiV2ResultsByResultIdApiArg = {
   resultId: string;
-  /** Project ID to verify ownership of the result */
+  /** Project ID used to scope the result deletion */
   projectId: string;
 };
 export type GetApiV2ResultsStatsApiResponse =
@@ -1456,13 +1449,13 @@ export type GetApiV2SpecsBySpecIdApiResponse =
   /** status 200 Spec details */ Spec;
 export type GetApiV2SpecsBySpecIdApiArg = {
   specId: string;
-  /** Project ID to verify ownership of the spec */
+  /** Project ID used to scope the spec lookup */
   projectId: string;
 };
 export type DeleteApiV2SpecsBySpecIdApiResponse = unknown;
 export type DeleteApiV2SpecsBySpecIdApiArg = {
   specId: string;
-  /** Project ID to verify ownership of the spec */
+  /** Project ID used to scope the spec deletion */
   projectId: string;
 };
 export type PostApiV2AssumptionsApiResponse =
@@ -1480,13 +1473,13 @@ export type GetApiV2AssumptionsByAssumptionIdApiResponse =
   /** status 200 Successfully retrieved assumption */ Assumption;
 export type GetApiV2AssumptionsByAssumptionIdApiArg = {
   assumptionId: string;
-  /** Project ID to verify ownership of the assumption */
+  /** Project ID used to scope the assumption lookup */
   projectId: string;
 };
 export type DeleteApiV2AssumptionsByAssumptionIdApiResponse = unknown;
 export type DeleteApiV2AssumptionsByAssumptionIdApiArg = {
   assumptionId: string;
-  /** Project ID to verify ownership of the assumption */
+  /** Project ID used to scope the assumption deletion */
   projectId: string;
 };
 export type PostApiV2ResultErrorsByResultErrorIdIssueApiResponse =
@@ -1534,20 +1527,20 @@ export type GetApiV2ResultErrorsByResultErrorIdApiResponse =
   };
 export type GetApiV2ResultErrorsByResultErrorIdApiArg = {
   resultErrorId: string;
-  /** Project ID to verify ownership of the result error */
+  /** Project ID used to scope the result-error lookup */
   projectId: string;
 };
 export type GetApiV2ExecutionsByExecutionIdApiResponse =
   /** status 200 Execution details retrieved successfully */ Execution;
 export type GetApiV2ExecutionsByExecutionIdApiArg = {
   executionId: string;
-  /** Project ID to verify ownership of the execution */
+  /** Project ID used to scope the execution lookup */
   projectId: string;
 };
 export type DeleteApiV2ExecutionsByExecutionIdApiResponse = unknown;
 export type DeleteApiV2ExecutionsByExecutionIdApiArg = {
   executionId: string;
-  /** Project ID to verify ownership of the execution */
+  /** Project ID used to scope the execution deletion */
   projectId: string;
 };
 export type PostApiV2UploadJsonReportApiResponse =
@@ -1711,11 +1704,7 @@ export type GetApiV2SkillsByIdArchiveApiArg = {
 };
 export type GetApiV2ProjectsApiResponse =
   /** status 200 List of projects */ Project[];
-export type GetApiV2ProjectsApiArg = {
-  ownerId?: string;
-  isActive?: boolean;
-  name?: string;
-};
+export type GetApiV2ProjectsApiArg = void;
 export type PostApiV2ProjectsApiResponse =
   /** status 201 Project created successfully */ Project;
 export type PostApiV2ProjectsApiArg = {
@@ -1934,7 +1923,7 @@ export type GetApiV2TestScenarioFoldersApiResponse =
     _count: {
       scenarios: number;
     };
-    children: any[];
+    children: TestScenarioFolder[];
   }[];
 export type GetApiV2TestScenarioFoldersApiArg = {
   projectId: string;
@@ -2840,6 +2829,7 @@ export type Project = {
   name: string;
   description: string | null;
   isActive: boolean;
+  /** Creator/owner attribution. This field is not a visibility or authorization boundary in the shared workspace. */
   ownerId: string;
   categoryWeights: ProjectCategoryWeights;
   createdAt: string;
@@ -3036,11 +3026,10 @@ export type TestScenario = {
   title: string;
   scenarioKey: string | null;
   details: string | null;
-  objective: string | null;
   preconditions: string | null;
   testData: string | null;
-  expectedResult: string | null;
-  notes: string | null;
+  priority: ("low" | "medium" | "high") | null;
+  relatedIssueUrl: string | null;
   steps: {
     id: string;
     position: number;
@@ -3058,11 +3047,10 @@ export type UpdateTestScenarioRequest = {
   title?: string;
   scenarioKey?: string | null;
   details?: string | null;
-  objective?: string | null;
   preconditions?: string | null;
   testData?: string | null;
-  expectedResult?: string | null;
-  notes?: string | null;
+  priority?: ("low" | "medium" | "high") | null;
+  relatedIssueUrl?: string | null;
 };
 export type AppendTestScenarioStepRequest = {
   action: string;
@@ -3128,11 +3116,10 @@ export type CreateTestScenarioRequest = {
   title: string;
   scenarioKey?: string | null;
   details?: string;
-  objective?: string;
   preconditions?: string;
   testData?: string;
-  expectedResult?: string;
-  notes?: string;
+  priority?: ("low" | "medium" | "high") | null;
+  relatedIssueUrl?: string | null;
   steps?: CreateTestScenarioStep[];
 };
 export type TestScenarioCreatorSummary = {
@@ -3235,11 +3222,8 @@ export type ManualTestRunRead = {
   updatedAt: string;
   title: string;
   details: string | null;
-  objective: string | null;
   preconditions: string | null;
   testData: string | null;
-  expectedResult: string | null;
-  scenarioNotes: string | null;
   notes: string | null;
   browser: string | null;
   operatingSystem: string | null;

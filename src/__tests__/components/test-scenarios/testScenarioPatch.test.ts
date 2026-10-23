@@ -15,11 +15,9 @@ import {
 const persisted = {
   title: 'Checkout',
   details: 'Existing details',
-  objective: 'Complete checkout',
   preconditions: 'Signed in',
   testData: null,
-  expectedResult: 'Order exists',
-  notes: null,
+
 };
 
 describe('Test Scenario structured payload helpers', () => {
@@ -32,7 +30,7 @@ describe('Test Scenario structured payload helpers', () => {
   it('returns only normalized changed structured fields', () => {
     expect(
       getTestScenarioPatchPayload(
-        { ...persisted, title: '  Checkout v2  ', details: '  Updated\n  details  ', objective: 'Complete checkout' },
+        { ...persisted, title: '  Checkout v2  ', details: '  Updated\n  details  ' },
         persisted,
       ),
     ).toEqual({ title: 'Checkout v2', details: 'Updated\n  details' });
@@ -82,13 +80,11 @@ describe('Test Scenario structured payload helpers', () => {
       { key: 'draft-b', action: 'Submit', expectedResult: '  ' },
     ];
 
-    expect(getTestScenarioCreatePayload('project-1', { ...persisted, details: '  ', notes: 'Keep note' }, steps)).toEqual({
+    expect(getTestScenarioCreatePayload('project-1', { ...persisted, details: '  ' }, steps)).toEqual({
       projectId: 'project-1',
       title: 'Checkout',
-      objective: 'Complete checkout',
-      preconditions: 'Signed in',
-      expectedResult: 'Order exists',
-      notes: 'Keep note',
+          preconditions: 'Signed in',
+
       steps: [
         { action: 'Open checkout', expectedResult: 'Form is shown' },
         { action: 'Submit' },
@@ -119,4 +115,24 @@ describe('Test Scenario structured payload helpers', () => {
       getTestScenarioStepPatchPayload({ action: 'Open', expectedResult: 'Ready' }, { action: 'Open', expectedResult: 'Ready' }),
     ).toBeNull();
   });
+  it('creates trimmed metadata, omits empty metadata and never serializes obsolete fields', () => {
+    const values = { title: 'Checkout', priority: 'high' as const, relatedIssueUrl: ' https://example.test/TP-20 ', objective: 'obsolete', notes: 'obsolete', expectedResult: 'obsolete' };
+    expect(getTestScenarioCreatePayload('project-1', values)).toEqual({ projectId: 'project-1', title: 'Checkout', priority: 'high', relatedIssueUrl: 'https://example.test/TP-20' });
+    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', priority: '', relatedIssueUrl: ' ' })).toEqual({ projectId: 'project-1', title: 'Checkout' });
+  });
+
+  it('preserves omitted metadata, clears explicitly empty metadata and skips unchanged values', () => {
+    const saved = { title: 'Checkout', priority: 'high' as const, relatedIssueUrl: 'https://example.test/TP-20' };
+    expect(getTestScenarioPatchPayload({ title: 'Checkout' }, saved)).toBeNull();
+    expect(getTestScenarioPatchPayload({ ...saved, priority: '', relatedIssueUrl: '' }, saved)).toEqual({ priority: null, relatedIssueUrl: null });
+    expect(getTestScenarioPatchPayload({ ...saved, relatedIssueUrl: ' https://example.test/TP-20 ' }, saved)).toBeNull();
+  });
+
+  it('rejects invalid metadata before constructing requests', () => {
+    for (const relatedIssueUrl of ['/relative', 'https:example.test/TP-20', 'https:/example.test/TP-20', 'http:example.test/TP-20', 'http:/example.test/TP-20', 'javascript:alert(1)', 'ftp://example.test']) {
+      expect(() => getTestScenarioCreatePayload('project-1', { title: 'Scenario', relatedIssueUrl })).toThrow();
+      expect(() => getTestScenarioPatchPayload({ title: 'Scenario', relatedIssueUrl }, { title: 'Scenario' })).toThrow();
+    }
+  });
+
 });

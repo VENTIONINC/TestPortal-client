@@ -7,3 +7,6 @@ Folders belong to one project and can be nested. Create from a selected folder t
 Suites are current, ordered selections of existing scenarios. Their purpose, description and release are labels only; a release suite does not preserve historical run evidence. Members can be added or removed in batches of up to 100 scenarios, and the catalog can reorder suite members. Bulk folder moves use the same 100-scenario limit.
 
 Scenario forms can assign a folder or leave the scenario Unfiled. Moving scenarios, editing folders, or changing suite membership does not change scenario identity or execution history.
+
+
+Bulk **Move…** assigns scenarios to a folder or Unfiled in All scenarios, folder and Unfiled views. It is hidden in suite views, and changing scope closes an open Move dialog. Folder menu moves remain available. Suite membership actions add/remove references to scenarios independently of their folder assignment; removing a member does not move or delete the scenario.

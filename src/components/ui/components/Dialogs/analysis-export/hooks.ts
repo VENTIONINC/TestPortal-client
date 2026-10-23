@@ -17,7 +17,7 @@ import { extractApiError } from '@/utils/apiErrors';
 import { ResultsAnalysisExportDialog } from './analysis-export-dialog';
 
 export const useResultsAnalysisExport = (closeDialog: () => void) => {
-  const { data: projects } = useGetApiV2ProjectsQuery({});
+  const { data: projects } = useGetApiV2ProjectsQuery();
   const projectsList: Project[] = projects ?? [];
   const firstActiveProject = projectsList.find((project) => project.isActive);
   const [triggerExport, { isFetching }] = useLazyGetAnalysisExportQuery();

@@ -79,11 +79,11 @@ const scenarioFor = (projectId: string) => ({
   title: `${projectId} scenario`,
     contentMd: `# ${projectId} scenario`,
     details: `${projectId} details`,
-    objective: `${projectId} objective`,
+    priority: null,
+    relatedIssueUrl: `https://example.test/${projectId}`,
     preconditions: null,
     testData: null,
-    expectedResult: null,
-    notes: null,
+
     steps: [],
     contentMdHash: `${projectId}-hash`,
     contentMdFormatVersion: 1,
@@ -132,7 +132,7 @@ describe('Test Scenario route boundaries', () => {
     const { unmount } = renderWithRouter(<TestScenarioDetailBoundary />);
 
     expect(mockedDetailQuery).toHaveBeenLastCalledWith({ scenarioId: 'scenario-1', projectId: 'project-a' });
-    expect(screen.getByText('project-a objective')).toBeInTheDocument();
+    expect(screen.getByText('https://example.test/project-a')).toBeInTheDocument();
     expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
 
@@ -140,13 +140,13 @@ describe('Test Scenario route boundaries', () => {
     renderWithRouter(<TestScenarioEditBoundary />);
 
     expect(mockedDetailQuery).toHaveBeenLastCalledWith({ scenarioId: 'scenario-1', projectId: 'project-a' });
-    expect(screen.getByRole('textbox', { name: 'Objective' })).toHaveValue('project-a objective');
+    expect(screen.getByRole('textbox', { name: 'Related issue URL' })).toHaveValue('https://example.test/project-a');
   });
 
   it('clears the edit form immediately and requests the new project scope after a project switch', () => {
     const { rerender } = renderWithRouter(<TestScenarioEditBoundary />);
 
-    expect(screen.getByRole('textbox', { name: 'Objective' })).toHaveValue('project-a objective');
+    expect(screen.getByRole('textbox', { name: 'Related issue URL' })).toHaveValue('https://example.test/project-a');
 
     selectedProject.id = 'project-b';
     mockedDetailQuery.mockReturnValue({
@@ -174,7 +174,7 @@ describe('Test Scenario route boundaries', () => {
   it('clears read-only details immediately when the selected project changes', () => {
     const { rerender } = renderWithRouter(<TestScenarioDetailBoundary />);
 
-    expect(screen.getByText('project-a objective')).toBeInTheDocument();
+    expect(screen.getByText('https://example.test/project-a')).toBeInTheDocument();
     expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
 
     selectedProject.id = 'project-b';

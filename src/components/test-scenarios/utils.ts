@@ -8,6 +8,7 @@ import type {
   UpdateTestScenarioRequest,
   UpdateTestScenarioStepRequest,
 } from '@/redux/apis/generatedApi';
+import { testScenarioAuthoringSchema } from '@/schemas';
 
 import {
   TEST_SCENARIO_EDITABLE_FIELDS,
@@ -52,12 +53,18 @@ export const toggleScenarioSelection = (selectedIds: string[], scenarioId: strin
   return selectedIds.length < 100 ? [...selectedIds, scenarioId] : selectedIds;
 };
 
+const metadataSchema = testScenarioAuthoringSchema.pick({ priority: true, relatedIssueUrl: true });
+const validateMetadata = (values: TestScenarioEditableValues) => metadataSchema.parse({
+  priority: values.priority ?? '', relatedIssueUrl: values.relatedIssueUrl ?? '',
+});
+
 export const getTestScenarioCreatePayload = (
   projectId: string,
   values: TestScenarioEditableValues,
   steps: TestScenarioInitialStepDraft[] = [],
   folderId?: string | null,
 ): CreateTestScenarioRequest => {
+  validateMetadata(values);
   const payload: CreateTestScenarioRequest = {
     projectId,
     title: normalizeScenarioText(values.title),
@@ -67,7 +74,9 @@ export const getTestScenarioCreatePayload = (
   for (const field of TEST_SCENARIO_EDITABLE_FIELDS) {
     if (field === 'title') continue;
     const value = normalizeScenarioText(values[field]);
-    if (value) payload[field] = value;
+    if (field === 'priority') {
+      if (values.priority) payload.priority = values.priority;
+    } else if (value) payload[field] = value;
   }
 
   const serializedSteps = serializeInitialSteps(steps);
@@ -81,15 +90,19 @@ export const getTestScenarioPatchPayload = (
   values: TestScenarioEditableValues,
   persisted: TestScenarioEditableValues,
 ): UpdateTestScenarioRequest | null => {
+  validateMetadata(values);
   const payload: UpdateTestScenarioRequest = {};
 
   for (const field of TEST_SCENARIO_EDITABLE_FIELDS) {
+    if (values[field] === undefined) continue;
     const value = normalizeScenarioText(values[field]);
     const savedValue = normalizeScenarioText(persisted[field]);
 
     if (value === savedValue) continue;
     if (field === 'title') {
       payload.title = value;
+    } else if (field === 'priority') {
+      payload.priority = values.priority || null;
     } else {
       payload[field] = value || null;
     }

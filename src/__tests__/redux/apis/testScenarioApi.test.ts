@@ -47,11 +47,11 @@ const scenario: TestScenario = {
   title: 'Checkout flow',
   contentMd: '# Checkout flow',
   details: 'Scenario details',
-  objective: 'Complete checkout',
+  priority: 'high',
+  relatedIssueUrl: 'https://example.test/TP-20',
   preconditions: 'Signed in',
   testData: null,
-  expectedResult: 'Order exists',
-  notes: null,
+
   steps: [],
   contentMdHash: 'hash-1',
   contentMdFormatVersion: 1,
@@ -145,7 +145,7 @@ describe('generated Test Scenario CRUD contract', () => {
       projectId: 'project-1',
       title: 'Checkout flow',
       details: 'Scenario details',
-      objective: 'Complete checkout',
+      relatedIssueUrl: 'https://example.test/TP-20',
     } satisfies CreateTestScenarioRequest,
   };
   const detailArgs: GetApiV2TestScenariosByScenarioIdApiArg = {
@@ -155,7 +155,7 @@ describe('generated Test Scenario CRUD contract', () => {
   const patchArgs: PatchApiV2TestScenariosByScenarioIdApiArg = {
     ...detailArgs,
     updateTestScenarioRequest: {
-      objective: 'Updated objective',
+      relatedIssueUrl: 'https://example.test/updated',
     } satisfies UpdateTestScenarioRequest,
   };
   const deleteArgs: DeleteApiV2TestScenariosByScenarioIdApiArg = detailArgs;
@@ -292,14 +292,14 @@ describe('generated Test Scenario cache behavior', () => {
         generatedApi.endpoints.patchApiV2TestScenariosByScenarioId.initiate({
           scenarioId: 'scenario-1',
           projectId: 'project-1',
-          updateTestScenarioRequest: { title: 'Updated checkout flow', objective: 'Updated objective' },
+          updateTestScenarioRequest: { title: 'Updated checkout flow', relatedIssueUrl: 'https://example.test/updated' },
         }),
       )
       .unwrap();
     await vi.waitFor(() => expect(catalogRequests).toBe(4));
     expect(patchBodies).toEqual([
       { details: 'Updated details' },
-      { title: 'Updated checkout flow', objective: 'Updated objective' },
+      { title: 'Updated checkout flow', relatedIssueUrl: 'https://example.test/updated' },
     ]);
     await vi.waitFor(() =>
       expect(
@@ -322,7 +322,7 @@ describe('generated Test Scenario cache behavior', () => {
     await vi.waitFor(() => expect(catalogRequests).toBe(5));
     expect(patchBodies).toEqual([
       { details: 'Updated details' },
-      { title: 'Updated checkout flow', objective: 'Updated objective' },
+      { title: 'Updated checkout flow', relatedIssueUrl: 'https://example.test/updated' },
       { details: null },
     ]);
     await vi.waitFor(() =>
