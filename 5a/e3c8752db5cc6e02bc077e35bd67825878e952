@@ -1,0 +1,19 @@
+src/__tests__/pages/UserSettings/MCPSettings.test.tsx
+  s_b4773076088531::t_407b04880ba294 1-191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.18",
+  "base_commit_sha": "5ae3c8752db5cc6e02bc077e35bd67825878e952",
+  "prompts": {},
+  "sessions": {
+    "s_b4773076088531": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17821-7ca2-7912-8cee-417c9b59778c",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
