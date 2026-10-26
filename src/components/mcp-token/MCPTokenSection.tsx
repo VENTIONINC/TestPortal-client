@@ -19,7 +19,7 @@ export function MCPTokenSection() {
         onRequest={handleRequestToken}
         onRevoke={handleRevokeToken}
       />
-      <Section.Description>Generate your Model Context Protocol token for Claude desktop</Section.Description>
+      <Section.Description>Generate one Model Context Protocol token to use with either MCP endpoint.</Section.Description>
       <Section.Card p={2}>
         {mcpToken ? <TokenReadyCard mcpToken={mcpToken} tokenExpiresAt={tokenExpiresAt} /> : <TokenGenerationCard />}
       </Section.Card>

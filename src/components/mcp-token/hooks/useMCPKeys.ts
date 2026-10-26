@@ -37,7 +37,7 @@ export const useMCPKeys = () => {
 
       toaster.create({
         title: 'MCP Token Generated',
-        description: 'Your MCP token has been generated successfully. Copy it to use in Claude desktop.',
+        description: 'Your MCP token has been generated successfully. Use it with either MCP endpoint.',
         type: 'success',
       });
     } catch {
