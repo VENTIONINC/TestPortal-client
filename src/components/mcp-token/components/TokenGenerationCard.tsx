@@ -10,7 +10,7 @@ export const TokenGenerationCard = () => {
         MCP Token Generation
       </Text>
       <Text fontSize="sm" color="status.info.text" mt={1}>
-        Click the button above to generate your MCP token for use with Claude desktop application.
+        Click the button above to generate an MCP token for your MCP client configurations.
       </Text>
     </Box>
   );

@@ -26,7 +26,7 @@ export const TokenReadyCard = memo(function TokenReadyCard({ mcpToken, tokenExpi
           Token Ready
         </Text>
         <Text fontSize="sm" color="status.success.text" mt={1}>
-          Copy this token and use it in your Claude desktop application to connect to the MCP server.
+          Copy this token and use it in your MCP client configuration to authenticate with Test Portal.
         </Text>
       </Box>
       <Box>
