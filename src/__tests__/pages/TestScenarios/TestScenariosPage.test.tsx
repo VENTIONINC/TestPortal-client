@@ -9,13 +9,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChakraProvider } from '@/components/ui';
 import { TestScenariosPage } from '@/pages/TestScenarios';
 
-const projectState = vi.hoisted(() => ({ id: 'project-1', missingCounts: false, requestedProjects: [] as string[] }));
+const projectState = vi.hoisted(() => ({ id: 'project-1', missingCounts: false, refreshingCounts: false, failedCounts: false, requestedProjects: [] as string[] }));
 const catalogTab = vi.hoisted(() => vi.fn());
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProject: () => ({ selectedProjectId: projectState.id }) }));
 vi.mock('@/redux/apis/generatedApi', () => ({
   useGetApiV2TestScenariosQuery: (arg: { projectId: string }) => {
     projectState.requestedProjects.push(arg.projectId);
-    return { currentData: projectState.missingCounts ? undefined : { total: arg.projectId === 'project-1' ? 12 : 3 } };
+    return {
+      currentData: projectState.missingCounts ? undefined : { total: arg.projectId === 'project-1' ? 12 : 3 },
+      isFetching: projectState.refreshingCounts,
+      error: projectState.failedCounts ? { status: 500 } : undefined,
+    };
   },
 }));
 vi.mock('@/redux/apis/extendedApi', () => ({
@@ -25,9 +29,13 @@ vi.mock('@/redux/apis/extendedApi', () => ({
       : arg.projectId === 'project-1'
         ? [{ id: 'suite-1' }, { id: 'suite-2' }]
         : [{ id: 'suite-3' }],
+    isFetching: projectState.refreshingCounts,
+    error: projectState.failedCounts ? { status: 500 } : undefined,
   }),
   useGetApiV2ManualTestRunsQuery: (arg: { projectId: string }) => ({
     currentData: projectState.missingCounts ? undefined : { total: arg.projectId === 'project-1' ? 27 : 4 },
+    isFetching: projectState.refreshingCounts,
+    error: projectState.failedCounts ? { status: 500 } : undefined,
   }),
 }));
 
@@ -63,6 +71,8 @@ describe('TestScenariosPage', () => {
   beforeEach(() => {
     catalogTab.mockReset();
     projectState.missingCounts = false;
+    projectState.refreshingCounts = false;
+    projectState.failedCounts = false;
     projectState.id = 'project-1';
     projectState.requestedProjects = [];
   });
@@ -100,6 +110,29 @@ describe('TestScenariosPage', () => {
   it('shows unavailable count placeholders when totals have not loaded', () => {
     projectState.missingCounts = true;
     renderPage();
+
+    expect(screen.getByLabelText('scenario count unavailable')).toBeInTheDocument();
+    expect(screen.getByLabelText('suite count unavailable')).toBeInTheDocument();
+    expect(screen.getByLabelText('manual run count unavailable')).toBeInTheDocument();
+  });
+
+  it('hides cached counts while refreshing or after a count request fails', () => {
+    projectState.refreshingCounts = true;
+    const { rerender } = renderPage();
+
+    expect(screen.getByLabelText('scenario count unavailable')).toBeInTheDocument();
+    expect(screen.getByLabelText('suite count unavailable')).toBeInTheDocument();
+    expect(screen.getByLabelText('manual run count unavailable')).toBeInTheDocument();
+
+    projectState.refreshingCounts = false;
+    projectState.failedCounts = true;
+    rerender(
+      <ChakraProvider>
+        <MemoryRouter initialEntries={['/test-scenarios']}>
+          <TestScenariosPage />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
 
     expect(screen.getByLabelText('scenario count unavailable')).toBeInTheDocument();
     expect(screen.getByLabelText('suite count unavailable')).toBeInTheDocument();

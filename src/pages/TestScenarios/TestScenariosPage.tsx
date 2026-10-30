@@ -21,9 +21,9 @@ export function TestScenariosPage({ initialTab }: { initialTab?: TestManagementT
   const suites = useGetApiV2TestSuitesQuery({ projectId }, { skip: !selectedProjectId });
   const manualRuns = useGetApiV2ManualTestRunsQuery({ projectId, page: 1, limit: 1 }, { skip: !selectedProjectId });
   const tab = initialTab ?? (location.pathname === '/manual-test-runs' ? 'manual-runs' : 'scenarios');
-  const scenarioCount = scenarios.currentData?.total;
-  const suiteCount = suites.currentData?.length;
-  const runCount = manualRuns.currentData?.total;
+  const scenarioCount = scenarios.isFetching || scenarios.error ? undefined : scenarios.currentData?.total;
+  const suiteCount = suites.isFetching || suites.error ? undefined : suites.currentData?.length;
+  const runCount = manualRuns.isFetching || manualRuns.error ? undefined : manualRuns.currentData?.total;
 
   return (
     <MainTemplate pageHeader="Test Management">
