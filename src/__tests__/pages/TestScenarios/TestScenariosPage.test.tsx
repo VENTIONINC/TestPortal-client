@@ -88,6 +88,12 @@ describe('TestScenariosPage', () => {
     expect(screen.getByRole('tab', { name: /Suites 2/ })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Manual runs 27/ })).toBeInTheDocument();
     expect(screen.getByText('Test Scenario catalog: scenarios')).toBeInTheDocument();
+
+    const scenariosTab = screen.getByRole('tab', { name: /Scenarios 12/ });
+    const suitesTab = screen.getByRole('tab', { name: /Suites 2/ });
+    expect(getComputedStyle(scenariosTab).fontSize).toBe('var(--chakra-font-sizes-sm)');
+    expect(getComputedStyle(scenariosTab).borderBottomWidth).toBe('2px');
+    expect(getComputedStyle(suitesTab).fontSize).toBe('var(--chakra-font-sizes-sm)');
   });
 
   it('switches to the Suites context when its tab is selected', async () => {

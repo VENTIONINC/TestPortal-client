@@ -13,6 +13,18 @@ import { useGetApiV2TestScenariosQuery } from '@/redux/apis/generatedApi';
 
 export type TestManagementTab = 'scenarios' | 'suites' | 'manual-runs';
 
+const TAB_TRIGGER_STYLE = {
+  px: 3,
+  py: 2,
+  fontSize: 'sm',
+  lineHeight: 'shorter',
+  whiteSpace: 'nowrap',
+  borderRadius: 0,
+  borderBottomWidth: '2px',
+  borderBottomColor: 'transparent',
+  _selected: { color: 'tabs.active', borderBottomColor: 'tabs.active' },
+} as const;
+
 export function TestScenariosPage({ initialTab }: { initialTab?: TestManagementTab }) {
   const location = useLocation();
   const { selectedProjectId } = useSelectedProject();
@@ -28,14 +40,14 @@ export function TestScenariosPage({ initialTab }: { initialTab?: TestManagementT
   return (
     <MainTemplate pageHeader="Test Management">
       <Tabs.Root defaultValue={tab} lazyMount unmountOnExit>
-        <Tabs.List aria-label="Test Management">
-          <Tabs.Trigger value="scenarios">
+        <Tabs.List aria-label="Test Management" w="full" gap={0} borderBottomWidth="1px" borderColor="border.default" overflowX="auto">
+          <Tabs.Trigger value="scenarios" {...TAB_TRIGGER_STYLE}>
             Scenarios <Count count={scenarioCount} label="scenario" />
           </Tabs.Trigger>
-          <Tabs.Trigger value="suites">
+          <Tabs.Trigger value="suites" {...TAB_TRIGGER_STYLE}>
             Suites <Count count={suiteCount} label="suite" />
           </Tabs.Trigger>
-          <Tabs.Trigger value="manual-runs">
+          <Tabs.Trigger value="manual-runs" {...TAB_TRIGGER_STYLE}>
             Manual runs <Count count={runCount} label="manual run" />
           </Tabs.Trigger>
         </Tabs.List>
@@ -55,7 +67,14 @@ export function TestScenariosPage({ initialTab }: { initialTab?: TestManagementT
 
 const Count = ({ count, label }: { count?: number; label: string }) =>
   count === undefined ? (
-    <span aria-label={`${label} count unavailable`}>—</span>
+    <span aria-label={`${label} count unavailable`} style={{ marginInlineStart: 6, fontWeight: 400, fontVariantNumeric: 'tabular-nums' }}>
+      —
+    </span>
   ) : (
-    <span aria-label={`${count} ${label}${count === 1 ? '' : 's'}`}>{count}</span>
+    <span
+      aria-label={`${count} ${label}${count === 1 ? '' : 's'}`}
+      style={{ marginInlineStart: 6, fontWeight: 400, fontVariantNumeric: 'tabular-nums' }}
+    >
+      {count}
+    </span>
   );

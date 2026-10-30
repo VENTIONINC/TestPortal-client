@@ -13,9 +13,9 @@ export const navigationMenuConfig: NavigationMenuGroup[] = [
     title: 'Main',
     items: [
       { id: 'dashboard', icon: FiGrid, label: 'Dashboard', path: PATHS.DASHBOARD },
+      { id: 'test-management', icon: FiClipboard, label: 'Test Management', path: PATHS.TEST_SCENARIOS },
       { id: 'results', icon: FiFileText, label: 'Results', path: PATHS.RESULTS, active: true },
       { id: 'issues', icon: FiAlertTriangle, label: 'Issues', path: PATHS.ISSUES },
-      { id: 'test-management', icon: FiClipboard, label: 'Test Management', path: PATHS.TEST_SCENARIOS },
       { id: 'prompts', icon: FiMessageSquare, label: 'Prompts', path: PATHS.PROMPTS },
       { id: 'skills', icon: FiCode, label: 'Skills', path: PATHS.SKILLS },
       // { id: 'report-generator', icon: FiPieChart, label: 'Report Generator', path: PATHS.REPORT_GENERATOR },
