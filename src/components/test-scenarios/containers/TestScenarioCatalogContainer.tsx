@@ -11,20 +11,24 @@ import { useTestScenarioCatalog } from '../hooks/useTestScenarioCatalog';
 
 export interface TestScenarioCatalogContainerProps {
   projectId: string;
+  organizationTab?: 'scenarios' | 'suites';
 }
 
-export const TestScenarioCatalogContainer = ({ projectId }: TestScenarioCatalogContainerProps) => {
-  const catalog = useTestScenarioCatalog(projectId);
+export const TestScenarioCatalogContainer = ({ projectId, organizationTab }: TestScenarioCatalogContainerProps) => {
+  const catalog = useTestScenarioCatalog(projectId, organizationTab);
   const navigate = useNavigate();
   const onCreateScenario = useCallback(() => {
     const folderId = catalog.scope.kind === 'folder' ? catalog.scope.id : undefined;
-    navigate(folderId ? `${PATHS.TEST_SCENARIO_NEW}?folderId=${encodeURIComponent(folderId)}` : PATHS.TEST_SCENARIO_NEW);
+    navigate(
+      folderId ? `${PATHS.TEST_SCENARIO_NEW}?folderId=${encodeURIComponent(folderId)}` : PATHS.TEST_SCENARIO_NEW,
+    );
   }, [catalog.scope, navigate]);
 
   return (
     <TestScenarioCatalogView
       {...catalog}
       projectId={projectId}
+      organizationTab={organizationTab}
       onMoveSelected={catalog.moveSelected}
       onAddSelectedToSuite={catalog.addSelectedToSuite}
       onRemoveSelectedFromSuite={catalog.removeSelectedFromSuite}

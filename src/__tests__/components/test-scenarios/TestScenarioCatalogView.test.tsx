@@ -95,6 +95,30 @@ const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>
   );
 
 describe('TestScenarioCatalogView', () => {
+  it('shows folder and unfiled navigation without suite navigation in Scenarios', () => {
+    renderView({ organizationTab: 'scenarios', suites: [{ id: 'suite-1', name: 'Release checks', description: null, purpose: null, release: null }] });
+
+    expect(screen.getByRole('button', { name: /Unfiled/ })).toBeInTheDocument();
+    expect(screen.getByText('Folders')).toBeInTheDocument();
+    expect(screen.queryByText('Suites')).not.toBeInTheDocument();
+  });
+
+  it('shows suite selection without folder navigation in Suites', () => {
+    renderView({
+      organizationTab: 'suites',
+      scope: { kind: 'suite' },
+      folders: [{ id: 'folder-1', name: 'Smoke', parentId: null, scenarioCount: 1 }],
+      suites: [{ id: 'suite-1', name: 'Release checks', description: null, purpose: null, release: null }],
+    });
+
+    expect(screen.getByText('Suites')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Release checks/ })).toBeInTheDocument();
+    expect(screen.queryByText('Folders')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Unfiled/ })).not.toBeInTheDocument();
+    expect(screen.getByText('Select a suite to view its scenarios.')).toBeInTheDocument();
+    expect(screen.queryByText('No Test Scenarios are available for this project.')).not.toBeInTheDocument();
+  });
+
   it('renders the loading state', () => {
     renderView({ scenarios: [], isLoading: true });
 

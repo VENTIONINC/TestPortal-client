@@ -24,7 +24,7 @@ import { toggleScenarioSelection } from '../utils';
 
 const SEARCH_DEBOUNCE_MS = 500;
 
-export const useTestScenarioCatalog = (projectId: string) => {
+export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'scenarios' | 'suites') => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState(search);
@@ -32,7 +32,9 @@ export const useTestScenarioCatalog = (projectId: string) => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [columnFilters, setColumnFilters] = useState({ scenarioKey: '', title: '', details: '', folder: '', createdBy: '' });
   const [debouncedColumnFilters, setDebouncedColumnFilters] = useState(columnFilters);
-  const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>({ kind: 'all' });
+  const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>(() =>
+    organizationTab === 'suites' ? { kind: 'suite' } : { kind: 'all' },
+  );
   const [includeDescendants, setIncludeDescendants] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [moveScenarios] = usePatchApiV2TestScenariosBulkFolderMutation();
@@ -70,7 +72,8 @@ export const useTestScenarioCatalog = (projectId: string) => {
     }, SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timeout);
   }, [columnFilters, search]);
-  const { currentData, isLoading: isQueryLoading, isFetching, error } = useGetApiV2TestScenariosQuery(queryArgs);
+  const isAwaitingSuiteSelection = organizationTab === 'suites' && scope.kind === 'suite' && !scope.id;
+  const { currentData, isLoading: isQueryLoading, isFetching, error } = useGetApiV2TestScenariosQuery(queryArgs, { skip: isAwaitingSuiteSelection });
 
   const scenarios = currentData?.scenarios ?? [];
   const pagination = currentData
