@@ -1,0 +1,12 @@
+.test-management-tabs [data-scope='tabs'][data-part='trigger'][data-selected] {
+  position: relative;
+}
+
+.test-management-tabs [data-scope='tabs'][data-part='trigger'][data-selected]::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  background-color: currentColor;
+}

@@ -11,6 +11,8 @@ import { useSelectedProject } from '@/hooks/useSelectedProject';
 import { useGetApiV2ManualTestRunsQuery, useGetApiV2TestSuitesQuery } from '@/redux/apis/extendedApi';
 import { useGetApiV2TestScenariosQuery } from '@/redux/apis/generatedApi';
 
+import './TestManagementTabs.css';
+
 export type TestManagementTab = 'scenarios' | 'suites' | 'manual-runs';
 
 const TAB_TRIGGER_STYLE = {
@@ -20,9 +22,8 @@ const TAB_TRIGGER_STYLE = {
   lineHeight: 'shorter',
   whiteSpace: 'nowrap',
   borderRadius: 0,
-  borderBottomWidth: '2px',
-  borderBottomColor: 'transparent',
-  _selected: { color: 'tabs.active', borderBottomColor: 'tabs.active' },
+  borderBottomWidth: 0,
+  _selected: { color: 'blue.fg' },
 } as const;
 
 export function TestScenariosPage({ initialTab }: { initialTab?: TestManagementTab }) {
@@ -39,7 +40,7 @@ export function TestScenariosPage({ initialTab }: { initialTab?: TestManagementT
 
   return (
     <MainTemplate pageHeader="Test Management">
-      <Tabs.Root defaultValue={tab} lazyMount unmountOnExit>
+      <Tabs.Root className="test-management-tabs" defaultValue={tab} lazyMount unmountOnExit>
         <Tabs.List
           aria-label="Test Management"
           w="full"
@@ -59,13 +60,13 @@ export function TestScenariosPage({ initialTab }: { initialTab?: TestManagementT
             Manual runs <Count count={runCount} label="manual run" />
           </Tabs.Trigger>
         </Tabs.List>
-        <Tabs.Content value="scenarios">
+        <Tabs.Content value="scenarios" pt={0}>
           <TestScenarioCatalog organizationTab="scenarios" />
         </Tabs.Content>
-        <Tabs.Content value="suites">
+        <Tabs.Content value="suites" pt={0}>
           <TestScenarioCatalog organizationTab="suites" />
         </Tabs.Content>
-        <Tabs.Content value="manual-runs">
+        <Tabs.Content value="manual-runs" pt={0}>
           <ManualTestRunHistoryBoundary />
         </Tabs.Content>
       </Tabs.Root>

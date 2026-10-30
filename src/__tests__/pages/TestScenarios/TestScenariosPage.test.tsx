@@ -93,7 +93,9 @@ describe('TestScenariosPage', () => {
     const suitesTab = screen.getByRole('tab', { name: /Suites 2/ });
     const tabList = screen.getByRole('tablist', { name: 'Test Management' });
     expect(getComputedStyle(scenariosTab).fontSize).toBe('var(--chakra-font-sizes-sm)');
-    expect(getComputedStyle(scenariosTab).borderBottomWidth).toBe('2px');
+    expect(getComputedStyle(scenariosTab).borderBottomWidth).toBe('0px');
+    const indicator = document.querySelector('[data-scope="tabs"][data-part="indicator"]');
+    expect(indicator).not.toBeInTheDocument();
     expect(getComputedStyle(suitesTab).fontSize).toBe('var(--chakra-font-sizes-sm)');
     expect(getComputedStyle(tabList).paddingInlineStart).toBe('var(--chakra-spacing-3)');
   });
