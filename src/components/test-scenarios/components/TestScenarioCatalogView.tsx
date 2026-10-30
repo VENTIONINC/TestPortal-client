@@ -39,6 +39,7 @@ export interface CatalogSuite {
 
 export interface TestScenarioCatalogViewProps {
   projectId?: string;
+  organizationTab?: 'scenarios' | 'suites';
   scenarios: TestScenarioSummary[];
   pagination: TestScenarioPagination;
   isLoading: boolean;
@@ -480,6 +481,7 @@ const PaginationSummary = ({ pagination }: { pagination: TestScenarioPagination 
 
 export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   projectId,
+  organizationTab,
   scenarios,
   pagination,
   isLoading,
@@ -793,6 +795,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             borderColor="border.main"
             aria-label="Scenario organization"
           >
+            {organizationTab !== 'suites' && (
             <VStack align="stretch" gap={1}>
               <Button
                 size="sm"
@@ -826,6 +829,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 Unfiled
               </Button>
             </VStack>
+            )}
+            {organizationTab !== 'suites' && (
             <Box>
               <HStack justify="space-between" px={2} mb={1}>
                 <Text
@@ -865,7 +870,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 </VStack>
               )}
             </Box>
-            <Box>
+            )}
+            {organizationTab !== 'scenarios' && <Box>
               <HStack justify="space-between" px={2} mb={1}>
                 <Text
                   fontSize="xs"
@@ -925,7 +931,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   })}
                 </VStack>
               )}
-            </Box>
+            </Box>}
           </VStack>
 
           <VStack align="stretch" gap={4} minW="0">
@@ -1269,7 +1275,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             )}
 
             <Box borderWidth="1px" borderColor="border.main" borderRadius="lg" overflow="hidden" bg="bg.card">
-              {error ? (
+              {organizationTab === 'suites' && !selectedSuite ? (
+                <Text p={6} textAlign="center" color="text.muted">Select a suite to view its scenarios.</Text>
+              ) : error ? (
                 <Box p={4}>
                   <ErrorState />
                 </Box>

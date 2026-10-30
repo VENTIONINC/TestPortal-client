@@ -4,6 +4,8 @@
 import { Link, useLocation } from 'react-router';
 import { Box, Text, VStack } from '@chakra-ui/react';
 
+import { PATHS } from '@/types/paths';
+
 import { navigationMenuConfig } from './config';
 import { NavItem } from './NavItem';
 
@@ -21,9 +23,12 @@ export const NavigationMenu = ({ collapsed }: { collapsed: boolean }) => {
           )}
           <VStack align="stretch" gap="4">
             {group.items.map((item) => {
-              const isActive = item.path
-                ? location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
-                : item.active;
+              const isActive =
+                item.id === 'test-management' && location.pathname === PATHS.MANUAL_TEST_RUNS
+                  ? true
+                  : item.path
+                    ? location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
+                    : item.active;
               return (
                 <Box key={item.id} asChild>
                   <Link to={item.path!} aria-current={isActive ? 'page' : undefined}>

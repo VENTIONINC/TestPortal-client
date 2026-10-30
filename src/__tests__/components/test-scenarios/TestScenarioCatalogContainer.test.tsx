@@ -121,7 +121,7 @@ describe('TestScenarioCatalogContainer', () => {
       </ChakraProvider>,
     );
 
-    expect(mockedScenarioQuery).toHaveBeenCalledWith({ projectId: 'project-1', page: 1, limit: 10 });
+    expect(mockedScenarioQuery).toHaveBeenCalledWith({ projectId: 'project-1', page: 1, limit: 10 }, { skip: false });
     expect(mockedDetailQuery).not.toHaveBeenCalled();
     expect(screen.getByText('Scenario page 1')).toBeInTheDocument();
   });
@@ -139,7 +139,7 @@ describe('TestScenarioCatalogContainer', () => {
 
     await user.click(screen.getByRole('button', { name: /^2$/ }));
 
-    expect(mockedScenarioQuery).toHaveBeenLastCalledWith({ projectId: 'project-1', page: 2, limit: 10 });
+    expect(mockedScenarioQuery).toHaveBeenLastCalledWith({ projectId: 'project-1', page: 2, limit: 10 }, { skip: false });
     expect(screen.getByText('Scenario page 2')).toBeInTheDocument();
     expect(screen.queryByText('# Scenario page 2')).not.toBeInTheDocument();
   });

@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -19,6 +19,24 @@ const query = { currentData: undefined, error: undefined, isLoading: false, isFe
 const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter>{children}</MemoryRouter>;
 
 describe('useManualTestRunHistory', () => {
+  it('restores the source scenario filter from legacy project-history navigation state', async () => {
+    mocks.project.mockReturnValue(query);
+    mocks.scenario.mockReturnValue(query);
+    const stateWrapper = ({ children }: { children: ReactNode }) => (
+      <MemoryRouter initialEntries={[{
+        pathname: '/manual-test-runs',
+        state: { manualTestRunHistory: { sourceTestScenarioId: 'scenario-source' } },
+      }]}>{children}</MemoryRouter>
+    );
+
+    renderHook(() => useManualTestRunHistory('project-1'), { wrapper: stateWrapper });
+
+    await waitFor(() => expect(mocks.project.mock.calls.at(-1)?.[0]).toMatchObject({
+      projectId: 'project-1',
+      testScenarioId: 'scenario-source',
+    }));
+  });
+
   it('applies a trimmed exact key only on Apply and preserves other immediate filters', () => {
     mocks.project.mockReturnValue(query);
     mocks.scenario.mockReturnValue(query);

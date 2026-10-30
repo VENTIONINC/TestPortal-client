@@ -133,7 +133,10 @@ describe('TestScenarioCatalog project boundary', () => {
       </ChakraProvider>,
     );
 
-    expect(mockedScenarioQuery).toHaveBeenLastCalledWith({ projectId: 'project-b', page: 1, limit: 10 });
+    expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
+      { projectId: 'project-b', page: 1, limit: 10 },
+      { skip: false },
+    );
     expect(screen.queryByText('project-a scenario')).not.toBeInTheDocument();
     expect(screen.queryByText('project-a details')).not.toBeInTheDocument();
     expect(screen.queryByText('project-a creator')).not.toBeInTheDocument();
