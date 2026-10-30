@@ -68,6 +68,7 @@ const summary: TestScenarioSummary = {
   title: scenario.title,
   scenarioKey: scenario.scenarioKey,
   details: scenario.details,
+  priority: scenario.priority,
   createdBy: creator,
   createdAt: scenario.createdAt,
   updatedAt: scenario.updatedAt,

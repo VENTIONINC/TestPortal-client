@@ -1,31 +1,84 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from 'react';
-import { Box, Button, Collapsible, Grid, Heading, HStack, IconButton, Input, Link as ChakraLink, Menu, Portal, Table, Text, Textarea, VStack } from '@chakra-ui/react';
-import { FiArrowDown, FiArrowUp, FiChevronsUp, FiChevronDown, FiChevronRight, FiEdit, FiFolder, FiLayers, FiMoreHorizontal, FiPlus, FiSearch, FiTrash2, FiX } from 'react-icons/fi';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type FormEvent,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
+import {
+  Box,
+  Button,
+  Collapsible,
+  Grid,
+  Heading,
+  HStack,
+  IconButton,
+  Input,
+  Link as ChakraLink,
+  Menu,
+  Portal,
+  Table,
+  Text,
+  Textarea,
+  VStack,
+} from '@chakra-ui/react';
+import {
+  FiArrowDown,
+  FiArrowUp,
+  FiChevronsUp,
+  FiChevronDown,
+  FiChevronRight,
+  FiEdit,
+  FiFolder,
+  FiLayers,
+  FiMoreHorizontal,
+  FiPlus,
+  FiSearch,
+  FiTrash2,
+  FiX,
+} from 'react-icons/fi';
 import { Link as RouterLink } from 'react-router';
 
-import { Alert, ContextMenuButton, Dialog, DialogBody, DialogFooter, NativeSelect, Pagination, Tooltip, Wrap } from '@/components/ui';
+import {
+  Alert,
+  ContextMenuButton,
+  Dialog,
+  DialogBody,
+  DialogFooter,
+  NativeSelect,
+  Pagination,
+  Tooltip,
+  Wrap,
+} from '@/components/ui';
 import { extractApiError } from '@/utils/apiErrors';
 
 import { TestSuiteAddScenariosDialogContainer } from '../containers/TestSuiteAddScenariosDialogContainer';
 import { getTestScenarioDetailPath } from '../constants';
 import { useTestScenarioContextMenu } from '../hooks/useTestScenarioContextMenu';
+import type { ScenarioOperationReport } from '../utils';
 import type { TestScenarioPagination, TestScenarioSummary } from '../types';
 
 export interface CatalogFolder {
   id: string;
   name: string;
   parentId: string | null;
+  description?: string | null;
   position?: number;
   scenarioCount: number;
   children?: unknown[];
 }
 
 const getFolderChildren = (folder: CatalogFolder): CatalogFolder[] =>
-  (folder.children ?? []).filter((child): child is CatalogFolder =>
-    typeof child === 'object' && child !== null && 'id' in child && 'name' in child,
+  (folder.children ?? []).filter(
+    (child): child is CatalogFolder => typeof child === 'object' && child !== null && 'id' in child && 'name' in child,
   );
 
 export interface CatalogSuite {
@@ -42,6 +95,11 @@ export interface TestScenarioCatalogViewProps {
   organizationTab?: 'scenarios' | 'suites';
   scenarios: TestScenarioSummary[];
   pagination: TestScenarioPagination;
+  projectScenarioCount: number;
+  unfiledScenarioCount: number;
+  pageSize: number;
+  pageSizes: readonly number[];
+  onPageSizeChange: (value: number) => void;
   isLoading: boolean;
   error?: unknown;
   onPageChange: (page: number) => void;
@@ -52,6 +110,13 @@ export interface TestScenarioCatalogViewProps {
   sort?: 'scenarioKey' | 'title' | 'details' | 'folder' | 'createdBy' | 'createdAt' | 'updatedAt';
   sortDirection: 'asc' | 'desc';
   onSortChange: (value: NonNullable<TestScenarioCatalogViewProps['sort']>) => void;
+  onSortDirectionChange: (value: 'asc' | 'desc') => void;
+  priority: 'low' | 'medium' | 'high' | '';
+  onPriorityChange: (value: 'low' | 'medium' | 'high' | '') => void;
+  authorId: string;
+  onAuthorChange: (value: string) => void;
+  authors: Array<{ id: string; name: string; email: string }>;
+  authorsLoading: boolean;
   columnFilters: { scenarioKey: string; title: string; details: string; folder: string; createdBy: string };
   onColumnFilterChange: (field: keyof TestScenarioCatalogViewProps['columnFilters'], value: string) => void;
   scope: { kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string };
@@ -61,17 +126,35 @@ export interface TestScenarioCatalogViewProps {
   organizationLoading: boolean;
   organizationError?: unknown;
   selectedIds: string[];
+  allMatchingSelected: boolean;
+  isExecutingOperation: boolean;
+  isResolvingSelection: boolean;
+  selectionError: string | null;
+  selectAllMatching: () => Promise<void>;
   toggleSelected: (id: string) => void;
   selectOnlyScenario?: (id: string) => void;
-  onMoveSelected: (folderId: string | null) => Promise<void>;
-  onAddSelectedToSuite: (suiteId: string) => Promise<void>;
-  onRemoveSelectedFromSuite: () => Promise<void>;
+  onMoveSelected: (folderId: string | null) => Promise<ScenarioOperationReport>;
+  onMoveScenarioIds: (scenarioIds: string[], folderId: string | null) => Promise<ScenarioOperationReport>;
+  onAddSelectedToSuite: (suiteId: string) => Promise<ScenarioOperationReport>;
+  onDeleteSelected: (scenarioIds: string[]) => Promise<ScenarioOperationReport>;
+  onRemoveSelectedFromSuite: () => Promise<ScenarioOperationReport>;
   onReorderSuite: (suiteId: string, scenarioIds: string[]) => Promise<void>;
-  onCreateFolder: (name: string, parentId: string | null) => Promise<unknown>;
-  onUpdateFolder: (folderId: string, body: { name?: string; parentId?: string | null; position?: number }) => Promise<unknown>;
+  onCreateFolder: (name: string, parentId: string | null, description?: string | null) => Promise<unknown>;
+  onUpdateFolder: (
+    folderId: string,
+    body: { name?: string; parentId?: string | null; position?: number; description?: string | null },
+  ) => Promise<unknown>;
   onDeleteFolder: (folderId: string, disposition: 'parent' | 'unfiled') => Promise<void>;
-  onCreateSuite: (body: { name: string; description?: string | null; purpose?: string | null; release?: string | null }) => Promise<unknown>;
-  onUpdateSuite: (suiteId: string, body: { name?: string; description?: string | null; purpose?: string | null; release?: string | null }) => Promise<unknown>;
+  onCreateSuite: (body: {
+    name: string;
+    description?: string | null;
+    purpose?: string | null;
+    release?: string | null;
+  }) => Promise<unknown>;
+  onUpdateSuite: (
+    suiteId: string,
+    body: { name?: string; description?: string | null; purpose?: string | null; release?: string | null },
+  ) => Promise<unknown>;
   onDeleteSuite: (suiteId: string) => Promise<void>;
   includeDescendants: boolean;
   onIncludeDescendantsChange: (value: boolean) => void;
@@ -87,14 +170,27 @@ const formatScenarioDate = (timestamp: string) => {
 
 const ScenarioTimestamp = ({ timestamp }: { timestamp: string }) => {
   const { date, time } = formatScenarioDate(timestamp);
-  return <VStack align="start" gap={0} whiteSpace="nowrap" fontSize="xs"><Text>{date}</Text><Text>{time}</Text></VStack>;
+  return (
+    <VStack align="start" gap={0} whiteSpace="nowrap" fontSize="xs">
+      <Text>{date}</Text>
+      <Text>{time}</Text>
+    </VStack>
+  );
 };
 
 const TABLE_CELL_PADDING = { px: 4, py: 4 } as const;
 const UNFILED_DESTINATION = '__unfiled__';
 
 const ScenarioColumnHeader = ({
-  label, field, sort, sortDirection, onSortChange, filterValue, onFilterChange, openFilter, onFilterDisclosureChange,
+  label,
+  field,
+  sort,
+  sortDirection,
+  onSortChange,
+  filterValue,
+  onFilterChange,
+  openFilter,
+  onFilterDisclosureChange,
 }: {
   label: string;
   field: NonNullable<TestScenarioCatalogViewProps['sort']>;
@@ -137,25 +233,119 @@ const ScenarioColumnHeader = ({
   }, [field, filterPosition, openFilter]);
   return (
     <HStack gap={1} minW={0} justify="flex-start" flexWrap="nowrap">
-      <Button size="xs" variant="ghost" px={1} minW={0} flex="1" h="auto" whiteSpace="nowrap" textAlign="start" justifyContent="flex-start" aria-label={`Sort by ${label}${activeSort ? ` ${activeDirection === 'asc' ? 'ascending' : 'descending'}` : ''}`} onClick={() => onSortChange(field)}>
-        <Text as="span" overflow="hidden" textOverflow="ellipsis">{label}</Text>{activeSort ? (activeDirection === 'asc' ? <FiArrowUp aria-hidden="true" /> : <FiArrowDown aria-hidden="true" />) : <FiChevronsUp aria-hidden="true" />}
+      <Button
+        size="xs"
+        variant="ghost"
+        px={1}
+        minW={0}
+        flex="1"
+        h="auto"
+        whiteSpace="nowrap"
+        textAlign="start"
+        justifyContent="flex-start"
+        aria-label={`Sort by ${label}${activeSort ? ` ${activeDirection === 'asc' ? 'ascending' : 'descending'}` : ''}`}
+        onClick={() => onSortChange(field)}
+      >
+        <Text as="span" overflow="hidden" textOverflow="ellipsis">
+          {label}
+        </Text>
+        {activeSort ? (
+          activeDirection === 'asc' ? (
+            <FiArrowUp aria-hidden="true" />
+          ) : (
+            <FiArrowDown aria-hidden="true" />
+          )
+        ) : (
+          <FiChevronsUp aria-hidden="true" />
+        )}
       </Button>
-      {onFilterChange && <details ref={filterRef} data-filter-field={field} open={openFilter === field} onToggle={(event) => onFilterDisclosureChange(event.currentTarget.open ? field : null)} style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
-        <Box as="summary" role="button" aria-label={`Filter by ${label}${filterValue ? ', filter active' : ''}`} aria-pressed={Boolean(filterValue)} display="inline-flex" alignItems="center" justifyContent="center" listStyleType="none" cursor="pointer" borderRadius="md" w="24px" h="24px" color={filterValue ? 'blue.600' : 'text.muted'} bg={filterValue ? 'blue.subtle' : undefined} _hover={{ bg: 'bg.subtle', color: 'text.main' }}><FiSearch aria-hidden="true" /></Box>
-        {openFilter === field && filterPosition && <Portal><VStack data-filter-panel={field} align="stretch" gap={2} position="fixed" zIndex="popover" top={`${filterPosition.top}px`} left={`${filterPosition.left}px`} p={3} w="260px" bg="bg.panel" borderWidth="1px" borderColor="border.main" borderRadius="md" boxShadow="lg" fontWeight="normal">
-          <Box><Text fontSize="sm" fontWeight="medium">Search {label}</Text><Text fontSize="xs" color="text.muted">Match text anywhere in this column</Text></Box>
-          <HStack>
-            <Input ref={filterInputRef} size="sm" aria-label={`${label} filter`} placeholder={`Search ${label.toLowerCase()}`} value={filterValue ?? ''} onChange={(event) => onFilterChange(event.currentTarget.value)} onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === 'Escape') {
-                event.preventDefault();
-                event.stopPropagation();
-                onFilterDisclosureChange(null);
-              }
-            }} autoFocus />
-            {filterValue && <IconButton size="sm" variant="ghost" aria-label={`Clear ${label} filter`} onClick={() => onFilterChange('')}><FiX /></IconButton>}
-          </HStack>
-        </VStack></Portal>}
-      </details>}
+      {onFilterChange && (
+        <details
+          ref={filterRef}
+          data-filter-field={field}
+          open={openFilter === field}
+          onToggle={(event) => onFilterDisclosureChange(event.currentTarget.open ? field : null)}
+          style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}
+        >
+          <Box
+            as="summary"
+            role="button"
+            aria-label={`Filter by ${label}${filterValue ? ', filter active' : ''}`}
+            aria-pressed={Boolean(filterValue)}
+            display="inline-flex"
+            alignItems="center"
+            justifyContent="center"
+            listStyleType="none"
+            cursor="pointer"
+            borderRadius="md"
+            w="24px"
+            h="24px"
+            color={filterValue ? 'blue.600' : 'text.muted'}
+            bg={filterValue ? 'blue.subtle' : undefined}
+            _hover={{ bg: 'bg.subtle', color: 'text.main' }}
+          >
+            <FiSearch aria-hidden="true" />
+          </Box>
+          {openFilter === field && filterPosition && (
+            <Portal>
+              <VStack
+                data-filter-panel={field}
+                align="stretch"
+                gap={2}
+                position="fixed"
+                zIndex="popover"
+                top={`${filterPosition.top}px`}
+                left={`${filterPosition.left}px`}
+                p={3}
+                w="260px"
+                bg="bg.panel"
+                borderWidth="1px"
+                borderColor="border.main"
+                borderRadius="md"
+                boxShadow="lg"
+                fontWeight="normal"
+              >
+                <Box>
+                  <Text fontSize="sm" fontWeight="medium">
+                    Search {label}
+                  </Text>
+                  <Text fontSize="xs" color="text.muted">
+                    Match text anywhere in this column
+                  </Text>
+                </Box>
+                <HStack>
+                  <Input
+                    ref={filterInputRef}
+                    size="sm"
+                    aria-label={`${label} filter`}
+                    placeholder={`Search ${label.toLowerCase()}`}
+                    value={filterValue ?? ''}
+                    onChange={(event) => onFilterChange(event.currentTarget.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === 'Escape') {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onFilterDisclosureChange(null);
+                      }
+                    }}
+                    autoFocus
+                  />
+                  {filterValue && (
+                    <IconButton
+                      size="sm"
+                      variant="ghost"
+                      aria-label={`Clear ${label} filter`}
+                      onClick={() => onFilterChange('')}
+                    >
+                      <FiX />
+                    </IconButton>
+                  )}
+                </HStack>
+              </VStack>
+            </Portal>
+          )}
+        </details>
+      )}
     </HStack>
   );
 };
@@ -189,7 +379,9 @@ const ErrorState = () => (
 
 const EmptyState = ({ searchActive = false }: { searchActive?: boolean }) => (
   <VStack py={8}>
-    <Text color="text.muted">{searchActive ? 'No scenarios match the current search.' : 'No Test Scenarios are available for this project.'}</Text>
+    <Text color="text.muted">
+      {searchActive ? 'No scenarios match the current search.' : 'No Test Scenarios are available for this project.'}
+    </Text>
   </VStack>
 );
 
@@ -197,6 +389,7 @@ const ScenarioTable = ({
   scenarios,
   isLoading,
   selectedIds,
+  selectionDisabled,
   onToggleSelected,
   onContextMenu,
   showFolder,
@@ -213,6 +406,7 @@ const ScenarioTable = ({
   scenarios: TestScenarioSummary[];
   isLoading: boolean;
   selectedIds: string[];
+  selectionDisabled: boolean;
   onToggleSelected: (id: string) => void;
   onContextMenu?: (event: MouseEvent<HTMLButtonElement>, scenario: TestScenarioSummary) => void;
   showFolder: boolean;
@@ -232,7 +426,8 @@ const ScenarioTable = ({
     const anchorIndex = scenarios.findIndex((scenario) => scenario.id === anchorScenarioId);
     if (extendSelection && anchorIndex >= 0) {
       const [start, end] = [anchorIndex, index].sort((a, b) => a - b);
-      scenarios.slice(start, end + 1)
+      scenarios
+        .slice(start, end + 1)
         .filter((scenario) => !selectedIds.includes(scenario.id))
         .forEach((scenario) => onToggleSelected(scenario.id));
     } else {
@@ -249,6 +444,7 @@ const ScenarioTable = ({
               <input
                 type="checkbox"
                 aria-label="Select all scenarios on this page"
+                disabled={selectionDisabled}
                 checked={scenarios.length > 0 && scenarios.every((scenario) => selectedIds.includes(scenario.id))}
                 ref={(element) => {
                   if (element)
@@ -384,6 +580,7 @@ const ScenarioTable = ({
                   <input
                     type="checkbox"
                     aria-label={`Select ${scenario.title}`}
+                    disabled={selectionDisabled}
                     checked={selectedIds.includes(scenario.id)}
                     onClick={(event) => {
                       extendSelectionRef.current = event.shiftKey;
@@ -479,11 +676,295 @@ const PaginationSummary = ({ pagination }: { pagination: TestScenarioPagination 
   );
 };
 
+const compactDate = (value: string) => new Date(value).toLocaleDateString('en-US');
+const shortAuthorName = (name: string) => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] || 'Unknown author';
+  return `${parts[0]} ${parts.at(-1)?.[0] ?? ''}.`;
+};
+const authorInitials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || '?';
+
+const CompactScenarioTable = ({
+  projectId,
+  scenarios,
+  isLoading,
+  selectedIds,
+  selectionDisabled,
+  onToggleSelected,
+  onContextMenu,
+  onDragPayload,
+  onDragEnd,
+  folderPathById,
+  searchActive,
+}: {
+  projectId: string;
+  scenarios: TestScenarioSummary[];
+  isLoading: boolean;
+  selectedIds: string[];
+  selectionDisabled: boolean;
+  onToggleSelected: (id: string) => void;
+  onContextMenu?: (event: MouseEvent<HTMLButtonElement>, scenario: TestScenarioSummary) => void;
+  onDragPayload: (projectId: string, scenarioIds: string[]) => void;
+  onDragEnd: () => void;
+  folderPathById: Map<string, string>;
+  searchActive: boolean;
+}) => {
+  const [anchorId, setAnchorId] = useState<string | null>(null);
+  const extendSelection = useRef(false);
+  const selectRange = (id: string, index: number) => {
+    const anchorIndex = scenarios.findIndex((scenario) => scenario.id === anchorId);
+    if (extendSelection.current && anchorIndex >= 0) {
+      const [start, end] = [anchorIndex, index].sort((left, right) => left - right);
+      scenarios
+        .slice(start, end + 1)
+        .filter((scenario) => !selectedIds.includes(scenario.id))
+        .forEach((scenario) => onToggleSelected(scenario.id));
+    } else onToggleSelected(id);
+    setAnchorId(id);
+    extendSelection.current = false;
+  };
+  return (
+    <Box overflowX="auto" w="100%">
+      <Table.Root size="sm" variant="outline" minW="980px" w="100%" tableLayout="fixed">
+        <Table.Header>
+          <Table.Row bg="bg.subtle">
+            <Table.ColumnHeader w="30px" px={1} py={2}>
+              <Text srOnly>Drag</Text>
+            </Table.ColumnHeader>
+            <Table.ColumnHeader w="44px" px={3} py={2}>
+              <input
+                type="checkbox"
+                aria-label="Select all scenarios on this page"
+                disabled={selectionDisabled}
+                checked={scenarios.length > 0 && scenarios.every((scenario) => selectedIds.includes(scenario.id))}
+                ref={(element) => {
+                  if (element)
+                    element.indeterminate =
+                      scenarios.some((scenario) => selectedIds.includes(scenario.id)) &&
+                      !scenarios.every((scenario) => selectedIds.includes(scenario.id));
+                }}
+                onChange={() => {
+                  const allSelected = scenarios.every((scenario) => selectedIds.includes(scenario.id));
+                  scenarios
+                    .filter((scenario) => selectedIds.includes(scenario.id) === allSelected)
+                    .forEach((scenario) => onToggleSelected(scenario.id));
+                }}
+              />
+              <Text srOnly>Select</Text>
+            </Table.ColumnHeader>
+            <Table.ColumnHeader w="120px" px={2} py={2}>
+              Key
+            </Table.ColumnHeader>
+            <Table.ColumnHeader px={3} py={2}>
+              Title
+            </Table.ColumnHeader>
+            <Table.ColumnHeader w="110px" px={3} py={2}>
+              Priority
+            </Table.ColumnHeader>
+            <Table.ColumnHeader w="190px" px={3} py={2}>
+              Folder
+            </Table.ColumnHeader>
+            <Table.ColumnHeader w="120px" px={3} py={2}>
+              Updated
+            </Table.ColumnHeader>
+            <Table.ColumnHeader w="180px" px={3} py={2}>
+              Author
+            </Table.ColumnHeader>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {scenarios.length === 0 ? (
+            <Table.Row>
+              <Table.Cell colSpan={8} py={8} textAlign="center">
+                {isLoading ? (
+                  <Text role="status" color="text.muted">
+                    Searching scenarios…
+                  </Text>
+                ) : (
+                  <EmptyState searchActive={searchActive} />
+                )}
+              </Table.Cell>
+            </Table.Row>
+          ) : (
+            scenarios.map((scenario, index) => {
+              const selected = selectedIds.includes(scenario.id);
+              const folderPath = scenario.folderId
+                ? (folderPathById.get(scenario.folderId) ?? scenario.folderName ?? 'Unknown folder')
+                : 'No folder';
+              const fullAuthor = scenario.createdBy.name
+                ? `${scenario.createdBy.name} (${scenario.createdBy.email})`
+                : scenario.createdBy.email || 'Unknown author';
+              const priority = scenario.priority;
+              const priorityStyle =
+                priority === 'high'
+                  ? { bg: 'orange.subtle', color: 'orange.fg' }
+                  : priority === 'medium'
+                    ? { bg: 'blue.subtle', color: 'blue.fg' }
+                    : { bg: 'bg.subtle', color: 'text.muted' };
+              return (
+                <Table.Row
+                  key={scenario.id}
+                  data-testid={`test-scenario-${scenario.id}`}
+                  bg={selected ? 'blue.subtle' : undefined}
+                  _hover={{ bg: selected ? 'blue.subtle' : 'bg.subtle' }}
+                >
+                  <Table.Cell px={1} py={2}>
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="ghost"
+                      aria-label={`Drag ${scenario.title} to a folder`}
+                      title="Drag to move into a folder"
+                      draggable={!selectionDisabled}
+                      disabled={selectionDisabled}
+                      onDragStart={(event) => {
+                        const scenarioIds = selected ? selectedIds : [scenario.id];
+                        onDragPayload(projectId, scenarioIds);
+                        event.dataTransfer.effectAllowed = 'move';
+                        event.dataTransfer.setData(
+                          'application/x-testportal-scenarios',
+                          JSON.stringify({ projectId, scenarioIds }),
+                        );
+                      }}
+                      onDragEnd={onDragEnd}
+                    >
+                      ⠿
+                    </Button>
+                  </Table.Cell>
+                  <Table.Cell px={3} py={2}>
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${scenario.title}`}
+                      disabled={selectionDisabled}
+                      checked={selected}
+                      onClick={(event) => {
+                        extendSelection.current = event.shiftKey;
+                      }}
+                      onChange={() => selectRange(scenario.id, index)}
+                    />
+                  </Table.Cell>
+                  <Table.Cell px={2} py={2}>
+                    <Tooltip content={scenario.scenarioKey ?? 'N/A'}>
+                      <Text
+                        display="block"
+                        maxW="100%"
+                        overflow="hidden"
+                        textOverflow="ellipsis"
+                        whiteSpace="nowrap"
+                        title={scenario.scenarioKey ?? 'N/A'}
+                      >
+                        {scenario.scenarioKey ?? 'N/A'}
+                      </Text>
+                    </Tooltip>
+                  </Table.Cell>
+                  <Table.Cell px={3} py={2}>
+                    <HStack minW={0} justify="space-between" gap={2}>
+                      <Tooltip content={scenario.title}>
+                        <ChakraLink
+                          asChild
+                          minW={0}
+                          flex="1"
+                          fontWeight="semibold"
+                          color="text.main"
+                          overflow="hidden"
+                          textOverflow="ellipsis"
+                          whiteSpace="nowrap"
+                          title={scenario.title}
+                        >
+                          <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
+                        </ChakraLink>
+                      </Tooltip>
+                      <ContextMenuButton
+                        aria-label={`Actions for ${scenario.title}`}
+                        onClick={(event) => onContextMenu?.(event, scenario)}
+                      />
+                    </HStack>
+                  </Table.Cell>
+                  <Table.Cell px={3} py={2}>
+                    {priority ? (
+                      <Text
+                        as="span"
+                        display="inline-flex"
+                        px={2}
+                        py={0.5}
+                        borderRadius="full"
+                        fontSize="xs"
+                        fontWeight="semibold"
+                        bg={priorityStyle.bg}
+                        color={priorityStyle.color}
+                      >
+                        {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                      </Text>
+                    ) : (
+                      <Text color="text.muted">—</Text>
+                    )}
+                  </Table.Cell>
+                  <Table.Cell px={3} py={2}>
+                    <Tooltip content={folderPath}>
+                      <Text
+                        display="block"
+                        maxW="100%"
+                        overflow="hidden"
+                        textOverflow="ellipsis"
+                        whiteSpace="nowrap"
+                        title={folderPath}
+                      >
+                        {folderPath}
+                      </Text>
+                    </Tooltip>
+                  </Table.Cell>
+                  <Table.Cell px={3} py={2} whiteSpace="nowrap" color="text.secondary">
+                    {compactDate(scenario.updatedAt)}
+                  </Table.Cell>
+                  <Table.Cell px={3} py={2}>
+                    <Tooltip content={fullAuthor}>
+                      <HStack gap={2} minW={0} title={fullAuthor}>
+                        <Box
+                          aria-hidden="true"
+                          display="inline-flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          w="6"
+                          h="6"
+                          flexShrink={0}
+                          borderRadius="full"
+                          bg="blue.subtle"
+                          color="blue.fg"
+                          fontSize="xs"
+                          fontWeight="semibold"
+                        >
+                          {authorInitials(scenario.createdBy.name)}
+                        </Box>
+                        <Text overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                          {shortAuthorName(scenario.createdBy.name)}
+                        </Text>
+                      </HStack>
+                    </Tooltip>
+                  </Table.Cell>
+                </Table.Row>
+              );
+            })
+          )}
+        </Table.Body>
+      </Table.Root>
+    </Box>
+  );
+};
+
 export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   projectId,
   organizationTab,
   scenarios,
   pagination,
+  projectScenarioCount,
+  unfiledScenarioCount,
   isLoading,
   error,
   onPageChange,
@@ -494,6 +975,16 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   sort,
   sortDirection,
   onSortChange,
+  onSortDirectionChange,
+  priority,
+  onPriorityChange,
+  authorId,
+  onAuthorChange,
+  authors,
+  authorsLoading,
+  pageSize,
+  pageSizes,
+  onPageSizeChange,
   columnFilters,
   onColumnFilterChange,
   scope,
@@ -503,10 +994,17 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   organizationLoading,
   organizationError,
   selectedIds,
+  allMatchingSelected,
+  isExecutingOperation,
+  isResolvingSelection,
+  selectionError,
+  selectAllMatching,
   toggleSelected,
   selectOnlyScenario,
   onMoveSelected,
+  onMoveScenarioIds,
   onAddSelectedToSuite,
+  onDeleteSelected,
   onRemoveSelectedFromSuite,
   onReorderSuite,
   onCreateFolder,
@@ -518,7 +1016,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   includeDescendants,
   onIncludeDescendantsChange,
 }: TestScenarioCatalogViewProps) {
-  const [createDialog, setCreateDialog] = useState<'folder' | 'suite' | 'rename-folder' | 'edit-suite' | 'move-folder' | 'delete-folder' | 'delete-suite' | null>(null);
+  const isScenariosTab = organizationTab !== 'suites';
+  const [createDialog, setCreateDialog] = useState<
+    'folder' | 'suite' | 'rename-folder' | 'edit-suite' | 'move-folder' | 'delete-folder' | 'delete-suite' | null
+  >(null);
   const [openFilter, setOpenFilter] = useState<string | null>(null);
   useEffect(() => {
     if (!openFilter) return;
@@ -529,7 +1030,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
         filterElement &&
         !filterElement.contains(event.target as Node) &&
         !filterPanel?.contains(event.target as Node)
-      ) setOpenFilter(null);
+      )
+        setOpenFilter(null);
     };
     document.addEventListener('pointerdown', handleOutsidePointerDown);
     return () => document.removeEventListener('pointerdown', handleOutsidePointerDown);
@@ -541,8 +1043,14 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [deleteDisposition, setDeleteDisposition] = useState<'parent' | 'unfiled'>('parent');
   const [bulkSuiteId, setBulkSuiteId] = useState('');
   const [moveScenariosOpen, setMoveScenariosOpen] = useState(false);
+  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+  const activeDrag = useRef<{ projectId: string; scenarioIds: string[] } | null>(null);
   const [moveScenariosTarget, setMoveScenariosTarget] = useState('');
   const [moveScenariosError, setMoveScenariosError] = useState<string | null>(null);
+  const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
+  const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
+  const [operationReport, setOperationReport] = useState<ScenarioOperationReport | null>(null);
   const scopeKey = `${scope.kind}:${scope.id ?? ''}`;
   const latestScope = useRef(scopeKey);
   const moveDialogScope = useRef<string | null>(null);
@@ -552,6 +1060,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setMoveScenariosOpen(false);
     setMoveScenariosTarget('');
     setMoveScenariosError(null);
+    setOperationReport(null);
+    setDeleteSelectedOpen(false);
   }, [scopeKey]);
 
   const [isMovingScenarios, setIsMovingScenarios] = useState(false);
@@ -561,12 +1071,18 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [removeFromSuiteOpen, setRemoveFromSuiteOpen] = useState(false);
   const [removeFromSuiteError, setRemoveFromSuiteError] = useState<string | null>(null);
   const [isRemovingFromSuite, setIsRemovingFromSuite] = useState(false);
-  const requestRemoveFromSuite = useCallback((scenario: Pick<TestScenarioSummary, 'id' | 'title'>) => {
-    selectOnlyScenario?.(scenario.id);
-    setRemoveFromSuiteError(null);
-    setRemoveFromSuiteOpen(true);
-  }, [selectOnlyScenario]);
-  const suiteAwareContextMenu = useTestScenarioContextMenu(projectId, scope.kind === 'suite' ? requestRemoveFromSuite : undefined);
+  const requestRemoveFromSuite = useCallback(
+    (scenario: Pick<TestScenarioSummary, 'id' | 'title'>) => {
+      selectOnlyScenario?.(scenario.id);
+      setRemoveFromSuiteError(null);
+      setRemoveFromSuiteOpen(true);
+    },
+    [selectOnlyScenario],
+  );
+  const suiteAwareContextMenu = useTestScenarioContextMenu(
+    projectId,
+    scope.kind === 'suite' ? requestRemoveFromSuite : undefined,
+  );
   const onContextMenu = onContextMenuOverride ?? suiteAwareContextMenu;
   const [addScenariosToSuiteOpen, setAddScenariosToSuiteOpen] = useState(false);
   const [createName, setCreateName] = useState('');
@@ -576,7 +1092,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const folderRows = flattenFolders(folders);
-  const showFolderColumn = scope.kind === 'all' || scope.kind === 'suite' || (scope.kind === 'folder' && includeDescendants);
+  const showFolderColumn =
+    scope.kind === 'all' || scope.kind === 'suite' || (scope.kind === 'folder' && includeDescendants);
   const folderPathById = new Map<string, string>();
   const folderScenarioCounts = new Map<string, number>();
   folderRows.forEach((folder) => {
@@ -594,19 +1111,28 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   });
   const selectedFolder = scope.kind === 'folder' ? folderRows.find((folder) => folder.id === scope.id) : undefined;
   const selectedSuite = scope.kind === 'suite' ? suites.find((suite) => suite.id === scope.id) : undefined;
-  const activeColumnFilters = (Object.entries(columnFilters) as Array<[keyof typeof columnFilters, string]>)
-    .filter(([, value]) => value.trim().length > 0);
+  const activeColumnFilters = (Object.entries(columnFilters) as Array<[keyof typeof columnFilters, string]>).filter(
+    ([, value]) => value.trim().length > 0,
+  );
   const filterLabels: Record<keyof typeof columnFilters, string> = {
-    scenarioKey: 'Scenario key', title: 'Title', details: 'Details', folder: 'Folder', createdBy: 'Created by',
+    scenarioKey: 'Scenario key',
+    title: 'Title',
+    details: 'Details',
+    folder: 'Folder',
+    createdBy: 'Created by',
   };
-  const breadcrumbs = selectedFolder ? [...folderRows.filter((folder) => {
-    let current: (typeof folderRows)[number] | undefined = selectedFolder;
-    while (current) {
-      if (current.id === folder.id) return true;
-      current = folderRows.find((candidate) => candidate.id === current?.parentId);
-    }
-    return false;
-  })].sort((a, b) => a.depth - b.depth) : [];
+  const breadcrumbs = selectedFolder
+    ? [
+        ...folderRows.filter((folder) => {
+          let current: (typeof folderRows)[number] | undefined = selectedFolder;
+          while (current) {
+            if (current.id === folder.id) return true;
+            current = folderRows.find((candidate) => candidate.id === current?.parentId);
+          }
+          return false;
+        }),
+      ].sort((a, b) => a.depth - b.depth)
+    : [];
   const openCreateDialog = (kind: 'folder' | 'suite') => {
     setCreateName('');
     setCreatePurpose('');
@@ -621,7 +1147,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setCreateName(folder.name);
     setCreatePurpose('');
     setCreateRelease('');
-    setCreateDescription('');
+    setCreateDescription(folder.description ?? '');
     setCreateError(null);
     setCreateDialog('rename-folder');
   };
@@ -652,12 +1178,17 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   };
   const submitCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!createDialog || isCreating || (['folder', 'suite', 'rename-folder', 'edit-suite'].includes(createDialog) && !createName.trim())) return;
+    if (
+      !createDialog ||
+      isCreating ||
+      (['folder', 'suite', 'rename-folder', 'edit-suite'].includes(createDialog) && !createName.trim())
+    )
+      return;
     setIsCreating(true);
     setCreateError(null);
     try {
       if (createDialog === 'folder') {
-        await onCreateFolder(createName.trim(), selectedFolder?.id ?? null);
+        await onCreateFolder(createName.trim(), selectedFolder?.id ?? null, createDescription.trim() || null);
       } else if (createDialog === 'suite') {
         await onCreateSuite({
           name: createName.trim(),
@@ -666,7 +1197,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           description: createDescription.trim() || undefined,
         });
       } else if (createDialog === 'rename-folder' && targetFolder) {
-        await onUpdateFolder(targetFolder.id, { name: createName.trim() });
+        await onUpdateFolder(targetFolder.id, {
+          name: createName.trim(),
+          description: createDescription.trim() || null,
+        });
       } else if (createDialog === 'edit-suite' && targetSuite) {
         await onUpdateSuite(targetSuite.id, {
           name: createName.trim(),
@@ -690,11 +1224,18 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   };
   const submitMoveScenarios = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isMovingScenarios || selectedIds.length === 0 || scope.kind === 'suite' || moveDialogScope.current !== latestScope.current) return;
+    if (
+      isMovingScenarios ||
+      selectedIds.length === 0 ||
+      scope.kind === 'suite' ||
+      moveDialogScope.current !== latestScope.current
+    )
+      return;
     setIsMovingScenarios(true);
     setMoveScenariosError(null);
     try {
-      await onMoveSelected(moveScenariosTarget === UNFILED_DESTINATION ? null : moveScenariosTarget);
+      const report = await onMoveSelected(moveScenariosTarget === UNFILED_DESTINATION ? null : moveScenariosTarget);
+      setOperationReport(report);
       setMoveScenariosOpen(false);
     } catch (error) {
       setMoveScenariosError(getActionErrorMessage(error));
@@ -708,12 +1249,32 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setIsAddingToSuite(true);
     setAddToSuiteError(null);
     try {
-      await onAddSelectedToSuite(bulkSuiteId);
+      const report = await onAddSelectedToSuite(bulkSuiteId);
+      setOperationReport(report);
       setAddToSuiteOpen(false);
     } catch (error) {
       setAddToSuiteError(getActionErrorMessage(error));
     } finally {
       setIsAddingToSuite(false);
+    }
+  };
+  const submitDeleteSelected = async () => {
+    if (isDeletingSelected || deleteTargetIds.length === 0) return;
+    setIsDeletingSelected(true);
+    setOperationReport(null);
+    try {
+      setOperationReport(await onDeleteSelected(deleteTargetIds));
+      setDeleteSelectedOpen(false);
+    } catch (error) {
+      setOperationReport({
+        succeededIds: [],
+        failedIds: [],
+        unattemptedIds: deleteTargetIds,
+        uncertainIds: [],
+        errorMessage: getActionErrorMessage(error),
+      });
+    } finally {
+      setIsDeletingSelected(false);
     }
   };
   const submitRemoveFromSuite = async (event: FormEvent<HTMLFormElement>) => {
@@ -722,7 +1283,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setIsRemovingFromSuite(true);
     setRemoveFromSuiteError(null);
     try {
-      await onRemoveSelectedFromSuite();
+      setOperationReport(await onRemoveSelectedFromSuite());
       setRemoveFromSuiteOpen(false);
     } catch (error) {
       setRemoveFromSuiteError(getActionErrorMessage(error));
@@ -731,6 +1292,61 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     }
   };
   const clearSelection = () => selectedIds.forEach((id) => toggleSelected(id));
+  const scenarioDragMime = 'application/x-testportal-scenarios';
+  const handleScenarioDragOver = (event: DragEvent<HTMLElement>, destinationId: string) => {
+    if (
+      !isScenariosTab ||
+      !projectId ||
+      !event.dataTransfer.types.includes(scenarioDragMime) ||
+      activeDrag.current?.projectId !== projectId
+    )
+      return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    setDragOverFolderId(destinationId);
+  };
+  const handleScenarioDrop = (event: DragEvent<HTMLElement>, destinationId: string | null) => {
+    if (!isScenariosTab || !projectId || !event.dataTransfer.types.includes(scenarioDragMime)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setDragOverFolderId(null);
+    const active = activeDrag.current;
+    activeDrag.current = null;
+    try {
+      const payload = JSON.parse(event.dataTransfer.getData(scenarioDragMime)) as {
+        projectId?: string;
+        scenarioIds?: unknown;
+      };
+      if (
+        payload.projectId !== projectId ||
+        !Array.isArray(payload.scenarioIds) ||
+        !payload.scenarioIds.every((id) => typeof id === 'string')
+      )
+        return;
+      const ids = [...new Set(payload.scenarioIds as string[])];
+      if (ids.length === 0 || active?.projectId !== projectId || ids.some((id) => !active.scenarioIds.includes(id)))
+        return;
+      void onMoveScenarioIds(ids, destinationId)
+        .then(setOperationReport)
+        .catch((error: unknown) => {
+          setOperationReport({
+            succeededIds: [],
+            failedIds: [],
+            unattemptedIds: [],
+            uncertainIds: ids,
+            errorMessage: getActionErrorMessage(error),
+          });
+        });
+    } catch {
+      setOperationReport({
+        succeededIds: [],
+        failedIds: [],
+        unattemptedIds: [],
+        uncertainIds: [],
+        errorMessage: 'The drag payload was invalid.',
+      });
+    }
+  };
   const isInFolderSubtree = (candidateId: string, folderId: string) => {
     let current = folderRows.find((folder) => folder.id === candidateId);
     while (current) {
@@ -760,22 +1376,87 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     return (
       <Box key={folder.id}>
         <HStack gap={0}>
-          {children.length ? <IconButton size="xs" w="4" minW="4" flexShrink={0} variant="ghost" aria-label={`${expanded ? 'Collapse' : 'Expand'} ${folder.name}`} onClick={() => toggleFolderExpanded(folder.id)}>{expanded ? <FiChevronDown /> : <FiChevronRight />}</IconButton> : <Box w="4" flexShrink={0} />}
-          <Button flex="1" minW="0" size="sm" px={2} ps={1} variant={selected ? 'subtle' : 'ghost'} colorPalette={selected ? 'blue' : undefined} borderStartWidth="3px" borderStartColor={selected ? 'blue.500' : 'transparent'} justifyContent="flex-start" aria-current={selected ? 'page' : undefined} onClick={() => onScopeChange({ kind: 'folder', id: folder.id })}>
-            <FiFolder /><Text flex="1" textAlign="left" lineClamp={1}>{folder.name}</Text><Text color="text.muted" fontSize="xs">{folderScenarioCounts.get(folder.id) ?? folder.scenarioCount}</Text>
+          {children.length ? (
+            <IconButton
+              size="xs"
+              w="4"
+              minW="4"
+              flexShrink={0}
+              variant="ghost"
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} ${folder.name}`}
+              onClick={() => toggleFolderExpanded(folder.id)}
+            >
+              {expanded ? <FiChevronDown /> : <FiChevronRight />}
+            </IconButton>
+          ) : (
+            <Box w="4" flexShrink={0} />
+          )}
+          <Button
+            flex="1"
+            minW="0"
+            size="sm"
+            px={2}
+            ps={1}
+            variant={selected || dragOverFolderId === folder.id ? 'subtle' : 'ghost'}
+            colorPalette={selected || dragOverFolderId === folder.id ? 'blue' : undefined}
+            borderStartWidth="3px"
+            borderStartColor={selected || dragOverFolderId === folder.id ? 'blue.500' : 'transparent'}
+            justifyContent="flex-start"
+            aria-current={selected ? 'page' : undefined}
+            onClick={() => onScopeChange({ kind: 'folder', id: folder.id })}
+            onDragOver={(event) => handleScenarioDragOver(event, folder.id)}
+            onDragLeave={() => setDragOverFolderId((current) => (current === folder.id ? null : current))}
+            onDrop={(event) => handleScenarioDrop(event, folder.id)}
+          >
+            <FiFolder />
+            <Text flex="1" textAlign="left" lineClamp={1}>
+              {folder.name}
+            </Text>
+            <Text color="text.muted" fontSize="xs">
+              {folderScenarioCounts.get(folder.id) ?? folder.scenarioCount}
+            </Text>
           </Button>
           <Menu.Root>
-            <Menu.Trigger asChild><IconButton size="xs" variant="ghost" color="text.muted" aria-label={`Actions for folder ${folder.name}`}><FiMoreHorizontal /></IconButton></Menu.Trigger>
-            <Menu.Positioner><Menu.Content>
-              <Menu.Item value="rename" onClick={() => openEditFolderDialog(folder)}>Rename</Menu.Item>
-              <Menu.Item value="move" onClick={() => openFolderActionDialog('move-folder', folder)}>Move</Menu.Item>
-              <Menu.Item value="move-up" disabled={folderIndex <= 0} onClick={() => void reorderFolder(folder, -1)}>Move up</Menu.Item>
-              <Menu.Item value="move-down" disabled={folderIndex < 0 || folderIndex >= siblings.length - 1} onClick={() => void reorderFolder(folder, 1)}>Move down</Menu.Item>
-              <Menu.Item value="delete" color="fg.error" onClick={() => openFolderActionDialog('delete-folder', folder)}>Delete</Menu.Item>
-            </Menu.Content></Menu.Positioner>
+            <Menu.Trigger asChild>
+              <IconButton size="xs" variant="ghost" color="text.muted" aria-label={`Actions for folder ${folder.name}`}>
+                <FiMoreHorizontal />
+              </IconButton>
+            </Menu.Trigger>
+            <Menu.Positioner>
+              <Menu.Content>
+                <Menu.Item value="rename" onClick={() => openEditFolderDialog(folder)}>
+                  Rename
+                </Menu.Item>
+                <Menu.Item value="move" onClick={() => openFolderActionDialog('move-folder', folder)}>
+                  Move
+                </Menu.Item>
+                <Menu.Item value="move-up" disabled={folderIndex <= 0} onClick={() => void reorderFolder(folder, -1)}>
+                  Move up
+                </Menu.Item>
+                <Menu.Item
+                  value="move-down"
+                  disabled={folderIndex < 0 || folderIndex >= siblings.length - 1}
+                  onClick={() => void reorderFolder(folder, 1)}
+                >
+                  Move down
+                </Menu.Item>
+                <Menu.Item
+                  value="delete"
+                  color="fg.error"
+                  onClick={() => openFolderActionDialog('delete-folder', folder)}
+                >
+                  Delete
+                </Menu.Item>
+              </Menu.Content>
+            </Menu.Positioner>
           </Menu.Root>
         </HStack>
-        {expanded && children.map((child) => <Box key={child.id} ps={4}>{renderFolder(child)}</Box>)}
+        {expanded &&
+          children.map((child) => (
+            <Box key={child.id} ps={4}>
+              {renderFolder(child)}
+            </Box>
+          ))}
       </Box>
     );
   };
@@ -796,142 +1477,152 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             aria-label="Scenario organization"
           >
             {organizationTab !== 'suites' && (
-            <VStack align="stretch" gap={1}>
-              <Button
-                size="sm"
-                justifyContent="flex-start"
-                variant={scope.kind === 'all' ? 'subtle' : 'ghost'}
-                colorPalette={scope.kind === 'all' ? 'blue' : undefined}
-                borderStartWidth="3px"
-                borderStartColor={scope.kind === 'all' ? 'blue.500' : 'transparent'}
-                aria-current={scope.kind === 'all' ? 'page' : undefined}
-                onClick={() => onScopeChange({ kind: 'all' })}
-              >
-                <FiLayers />
-                All scenarios
-                {scope.kind === 'all' && (
-                  <Text ml="auto" color="text.muted" fontSize="xs">
-                    {pagination.total}
+              <VStack align="stretch" gap={1}>
+                <Button
+                  size="sm"
+                  justifyContent="flex-start"
+                  variant={scope.kind === 'all' ? 'subtle' : 'ghost'}
+                  colorPalette={scope.kind === 'all' ? 'blue' : undefined}
+                  borderStartWidth="3px"
+                  borderStartColor={scope.kind === 'all' ? 'blue.500' : 'transparent'}
+                  aria-current={scope.kind === 'all' ? 'page' : undefined}
+                  onClick={() => onScopeChange({ kind: 'all' })}
+                >
+                  <FiLayers />
+                  All scenarios
+                  {scope.kind === 'all' && (
+                    <Text ml="auto" color="text.muted" fontSize="xs">
+                      {projectScenarioCount}
+                    </Text>
+                  )}
+                </Button>
+              </VStack>
+            )}
+            {organizationTab !== 'suites' && (
+              <Box>
+                <HStack justify="space-between" px={2} mb={1}>
+                  <Text
+                    fontSize="xs"
+                    fontWeight="bold"
+                    letterSpacing="wider"
+                    color="text.muted"
+                    textTransform="uppercase"
+                  >
+                    Folders
                   </Text>
+                  <IconButton
+                    size="xs"
+                    variant="ghost"
+                    aria-label={selectedFolder ? 'Create subfolder' : 'Create folder'}
+                    title={selectedFolder ? 'Create inside selected folder' : 'Create folder'}
+                    onClick={() => openCreateDialog('folder')}
+                  >
+                    <FiPlus />
+                  </IconButton>
+                </HStack>
+                {organizationLoading ? (
+                  <Text px={2} color="text.muted" fontSize="sm">
+                    Loading folders…
+                  </Text>
+                ) : organizationError ? (
+                  <Text px={2} color="fg.error" fontSize="sm" role="alert">
+                    Folders could not be loaded.
+                  </Text>
+                ) : folders.length === 0 ? (
+                  <Text px={2} color="text.muted" fontSize="sm">
+                    No folders yet
+                  </Text>
+                ) : (
+                  <VStack align="stretch" gap={0}>
+                    {folders.map(renderFolder)}
+                  </VStack>
                 )}
-              </Button>
+              </Box>
+            )}
+            {organizationTab !== 'suites' && (
               <Button
                 size="sm"
                 justifyContent="flex-start"
-                variant={scope.kind === 'unfiled' ? 'subtle' : 'ghost'}
-                colorPalette={scope.kind === 'unfiled' ? 'blue' : undefined}
                 borderStartWidth="3px"
                 borderStartColor={scope.kind === 'unfiled' ? 'blue.500' : 'transparent'}
                 aria-current={scope.kind === 'unfiled' ? 'page' : undefined}
                 onClick={() => onScopeChange({ kind: 'unfiled' })}
+                variant={scope.kind === 'unfiled' || dragOverFolderId === UNFILED_DESTINATION ? 'subtle' : 'ghost'}
+                colorPalette={scope.kind === 'unfiled' || dragOverFolderId === UNFILED_DESTINATION ? 'blue' : undefined}
+                onDragOver={(event) => handleScenarioDragOver(event, UNFILED_DESTINATION)}
+                onDragLeave={() => setDragOverFolderId((current) => (current === UNFILED_DESTINATION ? null : current))}
+                onDrop={(event) => handleScenarioDrop(event, null)}
               >
                 <FiFolder />
-                Unfiled
+                No folder
+                <Text ml="auto" color="text.muted" fontSize="xs">
+                  {unfiledScenarioCount}
+                </Text>
               </Button>
-            </VStack>
             )}
-            {organizationTab !== 'suites' && (
-            <Box>
-              <HStack justify="space-between" px={2} mb={1}>
-                <Text
-                  fontSize="xs"
-                  fontWeight="bold"
-                  letterSpacing="wider"
-                  color="text.muted"
-                  textTransform="uppercase"
-                >
-                  Folders
-                </Text>
-                <IconButton
-                  size="xs"
-                  variant="ghost"
-                  aria-label={selectedFolder ? 'Create subfolder' : 'Create folder'}
-                  title={selectedFolder ? 'Create inside selected folder' : 'Create folder'}
-                  onClick={() => openCreateDialog('folder')}
-                >
-                  <FiPlus />
-                </IconButton>
-              </HStack>
-              {organizationLoading ? (
-                <Text px={2} color="text.muted" fontSize="sm">
-                  Loading folders…
-                </Text>
-              ) : organizationError ? (
-                <Text px={2} color="fg.error" fontSize="sm" role="alert">
-                  Folders could not be loaded.
-                </Text>
-              ) : folders.length === 0 ? (
-                <Text px={2} color="text.muted" fontSize="sm">
-                  No folders yet
-                </Text>
-              ) : (
-                <VStack align="stretch" gap={0}>
-                  {folders.map(renderFolder)}
-                </VStack>
-              )}
-            </Box>
+            {organizationTab !== 'scenarios' && (
+              <Box>
+                <HStack justify="space-between" px={2} mb={1}>
+                  <Text
+                    fontSize="xs"
+                    fontWeight="bold"
+                    letterSpacing="wider"
+                    color="text.muted"
+                    textTransform="uppercase"
+                  >
+                    Suites
+                  </Text>
+                  <IconButton
+                    size="xs"
+                    variant="ghost"
+                    aria-label="Create suite"
+                    onClick={() => openCreateDialog('suite')}
+                  >
+                    <FiPlus />
+                  </IconButton>
+                </HStack>
+                {organizationLoading ? (
+                  <Text px={2} color="text.muted" fontSize="sm">
+                    Loading suites…
+                  </Text>
+                ) : organizationError ? (
+                  <Text px={2} color="fg.error" fontSize="sm" role="alert">
+                    Suites could not be loaded.
+                  </Text>
+                ) : suites.length === 0 ? (
+                  <Text px={2} color="text.muted" fontSize="sm">
+                    No suites yet
+                  </Text>
+                ) : (
+                  <VStack align="stretch" gap={0}>
+                    {suites.map((suite) => {
+                      const selected = scope.kind === 'suite' && scope.id === suite.id;
+                      return (
+                        <Button
+                          key={suite.id}
+                          size="sm"
+                          variant={selected ? 'subtle' : 'ghost'}
+                          colorPalette={selected ? 'blue' : undefined}
+                          borderStartWidth="3px"
+                          borderStartColor={selected ? 'blue.500' : 'transparent'}
+                          justifyContent="flex-start"
+                          aria-current={selected ? 'page' : undefined}
+                          onClick={() => onScopeChange({ kind: 'suite', id: suite.id })}
+                        >
+                          <FiLayers />
+                          <Text flex="1" textAlign="left" lineClamp={1}>
+                            {suite.name}
+                          </Text>
+                          <Text color="text.muted" fontSize="xs">
+                            {suite.members?.length ?? 0}
+                          </Text>
+                        </Button>
+                      );
+                    })}
+                  </VStack>
+                )}
+              </Box>
             )}
-            {organizationTab !== 'scenarios' && <Box>
-              <HStack justify="space-between" px={2} mb={1}>
-                <Text
-                  fontSize="xs"
-                  fontWeight="bold"
-                  letterSpacing="wider"
-                  color="text.muted"
-                  textTransform="uppercase"
-                >
-                  Suites
-                </Text>
-                <IconButton
-                  size="xs"
-                  variant="ghost"
-                  aria-label="Create suite"
-                  onClick={() => openCreateDialog('suite')}
-                >
-                  <FiPlus />
-                </IconButton>
-              </HStack>
-              {organizationLoading ? (
-                <Text px={2} color="text.muted" fontSize="sm">
-                  Loading suites…
-                </Text>
-              ) : organizationError ? (
-                <Text px={2} color="fg.error" fontSize="sm" role="alert">
-                  Suites could not be loaded.
-                </Text>
-              ) : suites.length === 0 ? (
-                <Text px={2} color="text.muted" fontSize="sm">
-                  No suites yet
-                </Text>
-              ) : (
-                <VStack align="stretch" gap={0}>
-                  {suites.map((suite) => {
-                    const selected = scope.kind === 'suite' && scope.id === suite.id;
-                    return (
-                      <Button
-                        key={suite.id}
-                        size="sm"
-                        variant={selected ? 'subtle' : 'ghost'}
-                        colorPalette={selected ? 'blue' : undefined}
-                        borderStartWidth="3px"
-                        borderStartColor={selected ? 'blue.500' : 'transparent'}
-                        justifyContent="flex-start"
-                        aria-current={selected ? 'page' : undefined}
-                        onClick={() => onScopeChange({ kind: 'suite', id: suite.id })}
-                      >
-                        <FiLayers />
-                        <Text flex="1" textAlign="left" lineClamp={1}>
-                          {suite.name}
-                        </Text>
-                        <Text color="text.muted" fontSize="xs">
-                          {suite.members?.length ?? 0}
-                        </Text>
-                      </Button>
-                    );
-                  })}
-                </VStack>
-              )}
-            </Box>}
           </VStack>
 
           <VStack align="stretch" gap={4} minW="0">
@@ -961,14 +1652,21 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   <Heading fontSize="lg">
                     {selectedFolder?.name ??
                       selectedSuite?.name ??
-                      (scope.kind === 'unfiled' ? 'Unfiled scenarios' : 'All scenarios')}
+                      (scope.kind === 'unfiled' ? 'No folder scenarios' : 'All scenarios')}
                   </Heading>
+                  {selectedFolder?.description && (
+                    <Text mt={1} color="text.secondary" fontSize="sm">
+                      {selectedFolder.description}
+                    </Text>
+                  )}
                   <Text mt={1} color="text.muted" fontSize="sm">
                     {selectedFolder
                       ? `${pagination.total} scenarios${includeDescendants ? ' in this folder and subfolders' : ' directly in this folder'}`
                       : selectedSuite
                         ? `${selectedSuite.members?.length ?? 0} scenarios${selectedSuite.release ? ` · ${selectedSuite.release}` : ''}`
-                        : `${pagination.total} scenarios`}
+                        : scope.kind === 'unfiled'
+                          ? `${pagination.total} scenarios without a folder`
+                          : `${pagination.total} scenarios`}
                   </Text>
                 </Box>
                 {selectedFolder && (
@@ -1086,6 +1784,63 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     </IconButton>
                   )}
                 </Box>
+                {isScenariosTab ? (
+                  <>
+                    <Box w="150px">
+                      <NativeSelect
+                        aria-label="Priority"
+                        value={priority}
+                        onChange={(event) =>
+                          onPriorityChange(event.currentTarget.value as 'low' | 'medium' | 'high' | '')
+                        }
+                      >
+                        <option value="">All priorities</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                      </NativeSelect>
+                    </Box>
+                    <Box w="210px">
+                      <NativeSelect
+                        aria-label="Author"
+                        value={authorId}
+                        onChange={(event) => onAuthorChange(event.currentTarget.value)}
+                      >
+                        <option value="">{authorsLoading ? 'Loading authors…' : 'All authors'}</option>
+                        {authors.map((author) => (
+                          <option key={author.id} value={author.id}>
+                            {author.name || author.email}
+                          </option>
+                        ))}
+                      </NativeSelect>
+                    </Box>
+                    <Box w="150px">
+                      <NativeSelect
+                        aria-label="Sort by"
+                        value={sort ?? 'updatedAt'}
+                        onChange={(event) =>
+                          onSortChange(event.currentTarget.value as NonNullable<TestScenarioCatalogViewProps['sort']>)
+                        }
+                      >
+                        <option value="scenarioKey">Key</option>
+                        <option value="title">Title</option>
+                        <option value="folder">Folder</option>
+                        <option value="updatedAt">Updated</option>
+                        <option value="createdBy">Author</option>
+                      </NativeSelect>
+                    </Box>
+                    <Box w="150px">
+                      <NativeSelect
+                        aria-label="Sort direction"
+                        value={sortDirection}
+                        onChange={(event) => onSortDirectionChange(event.currentTarget.value as 'asc' | 'desc')}
+                      >
+                        <option value="desc">Descending</option>
+                        <option value="asc">Ascending</option>
+                      </NativeSelect>
+                    </Box>
+                  </>
+                ) : null}
                 {(search.trim() || activeColumnFilters.length > 0) && (
                   <Text fontSize="xs" color="text.muted">
                     {activeColumnFilters.length + Number(Boolean(search.trim()))} search{' '}
@@ -1212,8 +1967,44 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 </label>
               </HStack>
             )}
+            {selectionError && (
+              <Text role="alert" color="fg.error" fontSize="sm">
+                Could not select all matching scenarios: {selectionError}
+              </Text>
+            )}
+            {isResolvingSelection && (
+              <Text role="status" color="text.muted" fontSize="sm">
+                Resolving all matching scenario IDs…
+              </Text>
+            )}
+            {operationReport && (
+              <Text
+                role={
+                  operationReport.failedIds.length ||
+                  operationReport.unattemptedIds.length ||
+                  operationReport.uncertainIds.length
+                    ? 'alert'
+                    : 'status'
+                }
+                color={
+                  operationReport.failedIds.length ||
+                  operationReport.unattemptedIds.length ||
+                  operationReport.uncertainIds.length
+                    ? 'fg.error'
+                    : 'text.muted'
+                }
+                fontSize="sm"
+              >
+                {operationReport.succeededIds.length} succeeded, {operationReport.failedIds.length} failed,{' '}
+                {operationReport.unattemptedIds.length} not attempted, {operationReport.uncertainIds.length} uncertain.
+                {operationReport.errorMessage ? ` ${operationReport.errorMessage}` : ''}
+              </Text>
+            )}
             {selectedIds.length > 0 && (
               <HStack
+                position="sticky"
+                bottom={3}
+                zIndex="docked"
                 flexWrap="wrap"
                 gap={2}
                 p={3}
@@ -1221,31 +2012,52 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 borderRadius="md"
                 borderStartWidth="3px"
                 borderStartColor="border.focus"
+                boxShadow="lg"
+                w="100%"
                 aria-label="Bulk scenario actions"
               >
                 <Text fontWeight="semibold" whiteSpace="nowrap">
-                  {selectedIds.length} selected
+                  {selectedIds.length} {allMatchingSelected ? 'matching scenarios selected' : 'selected'}
                 </Text>
-                <Button size="sm" variant="ghost" onClick={clearSelection}>
-                  Clear selection
+                {isScenariosTab && !allMatchingSelected && selectedIds.length < pagination.total && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isResolvingSelection || isExecutingOperation}
+                    onClick={() => void selectAllMatching()}
+                  >
+                    Select all {pagination.total}
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-label="Close bulk scenario actions and clear selection"
+                  disabled={isExecutingOperation}
+                  onClick={clearSelection}
+                >
+                  <FiX />
                 </Button>
                 <Box flex="1" />
-                {scope.kind !== 'suite' && <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    moveDialogScope.current = scopeKey;
-                    setMoveScenariosTarget('');
-                    setMoveScenariosError(null);
-                    setMoveScenariosOpen(true);
-                  }}
-                >
-                  Move…
-                </Button>}
+                {scope.kind !== 'suite' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isExecutingOperation}
+                    onClick={() => {
+                      moveDialogScope.current = scopeKey;
+                      setMoveScenariosTarget('');
+                      setMoveScenariosError(null);
+                      setMoveScenariosOpen(true);
+                    }}
+                  >
+                    Move…
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={suites.length === 0}
+                  disabled={suites.length === 0 || isExecutingOperation}
                   onClick={() => {
                     setBulkSuiteId('');
                     setAddToSuiteError(null);
@@ -1254,10 +2066,25 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 >
                   Add to suite…
                 </Button>
+                {isScenariosTab && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    colorPalette="red"
+                    disabled={isExecutingOperation}
+                    onClick={() => {
+                      setDeleteTargetIds([...selectedIds]);
+                      setDeleteSelectedOpen(true);
+                    }}
+                  >
+                    Delete
+                  </Button>
+                )}
                 {scope.kind === 'suite' && (
                   <Button
                     size="sm"
                     variant="outline"
+                    disabled={isExecutingOperation}
                     onClick={() => {
                       setRemoveFromSuiteError(null);
                       setRemoveFromSuiteOpen(true);
@@ -1266,41 +2093,60 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     Remove from suite
                   </Button>
                 )}
-                {selectedIds.length >= 100 && (
-                  <Text role="status" color="text.muted" fontSize="sm">
-                    Limit reached: 100 scenarios per action.
-                  </Text>
-                )}
               </HStack>
             )}
 
             <Box borderWidth="1px" borderColor="border.main" borderRadius="lg" overflow="hidden" bg="bg.card">
               {organizationTab === 'suites' && !selectedSuite ? (
-                <Text p={6} textAlign="center" color="text.muted">Select a suite to view its scenarios.</Text>
+                <Text p={6} textAlign="center" color="text.muted">
+                  Select a suite to view its scenarios.
+                </Text>
               ) : error ? (
                 <Box p={4}>
                   <ErrorState />
                 </Box>
               ) : (
                 <>
-                  <ScenarioTable
-                    scenarios={scenarios}
-                    isLoading={isLoading}
-                    selectedIds={selectedIds}
-                    onToggleSelected={toggleSelected}
-                    onContextMenu={onContextMenu}
-                    showFolder={showFolderColumn}
-                    folderPathById={folderPathById}
-                    sort={sort}
-                    sortDirection={sortDirection}
-                    onSortChange={onSortChange}
-                    columnFilters={columnFilters}
-                    onColumnFilterChange={onColumnFilterChange}
-                    openFilter={openFilter}
-                    onFilterDisclosureChange={setOpenFilter}
-                    searchActive={Boolean(search.trim()) || activeColumnFilters.length > 0}
-                  />
-                  {scenarios.length > 0 && (
+                  {isScenariosTab ? (
+                    <CompactScenarioTable
+                      projectId={projectId ?? ''}
+                      scenarios={scenarios}
+                      isLoading={isLoading}
+                      selectedIds={selectedIds}
+                      selectionDisabled={isExecutingOperation}
+                      onToggleSelected={toggleSelected}
+                      onContextMenu={onContextMenu}
+                      onDragPayload={(dragProjectId, scenarioIds) => {
+                        activeDrag.current = { projectId: dragProjectId, scenarioIds };
+                      }}
+                      onDragEnd={() => {
+                        activeDrag.current = null;
+                        setDragOverFolderId(null);
+                      }}
+                      folderPathById={folderPathById}
+                      searchActive={Boolean(search.trim()) || Boolean(priority) || Boolean(authorId)}
+                    />
+                  ) : (
+                    <ScenarioTable
+                      scenarios={scenarios}
+                      isLoading={isLoading}
+                      selectedIds={selectedIds}
+                      selectionDisabled={isExecutingOperation}
+                      onToggleSelected={toggleSelected}
+                      onContextMenu={onContextMenu}
+                      showFolder={showFolderColumn}
+                      folderPathById={folderPathById}
+                      sort={sort}
+                      sortDirection={sortDirection}
+                      onSortChange={onSortChange}
+                      columnFilters={columnFilters}
+                      onColumnFilterChange={onColumnFilterChange}
+                      openFilter={openFilter}
+                      onFilterDisclosureChange={setOpenFilter}
+                      searchActive={Boolean(search.trim()) || activeColumnFilters.length > 0}
+                    />
+                  )}
+                  {(isScenariosTab || scenarios.length > 0) && (
                     <HStack
                       justify="space-between"
                       flexWrap="wrap"
@@ -1309,6 +2155,21 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       borderColor="border.main"
                     >
                       <PaginationSummary pagination={pagination} />
+                      {isScenariosTab && (
+                        <Box w="130px">
+                          <NativeSelect
+                            aria-label="Rows per page"
+                            value={String(pageSize)}
+                            onChange={(event) => onPageSizeChange(Number(event.currentTarget.value))}
+                          >
+                            {pageSizes.map((size) => (
+                              <option key={size} value={size}>
+                                {size} rows
+                              </option>
+                            ))}
+                          </NativeSelect>
+                        </Box>
+                      )}
                       {pagination.totalPages > 1 && (
                         <Box as="nav" aria-label="Test Scenario pagination">
                           <Pagination
@@ -1334,6 +2195,38 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           onClose={() => setAddScenariosToSuiteOpen(false)}
         />
       )}
+      {deleteSelectedOpen && (
+        <Dialog
+          title={`Delete ${deleteTargetIds.length} selected scenario${deleteTargetIds.length === 1 ? '' : 's'}?`}
+          onClose={() => setDeleteSelectedOpen(false)}
+        >
+          <DialogBody>
+            <Text>
+              This permanently deletes the selected scenarios. Only scenarios in this confirmed selection will be
+              deleted.
+            </Text>
+          </DialogBody>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={isDeletingSelected}
+              onClick={() => setDeleteSelectedOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              colorPalette="red"
+              loading={isDeletingSelected}
+              disabled={isDeletingSelected}
+              onClick={() => void submitDeleteSelected()}
+            >
+              Delete {deleteTargetIds.length} scenarios
+            </Button>
+          </DialogFooter>
+        </Dialog>
+      )}
       {moveScenariosOpen && scope.kind !== 'suite' && moveDialogScope.current === scopeKey && (
         <Dialog
           title={`Move ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'}`}
@@ -1349,7 +2242,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   value={moveScenariosTarget}
                   onChange={(event) => setMoveScenariosTarget(event.currentTarget.value)}
                 >
-                  <option value={UNFILED_DESTINATION}>Unfiled</option>
+                  <option value={UNFILED_DESTINATION}>No folder</option>
                   {folderRows.map((folder) => (
                     <option key={folder.id} value={folder.id}>
                       {'　'.repeat(folder.depth)}
@@ -1490,36 +2383,61 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       maxLength={120}
                       value={createName}
                       onChange={(event) => setCreateName(event.currentTarget.value)}
-                      bg={createDialog === 'rename-folder' || createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined}
+                      bg={
+                        createDialog === 'rename-folder' || createDialog === 'suite'
+                          ? 'white'
+                          : createDialog === 'edit-suite'
+                            ? 'bg.card'
+                            : undefined
+                      }
                     />
                   </label>
                 )}
-                {(createDialog === 'suite' || createDialog === 'edit-suite') && (
+                {['folder', 'rename-folder', 'suite', 'edit-suite'].includes(createDialog) && (
                   <>
-                    <label>
-                      <Text mb={1}>Purpose (optional)</Text>
-                      <Input
-                        value={createPurpose}
-                        onChange={(event) => setCreatePurpose(event.currentTarget.value)}
-                        bg={createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined}
-                      />
-                    </label>
-                    <label>
-                      <Text mb={1}>Release (optional)</Text>
-                      <Input
-                        value={createRelease}
-                        onChange={(event) => setCreateRelease(event.currentTarget.value)}
-                        bg={createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined}
-                      />
-                    </label>
-                    <label>
-                      <Text mb={1}>Description (optional)</Text>
-                      <Textarea
-                        value={createDescription}
-                        onChange={(event) => setCreateDescription(event.currentTarget.value)}
-                        bg={createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined}
-                      />
-                    </label>
+                    {(createDialog === 'folder' || createDialog === 'rename-folder') && (
+                      <label>
+                        <Text mb={1}>Description (optional)</Text>
+                        <Textarea
+                          value={createDescription}
+                          onChange={(event) => setCreateDescription(event.currentTarget.value)}
+                        />
+                      </label>
+                    )}
+                    {(createDialog === 'suite' || createDialog === 'edit-suite') && (
+                      <>
+                        <label>
+                          <Text mb={1}>Purpose (optional)</Text>
+                          <Input
+                            value={createPurpose}
+                            onChange={(event) => setCreatePurpose(event.currentTarget.value)}
+                            bg={
+                              createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined
+                            }
+                          />
+                        </label>
+                        <label>
+                          <Text mb={1}>Release (optional)</Text>
+                          <Input
+                            value={createRelease}
+                            onChange={(event) => setCreateRelease(event.currentTarget.value)}
+                            bg={
+                              createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined
+                            }
+                          />
+                        </label>
+                        <label>
+                          <Text mb={1}>Description (optional)</Text>
+                          <Textarea
+                            value={createDescription}
+                            onChange={(event) => setCreateDescription(event.currentTarget.value)}
+                            bg={
+                              createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined
+                            }
+                          />
+                        </label>
+                      </>
+                    )}
                   </>
                 )}
                 {createDialog === 'move-folder' && targetFolder && (
@@ -1551,7 +2469,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       onChange={(event) => setDeleteDisposition(event.currentTarget.value as 'parent' | 'unfiled')}
                     >
                       <option value="parent">Parent folder</option>
-                      <option value="unfiled">Unfiled</option>
+                      <option value="unfiled">No folder</option>
                     </NativeSelect>
                   </>
                 )}
