@@ -40,7 +40,15 @@ export function TestScenariosPage({ initialTab }: { initialTab?: TestManagementT
   return (
     <MainTemplate pageHeader="Test Management">
       <Tabs.Root defaultValue={tab} lazyMount unmountOnExit>
-        <Tabs.List aria-label="Test Management" w="full" gap={0} borderBottomWidth="1px" borderColor="border.default" overflowX="auto">
+        <Tabs.List
+          aria-label="Test Management"
+          w="full"
+          gap={0}
+          ps={3}
+          borderBottomWidth="1px"
+          borderColor="border.default"
+          overflowX="auto"
+        >
           <Tabs.Trigger value="scenarios" {...TAB_TRIGGER_STYLE}>
             Scenarios <Count count={scenarioCount} label="scenario" />
           </Tabs.Trigger>

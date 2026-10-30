@@ -91,9 +91,11 @@ describe('TestScenariosPage', () => {
 
     const scenariosTab = screen.getByRole('tab', { name: /Scenarios 12/ });
     const suitesTab = screen.getByRole('tab', { name: /Suites 2/ });
+    const tabList = screen.getByRole('tablist', { name: 'Test Management' });
     expect(getComputedStyle(scenariosTab).fontSize).toBe('var(--chakra-font-sizes-sm)');
     expect(getComputedStyle(scenariosTab).borderBottomWidth).toBe('2px');
     expect(getComputedStyle(suitesTab).fontSize).toBe('var(--chakra-font-sizes-sm)');
+    expect(getComputedStyle(tabList).paddingInlineStart).toBe('var(--chakra-spacing-3)');
   });
 
   it('switches to the Suites context when its tab is selected', async () => {
