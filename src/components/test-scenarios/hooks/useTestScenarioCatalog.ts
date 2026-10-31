@@ -145,6 +145,17 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     return () => window.clearTimeout(timeout);
   }, [columnFilters, search]);
   const isAwaitingSuiteSelection = organizationTab === 'suites' && scope.kind === 'suite' && !scope.id;
+  // Count against the current scope and other filters, independent of priority and pagination.
+  const countArgs = { ...queryArgs, page: 1, limit: 1 };
+  const countOptions = { skip: isAwaitingSuiteSelection };
+  const highCount = useGetApiV2TestScenariosQuery({ ...countArgs, priority: 'high' }, countOptions);
+  const mediumCount = useGetApiV2TestScenariosQuery({ ...countArgs, priority: 'medium' }, countOptions);
+  const lowCount = useGetApiV2TestScenariosQuery({ ...countArgs, priority: 'low' }, countOptions);
+  const priorityCounts = {
+    high: highCount.currentData?.total,
+    medium: mediumCount.currentData?.total,
+    low: lowCount.currentData?.total,
+  };
   const {
     currentData,
     isLoading: isQueryLoading,
@@ -423,6 +434,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     columnFilters,
     onColumnFilterChange,
     priority,
+    priorityCounts,
     onPriorityChange,
     authorId,
     onAuthorChange,

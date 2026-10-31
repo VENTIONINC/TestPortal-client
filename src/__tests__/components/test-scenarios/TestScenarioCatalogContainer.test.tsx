@@ -235,7 +235,7 @@ describe('TestScenarioCatalogContainer', () => {
     expect(result.current.selectedIds).toEqual(['visible-id']);
     act(() => {
       result.current.onScopeChange({ kind: 'folder', id: 'folder-a' });
-      result.current.onPriorityChange('high');
+      result.current.onPriorityChange('high,medium');
       result.current.onAuthorChange('user-1');
       result.current.onSearchChange('login');
     });
@@ -248,7 +248,7 @@ describe('TestScenarioCatalogContainer', () => {
         projectId: 'project-1',
         folderId: 'folder-a',
         includeDescendants: true,
-        priority: 'high',
+        priority: 'high,medium',
         createdById: 'user-1',
         search: 'login',
       }),
@@ -467,7 +467,7 @@ describe('TestScenarioCatalogContainer', () => {
       </ChakraProvider>,
     );
 
-    await user.click(screen.getByRole('button', { name: /^2$/ }));
+    await user.click(screen.getByRole('button', { name: 'Next Page' }));
 
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
       { projectId: 'project-1', page: 2, limit: 25, sortField: 'updatedAt', sortDirection: 'desc' },
@@ -546,7 +546,8 @@ describe('TestScenarioCatalogContainer', () => {
 
     await user.selectOptions(screen.getByLabelText('Sort by'), 'title');
     await user.selectOptions(screen.getByLabelText('Sort direction'), 'asc');
-    await user.selectOptions(screen.getByLabelText('Priority'), 'high');
+    await user.click(screen.getByRole('button', { name: 'Priority' }));
+    await user.click(screen.getByRole('checkbox', { name: 'High' }));
     await user.selectOptions(screen.getByLabelText('Author'), 'user-1');
 
     await waitFor(() =>

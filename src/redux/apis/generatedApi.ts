@@ -1927,7 +1927,7 @@ export type GetApiV2TestScenariosApiArg = {
   limit?: number;
   search?: string;
   createdById?: string;
-  priority?: "low" | "medium" | "high";
+  priority?: string;
   sort?: "recently_created" | "recently_updated" | "title_asc";
   sortField?:
     | "scenarioKey"
@@ -1958,7 +1958,7 @@ export type GetApiV2TestScenariosSelectionApiArg = {
   projectId: string;
   search?: string;
   createdById?: string;
-  priority?: "low" | "medium" | "high";
+  priority?: string;
   scenarioKey?: string;
   title?: string;
   details?: string;

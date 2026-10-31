@@ -77,7 +77,7 @@ export const TestSuiteAddScenariosDialogView = ({
         <Grid templateColumns={{ base: '1fr', md: 'minmax(0, 1fr) 240px' }} alignItems="end" gap={3}>
           <Input
             aria-label="Search available scenarios"
-            placeholder="Search title or scenario key"
+            placeholder="Search by title or key"
             value={search}
             bg="bg.input"
             onChange={(event) => onSearchChange(event.currentTarget.value)}
@@ -98,21 +98,40 @@ export const TestSuiteAddScenariosDialogView = ({
         </Grid>
 
         {error ? (
-          <Text role="alert" color="fg.error">{error}</Text>
+          <Text role="alert" color="fg.error">
+            {error}
+          </Text>
         ) : isLoading ? (
-          <Text py={8} textAlign="center" color="text.secondary">Loading scenarios…</Text>
+          <Text py={8} textAlign="center" color="text.secondary">
+            Loading scenarios…
+          </Text>
         ) : scenarios.length === 0 ? (
-          <VStack gap={2} py={9} px={4} borderWidth="1px" borderStyle="dashed" borderColor="border.main" borderRadius="lg" textAlign="center">
+          <VStack
+            gap={2}
+            py={9}
+            px={4}
+            borderWidth="1px"
+            borderStyle="dashed"
+            borderColor="border.main"
+            borderRadius="lg"
+            textAlign="center"
+          >
             <Box p={3} borderRadius="full" bg="bg.subtle" color="text.secondary">
               {emptyState === 'already-added' ? <FiCheckCircle size={22} /> : <FiSearch size={22} />}
             </Box>
-            <Heading size="sm">{emptyState === 'already-added' ? 'Already in this suite' : 'No scenarios found'}</Heading>
+            <Heading size="sm">
+              {emptyState === 'already-added' ? 'Already in this suite' : 'No scenarios found'}
+            </Heading>
             <Text maxW="460px" color="text.secondary" fontSize="sm">
               {emptyState === 'already-added'
                 ? 'Every scenario on this page is already included. Try another folder or clear the filters to find more.'
                 : 'Try a different search or folder. You can also clear the filters to browse all project scenarios.'}
             </Text>
-            {(search || folderId) && <Button size="sm" variant="outline" onClick={onClearFilters}>Clear filters</Button>}
+            {(search || folderId) && (
+              <Button size="sm" variant="outline" onClick={onClearFilters}>
+                Clear filters
+              </Button>
+            )}
           </VStack>
         ) : (
           <Box borderWidth="1px" borderColor="border.main" borderRadius="md" overflow="auto" maxH="360px">
@@ -124,13 +143,21 @@ export const TestSuiteAddScenariosDialogView = ({
                       type="checkbox"
                       aria-label="Select all scenarios on this page"
                       checked={allPageSelected}
-                      ref={(element) => { if (element) element.indeterminate = somePageSelected; }}
+                      ref={(element) => {
+                        if (element) element.indeterminate = somePageSelected;
+                      }}
                       onChange={onTogglePage}
                     />
                   </Table.ColumnHeader>
-                  <Table.ColumnHeader px={3} bg="bg.subtle">Scenario key</Table.ColumnHeader>
-                  <Table.ColumnHeader px={3} bg="bg.subtle">Title</Table.ColumnHeader>
-                  <Table.ColumnHeader px={3} bg="bg.subtle">Folder</Table.ColumnHeader>
+                  <Table.ColumnHeader px={3} bg="bg.subtle">
+                    Scenario key
+                  </Table.ColumnHeader>
+                  <Table.ColumnHeader px={3} bg="bg.subtle">
+                    Title
+                  </Table.ColumnHeader>
+                  <Table.ColumnHeader px={3} bg="bg.subtle">
+                    Folder
+                  </Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -144,9 +171,15 @@ export const TestSuiteAddScenariosDialogView = ({
                         onChange={() => onToggleScenario(scenario.id)}
                       />
                     </Table.Cell>
-                    <Table.Cell px={3} color="text.secondary">{scenario.scenarioKey ?? '—'}</Table.Cell>
-                    <Table.Cell px={3} fontWeight="medium">{scenario.title}</Table.Cell>
-                    <Table.Cell px={3} color="text.secondary">{scenario.folderName ?? 'Unfiled'}</Table.Cell>
+                    <Table.Cell px={3} color="text.secondary">
+                      {scenario.scenarioKey ?? '—'}
+                    </Table.Cell>
+                    <Table.Cell px={3} fontWeight="medium">
+                      {scenario.title}
+                    </Table.Cell>
+                    <Table.Cell px={3} color="text.secondary">
+                      {scenario.folderName ?? 'Unfiled'}
+                    </Table.Cell>
                   </Table.Row>
                 ))}
               </Table.Body>
@@ -156,7 +189,9 @@ export const TestSuiteAddScenariosDialogView = ({
 
         {!error && !isLoading && totalPages > 1 && (
           <HStack justify="space-between" flexWrap="wrap">
-            <Text color="text.secondary" fontSize="sm">Page {page} of {totalPages}</Text>
+            <Text color="text.secondary" fontSize="sm">
+              Page {page} of {totalPages}
+            </Text>
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={onPageChange} />
           </HStack>
         )}
@@ -168,11 +203,23 @@ export const TestSuiteAddScenariosDialogView = ({
           <Text fontSize="sm" color="text.secondary" aria-live="polite">
             {selectedIds.length} selected{selectedIds.length === 100 ? ' · Limit 100 per action' : ''}
           </Text>
-          {selectedIds.length > 0 && <Button size="xs" variant="ghost" onClick={onClearSelection}>Clear selection</Button>}
+          {selectedIds.length > 0 && (
+            <Button size="xs" variant="ghost" onClick={onClearSelection}>
+              Clear selection
+            </Button>
+          )}
         </HStack>
         <HStack>
-          <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-          <Button type="button" variant="primary" loading={isAdding} disabled={selectedIds.length === 0 || isAdding} onClick={onAdd}>
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            loading={isAdding}
+            disabled={selectedIds.length === 0 || isAdding}
+            onClick={onAdd}
+          >
             Add {selectedIds.length} scenario{selectedIds.length === 1 ? '' : 's'}
           </Button>
         </HStack>

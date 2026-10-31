@@ -203,7 +203,7 @@ export type GetApiV2TestScenariosForResultLinkManagementApiArg = {
   limit?: number;
   search?: string;
   createdById?: string;
-  priority?: "low" | "medium" | "high";
+  priority?: string;
   sort?: "recently_created" | "recently_updated" | "title_asc";
   sortField?:
     | "scenarioKey"

@@ -236,7 +236,7 @@ describe('ResultRelatedScenarios', () => {
       { projectId: 'project-1', page: 1, limit: 10 },
       { skip: false },
     );
-    await user.type(screen.getByRole('textbox', { name: 'Search title or scenario key' }), '  PAY-2  ');
+    await user.type(screen.getByRole('textbox', { name: 'Search by title or key' }), '  PAY-2  ');
     await user.click(screen.getByRole('button', { name: 'Search' }));
     expect(mocks.catalogRequest).toHaveBeenLastCalledWith(
       { projectId: 'project-1', page: 1, limit: 10, search: 'PAY-2' },
@@ -369,7 +369,7 @@ describe('ResultRelatedScenarios', () => {
       refetch: vi.fn(() => ({ unwrap: async () => ({}) })),
     };
     rerender(<ChakraProvider><ResultRelatedScenarios resultId="result-1" projectId="project-1" isActive /></ChakraProvider>);
-    await user.type(screen.getByRole('textbox', { name: 'Search title or scenario key' }), 'missing');
+    await user.type(screen.getByRole('textbox', { name: 'Search by title or key' }), 'missing');
     await user.click(screen.getByRole('button', { name: 'Search' }));
     expect(screen.getByText('No Test Scenarios match this search.')).toBeInTheDocument();
 

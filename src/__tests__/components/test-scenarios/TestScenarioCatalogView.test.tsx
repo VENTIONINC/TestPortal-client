@@ -185,8 +185,8 @@ describe('TestScenarioCatalogView', () => {
       ],
       scope: { kind: 'folder', id: 'folder-1' },
     });
-    await user.click(screen.getByRole('button', { name: 'Actions for folder Authentication' }));
-    await user.click(screen.getByRole('menuitem', { name: 'Rename' }));
+    await user.click(screen.getByRole('button', { name: 'Folder actions' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Edit folder details' }));
     await user.clear(screen.getByLabelText('Description (optional)'));
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(onUpdateFolder).toHaveBeenCalledWith('folder-1', { name: 'Authentication', description: null });
@@ -225,7 +225,7 @@ describe('TestScenarioCatalogView', () => {
     renderView({ scenarios: [], pagination: { ...pagination, total: 0, totalPages: 0 } });
 
     expect(screen.getByText('No Test Scenarios are available for this project.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Next Page' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next Page' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Create Test Scenario' })).toBeInTheDocument();
   });
 
@@ -359,20 +359,69 @@ describe('TestScenarioCatalogView', () => {
     const onAuthorChange = vi.fn();
     const onSortDirectionChange = vi.fn();
     const onPageSizeChange = vi.fn();
-    renderView({ onSortChange, onPriorityChange, onAuthorChange, onSortDirectionChange, onPageSizeChange });
+    const StatefulCatalog = () => {
+      const [priority, setPriority] = useState('');
+      return (
+        <TestScenarioCatalogView
+          {...defaultProps}
+          scenarios={scenarios}
+          pagination={pagination}
+          isLoading={false}
+          onPageChange={vi.fn()}
+          priority={priority}
+          onPriorityChange={(value) => {
+            onPriorityChange(value);
+            setPriority(value);
+          }}
+          onSortChange={onSortChange}
+          onAuthorChange={onAuthorChange}
+          onSortDirectionChange={onSortDirectionChange}
+          onPageSizeChange={onPageSizeChange}
+        />
+      );
+    };
+    render(
+      <ChakraProvider>
+        <MemoryRouter>
+          <StatefulCatalog />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
 
-    await user.selectOptions(screen.getByLabelText('Priority'), 'high');
+    await user.click(screen.getByRole('button', { name: 'Priority' }));
+    await user.click(screen.getByRole('checkbox', { name: 'High' }));
+    expect(onPriorityChange).toHaveBeenLastCalledWith('high');
+    expect(screen.getByRole('button', { name: 'Priority:High' })).toBeInTheDocument();
+    await user.click(screen.getByRole('checkbox', { name: 'Medium' }));
+    expect(onPriorityChange).toHaveBeenLastCalledWith('high,medium');
+    expect(screen.getByRole('button', { name: 'Priority: 2' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    expect(screen.getByRole('button', { name: 'Priority: 2' })).toHaveAttribute('aria-expanded', 'false');
     await user.selectOptions(screen.getByLabelText('Author'), 'user-1');
     await user.selectOptions(screen.getByLabelText('Sort by'), 'scenarioKey');
     await user.selectOptions(screen.getByLabelText('Sort direction'), 'asc');
     await user.selectOptions(screen.getByLabelText('Rows per page'), '50');
-    expect(onPriorityChange).toHaveBeenCalledWith('high');
+    expect(onPriorityChange).toHaveBeenCalledWith('high,medium');
     expect(onAuthorChange).toHaveBeenCalledWith('user-1');
     expect(onSortChange).toHaveBeenCalledWith('scenarioKey');
     expect(onSortDirectionChange).toHaveBeenCalledWith('asc');
     expect(onPageSizeChange).toHaveBeenCalledWith(50);
     expect(screen.queryByText('Press / to search')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Run/i })).not.toBeInTheDocument();
+  });
+
+  it('marks active search and filters with the accent treatment', () => {
+    renderView({ search: 'checkout', priority: 'high', authorId: 'user-1' });
+
+    expect(screen.getByRole('textbox', { name: 'Search scenarios' })).toHaveStyle({
+      background: 'var(--chakra-colors-bg-active)',
+    });
+    expect(screen.getByRole('button', { name: 'Priority:High' })).toHaveStyle({
+      background: 'var(--chakra-colors-bg-active)',
+    });
+    expect(screen.getByLabelText('Author')).toHaveStyle({
+      background: 'var(--chakra-colors-bg-active)',
+    });
   });
 
   it('requires count-based delete confirmation for the exact selected UUIDs', async () => {
@@ -462,8 +511,8 @@ describe('TestScenarioCatalogView', () => {
       scope: { kind: 'folder', id: 'folder-1' },
       onDeleteFolder,
     });
-    await user.click(screen.getByRole('button', { name: 'Actions for folder Authentication' }));
-    await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
+    await user.click(screen.getByRole('button', { name: 'Folder actions' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete folder' }));
     await user.selectOptions(screen.getByRole('combobox', { name: 'Move direct scenarios to' }), 'unfiled');
     expect(screen.getByText(/Child folders will be promoted/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Delete' }));
@@ -541,7 +590,7 @@ describe('TestScenarioCatalogView', () => {
       scope: { kind: 'folder', id: 'folder-1' },
       onUpdateFolder,
     });
-    await user.click(screen.getByRole('button', { name: 'Actions for folder Authentication' }));
+    await user.click(screen.getByRole('button', { name: 'Folder actions' }));
     await user.click(screen.getByRole('menuitem', { name: /^Move$/ }));
     await user.selectOptions(screen.getByRole('combobox', { name: 'Parent folder' }), 'folder-2');
     await user.click(screen.getByRole('button', { name: /^Move$/ }));
@@ -593,13 +642,13 @@ describe('TestScenarioCatalogView', () => {
 
     const table = screen.getByRole('table');
     const pagination = screen.getByRole('navigation', { name: 'Test Scenario pagination' });
-    const summary = screen.getByText('Showing 1-10 of 11 Test Scenarios');
+    const summary = screen.getByText('1–10 of 11');
 
     expect(table).toBeInTheDocument();
     expect(pagination).toBeInTheDocument();
     expect(summary).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /^2$/ }));
+    await user.click(screen.getByRole('button', { name: 'Next Page' }));
 
     expect(onPageChange).toHaveBeenCalledWith(2);
     expect(summary).toBeInTheDocument();

@@ -25,6 +25,7 @@ import {
   Link as ChakraLink,
   Menu,
   Portal,
+  Popover,
   Table,
   Text,
   Textarea,
@@ -35,6 +36,7 @@ import {
   FiArrowUp,
   FiChevronsUp,
   FiChevronDown,
+  FiChevronLeft,
   FiChevronRight,
   FiEdit,
   FiFolder,
@@ -111,8 +113,9 @@ export interface TestScenarioCatalogViewProps {
   sortDirection: 'asc' | 'desc';
   onSortChange: (value: NonNullable<TestScenarioCatalogViewProps['sort']>) => void;
   onSortDirectionChange: (value: 'asc' | 'desc') => void;
-  priority: 'low' | 'medium' | 'high' | '';
-  onPriorityChange: (value: 'low' | 'medium' | 'high' | '') => void;
+  priority: string;
+  priorityCounts?: Partial<Record<'high' | 'medium' | 'low', number | undefined>>;
+  onPriorityChange: (value: string) => void;
   authorId: string;
   onAuthorChange: (value: string) => void;
   authors: Array<{ id: string; name: string; email: string }>;
@@ -676,6 +679,124 @@ const PaginationSummary = ({ pagination }: { pagination: TestScenarioPagination 
   );
 };
 
+type PriorityValue = 'high' | 'medium' | 'low';
+
+const PriorityFilter = ({
+  value,
+  counts,
+  onChange,
+}: {
+  value: string;
+  counts?: Partial<Record<PriorityValue, number | undefined>>;
+  onChange: (value: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const values: PriorityValue[] = ['high', 'medium', 'low'];
+  const selected = value ? (value.split(',') as PriorityValue[]) : [];
+  const selectedPriority = selected.length === 1 ? selected[0] : undefined;
+  const priorityLabel = (priority: PriorityValue) => priority.charAt(0).toUpperCase() + priority.slice(1);
+  const priorityColors = {
+    high: { bg: 'orange.subtle', color: 'orange.fg' },
+    medium: { bg: 'blue.subtle', color: 'blue.fg' },
+    low: { bg: 'bg.subtle', color: 'text.muted' },
+  } as const;
+  return (
+    <Popover.Root
+      open={open}
+      onOpenChange={({ open: nextOpen }) => setOpen(nextOpen)}
+    >
+      <Popover.Trigger asChild>
+        <Button
+          variant="outline"
+          bg={selected.length ? 'bg.active' : 'bg.card'}
+          borderColor={selected.length ? 'border.active' : undefined}
+          color={selected.length ? 'text.primary' : undefined}
+          minW="150px"
+          justifyContent="space-between"
+          fontSize="sm"
+        >
+          {selectedPriority ? (
+            <HStack as="span" gap={2}>
+              <Text as="span">Priority:</Text>
+              <Text
+                as="span"
+                px={2}
+                borderRadius="full"
+                fontSize="xs"
+                bg={priorityColors[selectedPriority].bg}
+                color={priorityColors[selectedPriority].color}
+              >
+                {priorityLabel(selectedPriority)}
+              </Text>
+            </HStack>
+          ) : selected.length > 1 ? (
+            `Priority: ${selected.length}`
+          ) : (
+            'Priority'
+          )}{' '}
+          <FiChevronDown />
+        </Button>
+      </Popover.Trigger>
+      <Portal>
+        <Popover.Positioner>
+          <Popover.Content w="220px" bg="bg.card" p={2}>
+            <Popover.Body p={1}>
+              <VStack align="stretch" gap={1}>
+                {values.map((item) => (
+                  <HStack as="label" key={item} px={2} py={1} cursor="pointer" justify="space-between">
+                    <HStack gap={2}>
+                      <input
+                        type="checkbox"
+                        aria-label={item.charAt(0).toUpperCase() + item.slice(1)}
+                        checked={selected.includes(item)}
+                        onChange={() =>
+                          onChange(
+                            values
+                              .filter((entry) => (entry === item ? !selected.includes(entry) : selected.includes(entry)))
+                              .join(','),
+                          )
+                        }
+                      />
+                      <Text
+                        as="span"
+                        px={2}
+                        borderRadius="full"
+                        fontSize="xs"
+                        bg={priorityColors[item].bg}
+                        color={priorityColors[item].color}
+                      >
+                        {priorityLabel(item)}
+                      </Text>
+                    </HStack>
+                    <Text fontSize="xs" color="text.secondary">
+                      {counts?.[item] ?? '–'}
+                    </Text>
+                  </HStack>
+                ))}
+              </VStack>
+            </Popover.Body>
+            <HStack justify="space-between" pt={2} borderTopWidth="1px" borderColor="border.main">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  onChange('');
+                  setOpen(false);
+                }}
+              >
+                Clear
+              </Button>
+              <Button size="sm" variant="primary" onClick={() => setOpen(false)}>
+                Done
+              </Button>
+            </HStack>
+          </Popover.Content>
+        </Popover.Positioner>
+      </Portal>
+    </Popover.Root>
+  );
+};
+
 const compactDate = (value: string) => new Date(value).toLocaleDateString('en-US');
 const shortAuthorName = (name: string) => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -977,6 +1098,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   onSortChange,
   onSortDirectionChange,
   priority,
+  priorityCounts,
   onPriorityChange,
   authorId,
   onAuthorChange,
@@ -1038,7 +1160,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   }, [openFilter]);
   const [targetFolder, setTargetFolder] = useState<CatalogFolder | null>(null);
   const [targetSuite, setTargetSuite] = useState<CatalogSuite | null>(null);
-  const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(() => new Set());
   const [moveParentId, setMoveParentId] = useState('');
   const [deleteDisposition, setDeleteDisposition] = useState<'parent' | 'unfiled'>('parent');
   const [bulkSuiteId, setBulkSuiteId] = useState('');
@@ -1167,14 +1288,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setDeleteDisposition('parent');
     setCreateError(null);
     setCreateDialog(kind);
-  };
-  const toggleFolderExpanded = (folderId: string) => {
-    setExpandedFolderIds((current) => {
-      const next = new Set(current);
-      if (next.has(folderId)) next.delete(folderId);
-      else next.add(folderId);
-      return next;
-    });
   };
   const submitCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1369,28 +1482,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   };
   const renderFolder = (folder: CatalogFolder): ReactNode => {
     const children = getFolderChildren(folder);
-    const siblings = folderRows.filter((item) => item.parentId === folder.parentId);
-    const folderIndex = siblings.findIndex((item) => item.id === folder.id);
-    const expanded = expandedFolderIds.has(folder.id);
     const selected = scope.kind === 'folder' && scope.id === folder.id;
     return (
       <Box key={folder.id}>
         <HStack gap={0}>
-          {children.length ? (
-            <IconButton
-              size="xs"
-              w="4"
-              minW="4"
-              flexShrink={0}
-              variant="ghost"
-              aria-label={`${expanded ? 'Collapse' : 'Expand'} ${folder.name}`}
-              onClick={() => toggleFolderExpanded(folder.id)}
-            >
-              {expanded ? <FiChevronDown /> : <FiChevronRight />}
-            </IconButton>
-          ) : (
-            <Box w="4" flexShrink={0} />
-          )}
           <Button
             flex="1"
             minW="0"
@@ -1416,52 +1511,21 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
               {folderScenarioCounts.get(folder.id) ?? folder.scenarioCount}
             </Text>
           </Button>
-          <Menu.Root>
-            <Menu.Trigger asChild>
-              <IconButton size="xs" variant="ghost" color="text.muted" aria-label={`Actions for folder ${folder.name}`}>
-                <FiMoreHorizontal />
-              </IconButton>
-            </Menu.Trigger>
-            <Menu.Positioner>
-              <Menu.Content>
-                <Menu.Item value="rename" onClick={() => openEditFolderDialog(folder)}>
-                  Rename
-                </Menu.Item>
-                <Menu.Item value="move" onClick={() => openFolderActionDialog('move-folder', folder)}>
-                  Move
-                </Menu.Item>
-                <Menu.Item value="move-up" disabled={folderIndex <= 0} onClick={() => void reorderFolder(folder, -1)}>
-                  Move up
-                </Menu.Item>
-                <Menu.Item
-                  value="move-down"
-                  disabled={folderIndex < 0 || folderIndex >= siblings.length - 1}
-                  onClick={() => void reorderFolder(folder, 1)}
-                >
-                  Move down
-                </Menu.Item>
-                <Menu.Item
-                  value="delete"
-                  color="fg.error"
-                  onClick={() => openFolderActionDialog('delete-folder', folder)}
-                >
-                  Delete
-                </Menu.Item>
-              </Menu.Content>
-            </Menu.Positioner>
-          </Menu.Root>
         </HStack>
-        {expanded &&
-          children.map((child) => (
-            <Box key={child.id} ps={4}>
-              {renderFolder(child)}
-            </Box>
-          ))}
+        {children.map((child) => (
+          <Box key={child.id} ps={4}>
+            {renderFolder(child)}
+          </Box>
+        ))}
       </Box>
     );
   };
+  const selectedFolderSiblings = selectedFolder
+    ? folderRows.filter((folder) => folder.parentId === selectedFolder.parentId)
+    : [];
+  const selectedFolderIndex = selectedFolderSiblings.findIndex((folder) => folder.id === selectedFolder?.id);
   return (
-    <Wrap my={4} mx={6} p={{ base: 3, md: 5 }}>
+    <Wrap my={4} mx={6} p={{ base: 3, md: 5 }} ps={{ base: 3, md: '14px' }} bg="bg.card" borderRadius="lg">
       <VStack align="stretch" gap={5} w="100%">
         <Grid
           templateColumns={{ base: '1fr', lg: '250px minmax(0, 1fr)' }}
@@ -1474,6 +1538,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             pe={{ base: 0, lg: 4 }}
             borderEndWidth={{ base: 0, lg: '1px' }}
             borderColor="border.main"
+            bg="bg.card"
             aria-label="Scenario organization"
           >
             {organizationTab !== 'suites' && (
@@ -1505,7 +1570,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     fontSize="xs"
                     fontWeight="bold"
                     letterSpacing="wider"
-                    color="text.muted"
+                    color="text.secondary"
                     textTransform="uppercase"
                   >
                     Folders
@@ -1513,6 +1578,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   <IconButton
                     size="xs"
                     variant="ghost"
+                    color="text.secondary"
                     aria-label={selectedFolder ? 'Create subfolder' : 'Create folder'}
                     title={selectedFolder ? 'Create inside selected folder' : 'Create folder'}
                     onClick={() => openCreateDialog('folder')}
@@ -1669,33 +1735,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                           : `${pagination.total} scenarios`}
                   </Text>
                 </Box>
-                {selectedFolder && (
-                  <Menu.Root>
-                    <Menu.Trigger asChild>
-                      <Button size="sm" variant="outline">
-                        Folder actions
-                        <FiMoreHorizontal />
-                      </Button>
-                    </Menu.Trigger>
-                    <Menu.Positioner>
-                      <Menu.Content>
-                        <Menu.Item value="rename" onClick={() => openEditFolderDialog(selectedFolder)}>
-                          Rename
-                        </Menu.Item>
-                        <Menu.Item value="move" onClick={() => openFolderActionDialog('move-folder', selectedFolder)}>
-                          Move
-                        </Menu.Item>
-                        <Menu.Item
-                          value="delete"
-                          color="fg.error"
-                          onClick={() => openFolderActionDialog('delete-folder', selectedFolder)}
-                        >
-                          Delete
-                        </Menu.Item>
-                      </Menu.Content>
-                    </Menu.Positioner>
-                  </Menu.Root>
-                )}
                 {selectedSuite && (
                   <HStack>
                     <Button size="sm" variant="outline" onClick={() => setAddScenariosToSuiteOpen(true)}>
@@ -1735,10 +1774,62 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     </Menu.Root>
                   </HStack>
                 )}
-                <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}>
-                  <FiPlus />
-                  Create scenario
-                </Button>
+                <HStack gap={2}>
+                  <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}>
+                    <FiPlus />
+                    Create scenario
+                  </Button>
+                  {isScenariosTab && (
+                    <Menu.Root>
+                      <Menu.Trigger asChild>
+                        <IconButton aria-label="Folder actions" size="md" variant="outline">
+                          <FiMoreHorizontal />
+                        </IconButton>
+                      </Menu.Trigger>
+                      <Menu.Positioner>
+                        <Menu.Content>
+                          <Menu.Item value="create-folder" onClick={() => openCreateDialog('folder')}>
+                            {selectedFolder ? 'Create subfolder' : 'Create folder'}
+                          </Menu.Item>
+                          {selectedFolder && (
+                            <>
+                              <Menu.Item value="rename-folder" onClick={() => openEditFolderDialog(selectedFolder)}>
+                                Edit folder details
+                              </Menu.Item>
+                              <Menu.Item
+                                value="move-folder-up"
+                                disabled={selectedFolderIndex <= 0}
+                                onClick={() => void reorderFolder(selectedFolder, -1)}
+                              >
+                                Move up
+                              </Menu.Item>
+                              <Menu.Item
+                                value="move-folder-down"
+                                disabled={selectedFolderIndex < 0 || selectedFolderIndex >= selectedFolderSiblings.length - 1}
+                                onClick={() => void reorderFolder(selectedFolder, 1)}
+                              >
+                                Move down
+                              </Menu.Item>
+                              <Menu.Item
+                                value="move-folder"
+                                onClick={() => openFolderActionDialog('move-folder', selectedFolder)}
+                              >
+                                Move
+                              </Menu.Item>
+                              <Menu.Item
+                                value="delete-folder"
+                                color="fg.error"
+                                onClick={() => openFolderActionDialog('delete-folder', selectedFolder)}
+                              >
+                                Delete folder
+                              </Menu.Item>
+                            </>
+                          )}
+                        </Menu.Content>
+                      </Menu.Positioner>
+                    </Menu.Root>
+                  )}
+                </HStack>
               </HStack>
             </Box>
 
@@ -1762,12 +1853,13 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   </Box>
                   <Input
                     aria-label="Search scenarios"
-                    placeholder="Search title or scenario key"
+                    placeholder="Search by title or key"
                     value={search}
                     onChange={(event) => onSearchChange(event.currentTarget.value)}
                     ps={9}
                     pe={search ? 9 : 3}
-                    bg="bg.card"
+                    bg={search.trim() ? 'bg.active' : 'bg.card'}
+                    borderColor={search.trim() ? 'border.active' : undefined}
                   />
                   {search && (
                     <IconButton
@@ -1786,24 +1878,13 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 </Box>
                 {isScenariosTab ? (
                   <>
-                    <Box w="150px">
-                      <NativeSelect
-                        aria-label="Priority"
-                        value={priority}
-                        onChange={(event) =>
-                          onPriorityChange(event.currentTarget.value as 'low' | 'medium' | 'high' | '')
-                        }
-                      >
-                        <option value="">All priorities</option>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
-                      </NativeSelect>
-                    </Box>
+                    <PriorityFilter value={priority} counts={priorityCounts} onChange={onPriorityChange} />
                     <Box w="210px">
                       <NativeSelect
                         aria-label="Author"
                         value={authorId}
+                        bg={authorId ? 'bg.active' : 'bg.card'}
+                        borderColor={authorId ? 'border.active' : undefined}
                         onChange={(event) => onAuthorChange(event.currentTarget.value)}
                       >
                         <option value="">{authorsLoading ? 'Loading authors…' : 'All authors'}</option>
@@ -2154,23 +2235,57 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       borderTopWidth="1px"
                       borderColor="border.main"
                     >
-                      <PaginationSummary pagination={pagination} />
-                      {isScenariosTab && (
-                        <Box w="130px">
-                          <NativeSelect
-                            aria-label="Rows per page"
-                            value={String(pageSize)}
-                            onChange={(event) => onPageSizeChange(Number(event.currentTarget.value))}
-                          >
-                            {pageSizes.map((size) => (
-                              <option key={size} value={size}>
-                                {size} rows
-                              </option>
-                            ))}
-                          </NativeSelect>
-                        </Box>
+                      {isScenariosTab ? (
+                        <HStack w="full" justify="space-between" gap={3} flexWrap="wrap">
+                          <Text color="text.secondary" fontSize="sm">
+                            {pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}–
+                            {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
+                          </Text>
+                          <HStack as="nav" aria-label="Test Scenario pagination" gap={2}>
+                            <Text color="text.secondary" fontSize="sm" whiteSpace="nowrap">
+                              Rows per page
+                            </Text>
+                            <Box w="64px">
+                              <NativeSelect
+                                id="scenario-page-size"
+                                aria-label="Rows per page"
+                                h="8"
+                                bg="bg.card"
+                                ps={2}
+                                value={String(pageSize)}
+                                onChange={(event) => onPageSizeChange(Number(event.currentTarget.value))}
+                              >
+                                {pageSizes.map((size) => (
+                                  <option key={size} value={size}>
+                                    {size}
+                                  </option>
+                                ))}
+                              </NativeSelect>
+                            </Box>
+                            <IconButton
+                              aria-label="Previous Page"
+                              size="sm"
+                              variant="outline"
+                              disabled={pagination.page <= 1}
+                              onClick={() => onPageChange(pagination.page - 1)}
+                            >
+                              <FiChevronLeft />
+                            </IconButton>
+                            <IconButton
+                              aria-label="Next Page"
+                              size="sm"
+                              variant="outline"
+                              disabled={pagination.page >= pagination.totalPages || pagination.totalPages === 0}
+                              onClick={() => onPageChange(pagination.page + 1)}
+                            >
+                              <FiChevronRight />
+                            </IconButton>
+                          </HStack>
+                        </HStack>
+                      ) : (
+                        <PaginationSummary pagination={pagination} />
                       )}
-                      {pagination.totalPages > 1 && (
+                      {!isScenariosTab && pagination.totalPages > 1 && (
                         <Box as="nav" aria-label="Test Scenario pagination">
                           <Pagination
                             currentPage={pagination.page}
