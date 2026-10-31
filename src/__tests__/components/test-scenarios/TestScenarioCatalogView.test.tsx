@@ -203,10 +203,10 @@ describe('TestScenarioCatalogView', () => {
   });
 
   it('renders a fallback for null details', () => {
-    renderView({ scenarios: [{ ...scenarios[0], scenarioKey: null, details: null }] });
+    renderView({ scenarios: [{ ...scenarios[0], scenarioKey: 'TMS-1', details: null }] });
 
     expect(screen.getByText('No details')).toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.getByText('TMS-1')).toBeInTheDocument();
   });
 
   it('maps every scenario title to its own detail route while keeping actions separate', () => {
@@ -219,7 +219,7 @@ describe('TestScenarioCatalogView', () => {
           folderId: null,
           folderName: null,
           createdById: 'user-2',
-          scenarioKey: null,
+          scenarioKey: 'TMS-1',
           title: 'Refund flow',
           details: null,
           createdBy: { id: 'user-2', name: 'Grace Hopper', email: 'grace@example.com' },

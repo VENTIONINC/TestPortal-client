@@ -1,0 +1,146 @@
+- generic [ref=f4e1]:
+  - generic [ref=f4e271]:
+    - generic [ref=f4e273]:
+      - generic [ref=f4e274]:
+        - button "Toggle sidebar" [ref=f4e275] [cursor=pointer]
+        - link [ref=f4e280] [cursor=pointer]:
+          - /url: /dashboard
+      - generic [ref=f4e295]:
+        - generic [ref=f4e296]:
+          - paragraph [ref=f4e297]: Main
+          - generic [ref=f4e298]:
+            - link [ref=f4e299] [cursor=pointer]:
+              - /url: /dashboard
+              - paragraph [ref=f4e307]: Dashboard
+            - link [ref=f4e308] [cursor=pointer]:
+              - /url: /test-scenarios
+              - paragraph [ref=f4e314]: Test Management
+            - link [ref=f4e315] [cursor=pointer]:
+              - /url: /results
+              - paragraph [ref=f4e321]: Results
+            - link [ref=f4e322] [cursor=pointer]:
+              - /url: /issues
+              - paragraph [ref=f4e327]: Issues
+            - link [ref=f4e328] [cursor=pointer]:
+              - /url: /prompts
+              - paragraph [ref=f4e333]: Prompts
+            - link [ref=f4e334] [cursor=pointer]:
+              - /url: /skills
+              - paragraph [ref=f4e340]: Skills
+        - generic [ref=f4e341]:
+          - paragraph [ref=f4e342]: System
+          - link [ref=f4e344] [cursor=pointer]:
+            - /url: /settings
+            - paragraph [ref=f4e350]: Settings
+      - button [ref=f4e353]:
+        - generic [ref=f4e354]:
+          - paragraph [ref=f4e356]: TB
+          - generic [ref=f4e357]:
+            - paragraph [ref=f4e358]: TP43 Browser
+            - paragraph [ref=f4e359]: tp43-browser@example.test
+    - generic [ref=f4e363]:
+      - generic [ref=f4e367]:
+        - heading "Create Test Scenario" [level=2] [ref=f4e368]
+        - generic [ref=f4e369]:
+          - group [ref=f4e370]:
+            - combobox [ref=f4e372]:
+              - option "TP43 Browser verification" [selected]
+              - option "Default Project"
+          - button "Upload" [ref=f4e373] [cursor=pointer]
+        - button "Toggle theme" [ref=f4e377] [cursor=pointer]
+      - generic [ref=f4e382]:
+        - generic [ref=f4e383]:
+          - button "Back to Checkout" [ref=f4e384] [cursor=pointer]
+          - generic [ref=f4e387]:
+            - button "Cancel" [ref=f4e388] [cursor=pointer]
+            - button "Save scenario" [ref=f4e389] [cursor=pointer]
+        - generic [ref=f4e390]:
+          - generic [ref=f4e391]:
+            - paragraph [ref=f4e392]: NEW SCENARIO
+            - generic [ref=f4e393]:
+              - generic [ref=f4e394]:
+                - paragraph [ref=f4e395]: Scenario key
+                - paragraph [ref=f4e396]: Assigned on save
+              - group [ref=f4e397]:
+                - generic [ref=f4e398]: Folder
+                - combobox "Scenario folder" [ref=f4e401]:
+                  - option "Unfiled"
+                  - option "Checkout" [selected]
+              - group [ref=f4e402]:
+                - generic [ref=f4e403]: Priority
+                - combobox "Priority" [ref=f4e406]:
+                  - option "High"
+                  - option "Medium" [selected]
+                  - option "Low"
+            - group [ref=f4e407]:
+              - generic [ref=f4e408]: Title
+              - textbox "Title" [ref=f4e410]:
+                - /placeholder: What should this scenario verify?
+                - text: Guest checkout browser verification
+            - group [ref=f4e411]:
+              - generic [ref=f4e412]: Details
+              - textbox "Details" [ref=f4e414]:
+                - /placeholder: Optional context for this scenario
+                - text: One draft and one atomic save
+            - generic [ref=f4e415]:
+              - group [ref=f4e416]:
+                - generic [ref=f4e417]: Preconditions
+                - textbox "Preconditions" [ref=f4e419]:
+                  - /placeholder: What must be true before testing?
+                  - text: User is signed out
+              - group [ref=f4e420]:
+                - generic [ref=f4e421]: Test data
+                - textbox "Test data" [ref=f4e423]:
+                  - /placeholder: Accounts, inputs or data needed for this test
+                  - text: "Product: Basic T-shirt"
+            - heading "Steps 2" [level=2] [ref=f4e467]
+            - paragraph [ref=f4e425]: "Drag to reorder. Keyboard: Space to pick up, arrows to move, Space to drop, Escape to cancel."
+            - generic [ref=f4e426]:
+              - paragraph [ref=f4e428]: "#"
+              - paragraph [ref=f4e429]: Action
+              - paragraph [ref=f4e430]: Expected result
+            - list "Scenario steps" [ref=f4e432]:
+              - listitem [ref=f4e433]:
+                - generic [ref=f4e434]:
+                  - button "Reorder step 1" [ref=f4e435] [cursor=pointer]
+                  - paragraph [ref=f4e437]: "1"
+                  - group [ref=f4e438]:
+                    - generic [ref=f4e439]: Action
+                    - textbox "Step 1 action" [ref=f4e441]: Open product page
+                  - group [ref=f4e443]:
+                    - generic [ref=f4e444]: Expected result
+                    - textbox "Step 1 expected result" [ref=f4e446]: Product is shown
+                  - button "Remove step 1" [ref=f4e447] [cursor=pointer]
+              - listitem [ref=f4e468]:
+                - generic [ref=f4e469]:
+                  - button "Reorder step 2" [ref=f4e470] [cursor=pointer]
+                  - paragraph [ref=f4e472]: "2"
+                  - group [ref=f4e473]:
+                    - generic [ref=f4e474]: Action
+                    - textbox "Step 2 action" [ref=f4e476]: Add product to cart
+                  - group [ref=f4e478]:
+                    - generic [ref=f4e479]: Expected result
+                    - textbox "Step 2 expected result" [ref=f4e481]: Cart contains product
+                  - button "Remove step 2" [ref=f4e482] [cursor=pointer]
+            - button "Add step" [ref=f4e450] [cursor=pointer]
+            - status
+          - generic [ref=f4e452]:
+            - generic [ref=f4e453]:
+              - generic [ref=f4e454]:
+                - heading "Suites" [level=2] [ref=f4e455]
+                - button "Select suites" [expanded] [ref=f4e456] [cursor=pointer]
+              - generic [ref=f4e493]:
+                - paragraph [ref=f4e494]: Smoke browser (new)
+                - button "Remove suite Smoke browser" [ref=f4e495] [cursor=pointer]
+              - dialog "Choose suites" [ref=f4e485]:
+                - group [ref=f4e486]:
+                  - generic [ref=f4e487]: Search or create suite
+                  - textbox "Search or create suite" [active] [ref=f4e489]
+                - button "Done" [ref=f4e490] [cursor=pointer]
+            - generic [ref=f4e459]:
+              - heading "Requirement or ticket" [level=2] [ref=f4e464]
+              - group [ref=f4e465]:
+                - textbox "Requirement or ticket" [ref=f4e466]:
+                  - /placeholder: https://youtrack… or https://jira…
+                  - text: https://yt-wod.ventionteams.com/issue/TP-43
+  - region "top-end Notifications alt+T"

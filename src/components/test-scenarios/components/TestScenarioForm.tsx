@@ -1,37 +1,38 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Button, Grid, Heading, HStack, IconButton, Text, VStack } from '@chakra-ui/react';
+import { Alert, Box, Button, Grid, Heading, HStack, IconButton, Link, Text, VStack } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { FiArrowLeft, FiChevronDown, FiChevronUp, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiLink, FiMenu, FiPlus, FiTrash2, FiX } from 'react-icons/fi';
 
 import { Input, NativeSelect, Textarea } from '@/components/ui';
-import {
-  testScenarioAuthoringSchema,
-  testScenarioStepSchema,
-  type TestScenarioAuthoringFormData,
-} from '@/schemas';
+import { testScenarioAuthoringSchema, type TestScenarioAuthoringFormData } from '@/schemas';
 
-import type {
-  TestScenarioEditableField,
-  TestScenarioEditableValues,
-  TestScenarioInitialStepDraft,
-} from '../types';
+import type { TestScenarioEditableField, TestScenarioEditableValues, TestScenarioInitialStepDraft } from '../types';
 
 export type TestScenarioFormMode = 'create' | 'edit';
-
+export interface ScenarioSuiteDraft {
+  id: string;
+  name: string;
+  isNew?: boolean;
+}
+export interface ScenarioDraftCollections {
+  suiteIds: string[];
+  newSuites: { name: string }[];
+}
 export interface TestScenarioFormReconciliation {
   token: number;
   values: TestScenarioEditableValues;
   submittedFields: TestScenarioEditableField[];
 }
-
 export interface TestScenarioFormProps {
   mode: TestScenarioFormMode;
   initialValues?: Partial<TestScenarioEditableValues> & Pick<TestScenarioEditableValues, 'title'>;
   initialSteps?: TestScenarioInitialStepDraft[];
+  initialSuites?: ScenarioSuiteDraft[];
+  suites?: Array<{ id: string; name: string; members?: unknown[] }>;
   reconciliation?: TestScenarioFormReconciliation;
   isSubmitting?: boolean;
   apiError?: string;
@@ -39,44 +40,47 @@ export interface TestScenarioFormProps {
   successMessage?: string;
   folders?: Array<{ id: string; name: string; depth?: number }>;
   initialFolderId?: string | null;
-  onSubmit: (values: TestScenarioAuthoringFormData, steps: TestScenarioInitialStepDraft[], folderId?: string | null) => void | Promise<void>;
-  onCancel: () => void;
+  history?: {
+    createdAt: string;
+    updatedAt: string;
+    createdBy?: { name: string; email?: string } | null;
+    updatedBy?: { name: string; email?: string } | null;
+  };
+  onDirtyChange?: (dirty: boolean) => void;
+  onReload?: () => void;
+  errorCatalogPath?: string;
+  onSubmit: (
+    values: TestScenarioAuthoringFormData,
+    steps: TestScenarioInitialStepDraft[],
+    folderId?: string | null,
+    collections?: ScenarioDraftCollections,
+  ) => void | Promise<void>;
+  onCancel: (folderId?: string | null) => void;
 }
-
-const EMPTY_VALUES: TestScenarioEditableValues = {
-  scenarioKey: '',
-  title: '',
-  details: null,
-  priority: null,
-  preconditions: null,
-  testData: null,
-  relatedIssueUrl: null,
-};
-
-const EMPTY_INITIAL_STEPS: TestScenarioInitialStepDraft[] = [];
-
+const EMPTY_VALUES = { title: '' };
+const EMPTY_STEPS: TestScenarioInitialStepDraft[] = [];
+const EMPTY_SUITES: ScenarioSuiteDraft[] = [];
 let draftSequence = 0;
-
-const createDraftStep = (): TestScenarioInitialStepDraft => ({
-  key: `initial-step-${++draftSequence}`,
+const newStep = (): TestScenarioInitialStepDraft => ({
+  key: `draft-${++draftSequence}`,
   action: '',
   expectedResult: '',
 });
-
-const toFormValues = (values: Partial<TestScenarioEditableValues> & Pick<TestScenarioEditableValues, 'title'>) => ({
-  scenarioKey: values.scenarioKey ?? '',
-  title: values.title ?? '',
-  details: values.details ?? '',
-  priority: values.priority ?? '',
-  preconditions: values.preconditions ?? '',
-  testData: values.testData ?? '',
-  relatedIssueUrl: values.relatedIssueUrl ?? '',
+const toValues = (values: TestScenarioFormProps['initialValues']) => ({
+  title: values?.title ?? '',
+  details: values?.details ?? '',
+  priority: values?.priority || ('medium' as const),
+  preconditions: values?.preconditions ?? '',
+  testData: values?.testData ?? '',
+  relatedIssueUrl: values?.relatedIssueUrl ?? '',
 });
 
 export const TestScenarioForm = ({
   mode,
   initialValues = EMPTY_VALUES,
-  initialSteps = EMPTY_INITIAL_STEPS,
+  initialSteps = EMPTY_STEPS,
+  initialSuites = EMPTY_SUITES,
+  suites = [],
   reconciliation,
   isSubmitting = false,
   apiError,
@@ -84,137 +88,148 @@ export const TestScenarioForm = ({
   successMessage,
   folders = [],
   initialFolderId = null,
+  history,
+  onDirtyChange,
+  onReload,
+  errorCatalogPath,
   onSubmit,
   onCancel,
 }: TestScenarioFormProps) => {
-  const [initialStepDrafts, setInitialStepDrafts] = useState<TestScenarioInitialStepDraft[]>(initialSteps);
+  const [steps, setSteps] = useState(() => (initialSteps.length ? initialSteps : mode === 'create' ? [newStep()] : []));
+  const [folderId, setFolderId] = useState(initialFolderId);
+  const [selectedSuites, setSelectedSuites] = useState(initialSuites);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [suiteError, setSuiteError] = useState('');
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
-  const [folderId, setFolderId] = useState<string | null>(initialFolderId);
-  const appliedReconciliationToken = useRef<number | undefined>(undefined);
-  const isCreate = mode === 'create';
-  const initialScenarioKey = initialValues.scenarioKey;
-  const initialTitle = initialValues.title;
-  const initialDetails = initialValues.details;
-  const initialPriority = initialValues.priority;
-  const initialPreconditions = initialValues.preconditions;
-  const initialTestData = initialValues.testData;
-  const initialRelatedIssueUrl = initialValues.relatedIssueUrl;
-  const formValues = useMemo(
-    () => toFormValues({
-      scenarioKey: initialScenarioKey,
-      title: initialTitle,
-      details: initialDetails,
-      priority: initialPriority,
-      preconditions: initialPreconditions,
-      testData: initialTestData,
-      relatedIssueUrl: initialRelatedIssueUrl,
-    }),
-    [
-      initialDetails,
-      initialRelatedIssueUrl,
-      initialPriority,
-      initialPreconditions,
-      initialScenarioKey,
-      initialTestData,
-      initialTitle,
-    ],
-  );
+  const [announcement, setAnnouncement] = useState('');
+  const [grabbed, setGrabbed] = useState<string>();
+  const pickedUpOrder = useRef<string[]>([]);
+  const [focusStep, setFocusStep] = useState<string>();
+  const [focusHandle, setFocusHandle] = useState<string>();
+  const root = useRef<HTMLFormElement>(null);
+  const pickerButton = useRef<HTMLButtonElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
+  const pointer = useRef<{ key: string; id: number } | null>(null);
+  const baseline = useRef({ steps: initialSteps, suites: initialSuites, folderId: initialFolderId });
   const {
     register,
     handleSubmit,
     reset,
-    getValues,
-    setValue,
-    formState: { errors, isSubmitting: isFormSubmitting, dirtyFields },
+    watch,
+    formState: { errors, isSubmitting: submitting, isDirty },
   } = useForm<TestScenarioAuthoringFormData>({
     resolver: zodResolver(testScenarioAuthoringSchema),
+    defaultValues: toValues(initialValues),
     mode: 'onChange',
-    defaultValues: formValues,
   });
-
+  const values = watch();
+  const pending = submitting || isSubmitting;
+  const meaningfulSteps = steps.filter((s) => s.id || s.action.trim() || s.expectedResult.trim());
+  const dirty =
+    isDirty ||
+    folderId !== baseline.current.folderId ||
+    JSON.stringify(meaningfulSteps) !== JSON.stringify(baseline.current.steps) ||
+    JSON.stringify(selectedSuites) !== JSON.stringify(baseline.current.suites);
   useEffect(() => {
-    reset(formValues, { keepDirtyValues: true });
-  }, [formValues, reset]);
-
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
   useEffect(() => {
-    setInitialStepDrafts(initialSteps);
-    setStepErrors({});
-  }, [initialSteps]);
-
-  useEffect(() => setFolderId(initialFolderId), [initialFolderId]);
-
+    const warn = (event: BeforeUnloadEvent) => {
+      if (dirty) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
   useEffect(() => {
     if (!reconciliation) return;
-    if (appliedReconciliationToken.current === reconciliation.token) return;
-    appliedReconciliationToken.current = reconciliation.token;
-
-    const currentValues = getValues();
-    const dirty = dirtyFields as Partial<Record<TestScenarioEditableField, boolean>>;
-    const nextValues = { ...toFormValues(reconciliation.values) };
-
-    for (const field of Object.keys(nextValues) as TestScenarioEditableField[]) {
-      if (dirty[field] && !reconciliation.submittedFields.includes(field)) {
-        if (field === 'priority') nextValues.priority = currentValues.priority ?? '';
-        else nextValues[field] = currentValues[field] ?? '';
-      }
+    reset(toValues(reconciliation.values));
+    setSteps(initialSteps);
+    setSelectedSuites(initialSuites);
+    setFolderId(initialFolderId);
+    baseline.current = { steps: initialSteps, suites: initialSuites, folderId: initialFolderId };
+    setStepErrors({});
+    // Only an explicit save/reload token may replace an active draft.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reconciliation?.token, reset]);
+  useEffect(() => {
+    if (focusStep) {
+      root.current?.querySelector<HTMLTextAreaElement>(`[data-action-key="${focusStep}"]`)?.focus();
+      setFocusStep(undefined);
     }
-
-    reset(nextValues);
-    for (const field of reconciliation.submittedFields) {
-      setValue(field, nextValues[field] ?? '', { shouldDirty: false, shouldValidate: true });
+    if (focusHandle) {
+      root.current?.querySelector<HTMLButtonElement>(`[data-handle-key="${focusHandle}"]`)?.focus();
+      setFocusHandle(undefined);
     }
-    for (const field of Object.keys(dirty) as TestScenarioEditableField[]) {
-      if (dirty[field] && !reconciliation.submittedFields.includes(field)) {
-        setValue(field, currentValues[field] ?? '', { shouldDirty: true, shouldValidate: false });
-      }
-    }
-  }, [dirtyFields, getValues, reconciliation, reset, setValue]);
-
-  const pending = isSubmitting || isFormSubmitting;
-  const displayedError = apiError ?? errorMessage;
-
-  const updateStepDraft = (key: string, field: 'action' | 'expectedResult', value: string) => {
-    setInitialStepDrafts((drafts) =>
-      drafts.map((draft) => (draft.key === key ? { ...draft, [field]: value } : draft)),
+  }, [focusStep, focusHandle, steps]);
+  useEffect(() => {
+    if (pickerOpen) searchInput.current?.focus();
+  }, [pickerOpen]);
+  const closePicker = () => {
+    setPickerOpen(false);
+    pickerButton.current?.focus();
+  };
+  const append = () => {
+    if (pending) return;
+    const step = newStep();
+    setSteps((previous) => [...previous, step]);
+    setFocusStep(step.key);
+  };
+  const move = (key: string, target: number) => {
+    if (pending) return;
+    setSteps((previous) => {
+      const from = previous.findIndex((s) => s.key === key);
+      if (from < 0 || target < 0 || target >= previous.length || target === from) return previous;
+      const next = [...previous];
+      next.splice(target, 0, next.splice(from, 1)[0]);
+      setAnnouncement(`Step moved to position ${target + 1} of ${next.length}`);
+      return next;
+    });
+    setFocusHandle(key);
+  };
+  const update = (key: string, field: 'action' | 'expectedResult', value: string) => {
+    setSteps((previous) => previous.map((s) => (s.key === key ? { ...s, [field]: value } : s)));
+    setStepErrors((previous) => ({ ...previous, [key]: '' }));
+  };
+  const submit = (data: TestScenarioAuthoringFormData) => {
+    if (pending) return;
+    const invalid = Object.fromEntries(
+      meaningfulSteps.filter((s) => !s.action.trim()).map((s) => [s.key, 'Step action is required']),
     );
-    setStepErrors((current) => {
-      if (!current[key]) return current;
-      const next = { ...current };
-      delete next[key];
-      return next;
+    setStepErrors(invalid);
+    if (Object.keys(invalid).length) return;
+    return onSubmit(data, meaningfulSteps, folderId, {
+      suiteIds: selectedSuites.filter((s) => !s.isNew).map((s) => s.id),
+      newSuites: selectedSuites.filter((s) => s.isNew).map(({ name }) => ({ name })),
     });
   };
-
-  const moveStep = (index: number, direction: -1 | 1) => {
-    setInitialStepDrafts((drafts) => {
-      const nextIndex = index + direction;
-      if (nextIndex < 0 || nextIndex >= drafts.length) return drafts;
-      const next = [...drafts];
-      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
-      return next;
-    });
-  };
-
-  const handleValidSubmit = (values: TestScenarioAuthoringFormData) => {
-    if (isCreate) {
-      const nextErrors: Record<string, string> = {};
-      for (const draft of initialStepDrafts) {
-        const result = testScenarioStepSchema.safeParse(draft);
-        if (!result.success) nextErrors[draft.key] = result.error.issues[0]?.message ?? 'Step action is required';
-      }
-      setStepErrors(nextErrors);
-      if (Object.keys(nextErrors).length > 0) return;
+  const folder = folderId ? folders.find((f) => f.id === folderId) : null;
+  const backLabel = folderId ? (folder ? folder.name : 'All scenarios') : 'Unfiled';
+  const cancel = () => onCancel(folderId);
+  const addSuite = () => {
+    const name = search.trim();
+    if (!name || name.length > 200) {
+      setSuiteError('Enter a suite name of 1–200 characters.');
+      return;
     }
-
-    return onSubmit(values, initialStepDrafts, folderId);
+    if ([...suites, ...selectedSuites].some((s) => s.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setSuiteError('A suite with this name already exists. Select the existing suite.');
+      return;
+    }
+    setSelectedSuites((previous) => [...previous, { id: `suite-draft-${++draftSequence}`, name, isNew: true }]);
+    setSearch('');
+    setSuiteError('');
+    searchInput.current?.focus();
   };
-
   return (
     <Box
       as="form"
-      onSubmit={handleSubmit(handleValidSubmit)}
-      maxW={isCreate ? undefined : '900px'}
-      mx={{ base: 4, md: 6 }}
+      ref={root}
+      onSubmit={handleSubmit(submit)}
+      mx={{ base: 3, md: 6 }}
       my={4}
       p={{ base: 4, md: 6 }}
       bg="bg.section"
@@ -222,193 +237,441 @@ export const TestScenarioForm = ({
       shadow="sm"
     >
       <VStack align="stretch" gap={6}>
-        {!isCreate && (
-          <HStack align="center" gap={2}>
-            <IconButton
-              type="button"
-              aria-label="Return to Test Scenarios"
-              title="Return to Test Scenarios"
-              variant="ghost"
-              color="text.active"
-              onClick={onCancel}
-              disabled={pending}
-            >
-              <FiArrowLeft size={18} aria-hidden="true" />
-            </IconButton>
-            <Heading size="lg">Edit Test Scenario</Heading>
+        <HStack justify="space-between" flexWrap="wrap">
+          <Button type="button" variant="ghost" onClick={cancel} disabled={pending}>
+            <FiArrowLeft />
+            Back to {backLabel}
+          </Button>
+          <HStack>
+            <Button type="button" variant="outline" onClick={cancel} disabled={pending}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" loading={pending} disabled={pending}>
+              {mode === 'create' ? 'Save scenario' : 'Save changes'}
+            </Button>
           </HStack>
-        )}
-
-        {displayedError && (
+        </HStack>
+        {(apiError || errorMessage) && (
           <Alert.Root status="error" role="alert">
             <Alert.Indicator />
             <Alert.Content>
-              <Alert.Title>Test Scenario save failed</Alert.Title>
-              <Alert.Description>{displayedError}</Alert.Description>
+              <Alert.Title>Scenario save failed</Alert.Title>
+              <Alert.Description>{apiError || errorMessage}</Alert.Description>
+              {errorCatalogPath && (
+                <Link href={errorCatalogPath} color="text.active" textDecoration="underline">
+                  Inspect scenario catalog
+                </Link>
+              )}
+              {onReload && (
+                <Button type="button" variant="outline" onClick={onReload} disabled={pending}>
+                  Reload saved scenario
+                </Button>
+              )}
             </Alert.Content>
           </Alert.Root>
         )}
         {successMessage && (
-          <Alert.Root status="success" role="status">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title>{successMessage}</Alert.Title>
-            </Alert.Content>
+          <Alert.Root status="success">
+            <Alert.Content>{successMessage}</Alert.Content>
           </Alert.Root>
         )}
-
-        <VStack align="stretch" gap={4}>
-          <Heading size="md" pb={3} borderBottomWidth="1px" borderColor="border.main">Scenario fields</Heading>
-          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
-            <NativeSelect name="scenario-folder" label="Folder" aria-label="Scenario folder" value={folderId ?? ''}
-              onChange={(event) => setFolderId(event.currentTarget.value || null)}>
-              <option value="">Unfiled</option>
-              {folders.map((folder) => <option key={folder.id} value={folder.id}>{'　'.repeat(folder.depth ?? 0)}{folder.name}</option>)}
-            </NativeSelect>
-            <Input {...register('scenarioKey')} name="scenarioKey" label="Scenario key (optional)"
-              placeholder="e.g. R1 or AUTH-LOGIN" fieldProps={{ helperText: 'Up to 100 characters. Duplicate keys are allowed.' }} error={errors.scenarioKey?.message} />
-            <Input {...register('title')} name="title" label="Title" error={errors.title?.message} />
-            <NativeSelect {...register('priority')} name="priority" label="Priority" error={errors.priority?.message}>
-              <option value="">Unset</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
-            </NativeSelect>
-            <Input {...register('relatedIssueUrl')} name="relatedIssueUrl" label="Related issue URL" error={errors.relatedIssueUrl?.message} />
-            <Textarea {...register('details')} name="details" label="Details" resize="vertical" error={errors.details?.message} />
-          </Grid>
-        </VStack>
-        <VStack align="stretch" gap={4}>
-          <Heading size="md" pb={3} borderBottomWidth="1px" borderColor="border.main">Test setup</Heading>
-          <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
-            <Textarea {...register('preconditions')} name="preconditions" label="Preconditions" resize="vertical" error={errors.preconditions?.message} />
-            <Textarea {...register('testData')} name="testData" label="Test data" resize="vertical" error={errors.testData?.message} />
-          </Grid>
-        </VStack>
-
-        {isCreate && (
-          <VStack align="stretch" gap={3} pt={5} borderTopWidth="1px" borderColor="border.main">
-            <HStack justify="space-between" align="center">
-              <VStack align="start" gap={0}>
-                <Heading size="md">Scenario steps ({initialStepDrafts.length})</Heading>
-                <Text color="text.secondary" fontSize="sm">
-                  Add optional ordered steps. They are saved atomically with the scenario.
+        <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 1fr) 280px' }} gap={8}>
+          <VStack align="stretch" gap={5}>
+            {mode === 'create' && (
+              <Text fontSize="xs" fontWeight="semibold" color="text.secondary">
+                NEW SCENARIO
+              </Text>
+            )}
+            <Grid templateColumns={{ base: '1fr', md: 'minmax(120px, 1fr) 2fr 1fr' }} alignItems="end" gap={4}>
+              <Box>
+                <Text fontSize="sm" color="text.secondary">
+                  Scenario key
                 </Text>
-              </VStack>
-              <Button type="button" variant="outline" onClick={() => setInitialStepDrafts((steps) => [...steps, createDraftStep()])}>
-                Add step
-              </Button>
-            </HStack>
-
-            {initialStepDrafts.length === 0 ? (
-              <Text color="text.muted">No initial steps. You can add them later.</Text>
-            ) : (
-              <VStack as="ol" aria-label="Scenario steps" align="stretch" gap={0} m={0} p={0}>
-                {initialStepDrafts.map((step, index) => (
-                  <Box
-                    as="li"
-                    key={step.key}
-                    listStyle="none"
-                    py={5}
-                    borderTopWidth="1px"
-                    borderColor="border.main"
-                    _last={{ borderBottomWidth: '1px' }}
+                <Text fontWeight="semibold">{mode === 'create' ? 'Assigned on save' : initialValues.scenarioKey}</Text>
+              </Box>
+              <NativeSelect
+                name="scenario-folder"
+                label="Folder"
+                aria-label="Scenario folder"
+                value={folderId ?? ''}
+                disabled={pending}
+                onChange={(e) => setFolderId(e.target.value || null)}
+              >
+                <option value="">Unfiled</option>
+                {folders.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {'　'.repeat(f.depth ?? 0)}
+                    {f.name}
+                  </option>
+                ))}
+              </NativeSelect>
+              <NativeSelect
+                {...register('priority')}
+                name="priority"
+                label="Priority"
+                disabled={pending}
+                color={values.priority === 'high' ? 'red.500' : values.priority === 'low' ? 'green.600' : 'orange.600'}
+                error={errors.priority?.message}
+              >
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </NativeSelect>
+            </Grid>
+            <Input
+              {...register('title')}
+              name="title"
+              label="Title"
+              fontSize="2xl"
+              placeholder="What should this scenario verify?"
+              disabled={pending}
+              error={errors.title?.message}
+            />
+            <Textarea
+              {...register('details')}
+              name="details"
+              label="Details"
+              placeholder="Optional context for this scenario"
+              disabled={pending}
+              error={errors.details?.message}
+            />
+            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={5}>
+              <Textarea
+                {...register('preconditions')}
+                name="preconditions"
+                label="Preconditions"
+                placeholder="What must be true before testing?"
+                minH="120px"
+                disabled={pending}
+                error={errors.preconditions?.message}
+              />
+              <Textarea
+                {...register('testData')}
+                name="testData"
+                label="Test data"
+                placeholder="Accounts, inputs or data needed for this test"
+                minH="120px"
+                disabled={pending}
+                error={errors.testData?.message}
+              />
+            </Grid>
+            <Heading size="md">Steps {steps.length}</Heading>
+            <Text fontSize="xs" color="text.secondary">
+              Drag to reorder. Keyboard: Space to pick up, arrows to move, Space to drop, Escape to cancel.
+            </Text>
+            <Grid
+              display={{ base: 'none', md: 'grid' }}
+              templateColumns="30px 24px minmax(0, 1fr) minmax(0, 1fr) 30px"
+              gap={3}
+              fontSize="xs"
+              color="text.secondary"
+              aria-hidden="true"
+            >
+              <Box />
+              <Text>#</Text>
+              <Text>Action</Text>
+              <Text>Expected result</Text>
+              <Box />
+            </Grid>
+            <VStack as="ol" aria-label="Scenario steps" align="stretch" gap={3} m={0} p={0}>
+              {steps.map((step, index) => (
+                <Box
+                  as="li"
+                  key={step.key}
+                  data-step-key={step.key}
+                  listStyle="none"
+                  borderBottomWidth="1px"
+                  borderColor="border.main"
+                  pb={3}
+                >
+                  <Grid
+                    templateColumns={{ base: '30px 1fr 30px', md: '30px 24px minmax(0, 1fr) minmax(0, 1fr) 30px' }}
+                    gap={3}
+                    alignItems="start"
                   >
-                    <VStack align="stretch" gap={3}>
-                      <HStack align="center" gap={2}>
-                        <Box
-                          aria-hidden="true"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          flexShrink={0}
-                          w="34px"
-                          h="34px"
-                          borderRadius="full"
-                          bg="bg.active"
-                          borderWidth="1px"
-                          borderColor="border.main"
-                          color="text.active"
-                          fontWeight="semibold"
-                          fontSize="sm"
-                        >
-                          {index + 1}
-                        </Box>
-                        <HStack gap={0}>
-                          <IconButton
-                            type="button"
-                            size="xs"
-                            variant="ghost"
-                            aria-label={`Move step ${index + 1} up`}
-                            title={`Move step ${index + 1} up`}
-                            onClick={() => moveStep(index, -1)}
-                            disabled={pending || index === 0}
-                          >
-                            <FiChevronUp aria-hidden="true" />
-                          </IconButton>
-                          <IconButton
-                            type="button"
-                            size="xs"
-                            variant="ghost"
-                            aria-label={`Move step ${index + 1} down`}
-                            title={`Move step ${index + 1} down`}
-                            onClick={() => moveStep(index, 1)}
-                            disabled={pending || index === initialStepDrafts.length - 1}
-                          >
-                            <FiChevronDown aria-hidden="true" />
-                          </IconButton>
-                          <IconButton
-                            type="button"
-                            size="xs"
-                            variant="ghost"
-                            aria-label={`Remove step ${index + 1}`}
-                            title={`Remove step ${index + 1}`}
-                            onClick={() => setInitialStepDrafts((steps) => steps.filter(({ key }) => key !== step.key))}
-                            disabled={pending}
-                          >
-                            <FiTrash2 aria-hidden="true" />
-                          </IconButton>
-                        </HStack>
-                      </HStack>
-                      <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 3, md: 6 }}>
-                        <Textarea
-                          name={`initial-step-${step.key}-action`}
-                          label="Action"
-                          aria-label={`Step ${index + 1} action`}
-                          value={step.action}
-                          onChange={(event) => updateStepDraft(step.key, 'action', event.target.value)}
-                          error={stepErrors[step.key]}
-                          resize="vertical"
-                          disabled={pending}
-                          fieldProps={{ labelProps: { fontSize: 'md', fontWeight: 'semibold' } }}
-                        />
-                        <Textarea
-                          name={`initial-step-${step.key}-expected-result`}
-                          label="Expected result"
-                          aria-label={`Step ${index + 1} expected result`}
-                          value={step.expectedResult}
-                          onChange={(event) => updateStepDraft(step.key, 'expectedResult', event.target.value)}
-                          resize="vertical"
-                          disabled={pending}
-                          fieldProps={{ labelProps: { fontSize: 'md', fontWeight: 'semibold' } }}
-                        />
-                      </Grid>
-                    </VStack>
-                  </Box>
+                    <IconButton
+                      type="button"
+                      size="xs"
+                      variant="ghost"
+                      aria-label={`Reorder step ${index + 1}`}
+                      aria-pressed={grabbed === step.key}
+                      data-handle-key={step.key}
+                      disabled={pending}
+                      style={{ touchAction: 'none' }}
+                      onPointerDown={(e) => {
+                        if (pending) return;
+                        pointer.current = { key: step.key, id: e.pointerId };
+                        e.currentTarget.setPointerCapture?.(e.pointerId);
+                      }}
+                      onPointerMove={(e) => {
+                        if (pointer.current?.key !== step.key) return;
+                        const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-step-key]');
+                        const key = target?.getAttribute('data-step-key');
+                        if (key)
+                          move(
+                            step.key,
+                            steps.findIndex((s) => s.key === key),
+                          );
+                      }}
+                      onPointerUp={(e) => {
+                        pointer.current = null;
+                        e.currentTarget.releasePointerCapture?.(e.pointerId);
+                      }}
+                      onPointerCancel={() => {
+                        pointer.current = null;
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === ' ' || e.key === 'Enter') {
+                          e.preventDefault();
+                          if (grabbed !== step.key) pickedUpOrder.current = steps.map((row) => row.key);
+                          setGrabbed(grabbed === step.key ? undefined : step.key);
+                          setAnnouncement(grabbed === step.key ? 'Step dropped' : `Step ${index + 1} picked up`);
+                        } else if (grabbed === step.key && ['ArrowUp', 'ArrowDown'].includes(e.key)) {
+                          e.preventDefault();
+                          move(step.key, index + (e.key === 'ArrowUp' ? -1 : 1));
+                        } else if (e.key === 'Escape' && grabbed === step.key) {
+                          e.preventDefault();
+                          setSteps((current) => {
+                            const order = new Map(pickedUpOrder.current.map((key, position) => [key, position]));
+                            return [...current].sort(
+                              (left, right) =>
+                                (order.get(left.key) ?? current.length) - (order.get(right.key) ?? current.length),
+                            );
+                          });
+                          setGrabbed(undefined);
+                          setFocusHandle(step.key);
+                          setAnnouncement('Reordering cancelled');
+                        }
+                      }}
+                    >
+                      <FiMenu />
+                    </IconButton>
+                    <Text display={{ base: 'none', md: 'block' }} pt={1}>
+                      {index + 1}
+                    </Text>
+                    <Textarea
+                      name={`step-${step.key}-action`}
+                      label="Action"
+                      aria-label={`Step ${index + 1} action`}
+                      data-action-key={step.key}
+                      value={step.action}
+                      disabled={pending}
+                      error={stepErrors[step.key]}
+                      onChange={(e) => update(step.key, 'action', e.target.value)}
+                      resize="vertical"
+                    />
+                    <Box gridColumn={{ base: '2', md: 'auto' }}>
+                      <Textarea
+                        name={`step-${step.key}-expected`}
+                        label="Expected result"
+                        aria-label={`Step ${index + 1} expected result`}
+                        value={step.expectedResult}
+                        disabled={pending}
+                        onChange={(e) => update(step.key, 'expectedResult', e.target.value)}
+                        onKeyDown={(e) => {
+                          if (
+                            e.key === 'Enter' &&
+                            !e.shiftKey &&
+                            !e.nativeEvent.isComposing &&
+                            index === steps.length - 1
+                          ) {
+                            e.preventDefault();
+                            if (!e.repeat) append();
+                          }
+                        }}
+                        resize="vertical"
+                      />
+                    </Box>
+                    <IconButton
+                      type="button"
+                      aria-label={`Remove step ${index + 1}`}
+                      size="xs"
+                      variant="ghost"
+                      disabled={pending}
+                      onClick={() => setSteps((previous) => previous.filter((s) => s.key !== step.key))}
+                    >
+                      <FiTrash2 />
+                    </IconButton>
+                  </Grid>
+                </Box>
+              ))}
+            </VStack>
+            <Button type="button" variant="outline" width="full" disabled={pending} onClick={append}>
+              <FiPlus />
+              Add step
+            </Button>
+            <Text role="status" aria-live="polite" fontSize="sm">
+              {announcement}
+            </Text>
+          </VStack>
+          <VStack
+            align="stretch"
+            gap={6}
+            borderLeftWidth={{ base: 0, lg: '1px' }}
+            borderColor="border.main"
+            pl={{ base: 0, lg: 6 }}
+          >
+            <Box>
+              <HStack justify="space-between">
+                <Heading size="sm">Suites</Heading>
+                <IconButton
+                  ref={pickerButton}
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  aria-label="Select suites"
+                  aria-expanded={pickerOpen}
+                  disabled={pending}
+                  onClick={() => setPickerOpen(!pickerOpen)}
+                >
+                  <FiPlus />
+                </IconButton>
+              </HStack>
+              {!selectedSuites.length && (
+                <Text color="text.secondary" fontSize="sm">
+                  Not in any suite
+                </Text>
+              )}
+              <VStack align="stretch" gap={2}>
+                {selectedSuites.map((suite) => (
+                  <HStack key={suite.id} justify="space-between" bg="bg.active" borderRadius="md" px={2}>
+                    <Text fontSize="sm">
+                      {suite.name}
+                      {suite.isNew ? ' (new)' : ''}
+                    </Text>
+                    <IconButton
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      aria-label={`Remove suite ${suite.name}`}
+                      disabled={pending}
+                      onClick={() => setSelectedSuites((previous) => previous.filter((s) => s.id !== suite.id))}
+                    >
+                      <FiX />
+                    </IconButton>
+                  </HStack>
                 ))}
               </VStack>
+              {pickerOpen && (
+                <Box
+                  role="dialog"
+                  aria-label="Choose suites"
+                  borderWidth="1px"
+                  borderColor="border.main"
+                  borderRadius="md"
+                  p={3}
+                  mt={3}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      closePicker();
+                    } else if (e.key === 'Tab') {
+                      const controls = Array.from(
+                        e.currentTarget.querySelectorAll<HTMLElement>('input:not(:disabled), button:not(:disabled)'),
+                      );
+                      const first = controls[0];
+                      const last = controls[controls.length - 1];
+                      if (e.shiftKey && document.activeElement === first) {
+                        e.preventDefault();
+                        last?.focus();
+                      } else if (!e.shiftKey && document.activeElement === last) {
+                        e.preventDefault();
+                        first?.focus();
+                      }
+                    }
+                  }}
+                >
+                  <Input
+                    ref={searchInput}
+                    name="suite-search"
+                    label="Search or create suite"
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') event.preventDefault();
+                    }}
+                    value={search}
+                    disabled={pending}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setSuiteError('');
+                    }}
+                  />
+                  <VStack align="stretch" maxH="240px" overflowY="auto" mt={2}>
+                    {suites
+                      .filter((s) => s.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
+                      .map((suite) => (
+                        <Button
+                          key={suite.id}
+                          type="button"
+                          variant="ghost"
+                          justifyContent="space-between"
+                          aria-pressed={selectedSuites.some((s) => s.id === suite.id)}
+                          disabled={pending}
+                          onClick={() =>
+                            setSelectedSuites((previous) =>
+                              previous.some((s) => s.id === suite.id)
+                                ? previous.filter((s) => s.id !== suite.id)
+                                : [...previous, { id: suite.id, name: suite.name }],
+                            )
+                          }
+                        >
+                          <Text truncate>{suite.name}</Text>
+                          <Text>{suite.members?.length ?? 0} scenarios</Text>
+                        </Button>
+                      ))}
+                  </VStack>
+                  {search.trim() && (
+                    <Button type="button" variant="outline" size="sm" disabled={pending} onClick={addSuite}>
+                      Create “{search.trim()}”
+                    </Button>
+                  )}
+                  {suiteError && (
+                    <Text role="alert" color="red.500">
+                      {suiteError}
+                    </Text>
+                  )}
+                  <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={closePicker}>
+                    Done
+                  </Button>
+                </Box>
+              )}
+            </Box>
+            <Box>
+              <HStack mb={2}>
+                <FiLink />
+                <Heading size="sm">Requirement or ticket</Heading>
+              </HStack>
+              <Input
+                {...register('relatedIssueUrl')}
+                name="relatedIssueUrl"
+                aria-label="Requirement or ticket"
+                placeholder="https://youtrack… or https://jira…"
+                disabled={pending}
+                error={errors.relatedIssueUrl?.message}
+              />
+            </Box>
+            {mode === 'edit' && (
+              <Box>
+                <Heading size="sm" mb={3}>
+                  History
+                </Heading>
+                <Text fontSize="sm">
+                  Created {history?.createdAt ? new Date(history.createdAt).toLocaleString() : 'Unknown'}
+                </Text>
+                <Text color="text.secondary" fontSize="sm">
+                  {history?.createdBy?.name || history?.createdBy?.email || 'Unknown'}
+                </Text>
+                <Text fontSize="sm" mt={3}>
+                  Updated {history?.updatedAt ? new Date(history.updatedAt).toLocaleString() : 'Unknown'}
+                </Text>
+                <Text color="text.secondary" fontSize="sm">
+                  {history?.updatedBy?.name || history?.updatedBy?.email || 'Unknown'}
+                </Text>
+              </Box>
             )}
           </VStack>
-        )}
-
-        <HStack justify="flex-end" gap={3}>
-          <Button type="button" variant="outline" onClick={onCancel} disabled={pending}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={pending} disabled={pending}>
-            {isCreate ? 'Create Test Scenario' : 'Save Test Scenario'}
-          </Button>
-        </HStack>
+        </Grid>
       </VStack>
     </Box>
   );
 };
-
 export const TestScenarioAuthoringForm = TestScenarioForm;

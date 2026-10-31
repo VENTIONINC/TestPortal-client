@@ -1,177 +1,117 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
-
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TestScenarioCreateContainer } from '@/components/test-scenarios/containers/TestScenarioCreateContainer';
-import { ChakraProvider, toaster } from '@/components/ui';
-import { usePostApiV2TestScenariosMutation } from '@/redux/apis/generatedApi';
-
-const navigate = vi.fn();
-const createScenario = vi.fn();
-
-vi.mock('react-router', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router')>();
-
-  return { ...actual, useNavigate: () => navigate };
-});
-vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/redux/apis/generatedApi')>();
-
-  return { ...actual, usePostApiV2TestScenariosMutation: vi.fn() };
-});
-vi.mock('@/redux/apis/extendedApi', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/redux/apis/extendedApi')>()),
-  useGetApiV2TestScenarioFoldersQuery: vi.fn(() => ({ currentData: [{ id: 'folder-42', name: 'Authentication' }] })),
+import { ChakraProvider } from '@/components/ui';
+const { navigate, createScenario } = vi.hoisted(() => ({ navigate: vi.fn(), createScenario: vi.fn() }));
+vi.mock('react-router', async (original) => ({
+  ...(await original<typeof import('react-router')>()),
+  useNavigate: () => navigate,
 }));
-
-const mockedCreateMutation = vi.mocked(usePostApiV2TestScenariosMutation);
-
-const renderContainer = (projectId = 'project-1') =>
+vi.mock('@/redux/apis/generatedApi', async (original) => ({
+  ...(await original<typeof import('@/redux/apis/generatedApi')>()),
+  usePostApiV2TestScenariosMutation: () => [createScenario, { isLoading: false }],
+}));
+vi.mock('@/redux/apis/extendedApi', async (original) => ({
+  ...(await original<typeof import('@/redux/apis/extendedApi')>()),
+  useGetApiV2TestScenarioFoldersQuery: () => ({ currentData: [{ id: 'folder-1', name: 'Authentication' }] }),
+  useGetApiV2TestSuitesQuery: () => ({ currentData: [{ id: 'suite-1', name: 'Regression', members: [{}, {}] }] }),
+}));
+const setup = () =>
   render(
     <ChakraProvider>
-      <TestScenarioCreateContainer projectId={projectId} />
+      <TestScenarioCreateContainer projectId="project-1" initialFolderId="folder-1" />
     </ChakraProvider>,
   );
-
+const change = (name: string, value: string) =>
+  fireEvent.change(screen.getByRole('textbox', { name }), { target: { value } });
+const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save scenario' }));
+beforeEach(() => {
+  navigate.mockReset();
+  createScenario.mockReset();
+});
 describe('TestScenarioCreateContainer', () => {
-  beforeEach(() => {
-    navigate.mockReset();
-    createScenario.mockReset();
-    vi.spyOn(toaster, 'create').mockClear();
-    mockedCreateMutation.mockReturnValue([createScenario, { isLoading: false }] as never);
+  it('saves fields, steps and deferred suites in one request without keys or step IDs', async () => {
+    createScenario.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'returned-id' }) });
+    setup();
+    change('Title', '  Scenario  ');
+    change('Step 1 action', '  Open  ');
+    fireEvent.click(screen.getByRole('button', { name: 'Select suites' }));
+    expect(screen.getByText('2 scenarios')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Regression/ }));
+    change('Search or create suite', ' Release ');
+    fireEvent.click(screen.getByRole('button', { name: 'Create “Release”' }));
+    expect(createScenario).not.toHaveBeenCalled();
+    save();
+    await waitFor(() => expect(createScenario).toHaveBeenCalledOnce());
+    expect(createScenario).toHaveBeenCalledWith({
+      createTestScenarioRequest: {
+        projectId: 'project-1',
+        folderId: 'folder-1',
+        title: 'Scenario',
+        priority: 'medium',
+        steps: [{ action: 'Open' }],
+        suiteIds: ['suite-1'],
+        newSuites: [{ name: 'Release' }],
+      },
+    });
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/returned-id', { replace: true }));
   });
-
-  it.each(['https:example.test/TP-20', 'https:/example.test/TP-20'])('rejects malformed absolute issue URL %s before mutation', async (relatedIssueUrl) => {
-    const user = userEvent.setup();
-    renderContainer();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'Scenario' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Related issue URL' }), { target: { value: relatedIssueUrl } });
-    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
-    expect(await screen.findByText('Enter an absolute HTTP(S) URL')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Related issue URL' })).toHaveValue(relatedIssueUrl);
+  it('saves untouched initial row as zero steps', async () => {
+    createScenario.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'id' }) });
+    setup();
+    change('Title', 'Scenario');
+    save();
+    await waitFor(() => expect(createScenario).toHaveBeenCalledOnce());
+    expect(createScenario.mock.calls[0][0].createTestScenarioRequest.steps).toEqual([]);
+  });
+  it('preserves draft and explains an uncertain create without retrying automatically', async () => {
+    createScenario.mockReturnValue({ unwrap: () => Promise.reject({ status: 'FETCH_ERROR' }) });
+    setup();
+    change('Title', 'Draft');
+    change('Step 1 action', 'Action');
+    save();
+    expect(await screen.findByText(/The save result is uncertain/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Inspect scenario catalog' })).toHaveAttribute('href', '/test-scenarios?projectId=project-1');
+    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Draft');
+    expect(screen.getByRole('textbox', { name: 'Step 1 action' })).toHaveValue('Action');
+    expect(createScenario).toHaveBeenCalledOnce();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+  it('freezes all draft mutations during save and suppresses duplicate submission', async () => {
+    createScenario.mockReturnValue({ unwrap: () => new Promise(() => {}) });
+    setup();
+    change('Title', 'Draft');
+    save();
+    save();
+    await waitFor(() => expect(createScenario).toHaveBeenCalledOnce());
+    expect(screen.getByRole('textbox', { name: 'Title' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add step' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Select suites' })).toBeDisabled();
+  });
+  it('returns to the currently selected folder without creating pending suites', () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(navigate).toHaveBeenCalledWith('/test-scenarios?projectId=project-1&folderId=folder-1');
     expect(createScenario).not.toHaveBeenCalled();
   });
-
-  it('submits the selected project and structured fields without generated Markdown', async () => {
-    const user = userEvent.setup();
-    createScenario.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'scenario-1' }) });
-
-    renderContainer();
-    await user.type(screen.getByRole('textbox', { name: 'Title' }), '  Checkout flow  ');
-    fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: '  Details\n  here  ' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Related issue URL' }), { target: { value: ' https://example.test/TP-20 ' } });
-    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
-
-    await waitFor(() => expect(createScenario).toHaveBeenCalledTimes(1));
-    expect(createScenario).toHaveBeenCalledWith({
-      createTestScenarioRequest: {
-        projectId: 'project-1',
-        folderId: null,
-        title: 'Checkout flow',
-        details: 'Details\n  here',
-        relatedIssueUrl: 'https://example.test/TP-20',
-      },
+  it('ignores a response after scope unmount', async () => {
+    let resolve!: (value: { id: string }) => void;
+    createScenario.mockReturnValue({
+      unwrap: () =>
+        new Promise((r) => {
+          resolve = r;
+        }),
     });
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1', { replace: true }));
-  });
-
-  it('submits zero or multiple initial steps atomically without temporary IDs or positions', async () => {
-    const user = userEvent.setup();
-    createScenario.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'scenario-with-steps' }) });
-
-    renderContainer();
-    await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Checkout flow');
-    await user.click(screen.getByRole('button', { name: 'Add step' }));
-    await user.type(screen.getByRole('textbox', { name: 'Step 1 action' }), 'Open checkout');
-    await user.type(screen.getByRole('textbox', { name: 'Step 1 expected result' }), 'Form is shown');
-    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
-
-    await waitFor(() => expect(createScenario).toHaveBeenCalledTimes(1));
-    expect(createScenario).toHaveBeenCalledWith({
-      createTestScenarioRequest: {
-        projectId: 'project-1',
-        folderId: null,
-        title: 'Checkout flow',
-        steps: [{ action: 'Open checkout', expectedResult: 'Form is shown' }],
-      },
-    });
-    expect(createScenario.mock.calls[0]?.[0].createTestScenarioRequest.steps?.[0]).not.toHaveProperty('id');
-    expect(createScenario.mock.calls[0]?.[0].createTestScenarioRequest.steps?.[0]).not.toHaveProperty('position');
-  });
-
-  it('submits the selected folder UUID when creating from a folder', async () => {
-    const user = userEvent.setup();
-    createScenario.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'scenario-foldered' }) });
-
-    renderContainer();
-    await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Folder scenario');
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Scenario folder' }), 'folder-42');
-    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
-
-    await waitFor(() => expect(createScenario).toHaveBeenCalledWith({
-      createTestScenarioRequest: expect.objectContaining({ projectId: 'project-1', title: 'Folder scenario', folderId: 'folder-42' }),
-    }));
-  });
-
-  it('retains all drafts, shows API feedback and permits an explicit retry', async () => {
-    const user = userEvent.setup();
-    const details = 'Retry details';
-    createScenario
-      .mockReturnValueOnce({ unwrap: () => Promise.reject({ status: 422, data: { error: 'Title already exists' } }) })
-      .mockReturnValueOnce({ unwrap: () => Promise.resolve({ id: 'scenario-2' }) });
-
-    renderContainer();
-    await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Retryable scenario');
-    fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: details } });
-    await user.click(screen.getByRole('button', { name: 'Add step' }));
-    await user.type(screen.getByRole('textbox', { name: 'Step 1 action' }), 'Retry action');
-    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
-
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Title already exists'));
-    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Retryable scenario');
-    expect(screen.getByRole('textbox', { name: 'Details' })).toHaveValue(details);
-    expect(screen.getByRole('textbox', { name: 'Step 1 action' })).toHaveValue('Retry action');
-
-    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
-    await waitFor(() => expect(createScenario).toHaveBeenCalledTimes(2));
-    expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-2', { replace: true });
-  });
-
-  it('prevents duplicate requests while creation is pending', async () => {
-    const user = userEvent.setup();
-    let resolveRequest!: (value: { id: string }) => void;
-    createScenario.mockReturnValue({ unwrap: () => new Promise((resolve) => (resolveRequest = resolve)) });
-
-    renderContainer();
-    await user.type(screen.getByRole('textbox', { name: 'Title' }), 'Pending scenario');
-    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
-    expect(screen.getByRole('button', { name: 'Create Test Scenario' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
-    expect(createScenario).toHaveBeenCalledTimes(1);
-
-    resolveRequest({ id: 'scenario-3' });
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-3', { replace: true }));
-  });
-
-  it('does not navigate after a late response from an abandoned project scope', async () => {
-    let resolveRequest!: (value: { id: string }) => void;
-    createScenario.mockReturnValue({ unwrap: () => new Promise((resolve) => (resolveRequest = resolve)) });
-
-    const { rerender } = renderContainer('project-1');
-    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'Scoped scenario' } });
-    fireEvent.submit(screen.getByRole('button', { name: 'Create Test Scenario' }).closest('form')!);
-    await waitFor(() => expect(createScenario).toHaveBeenCalledTimes(1));
-
-    rerender(
-      <ChakraProvider>
-        <TestScenarioCreateContainer projectId="project-2" />
-      </ChakraProvider>,
-    );
-    resolveRequest({ id: 'old-scope-scenario' });
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    const view = setup();
+    change('Title', 'Draft');
+    save();
+    await waitFor(() => expect(createScenario).toHaveBeenCalledOnce());
+    view.unmount();
+    resolve({ id: 'late' });
+    await Promise.resolve();
     expect(navigate).not.toHaveBeenCalled();
   });
 });

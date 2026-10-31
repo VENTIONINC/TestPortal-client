@@ -24,6 +24,9 @@ vi.mock('@/components/ui', async (importOriginal) => {
   };
 });
 
+const restoreProject = vi.hoisted(() => vi.fn());
+vi.mock('@/redux/slices/projects', () => ({ useProjectsActions: () => ({ setSelectedProjectId: restoreProject }) }));
+
 vi.mock('@/hooks/useSelectedProject', () => ({
   useSelectedProject: vi.fn(),
 }));
@@ -71,7 +74,7 @@ const createResponse = (projectId: string, page: number) => ({
       folderId: null,
       folderName: null,
       createdById: 'user-1',
-      scenarioKey: null,
+      scenarioKey: 'TMS-1',
       title: `${projectId} scenario`,
       details: `${projectId} details`,
       createdBy: { id: 'user-1', name: `${projectId} creator`, email: `${projectId}@example.com` },
@@ -141,5 +144,19 @@ describe('TestScenarioCatalog project boundary', () => {
     expect(screen.queryByText('project-a details')).not.toBeInTheDocument();
     expect(screen.queryByText('project-a creator')).not.toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Searching scenarios…');
+  });
+  it('consumes a return URL project once and allows a subsequent deliberate project change', () => {
+    restoreProject.mockClear();
+    const content = () => (
+      <ChakraProvider>
+        <MemoryRouter initialEntries={['/test-scenarios?projectId=project-a&folderId=unfiled']}>
+          <TestScenarioCatalog />
+        </MemoryRouter>
+      </ChakraProvider>
+    );
+    const view = render(content());
+    selectedProjectId = 'project-b';
+    view.rerender(content());
+    expect(restoreProject).not.toHaveBeenCalled();
   });
 });

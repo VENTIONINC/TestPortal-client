@@ -9,7 +9,8 @@ import { TestScenarioDetailsView } from '@/components/test-scenarios/components/
 import type { TestScenario } from '@/redux/apis/generatedApi';
 
 const scenario: TestScenario = {
-  folderId: null, id: 'scenario-1', projectId: 'project-1', createdById: 'user-1', title: 'Checkout', scenarioKey: null,
+  revision: 1, suites: [], createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' }, updatedBy: null,
+  folderId: null, id: 'scenario-1', projectId: 'project-1', createdById: 'user-1', title: 'Checkout', scenarioKey: 'TMS-1',
   details: 'Details content', priority: 'high', relatedIssueUrl: 'https://example.test/TP-20',
   preconditions: 'Ready', testData: 'Input', contentMd: '# Checkout', contentMdHash: 'hash',
   contentMdFormatVersion: 1, createdAt: '', updatedAt: '',
@@ -35,8 +36,8 @@ describe('TestScenarioDetailsView', () => {
     expect(screen.getByRole('link', { name: 'https://example.test/TP-20' })).toHaveAttribute('rel', 'noopener noreferrer');
   });
   it('shows consistent empty metadata without a link', () => {
-    renderView({ priority: null, relatedIssueUrl: null });
-    expect(screen.getAllByText('No value')).toHaveLength(2);
+    renderView({ relatedIssueUrl: null });
+    expect(screen.getAllByText('No value')).toHaveLength(1);
     expect(screen.queryByRole('link', { name: /example.test/ })).not.toBeInTheDocument();
   });
   it('does not render an unsafe related issue URL as a link', () => {

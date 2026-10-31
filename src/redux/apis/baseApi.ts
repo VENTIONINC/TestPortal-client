@@ -57,7 +57,13 @@ const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQuery
   api,
   extraOptions,
 ) => {
-  let result = await baseQuery(args, api, extraOptions);
+  // Aggregate writes may already have committed when a transport response is lost.
+  // Never replay them automatically; the editor preserves the draft for explicit recovery.
+  const retryOptions =
+    api.endpoint === 'postApiV2TestScenarios' || api.endpoint === 'patchApiV2TestScenariosByScenarioId'
+      ? { ...extraOptions, maxRetries: 0 }
+      : extraOptions;
+  let result = await baseQuery(args, api, retryOptions);
 
   if (result.error && result.error.status === 401) {
     const state = api.getState() as RootState;
@@ -90,7 +96,7 @@ const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQuery
           }),
         );
 
-        result = await baseQuery(args, api, extraOptions);
+        result = await baseQuery(args, api, retryOptions);
       } else {
         api.dispatch(logout());
       }

@@ -39,11 +39,15 @@ const creator: TestScenarioCreatorSummary = {
 };
 
 const scenario: TestScenario = {
+  revision: 1,
+  suites: [],
+  createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' },
+  updatedBy: null,
   folderId: null,
   id: 'scenario-1',
   projectId: 'project-1',
   createdById: 'user-1',
-  scenarioKey: null,
+  scenarioKey: 'TMS-1',
   title: 'Checkout flow',
   contentMd: '# Checkout flow',
   details: 'Scenario details',
@@ -122,8 +126,12 @@ describe('generated Test Scenario list contract', () => {
 
   it('exposes typed organization and combined list contracts', () => {
     const scopedList: GetApiV2TestScenariosApiArg = {
-      projectId: 'project-1', page: 1, limit: 10, search: 'login',
-      folderId: 'unfiled', includeDescendants: false,
+      projectId: 'project-1',
+      page: 1,
+      limit: 10,
+      search: 'login',
+      folderId: 'unfiled',
+      includeDescendants: false,
     };
     const folderQuery: GetApiV2TestScenarioFoldersApiArg = { projectId: 'project-1' };
     const suiteQuery: GetApiV2TestSuitesApiArg = { projectId: 'project-1' };
@@ -292,7 +300,10 @@ describe('generated Test Scenario cache behavior', () => {
         generatedApi.endpoints.patchApiV2TestScenariosByScenarioId.initiate({
           scenarioId: 'scenario-1',
           projectId: 'project-1',
-          updateTestScenarioRequest: { title: 'Updated checkout flow', relatedIssueUrl: 'https://example.test/updated' },
+          updateTestScenarioRequest: {
+            title: 'Updated checkout flow',
+            relatedIssueUrl: 'https://example.test/updated',
+          },
         }),
       )
       .unwrap();
@@ -347,5 +358,40 @@ describe('generated Test Scenario cache behavior', () => {
     });
     expect(fetchMock).toHaveBeenCalled();
     subscription.unsubscribe();
+  });
+});
+
+describe('scenario aggregate transport safety', () => {
+  it.each(['create', 'edit'])('does not automatically retry an uncertain %s', async (operation) => {
+    vi.useFakeTimers();
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Network response lost'));
+    try {
+      const pending =
+        operation === 'create'
+          ? store.dispatch(
+              generatedApi.endpoints.postApiV2TestScenarios.initiate({
+                createTestScenarioRequest: {
+                  projectId: 'project-1',
+                  title: 'Draft',
+                  steps: [],
+                  suiteIds: [],
+                  newSuites: [],
+                },
+              }),
+            )
+          : store.dispatch(
+              generatedApi.endpoints.patchApiV2TestScenariosByScenarioId.initiate({
+                projectId: 'project-1',
+                scenarioId: 'scenario-1',
+                updateTestScenarioRequest: { expectedRevision: 1, steps: [], suiteIds: [], newSuites: [] },
+              }),
+            );
+      await vi.runAllTimersAsync();
+      const result = await pending;
+      expect(result).toHaveProperty('error');
+      expect(fetchMock).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

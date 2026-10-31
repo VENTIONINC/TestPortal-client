@@ -117,7 +117,7 @@ export const extendedApi = generatedApi
         providesTags: (_result, _error, arg) => [TAGS.TestScenario, scenarioCatalogTag(arg.projectId)],
       },
       postApiV2TestScenarios: {
-        invalidatesTags: (result, _error, arg) => result ? [TAGS.TestScenario, scenarioCatalogTag(arg.createTestScenarioRequest.projectId), { type: 'ScenarioFolders', id: arg.createTestScenarioRequest.projectId }] : [],
+        invalidatesTags: (result, _error, arg) => result ? [TAGS.TestScenario, scenarioCatalogTag(arg.createTestScenarioRequest.projectId), { type: 'ScenarioFolders', id: arg.createTestScenarioRequest.projectId }, { type: 'ScenarioSuites', id: arg.createTestScenarioRequest.projectId }] : [],
       },
       patchApiV2TestScenariosByScenarioId: {
         invalidatesTags: (result, _error, arg) => result ? [TAGS.TestScenario, 'Results', scenarioCatalogTag(arg.projectId), { type: 'ScenarioFolders', id: arg.projectId }, { type: 'ScenarioSuites', id: arg.projectId }] : [],

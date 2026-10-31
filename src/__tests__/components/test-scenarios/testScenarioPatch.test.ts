@@ -40,25 +40,9 @@ describe('Test Scenario structured payload helpers', () => {
     expect(getTestScenarioPatchPayload({ ...persisted, details: ' \n\t ' }, persisted)).toEqual({ details: null });
   });
 
-  it('trims a Scenario key on creation and omits a blank key', () => {
-    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', scenarioKey: '  AUTH Login  ' })).toEqual({
-      projectId: 'project-1',
-      title: 'Checkout',
-      scenarioKey: 'AUTH Login',
-    });
-    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', scenarioKey: ' \t ' })).toEqual({
-      projectId: 'project-1',
-      title: 'Checkout',
-    });
-  });
-
-  it('clears a persisted Scenario key to null and omits unchanged keys', () => {
-    const persistedWithKey = { ...persisted, scenarioKey: 'AUTH-1' };
-
-    expect(getTestScenarioPatchPayload({ ...persistedWithKey, scenarioKey: '  \t ' }, persistedWithKey)).toEqual({
-      scenarioKey: null,
-    });
-    expect(getTestScenarioPatchPayload({ ...persistedWithKey, scenarioKey: ' AUTH-1 ' }, persistedWithKey)).toBeNull();
+  it('excludes immutable keys on create and edit and defaults priority', () => {
+    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', scenarioKey: 'ignored' })).toEqual({ projectId: 'project-1', title: 'Checkout', priority: 'medium' });
+    expect(getTestScenarioPatchPayload({ ...persisted, scenarioKey: 'ignored' }, { ...persisted, scenarioKey: 'TMS-1' })).toBeNull();
   });
 
   it('treats blank input as a no-op when the saved optional value is already null', () => {
@@ -68,7 +52,7 @@ describe('Test Scenario structured payload helpers', () => {
   it('does not include generated Markdown, hash, version, steps or immutable metadata', () => {
     const payload = getTestScenarioPatchPayload({ ...persisted, title: 'Updated', scenarioKey: 'R1' }, persisted);
 
-    expect(payload).toEqual({ title: 'Updated', scenarioKey: 'R1' });
+    expect(payload).toEqual({ title: 'Updated' });
     expect(payload).not.toHaveProperty('contentMd');
     expect(payload).not.toHaveProperty('steps');
     expect(payload).not.toHaveProperty('id');
@@ -82,6 +66,7 @@ describe('Test Scenario structured payload helpers', () => {
 
     expect(getTestScenarioCreatePayload('project-1', { ...persisted, details: '  ' }, steps)).toEqual({
       projectId: 'project-1',
+      priority: 'medium',
       title: 'Checkout',
           preconditions: 'Signed in',
 
@@ -92,6 +77,7 @@ describe('Test Scenario structured payload helpers', () => {
     });
     expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout' })).toEqual({
       projectId: 'project-1',
+      priority: 'medium',
       title: 'Checkout',
     });
     expect(serializeInitialSteps(steps)).toEqual([
@@ -118,13 +104,13 @@ describe('Test Scenario structured payload helpers', () => {
   it('creates trimmed metadata, omits empty metadata and never serializes obsolete fields', () => {
     const values = { title: 'Checkout', priority: 'high' as const, relatedIssueUrl: ' https://example.test/TP-20 ', objective: 'obsolete', notes: 'obsolete', expectedResult: 'obsolete' };
     expect(getTestScenarioCreatePayload('project-1', values)).toEqual({ projectId: 'project-1', title: 'Checkout', priority: 'high', relatedIssueUrl: 'https://example.test/TP-20' });
-    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', priority: '', relatedIssueUrl: ' ' })).toEqual({ projectId: 'project-1', title: 'Checkout' });
+    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', priority: '', relatedIssueUrl: ' ' })).toEqual({ projectId: 'project-1', title: 'Checkout', priority: 'medium' });
   });
 
   it('preserves omitted metadata, clears explicitly empty metadata and skips unchanged values', () => {
     const saved = { title: 'Checkout', priority: 'high' as const, relatedIssueUrl: 'https://example.test/TP-20' };
     expect(getTestScenarioPatchPayload({ title: 'Checkout' }, saved)).toBeNull();
-    expect(getTestScenarioPatchPayload({ ...saved, priority: '', relatedIssueUrl: '' }, saved)).toEqual({ priority: null, relatedIssueUrl: null });
+    expect(getTestScenarioPatchPayload({ ...saved, priority: '', relatedIssueUrl: '' }, saved)).toEqual({ priority: 'medium', relatedIssueUrl: null });
     expect(getTestScenarioPatchPayload({ ...saved, relatedIssueUrl: ' https://example.test/TP-20 ' }, saved)).toBeNull();
   });
 
@@ -135,4 +121,13 @@ describe('Test Scenario structured payload helpers', () => {
     }
   });
 
+});
+
+describe('folder-aware scenario return path', () => {
+  it('encodes folder/project scope and uses Unfiled or removed-folder fallback', async () => {
+    const { getScenarioFolderReturnPath } = await import('@/components/test-scenarios/utils');
+    expect(getScenarioFolderReturnPath('p', 'f', [{ id: 'f' }])).toBe('/test-scenarios?projectId=p&folderId=f');
+    expect(getScenarioFolderReturnPath('p', null, [])).toBe('/test-scenarios?projectId=p&folderId=unfiled');
+    expect(getScenarioFolderReturnPath('p', 'removed', [])).toBe('/test-scenarios?projectId=p');
+  });
 });

@@ -48,8 +48,41 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
 });
 vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
-  const foldersQuery = vi.fn(() => ({ currentData: [{ id: 'folder-a', projectId: 'project-1', parentId: null, name: 'Authentication', position: 0, createdAt: '', updatedAt: '', scenarioCount: 3, _count: { scenarios: 3 }, children: [] }], isLoading: false, error: undefined }));
-  const suitesQuery = vi.fn(() => ({ currentData: [{ id: 'suite-a', projectId: 'project-1', name: 'Regression', description: null, purpose: null, release: 'R1', createdAt: '', updatedAt: '', members: [] }], isLoading: false, error: undefined }));
+  const foldersQuery = vi.fn(() => ({
+    currentData: [
+      {
+        id: 'folder-a',
+        projectId: 'project-1',
+        parentId: null,
+        name: 'Authentication',
+        position: 0,
+        createdAt: '',
+        updatedAt: '',
+        scenarioCount: 3,
+        _count: { scenarios: 3 },
+        children: [],
+      },
+    ],
+    isLoading: false,
+    error: undefined,
+  }));
+  const suitesQuery = vi.fn(() => ({
+    currentData: [
+      {
+        id: 'suite-a',
+        projectId: 'project-1',
+        name: 'Regression',
+        description: null,
+        purpose: null,
+        release: 'R1',
+        createdAt: '',
+        updatedAt: '',
+        members: [],
+      },
+    ],
+    isLoading: false,
+    error: undefined,
+  }));
   const mutation = vi.fn(() => [vi.fn(() => ({ unwrap: () => Promise.resolve({}) })), { isLoading: false }]);
   return {
     ...actual,
@@ -80,7 +113,7 @@ const createResponse = (page: number) => ({
       folderId: null,
       folderName: null,
       createdById: 'user-1',
-      scenarioKey: null,
+      scenarioKey: 'TMS-1',
       title: `Scenario page ${page}`,
       details: `Details page ${page}`,
       createdBy: { id: 'user-1', name: 'Ada Lovelace', email: 'ada@example.com' },
@@ -126,6 +159,26 @@ describe('TestScenarioCatalogContainer', () => {
     expect(screen.getByText('Scenario page 1')).toBeInTheDocument();
   });
 
+  it.each([
+    ['unfiled', { folderId: 'unfiled' }],
+    ['folder-a', { folderId: 'folder-a', includeDescendants: true }],
+    ['removed-folder', {}],
+  ])('restores catalog folder scope %s from a direct-entry URL', async (folderId, expected) => {
+    render(
+      <ChakraProvider>
+        <MemoryRouter initialEntries={[`/test-scenarios?projectId=project-1&folderId=${folderId}`]}>
+          <TestScenarioCatalogContainer projectId="project-1" />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
+    await waitFor(() =>
+      expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
+        { projectId: 'project-1', page: 1, limit: 10, ...expected },
+        { skip: false },
+      ),
+    );
+  });
+
   it('requests the selected page for the same project and limit', async () => {
     const user = userEvent.setup();
 
@@ -139,7 +192,10 @@ describe('TestScenarioCatalogContainer', () => {
 
     await user.click(screen.getByRole('button', { name: /^2$/ }));
 
-    expect(mockedScenarioQuery).toHaveBeenLastCalledWith({ projectId: 'project-1', page: 2, limit: 10 }, { skip: false });
+    expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
+      { projectId: 'project-1', page: 2, limit: 10 },
+      { skip: false },
+    );
     expect(screen.getByText('Scenario page 2')).toBeInTheDocument();
     expect(screen.queryByText('# Scenario page 2')).not.toBeInTheDocument();
   });
@@ -172,13 +228,24 @@ describe('TestScenarioCatalogContainer', () => {
 
     await user.click(screen.getByRole('button', { name: /Authentication 3/ }));
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
-      projectId: 'project-1', page: 1, limit: 10, folderId: 'folder-a', includeDescendants: true,
+      projectId: 'project-1',
+      page: 1,
+      limit: 10,
+      folderId: 'folder-a',
+      includeDescendants: true,
     });
 
     await user.type(screen.getByRole('textbox', { name: 'Search scenarios' }), 'login');
-    await waitFor(() => expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
-      projectId: 'project-1', page: 1, limit: 10, folderId: 'folder-a', includeDescendants: true, search: 'login',
-    }));
+    await waitFor(() =>
+      expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
+        projectId: 'project-1',
+        page: 1,
+        limit: 10,
+        folderId: 'folder-a',
+        includeDescendants: true,
+        search: 'login',
+      }),
+    );
   });
 
   it('keeps a selected sort while applying a debounced filter from another column', async () => {
@@ -198,9 +265,17 @@ describe('TestScenarioCatalogContainer', () => {
     await user.click(screen.getByRole('button', { name: 'Filter by Created by' }));
     await user.type(screen.getByRole('textbox', { name: 'Created by filter' }), 'Ada');
 
-    await waitFor(() => expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
-      projectId: 'project-1', page: 1, limit: 10, sortField: 'title', sortDirection: 'asc', folder: 'Auth', createdBy: 'Ada',
-    }));
+    await waitFor(() =>
+      expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
+        projectId: 'project-1',
+        page: 1,
+        limit: 10,
+        sortField: 'title',
+        sortDirection: 'asc',
+        folder: 'Auth',
+        createdBy: 'Ada',
+      }),
+    );
     await user.click(screen.getByRole('button', { name: 'Folder: Auth' }));
     await waitFor(() => {
       const latestArgs = mockedScenarioQuery.mock.calls.at(-1)?.[0];
@@ -221,7 +296,10 @@ describe('TestScenarioCatalogContainer', () => {
 
     await user.click(screen.getByRole('button', { name: 'Unfiled' }));
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
-      projectId: 'project-1', page: 1, limit: 10, folderId: 'unfiled',
+      projectId: 'project-1',
+      page: 1,
+      limit: 10,
+      folderId: 'unfiled',
     });
   });
 
@@ -237,7 +315,10 @@ describe('TestScenarioCatalogContainer', () => {
 
     await user.click(screen.getByRole('button', { name: /Regression 0/ }));
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
-      projectId: 'project-1', page: 1, limit: 10, suiteId: 'suite-a',
+      projectId: 'project-1',
+      page: 1,
+      limit: 10,
+      suiteId: 'suite-a',
     });
   });
 });

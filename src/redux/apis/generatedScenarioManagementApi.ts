@@ -447,7 +447,7 @@ export type TestScenarioSummary = {
   projectId: string;
   createdById: string;
   title: string;
-  scenarioKey: string | null;
+  scenarioKey: string;
   details: string | null;
   createdBy: TestScenarioCreatorSummary;
   createdAt: string;

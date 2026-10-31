@@ -1,340 +1,181 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
-
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TestScenarioEditContainer } from '@/components/test-scenarios/containers/TestScenarioEditContainer';
-import { ChakraProvider, toaster } from '@/components/ui';
-import {
-  useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
-  useGetApiV2TestScenariosByScenarioIdQuery,
-  usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation,
-  usePostApiV2TestScenariosByScenarioIdStepsMutation,
-  usePutApiV2TestScenariosByScenarioIdStepsOrderMutation,
-} from '@/redux/apis/generatedApi';
-import { usePatchApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
-
-const navigate = vi.fn();
-const updateScenario = vi.fn();
-const getScenario = vi.fn();
-const appendStep = vi.fn();
-const updateStep = vi.fn();
-const deleteStep = vi.fn();
-const reorderSteps = vi.fn();
-const refetch = vi.fn();
-
-vi.mock('react-router', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router')>();
-
-  return { ...actual, useNavigate: () => navigate };
-});
-vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/redux/apis/generatedApi')>();
-
-  return {
-    ...actual,
-    useGetApiV2TestScenariosByScenarioIdQuery: vi.fn(),
-    usePostApiV2TestScenariosByScenarioIdStepsMutation: vi.fn(),
-    usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation: vi.fn(),
-    useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation: vi.fn(),
-    usePutApiV2TestScenariosByScenarioIdStepsOrderMutation: vi.fn(),
-  };
-});
-vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
-  return {
-    ...actual,
-    usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn(),
-    useGetApiV2TestScenarioFoldersQuery: vi.fn(() => ({ currentData: [{ id: 'folder-42', name: 'Authentication' }] })),
-  };
-});
-
-const mockedGetScenario = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
-const mockedUpdateMutation = vi.mocked(usePatchApiV2TestScenariosByScenarioIdMutation);
-const mockedAppendMutation = vi.mocked(usePostApiV2TestScenariosByScenarioIdStepsMutation);
-const mockedStepUpdateMutation = vi.mocked(usePatchApiV2TestScenariosByScenarioIdStepsAndStepIdMutation);
-const mockedDeleteMutation = vi.mocked(useDeleteApiV2TestScenariosByScenarioIdStepsAndStepIdMutation);
-const mockedReorderMutation = vi.mocked(usePutApiV2TestScenariosByScenarioIdStepsOrderMutation);
-
-const scenario = (overrides: Record<string, unknown> = {}) => ({
+import { ChakraProvider } from '@/components/ui';
+import type { TestScenario } from '@/redux/apis/generatedApi';
+const { navigate, updateScenario, refetch, state } = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  updateScenario: vi.fn(),
+  refetch: vi.fn(),
+  state: { scenario: undefined as unknown },
+}));
+vi.mock('react-router', async (original) => ({
+  ...(await original<typeof import('react-router')>()),
+  useNavigate: () => navigate,
+}));
+vi.mock('@/components/test-scenarios/hooks/useTestScenarioDetail', () => ({
+  useTestScenarioDetail: () => ({
+    scenario: state.scenario,
+    refetch,
+    setPersistedScenario: vi.fn(),
+    isLoading: false,
+    isUnavailable: false,
+    isError: false,
+  }),
+}));
+vi.mock('@/redux/apis/extendedApi', async (original) => ({
+  ...(await original<typeof import('@/redux/apis/extendedApi')>()),
+  usePatchApiV2TestScenariosByScenarioIdMutation: () => [updateScenario, { isLoading: false }],
+  useGetApiV2TestScenarioFoldersQuery: () => ({ currentData: [{ id: 'folder-1', name: 'Authentication' }] }),
+  useGetApiV2TestSuitesQuery: () => ({ currentData: [{ id: 'suite-1', name: 'Regression', members: [] }] }),
+}));
+const scenario = (): TestScenario => ({
   id: 'scenario-1',
   projectId: 'project-1',
   folderId: null,
   createdById: 'user-1',
-  scenarioKey: 'AUTH-1',
-  title: 'Checkout flow',
-  details: 'Scenario details',
-  priority: 'high',
-  relatedIssueUrl: 'https://example.test/TP-20',
-  preconditions: 'Signed in',
-  testData: 'Account 1',
-
+  revision: 3,
+  createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' },
+  updatedBy: null,
+  suites: [{ id: 'suite-1', name: 'Regression' }],
+  scenarioKey: 'TMS-1',
+  title: 'Saved',
+  details: 'Details',
+  preconditions: null,
+  testData: null,
+  relatedIssueUrl: 'https://example.test/TP-1',
+  priority: 'medium',
   steps: [
-    { id: 'step-1', position: 1, action: 'Open checkout', expectedResult: 'Form is shown' },
+    { id: 'step-1', position: 0, action: 'Open', expectedResult: 'Ready' },
+    { id: 'step-2', position: 1, action: 'Submit', expectedResult: null },
   ],
-  contentMd: '# Checkout flow\n\nGenerated preview',
-  contentMdHash: 'hash-1',
+  contentMd: '',
+  contentMdHash: '',
   contentMdFormatVersion: 1,
-  createdAt: '2026-09-01T10:00:00.000Z',
-  updatedAt: '2026-09-02T11:00:00.000Z',
-  ...overrides,
+  createdAt: '2026-10-01T10:00:00Z',
+  updatedAt: '2026-10-02T10:00:00Z',
 });
-
-const renderContainer = () =>
+const setup = () =>
   render(
     <ChakraProvider>
       <TestScenarioEditContainer projectId="project-1" scenarioId="scenario-1" />
     </ChakraProvider>,
   );
-
+const change = (name: string, value: string) =>
+  fireEvent.change(screen.getByRole('textbox', { name }), { target: { value } });
+const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+beforeEach(() => {
+  state.scenario = scenario();
+  updateScenario.mockReset();
+  navigate.mockReset();
+  refetch.mockReset();
+});
 describe('TestScenarioEditContainer', () => {
-  beforeEach(() => {
-    navigate.mockReset();
-    getScenario.mockReset();
-    updateScenario.mockReset();
-    appendStep.mockReset();
-    updateStep.mockReset();
-    deleteStep.mockReset();
-    reorderSteps.mockReset();
-    refetch.mockReset();
-    vi.spyOn(toaster, 'create').mockClear();
-    const persisted = scenario();
-    mockedGetScenario.mockReturnValue({
-      data: persisted,
-      currentData: persisted,
-      isLoading: false,
-      isFetching: false,
-      error: undefined,
-      refetch,
-    } as never);
-    mockedUpdateMutation.mockReturnValue([updateScenario, { isLoading: false }] as never);
-    mockedAppendMutation.mockReturnValue([appendStep, { isLoading: false }] as never);
-    mockedStepUpdateMutation.mockReturnValue([updateStep, { isLoading: false }] as never);
-    mockedDeleteMutation.mockReturnValue([deleteStep, { isLoading: false }] as never);
-    mockedReorderMutation.mockReturnValue([reorderSteps, { isLoading: false }] as never);
-  });
-
-  it.each(['https:example.test/TP-20', 'https:/example.test/TP-20'])('rejects malformed absolute issue URL %s before mutation', async (relatedIssueUrl) => {
-    const user = userEvent.setup();
-    renderContainer();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'Scenario' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Related issue URL' }), { target: { value: relatedIssueUrl } });
-    await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
-    expect(await screen.findByText('Enter an absolute HTTP(S) URL')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Related issue URL' })).toHaveValue(relatedIssueUrl);
+  it('keeps steps local, then saves one revision-checked aggregate and adopts IDs and clean baseline', async () => {
+    const returned = {
+      ...scenario(),
+      title: 'Changed',
+      revision: 4,
+      steps: [scenario().steps[1], { ...scenario().steps[0], expectedResult: null }],
+    };
+    updateScenario.mockReturnValue({ unwrap: () => Promise.resolve(returned) });
+    setup();
+    change('Title', ' Changed ');
+    change('Step 1 expected result', '');
+    const handle = screen.getByRole('button', { name: 'Reorder step 2' });
+    fireEvent.keyDown(handle, { key: ' ' });
+    fireEvent.keyDown(handle, { key: 'ArrowUp' });
     expect(updateScenario).not.toHaveBeenCalled();
-  });
-
-  it('requests both identities, initializes all structured fields and does not display Markdown', () => {
-    renderContainer();
-
-    expect(mockedGetScenario).toHaveBeenCalledWith({ scenarioId: 'scenario-1', projectId: 'project-1' });
-    expect(screen.getByRole('textbox', { name: 'Scenario key (optional)' })).toHaveValue('AUTH-1');
-    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Checkout flow');
-    expect(screen.getByRole('combobox', { name: 'Priority' })).toHaveValue('high');
-    expect(screen.getByRole('textbox', { name: 'Step 1 action' })).toHaveValue('Open checkout');
-    expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
-    expect(screen.queryByRole('textbox', { name: 'Markdown' })).not.toBeInTheDocument();
-  });
-
-  it.each([
-    ['title', () => fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'Updated title' } }), { title: 'Updated title' }],
-    ['details', () => fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: '  Updated details  ' } }), { details: 'Updated details' }],
-    ['related issue URL', () => fireEvent.change(screen.getByRole('textbox', { name: 'Related issue URL' }), { target: { value: ' https://example.test/updated ' } }), { relatedIssueUrl: 'https://example.test/updated' }],
-    ['priority', () => fireEvent.change(screen.getByRole('combobox', { name: 'Priority' }), { target: { value: 'low' } }), { priority: 'low' }],
-    ['cleared priority', () => fireEvent.change(screen.getByRole('combobox', { name: 'Priority' }), { target: { value: '' } }), { priority: null }],
-    ['cleared issue URL', () => fireEvent.change(screen.getByRole('textbox', { name: 'Related issue URL' }), { target: { value: '' } }), { relatedIssueUrl: null }],
-    ['cleared details', () => fireEvent.change(screen.getByRole('textbox', { name: 'Details' }), { target: { value: ' \n\t ' } }), { details: null }],
-    ['cleared scenario key', () => fireEvent.change(screen.getByRole('textbox', { name: 'Scenario key (optional)' }), { target: { value: '  ' } }), { scenarioKey: null }],
-  ])('sends only the normalized %s PATCH field', async (_name, change, expected) => {
-    const user = userEvent.setup();
-    updateScenario.mockReturnValue({ unwrap: () => Promise.resolve({ ...scenario(), ...expected }) });
-
-    renderContainer();
-    change();
-    await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
-
-    await waitFor(() => expect(updateScenario).toHaveBeenCalledTimes(1));
+    save();
+    await waitFor(() => expect(updateScenario).toHaveBeenCalledOnce());
     expect(updateScenario).toHaveBeenCalledWith({
-      scenarioId: 'scenario-1',
       projectId: 'project-1',
-      updateTestScenarioRequest: expected,
+      scenarioId: 'scenario-1',
+      updateTestScenarioRequest: {
+        title: 'Changed',
+        expectedRevision: 3,
+        suiteIds: ['suite-1'],
+        newSuites: [],
+        steps: [
+          { id: 'step-2', action: 'Submit', expectedResult: null },
+          { id: 'step-1', action: 'Open', expectedResult: null },
+        ],
+      },
     });
+    await screen.findByText('Test Scenario saved successfully.');
+    save();
+    await screen.findByText('No changes to save.');
+    expect(updateScenario).toHaveBeenCalledOnce();
+    expect(navigate).not.toHaveBeenCalled();
   });
-
-  it('adopts normalized returned field values as the saved baseline', async () => {
-    const user = userEvent.setup();
-    const response = scenario({ title: 'Normalized title', contentMd: '# Normalized title' });
-    updateScenario.mockReturnValue({ unwrap: () => Promise.resolve(response) });
-
-    renderContainer();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: '  Normalized title  ' } });
-    await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
-
-    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Normalized title'));
-    await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
-
-    expect(updateScenario).toHaveBeenCalledTimes(1);
-    expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
-  });
-
-  it('does not call PATCH for an unchanged save', async () => {
-    const user = userEvent.setup();
-    renderContainer();
-
-    await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
-
+  it('does not write when unchanged and displays honest history', async () => {
+    setup();
+    expect(screen.getByText('TMS-1')).toBeInTheDocument();
+    expect(screen.getByText('Creator')).toBeInTheDocument();
+    expect(screen.getByText('Unknown')).toBeInTheDocument();
+    save();
+    await screen.findByText('No changes to save.');
     expect(updateScenario).not.toHaveBeenCalled();
-    expect(screen.getByRole('status')).toHaveTextContent('No changes to save.');
   });
-
-  it('sends folder assignment while preserving unchanged scenario fields', async () => {
-    const user = userEvent.setup();
-    updateScenario.mockReturnValue({ unwrap: () => Promise.resolve(scenario({ folderId: 'folder-42' })) });
-
-    renderContainer();
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Scenario folder' }), 'folder-42');
-    await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
-
-    await waitFor(() => expect(updateScenario).toHaveBeenCalledWith({
-      scenarioId: 'scenario-1',
-      projectId: 'project-1',
-      updateTestScenarioRequest: { folderId: 'folder-42' },
-    }));
+  it('rejects clearing a retained action rather than filtering it away', async () => {
+    setup();
+    change('Step 1 action', '');
+    change('Step 1 expected result', '');
+    save();
+    await screen.findByText('Step action is required');
+    expect(updateScenario).not.toHaveBeenCalled();
   });
-
-  it('retains unrelated dirty fields after a successful step save', async () => {
-    const user = userEvent.setup();
-    appendStep.mockReturnValue({
-      unwrap: () => Promise.resolve(scenario({ contentMd: '# Step-generated preview' })),
-    });
-
-    renderContainer();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Test data' }), { target: { value: 'Unsaved note' } });
-    await user.type(screen.getByRole('textbox', { name: 'New step action' }), 'Append this step');
-    await user.click(screen.getByRole('button', { name: 'Add step' }));
-
-    await waitFor(() => expect(appendStep).toHaveBeenCalledTimes(1));
-    expect(screen.getByRole('textbox', { name: 'Test data' })).toHaveValue('Unsaved note');
-    expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
+  it('preserves dirty fields, removed steps and pending suites on 409 and failed reload', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    updateScenario.mockReturnValue({ unwrap: () => Promise.reject({ status: 409 }) });
+    refetch.mockResolvedValue({ error: { status: 500 } });
+    setup();
+    change('Title', 'Local draft');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove step 2' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select suites' }));
+    change('Search or create suite', 'Pending');
+    fireEvent.click(screen.getByRole('button', { name: 'Create “Pending”' }));
+    save();
+    await screen.findByText(/The saved scenario or suite membership changed/);
+    expect(screen.getByText('Pending (new)')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Steps 1' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reload saved scenario' }));
+    await screen.findByText('Reload failed. Your draft is preserved. Please try again.');
+    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Local draft');
+    expect(screen.getByText('Pending (new)')).toBeInTheDocument();
+    expect(updateScenario).toHaveBeenCalledOnce();
   });
-
-  it('retains field drafts after a failed save', async () => {
-    const user = userEvent.setup();
-    updateScenario.mockReturnValue({ unwrap: () => Promise.reject({ status: 500, data: { error: 'Save failed' } }) });
-
-    renderContainer();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Title' }), { target: { value: 'Unsaved title' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Test data' }), { target: { value: 'Unsaved note' } });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Scenario key (optional)' }), { target: { value: 'Unsaved key' } });
-    await user.click(screen.getByRole('button', { name: 'Save Test Scenario' }));
-
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Save failed'));
-    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Unsaved title');
-    expect(screen.getByRole('textbox', { name: 'Test data' })).toHaveValue('Unsaved note');
-    expect(screen.getByRole('textbox', { name: 'Scenario key (optional)' })).toHaveValue('Unsaved key');
+  it('reloads only after confirmation and preserves input when discard is declined', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    updateScenario.mockReturnValue({ unwrap: () => Promise.reject({ status: 409 }) });
+    refetch.mockResolvedValue({ data: { ...scenario(), title: 'Remote', revision: 4 } });
+    setup();
+    change('Title', 'Local');
+    save();
+    await screen.findByText(/The saved scenario or suite membership changed/);
+    fireEvent.click(screen.getByRole('button', { name: 'Reload saved scenario' }));
+    expect(refetch).not.toHaveBeenCalled();
+    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Local');
+    confirm.mockReturnValue(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Reload saved scenario' }));
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Remote'));
   });
-
-  it('appends a step with only structured step fields and adopts the returned scenario', async () => {
-    const user = userEvent.setup();
-    const response = scenario({
-      steps: [
-        { id: 'step-1', position: 1, action: 'Open checkout', expectedResult: 'Form is shown' },
-        { id: 'step-2', position: 2, action: 'Submit order', expectedResult: null },
-      ],
-      contentMd: '# Updated preview',
-    });
-    appendStep.mockReturnValue({ unwrap: () => Promise.resolve(response) });
-
-    renderContainer();
-    await user.type(screen.getByRole('textbox', { name: 'New step action' }), '  Submit order  ');
-    await user.click(screen.getByRole('button', { name: 'Add step' }));
-
-    await waitFor(() => expect(appendStep).toHaveBeenCalledWith({
-      scenarioId: 'scenario-1',
-      projectId: 'project-1',
-      appendTestScenarioStepRequest: { action: 'Submit order' },
-    }));
-    expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
-  });
-
-  it('patches only changed step fields and supports null clearing', async () => {
-    const user = userEvent.setup();
-    updateStep.mockReturnValue({ unwrap: () => Promise.resolve(scenario({ steps: [{ id: 'step-1', position: 1, action: 'Open checkout', expectedResult: null }] })) });
-
-    renderContainer();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Step 1 expected result' }), { target: { value: '  ' } });
-    await user.click(screen.getByRole('button', { name: 'Save step 1' }));
-
-    await waitFor(() => expect(updateStep).toHaveBeenCalledWith({
-      scenarioId: 'scenario-1',
-      stepId: 'step-1',
-      projectId: 'project-1',
-      updateTestScenarioStepRequest: { expectedResult: null },
-    }));
-  });
-
-  it('does not call a step PATCH when the draft is unchanged', async () => {
-    const user = userEvent.setup();
-    renderContainer();
-
-    await user.click(screen.getByRole('button', { name: 'Save step 1' }));
-
-    expect(updateStep).not.toHaveBeenCalled();
-    expect(screen.getByRole('status')).toHaveTextContent('No changes to save for step 1.');
-  });
-
-  it('deletes a persisted step without a request body', async () => {
-    const user = userEvent.setup();
-    deleteStep.mockReturnValue({ unwrap: () => Promise.resolve(scenario({ steps: [] })) });
-
-    renderContainer();
-    await user.click(screen.getByRole('button', { name: 'Delete step 1' }));
-
-    await waitFor(() => expect(deleteStep).toHaveBeenCalledWith({
-      scenarioId: 'scenario-1',
-      stepId: 'step-1',
-      projectId: 'project-1',
-    }));
-    await waitFor(() => expect(screen.getByText('No saved steps yet.')).toBeInTheDocument());
-  });
-
-  it('reorders every backend step ID and adopts returned order', async () => {
-    const user = userEvent.setup();
-    const response = scenario({
-      steps: [
-        { id: 'step-2', position: 1, action: 'Submit order', expectedResult: null },
-        { id: 'step-1', position: 2, action: 'Open checkout', expectedResult: 'Form is shown' },
-      ],
-    });
-    reorderSteps.mockReturnValue({ unwrap: () => Promise.resolve(response) });
-
-    const twoStepScenario = scenario({
-      steps: [
-        { id: 'step-1', position: 1, action: 'Open checkout', expectedResult: 'Form is shown' },
-        { id: 'step-2', position: 2, action: 'Submit order', expectedResult: null },
-      ],
-    });
-    mockedGetScenario.mockReturnValue({
-      data: twoStepScenario,
-      currentData: twoStepScenario,
-      isLoading: false,
-      isFetching: false,
-      error: undefined,
-      refetch,
-    } as never);
-    renderContainer();
-
-    expect(screen.getByRole('button', { name: 'Move step 1 up' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Move step 2 down' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Move step 2 up' }));
-    await waitFor(() => expect(reorderSteps).toHaveBeenCalledWith({
-      scenarioId: 'scenario-1',
-      projectId: 'project-1',
-      reorderTestScenarioStepsRequest: { stepIds: ['step-2', 'step-1'] },
-    }));
-    expect(screen.getByRole('textbox', { name: 'Step 1 action' })).toHaveValue('Submit order');
+  it('ignores background refreshes while retaining baseline revision for conflict detection', async () => {
+    updateScenario.mockReturnValue({ unwrap: () => Promise.resolve({ ...scenario(), title: 'Local', revision: 4 }) });
+    const view = setup();
+    change('Title', 'Local');
+    state.scenario = { ...scenario(), title: 'Remote', revision: 9 };
+    view.rerender(
+      <ChakraProvider>
+        <TestScenarioEditContainer projectId="project-1" scenarioId="scenario-1" />
+      </ChakraProvider>,
+    );
+    expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Local');
+    save();
+    await waitFor(() => expect(updateScenario).toHaveBeenCalledOnce());
+    expect(updateScenario.mock.calls[0][0].updateTestScenarioRequest.expectedRevision).toBe(3);
   });
 });

@@ -1,147 +1,193 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
-
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { useNavigate } from 'react-router';
 
 import { toaster } from '@/components/ui';
-import { usePatchApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
-import { useGetApiV2TestScenarioFoldersQuery } from '@/redux/apis/extendedApi';
-import { type TestScenarioAuthoringFormData } from '@/schemas';
-import { PATHS } from '@/types/paths';
+import {
+  usePatchApiV2TestScenariosByScenarioIdMutation,
+  useGetApiV2TestScenarioFoldersQuery,
+  useGetApiV2TestSuitesQuery,
+} from '@/redux/apis/extendedApi';
+import type { TestScenario } from '@/redux/apis/generatedApi';
 import { extractApiError } from '@/utils/apiErrors';
 
-import { TestScenarioDetailStateView, TestScenarioForm, TestScenarioStepsEditor } from '../components';
+import { TestScenarioDetailStateView, TestScenarioForm } from '../components';
+import { ScenarioDraftNavigationGuard } from '../components/ScenarioDraftNavigationGuard';
 import { useTestScenarioDetail } from '../hooks/useTestScenarioDetail';
-import { flattenScenarioFolders, getTestScenarioEditableValues, getTestScenarioPatchPayload } from '../utils';
-import type { TestScenarioEditableField } from '../types';
+import {
+  flattenScenarioFolders,
+  getScenarioFolderReturnPath,
+  getTestScenarioEditableValues,
+  getTestScenarioPatchPayload,
+} from '../utils';
 
+type EditorScenario = TestScenario;
 export interface TestScenarioEditContainerProps {
   projectId: string;
   scenarioId: string;
 }
-
-export const TestScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEditContainerProps) => {
+const rows = (scenario: TestScenario) =>
+  scenario.steps.map((step) => ({
+    key: step.id,
+    id: step.id,
+    action: step.action,
+    expectedResult: step.expectedResult ?? '',
+  }));
+const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEditContainerProps) => {
   const navigate = useNavigate();
   const detail = useTestScenarioDetail(projectId, scenarioId);
   const { currentData: folders = [] } = useGetApiV2TestScenarioFoldersQuery({ projectId });
-  const [updateScenario, { isLoading: isMutationLoading }] = usePatchApiV2TestScenariosByScenarioIdMutation();
+  const { currentData: suites = [] } = useGetApiV2TestSuitesQuery({ projectId });
+  const [updateScenario, { isLoading }] = usePatchApiV2TestScenariosByScenarioIdMutation();
+  const [baseline, setBaseline] = useState<EditorScenario>();
   const [apiError, setApiError] = useState<string>();
   const [successMessage, setSuccessMessage] = useState<string>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [reconciliation, setReconciliation] = useState<{
-    token: number;
-    values: ReturnType<typeof getTestScenarioEditableValues>;
-    submittedFields: TestScenarioEditableField[];
-  }>();
-  const submitInFlight = useRef(false);
-  const mountedRef = useRef(true);
-  const latestScope = useRef(`${projectId}:${scenarioId}`);
-  const goToCatalog = useCallback(() => navigate(PATHS.TEST_SCENARIOS), [navigate]);
-
-  latestScope.current = `${projectId}:${scenarioId}`;
-  useEffect(() => () => {
-    mountedRef.current = false;
-  }, []);
-
-  const isCurrentScope = useCallback(
-    () => mountedRef.current && latestScope.current === `${projectId}:${scenarioId}`,
-    [projectId, scenarioId],
-  );
-
-  const handleSubmit = async (values: TestScenarioAuthoringFormData, _steps: unknown, folderId?: string | null) => {
-    if (submitInFlight.current || !detail.scenario) return;
-
-    const savedValues = getTestScenarioEditableValues(detail.scenario);
-    const structuredPayload = getTestScenarioPatchPayload(values, savedValues);
-    const payload = {
-      ...structuredPayload,
-      ...(folderId !== undefined && folderId !== detail.scenario.folderId ? { folderId } : {}),
+  const [dirty, setDirty] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [token, setToken] = useState(0);
+  const inFlight = useRef(false);
+  const mounted = useRef(true);
+  const scope = useRef(`${projectId}:${scenarioId}`);
+  scope.current = `${projectId}:${scenarioId}`;
+  const flatFolders = flattenScenarioFolders(folders);
+  const current = () => mounted.current && scope.current === `${projectId}:${scenarioId}`;
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
     };
-    setApiError(undefined);
-    setSuccessMessage(undefined);
-
-    if (Object.keys(payload).length === 0) {
+  }, []);
+  useEffect(() => {
+    if (detail.scenario && !baseline) setBaseline(detail.scenario);
+  }, [baseline, detail.scenario]);
+  const adopt = (scenario: EditorScenario) => {
+    setBaseline(scenario);
+    detail.setPersistedScenario(scenario);
+    setToken((value) => value + 1);
+    setDirty(false);
+  };
+  const handleSubmit: ComponentProps<typeof TestScenarioForm>['onSubmit'] = async (
+    values,
+    steps,
+    folderId,
+    collections,
+  ) => {
+    if (inFlight.current || !baseline) return;
+    const fields = getTestScenarioPatchPayload(values, getTestScenarioEditableValues(baseline));
+    const finalSteps = steps.map(({ id, action, expectedResult }) => ({
+      ...(id ? { id } : {}),
+      action: action.trim(),
+      expectedResult: expectedResult.trim() || null,
+    }));
+    const savedSteps = baseline.steps.map(({ id, action, expectedResult }) => ({ id, action, expectedResult }));
+    const suiteIds = collections?.suiteIds ?? [];
+    const newSuites = collections?.newSuites ?? [];
+    const folderChanged = folderId !== undefined && folderId !== baseline.folderId;
+    if (
+      !fields &&
+      !folderChanged &&
+      JSON.stringify(finalSteps) === JSON.stringify(savedSteps) &&
+      JSON.stringify([...suiteIds].sort()) === JSON.stringify((baseline.suites ?? []).map((s) => s.id).sort()) &&
+      !newSuites.length
+    ) {
       setSuccessMessage('No changes to save.');
       return;
     }
-
-    submitInFlight.current = true;
-    setIsSubmitting(true);
-
+    inFlight.current = true;
+    setSubmitting(true);
+    setApiError(undefined);
+    setSuccessMessage(undefined);
     try {
-      const response = await updateScenario({
-        scenarioId,
-        projectId,
-        updateTestScenarioRequest: payload,
-      }).unwrap();
-
-      if (!isCurrentScope()) return;
-      detail.setPersistedScenario(response);
-      setReconciliation({
-        token: Date.now(),
-        values: getTestScenarioEditableValues(response),
-        submittedFields: Object.keys(payload).filter((field): field is TestScenarioEditableField => field !== 'folderId') as TestScenarioEditableField[],
-      });
+      const request = {
+        ...fields,
+        ...(folderChanged ? { folderId } : {}),
+        expectedRevision: baseline.revision,
+        steps: finalSteps,
+        suiteIds,
+        newSuites,
+      };
+      const response = await updateScenario({ scenarioId, projectId, updateTestScenarioRequest: request }).unwrap();
+      if (!current()) return;
+      adopt(response);
       setSuccessMessage('Test Scenario saved successfully.');
       toaster.create({ title: 'Test Scenario saved successfully.', type: 'success' });
     } catch (error) {
-      if (!isCurrentScope()) return;
-      const message = extractApiError(error as FetchBaseQueryError | SerializedError);
-      setApiError(message);
-      toaster.create({ title: message, type: 'error' });
+      if (!current()) return;
+      setApiError(
+        (error as FetchBaseQueryError).status === 409
+          ? 'The saved scenario or suite membership changed. Your entire draft is preserved. Correct any suite name conflict, or reload the saved scenario to recover from a stale revision.'
+          : extractApiError(error as FetchBaseQueryError | SerializedError),
+      );
     } finally {
-      if (isCurrentScope()) {
-        submitInFlight.current = false;
-        setIsSubmitting(false);
+      if (current()) {
+        inFlight.current = false;
+        setSubmitting(false);
       }
     }
   };
-
-  const handleScenarioUpdated = useCallback(
-    (scenario: NonNullable<typeof detail.scenario>) => {
-      if (!isCurrentScope()) return;
-      detail.setPersistedScenario(scenario);
+  const reload = async () => {
+    if (inFlight.current || !window.confirm('Discard unsaved scenario changes and reload the saved scenario?')) return;
+    inFlight.current = true;
+    setSubmitting(true);
+    try {
+      const result = (await detail.refetch()) as { data?: EditorScenario; error?: unknown };
+      if (!current()) return;
+      if (result.error || !result.data) throw result.error ?? new Error('Reload failed');
+      adopt(result.data);
       setApiError(undefined);
       setSuccessMessage(undefined);
-    },
-    [detail, isCurrentScope],
-  );
-
+    } catch {
+      if (current()) setApiError('Reload failed. Your draft is preserved. Please try again.');
+    } finally {
+      if (current()) {
+        inFlight.current = false;
+        setSubmitting(false);
+      }
+    }
+  };
+  const scenario = baseline ?? (detail.scenario as EditorScenario | undefined);
   return (
-    <TestScenarioDetailStateView
-      scenario={detail.scenario}
-      isLoading={detail.isLoading}
-      isUnavailable={detail.isUnavailable}
-      isError={detail.isError}
-      onRetry={() => void detail.refetch()}
-      onBack={goToCatalog}
-    >
-      {(scenario) => (
-        <>
+    <>
+      <ScenarioDraftNavigationGuard dirty={dirty} />
+      <TestScenarioDetailStateView
+        scenario={scenario}
+        isLoading={detail.isLoading}
+        isUnavailable={detail.isUnavailable}
+        isError={detail.isError}
+        onRetry={() => void detail.refetch()}
+        onBack={() => navigate(getScenarioFolderReturnPath(projectId, scenario?.folderId ?? null, flatFolders))}
+      >
+        {(saved) => (
           <TestScenarioForm
+            key={`${projectId}:${scenarioId}`}
             mode="edit"
-            initialValues={scenario}
-            folders={flattenScenarioFolders(folders)}
-            initialFolderId={scenario.folderId}
-            reconciliation={reconciliation}
-            isSubmitting={isSubmitting || isMutationLoading}
+            initialValues={saved}
+            initialSteps={rows(saved)}
+            initialSuites={(saved as EditorScenario).suites ?? []}
+            suites={suites}
+            history={saved as EditorScenario}
+            folders={flatFolders}
+            initialFolderId={saved.folderId}
+            reconciliation={
+              token ? { token, values: getTestScenarioEditableValues(saved), submittedFields: [] } : undefined
+            }
+            isSubmitting={submitting || isLoading}
             apiError={apiError}
             successMessage={successMessage}
+            onDirtyChange={setDirty}
+            onReload={() => void reload()}
             onSubmit={handleSubmit}
-            onCancel={goToCatalog}
+            onCancel={(folderId) => navigate(getScenarioFolderReturnPath(projectId, folderId ?? null, flatFolders))}
           />
-          <TestScenarioStepsEditor
-            scenario={scenario}
-            projectId={projectId}
-            scenarioId={scenarioId}
-            onScenarioUpdated={handleScenarioUpdated}
-            onRefresh={async () => detail.refetch()}
-          />
-        </>
-      )}
-    </TestScenarioDetailStateView>
+        )}
+      </TestScenarioDetailStateView>
+    </>
   );
 };
+
+export const TestScenarioEditContainer = (props: TestScenarioEditContainerProps) => (
+  <ScopedScenarioEditContainer key={`${props.projectId}:${props.scenarioId}`} {...props} />
+);

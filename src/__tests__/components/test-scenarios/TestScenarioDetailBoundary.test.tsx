@@ -56,6 +56,7 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     ...actual,
     usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn(),
     useGetApiV2TestScenarioFoldersQuery: vi.fn(() => ({ currentData: [] })),
+    useGetApiV2TestSuitesQuery: vi.fn(() => ({ currentData: [] })),
     usePostApiV2TestScenariosByScenarioIdManualRunsMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
     useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery: vi.fn(() => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() })),
     usePostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
@@ -140,13 +141,13 @@ describe('Test Scenario route boundaries', () => {
     renderWithRouter(<TestScenarioEditBoundary />);
 
     expect(mockedDetailQuery).toHaveBeenLastCalledWith({ scenarioId: 'scenario-1', projectId: 'project-a' });
-    expect(screen.getByRole('textbox', { name: 'Related issue URL' })).toHaveValue('https://example.test/project-a');
+    expect(screen.getByRole('textbox', { name: 'Requirement or ticket' })).toHaveValue('https://example.test/project-a');
   });
 
   it('clears the edit form immediately and requests the new project scope after a project switch', () => {
     const { rerender } = renderWithRouter(<TestScenarioEditBoundary />);
 
-    expect(screen.getByRole('textbox', { name: 'Related issue URL' })).toHaveValue('https://example.test/project-a');
+    expect(screen.getByRole('textbox', { name: 'Requirement or ticket' })).toHaveValue('https://example.test/project-a');
 
     selectedProject.id = 'project-b';
     mockedDetailQuery.mockReturnValue({
