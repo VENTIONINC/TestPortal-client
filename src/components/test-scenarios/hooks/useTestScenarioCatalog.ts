@@ -14,7 +14,6 @@ import {
   usePatchApiV2TestSuitesBySuiteIdMutation,
   useDeleteApiV2TestSuitesBySuiteIdMutation,
   usePatchApiV2TestScenariosBulkFolderMutation,
-  usePostApiV2TestSuitesBySuiteIdMembersMutation,
   useDeleteApiV2TestSuitesBySuiteIdMembersMutation,
   usePutApiV2TestSuitesBySuiteIdMembersOrderMutation,
 } from '@/redux/apis/extendedApi';
@@ -57,6 +56,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const selectionRevision = useRef(0);
+  const suiteSelectionRevision = useRef<number | null>(null);
   const [resolveSelectionRequest] = useLazyGetApiV2TestScenariosSelectionQuery();
   const [isResolvingSelection, setIsResolvingSelection] = useState(false);
   const [selectionError, setSelectionError] = useState<string | null>(null);
@@ -65,7 +65,6 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [isExecutingOperation, setIsExecutingOperation] = useState(false);
   const [moveScenarios] = usePatchApiV2TestScenariosBulkFolderMutation();
   const [deleteScenario] = useDeleteApiV2TestScenariosByScenarioIdMutation();
-  const [addSuiteMembers] = usePostApiV2TestSuitesBySuiteIdMembersMutation();
   const [removeSuiteMembers] = useDeleteApiV2TestSuitesBySuiteIdMembersMutation();
   const [reorderSuiteMembers] = usePutApiV2TestSuitesBySuiteIdMembersOrderMutation();
   const [createFolderRequest] = usePostApiV2TestScenarioFoldersMutation();
@@ -352,20 +351,17 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     (folderId: string | null) => moveScenarioIds(selectedIds, folderId),
     [moveScenarioIds, selectedIds],
   );
-  const addSelectedToSuite = useCallback(
-    async (suiteId: string): Promise<ScenarioOperationReport> => {
-      return runOperation(async () => {
-        const ids = [...selectedIds];
-        const revision = selectionRevision.current;
-        const report = await executeScenarioOperation(ids, (scenarioIds) =>
-          addSuiteMembers({ suiteId, body: { projectId, scenarioIds } }).unwrap(),
-        );
-        reconcileOperation(report, revision);
-        return report;
-      });
-    },
-    [addSuiteMembers, projectId, reconcileOperation, runOperation, selectedIds],
-  );
+  const startSuiteOperation = useCallback(() => {
+    suiteSelectionRevision.current = selectionRevision.current;
+  }, []);
+  const reconcileSuiteOperation = useCallback((report: ScenarioOperationReport, selection: string[]) => {
+    if (suiteSelectionRevision.current !== selectionRevision.current) return;
+    setSelectedIds((current) => {
+      if (current.length !== selection.length || current.some((id, index) => id !== selection[index])) return current;
+      return current.filter((id) => !report.succeededIds.includes(id));
+    });
+    setAllMatchingSelected(false);
+  }, []);
   const deleteSelected = useCallback(
     async (idsToDelete: string[]): Promise<ScenarioOperationReport> => {
       return runOperation(async () => {
@@ -494,7 +490,8 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     moveSelected,
     moveScenarioIds,
     deleteSelected,
-    addSelectedToSuite,
+    startSuiteOperation,
+    reconcileSuiteOperation,
     removeSelectedFromSuite,
     reorderSuite,
     createFolder,

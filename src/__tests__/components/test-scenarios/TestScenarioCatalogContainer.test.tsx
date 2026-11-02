@@ -381,6 +381,15 @@ describe('TestScenarioCatalogContainer', () => {
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({ page: 2 });
   });
 
+  it('does not reconcile a suite operation into a changed selection', () => {
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    act(() => result.current.toggleSelected('scenario-1'));
+    act(() => result.current.startSuiteOperation());
+    act(() => result.current.toggleSelected('scenario-2'));
+    act(() => result.current.reconcileSuiteOperation({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [] }, ['scenario-1']));
+    expect(result.current.selectedIds).toEqual(['scenario-1', 'scenario-2']);
+  });
+
   it('locks selection and duplicate operations while a batch is pending', async () => {
     let finishRequest: (() => void) | undefined;
     const moveTrigger = vi.fn(() => ({

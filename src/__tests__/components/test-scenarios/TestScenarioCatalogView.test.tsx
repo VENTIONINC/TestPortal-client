@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState, type ReactNode } from 'react';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -21,6 +21,12 @@ vi.mock('@/components/ui', async (importOriginal) => {
     Tooltip: ({ children }: { children: ReactNode }) => children,
   };
 });
+
+vi.mock('@/components/test-scenarios/components/SuitePicker', () => ({
+  SuitePicker: ({ onComplete, selectedIds }: { onComplete: (report: { succeededIds: string[]; failedIds: string[]; unattemptedIds: string[]; uncertainIds: string[] }, ids: string[]) => void; selectedIds: string[] }) => (
+    <button onClick={() => onComplete({ succeededIds: selectedIds, failedIds: [], unattemptedIds: [], uncertainIds: [] }, selectedIds)}>Add to suite</button>
+  ),
+}));
 
 vi.mock('@/components/test-scenarios/hooks/useTestScenarioContextMenu', () => ({
   useTestScenarioContextMenu: () => vi.fn(),
@@ -51,6 +57,7 @@ const pagination = {
 };
 
 const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination' | 'isLoading' | 'onPageChange'> = {
+  projectId: 'project-1',
   search: '',
   projectScenarioCount: 1,
   unfiledScenarioCount: 0,
@@ -84,7 +91,8 @@ const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination
   toggleSelected: vi.fn(),
   onMoveSelected: vi.fn(async () => ({ succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] })),
   onMoveScenarioIds: vi.fn(async () => ({ succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] })),
-  onAddSelectedToSuite: vi.fn(async () => ({ succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] })),
+  onSuiteOperationStart: vi.fn(),
+  onSuiteOperationComplete: vi.fn(),
   onDeleteSelected: vi.fn(async () => ({ succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] })),
   onRemoveSelectedFromSuite: vi.fn(async () => ({
     succeededIds: [],
@@ -548,12 +556,7 @@ describe('TestScenarioCatalogView', () => {
 
   it('confirms suite membership changes and submits the ordered member UUID list', async () => {
     const user = userEvent.setup();
-    const onAddSelectedToSuite = vi.fn(async () => ({
-      succeededIds: [],
-      failedIds: [],
-      unattemptedIds: [],
-      uncertainIds: [],
-    }));
+    const onSuiteOperationComplete = vi.fn();
     const onReorderSuite = vi.fn(async () => {});
     const members = [
       { suiteId: 'suite-1', testScenarioId: 'scenario-1', position: 0, createdAt: '' },
@@ -564,7 +567,7 @@ describe('TestScenarioCatalogView', () => {
       suites: [{ id: 'suite-1', name: 'Regression', description: null, purpose: null, release: null, members }],
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
-      onAddSelectedToSuite,
+      onSuiteOperationComplete,
       onReorderSuite,
     });
     await user.click(screen.getByRole('button', { name: 'Manage suite order (2)' }));
@@ -572,9 +575,7 @@ describe('TestScenarioCatalogView', () => {
     expect(onReorderSuite).toHaveBeenCalledWith('suite-1', ['scenario-2', 'scenario-1']);
 
     await user.click(screen.getByRole('button', { name: 'Add to suite' }));
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Suite' }), 'suite-1');
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add to suite' }));
-    expect(onAddSelectedToSuite).toHaveBeenCalledWith('suite-1');
+    expect(onSuiteOperationComplete).toHaveBeenCalledWith(expect.objectContaining({ succeededIds: ['scenario-1'] }), ['scenario-1']);
   });
 
   it('hides the bulk Move menu in suite scope while retaining membership actions', () => {
