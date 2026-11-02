@@ -1,3 +1,4 @@
+import userEvent from '@testing-library/user-event';
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -37,13 +38,13 @@ describe('ScenarioDraftNavigationGuard', () => {
   it('keeps a pending suite draft when route departure is declined and discards on confirmation', async () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     const router = setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Select suites' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Search or create suite' }), { target: { value: 'Pending' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create “Pending”' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Select suites' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Find or create a suite' }), { target: { value: 'Pending' } });
+    await userEvent.click(screen.getByRole('button', { name: 'Create suite “Pending”' }));
     fireEvent.click(screen.getByRole('link', { name: 'Other page' }));
     await waitFor(() => expect(confirm).toHaveBeenCalledOnce());
     expect(router.state.location.pathname).toBe('/');
-    expect(screen.getByText('Pending (new)')).toBeInTheDocument();
+    expect(screen.getByText('Pending')).toBeInTheDocument();
     confirm.mockReturnValue(true);
     fireEvent.click(screen.getByRole('link', { name: 'Other page' }));
     await screen.findByText('Destination');

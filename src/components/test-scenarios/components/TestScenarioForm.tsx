@@ -10,6 +10,7 @@ import { FiArrowLeft, FiFolder, FiLink, FiMenu, FiPlus, FiX } from 'react-icons/
 import { Input, NativeSelect, Textarea } from '@/components/ui';
 import { testScenarioAuthoringSchema, type TestScenarioAuthoringFormData } from '@/schemas';
 
+import { SuitePicker } from './SuitePicker';
 import type { TestScenarioEditableField, TestScenarioEditableValues, TestScenarioInitialStepDraft } from '../types';
 
 export type TestScenarioFormMode = 'create' | 'edit';
@@ -98,9 +99,6 @@ export const TestScenarioForm = ({
   const [steps, setSteps] = useState(() => (initialSteps.length ? initialSteps : mode === 'create' ? [newStep()] : []));
   const [folderId, setFolderId] = useState(initialFolderId);
   const [selectedSuites, setSelectedSuites] = useState(initialSuites);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const [suiteError, setSuiteError] = useState('');
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const [announcement, setAnnouncement] = useState('');
   const [grabbed, setGrabbed] = useState<string>();
@@ -108,8 +106,6 @@ export const TestScenarioForm = ({
   const [focusStep, setFocusStep] = useState<string>();
   const [focusHandle, setFocusHandle] = useState<string>();
   const root = useRef<HTMLFormElement>(null);
-  const pickerButton = useRef<HTMLButtonElement>(null);
-  const searchInput = useRef<HTMLInputElement>(null);
   const pointer = useRef<{ key: string; id: number } | null>(null);
   const baseline = useRef({ steps: initialSteps, suites: initialSuites, folderId: initialFolderId });
   const {
@@ -165,13 +161,6 @@ export const TestScenarioForm = ({
       setFocusHandle(undefined);
     }
   }, [focusStep, focusHandle, steps]);
-  useEffect(() => {
-    if (pickerOpen) searchInput.current?.focus();
-  }, [pickerOpen]);
-  const closePicker = () => {
-    setPickerOpen(false);
-    pickerButton.current?.focus();
-  };
   const append = () => {
     if (pending) return;
     const step = newStep();
@@ -209,21 +198,6 @@ export const TestScenarioForm = ({
   const folder = folderId ? folders.find((f) => f.id === folderId) : null;
   const backLabel = folderId ? (folder ? folder.name : 'All scenarios') : 'Unfiled';
   const cancel = () => onCancel(folderId);
-  const addSuite = () => {
-    const name = search.trim();
-    if (!name || name.length > 200) {
-      setSuiteError('Enter a suite name of 1–200 characters.');
-      return;
-    }
-    if ([...suites, ...selectedSuites].some((s) => s.name.toLocaleLowerCase() === name.toLocaleLowerCase())) {
-      setSuiteError('A suite with this name already exists. Select the existing suite.');
-      return;
-    }
-    setSelectedSuites((previous) => [...previous, { id: `suite-draft-${++draftSequence}`, name, isNew: true }]);
-    setSearch('');
-    setSuiteError('');
-    searchInput.current?.focus();
-  };
   return (
     <Box
       as="form"
@@ -526,129 +500,22 @@ export const TestScenarioForm = ({
           >
             <Box>
               <Heading size="sm" mb={2}>Suites</Heading>
-              <HStack gap={2}>
-                <IconButton
-                  ref={pickerButton}
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  borderStyle="dashed"
-                  borderRadius="full"
-                  aria-label="Select suites"
-                  aria-expanded={pickerOpen}
-                  disabled={pending}
-                  onClick={() => setPickerOpen(!pickerOpen)}
-                >
-                  <FiPlus />
-                </IconButton>
-                {!selectedSuites.length && (
-                  <Text color="text.secondary" fontSize="sm">
-                    Not in any suite
-                  </Text>
-                )}
-              </HStack>
-              <VStack align="stretch" gap={2}>
+              <HStack gap={2} flexWrap="wrap">
                 {selectedSuites.map((suite) => (
-                  <HStack key={suite.id} justify="space-between" bg="bg.active" borderRadius="md" px={2}>
-                    <Text fontSize="sm">
-                      {suite.name}
-                      {suite.isNew ? ' (new)' : ''}
-                    </Text>
-                    <IconButton
-                      type="button"
-                      variant="ghost"
-                      size="xs"
-                      aria-label={`Remove suite ${suite.name}`}
-                      disabled={pending}
-                      onClick={() => setSelectedSuites((previous) => previous.filter((s) => s.id !== suite.id))}
-                    >
+                  <HStack key={suite.id} gap={1} bg="blue.100" color="blue.700" _dark={{ bg: 'blue.900', color: 'blue.100' }}
+                    borderRadius="full" pl={3} pr={1} py={0.5}>
+                    <Text fontSize="sm">{suite.name}</Text>
+                    <IconButton type="button" variant="ghost" size="2xs" color="inherit" _hover={{ bg: 'transparent', color: 'inherit' }}
+                      aria-label={`Remove suite ${suite.name}`} disabled={pending}
+                      onClick={() => setSelectedSuites((previous) => previous.filter((s) => s.id !== suite.id))}>
                       <FiX />
                     </IconButton>
                   </HStack>
                 ))}
-              </VStack>
-              {pickerOpen && (
-                <Box
-                  role="dialog"
-                  aria-label="Choose suites"
-                  borderWidth="1px"
-                  borderColor="border.main"
-                  borderRadius="md"
-                  p={3}
-                  mt={3}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      e.preventDefault();
-                      closePicker();
-                    } else if (e.key === 'Tab') {
-                      const controls = Array.from(
-                        e.currentTarget.querySelectorAll<HTMLElement>('input:not(:disabled), button:not(:disabled)'),
-                      );
-                      const first = controls[0];
-                      const last = controls[controls.length - 1];
-                      if (e.shiftKey && document.activeElement === first) {
-                        e.preventDefault();
-                        last?.focus();
-                      } else if (!e.shiftKey && document.activeElement === last) {
-                        e.preventDefault();
-                        first?.focus();
-                      }
-                    }
-                  }}
-                >
-                  <Input
-                    ref={searchInput}
-                    name="suite-search"
-                    label="Search or create suite"
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') event.preventDefault();
-                    }}
-                    value={search}
-                    disabled={pending}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setSuiteError('');
-                    }}
-                  />
-                  <VStack align="stretch" maxH="240px" overflowY="auto" mt={2}>
-                    {suites
-                      .filter((s) => s.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
-                      .map((suite) => (
-                        <Button
-                          key={suite.id}
-                          type="button"
-                          variant="ghost"
-                          justifyContent="space-between"
-                          aria-pressed={selectedSuites.some((s) => s.id === suite.id)}
-                          disabled={pending}
-                          onClick={() =>
-                            setSelectedSuites((previous) =>
-                              previous.some((s) => s.id === suite.id)
-                                ? previous.filter((s) => s.id !== suite.id)
-                                : [...previous, { id: suite.id, name: suite.name }],
-                            )
-                          }
-                        >
-                          <Text truncate>{suite.name}</Text>
-                          <Text>{suite.members?.length ?? 0} scenarios</Text>
-                        </Button>
-                      ))}
-                  </VStack>
-                  {search.trim() && (
-                    <Button type="button" variant="outline" size="sm" disabled={pending} onClick={addSuite}>
-                      Create “{search.trim()}”
-                    </Button>
-                  )}
-                  {suiteError && (
-                    <Text role="alert" color="red.500">
-                      {suiteError}
-                    </Text>
-                  )}
-                  <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={closePicker}>
-                    Done
-                  </Button>
-                </Box>
-              )}
+                <SuitePicker mode="draft" suites={suites} selectedNames={selectedSuites.map((suite) => suite.name)}
+                  disabled={pending} onSelect={(suite) => setSelectedSuites((previous) => [...previous, suite])} />
+                {!selectedSuites.length && <Text color="text.secondary" fontSize="sm">Not in any suite</Text>}
+              </HStack>
             </Box>
             <Box>
               <HStack mb={2}>

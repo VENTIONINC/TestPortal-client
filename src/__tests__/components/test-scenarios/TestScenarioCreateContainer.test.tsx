@@ -1,3 +1,4 @@
+import userEvent from '@testing-library/user-event';
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -38,11 +39,12 @@ describe('TestScenarioCreateContainer', () => {
     setup();
     change('Title', '  Scenario  ');
     change('Step 1 action', '  Open  ');
-    fireEvent.click(screen.getByRole('button', { name: 'Select suites' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Select suites' }));
     expect(screen.getByText('2 scenarios')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Regression/ }));
-    change('Search or create suite', ' Release ');
-    fireEvent.click(screen.getByRole('button', { name: 'Create “Release”' }));
+    await userEvent.click(screen.getByRole('button', { name: /Regression/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Select suites' }));
+    change('Find or create a suite', ' Release ');
+    await userEvent.click(screen.getByRole('button', { name: 'Create suite “Release”' }));
     expect(createScenario).not.toHaveBeenCalled();
     save();
     await waitFor(() => expect(createScenario).toHaveBeenCalledOnce());

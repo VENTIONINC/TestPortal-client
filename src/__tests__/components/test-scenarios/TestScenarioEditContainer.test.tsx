@@ -1,3 +1,4 @@
+import userEvent from '@testing-library/user-event';
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -135,17 +136,17 @@ describe('TestScenarioEditContainer', () => {
     setup();
     change('Title', 'Local draft');
     fireEvent.click(screen.getByRole('button', { name: 'Remove step 2' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Select suites' }));
-    change('Search or create suite', 'Pending');
-    fireEvent.click(screen.getByRole('button', { name: 'Create “Pending”' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Select suites' }));
+    change('Find or create a suite', 'Pending');
+    await userEvent.click(screen.getByRole('button', { name: 'Create suite “Pending”' }));
     save();
     await screen.findByText(/The saved scenario or suite membership changed/);
-    expect(screen.getByText('Pending (new)')).toBeInTheDocument();
+    expect(screen.getByText('Pending')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Steps 1' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reload saved scenario' }));
     await screen.findByText('Reload failed. Your draft is preserved. Please try again.');
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Local draft');
-    expect(screen.getByText('Pending (new)')).toBeInTheDocument();
+    expect(screen.getByText('Pending')).toBeInTheDocument();
     expect(updateScenario).toHaveBeenCalledOnce();
   });
   it('reloads only after confirmation and preserves input when discard is declined', async () => {

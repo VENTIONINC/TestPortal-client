@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 
 import { TestScenarioForm } from '@/components/test-scenarios/components/TestScenarioForm';
 import { ChakraProvider } from '@/components/ui';
@@ -89,6 +90,7 @@ describe('TestScenarioForm', () => {
     expect(screen.getByRole('textbox', { name: 'Step 2 action' })).toHaveValue('Edited second');
   });
   it('selects multiple suites, removes pending suite creation and rejects case-insensitive duplicates', async () => {
+    const user = userEvent.setup();
     const onSubmit = vi.fn();
     setup({
       initialValues: { title: 'Scenario' },
@@ -98,28 +100,33 @@ describe('TestScenarioForm', () => {
       ],
       onSubmit,
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Select suites' }));
-    expect(screen.getByRole('textbox', { name: 'Search or create suite' })).toHaveFocus();
-    fireEvent.click(screen.getByRole('button', { name: /Alpha/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Beta/ }));
-    const search = screen.getByRole('textbox', { name: 'Search or create suite' });
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Find or create a suite' })).toHaveFocus());
+    await user.click(screen.getByRole('button', { name: /Alpha/ }));
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
+    await user.click(screen.getByRole('button', { name: /Beta/ }));
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
+    const search = screen.getByRole('textbox', { name: 'Find or create a suite' });
     fireEvent.change(search, { target: { value: 'alpha' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create “alpha”' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('already exists');
+    expect(screen.queryByRole('button', { name: 'Create suite “alpha”' })).not.toBeInTheDocument();
     fireEvent.change(search, { target: { value: 'Pending' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create “Pending”' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Remove suite Pending' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
-    expect(screen.getByRole('button', { name: 'Select suites' })).toHaveFocus();
-    fireEvent.click(screen.getByRole('button', { name: 'Save scenario' }));
+    await user.click(screen.getByRole('button', { name: 'Create suite “Pending”' }));
+    await user.click(screen.getByRole('button', { name: 'Remove suite Pending' }));
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Find or create a suite' }), { target: { value: 'Release' } });
+    await user.click(screen.getByRole('button', { name: 'Create suite “Release”' }));
+    expect(screen.getByText('Release')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Select suites' })).toHaveFocus());
+    await user.click(screen.getByRole('button', { name: 'Save scenario' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
-    expect(onSubmit.mock.calls[0][3]).toEqual({ suiteIds: ['a', 'b'], newSuites: [] });
+    expect(onSubmit.mock.calls[0][3]).toEqual({ suiteIds: ['a', 'b'], newSuites: [{ name: 'Release' }] });
   });
-  it('never submits the scenario when Enter is pressed in suite search', () => {
+  it('never submits the scenario when Enter is pressed in suite search', async () => {
+    const user = userEvent.setup();
     const onSubmit = vi.fn();
     setup({ initialValues: { title: 'Ready' }, onSubmit });
-    fireEvent.click(screen.getByRole('button', { name: 'Select suites' }));
-    const search = screen.getByRole('textbox', { name: 'Search or create suite' });
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
+    const search = screen.getByRole('textbox', { name: 'Find or create a suite' });
     fireEvent.change(search, { target: { value: 'Deferred' } });
     expect(fireEvent.keyDown(search, { key: 'Enter' })).toBe(false);
     expect(onSubmit).not.toHaveBeenCalled();
