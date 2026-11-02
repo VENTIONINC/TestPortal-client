@@ -60,6 +60,7 @@ import {
 import { extractApiError } from '@/utils/apiErrors';
 
 import { TestSuiteAddScenariosDialogContainer } from '../containers/TestSuiteAddScenariosDialogContainer';
+import { SuitePicker } from './SuitePicker';
 import { getTestScenarioDetailPath } from '../constants';
 import type { ScenarioOperationReport } from '../utils';
 import type { TestScenarioPagination, TestScenarioSummary } from '../types';
@@ -136,7 +137,8 @@ export interface TestScenarioCatalogViewProps {
   selectOnlyScenario?: (id: string) => void;
   onMoveSelected: (folderId: string | null) => Promise<ScenarioOperationReport>;
   onMoveScenarioIds: (scenarioIds: string[], folderId: string | null) => Promise<ScenarioOperationReport>;
-  onAddSelectedToSuite: (suiteId: string) => Promise<ScenarioOperationReport>;
+  onSuiteOperationStart: () => void;
+  onSuiteOperationComplete: (report: ScenarioOperationReport, selection: string[]) => void;
   onDeleteSelected: (scenarioIds: string[]) => Promise<ScenarioOperationReport>;
   onRemoveSelectedFromSuite: () => Promise<ScenarioOperationReport>;
   onReorderSuite: (suiteId: string, scenarioIds: string[]) => Promise<void>;
@@ -1351,7 +1353,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   toggleSelected,
   onMoveSelected,
   onMoveScenarioIds,
-  onAddSelectedToSuite,
+  onSuiteOperationStart,
+  onSuiteOperationComplete,
   onDeleteSelected,
   onRemoveSelectedFromSuite,
   onReorderSuite,
@@ -1363,6 +1366,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   onDeleteSuite,
 }: TestScenarioCatalogViewProps) {
   const isScenariosTab = organizationTab !== 'suites';
+  const currentProjectId = useRef(projectId);
+  currentProjectId.current = projectId;
   const selectedAuthorIds = authorIds ?? (authorId ? [authorId] : []);
   const [createDialog, setCreateDialog] = useState<
     'folder' | 'suite' | 'rename-folder' | 'edit-suite' | 'move-folder' | 'delete-folder' | 'delete-suite' | null
@@ -1387,7 +1392,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [targetSuite, setTargetSuite] = useState<CatalogSuite | null>(null);
   const [moveParentId, setMoveParentId] = useState('');
   const [deleteDisposition, setDeleteDisposition] = useState<'parent' | 'unfiled'>('parent');
-  const [bulkSuiteId, setBulkSuiteId] = useState('');
   const [moveScenariosOpen, setMoveScenariosOpen] = useState(false);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [isDraggingScenario, setIsDraggingScenario] = useState(false);
@@ -1411,8 +1415,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   }, [scopeKey]);
 
   const [isMovingScenarios, setIsMovingScenarios] = useState(false);
-  const [addToSuiteOpen, setAddToSuiteOpen] = useState(false);
-  const [addToSuiteError, setAddToSuiteError] = useState<string | null>(null);
   const [isAddingToSuite, setIsAddingToSuite] = useState(false);
   const [removeFromSuiteOpen, setRemoveFromSuiteOpen] = useState(false);
   const [removeFromSuiteError, setRemoveFromSuiteError] = useState<string | null>(null);
@@ -1580,20 +1582,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       setMoveScenariosError(getActionErrorMessage(error));
     } finally {
       setIsMovingScenarios(false);
-    }
-  };
-  const submitAddToSuite = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!bulkSuiteId || isAddingToSuite || selectedIds.length === 0) return;
-    setIsAddingToSuite(true);
-    setAddToSuiteError(null);
-    try {
-      showOperationReport(await onAddSelectedToSuite(bulkSuiteId));
-      setAddToSuiteOpen(false);
-    } catch (error) {
-      setAddToSuiteError(getActionErrorMessage(error));
-    } finally {
-      setIsAddingToSuite(false);
     }
   };
   const submitDeleteSelected = async () => {
@@ -2305,9 +2293,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                           size="sm"
                           variant="ghost"
                           aria-label="More bulk actions"
-                          disabled={isExecutingOperation}
+                          disabled={isExecutingOperation || isAddingToSuite}
                           color="inherit"
-                          _hover={{ bg: 'whiteAlpha.200' }}
+                          _hover={{ bg: 'whiteAlpha.200', _dark: { bg: 'blackAlpha.200' } }}
+                          _expanded={{ bg: 'whiteAlpha.200', _dark: { bg: 'blackAlpha.200' } }}
                         >
                           <FiMoreHorizontal />
                         </IconButton>
@@ -2332,26 +2321,28 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       </Menu.Positioner>
                     </Menu.Root>
                   )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={suites.length === 0 || isExecutingOperation}
-                    onClick={() => {
-                      setBulkSuiteId('');
-                      setAddToSuiteError(null);
-                      setAddToSuiteOpen(true);
-                    }}
-                    color="inherit"
-                    _hover={{ bg: 'whiteAlpha.200' }}
-                  >
-                    <FiLayers aria-hidden="true" />
-                    Add to suite
-                  </Button>
+                  {projectId && (
+                    <SuitePicker
+                      key={projectId}
+                      projectId={projectId}
+                      selectedIds={selectedIds}
+                      disabled={isExecutingOperation || isAddingToSuite}
+                      onBusyChange={(busy) => {
+                        if (busy) onSuiteOperationStart();
+                        setIsAddingToSuite(busy);
+                      }}
+                      onComplete={(report, selection) => {
+                        if (currentProjectId.current !== projectId) return;
+                        onSuiteOperationComplete(report, selection);
+                        showOperationReport(report);
+                      }}
+                    />
+                  )}
                   {isScenariosTab && (
                     <Button
                       size="sm"
                       variant="ghost"
-                      disabled={isExecutingOperation}
+                      disabled={isExecutingOperation || isAddingToSuite}
                       onClick={() => {
                         setDeleteTargetIds([...selectedIds]);
                         setDeleteSelectedOpen(true);
@@ -2368,7 +2359,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     <Button
                       size="sm"
                       variant="ghost"
-                      disabled={isExecutingOperation}
+                      disabled={isExecutingOperation || isAddingToSuite}
                       onClick={() => {
                         setRemoveFromSuiteError(null);
                         setRemoveFromSuiteOpen(true);
@@ -2383,7 +2374,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     size="sm"
                     variant="ghost"
                     aria-label="Close bulk scenario actions and clear selection"
-                    disabled={isExecutingOperation}
+                    disabled={isExecutingOperation || isAddingToSuite}
                     onClick={clearSelection}
                     color="inherit"
                     _hover={{ bg: 'whiteAlpha.200' }}
@@ -2600,51 +2591,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 disabled={!moveScenariosTarget || isMovingScenarios}
               >
                 Move {selectedIds.length} scenario{selectedIds.length === 1 ? '' : 's'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Dialog>
-      )}
-      {addToSuiteOpen && (
-        <Dialog
-          title={`Add ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'} to suite`}
-          onClose={() => setAddToSuiteOpen(false)}
-        >
-          <form onSubmit={(event) => void submitAddToSuite(event)}>
-            <DialogBody>
-              <VStack align="stretch" gap={4}>
-                <Text color="text.secondary">Choose the suite that should include the selected scenarios.</Text>
-                <NativeSelect
-                  label="Suite"
-                  value={bulkSuiteId}
-                  onChange={(event) => setBulkSuiteId(event.currentTarget.value)}
-                >
-                  <option value="">Select a suite</option>
-                  {suites.map((suite) => (
-                    <option key={suite.id} value={suite.id}>
-                      {suite.name}
-                      {suite.release ? ` · ${suite.release}` : ''}
-                    </option>
-                  ))}
-                </NativeSelect>
-                {addToSuiteError && (
-                  <Text role="alert" color="fg.error">
-                    {addToSuiteError}
-                  </Text>
-                )}
-              </VStack>
-            </DialogBody>
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setAddToSuiteOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                loading={isAddingToSuite}
-                disabled={!bulkSuiteId || isAddingToSuite}
-              >
-                Add to suite
               </Button>
             </DialogFooter>
           </form>
