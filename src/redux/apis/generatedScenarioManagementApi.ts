@@ -18,6 +18,7 @@ const injectedRtkApi = api
             limit: queryArg.limit,
             search: queryArg.search,
             createdById: queryArg.createdById,
+            createdByIds: queryArg.createdByIds,
             priority: queryArg.priority,
             sort: queryArg.sort,
             sortField: queryArg.sortField,
@@ -203,6 +204,7 @@ export type GetApiV2TestScenariosForResultLinkManagementApiArg = {
   limit?: number;
   search?: string;
   createdById?: string;
+  createdByIds?: string;
   priority?: string;
   sort?: "recently_created" | "recently_updated" | "title_asc";
   sortField?:

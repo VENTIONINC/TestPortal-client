@@ -116,10 +116,13 @@ export interface TestScenarioCatalogViewProps {
   priority: string;
   priorityCounts?: Partial<Record<'high' | 'medium' | 'low', number | undefined>>;
   onPriorityChange: (value: string) => void;
-  authorId: string;
-  onAuthorChange: (value: string) => void;
-  authors: Array<{ id: string; name: string; email: string }>;
+  authorIds?: string[];
+  /** @deprecated Use `authorIds` for multi-author filtering. */
+  authorId?: string;
+  onAuthorChange: (value: string[] | string) => void;
+  authors: Array<{ id: string; name: string; email: string; scenarioCount?: number }>;
   authorsLoading: boolean;
+  authorsError?: unknown;
   columnFilters: { scenarioKey: string; title: string; details: string; folder: string; createdBy: string };
   onColumnFilterChange: (field: keyof TestScenarioCatalogViewProps['columnFilters'], value: string) => void;
   scope: { kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string };
@@ -797,6 +800,137 @@ const PriorityFilter = ({
   );
 };
 
+const AuthorFilter = ({
+  value,
+  authors,
+  loading,
+  error,
+  onChange,
+}: {
+  value: string[];
+  authors: Array<{ id: string; name: string; email: string; scenarioCount?: number }>;
+  loading: boolean;
+  error?: unknown;
+  onChange: (value: string[]) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const selectedAuthors = authors.filter((author) => value.includes(author.id));
+  const matchingAuthors = authors.filter((author) =>
+    `${author.name} ${author.email}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
+  );
+  const selectedAuthor = selectedAuthors[0];
+  const label = value.length === 1
+    ? `Author: ${selectedAuthor?.name ? shortAuthorName(selectedAuthor.name) : selectedAuthor?.email || '1'}`
+    : value.length
+      ? `Author: ${value.length}`
+      : 'Author';
+  const close = () => {
+    setOpen(false);
+    setSearch('');
+  };
+
+  return (
+    <Popover.Root
+      open={open}
+      onOpenChange={({ open: nextOpen }) => {
+        setOpen(nextOpen);
+        if (!nextOpen) setSearch('');
+      }}
+    >
+      <Popover.Trigger asChild>
+        <Button
+          variant="outline"
+          bg={value.length ? 'bg.active' : 'bg.card'}
+          borderColor={value.length ? 'border.active' : undefined}
+          color={value.length ? 'text.primary' : undefined}
+          minW="90px"
+          maxW="250px"
+          justifyContent="space-between"
+          fontSize="sm"
+        >
+          <Text as="span" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">{label}</Text>
+          <FiChevronDown aria-hidden="true" />
+        </Button>
+      </Popover.Trigger>
+      <Portal>
+        <Popover.Positioner>
+          <Popover.Content w="260px" bg="bg.card" p={0}>
+            <Box position="relative" px={3} py={2} borderBottomWidth="1px" borderColor="border.main">
+              <Box position="absolute" insetStart={3} top="50%" transform="translateY(-50%)" zIndex={1} color="text.muted" pointerEvents="none">
+                <FiSearch aria-hidden="true" size={13} />
+              </Box>
+              <Input
+                aria-label="Search authors"
+                placeholder="Type to find an author"
+                size="sm"
+                value={search}
+                onChange={(event) => setSearch(event.currentTarget.value)}
+                ps={7}
+                border={0}
+                focusRing="none"
+              />
+            </Box>
+            <Popover.Body p={1} maxH="240px" overflowY="auto">
+              <VStack align="stretch" gap={0}>
+                {loading && (
+                  <Text px={2} py={2} color="text.secondary" fontSize="sm">
+                    {authors.length ? 'Updating author counts…' : 'Loading authors…'}
+                  </Text>
+                )}
+                {Boolean(error) && (
+                  <Text px={2} py={2} color="text.secondary" fontSize="sm">
+                    Author counts are unavailable.
+                  </Text>
+                )}
+                {matchingAuthors.length ? (
+                  matchingAuthors.map((author) => (
+                    <HStack as="label" key={author.id} px={2} py={1.5} cursor="pointer" justify="space-between">
+                      <HStack gap={2} minW={0}>
+                        <input
+                          type="checkbox"
+                          aria-label={author.name || author.email}
+                          checked={value.includes(author.id)}
+                          onChange={() =>
+                            onChange(value.includes(author.id) ? value.filter((id) => id !== author.id) : [...value, author.id])
+                          }
+                        />
+                        <Text as="span" fontSize="sm" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                          {author.name || author.email}
+                        </Text>
+                      </HStack>
+                      <Text flexShrink={0} fontSize="xs" color="text.secondary">
+                        {author.scenarioCount ?? (loading ? '…' : '–')}
+                      </Text>
+                    </HStack>
+                  ))
+                ) : !loading && !error ? (
+                  <Text px={2} py={2} color="text.secondary" fontSize="sm">No authors found</Text>
+                ) : null}
+              </VStack>
+            </Popover.Body>
+            <HStack justify="space-between" p={2} borderTopWidth="1px" borderColor="border.main">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  onChange([]);
+                  close();
+                }}
+              >
+                Clear
+              </Button>
+              <Button size="sm" variant="primary" onClick={close}>
+                Done
+              </Button>
+            </HStack>
+          </Popover.Content>
+        </Popover.Positioner>
+      </Portal>
+    </Popover.Root>
+  );
+};
+
 const compactDate = (value: string) => new Date(value).toLocaleDateString('en-US');
 const shortAuthorName = (name: string) => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -1101,9 +1235,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   priorityCounts,
   onPriorityChange,
   authorId,
+  authorIds,
   onAuthorChange,
   authors,
   authorsLoading,
+  authorsError,
   pageSize,
   pageSizes,
   onPageSizeChange,
@@ -1139,6 +1275,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   onIncludeDescendantsChange,
 }: TestScenarioCatalogViewProps) {
   const isScenariosTab = organizationTab !== 'suites';
+  const selectedAuthorIds = authorIds ?? (authorId ? [authorId] : []);
   const [createDialog, setCreateDialog] = useState<
     'folder' | 'suite' | 'rename-folder' | 'edit-suite' | 'move-folder' | 'delete-folder' | 'delete-suite' | null
   >(null);
@@ -1880,22 +2017,13 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 {isScenariosTab ? (
                   <>
                     <PriorityFilter value={priority} counts={priorityCounts} onChange={onPriorityChange} />
-                    <Box w="210px">
-                      <NativeSelect
-                        aria-label="Author"
-                        value={authorId}
-                        bg={authorId ? 'bg.active' : 'bg.card'}
-                        borderColor={authorId ? 'border.active' : undefined}
-                        onChange={(event) => onAuthorChange(event.currentTarget.value)}
-                      >
-                        <option value="">{authorsLoading ? 'Loading authors…' : 'All authors'}</option>
-                        {authors.map((author) => (
-                          <option key={author.id} value={author.id}>
-                            {author.name || author.email}
-                          </option>
-                        ))}
-                      </NativeSelect>
-                    </Box>
+                    <AuthorFilter
+                      value={selectedAuthorIds}
+                      authors={authors}
+                      loading={authorsLoading}
+                      error={authorsError}
+                      onChange={onAuthorChange}
+                    />
                     <Box w="150px">
                       <NativeSelect
                         aria-label="Sort by"
@@ -2206,7 +2334,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         setDragOverFolderId(null);
                       }}
                       folderPathById={folderPathById}
-                      searchActive={Boolean(search.trim()) || Boolean(priority) || Boolean(authorId)}
+                      searchActive={Boolean(search.trim()) || Boolean(priority) || selectedAuthorIds.length > 0}
                     />
                   ) : (
                     <ScenarioTable

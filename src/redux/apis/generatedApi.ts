@@ -999,6 +999,7 @@ const injectedRtkApi = api
             limit: queryArg.limit,
             search: queryArg.search,
             createdById: queryArg.createdById,
+            createdByIds: queryArg.createdByIds,
             priority: queryArg.priority,
             sort: queryArg.sort,
             sortField: queryArg.sortField,
@@ -1023,6 +1024,16 @@ const injectedRtkApi = api
           url: `/api/v2/test-scenarios/authors`,
           params: {
             projectId: queryArg.projectId,
+            search: queryArg.search,
+            priority: queryArg.priority,
+            scenarioKey: queryArg.scenarioKey,
+            title: queryArg.title,
+            details: queryArg.details,
+            folder: queryArg.folder,
+            createdBy: queryArg.createdBy,
+            folderId: queryArg.folderId,
+            includeDescendants: queryArg.includeDescendants,
+            suiteId: queryArg.suiteId,
           },
         }),
         providesTags: ["Test Scenarios"],
@@ -1037,6 +1048,7 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
             search: queryArg.search,
             createdById: queryArg.createdById,
+            createdByIds: queryArg.createdByIds,
             priority: queryArg.priority,
             scenarioKey: queryArg.scenarioKey,
             title: queryArg.title,
@@ -1927,6 +1939,7 @@ export type GetApiV2TestScenariosApiArg = {
   limit?: number;
   search?: string;
   createdById?: string;
+  createdByIds?: string;
   priority?: string;
   sort?: "recently_created" | "recently_updated" | "title_asc";
   sortField?:
@@ -1951,6 +1964,16 @@ export type GetApiV2TestScenariosAuthorsApiResponse =
   /** status 200 Scenario catalog lookup succeeded */ TestScenarioAuthorsResponse;
 export type GetApiV2TestScenariosAuthorsApiArg = {
   projectId: string;
+  search?: string;
+  priority?: string;
+  scenarioKey?: string;
+  title?: string;
+  details?: string;
+  folder?: string;
+  createdBy?: string;
+  folderId?: string | "unfiled";
+  includeDescendants?: boolean;
+  suiteId?: string;
 };
 export type GetApiV2TestScenariosSelectionApiResponse =
   /** status 200 Scenario catalog lookup succeeded */ TestScenarioSelectionResponse;
@@ -1958,6 +1981,7 @@ export type GetApiV2TestScenariosSelectionApiArg = {
   projectId: string;
   search?: string;
   createdById?: string;
+  createdByIds?: string;
   priority?: string;
   scenarioKey?: string;
   title?: string;
@@ -3214,8 +3238,14 @@ export type TestScenarioListResponse = {
   limit: number;
   totalPages: number;
 };
+export type TestScenarioAuthorOption = {
+  id: string;
+  name: string;
+  email: string;
+  scenarioCount: number;
+};
 export type TestScenarioAuthorsResponse = {
-  authors: TestScenarioCreatorSummary[];
+  authors: TestScenarioAuthorOption[];
 };
 export type TestScenarioSelectionResponse = {
   scenarioIds: string[];

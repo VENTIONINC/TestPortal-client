@@ -22,6 +22,7 @@ import {
   useGetApiV2TestScenariosAuthorsQuery,
   useGetApiV2TestScenariosQuery,
   useLazyGetApiV2TestScenariosSelectionQuery,
+  type GetApiV2TestScenariosAuthorsApiArg,
   type GetApiV2TestScenariosApiArg,
   type GetApiV2TestScenariosSelectionApiArg,
 } from '@/redux/apis/generatedApi';
@@ -47,7 +48,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   });
   const [debouncedColumnFilters, setDebouncedColumnFilters] = useState(columnFilters);
   const [priority, setPriority] = useState<NonNullable<GetApiV2TestScenariosApiArg['priority']> | ''>('');
-  const [authorId, setAuthorId] = useState('');
+  const [authorIds, setAuthorIds] = useState<string[]>([]);
   const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>(() =>
     organizationTab === 'suites' ? { kind: 'suite' } : { kind: 'all' },
   );
@@ -73,7 +74,6 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [deleteSuiteRequest] = useDeleteApiV2TestSuitesBySuiteIdMutation();
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
   const suitesQuery = useGetApiV2TestSuitesQuery({ projectId });
-  const authorsQuery = useGetApiV2TestScenariosAuthorsQuery({ projectId });
   const projectCountQuery = useGetApiV2TestScenariosQuery({ projectId, page: 1, limit: 1 });
   const unfiledCountQuery = useGetApiV2TestScenariosQuery({ projectId, page: 1, limit: 1, folderId: 'unfiled' });
   const queryArgs = useMemo(
@@ -84,7 +84,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       sortField: sortField ?? 'updatedAt',
       sortDirection,
       ...(priority ? { priority } : {}),
-      ...(authorId ? { createdById: authorId } : {}),
+      ...(authorIds.length ? { createdByIds: authorIds.join(',') } : {}),
       ...(debouncedColumnFilters.scenarioKey.trim() ? { scenarioKey: debouncedColumnFilters.scenarioKey.trim() } : {}),
       ...(debouncedColumnFilters.title.trim() ? { title: debouncedColumnFilters.title.trim() } : {}),
       ...(debouncedColumnFilters.details.trim() ? { details: debouncedColumnFilters.details.trim() } : {}),
@@ -96,7 +96,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
     }),
     [
-      authorId,
+      authorIds,
       debouncedColumnFilters,
       debouncedSearch,
       includeDescendants,
@@ -109,11 +109,40 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       sortField,
     ],
   );
+  const authorCountArgs = useMemo<GetApiV2TestScenariosAuthorsApiArg>(
+    () => ({
+      projectId,
+      ...(priority ? { priority } : {}),
+      ...(debouncedColumnFilters.scenarioKey.trim() ? { scenarioKey: debouncedColumnFilters.scenarioKey.trim() } : {}),
+      ...(debouncedColumnFilters.title.trim() ? { title: debouncedColumnFilters.title.trim() } : {}),
+      ...(debouncedColumnFilters.details.trim() ? { details: debouncedColumnFilters.details.trim() } : {}),
+      ...(debouncedColumnFilters.folder.trim() ? { folder: debouncedColumnFilters.folder.trim() } : {}),
+      ...(debouncedColumnFilters.createdBy.trim() ? { createdBy: debouncedColumnFilters.createdBy.trim() } : {}),
+      ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
+      ...(scope.kind === 'unfiled' ? { folderId: 'unfiled' as const } : {}),
+      ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants } : {}),
+      ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
+    }),
+    [debouncedColumnFilters, debouncedSearch, includeDescendants, priority, projectId, scope],
+  );
+  const authorsQuery = useGetApiV2TestScenariosAuthorsQuery(authorCountArgs);
+  const authorIdentityCache = useRef<{
+    projectId: string;
+    authors: Array<{ id: string; name: string; email: string }>;
+  } | null>(null);
+  useEffect(() => {
+    const currentAuthors = authorsQuery.currentData?.authors;
+    if (!currentAuthors) return;
+    authorIdentityCache.current = {
+      projectId,
+      authors: currentAuthors.map(({ id, name, email }) => ({ id, name, email })),
+    };
+  }, [authorsQuery.currentData, projectId]);
   const selectionArgs = useMemo<GetApiV2TestScenariosSelectionApiArg>(
     () => ({
       projectId,
       ...(priority ? { priority } : {}),
-      ...(authorId ? { createdById: authorId } : {}),
+      ...(authorIds.length ? { createdByIds: authorIds.join(',') } : {}),
       ...(columnFilters.scenarioKey.trim() ? { scenarioKey: columnFilters.scenarioKey.trim() } : {}),
       ...(columnFilters.title.trim() ? { title: columnFilters.title.trim() } : {}),
       ...(columnFilters.details.trim() ? { details: columnFilters.details.trim() } : {}),
@@ -124,7 +153,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants } : {}),
       ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
     }),
-    [authorId, columnFilters, includeDescendants, priority, projectId, scope, search],
+    [authorIds, columnFilters, includeDescendants, priority, projectId, scope, search],
   );
   const invalidateSelection = useCallback(() => {
     selectionRevision.current += 1;
@@ -232,9 +261,10 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     [invalidateSelection],
   );
   const onAuthorChange = useCallback(
-    (value: string) => {
+    (value: string[] | string) => {
       invalidateSelection();
-      setAuthorId(value);
+      const nextAuthorIds = typeof value === 'string' ? (value ? [value] : []) : value;
+      setAuthorIds([...new Set(nextAuthorIds)]);
       setPage(1);
     },
     [invalidateSelection],
@@ -415,6 +445,14 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     },
     [deleteSuiteRequest, onScopeChange, projectId, scope.id],
   );
+  const currentAuthors = authorsQuery.currentData?.authors;
+  const cachedAuthorIdentities = authorIdentityCache.current?.projectId === projectId ? authorIdentityCache.current.authors : [];
+  const authorsForFilter = currentAuthors
+    ? currentAuthors.map((author) => ({
+        ...author,
+        scenarioCount: !authorsQuery.isFetching && !authorsQuery.error ? author.scenarioCount : undefined,
+      }))
+    : cachedAuthorIdentities.map((author) => ({ ...author, scenarioCount: undefined }));
 
   return {
     scenarios,
@@ -436,10 +474,10 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     priority,
     priorityCounts,
     onPriorityChange,
-    authorId,
+    authorIds,
     onAuthorChange,
-    authors: authorsQuery.currentData?.authors ?? [],
-    authorsLoading: authorsQuery.isLoading,
+    authors: authorsForFilter,
+    authorsLoading: authorsQuery.isFetching,
     authorsError: authorsQuery.error,
     projectScenarioCount: projectCountQuery.currentData?.total ?? 0,
     unfiledScenarioCount: unfiledCountQuery.currentData?.total ?? 0,
