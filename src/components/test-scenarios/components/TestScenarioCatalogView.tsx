@@ -187,6 +187,23 @@ const ScenarioTimestamp = ({ timestamp }: { timestamp: string }) => {
 const TABLE_CELL_PADDING = { px: 4, py: 4 } as const;
 const UNFILED_DESTINATION = '__unfiled__';
 
+const UnfiledFolderIcon = () => (
+  <svg
+    aria-hidden="true"
+    width="22"
+    height="22"
+    style={{ display: 'block', flexShrink: 0 }}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M2.5 6.5a2 2 0 0 1 2-2h4.8l2.6 2.6h7.6a2 2 0 0 1 2 2v8.4a2 2 0 0 1-2 2H4.5a2 2 0 0 1-2-2z" strokeDasharray="2 2" />
+  </svg>
+);
+
 const ScenarioColumnHeader = ({
   label,
   field,
@@ -931,6 +948,95 @@ const AuthorFilter = ({
   );
 };
 
+const ScenarioSortSelect = ({
+  value,
+  onChange,
+}: {
+  value: NonNullable<TestScenarioCatalogViewProps['sort']>;
+  onChange: (value: NonNullable<TestScenarioCatalogViewProps['sort']>) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const options: Array<{ value: typeof value; label: string }> = [
+    { value: 'scenarioKey', label: 'Key' },
+    { value: 'title', label: 'Title' },
+    { value: 'folder', label: 'Folder' },
+    { value: 'updatedAt', label: 'Updated' },
+    { value: 'createdBy', label: 'Author' },
+  ];
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? 'Updated';
+
+  return (
+    <Popover.Root open={open} onOpenChange={({ open: nextOpen }) => setOpen(nextOpen)}>
+      <Popover.Trigger asChild>
+        <Button
+          aria-label={`Sort: ${selectedLabel}`}
+          variant="outline"
+          bg="bg.card"
+          minW="152px"
+          justifyContent="space-between"
+          fontSize="sm"
+        >
+          <Text as="span">Sort: {selectedLabel}</Text>
+          <FiChevronDown aria-hidden="true" />
+        </Button>
+      </Popover.Trigger>
+      <Portal>
+        <Popover.Positioner>
+          <Popover.Content w="132px" bg="bg.card" p={1}>
+            <Popover.Body p={0}>
+              <VStack align="stretch" gap={0}>
+                {options.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant="ghost"
+                    size="sm"
+                    justifyContent="flex-start"
+                    fontWeight={option.value === value ? 'semibold' : 'normal'}
+                    aria-current={option.value === value ? 'true' : undefined}
+                    onClick={() => {
+                      onChange(option.value);
+                      setOpen(false);
+                    }}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </VStack>
+            </Popover.Body>
+          </Popover.Content>
+        </Popover.Positioner>
+      </Portal>
+    </Popover.Root>
+  );
+};
+
+const SortDirectionIcon = ({ direction }: { direction: 'asc' | 'desc' }) => {
+  const widths = direction === 'desc' ? [9, 7, 5] : [5, 7, 9];
+
+  return (
+    <svg
+      aria-hidden="true"
+      width="22.5"
+      height="22.5"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {widths.map((width, index) => (
+        <line key={index} x1="2.5" y1={5 + index * 5} x2={2.5 + width} y2={5 + index * 5} />
+      ))}
+      {direction === 'desc' ? (
+        <path d="M16 3.5v12m-3-3 3 3 3-3" />
+      ) : (
+        <path d="M16 16.5v-12m-3 3 3-3 3 3" />
+      )}
+    </svg>
+  );
+};
+
 const compactDate = (value: string) => new Date(value).toLocaleDateString('en-US');
 const shortAuthorName = (name: string) => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -1633,6 +1739,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             colorPalette={selected || dragOverFolderId === folder.id ? 'blue' : undefined}
             borderStartWidth="3px"
             borderStartColor={selected || dragOverFolderId === folder.id ? 'blue.500' : 'transparent'}
+            alignItems="center"
             justifyContent="flex-start"
             aria-current={selected ? 'page' : undefined}
             onClick={() => onScopeChange({ kind: 'folder', id: folder.id })}
@@ -1640,8 +1747,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             onDragLeave={() => setDragOverFolderId((current) => (current === folder.id ? null : current))}
             onDrop={(event) => handleScenarioDrop(event, folder.id)}
           >
-            <FiFolder />
-            <Text flex="1" textAlign="left" lineClamp={1}>
+            <FiFolder size={22} style={{ display: 'block', flexShrink: 0 }} />
+            <Text display="flex" alignItems="center" flex="1" textAlign="left" lineClamp={1}>
               {folder.name}
             </Text>
             <Text color="text.muted" fontSize="xs">
@@ -1745,19 +1852,25 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             {organizationTab !== 'suites' && (
               <Button
                 size="sm"
+                minH="24px"
+                px={1.5}
+                gap={3}
+                variant="ghost"
+                alignItems="center"
                 justifyContent="flex-start"
-                borderStartWidth="3px"
-                borderStartColor={scope.kind === 'unfiled' ? 'blue.500' : 'transparent'}
                 aria-current={scope.kind === 'unfiled' ? 'page' : undefined}
                 onClick={() => onScopeChange({ kind: 'unfiled' })}
-                variant={scope.kind === 'unfiled' || dragOverFolderId === UNFILED_DESTINATION ? 'subtle' : 'ghost'}
-                colorPalette={scope.kind === 'unfiled' || dragOverFolderId === UNFILED_DESTINATION ? 'blue' : undefined}
+                bg={scope.kind === 'unfiled' || dragOverFolderId === UNFILED_DESTINATION ? 'blue.subtle' : undefined}
+                color={scope.kind === 'unfiled' ? 'blue.fg' : 'text.main'}
+                _hover={{ bg: 'bg.subtle' }}
                 onDragOver={(event) => handleScenarioDragOver(event, UNFILED_DESTINATION)}
                 onDragLeave={() => setDragOverFolderId((current) => (current === UNFILED_DESTINATION ? null : current))}
                 onDrop={(event) => handleScenarioDrop(event, null)}
               >
-                <FiFolder />
-                No folder
+                <UnfiledFolderIcon />
+                <Text display="flex" alignItems="center" fontStyle="italic">
+                  No folder
+                </Text>
                 <Text ml="auto" color="text.muted" fontSize="xs">
                   {unfiledScenarioCount}
                 </Text>
@@ -2024,31 +2137,26 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       error={authorsError}
                       onChange={onAuthorChange}
                     />
-                    <Box w="150px">
-                      <NativeSelect
-                        aria-label="Sort by"
-                        value={sort ?? 'updatedAt'}
-                        onChange={(event) =>
-                          onSortChange(event.currentTarget.value as NonNullable<TestScenarioCatalogViewProps['sort']>)
-                        }
+                    <Box flex="1 1 auto" minW={0} />
+                    <ScenarioSortSelect value={sort ?? 'updatedAt'} onChange={onSortChange} />
+                    <Tooltip content={sortDirection === 'desc' ? 'Descending' : 'Ascending'}>
+                      <IconButton
+                        aria-label={`Sort ${sortDirection === 'desc' ? 'descending' : 'ascending'}`}
+                        variant="outline"
+                        bg="bg.card"
+                        color="text.primary"
+                        borderColor="border.main"
+                        h="40px"
+                        w="40px"
+                        minW="40px"
+                        p={0}
+                        borderRadius="md"
+                        _hover={{ bg: 'bg.subtle', borderColor: 'border.active' }}
+                        onClick={() => onSortDirectionChange(sortDirection === 'desc' ? 'asc' : 'desc')}
                       >
-                        <option value="scenarioKey">Key</option>
-                        <option value="title">Title</option>
-                        <option value="folder">Folder</option>
-                        <option value="updatedAt">Updated</option>
-                        <option value="createdBy">Author</option>
-                      </NativeSelect>
-                    </Box>
-                    <Box w="150px">
-                      <NativeSelect
-                        aria-label="Sort direction"
-                        value={sortDirection}
-                        onChange={(event) => onSortDirectionChange(event.currentTarget.value as 'asc' | 'desc')}
-                      >
-                        <option value="desc">Descending</option>
-                        <option value="asc">Ascending</option>
-                      </NativeSelect>
-                    </Box>
+                        <SortDirectionIcon direction={sortDirection} />
+                      </IconButton>
+                    </Tooltip>
                   </>
                 ) : null}
                 {(search.trim() || activeColumnFilters.length > 0) && (
