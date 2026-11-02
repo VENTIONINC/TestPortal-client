@@ -10,7 +10,6 @@ import {
   useState,
   type DragEvent,
   type FormEvent,
-  type MouseEvent,
   type ReactNode,
 } from 'react';
 import {
@@ -51,7 +50,6 @@ import { Link as RouterLink } from 'react-router';
 
 import {
   Alert,
-  ContextMenuButton,
   Dialog,
   DialogBody,
   DialogFooter,
@@ -64,7 +62,6 @@ import { extractApiError } from '@/utils/apiErrors';
 
 import { TestSuiteAddScenariosDialogContainer } from '../containers/TestSuiteAddScenariosDialogContainer';
 import { getTestScenarioDetailPath } from '../constants';
-import { useTestScenarioContextMenu } from '../hooks/useTestScenarioContextMenu';
 import type { ScenarioOperationReport } from '../utils';
 import type { TestScenarioPagination, TestScenarioSummary } from '../types';
 
@@ -106,7 +103,6 @@ export interface TestScenarioCatalogViewProps {
   error?: unknown;
   onPageChange: (page: number) => void;
   onCreateScenario?: () => void;
-  onContextMenu?: (event: MouseEvent<HTMLButtonElement>, scenario: TestScenarioSummary) => void;
   search: string;
   onSearchChange: (value: string) => void;
   sort?: 'scenarioKey' | 'title' | 'details' | 'folder' | 'createdBy' | 'createdAt' | 'updatedAt';
@@ -412,7 +408,6 @@ const ScenarioTable = ({
   selectedIds,
   selectionDisabled,
   onToggleSelected,
-  onContextMenu,
   showFolder,
   folderPathById,
   sort,
@@ -429,7 +424,6 @@ const ScenarioTable = ({
   selectedIds: string[];
   selectionDisabled: boolean;
   onToggleSelected: (id: string) => void;
-  onContextMenu?: (event: MouseEvent<HTMLButtonElement>, scenario: TestScenarioSummary) => void;
   showFolder: boolean;
   folderPathById: Map<string, string>;
   sort?: TestScenarioCatalogViewProps['sort'];
@@ -571,7 +565,6 @@ const ScenarioTable = ({
                 onFilterDisclosureChange={onFilterDisclosureChange}
               />
             </Table.ColumnHeader>
-            <Table.ColumnHeader px={1} py={4} w="35px" />
           </Table.Row>
         </Table.Header>
         <Table.Body>
@@ -619,10 +612,23 @@ const ScenarioTable = ({
                     </Text>
                   )}
                 </Table.Cell>
-                <Table.Cell {...TABLE_CELL_PADDING}>
-                  <ChakraLink asChild fontWeight="semibold" color="text.main" lineClamp={2}>
-                    <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
-                  </ChakraLink>
+                <Table.Cell {...TABLE_CELL_PADDING} minW={0} overflow="hidden">
+                  <Tooltip content={scenario.title}>
+                    <ChakraLink
+                      asChild
+                      display="block"
+                      minW={0}
+                      maxW="100%"
+                      overflow="hidden"
+                      textOverflow="ellipsis"
+                      whiteSpace="nowrap"
+                      fontWeight="semibold"
+                      color="text.main"
+                      title={scenario.title}
+                    >
+                      <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
+                    </ChakraLink>
+                  </Tooltip>
                 </Table.Cell>
                 <Table.Cell
                   {...TABLE_CELL_PADDING}
@@ -668,12 +674,6 @@ const ScenarioTable = ({
                 </Table.Cell>
                 <Table.Cell px={1} py={4} color="text.secondary" fontSize="sm">
                   <ScenarioTimestamp timestamp={scenario.updatedAt} />
-                </Table.Cell>
-                <Table.Cell px={0} py={4} textAlign="start" w="35px">
-                  <ContextMenuButton
-                    aria-label={`Actions for ${scenario.title}`}
-                    onClick={(event) => onContextMenu?.(event, scenario)}
-                  />
                 </Table.Cell>
               </Table.Row>
             ))
@@ -729,7 +729,7 @@ const PriorityFilter = ({
           bg={selected.length ? 'bg.active' : 'bg.card'}
           borderColor={selected.length ? 'border.active' : undefined}
           color={selected.length ? 'text.primary' : undefined}
-          minW="150px"
+          minW="110px"
           justifyContent="space-between"
           fontSize="sm"
         >
@@ -1057,7 +1057,6 @@ const CompactScenarioTable = ({
   selectedIds,
   selectionDisabled,
   onToggleSelected,
-  onContextMenu,
   onDragPayload,
   onDragEnd,
   folderPathById,
@@ -1069,7 +1068,6 @@ const CompactScenarioTable = ({
   selectedIds: string[];
   selectionDisabled: boolean;
   onToggleSelected: (id: string) => void;
-  onContextMenu?: (event: MouseEvent<HTMLButtonElement>, scenario: TestScenarioSummary) => void;
   onDragPayload: (projectId: string, scenarioIds: string[]) => void;
   onDragEnd: () => void;
   folderPathById: Map<string, string>;
@@ -1223,28 +1221,23 @@ const CompactScenarioTable = ({
                       </Text>
                     </Tooltip>
                   </Table.Cell>
-                  <Table.Cell px={3} py={2}>
-                    <HStack minW={0} justify="space-between" gap={2}>
-                      <Tooltip content={scenario.title}>
-                        <ChakraLink
-                          asChild
-                          minW={0}
-                          flex="1"
-                          fontWeight="semibold"
-                          color="text.main"
-                          overflow="hidden"
-                          textOverflow="ellipsis"
-                          whiteSpace="nowrap"
-                          title={scenario.title}
-                        >
-                          <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
-                        </ChakraLink>
-                      </Tooltip>
-                      <ContextMenuButton
-                        aria-label={`Actions for ${scenario.title}`}
-                        onClick={(event) => onContextMenu?.(event, scenario)}
-                      />
-                    </HStack>
+                  <Table.Cell px={3} py={2} minW={0} overflow="hidden">
+                    <Tooltip content={scenario.title}>
+                      <ChakraLink
+                        asChild
+                        display="block"
+                        minW={0}
+                        maxW="100%"
+                        overflow="hidden"
+                        textOverflow="ellipsis"
+                        whiteSpace="nowrap"
+                        fontWeight="semibold"
+                        color="text.main"
+                        title={scenario.title}
+                      >
+                        <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
+                      </ChakraLink>
+                    </Tooltip>
                   </Table.Cell>
                   <Table.Cell px={3} py={2}>
                     {priority ? (
@@ -1328,7 +1321,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   error,
   onPageChange,
   onCreateScenario,
-  onContextMenu: onContextMenuOverride,
   search,
   onSearchChange,
   sort,
@@ -1431,19 +1423,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [removeFromSuiteOpen, setRemoveFromSuiteOpen] = useState(false);
   const [removeFromSuiteError, setRemoveFromSuiteError] = useState<string | null>(null);
   const [isRemovingFromSuite, setIsRemovingFromSuite] = useState(false);
-  const requestRemoveFromSuite = useCallback(
-    (scenario: Pick<TestScenarioSummary, 'id' | 'title'>) => {
-      selectOnlyScenario?.(scenario.id);
-      setRemoveFromSuiteError(null);
-      setRemoveFromSuiteOpen(true);
-    },
-    [selectOnlyScenario],
-  );
-  const suiteAwareContextMenu = useTestScenarioContextMenu(
-    projectId,
-    scope.kind === 'suite' ? requestRemoveFromSuite : undefined,
-  );
-  const onContextMenu = onContextMenuOverride ?? suiteAwareContextMenu;
   const [addScenariosToSuiteOpen, setAddScenariosToSuiteOpen] = useState(false);
   const [createName, setCreateName] = useState('');
   const [createPurpose, setCreatePurpose] = useState('');
@@ -1766,7 +1745,15 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     : [];
   const selectedFolderIndex = selectedFolderSiblings.findIndex((folder) => folder.id === selectedFolder?.id);
   return (
-    <Wrap my={4} mx={6} p={{ base: 3, md: 5 }} ps={{ base: 3, md: '14px' }} bg="bg.card" borderRadius="lg">
+    <Wrap
+      my={4}
+      mx={6}
+      p={{ base: 3, md: 5 }}
+      ps={{ base: 3, md: '14px' }}
+      pb={selectedIds.length > 0 ? { base: 28, md: 24 } : undefined}
+      bg="bg.card"
+      borderRadius="lg"
+    >
       <VStack align="stretch" gap={5} w="100%">
         <Grid
           templateColumns={{ base: '1fr', lg: '250px minmax(0, 1fr)' }}
@@ -2006,7 +1993,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     <FiPlus />
                     Create scenario
                   </Button>
-                  {isScenariosTab && (
+                  {isScenariosTab && scope.kind !== 'all' && (
                     <Menu.Root>
                       <Menu.Trigger asChild>
                         <IconButton aria-label="Folder actions" size="md" variant="outline">
@@ -2032,7 +2019,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                               </Menu.Item>
                               <Menu.Item
                                 value="move-folder-down"
-                                disabled={selectedFolderIndex < 0 || selectedFolderIndex >= selectedFolderSiblings.length - 1}
+                                disabled={
+                                  selectedFolderIndex < 0 || selectedFolderIndex >= selectedFolderSiblings.length - 1
+                                }
                                 onClick={() => void reorderFolder(selectedFolder, 1)}
                               >
                                 Move down
@@ -2260,123 +2249,139 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 Resolving all matching scenario IDs…
               </Text>
             )}
-            {operationReport && (
-              <Text
-                role={
-                  operationReport.failedIds.length ||
-                  operationReport.unattemptedIds.length ||
-                  operationReport.uncertainIds.length
-                    ? 'alert'
-                    : 'status'
-                }
-                color={
-                  operationReport.failedIds.length ||
-                  operationReport.unattemptedIds.length ||
-                  operationReport.uncertainIds.length
-                    ? 'fg.error'
-                    : 'text.muted'
-                }
-                fontSize="sm"
-              >
-                {operationReport.succeededIds.length} succeeded, {operationReport.failedIds.length} failed,{' '}
-                {operationReport.unattemptedIds.length} not attempted, {operationReport.uncertainIds.length} uncertain.
-                {operationReport.errorMessage ? ` ${operationReport.errorMessage}` : ''}
-              </Text>
-            )}
             {selectedIds.length > 0 && (
-              <HStack
-                position="sticky"
-                bottom={3}
-                zIndex="docked"
-                flexWrap="wrap"
-                gap={2}
-                p={3}
-                bg="bg.subtle"
-                borderRadius="md"
-                borderStartWidth="3px"
-                borderStartColor="border.focus"
-                boxShadow="lg"
-                w="100%"
-                aria-label="Bulk scenario actions"
-              >
-                <Text fontWeight="semibold" whiteSpace="nowrap">
-                  {selectedIds.length} {allMatchingSelected ? 'matching scenarios selected' : 'selected'}
-                </Text>
-                {isScenariosTab && !allMatchingSelected && selectedIds.length < pagination.total && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={isResolvingSelection || isExecutingOperation}
-                    onClick={() => void selectAllMatching()}
-                  >
-                    Select all {pagination.total}
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  aria-label="Close bulk scenario actions and clear selection"
-                  disabled={isExecutingOperation}
-                  onClick={clearSelection}
+              <Portal>
+                <HStack
+                  position="fixed"
+                  left="50%"
+                  bottom={{ base: 3, md: 5 }}
+                  transform="translateX(-50%)"
+                  zIndex="popover"
+                  flexWrap={{ base: 'wrap', sm: 'nowrap' }}
+                  justify="center"
+                  gap={{ base: 1, sm: 2 }}
+                  px={{ base: 2, sm: 3 }}
+                  py={2}
+                  maxW="calc(100vw - 24px)"
+                  bg="black"
+                  color="white"
+                  borderRadius="lg"
+                  boxShadow="0 8px 28px rgba(0, 0, 0, 0.28)"
+                  aria-label="Bulk scenario actions"
+                  role="toolbar"
+                  _dark={{ bg: 'white', color: 'gray.900' }}
                 >
-                  <FiX />
-                </Button>
-                <Box flex="1" />
-                {scope.kind !== 'suite' && (
+                  <Text px={1} fontSize="sm" fontWeight="semibold" whiteSpace="nowrap">
+                    {selectedIds.length} selected
+                  </Text>
+                  {isScenariosTab && !allMatchingSelected && selectedIds.length < pagination.total && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      color="blue.300"
+                      textDecoration="underline"
+                      disabled={isResolvingSelection || isExecutingOperation}
+                      onClick={() => void selectAllMatching()}
+                      _dark={{ color: 'blue.700' }}
+                      _hover={{ bg: 'whiteAlpha.200' }}
+                    >
+                      Select all {pagination.total}
+                    </Button>
+                  )}
+                  {scope.kind !== 'suite' && (
+                    <Menu.Root>
+                      <Menu.Trigger asChild>
+                        <IconButton
+                          size="sm"
+                          variant="ghost"
+                          aria-label="More bulk actions"
+                          disabled={isExecutingOperation}
+                          color="inherit"
+                          _hover={{ bg: 'whiteAlpha.200' }}
+                        >
+                          <FiMoreHorizontal />
+                        </IconButton>
+                      </Menu.Trigger>
+                      <Menu.Positioner>
+                        <Menu.Content>
+                          <Menu.Item
+                            value="move-selected"
+                            onClick={() => {
+                              moveDialogScope.current = scopeKey;
+                              setMoveScenariosTarget('');
+                              setMoveScenariosError(null);
+                              setMoveScenariosOpen(true);
+                            }}
+                          >
+                            <HStack justify="space-between" w="full">
+                              <Text>Move to folder</Text>
+                              <FiFolder aria-hidden="true" />
+                            </HStack>
+                          </Menu.Item>
+                        </Menu.Content>
+                      </Menu.Positioner>
+                    </Menu.Root>
+                  )}
                   <Button
                     size="sm"
-                    variant="outline"
-                    disabled={isExecutingOperation}
+                    variant="ghost"
+                    disabled={suites.length === 0 || isExecutingOperation}
                     onClick={() => {
-                      moveDialogScope.current = scopeKey;
-                      setMoveScenariosTarget('');
-                      setMoveScenariosError(null);
-                      setMoveScenariosOpen(true);
+                      setBulkSuiteId('');
+                      setAddToSuiteError(null);
+                      setAddToSuiteOpen(true);
                     }}
+                    color="inherit"
+                    _hover={{ bg: 'whiteAlpha.200' }}
                   >
-                    Move…
+                    <FiLayers aria-hidden="true" />
+                    Add to suite
                   </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={suites.length === 0 || isExecutingOperation}
-                  onClick={() => {
-                    setBulkSuiteId('');
-                    setAddToSuiteError(null);
-                    setAddToSuiteOpen(true);
-                  }}
-                >
-                  Add to suite…
-                </Button>
-                {isScenariosTab && (
-                  <Button
+                  {isScenariosTab && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={isExecutingOperation}
+                      onClick={() => {
+                        setDeleteTargetIds([...selectedIds]);
+                        setDeleteSelectedOpen(true);
+                      }}
+                      color="red.300"
+                      _dark={{ color: 'red.600' }}
+                      _hover={{ bg: 'whiteAlpha.200' }}
+                    >
+                      <FiTrash2 aria-hidden="true" />
+                      Delete
+                    </Button>
+                  )}
+                  {scope.kind === 'suite' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={isExecutingOperation}
+                      onClick={() => {
+                        setRemoveFromSuiteError(null);
+                        setRemoveFromSuiteOpen(true);
+                      }}
+                      color="inherit"
+                      _hover={{ bg: 'whiteAlpha.200' }}
+                    >
+                      Remove from suite
+                    </Button>
+                  )}
+                  <IconButton
                     size="sm"
-                    variant="outline"
-                    colorPalette="red"
+                    variant="ghost"
+                    aria-label="Close bulk scenario actions and clear selection"
                     disabled={isExecutingOperation}
-                    onClick={() => {
-                      setDeleteTargetIds([...selectedIds]);
-                      setDeleteSelectedOpen(true);
-                    }}
+                    onClick={clearSelection}
+                    color="inherit"
+                    _hover={{ bg: 'whiteAlpha.200' }}
                   >
-                    Delete
-                  </Button>
-                )}
-                {scope.kind === 'suite' && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={isExecutingOperation}
-                    onClick={() => {
-                      setRemoveFromSuiteError(null);
-                      setRemoveFromSuiteOpen(true);
-                    }}
-                  >
-                    Remove from suite
-                  </Button>
-                )}
-              </HStack>
+                    <FiX />
+                  </IconButton>
+                </HStack>
+              </Portal>
             )}
 
             <Box borderWidth="1px" borderColor="border.main" borderRadius="lg" overflow="hidden" bg="bg.card">
@@ -2398,7 +2403,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       selectedIds={selectedIds}
                       selectionDisabled={isExecutingOperation}
                       onToggleSelected={toggleSelected}
-                      onContextMenu={onContextMenu}
                       onDragPayload={(dragProjectId, scenarioIds) => {
                         activeDrag.current = { projectId: dragProjectId, scenarioIds };
                       }}
@@ -2416,7 +2420,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       selectedIds={selectedIds}
                       selectionDisabled={isExecutingOperation}
                       onToggleSelected={toggleSelected}
-                      onContextMenu={onContextMenu}
                       showFolder={showFolderColumn}
                       folderPathById={folderPathById}
                       sort={sort}

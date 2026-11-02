@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState, type ReactNode } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -542,13 +542,13 @@ describe('TestScenarioCatalogView', () => {
     await user.click(screen.getByRole('button', { name: 'Move member 1 down' }));
     expect(onReorderSuite).toHaveBeenCalledWith('suite-1', ['scenario-2', 'scenario-1']);
 
-    await user.click(screen.getByRole('button', { name: 'Add to suite…' }));
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Suite' }), 'suite-1');
     await user.click(screen.getByRole('button', { name: 'Add to suite' }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Suite' }), 'suite-1');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add to suite' }));
     expect(onAddSelectedToSuite).toHaveBeenCalledWith('suite-1');
   });
 
-  it('hides bulk Move in suite scope while retaining membership actions', () => {
+  it('hides the bulk Move menu in suite scope while retaining membership actions', () => {
     const onMoveSelected = vi.fn(async () => ({
       succeededIds: [],
       failedIds: [],
@@ -556,9 +556,9 @@ describe('TestScenarioCatalogView', () => {
       uncertainIds: [],
     }));
     renderView({ scope: { kind: 'suite', id: 'suite-1' }, selectedIds: ['scenario-1'], onMoveSelected });
-    expect(screen.queryByRole('button', { name: 'Move…' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'More bulk actions' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Remove from suite' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add to suite…' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add to suite' })).toBeInTheDocument();
     expect(onMoveSelected).not.toHaveBeenCalled();
   });
 
@@ -571,7 +571,8 @@ describe('TestScenarioCatalogView', () => {
       uncertainIds: [],
     }));
     renderView({ scope: { kind, id: 'folder-1' }, selectedIds: ['scenario-1'], onMoveSelected });
-    await user.click(screen.getByRole('button', { name: 'Move…' }));
+    await user.click(screen.getByRole('button', { name: 'More bulk actions' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Move to folder' }));
     await user.selectOptions(screen.getByRole('combobox', { name: 'Destination folder' }), '__unfiled__');
     await user.click(screen.getByRole('button', { name: 'Move 1 scenario' }));
     expect(onMoveSelected).toHaveBeenCalledWith(null);
@@ -620,7 +621,8 @@ describe('TestScenarioCatalogView', () => {
       </ChakraProvider>
     );
     const view = render(tree({ kind: 'all' }));
-    await user.click(screen.getByRole('button', { name: 'Move…' }));
+    await user.click(screen.getByRole('button', { name: 'More bulk actions' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Move to folder' }));
     expect(screen.getByRole('combobox', { name: 'Destination folder' })).toBeInTheDocument();
     view.rerender(tree({ kind: 'suite', id: 'suite-1' }));
     expect(screen.queryByRole('combobox', { name: 'Destination folder' })).not.toBeInTheDocument();
