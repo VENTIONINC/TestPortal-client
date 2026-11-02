@@ -52,7 +52,6 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>(() =>
     organizationTab === 'suites' ? { kind: 'suite' } : { kind: 'all' },
   );
-  const [includeDescendants, setIncludeDescendants] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const selectionRevision = useRef(0);
   const [resolveSelectionRequest] = useLazyGetApiV2TestScenariosSelectionQuery();
@@ -92,14 +91,13 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       ...(debouncedColumnFilters.createdBy.trim() ? { createdBy: debouncedColumnFilters.createdBy.trim() } : {}),
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
       ...(scope.kind === 'unfiled' ? { folderId: 'unfiled' as const } : {}),
-      ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants } : {}),
+      ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants: true } : {}),
       ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
     }),
     [
       authorIds,
       debouncedColumnFilters,
       debouncedSearch,
-      includeDescendants,
       page,
       pageSize,
       priority,
@@ -120,10 +118,10 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       ...(debouncedColumnFilters.createdBy.trim() ? { createdBy: debouncedColumnFilters.createdBy.trim() } : {}),
       ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
       ...(scope.kind === 'unfiled' ? { folderId: 'unfiled' as const } : {}),
-      ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants } : {}),
+      ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants: true } : {}),
       ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
     }),
-    [debouncedColumnFilters, debouncedSearch, includeDescendants, priority, projectId, scope],
+    [debouncedColumnFilters, debouncedSearch, priority, projectId, scope],
   );
   const authorsQuery = useGetApiV2TestScenariosAuthorsQuery(authorCountArgs);
   const authorIdentityCache = useRef<{
@@ -150,10 +148,10 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       ...(columnFilters.createdBy.trim() ? { createdBy: columnFilters.createdBy.trim() } : {}),
       ...(search.trim() ? { search: search.trim() } : {}),
       ...(scope.kind === 'unfiled' ? { folderId: 'unfiled' as const } : {}),
-      ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants } : {}),
+      ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants: true } : {}),
       ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
     }),
-    [authorIds, columnFilters, includeDescendants, priority, projectId, scope, search],
+    [authorIds, columnFilters, priority, projectId, scope, search],
   );
   const invalidateSelection = useCallback(() => {
     selectionRevision.current += 1;
@@ -273,14 +271,6 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     (nextScope: typeof scope) => {
       invalidateSelection();
       setScope(nextScope);
-      setPage(1);
-    },
-    [invalidateSelection],
-  );
-  const onIncludeDescendantsChange = useCallback(
-    (value: boolean) => {
-      invalidateSelection();
-      setIncludeDescendants(value);
       setPage(1);
     },
     [invalidateSelection],
@@ -483,8 +473,6 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     unfiledScenarioCount: unfiledCountQuery.currentData?.total ?? 0,
     scope,
     onScopeChange,
-    includeDescendants,
-    onIncludeDescendantsChange,
     folders: foldersQuery.currentData ?? [],
     suites: suitesQuery.currentData ?? [],
     organizationLoading: foldersQuery.isLoading || suitesQuery.isLoading,

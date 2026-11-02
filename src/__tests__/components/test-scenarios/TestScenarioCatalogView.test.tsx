@@ -99,8 +99,6 @@ const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination
   onCreateSuite: vi.fn(async () => {}),
   onUpdateSuite: vi.fn(async () => {}),
   onDeleteSuite: vi.fn(async () => {}),
-  includeDescendants: true,
-  onIncludeDescendantsChange: vi.fn(),
 };
 
 const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>

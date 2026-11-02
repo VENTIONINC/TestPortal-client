@@ -162,8 +162,6 @@ export interface TestScenarioCatalogViewProps {
     body: { name?: string; description?: string | null; purpose?: string | null; release?: string | null },
   ) => Promise<unknown>;
   onDeleteSuite: (suiteId: string) => Promise<void>;
-  includeDescendants: boolean;
-  onIncludeDescendantsChange: (value: boolean) => void;
 }
 
 const formatScenarioDate = (timestamp: string) => {
@@ -1377,8 +1375,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   onCreateSuite,
   onUpdateSuite,
   onDeleteSuite,
-  includeDescendants,
-  onIncludeDescendantsChange,
 }: TestScenarioCatalogViewProps) {
   const isScenariosTab = organizationTab !== 'suites';
   const selectedAuthorIds = authorIds ?? (authorId ? [authorId] : []);
@@ -1456,8 +1452,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const folderRows = flattenFolders(folders);
-  const showFolderColumn =
-    scope.kind === 'all' || scope.kind === 'suite' || (scope.kind === 'folder' && includeDescendants);
+  const showFolderColumn = scope.kind === 'all' || scope.kind === 'suite' || scope.kind === 'folder';
   const folderPathById = new Map<string, string>();
   const folderScenarioCounts = new Map<string, number>();
   folderRows.forEach((folder) => {
@@ -1485,18 +1480,20 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     folder: 'Folder',
     createdBy: 'Created by',
   };
-  const breadcrumbs = selectedFolder
-    ? [
-        ...folderRows.filter((folder) => {
+  const selectedFolderPath = selectedFolder
+    ? [...folderRows]
+        .filter((folder) => {
           let current: (typeof folderRows)[number] | undefined = selectedFolder;
           while (current) {
             if (current.id === folder.id) return true;
             current = folderRows.find((candidate) => candidate.id === current?.parentId);
           }
           return false;
-        }),
-      ].sort((a, b) => a.depth - b.depth)
-    : [];
+        })
+        .sort((a, b) => a.depth - b.depth)
+        .map((folder) => folder.name)
+        .join(' / ')
+    : undefined;
   const openCreateDialog = (kind: 'folder' | 'suite') => {
     setCreateName('');
     setCreatePurpose('');
@@ -1942,31 +1939,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           </VStack>
 
           <VStack align="stretch" gap={4} minW="0">
-            <Box>
-              {selectedFolder && (
-                <HStack aria-label="Folder breadcrumbs" mb={2} gap={1} flexWrap="wrap">
-                  <Button size="xs" variant="ghost" onClick={() => onScopeChange({ kind: 'all' })}>
-                    All scenarios
-                  </Button>
-                  {breadcrumbs.map((folder) => (
-                    <HStack key={folder.id} gap={1}>
-                      <Text color="text.muted">/</Text>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        aria-current={folder.id === selectedFolder.id ? 'page' : undefined}
-                        onClick={() => onScopeChange({ kind: 'folder', id: folder.id })}
-                      >
-                        {folder.name}
-                      </Button>
-                    </HStack>
-                  ))}
-                </HStack>
-              )}
+            <Box minH={{ base: 'auto', md: selectedFolder ? '84px' : 'auto' }}>
               <HStack justify="space-between" align="start" gap={3} flexWrap="wrap">
-                <Box>
-                  <Heading fontSize="lg">
-                    {selectedFolder?.name ??
+                <Box minW="0" flex="1">
+                  <Heading fontSize="lg" lineHeight="1.3">
+                    {selectedFolderPath ??
                       selectedSuite?.name ??
                       (scope.kind === 'unfiled' ? 'No folder scenarios' : 'All scenarios')}
                   </Heading>
@@ -1975,9 +1952,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       {selectedFolder.description}
                     </Text>
                   )}
-                  <Text mt={1} color="text.muted" fontSize="sm">
+                  <Text mt={selectedFolder?.description ? 0 : 1} color="text.muted" fontSize="sm">
                     {selectedFolder
-                      ? `${pagination.total} scenarios${includeDescendants ? ' in this folder and subfolders' : ' directly in this folder'}`
+                      ? `${pagination.total} scenarios`
                       : selectedSuite
                         ? `${selectedSuite.members?.length ?? 0} scenarios${selectedSuite.release ? ` · ${selectedSuite.release}` : ''}`
                         : scope.kind === 'unfiled'
@@ -2273,18 +2250,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
               </Collapsible.Root>
             )}
 
-            {scope.kind === 'folder' && (
-              <HStack align="end" gap={3} flexWrap="wrap">
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, minHeight: 40 }}>
-                  <input
-                    type="checkbox"
-                    checked={includeDescendants}
-                    onChange={(event) => onIncludeDescendantsChange(event.currentTarget.checked)}
-                  />
-                  Include subfolders
-                </label>
-              </HStack>
-            )}
             {selectionError && (
               <Text role="alert" color="fg.error" fontSize="sm">
                 Could not select all matching scenarios: {selectionError}

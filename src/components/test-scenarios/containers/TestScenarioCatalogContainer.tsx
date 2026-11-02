@@ -41,8 +41,6 @@ export const TestScenarioCatalogContainer = ({ projectId, organizationTab }: Tes
       onCreateSuite={catalog.createSuite}
       onUpdateSuite={catalog.updateSuite}
       onDeleteSuite={catalog.deleteSuite}
-      includeDescendants={catalog.includeDescendants}
-      onIncludeDescendantsChange={catalog.onIncludeDescendantsChange}
       onCreateScenario={onCreateScenario}
     />
   );
