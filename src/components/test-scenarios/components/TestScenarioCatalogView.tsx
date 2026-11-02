@@ -1773,6 +1773,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
               <VStack align="stretch" gap={1}>
                 <Button
                   size="sm"
+                  p={1}
                   justifyContent="flex-start"
                   variant={scope.kind === 'all' ? 'subtle' : 'ghost'}
                   colorPalette={scope.kind === 'all' ? 'blue' : undefined}
@@ -1783,11 +1784,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 >
                   <FiLayers />
                   All scenarios
-                  {scope.kind === 'all' && (
-                    <Text ml="auto" color="text.muted" fontSize="xs">
-                      {projectScenarioCount}
-                    </Text>
-                  )}
+                  <Text ml="auto" color="text.muted" fontSize="xs">
+                    {projectScenarioCount}
+                  </Text>
                 </Button>
               </VStack>
             )}

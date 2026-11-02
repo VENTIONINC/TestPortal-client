@@ -190,6 +190,24 @@ describe('TestScenarioCatalogView', () => {
     expect(onUpdateFolder).toHaveBeenCalledWith('folder-1', { name: 'Authentication', description: null });
   });
 
+  it('does not expose an Include subfolders toggle for folder scope', () => {
+    renderView({
+      scope: { kind: 'folder', id: 'folder-1' },
+      folders: [
+        {
+          id: 'folder-1',
+          name: 'Authentication',
+          parentId: null,
+          scenarioCount: 1,
+          children: [{ id: 'child-1', name: 'Password recovery', parentId: 'folder-1', scenarioCount: 1 }],
+        },
+      ],
+    });
+
+    expect(screen.queryByText(/Include subfolders/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /subfolders/i })).not.toBeInTheDocument();
+  });
+
   it('shows suite selection without folder navigation in Suites', () => {
     renderView({
       organizationTab: 'suites',
@@ -227,11 +245,8 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByRole('button', { name: 'Create Test Scenario' })).toBeInTheDocument();
   });
 
-  it('renders compact summary metadata in the specified order', async () => {
-    const user = userEvent.setup();
-    const onContextMenu = vi.fn();
-
-    renderView({ onContextMenu });
+  it('renders compact summary metadata and opens scenario details from the title', () => {
+    renderView();
 
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getAllByRole('columnheader')).toHaveLength(8);
@@ -255,13 +270,7 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.queryByText('9/1/2026')).not.toBeInTheDocument();
     expect(screen.queryByText('# Checkout flow')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1');
-
-    const actions = screen.getByRole('button', { name: 'Actions for Checkout flow' });
-    expect(actions).toBeInTheDocument();
-
-    await user.click(actions);
-
-    expect(onContextMenu).toHaveBeenCalledWith(expect.anything(), scenarios[0]);
+    expect(screen.queryByRole('button', { name: 'Actions for Checkout flow' })).not.toBeInTheDocument();
   });
 
   it('drags selected rows as a group and unselected rows by their own UUID', () => {
@@ -395,12 +404,16 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByRole('button', { name: 'Priority: 2' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Done' }));
     expect(screen.getByRole('button', { name: 'Priority: 2' })).toHaveAttribute('aria-expanded', 'false');
-    await user.selectOptions(screen.getByLabelText('Author'), 'user-1');
-    await user.selectOptions(screen.getByLabelText('Sort by'), 'scenarioKey');
-    await user.selectOptions(screen.getByLabelText('Sort direction'), 'asc');
+    await user.click(screen.getByRole('button', { name: 'Author' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Ada Lovelace' }));
+    expect(onAuthorChange).toHaveBeenCalledWith(['user-1']);
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    await user.click(screen.getByRole('button', { name: 'Sort: Updated' }));
+    await user.click(screen.getByRole('button', { name: /^Key$/ }));
+    await user.click(screen.getByRole('button', { name: 'Sort descending' }));
     await user.selectOptions(screen.getByLabelText('Rows per page'), '50');
     expect(onPriorityChange).toHaveBeenCalledWith('high,medium');
-    expect(onAuthorChange).toHaveBeenCalledWith('user-1');
+    expect(onAuthorChange).toHaveBeenCalledWith(['user-1']);
     expect(onSortChange).toHaveBeenCalledWith('scenarioKey');
     expect(onSortDirectionChange).toHaveBeenCalledWith('asc');
     expect(onPageSizeChange).toHaveBeenCalledWith(50);
@@ -417,7 +430,7 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByRole('button', { name: 'Priority:High' })).toHaveStyle({
       background: 'var(--chakra-colors-bg-active)',
     });
-    expect(screen.getByLabelText('Author')).toHaveStyle({
+    expect(screen.getByRole('button', { name: 'Author: Ada L.' })).toHaveStyle({
       background: 'var(--chakra-colors-bg-active)',
     });
   });
@@ -483,7 +496,7 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByText('Grace H.')).toBeInTheDocument();
     expect(screen.queryByText('grace@example.com')).not.toBeInTheDocument();
     expect(screen.getByTitle('Grace Hopper (grace@example.com)')).toBeInTheDocument();
-    expect(screen.getAllByTestId('context-menu-button')).toHaveLength(2);
+    expect(screen.queryAllByTestId('context-menu-button')).toHaveLength(0);
   });
 
   it('reports the create action from the catalog header', async () => {

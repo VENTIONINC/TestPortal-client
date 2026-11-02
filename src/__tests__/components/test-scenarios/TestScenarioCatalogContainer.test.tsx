@@ -194,15 +194,15 @@ describe('TestScenarioCatalogContainer', () => {
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
       page: 1,
       priority: 'high',
-      createdById: 'user-1',
+      createdByIds: 'user-1',
       sortField: 'updatedAt',
       sortDirection: 'desc',
     });
     act(() => result.current.onPriorityChange(''));
-    expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({ page: 1, createdById: 'user-1' });
+    expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({ page: 1, createdByIds: 'user-1' });
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).not.toHaveProperty('priority');
     act(() => result.current.onPageSizeChange(50));
-    expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({ page: 1, limit: 50, createdById: 'user-1' });
+    expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({ page: 1, limit: 50, createdByIds: 'user-1' });
   });
 
   it('loads project and No folder totals independently of the visible list filters', () => {
@@ -249,7 +249,7 @@ describe('TestScenarioCatalogContainer', () => {
         folderId: 'folder-a',
         includeDescendants: true,
         priority: 'high,medium',
-        createdById: 'user-1',
+        createdByIds: 'user-1',
         search: 'login',
       }),
     );
@@ -544,11 +544,15 @@ describe('TestScenarioCatalogContainer', () => {
       </ChakraProvider>,
     );
 
-    await user.selectOptions(screen.getByLabelText('Sort by'), 'title');
-    await user.selectOptions(screen.getByLabelText('Sort direction'), 'asc');
+    await user.click(screen.getByRole('button', { name: 'Sort: Updated' }));
+    await user.click(screen.getByRole('button', { name: /^Title$/ }));
+    await user.click(screen.getByRole('button', { name: 'Sort descending' }));
     await user.click(screen.getByRole('button', { name: 'Priority' }));
     await user.click(screen.getByRole('checkbox', { name: 'High' }));
-    await user.selectOptions(screen.getByLabelText('Author'), 'user-1');
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    await user.click(screen.getByRole('button', { name: 'Author' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Ada Lovelace' }));
+    await user.click(screen.getByRole('button', { name: 'Done' }));
 
     await waitFor(() =>
       expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
@@ -558,7 +562,7 @@ describe('TestScenarioCatalogContainer', () => {
         sortField: 'title',
         sortDirection: 'asc',
         priority: 'high',
-        createdById: 'user-1',
+        createdByIds: 'user-1',
       }),
     );
   });

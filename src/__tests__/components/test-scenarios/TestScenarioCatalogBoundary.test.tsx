@@ -133,7 +133,11 @@ describe('TestScenarioCatalog project boundary', () => {
       </ChakraProvider>,
     );
 
-    await user.click(screen.getByRole('button', { name: /^2$/ }));
+    await user.click(screen.getByRole('button', { name: 'Next Page' }));
+    expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
+      { projectId: 'project-a', page: 2, limit: 25, sortField: 'updatedAt', sortDirection: 'desc' },
+      { skip: false },
+    );
     expect(screen.getByText('project-a scenario')).toBeInTheDocument();
     expect(screen.queryByText('project-a details')).not.toBeInTheDocument();
     expect(screen.getByText('project-a c.')).toBeInTheDocument();
