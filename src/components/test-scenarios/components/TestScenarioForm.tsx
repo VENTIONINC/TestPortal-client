@@ -5,7 +5,7 @@ import { Alert, Box, Button, Grid, Heading, HStack, IconButton, Link, Text, VSta
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { FiArrowLeft, FiLink, FiMenu, FiPlus, FiTrash2, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiFolder, FiLink, FiMenu, FiPlus, FiX } from 'react-icons/fi';
 
 import { Input, NativeSelect, Textarea } from '@/components/ui';
 import { testScenarioAuthoringSchema, type TestScenarioAuthoringFormData } from '@/schemas';
@@ -235,15 +235,16 @@ export const TestScenarioForm = ({
       bg="bg.section"
       borderRadius="12px"
       shadow="sm"
+      position="relative"
     >
-      <VStack align="stretch" gap={6}>
+      <VStack align="stretch" gap={4}>
         <HStack justify="space-between" flexWrap="wrap">
           <Button type="button" variant="ghost" onClick={cancel} disabled={pending}>
             <FiArrowLeft />
             Back to {backLabel}
           </Button>
-          <HStack>
-            <Button type="button" variant="outline" onClick={cancel} disabled={pending}>
+          <HStack position={{ base: 'static', md: 'absolute' }} top={{ md: '72px' }} right={{ md: 6 }}>
+            <Button type="button" variant="ghost" onClick={cancel} disabled={pending}>
               Cancel
             </Button>
             <Button type="submit" variant="primary" loading={pending} disabled={pending}>
@@ -275,73 +276,84 @@ export const TestScenarioForm = ({
             <Alert.Content>{successMessage}</Alert.Content>
           </Alert.Root>
         )}
-        <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 1fr) 280px' }} gap={8}>
-          <VStack align="stretch" gap={5}>
+        <VStack align="stretch" gap={2} maxW={{ lg: 'calc(100% - 224px)' }}>
             {mode === 'create' && (
-              <Text fontSize="xs" fontWeight="semibold" color="text.secondary">
+              <Text fontSize="xs" fontWeight="semibold" color="blue.500">
                 NEW SCENARIO
               </Text>
             )}
-            <Grid templateColumns={{ base: '1fr', md: 'minmax(120px, 1fr) 2fr 1fr' }} alignItems="end" gap={4}>
-              <Box>
-                <Text fontSize="sm" color="text.secondary">
-                  Scenario key
-                </Text>
-                <Text fontWeight="semibold">{mode === 'create' ? 'Assigned on save' : initialValues.scenarioKey}</Text>
+            <HStack gap={2} flexWrap="wrap">
+              <Text fontSize="sm" bg="bg.subtle" px={2} py={1} borderRadius="md">
+                {mode === 'create' ? 'Assigned on save' : initialValues.scenarioKey}
+              </Text>
+              <Box minW="140px" position="relative">
+                <Box position="absolute" left={2} top="50%" transform="translateY(-50%)" zIndex={1} pointerEvents="none">
+                  <FiFolder />
+                </Box>
+                <NativeSelect
+                  name="scenario-folder"
+                  aria-label="Scenario folder"
+                  value={folderId ?? ''}
+                  disabled={pending}
+                  onChange={(e) => setFolderId(e.target.value || null)}
+                  h="32px"
+                  pl={8}
+                >
+                  <option value="">Unfiled</option>
+                  {folders.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {'　'.repeat(f.depth ?? 0)}{f.name}
+                    </option>
+                  ))}
+                </NativeSelect>
               </Box>
-              <NativeSelect
-                name="scenario-folder"
-                label="Folder"
-                aria-label="Scenario folder"
-                value={folderId ?? ''}
-                disabled={pending}
-                onChange={(e) => setFolderId(e.target.value || null)}
-              >
-                <option value="">Unfiled</option>
-                {folders.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {'　'.repeat(f.depth ?? 0)}
-                    {f.name}
-                  </option>
-                ))}
-              </NativeSelect>
-              <NativeSelect
-                {...register('priority')}
-                name="priority"
-                label="Priority"
-                disabled={pending}
-                color={values.priority === 'high' ? 'red.500' : values.priority === 'low' ? 'green.600' : 'orange.600'}
-                error={errors.priority?.message}
-              >
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </NativeSelect>
-            </Grid>
+              <Box minW="110px">
+                <NativeSelect
+                  {...register('priority')}
+                  name="priority"
+                  aria-label="Priority"
+                  disabled={pending}
+                  h="32px"
+                  color={values.priority === 'high' ? 'red.500' : values.priority === 'low' ? 'green.600' : 'blue.600'}
+                  error={errors.priority?.message}
+                >
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </NativeSelect>
+              </Box>
+            </HStack>
             <Input
               {...register('title')}
               name="title"
-              label="Title"
+              aria-label="Title"
               fontSize="2xl"
-              placeholder="What should this scenario verify?"
+              fontWeight="semibold"
+              h="48px"
+              placeholder="Scenario title"
               disabled={pending}
               error={errors.title?.message}
             />
             <Textarea
               {...register('details')}
               name="details"
-              label="Details"
-              placeholder="Optional context for this scenario"
+              aria-label="Details"
+              placeholder="What this scenario covers and why (optional)"
+              minH="64px"
               disabled={pending}
               error={errors.details?.message}
             />
+        </VStack>
+        <Box borderTopWidth="1px" borderColor="border.main" />
+        <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 1fr) 200px' }} gap={6}>
+          <VStack align="stretch" gap={4}>
             <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={5}>
               <Textarea
                 {...register('preconditions')}
                 name="preconditions"
                 label="Preconditions"
-                placeholder="What must be true before testing?"
-                minH="120px"
+                placeholder="State the system must be in before step 1"
+                minH="84px"
                 disabled={pending}
                 error={errors.preconditions?.message}
               />
@@ -349,16 +361,18 @@ export const TestScenarioForm = ({
                 {...register('testData')}
                 name="testData"
                 label="Test data"
-                placeholder="Accounts, inputs or data needed for this test"
-                minH="120px"
+                placeholder="Accounts, cards, URLs or files the steps need. One per line."
+                minH="84px"
                 disabled={pending}
                 error={errors.testData?.message}
               />
             </Grid>
-            <Heading size="md">Steps {steps.length}</Heading>
-            <Text fontSize="xs" color="text.secondary">
-              Drag to reorder. Keyboard: Space to pick up, arrows to move, Space to drop, Escape to cancel.
-            </Text>
+            <HStack justify="space-between" flexWrap="wrap">
+              <Heading size="md">Steps {steps.length}</Heading>
+              <Text fontSize="xs" color="text.secondary">
+                Drag to reorder · Enter in the last field adds a step
+              </Text>
+            </HStack>
             <Grid
               display={{ base: 'none', md: 'grid' }}
               templateColumns="30px 24px minmax(0, 1fr) minmax(0, 1fr) 30px"
@@ -380,14 +394,12 @@ export const TestScenarioForm = ({
                   key={step.key}
                   data-step-key={step.key}
                   listStyle="none"
-                  borderBottomWidth="1px"
-                  borderColor="border.main"
-                  pb={3}
+
                 >
                   <Grid
                     templateColumns={{ base: '30px 1fr 30px', md: '30px 24px minmax(0, 1fr) minmax(0, 1fr) 30px' }}
                     gap={3}
-                    alignItems="start"
+                    alignItems="center"
                   >
                     <IconButton
                       type="button"
@@ -451,7 +463,9 @@ export const TestScenarioForm = ({
                     </Text>
                     <Textarea
                       name={`step-${step.key}-action`}
-                      label="Action"
+                      placeholder="What the tester does"
+                      minH="40px"
+                      rows={1}
                       aria-label={`Step ${index + 1} action`}
                       data-action-key={step.key}
                       value={step.action}
@@ -463,7 +477,9 @@ export const TestScenarioForm = ({
                     <Box gridColumn={{ base: '2', md: 'auto' }}>
                       <Textarea
                         name={`step-${step.key}-expected`}
-                        label="Expected result"
+                        placeholder="What should happen"
+                        minH="40px"
+                        rows={1}
                         aria-label={`Step ${index + 1} expected result`}
                         value={step.expectedResult}
                         disabled={pending}
@@ -490,13 +506,13 @@ export const TestScenarioForm = ({
                       disabled={pending}
                       onClick={() => setSteps((previous) => previous.filter((s) => s.key !== step.key))}
                     >
-                      <FiTrash2 />
+                      <FiX />
                     </IconButton>
                   </Grid>
                 </Box>
               ))}
             </VStack>
-            <Button type="button" variant="outline" width="full" disabled={pending} onClick={append}>
+            <Button type="button" variant="outline" borderStyle="dashed" width="full" disabled={pending} onClick={append}>
               <FiPlus />
               Add step
             </Button>
@@ -507,18 +523,17 @@ export const TestScenarioForm = ({
           <VStack
             align="stretch"
             gap={6}
-            borderLeftWidth={{ base: 0, lg: '1px' }}
-            borderColor="border.main"
-            pl={{ base: 0, lg: 6 }}
           >
             <Box>
-              <HStack justify="space-between">
-                <Heading size="sm">Suites</Heading>
+              <Heading size="sm" mb={2}>Suites</Heading>
+              <HStack gap={2}>
                 <IconButton
                   ref={pickerButton}
                   type="button"
-                  variant="ghost"
+                  variant="outline"
                   size="xs"
+                  borderStyle="dashed"
+                  borderRadius="full"
                   aria-label="Select suites"
                   aria-expanded={pickerOpen}
                   disabled={pending}
@@ -526,12 +541,12 @@ export const TestScenarioForm = ({
                 >
                   <FiPlus />
                 </IconButton>
+                {!selectedSuites.length && (
+                  <Text color="text.secondary" fontSize="sm">
+                    Not in any suite
+                  </Text>
+                )}
               </HStack>
-              {!selectedSuites.length && (
-                <Text color="text.secondary" fontSize="sm">
-                  Not in any suite
-                </Text>
-              )}
               <VStack align="stretch" gap={2}>
                 {selectedSuites.map((suite) => (
                   <HStack key={suite.id} justify="space-between" bg="bg.active" borderRadius="md" px={2}>
