@@ -45,7 +45,7 @@ export function TestScenariosPage({ initialTab }: { initialTab?: TestManagementT
           aria-label="Test Management"
           w="full"
           gap={0}
-          ps={3}
+          ps={6}
           borderBottomWidth="1px"
           borderColor="border.default"
           overflowX="auto"

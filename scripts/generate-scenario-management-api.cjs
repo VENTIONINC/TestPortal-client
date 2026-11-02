@@ -18,6 +18,8 @@ const operationIds = new Map([
   ['DELETE /api/v2/test-suites/{suiteId}/members', 'deleteApiV2TestSuitesBySuiteIdMembers'],
   ['PUT /api/v2/test-suites/{suiteId}/members/order', 'putApiV2TestSuitesBySuiteIdMembersOrder'],
   ['PATCH /api/v2/test-scenarios/bulk-folder', 'patchApiV2TestScenariosBulkFolder'],
+  ['GET /api/v2/test-scenarios/authors', 'getApiV2TestScenariosAuthors'],
+  ['GET /api/v2/test-scenarios/selection', 'getApiV2TestScenariosSelection'],
 ]);
 
 async function readOpenApi(source) {
@@ -38,6 +40,7 @@ function typeFolderChildren(openApi) {
       projectId: { type: 'string', format: 'uuid' },
       parentId: { type: ['string', 'null'], format: 'uuid' },
       name: { type: 'string' },
+      description: { type: ['string', 'null'] },
       position: { type: 'integer' },
       createdAt: { type: 'string' },
       updatedAt: { type: 'string' },

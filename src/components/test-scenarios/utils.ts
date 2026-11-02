@@ -50,13 +50,72 @@ export const flattenScenarioFolders = (folders: FolderOptionNode[]) => {
 
 export const toggleScenarioSelection = (selectedIds: string[], scenarioId: string): string[] => {
   if (selectedIds.includes(scenarioId)) return selectedIds.filter((selectedId) => selectedId !== scenarioId);
-  return selectedIds.length < 100 ? [...selectedIds, scenarioId] : selectedIds;
+  return [...selectedIds, scenarioId];
+};
+
+export interface ScenarioOperationReport {
+  succeededIds: string[];
+  failedIds: string[];
+  unattemptedIds: string[];
+  uncertainIds: string[];
+  errorMessage?: string;
+}
+
+const getScenarioOperationErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object') {
+    if ('message' in error && typeof error.message === 'string') return error.message;
+    if (
+      'data' in error &&
+      error.data &&
+      typeof error.data === 'object' &&
+      'message' in error.data &&
+      typeof error.data.message === 'string'
+    )
+      return error.data.message;
+    if ('status' in error) return `Request failed (${String(error.status)}).`;
+  }
+  return String(error);
+};
+
+const uniqueChunks = (ids: string[], size: number) => {
+  const uniqueIds = [...new Set(ids)];
+  const chunks: string[][] = [];
+  for (let index = 0; index < uniqueIds.length; index += size) chunks.push(uniqueIds.slice(index, index + size));
+  return chunks;
+};
+
+export const executeScenarioOperation = async (
+  ids: string[],
+  operation: (ids: string[]) => Promise<unknown>,
+  chunkSize = 100,
+): Promise<ScenarioOperationReport> => {
+  if (!Number.isInteger(chunkSize) || chunkSize < 1 || chunkSize > 100)
+    throw new Error('Scenario operation chunk size must be between 1 and 100.');
+  const chunks = uniqueChunks(ids, chunkSize);
+  const report: ScenarioOperationReport = { succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] };
+  for (const [index, chunk] of chunks.entries()) {
+    try {
+      await operation(chunk);
+      report.succeededIds.push(...chunk);
+    } catch (error) {
+      const status = error && typeof error === 'object' && 'status' in error ? Number(error.status) : NaN;
+      if (status >= 400 && status < 500) report.failedIds.push(...chunk);
+      else report.uncertainIds.push(...chunk);
+      report.unattemptedIds.push(...chunks.slice(index + 1).flat());
+      report.errorMessage = getScenarioOperationErrorMessage(error);
+      break;
+    }
+  }
+  return report;
 };
 
 const metadataSchema = testScenarioAuthoringSchema.pick({ priority: true, relatedIssueUrl: true });
-const validateMetadata = (values: TestScenarioEditableValues) => metadataSchema.parse({
-  priority: values.priority ?? '', relatedIssueUrl: values.relatedIssueUrl ?? '',
-});
+const validateMetadata = (values: TestScenarioEditableValues) =>
+  metadataSchema.parse({
+    priority: values.priority ?? '',
+    relatedIssueUrl: values.relatedIssueUrl ?? '',
+  });
 
 export const getTestScenarioCreatePayload = (
   projectId: string,

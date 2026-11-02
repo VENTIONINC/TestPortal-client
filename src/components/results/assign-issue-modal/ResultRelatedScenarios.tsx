@@ -80,27 +80,67 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: { resu
   if (mode === 'picker') {
     return (
       <Stack h="full" minH={0} gap={4} p={{ base: 4, md: 6 }} overflowY="auto">
-        <Button alignSelf="flex-start" size="sm" variant="ghost" onClick={management.cancelPicker}>Back to Test Scenarios</Button>
-        <Heading as="h2" size="md">Link Test Scenario</Heading>
-        <Text color="text.secondary">Links apply to all past and future Results of this Spec and show its current coverage. Search by title or scenario key; details are shown but are not searched.</Text>
+        <Button alignSelf="flex-start" size="sm" variant="ghost" onClick={management.cancelPicker}>
+          Back to Test Scenarios
+        </Button>
+        <Heading as="h2" size="md">
+          Link Test Scenario
+        </Heading>
+        <Text color="text.secondary">
+          Links apply to all past and future Results of this Spec and show its current coverage. Search by title or
+          scenario key; details are shown but are not searched.
+        </Text>
         <form onSubmit={management.applySearch}>
           <HStack align="end">
             <Box flex="1">
-              <label htmlFor="scenario-catalog-search" style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>Search title or scenario key</label>
-              <Input id="scenario-catalog-search" value={searchInput} onChange={(event) => management.setSearchInput(event.target.value)} />
+              <label htmlFor="scenario-catalog-search" style={{ display: 'block', marginBottom: 4, fontSize: 14 }}>
+                Search by title or key
+              </label>
+              <Input
+                id="scenario-catalog-search"
+                value={searchInput}
+                onChange={(event) => management.setSearchInput(event.target.value)}
+              />
             </Box>
-            <Button type="submit" variant="outline">Search</Button>
+            <Button type="submit" variant="outline">
+              Search
+            </Button>
           </HStack>
         </form>
         {feedback && <FeedbackMessage feedback={feedback} onRefresh={management.retryRefresh} />}
         {pickerQuery.isLoading || (!pickerQuery.currentData && pickerQuery.isFetching) ? (
-          <VStack role="status" aria-live="polite" p={6}><Spinner /><Text>Loading Test Scenarios…</Text></VStack>
+          <VStack role="status" aria-live="polite" p={6}>
+            <Spinner />
+            <Text>Loading Test Scenarios…</Text>
+          </VStack>
         ) : pickerQuery.isError ? (
-          <StateMessage message="Couldn’t load Test Scenarios." isError action={<Button size="sm" variant="outline" loading={pickerQuery.isFetching} onClick={() => void pickerQuery.refetch()}>Retry</Button>} />
+          <StateMessage
+            message="Couldn’t load Test Scenarios."
+            isError
+            action={
+              <Button
+                size="sm"
+                variant="outline"
+                loading={pickerQuery.isFetching}
+                onClick={() => void pickerQuery.refetch()}
+              >
+                Retry
+              </Button>
+            }
+          />
         ) : pickerQuery.currentData && pickerQuery.currentData.total === 0 ? (
-          <StateMessage message={appliedSearch ? 'No Test Scenarios match this search.' : 'This project has no Test Scenarios yet.'} />
+          <StateMessage
+            message={appliedSearch ? 'No Test Scenarios match this search.' : 'This project has no Test Scenarios yet.'}
+          />
         ) : pickerQuery.currentData && candidates.length === 0 ? (
-          <StateMessage message="There are no Test Scenarios on this page." action={<Button size="sm" variant="outline" onClick={() => management.setPage(1)}>Return to page 1</Button>} />
+          <StateMessage
+            message="There are no Test Scenarios on this page."
+            action={
+              <Button size="sm" variant="outline" onClick={() => management.setPage(1)}>
+                Return to page 1
+              </Button>
+            }
+          />
         ) : (
           <>
             <VStack align="stretch" gap={2}>
@@ -115,15 +155,40 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: { resu
               ))}
             </VStack>
             <HStack justify="space-between">
-              <Text fontSize="sm" color="text.secondary">Page {pickerQuery.currentData?.page ?? page} of {Math.max(totalPages, 1)} · {pickerQuery.currentData?.total ?? 0} scenarios</Text>
+              <Text fontSize="sm" color="text.secondary">
+                Page {pickerQuery.currentData?.page ?? page} of {Math.max(totalPages, 1)} ·{' '}
+                {pickerQuery.currentData?.total ?? 0} scenarios
+              </Text>
               <HStack>
-                <Button size="sm" variant="outline" disabled={page <= 1 || pickerQuery.isFetching} onClick={() => management.setPage((current) => current - 1)}>Previous</Button>
-                <Button size="sm" variant="outline" disabled={page >= totalPages || pickerQuery.isFetching} onClick={() => management.setPage((current) => current + 1)}>Next</Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={page <= 1 || pickerQuery.isFetching}
+                  onClick={() => management.setPage((current) => current - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={page >= totalPages || pickerQuery.isFetching}
+                  onClick={() => management.setPage((current) => current + 1)}
+                >
+                  Next
+                </Button>
               </HStack>
             </HStack>
             <HStack>
-              <Button variant="outline" onClick={management.cancelPicker}>Cancel</Button>
-              <Button onClick={() => void management.submitLink()} disabled={!selectedCandidateId || linkedIds.has(selectedCandidateId) || coverageNeedsRefresh} loading={isBusy}>Link selected scenario</Button>
+              <Button variant="outline" onClick={management.cancelPicker}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => void management.submitLink()}
+                disabled={!selectedCandidateId || linkedIds.has(selectedCandidateId) || coverageNeedsRefresh}
+                loading={isBusy}
+              >
+                Link selected scenario
+              </Button>
             </HStack>
           </>
         )}

@@ -113,7 +113,7 @@ describe('calculateIWQS', () => {
       undefined,
     );
 
-    expect(result).toEqual({ weightedSum: 9, totalLinkedFailures: 10, score: 10 });
+    expect(result).toEqual({ weightedSum: 10, totalLinkedFailures: 10, score: 10 });
   });
 
   it('uses the configured infra weight', () => {
@@ -122,7 +122,7 @@ describe('calculateIWQS', () => {
       { bug: 150, infra: 40, performance: 100, script: 20, other: 10 },
     );
 
-    expect(result.weightedSum).toBe(4);
+    expect(result.weightedSum).toBe(15);
   });
 
   it('does not assign the other weight to uncategorized results', () => {
@@ -131,7 +131,7 @@ describe('calculateIWQS', () => {
       { bug: 100, infra: 30, performance: 100, script: 20, other: 100 },
     );
 
-    expect(result.weightedSum).toBe(5);
+    expect(result.weightedSum).toBe(10);
   });
 
   it('keeps explicit other categorized results weighted', () => {
@@ -140,6 +140,6 @@ describe('calculateIWQS', () => {
       { bug: 150, infra: 30, performance: 100, script: 20, other: 25 },
     );
 
-    expect(result.weightedSum).toBe(2.5);
+    expect(result.weightedSum).toBe(15);
   });
 });

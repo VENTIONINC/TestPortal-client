@@ -30,7 +30,9 @@ export const TestScenarioCatalogContainer = ({ projectId, organizationTab }: Tes
       projectId={projectId}
       organizationTab={organizationTab}
       onMoveSelected={catalog.moveSelected}
+      onMoveScenarioIds={catalog.moveScenarioIds}
       onAddSelectedToSuite={catalog.addSelectedToSuite}
+      onDeleteSelected={catalog.deleteSelected}
       onRemoveSelectedFromSuite={catalog.removeSelectedFromSuite}
       onReorderSuite={catalog.reorderSuite}
       onCreateFolder={catalog.createFolder}
@@ -39,8 +41,6 @@ export const TestScenarioCatalogContainer = ({ projectId, organizationTab }: Tes
       onCreateSuite={catalog.createSuite}
       onUpdateSuite={catalog.updateSuite}
       onDeleteSuite={catalog.deleteSuite}
-      includeDescendants={catalog.includeDescendants}
-      onIncludeDescendantsChange={catalog.onIncludeDescendantsChange}
       onCreateScenario={onCreateScenario}
     />
   );
