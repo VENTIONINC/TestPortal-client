@@ -3,7 +3,6 @@
 
 import {
   memo,
-  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -726,7 +725,7 @@ const PriorityFilter = ({
       <Popover.Trigger asChild>
         <Button
           variant="outline"
-          bg={selected.length ? 'bg.active' : 'bg.card'}
+          bg={'bg.card'}
           borderColor={selected.length ? 'border.active' : undefined}
           color={selected.length ? 'text.primary' : undefined}
           minW="110px"
@@ -856,7 +855,7 @@ const AuthorFilter = ({
       <Popover.Trigger asChild>
         <Button
           variant="outline"
-          bg={value.length ? 'bg.active' : 'bg.card'}
+          bg={'bg.card'}
           borderColor={value.length ? 'border.active' : undefined}
           color={value.length ? 'text.primary' : undefined}
           minW="90px"
@@ -1354,7 +1353,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   selectionError,
   selectAllMatching,
   toggleSelected,
-  selectOnlyScenario,
   onMoveSelected,
   onMoveScenarioIds,
   onAddSelectedToSuite,
@@ -1399,10 +1397,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const activeDrag = useRef<{ projectId: string; scenarioIds: string[] } | null>(null);
   const [moveScenariosTarget, setMoveScenariosTarget] = useState('');
   const [moveScenariosError, setMoveScenariosError] = useState<string | null>(null);
+  const [operationFeedback, setOperationFeedback] = useState<string | null>(null);
   const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
-  const [operationReport, setOperationReport] = useState<ScenarioOperationReport | null>(null);
   const scopeKey = `${scope.kind}:${scope.id ?? ''}`;
   const latestScope = useRef(scopeKey);
   const moveDialogScope = useRef<string | null>(null);
@@ -1412,7 +1410,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setMoveScenariosOpen(false);
     setMoveScenariosTarget('');
     setMoveScenariosError(null);
-    setOperationReport(null);
     setDeleteSelectedOpen(false);
   }, [scopeKey]);
 
@@ -1554,6 +1551,20 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       setIsCreating(false);
     }
   };
+  const showOperationReport = (report: ScenarioOperationReport) => {
+    if (!report.failedIds.length && !report.unattemptedIds.length && !report.uncertainIds.length) {
+      setOperationFeedback(null);
+      return;
+    }
+    const counts = [
+      `${report.succeededIds.length} completed`,
+      `${report.failedIds.length} failed`,
+      `${report.unattemptedIds.length} not attempted`,
+      `${report.uncertainIds.length} with unknown outcome`,
+    ];
+    const guidance = report.uncertainIds.length ? ' Check unknown outcomes before retrying.' : '';
+    setOperationFeedback(`${counts.join(' · ')}. ${report.errorMessage ?? 'The operation did not complete.'}${guidance}`);
+  };
   const submitMoveScenarios = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (
@@ -1566,8 +1577,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setIsMovingScenarios(true);
     setMoveScenariosError(null);
     try {
-      const report = await onMoveSelected(moveScenariosTarget === UNFILED_DESTINATION ? null : moveScenariosTarget);
-      setOperationReport(report);
+      showOperationReport(await onMoveSelected(moveScenariosTarget === UNFILED_DESTINATION ? null : moveScenariosTarget));
       setMoveScenariosOpen(false);
     } catch (error) {
       setMoveScenariosError(getActionErrorMessage(error));
@@ -1581,8 +1591,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setIsAddingToSuite(true);
     setAddToSuiteError(null);
     try {
-      const report = await onAddSelectedToSuite(bulkSuiteId);
-      setOperationReport(report);
+      showOperationReport(await onAddSelectedToSuite(bulkSuiteId));
       setAddToSuiteOpen(false);
     } catch (error) {
       setAddToSuiteError(getActionErrorMessage(error));
@@ -1593,18 +1602,12 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const submitDeleteSelected = async () => {
     if (isDeletingSelected || deleteTargetIds.length === 0) return;
     setIsDeletingSelected(true);
-    setOperationReport(null);
     try {
-      setOperationReport(await onDeleteSelected(deleteTargetIds));
+      showOperationReport(await onDeleteSelected(deleteTargetIds));
       setDeleteSelectedOpen(false);
     } catch (error) {
-      setOperationReport({
-        succeededIds: [],
-        failedIds: [],
-        unattemptedIds: deleteTargetIds,
-        uncertainIds: [],
-        errorMessage: getActionErrorMessage(error),
-      });
+      setOperationFeedback(getActionErrorMessage(error));
+      setDeleteSelectedOpen(false);
     } finally {
       setIsDeletingSelected(false);
     }
@@ -1615,7 +1618,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setIsRemovingFromSuite(true);
     setRemoveFromSuiteError(null);
     try {
-      setOperationReport(await onRemoveSelectedFromSuite());
+      showOperationReport(await onRemoveSelectedFromSuite());
       setRemoveFromSuiteOpen(false);
     } catch (error) {
       setRemoveFromSuiteError(getActionErrorMessage(error));
@@ -1658,25 +1661,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       const ids = [...new Set(payload.scenarioIds as string[])];
       if (ids.length === 0 || active?.projectId !== projectId || ids.some((id) => !active.scenarioIds.includes(id)))
         return;
-      void onMoveScenarioIds(ids, destinationId)
-        .then(setOperationReport)
-        .catch((error: unknown) => {
-          setOperationReport({
-            succeededIds: [],
-            failedIds: [],
-            unattemptedIds: [],
-            uncertainIds: ids,
-            errorMessage: getActionErrorMessage(error),
-          });
-        });
-    } catch {
-      setOperationReport({
-        succeededIds: [],
-        failedIds: [],
-        unattemptedIds: [],
-        uncertainIds: [],
-        errorMessage: 'The drag payload was invalid.',
+      void onMoveScenarioIds(ids, destinationId).then(showOperationReport).catch((error: unknown) => {
+        setOperationFeedback(getActionErrorMessage(error));
       });
+    } catch {
+      return;
     }
   };
   const isInFolderSubtree = (candidateId: string, folderId: string) => {
@@ -2238,6 +2227,14 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
               </Collapsible.Root>
             )}
 
+            {operationFeedback && (
+              <HStack role="alert" color="fg.error" fontSize="sm">
+                <Text>{operationFeedback}</Text>
+                <IconButton aria-label="Dismiss operation feedback" size="xs" variant="ghost" onClick={() => setOperationFeedback(null)}>
+                  <FiX />
+                </IconButton>
+              </HStack>
+            )}
             {selectionError && (
               <Text role="alert" color="fg.error" fontSize="sm">
                 Could not select all matching scenarios: {selectionError}

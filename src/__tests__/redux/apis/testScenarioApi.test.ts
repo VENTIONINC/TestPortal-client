@@ -25,6 +25,7 @@ import {
   type TestScenarioSummary,
   type UpdateTestScenarioRequest,
 } from '@/redux/apis/generatedApi';
+import { extendedApi } from '@/redux/apis/extendedApi';
 import { store } from '@/redux/store';
 
 afterEach(() => {
@@ -174,6 +175,13 @@ describe('generated Test Scenario CRUD contract', () => {
 });
 
 describe('generated Test Scenario cache behavior', () => {
+  it('invalidates scoped author counts when the project catalog changes', async () => {
+    const args = { projectId: 'project-1', folderId: 'folder-1' };
+    await store.dispatch(generatedApi.util.upsertQueryData('getApiV2TestScenariosAuthors', args, { authors: [] }));
+    const affected = extendedApi.util.selectInvalidatedBy(store.getState(), [{ type: 'ScenarioCatalog', id: 'project-1' }]);
+    expect(affected.some((entry) => entry.endpointName === 'getApiV2TestScenariosAuthors')).toBe(true);
+  });
+
   it('refetches the project-scoped catalog after create, update, clear, and delete', async () => {
     let catalogRequests = 0;
     let deleted = false;

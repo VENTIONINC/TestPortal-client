@@ -427,12 +427,6 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByRole('textbox', { name: 'Search scenarios' })).toHaveStyle({
       background: 'var(--chakra-colors-bg-active)',
     });
-    expect(screen.getByRole('button', { name: 'Priority:High' })).toHaveStyle({
-      background: 'var(--chakra-colors-bg-active)',
-    });
-    expect(screen.getByRole('button', { name: 'Author: Ada L.' })).toHaveStyle({
-      background: 'var(--chakra-colors-bg-active)',
-    });
   });
 
   it('requires count-based delete confirmation for the exact selected UUIDs', async () => {
@@ -451,6 +445,22 @@ describe('TestScenarioCatalogView', () => {
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     await user.click(screen.getByRole('button', { name: 'Delete 2 scenarios' }));
     expect(onDeleteSelected).toHaveBeenCalledWith(['scenario-1', 'scenario-2']);
+  });
+
+  it('reports partial deletion instead of silently closing the confirmation', async () => {
+    const user = userEvent.setup();
+    renderView({
+      selectedIds: ['scenario-1', 'scenario-2', 'scenario-3'],
+      onDeleteSelected: vi.fn(async () => ({
+        succeededIds: ['scenario-1'], failedIds: ['scenario-2'], unattemptedIds: ['scenario-3'], uncertainIds: [],
+        errorMessage: 'Permission denied',
+      })),
+    });
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    await user.click(screen.getByRole('button', { name: 'Delete 3 scenarios' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Permission denied');
+    expect(screen.getByRole('alert')).toHaveTextContent('1 failed');
+    expect(screen.getByRole('alert')).toHaveTextContent('1 not attempted');
   });
 
   it('closes the bulk toolbar with a keyboard accessible clear control', async () => {
