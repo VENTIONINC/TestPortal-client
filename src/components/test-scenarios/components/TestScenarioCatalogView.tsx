@@ -1846,10 +1846,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     insetStart={3}
                     top="50%"
                     transform="translateY(-50%)"
+                    zIndex={1}
                     color="text.muted"
                     pointerEvents="none"
                   >
-                    <FiSearch />
+                    <FiSearch aria-hidden="true" size={14} />
                   </Box>
                   <Input
                     aria-label="Search scenarios"
