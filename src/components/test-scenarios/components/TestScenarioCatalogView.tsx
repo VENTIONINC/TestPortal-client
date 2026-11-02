@@ -698,6 +698,12 @@ const PaginationSummary = ({ pagination }: { pagination: TestScenarioPagination 
 
 type PriorityValue = 'high' | 'medium' | 'low';
 
+const priorityColors: Record<PriorityValue, { bg: string; color: string }> = {
+  high: { bg: 'status.attention.bg', color: 'text.secondary' },
+  medium: { bg: 'status.total.bg', color: 'text.secondary' },
+  low: { bg: 'status.neutral.bg', color: 'text.secondary' },
+};
+
 const PriorityFilter = ({
   value,
   counts,
@@ -712,11 +718,6 @@ const PriorityFilter = ({
   const selected = value ? (value.split(',') as PriorityValue[]) : [];
   const selectedPriority = selected.length === 1 ? selected[0] : undefined;
   const priorityLabel = (priority: PriorityValue) => priority.charAt(0).toUpperCase() + priority.slice(1);
-  const priorityColors = {
-    high: { bg: 'orange.subtle', color: 'orange.fg' },
-    medium: { bg: 'blue.subtle', color: 'blue.fg' },
-    low: { bg: 'bg.subtle', color: 'text.muted' },
-  } as const;
   return (
     <Popover.Root
       open={open}
@@ -1158,18 +1159,13 @@ const CompactScenarioTable = ({
                 ? `${scenario.createdBy.name} (${scenario.createdBy.email})`
                 : scenario.createdBy.email || 'Unknown author';
               const priority = scenario.priority;
-              const priorityStyle =
-                priority === 'high'
-                  ? { bg: 'orange.subtle', color: 'orange.fg' }
-                  : priority === 'medium'
-                    ? { bg: 'blue.subtle', color: 'blue.fg' }
-                    : { bg: 'bg.subtle', color: 'text.muted' };
+              const priorityStyle = priority ? priorityColors[priority] : undefined;
               return (
                 <Table.Row
                   key={scenario.id}
                   data-testid={`test-scenario-${scenario.id}`}
-                  bg={selected ? 'blue.subtle' : undefined}
-                  _hover={{ bg: selected ? 'blue.subtle' : 'bg.subtle' }}
+                  bg={selected ? 'blue.50' : undefined}
+                  _hover={{ bg: selected ? 'blue.50' : 'bg.subtle' }}
                 >
                   <Table.Cell px={1} py={2}>
                     <Button
@@ -1248,8 +1244,8 @@ const CompactScenarioTable = ({
                         borderRadius="full"
                         fontSize="xs"
                         fontWeight="semibold"
-                        bg={priorityStyle.bg}
-                        color={priorityStyle.color}
+                        bg={priorityStyle?.bg}
+                        color={priorityStyle?.color}
                       >
                         {priority.charAt(0).toUpperCase() + priority.slice(1)}
                       </Text>
@@ -1394,6 +1390,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [bulkSuiteId, setBulkSuiteId] = useState('');
   const [moveScenariosOpen, setMoveScenariosOpen] = useState(false);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+  const [isDraggingScenario, setIsDraggingScenario] = useState(false);
   const activeDrag = useRef<{ projectId: string; scenarioIds: string[] } | null>(null);
   const [moveScenariosTarget, setMoveScenariosTarget] = useState('');
   const [moveScenariosError, setMoveScenariosError] = useState<string | null>(null);
@@ -1645,6 +1642,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     event.preventDefault();
     event.stopPropagation();
     setDragOverFolderId(null);
+    setIsDraggingScenario(false);
     const active = activeDrag.current;
     activeDrag.current = null;
     try {
@@ -1704,12 +1702,18 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             colorPalette={selected || dragOverFolderId === folder.id ? 'blue' : undefined}
             borderStartWidth="3px"
             borderStartColor={selected || dragOverFolderId === folder.id ? 'blue.500' : 'transparent'}
+            outline={dragOverFolderId === folder.id ? '2px dashed' : undefined}
+            outlineColor="blue.500"
+            outlineOffset="-2px"
             alignItems="center"
             justifyContent="flex-start"
             aria-current={selected ? 'page' : undefined}
             onClick={() => onScopeChange({ kind: 'folder', id: folder.id })}
             onDragOver={(event) => handleScenarioDragOver(event, folder.id)}
-            onDragLeave={() => setDragOverFolderId((current) => (current === folder.id ? null : current))}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+                setDragOverFolderId((current) => (current === folder.id ? null : current));
+            }}
             onDrop={(event) => handleScenarioDrop(event, folder.id)}
           >
             <FiFolder size={22} style={{ display: 'block', flexShrink: 0 }} />
@@ -1754,8 +1758,12 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             gap={4}
             pe={{ base: 0, lg: 4 }}
             borderEndWidth={{ base: 0, lg: '1px' }}
-            borderColor="border.main"
-            bg="bg.card"
+            borderColor={isDraggingScenario ? 'blue.200' : 'border.main'}
+            bg={isDraggingScenario ? 'blue.50' : 'bg.card'}
+            outline={isDraggingScenario ? '1px solid' : undefined}
+            outlineColor="blue.200"
+            outlineOffset="4px"
+            borderRadius={isDraggingScenario ? 'sm' : undefined}
             aria-label="Scenario organization"
           >
             {organizationTab !== 'suites' && (
@@ -1833,10 +1841,16 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 aria-current={scope.kind === 'unfiled' ? 'page' : undefined}
                 onClick={() => onScopeChange({ kind: 'unfiled' })}
                 bg={scope.kind === 'unfiled' || dragOverFolderId === UNFILED_DESTINATION ? 'blue.subtle' : undefined}
+                outline={dragOverFolderId === UNFILED_DESTINATION ? '2px dashed' : undefined}
+                outlineColor="blue.500"
+                outlineOffset="-2px"
                 color={scope.kind === 'unfiled' ? 'blue.fg' : 'text.main'}
                 _hover={{ bg: 'bg.subtle' }}
                 onDragOver={(event) => handleScenarioDragOver(event, UNFILED_DESTINATION)}
-                onDragLeave={() => setDragOverFolderId((current) => (current === UNFILED_DESTINATION ? null : current))}
+                onDragLeave={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+                    setDragOverFolderId((current) => (current === UNFILED_DESTINATION ? null : current));
+                }}
                 onDrop={(event) => handleScenarioDrop(event, null)}
               >
                 <UnfiledFolderIcon />
@@ -2401,9 +2415,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       onToggleSelected={toggleSelected}
                       onDragPayload={(dragProjectId, scenarioIds) => {
                         activeDrag.current = { projectId: dragProjectId, scenarioIds };
+                        setIsDraggingScenario(true);
                       }}
                       onDragEnd={() => {
                         activeDrag.current = null;
+                        setIsDraggingScenario(false);
                         setDragOverFolderId(null);
                       }}
                       folderPathById={folderPathById}
