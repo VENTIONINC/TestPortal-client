@@ -18,6 +18,8 @@ const injectedRtkApi = api
             limit: queryArg.limit,
             search: queryArg.search,
             createdById: queryArg.createdById,
+            createdByIds: queryArg.createdByIds,
+            priority: queryArg.priority,
             sort: queryArg.sort,
             sortField: queryArg.sortField,
             sortDirection: queryArg.sortDirection,
@@ -202,6 +204,8 @@ export type GetApiV2TestScenariosForResultLinkManagementApiArg = {
   limit?: number;
   search?: string;
   createdById?: string;
+  createdByIds?: string;
+  priority?: string;
   sort?: "recently_created" | "recently_updated" | "title_asc";
   sortField?:
     | "scenarioKey"
@@ -227,6 +231,7 @@ export type GetApiV2TestScenarioFoldersApiResponse =
     projectId: string;
     parentId: string | null;
     name: string;
+    description: string | null;
     position: number;
     createdAt: string;
     updatedAt: string;
@@ -245,6 +250,7 @@ export type PostApiV2TestScenarioFoldersApiResponse =
     projectId: string;
     parentId: string | null;
     name: string;
+    description: string | null;
     position: number;
     createdAt: string;
     updatedAt: string;
@@ -253,6 +259,8 @@ export type PostApiV2TestScenarioFoldersApiArg = {
   body: {
     projectId: string;
     name: string;
+    /** Optional folder description. Omission leaves it unchanged; null or blank clears it. */
+    description?: string | null;
     parentId?: string | null;
     position?: number;
   };
@@ -263,6 +271,7 @@ export type PatchApiV2TestScenarioFoldersByFolderIdApiResponse =
     projectId: string;
     parentId: string | null;
     name: string;
+    description: string | null;
     position: number;
     createdAt: string;
     updatedAt: string;
@@ -272,6 +281,8 @@ export type PatchApiV2TestScenarioFoldersByFolderIdApiArg = {
   projectId: string;
   body: {
     name?: string;
+    /** Optional folder description. Omission leaves it unchanged; null or blank clears it. */
+    description?: string | null;
     parentId?: string | null;
     position?: number;
   };
@@ -449,6 +460,7 @@ export type TestScenarioSummary = {
   title: string;
   scenarioKey: string;
   details: string | null;
+  priority: ("low" | "medium" | "high") | null;
   createdBy: TestScenarioCreatorSummary;
   createdAt: string;
   updatedAt: string;
@@ -471,6 +483,7 @@ export type TestScenarioFolder = {
   projectId?: string;
   parentId?: string | null;
   name?: string;
+  description?: string | null;
   position?: number;
   createdAt?: string;
   updatedAt?: string;

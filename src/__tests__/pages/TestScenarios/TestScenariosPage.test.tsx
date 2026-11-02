@@ -97,7 +97,7 @@ describe('TestScenariosPage', () => {
     const indicator = document.querySelector('[data-scope="tabs"][data-part="indicator"]');
     expect(indicator).not.toBeInTheDocument();
     expect(getComputedStyle(suitesTab).fontSize).toBe('var(--chakra-font-sizes-sm)');
-    expect(getComputedStyle(tabList).paddingInlineStart).toBe('var(--chakra-spacing-3)');
+    expect(getComputedStyle(tabList).paddingInlineStart).toBe('var(--chakra-spacing-6)');
   });
 
   it('switches to the Suites context when its tab is selected', async () => {

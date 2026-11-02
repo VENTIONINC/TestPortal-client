@@ -36,6 +36,19 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
   return {
     ...actual,
     useGetApiV2TestScenariosQuery: vi.fn(),
+    useGetApiV2TestScenariosAuthorsQuery: vi.fn(() => ({
+      currentData: { authors: [] },
+      isLoading: false,
+      error: undefined,
+    })),
+    useLazyGetApiV2TestScenariosSelectionQuery: vi.fn(() => [
+      vi.fn(() => ({ unwrap: async () => ({ scenarioIds: [], total: 0 }) })),
+      { isLoading: false },
+    ]),
+    useDeleteApiV2TestScenariosByScenarioIdMutation: vi.fn(() => [
+      vi.fn(() => ({ unwrap: async () => {} })),
+      { isLoading: false },
+    ]),
   };
 });
 vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
@@ -77,6 +90,7 @@ const createResponse = (projectId: string, page: number) => ({
       scenarioKey: 'TMS-1',
       title: `${projectId} scenario`,
       details: `${projectId} details`,
+      priority: null,
       createdBy: { id: 'user-1', name: `${projectId} creator`, email: `${projectId}@example.com` },
       createdAt: '2026-09-01T10:00:00.000Z',
       updatedAt: '2026-09-02T11:00:00.000Z',
@@ -84,7 +98,7 @@ const createResponse = (projectId: string, page: number) => ({
   ],
   total: 11,
   page,
-  limit: 10,
+  limit: 25,
   totalPages: 2,
 });
 
@@ -122,10 +136,14 @@ describe('TestScenarioCatalog project boundary', () => {
       </ChakraProvider>,
     );
 
-    await user.click(screen.getByRole('button', { name: /^2$/ }));
+    await user.click(screen.getByRole('button', { name: 'Next Page' }));
+    expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
+      { projectId: 'project-a', page: 2, limit: 25, sortField: 'updatedAt', sortDirection: 'desc' },
+      { skip: false },
+    );
     expect(screen.getByText('project-a scenario')).toBeInTheDocument();
-    expect(screen.getByText('project-a details')).toBeInTheDocument();
-    expect(screen.getByText('project-a creator')).toBeInTheDocument();
+    expect(screen.queryByText('project-a details')).not.toBeInTheDocument();
+    expect(screen.getByText('project-a c.')).toBeInTheDocument();
 
     selectedProjectId = 'project-b';
     rerender(
@@ -137,12 +155,12 @@ describe('TestScenarioCatalog project boundary', () => {
     );
 
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
-      { projectId: 'project-b', page: 1, limit: 10 },
+      { projectId: 'project-b', page: 1, limit: 25, sortField: 'updatedAt', sortDirection: 'desc' },
       { skip: false },
     );
     expect(screen.queryByText('project-a scenario')).not.toBeInTheDocument();
     expect(screen.queryByText('project-a details')).not.toBeInTheDocument();
-    expect(screen.queryByText('project-a creator')).not.toBeInTheDocument();
+    expect(screen.queryByText('project-a c.')).not.toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Searching scenarios…');
   });
   it('consumes a return URL project once and allows a subsequent deliberate project change', () => {

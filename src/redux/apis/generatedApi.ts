@@ -999,9 +999,57 @@ const injectedRtkApi = api
             limit: queryArg.limit,
             search: queryArg.search,
             createdById: queryArg.createdById,
+            createdByIds: queryArg.createdByIds,
+            priority: queryArg.priority,
             sort: queryArg.sort,
             sortField: queryArg.sortField,
             sortDirection: queryArg.sortDirection,
+            scenarioKey: queryArg.scenarioKey,
+            title: queryArg.title,
+            details: queryArg.details,
+            folder: queryArg.folder,
+            createdBy: queryArg.createdBy,
+            folderId: queryArg.folderId,
+            includeDescendants: queryArg.includeDescendants,
+            suiteId: queryArg.suiteId,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenariosAuthors: build.query<
+        GetApiV2TestScenariosAuthorsApiResponse,
+        GetApiV2TestScenariosAuthorsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/authors`,
+          params: {
+            projectId: queryArg.projectId,
+            search: queryArg.search,
+            priority: queryArg.priority,
+            scenarioKey: queryArg.scenarioKey,
+            title: queryArg.title,
+            details: queryArg.details,
+            folder: queryArg.folder,
+            createdBy: queryArg.createdBy,
+            folderId: queryArg.folderId,
+            includeDescendants: queryArg.includeDescendants,
+            suiteId: queryArg.suiteId,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      getApiV2TestScenariosSelection: build.query<
+        GetApiV2TestScenariosSelectionApiResponse,
+        GetApiV2TestScenariosSelectionApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/selection`,
+          params: {
+            projectId: queryArg.projectId,
+            search: queryArg.search,
+            createdById: queryArg.createdById,
+            createdByIds: queryArg.createdByIds,
+            priority: queryArg.priority,
             scenarioKey: queryArg.scenarioKey,
             title: queryArg.title,
             details: queryArg.details,
@@ -1891,6 +1939,8 @@ export type GetApiV2TestScenariosApiArg = {
   limit?: number;
   search?: string;
   createdById?: string;
+  createdByIds?: string;
+  priority?: string;
   sort?: "recently_created" | "recently_updated" | "title_asc";
   sortField?:
     | "scenarioKey"
@@ -1910,12 +1960,45 @@ export type GetApiV2TestScenariosApiArg = {
   includeDescendants?: boolean;
   suiteId?: string;
 };
+export type GetApiV2TestScenariosAuthorsApiResponse =
+  /** status 200 Scenario catalog lookup succeeded */ TestScenarioAuthorsResponse;
+export type GetApiV2TestScenariosAuthorsApiArg = {
+  projectId: string;
+  search?: string;
+  priority?: string;
+  scenarioKey?: string;
+  title?: string;
+  details?: string;
+  folder?: string;
+  createdBy?: string;
+  folderId?: string | "unfiled";
+  includeDescendants?: boolean;
+  suiteId?: string;
+};
+export type GetApiV2TestScenariosSelectionApiResponse =
+  /** status 200 Scenario catalog lookup succeeded */ TestScenarioSelectionResponse;
+export type GetApiV2TestScenariosSelectionApiArg = {
+  projectId: string;
+  search?: string;
+  createdById?: string;
+  createdByIds?: string;
+  priority?: string;
+  scenarioKey?: string;
+  title?: string;
+  details?: string;
+  folder?: string;
+  createdBy?: string;
+  folderId?: string | "unfiled";
+  includeDescendants?: boolean;
+  suiteId?: string;
+};
 export type GetApiV2TestScenarioFoldersApiResponse =
   /** status 200 Organization operation succeeded */ {
     id: string;
     projectId: string;
     parentId: string | null;
     name: string;
+    description: string | null;
     position: number;
     createdAt: string;
     updatedAt: string;
@@ -1934,6 +2017,7 @@ export type PostApiV2TestScenarioFoldersApiResponse =
     projectId: string;
     parentId: string | null;
     name: string;
+    description: string | null;
     position: number;
     createdAt: string;
     updatedAt: string;
@@ -1942,6 +2026,8 @@ export type PostApiV2TestScenarioFoldersApiArg = {
   body: {
     projectId: string;
     name: string;
+    /** Optional folder description. Omission leaves it unchanged; null or blank clears it. */
+    description?: string | null;
     parentId?: string | null;
     position?: number;
   };
@@ -1952,6 +2038,7 @@ export type PatchApiV2TestScenarioFoldersByFolderIdApiResponse =
     projectId: string;
     parentId: string | null;
     name: string;
+    description: string | null;
     position: number;
     createdAt: string;
     updatedAt: string;
@@ -1961,6 +2048,8 @@ export type PatchApiV2TestScenarioFoldersByFolderIdApiArg = {
   projectId: string;
   body: {
     name?: string;
+    /** Optional folder description. Omission leaves it unchanged; null or blank clears it. */
+    description?: string | null;
     parentId?: string | null;
     position?: number;
   };
@@ -3161,6 +3250,7 @@ export type TestScenarioSummary = {
   title: string;
   scenarioKey: string;
   details: string | null;
+  priority: ("low" | "medium" | "high") | null;
   createdBy: TestScenarioCreatorSummary;
   createdAt: string;
   updatedAt: string;
@@ -3175,11 +3265,25 @@ export type TestScenarioListResponse = {
   limit: number;
   totalPages: number;
 };
+export type TestScenarioAuthorOption = {
+  id: string;
+  name: string;
+  email: string;
+  scenarioCount: number;
+};
+export type TestScenarioAuthorsResponse = {
+  authors: TestScenarioAuthorOption[];
+};
+export type TestScenarioSelectionResponse = {
+  scenarioIds: string[];
+  total: number;
+};
 export type TestScenarioFolder = {
   id?: string;
   projectId?: string;
   parentId?: string | null;
   name?: string;
+  description?: string | null;
   position?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -3481,6 +3585,10 @@ export const {
   usePostApiV2TestScenariosMutation,
   useGetApiV2TestScenariosQuery,
   useLazyGetApiV2TestScenariosQuery,
+  useGetApiV2TestScenariosAuthorsQuery,
+  useLazyGetApiV2TestScenariosAuthorsQuery,
+  useGetApiV2TestScenariosSelectionQuery,
+  useLazyGetApiV2TestScenariosSelectionQuery,
   useGetApiV2TestScenarioFoldersQuery,
   useLazyGetApiV2TestScenarioFoldersQuery,
   usePostApiV2TestScenarioFoldersMutation,
