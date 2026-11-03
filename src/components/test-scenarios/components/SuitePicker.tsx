@@ -272,13 +272,13 @@ const DraftSuitePicker = ({ suites, selectedNames, disabled, onSelect }: DraftSu
       <Portal><Popover.Positioner><Popover.Content w="300px" maxW="calc(100vw - 24px)" bg="bg.card" p={2}>
         <Popover.Body p={0}>
           <Input ref={inputRef} aria-label="Find or create a suite" placeholder="Find or create a suite"
-            value={search} maxLength={200} size="sm" onChange={(event) => setSearch(event.currentTarget.value)}
+            value={search} maxLength={200} size="sm" disabled={disabled} onChange={(event) => setSearch(event.currentTarget.value)}
             onKeyDown={(event) => { if (event.key === 'Enter') event.preventDefault(); }} />
           <Box maxH="250px" overflowY="auto" mt={1}>
             {filtered.map((suite) => (
               <Button type="button" key={suite.id} variant="ghost" w="full" h="auto" minH="44px"
                 justifyContent="flex-start" px={2} py={1}
-                disabled={selectedNames.some((item) => item.toLocaleLowerCase() === suite.name.toLocaleLowerCase())}
+                disabled={disabled || selectedNames.some((item) => item.toLocaleLowerCase() === suite.name.toLocaleLowerCase())}
                 onClick={() => select({ id: suite.id, name: suite.name })}>
                 <HStack gap={3}><FiList aria-hidden="true" /><Box textAlign="left">
                   <Text fontSize="sm">{suite.name}</Text>
@@ -286,7 +286,7 @@ const DraftSuitePicker = ({ suites, selectedNames, disabled, onSelect }: DraftSu
                 </Box></HStack>
               </Button>
             ))}
-            {name && !exists && <Button type="button" variant="ghost" color="blue.500" w="full"
+            {name && !exists && <Button type="button" variant="ghost" color="blue.500" w="full" disabled={disabled}
               justifyContent="flex-start" onClick={() => select({ id: `suite-draft-${crypto.randomUUID()}`, name, isNew: true })}>
               <FiPlus /> Create suite “{name}”
             </Button>}

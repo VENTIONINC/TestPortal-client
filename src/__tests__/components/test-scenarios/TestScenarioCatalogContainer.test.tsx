@@ -382,7 +382,7 @@ describe('TestScenarioCatalogContainer', () => {
   });
 
   it('does not reconcile a suite operation into a changed selection', () => {
-    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     act(() => result.current.toggleSelected('scenario-1'));
     act(() => result.current.startSuiteOperation());
     act(() => result.current.toggleSelected('scenario-2'));

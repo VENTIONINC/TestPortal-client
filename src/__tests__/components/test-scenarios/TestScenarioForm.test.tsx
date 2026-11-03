@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 
 import { TestScenarioForm } from '@/components/test-scenarios/components/TestScenarioForm';
@@ -13,6 +13,15 @@ const setup = (props: Partial<React.ComponentProps<typeof TestScenarioForm>> = {
     </ChakraProvider>,
   );
 describe('TestScenarioForm', () => {
+  beforeEach(() => {
+    // user-event installs a getter; Chakra's focus tracker also wraps this method.
+    userEvent.setup();
+    Object.defineProperty(HTMLElement.prototype, 'focus', {
+      configurable: true,
+      writable: true,
+      value: HTMLElement.prototype.focus,
+    });
+  });
   it('keeps a new step independent of a pre-existing draft key', async () => {
     setup({ initialSteps: [{ key: 'draft-1', action: '', expectedResult: '' }] });
     fireEvent.click(screen.getByRole('button', { name: 'Add step' }));
@@ -155,6 +164,17 @@ describe('TestScenarioForm', () => {
     fireEvent.change(search, { target: { value: 'Deferred' } });
     expect(fireEvent.keyDown(search, { key: 'Enter' })).toBe(false);
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+  it('prevents suite selection and creation when a save starts with the picker open', async () => {
+    const user = userEvent.setup();
+    const props = { initialValues: { title: 'Ready' }, suites: [{ id: 'a', name: 'Alpha' }] };
+    const view = setup(props);
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
+    await user.type(screen.getByRole('textbox', { name: 'Find or create a suite' }), 'Al');
+    view.rerender(<ChakraProvider><TestScenarioForm mode="create" onSubmit={vi.fn()} onCancel={vi.fn()} {...props} isSubmitting /></ChakraProvider>);
+    expect(screen.getByRole('textbox', { name: 'Find or create a suite' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Alpha/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Create suite “Al”' })).toBeDisabled();
   });
   it('warns on browser exit only for dirty draft data including pending suites', async () => {
     const view = setup();

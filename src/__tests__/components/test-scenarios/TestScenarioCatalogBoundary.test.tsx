@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ReactNode } from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -127,6 +127,7 @@ describe('TestScenarioCatalog project boundary', () => {
   });
 
   it('resets to page 1 and hides the previous project while the new request is pending', async () => {
+    vi.useFakeTimers();
     const user = userEvent.setup();
     const { rerender } = render(
       <ChakraProvider>
@@ -135,6 +136,9 @@ describe('TestScenarioCatalog project boundary', () => {
         </MemoryRouter>
       </ChakraProvider>,
     );
+
+    act(() => vi.advanceTimersByTime(500));
+    vi.useRealTimers();
 
     await user.click(screen.getByRole('button', { name: 'Next Page' }));
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(

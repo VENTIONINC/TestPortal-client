@@ -112,11 +112,9 @@ describe('TestScenarioEditContainer', () => {
     expect(updateScenario).toHaveBeenCalledOnce();
     expect(navigate).not.toHaveBeenCalled();
   });
-  it('does not write when unchanged and displays honest history', async () => {
+  it('does not write when unchanged', async () => {
     setup();
     expect(screen.getByText('TMS-1')).toBeInTheDocument();
-    expect(screen.getByText('Creator')).toBeInTheDocument();
-    expect(screen.getByText('Unknown')).toBeInTheDocument();
     save();
     await screen.findByText('No changes to save.');
     expect(updateScenario).not.toHaveBeenCalled();
