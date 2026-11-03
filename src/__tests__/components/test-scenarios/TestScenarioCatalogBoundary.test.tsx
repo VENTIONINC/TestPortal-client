@@ -171,7 +171,7 @@ describe('TestScenarioCatalog project boundary', () => {
     restoreProject.mockClear();
     const content = () => (
       <ChakraProvider>
-        <MemoryRouter initialEntries={['/test-scenarios?projectId=project-a&folderId=unfiled']}>
+        <MemoryRouter initialEntries={['/test-management?projectId=project-a&folderId=unfiled']}>
           <TestScenarioCatalog />
         </MemoryRouter>
       </ChakraProvider>

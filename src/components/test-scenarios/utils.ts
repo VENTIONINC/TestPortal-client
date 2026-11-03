@@ -9,6 +9,7 @@ import type {
   UpdateTestScenarioStepRequest,
 } from '@/redux/apis/generatedApi';
 import { testScenarioAuthoringSchema } from '@/schemas';
+import { PATHS } from '@/types/paths';
 
 import {
   TEST_SCENARIO_EDITABLE_FIELDS,
@@ -25,11 +26,6 @@ export type {
 } from './types';
 
 export const normalizeScenarioText = (value: string | null | undefined) => value?.trim() ?? '';
-
-export const normalizeOptionalScenarioText = (value: string | null | undefined) => {
-  const normalized = normalizeScenarioText(value);
-  return normalized || null;
-};
 
 interface FolderOptionNode {
   id?: string;
@@ -204,12 +200,10 @@ export const getTestScenarioEditableValues = (scenario: TestScenario): TestScena
     {} as TestScenarioEditableValues,
   );
 
-export const getTestScenarioUpdatePayload = getTestScenarioPatchPayload;
-
 /** A reloadable, project-scoped catalog destination for the current draft folder. */
 export const getScenarioFolderReturnPath = (projectId: string, folderId: string | null, folders: Array<{ id: string }>) => {
   const search = new URLSearchParams({ projectId });
   if (!folderId) search.set('folderId', 'unfiled');
   else if (folders.some((folder) => folder.id === folderId)) search.set('folderId', folderId);
-  return `/test-scenarios?${search.toString()}`;
+  return `${PATHS.TEST_SCENARIOS}?${search.toString()}`;
 };

@@ -13,7 +13,7 @@ describe('NavigationMenu', () => {
     ['Dashboard', '/dashboard'],
     ['Results', '/results'],
     ['Issues', '/issues'],
-    ['Test Management', '/test-scenarios'],
+    ['Test Management', '/test-management'],
     ['Prompts', '/prompts'],
     ['Skills', '/skills'],
     ['Settings', '/settings'],
@@ -32,7 +32,7 @@ describe('NavigationMenu', () => {
   it('marks Test Management active on its route', () => {
     render(
       <ChakraProvider>
-        <MemoryRouter initialEntries={['/test-scenarios']}>
+        <MemoryRouter initialEntries={['/test-management']}>
           <NavigationMenu collapsed={false} />
         </MemoryRouter>
       </ChakraProvider>,
