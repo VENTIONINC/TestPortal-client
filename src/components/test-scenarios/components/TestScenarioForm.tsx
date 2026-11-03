@@ -1,13 +1,13 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Button, Grid, Heading, HStack, IconButton, Link, Text, VStack } from '@chakra-ui/react';
+import { Alert, Box, Button, Grid, Heading, HStack, IconButton, Link, Popover, Portal, Text, VStack } from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { FiArrowLeft, FiFolder, FiLink, FiMenu, FiPlus, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiCheck, FiChevronDown, FiFolder, FiLink, FiPlus, FiSearch, FiX } from 'react-icons/fi';
 
-import { Input, NativeSelect, Textarea } from '@/components/ui';
+import { Input, Textarea, Tooltip } from '@/components/ui';
 import { testScenarioAuthoringSchema, type TestScenarioAuthoringFormData } from '@/schemas';
 
 import { SuitePicker } from './SuitePicker';
@@ -41,12 +41,6 @@ export interface TestScenarioFormProps {
   successMessage?: string;
   folders?: Array<{ id: string; name: string; depth?: number }>;
   initialFolderId?: string | null;
-  history?: {
-    createdAt: string;
-    updatedAt: string;
-    createdBy?: { name: string; email?: string } | null;
-    updatedBy?: { name: string; email?: string } | null;
-  };
   onDirtyChange?: (dirty: boolean) => void;
   onReload?: () => void;
   errorCatalogPath?: string;
@@ -89,7 +83,6 @@ export const TestScenarioForm = ({
   successMessage,
   folders = [],
   initialFolderId = null,
-  history,
   onDirtyChange,
   onReload,
   errorCatalogPath,
@@ -98,14 +91,19 @@ export const TestScenarioForm = ({
 }: TestScenarioFormProps) => {
   const [steps, setSteps] = useState(() => (initialSteps.length ? initialSteps : mode === 'create' ? [newStep()] : []));
   const [folderId, setFolderId] = useState(initialFolderId);
+  const [folderOpen, setFolderOpen] = useState(false);
+  const [folderSearch, setFolderSearch] = useState('');
+  const [priorityOpen, setPriorityOpen] = useState(false);
   const [selectedSuites, setSelectedSuites] = useState(initialSuites);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
   const [announcement, setAnnouncement] = useState('');
   const [grabbed, setGrabbed] = useState<string>();
+  const [draggedStep, setDraggedStep] = useState<string>();
   const pickedUpOrder = useRef<string[]>([]);
   const [focusStep, setFocusStep] = useState<string>();
   const [focusHandle, setFocusHandle] = useState<string>();
   const root = useRef<HTMLFormElement>(null);
+  const folderSearchRef = useRef<HTMLInputElement>(null);
   const pointer = useRef<{ key: string; id: number } | null>(null);
   const baseline = useRef({ steps: initialSteps, suites: initialSuites, folderId: initialFolderId });
   const {
@@ -113,6 +111,7 @@ export const TestScenarioForm = ({
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting: submitting, isDirty },
   } = useForm<TestScenarioAuthoringFormData>({
     resolver: zodResolver(testScenarioAuthoringSchema),
@@ -163,7 +162,8 @@ export const TestScenarioForm = ({
   }, [focusStep, focusHandle, steps]);
   const append = () => {
     if (pending) return;
-    const step = newStep();
+    let step = newStep();
+    while (steps.some((existing) => existing.key === step.key)) step = newStep();
     setSteps((previous) => [...previous, step]);
     setFocusStep(step.key);
   };
@@ -196,7 +196,7 @@ export const TestScenarioForm = ({
     });
   };
   const folder = folderId ? folders.find((f) => f.id === folderId) : null;
-  const backLabel = folderId ? (folder ? folder.name : 'All scenarios') : 'Unfiled';
+  const backLabel = folderId ? (folder ? folder.name : 'All scenarios') : 'No folder';
   const cancel = () => onCancel(folderId);
   return (
     <Box
@@ -206,7 +206,7 @@ export const TestScenarioForm = ({
       mx={{ base: 3, md: 6 }}
       my={4}
       p={{ base: 4, md: 6 }}
-      bg="bg.section"
+      bg="bg.card"
       borderRadius="12px"
       shadow="sm"
       position="relative"
@@ -251,72 +251,178 @@ export const TestScenarioForm = ({
           </Alert.Root>
         )}
         <VStack align="stretch" gap={2} maxW={{ lg: 'calc(100% - 224px)' }}>
-            {mode === 'create' && (
-              <Text fontSize="xs" fontWeight="semibold" color="blue.500">
-                NEW SCENARIO
+          {mode === 'create' && (
+            <Text fontSize="xs" fontWeight="semibold" color="blue.500">
+              NEW SCENARIO
+            </Text>
+          )}
+          <HStack gap={2} flexWrap="wrap">
+            {mode === 'create' ? (
+              <Tooltip content="The key is assigned automatically when the scenario is saved.">
+                <Text as="span" tabIndex={0} fontSize="sm" bg="bg.subtle" px={2} py={1} borderRadius="md" cursor="help">
+                  On save
+                </Text>
+              </Tooltip>
+            ) : (
+              <Text fontSize="sm" bg="bg.subtle" px={2} py={1} borderRadius="md">
+                {initialValues.scenarioKey}
               </Text>
             )}
-            <HStack gap={2} flexWrap="wrap">
-              <Text fontSize="sm" bg="bg.subtle" px={2} py={1} borderRadius="md">
-                {mode === 'create' ? 'Assigned on save' : initialValues.scenarioKey}
-              </Text>
-              <Box minW="140px" position="relative">
-                <Box position="absolute" left={2} top="50%" transform="translateY(-50%)" zIndex={1} pointerEvents="none">
-                  <FiFolder />
-                </Box>
-                <NativeSelect
-                  name="scenario-folder"
-                  aria-label="Scenario folder"
-                  value={folderId ?? ''}
-                  disabled={pending}
-                  onChange={(e) => setFolderId(e.target.value || null)}
-                  h="32px"
-                  pl={8}
-                >
-                  <option value="">Unfiled</option>
-                  {folders.map((f) => (
-                    <option key={f.id} value={f.id}>
-                      {'　'.repeat(f.depth ?? 0)}{f.name}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Box>
-              <Box minW="110px">
-                <NativeSelect
-                  {...register('priority')}
-                  name="priority"
-                  aria-label="Priority"
-                  disabled={pending}
-                  h="32px"
-                  color={values.priority === 'high' ? 'red.500' : values.priority === 'low' ? 'green.600' : 'blue.600'}
-                  error={errors.priority?.message}
-                >
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </NativeSelect>
-              </Box>
-            </HStack>
-            <Input
-              {...register('title')}
-              name="title"
-              aria-label="Title"
-              fontSize="2xl"
-              fontWeight="semibold"
-              h="48px"
-              placeholder="Scenario title"
-              disabled={pending}
-              error={errors.title?.message}
-            />
-            <Textarea
-              {...register('details')}
-              name="details"
-              aria-label="Details"
-              placeholder="What this scenario covers and why (optional)"
-              minH="64px"
-              disabled={pending}
-              error={errors.details?.message}
-            />
+            <Popover.Root
+              initialFocusEl={() => folderSearchRef.current}
+              open={folderOpen}
+              onOpenChange={({ open }) => {
+                setFolderOpen(open);
+                if (!open) setFolderSearch('');
+              }}
+            >
+              <Popover.Trigger asChild>
+                <Button type="button" variant="outline" size="sm" aria-label="Scenario folder" disabled={pending}>
+                  <FiFolder /> {folder?.name ?? 'No folder'} <FiChevronDown />
+                </Button>
+              </Popover.Trigger>
+              <Portal>
+                <Popover.Positioner>
+                  <Popover.Content w="260px" bg="bg.card" p={0}>
+                    <Box position="relative" px={3} py={2} borderBottomWidth="1px" borderColor="border.main">
+                      <Box
+                        position="absolute"
+                        left={3}
+                        top="50%"
+                        transform="translateY(-50%)"
+                        zIndex={1}
+                        color="text.muted"
+                      >
+                        <FiSearch />
+                      </Box>
+                      <Input
+                        ref={folderSearchRef}
+                        name="folder-search"
+                        aria-label="Search folders"
+                        placeholder="Type to find a folder"
+                        size="sm"
+                        value={folderSearch}
+                        onChange={(event) => setFolderSearch(event.currentTarget.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') event.preventDefault();
+                        }}
+                        ps={7}
+                        border={0}
+                      />
+                    </Box>
+                    <Popover.Body p={1} maxH="240px" overflowY="auto">
+                      {[{ id: '', name: 'No folder', depth: 0 }, ...folders]
+                        .filter((item) => item.name.toLowerCase().includes(folderSearch.toLowerCase().trim()))
+                        .map((item) => (
+                          <Button
+                            key={item.id}
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            w="full"
+                            justifyContent="space-between"
+                            aria-label={item.name}
+                            onClick={() => {
+                              setFolderId(item.id || null);
+                              setFolderOpen(false);
+                              setFolderSearch('');
+                            }}
+                          >
+                            <HStack pl={(item.depth ?? 0) * 3}>
+                              <FiFolder />
+                              <Text>{item.name}</Text>
+                            </HStack>
+                            {(folderId ?? '') === item.id && <FiCheck />}
+                          </Button>
+                        ))}
+                    </Popover.Body>
+                  </Popover.Content>
+                </Popover.Positioner>
+              </Portal>
+            </Popover.Root>
+            <Popover.Root open={priorityOpen} onOpenChange={({ open }) => setPriorityOpen(open)}>
+              <Popover.Trigger asChild>
+                <Button type="button" variant="outline" size="sm" aria-label="Priority" disabled={pending}>
+                  <Text
+                    as="span"
+                    px={2}
+                    borderRadius="full"
+                    bg={
+                      values.priority === 'high'
+                        ? 'status.attention.bg'
+                        : values.priority === 'low'
+                          ? 'status.neutral.bg'
+                          : 'status.total.bg'
+                    }
+                    color="text.secondary"
+                  >
+                    {values.priority === 'high' ? 'High' : values.priority === 'low' ? 'Low' : 'Medium'}
+                  </Text>
+                  <FiChevronDown />
+                </Button>
+              </Popover.Trigger>
+              <Portal>
+                <Popover.Positioner>
+                  <Popover.Content w="120px" bg="bg.card" p={1}>
+                    <Popover.Body p={0}>
+                      {(['high', 'medium', 'low'] as const).map((priority) => (
+                        <Button
+                          key={priority}
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          w="full"
+                          justifyContent="flex-start"
+                          onClick={() => {
+                            setValue('priority', priority, { shouldDirty: true, shouldValidate: true });
+                            setPriorityOpen(false);
+                          }}
+                        >
+                          <Text
+                            as="span"
+                            px={2}
+                            borderRadius="full"
+                            bg={
+                              priority === 'high'
+                                ? 'status.attention.bg'
+                                : priority === 'low'
+                                  ? 'status.neutral.bg'
+                                  : 'status.total.bg'
+                            }
+                            color="text.secondary"
+                          >
+                            {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                          </Text>
+                        </Button>
+                      ))}
+                    </Popover.Body>
+                  </Popover.Content>
+                </Popover.Positioner>
+              </Portal>
+            </Popover.Root>
+          </HStack>
+          <Input
+            {...register('title')}
+            bg="bg.card"
+            name="title"
+            aria-label="Title"
+            fontSize="xl"
+            fontWeight="semibold"
+            h="48px"
+            placeholder="Scenario title"
+            disabled={pending}
+            error={errors.title?.message}
+          />
+          <Textarea
+            {...register('details')}
+            bg="bg.card"
+            name="details"
+            aria-label="Details"
+            placeholder="What this scenario covers and why (optional)"
+            minH="64px"
+            disabled={pending}
+            error={errors.details?.message}
+          />
         </VStack>
         <Box borderTopWidth="1px" borderColor="border.main" />
         <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 1fr) 200px' }} gap={6}>
@@ -324,8 +430,11 @@ export const TestScenarioForm = ({
             <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={5}>
               <Textarea
                 {...register('preconditions')}
+                bg="bg.card"
                 name="preconditions"
                 label="Preconditions"
+                fieldProps={{ labelProps: { fontSize: 'sm', fontWeight: 'semibold' } }}
+                fontSize="md"
                 placeholder="State the system must be in before step 1"
                 minH="84px"
                 disabled={pending}
@@ -333,8 +442,11 @@ export const TestScenarioForm = ({
               />
               <Textarea
                 {...register('testData')}
+                bg="bg.card"
                 name="testData"
                 label="Test data"
+                fieldProps={{ labelProps: { fontSize: 'sm', fontWeight: 'semibold' } }}
+                fontSize="md"
                 placeholder="Accounts, cards, URLs or files the steps need. One per line."
                 minH="84px"
                 disabled={pending}
@@ -342,7 +454,12 @@ export const TestScenarioForm = ({
               />
             </Grid>
             <HStack justify="space-between" flexWrap="wrap">
-              <Heading size="md">Steps {steps.length}</Heading>
+              <Heading size="md">
+                Steps{' '}
+                <Text as="span" color="text.secondary">
+                  {steps.length}
+                </Text>
+              </Heading>
               <Text fontSize="xs" color="text.secondary">
                 Drag to reorder · Enter in the last field adds a step
               </Text>
@@ -351,8 +468,10 @@ export const TestScenarioForm = ({
               display={{ base: 'none', md: 'grid' }}
               templateColumns="30px 24px minmax(0, 1fr) minmax(0, 1fr) 30px"
               gap={3}
-              fontSize="xs"
-              color="text.secondary"
+              fontSize="sm"
+              color="text.primary"
+              fontWeight="semibold"
+              mb={-2}
               aria-hidden="true"
             >
               <Box />
@@ -368,7 +487,12 @@ export const TestScenarioForm = ({
                   key={step.key}
                   data-step-key={step.key}
                   listStyle="none"
-
+                  borderRadius="md"
+                  bg={draggedStep === step.key || grabbed === step.key ? 'blue.50' : 'transparent'}
+                  outline={draggedStep === step.key || grabbed === step.key ? '2px solid' : '2px solid transparent'}
+                  outlineColor={draggedStep === step.key || grabbed === step.key ? 'blue.400' : 'transparent'}
+                  boxShadow={draggedStep === step.key || grabbed === step.key ? 'md' : 'none'}
+                  _dark={{ bg: draggedStep === step.key || grabbed === step.key ? 'blue.900' : 'transparent' }}
                 >
                   <Grid
                     templateColumns={{ base: '30px 1fr 30px', md: '30px 24px minmax(0, 1fr) minmax(0, 1fr) 30px' }}
@@ -383,10 +507,13 @@ export const TestScenarioForm = ({
                       aria-pressed={grabbed === step.key}
                       data-handle-key={step.key}
                       disabled={pending}
+                      cursor={draggedStep === step.key ? 'grabbing' : 'grab'}
+                      color={draggedStep === step.key || grabbed === step.key ? 'blue.600' : 'text.secondary'}
                       style={{ touchAction: 'none' }}
                       onPointerDown={(e) => {
                         if (pending) return;
                         pointer.current = { key: step.key, id: e.pointerId };
+                        setDraggedStep(step.key);
                         e.currentTarget.setPointerCapture?.(e.pointerId);
                       }}
                       onPointerMove={(e) => {
@@ -401,10 +528,12 @@ export const TestScenarioForm = ({
                       }}
                       onPointerUp={(e) => {
                         pointer.current = null;
+                        setDraggedStep(undefined);
                         e.currentTarget.releasePointerCapture?.(e.pointerId);
                       }}
                       onPointerCancel={() => {
                         pointer.current = null;
+                        setDraggedStep(undefined);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === ' ' || e.key === 'Enter') {
@@ -430,13 +559,14 @@ export const TestScenarioForm = ({
                         }
                       }}
                     >
-                      <FiMenu />
+                      <Text aria-hidden="true">⠿</Text>
                     </IconButton>
                     <Text display={{ base: 'none', md: 'block' }} pt={1}>
                       {index + 1}
                     </Text>
                     <Textarea
                       name={`step-${step.key}-action`}
+                      bg="bg.card"
                       placeholder="What the tester does"
                       minH="40px"
                       rows={1}
@@ -451,6 +581,7 @@ export const TestScenarioForm = ({
                     <Box gridColumn={{ base: '2', md: 'auto' }}>
                       <Textarea
                         name={`step-${step.key}-expected`}
+                        bg="bg.card"
                         placeholder="What should happen"
                         minH="40px"
                         rows={1}
@@ -486,35 +617,69 @@ export const TestScenarioForm = ({
                 </Box>
               ))}
             </VStack>
-            <Button type="button" variant="outline" borderStyle="dashed" width="full" disabled={pending} onClick={append}>
+            <Button
+              type="button"
+              variant="outline"
+              borderStyle="dashed"
+              borderColor="text.muted"
+              alignSelf={{ base: 'stretch', md: 'auto' }}
+              ml={{ md: '78px' }}
+              mr={{ md: '42px' }}
+              disabled={pending}
+              onClick={append}
+            >
               <FiPlus />
               Add step
             </Button>
-            <Text role="status" aria-live="polite" fontSize="sm">
+            <Text role="status" aria-live="polite" srOnly>
               {announcement}
             </Text>
           </VStack>
-          <VStack
-            align="stretch"
-            gap={6}
-          >
+          <VStack align="stretch" gap={6}>
             <Box>
-              <Heading size="sm" mb={2}>Suites</Heading>
+              <Heading size="sm" mb={2}>
+                Suites
+              </Heading>
               <HStack gap={2} flexWrap="wrap">
                 {selectedSuites.map((suite) => (
-                  <HStack key={suite.id} gap={1} bg="blue.100" color="blue.700" _dark={{ bg: 'blue.900', color: 'blue.100' }}
-                    borderRadius="full" pl={3} pr={1} py={0.5}>
+                  <HStack
+                    key={suite.id}
+                    gap={1}
+                    bg="blue.100"
+                    color="blue.700"
+                    _dark={{ bg: 'blue.900', color: 'blue.100' }}
+                    borderRadius="full"
+                    pl={3}
+                    pr={1}
+                    py={0.5}
+                  >
                     <Text fontSize="sm">{suite.name}</Text>
-                    <IconButton type="button" variant="ghost" size="2xs" color="inherit" _hover={{ bg: 'transparent', color: 'inherit' }}
-                      aria-label={`Remove suite ${suite.name}`} disabled={pending}
-                      onClick={() => setSelectedSuites((previous) => previous.filter((s) => s.id !== suite.id))}>
+                    <IconButton
+                      type="button"
+                      variant="ghost"
+                      size="2xs"
+                      color="inherit"
+                      _hover={{ bg: 'transparent', color: 'inherit' }}
+                      aria-label={`Remove suite ${suite.name}`}
+                      disabled={pending}
+                      onClick={() => setSelectedSuites((previous) => previous.filter((s) => s.id !== suite.id))}
+                    >
                       <FiX />
                     </IconButton>
                   </HStack>
                 ))}
-                <SuitePicker mode="draft" suites={suites} selectedNames={selectedSuites.map((suite) => suite.name)}
-                  disabled={pending} onSelect={(suite) => setSelectedSuites((previous) => [...previous, suite])} />
-                {!selectedSuites.length && <Text color="text.secondary" fontSize="sm">Not in any suite</Text>}
+                <SuitePicker
+                  mode="draft"
+                  suites={suites}
+                  selectedNames={selectedSuites.map((suite) => suite.name)}
+                  disabled={pending}
+                  onSelect={(suite) => setSelectedSuites((previous) => [...previous, suite])}
+                />
+                {!selectedSuites.length && (
+                  <Text color="text.secondary" fontSize="sm">
+                    Not in any suite
+                  </Text>
+                )}
               </HStack>
             </Box>
             <Box>
@@ -524,6 +689,7 @@ export const TestScenarioForm = ({
               </HStack>
               <Input
                 {...register('relatedIssueUrl')}
+                bg="bg.card"
                 name="relatedIssueUrl"
                 aria-label="Requirement or ticket"
                 placeholder="https://youtrack… or https://jira…"
@@ -531,25 +697,6 @@ export const TestScenarioForm = ({
                 error={errors.relatedIssueUrl?.message}
               />
             </Box>
-            {mode === 'edit' && (
-              <Box>
-                <Heading size="sm" mb={3}>
-                  History
-                </Heading>
-                <Text fontSize="sm">
-                  Created {history?.createdAt ? new Date(history.createdAt).toLocaleString() : 'Unknown'}
-                </Text>
-                <Text color="text.secondary" fontSize="sm">
-                  {history?.createdBy?.name || history?.createdBy?.email || 'Unknown'}
-                </Text>
-                <Text fontSize="sm" mt={3}>
-                  Updated {history?.updatedAt ? new Date(history.updatedAt).toLocaleString() : 'Unknown'}
-                </Text>
-                <Text color="text.secondary" fontSize="sm">
-                  {history?.updatedBy?.name || history?.updatedBy?.email || 'Unknown'}
-                </Text>
-              </Box>
-            )}
           </VStack>
         </Grid>
       </VStack>

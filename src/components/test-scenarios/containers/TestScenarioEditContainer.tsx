@@ -168,7 +168,6 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
             initialSteps={rows(saved)}
             initialSuites={(saved as EditorScenario).suites ?? []}
             suites={suites}
-            history={saved as EditorScenario}
             folders={flatFolders}
             initialFolderId={saved.folderId}
             reconciliation={

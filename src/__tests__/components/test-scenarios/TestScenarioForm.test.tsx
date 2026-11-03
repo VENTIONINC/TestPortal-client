@@ -13,17 +13,42 @@ const setup = (props: Partial<React.ComponentProps<typeof TestScenarioForm>> = {
     </ChakraProvider>,
   );
 describe('TestScenarioForm', () => {
+  it('keeps a new step independent of a pre-existing draft key', async () => {
+    setup({ initialSteps: [{ key: 'draft-1', action: '', expectedResult: '' }] });
+    fireEvent.click(screen.getByRole('button', { name: 'Add step' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Step 1 action' }), { target: { value: 'Open' } });
+    fireEvent.change(screen.getByRole('textbox', { name: 'Step 1 expected result' }), { target: { value: 'Done' } });
+    expect(screen.getByRole('textbox', { name: 'Step 2 action' })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Step 2 expected result' })).toHaveValue('');
+  });
   it('uses the shared workspace with automatic key, Medium and one blank row', () => {
     setup();
     expect(screen.getByText('NEW SCENARIO')).toBeInTheDocument();
-    expect(screen.getByText('Assigned on save')).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Priority' })).toHaveValue('medium');
+    expect(screen.getByText('On save')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Priority' })).toHaveTextContent('Medium');
     expect(screen.getByRole('heading', { name: 'Steps 1' })).toBeInTheDocument();
     expect(screen.queryByRole('textbox', { name: /Scenario key/ })).not.toBeInTheDocument();
     expect(screen.queryByText('Scenario fields')).not.toBeInTheDocument();
     expect(screen.queryByText('Test setup')).not.toBeInTheDocument();
     expect(screen.queryByText('History')).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Unset' })).not.toBeInTheDocument();
+  });
+  it('filters folders and saves the selected folder and priority', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    setup({ initialValues: { title: 'Scenario' }, folders: [{ id: 'a', name: 'Account' }, { id: 'b', name: 'Checkout' }], onSubmit });
+    await user.click(screen.getByRole('button', { name: 'Scenario folder' }));
+    const folderSearch = screen.getByRole('textbox', { name: 'Search folders' });
+    await waitFor(() => expect(folderSearch).toHaveFocus());
+    await user.type(folderSearch, 'check');
+    expect(screen.queryByRole('button', { name: 'Account' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Checkout' }));
+    await user.click(screen.getByRole('button', { name: 'Priority' }));
+    await user.click(screen.getByRole('button', { name: 'High' }));
+    await user.click(screen.getByRole('button', { name: 'Save scenario' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    expect(onSubmit.mock.calls[0][0].priority).toBe('high');
+    expect(onSubmit.mock.calls[0][2]).toBe('b');
   });
   it('omits a blank new row but validates an expected-only row and preserves all input', async () => {
     const onSubmit = vi.fn();
