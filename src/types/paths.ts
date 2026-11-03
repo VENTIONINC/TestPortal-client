@@ -6,7 +6,7 @@ export enum PATHS {
   DASHBOARD = '/dashboard',
   RESULTS = '/results',
   ISSUES = '/issues',
-  TEST_SCENARIOS = '/test-scenarios',
+  TEST_SCENARIOS = '/test-management',
   TEST_SCENARIO_NEW = '/test-scenarios/new',
   TEST_SCENARIO_DETAILS = '/test-scenarios/:scenarioId',
   TEST_SCENARIO_MANUAL_RUNS = '/test-scenarios/:scenarioId/manual-runs',

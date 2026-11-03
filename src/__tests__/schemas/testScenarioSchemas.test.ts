@@ -26,7 +26,6 @@ describe('Test Scenario authoring schema', () => {
     });
 
     expect(result).toEqual({
-      scenarioKey: 'AUTH LOGIN',
       title: 'Scenario',
       details: 'First line\n  Second line',
       priority: 'high',
@@ -44,20 +43,8 @@ describe('Test Scenario authoring schema', () => {
     expect(result.testData).toBe(value.trim());
   });
 
-  it('accepts duplicate keys and keys at the normalized 100-character boundary', () => {
-    const key = `  ${'K'.repeat(100)}  `;
-
-    expect(testScenarioAuthoringSchema.parse({ title: 'Scenario', scenarioKey: key }).scenarioKey).toBe('K'.repeat(100));
-    expect(testScenarioAuthoringSchema.safeParse({ title: 'Scenario', scenarioKey: 'AUTH-1' }).success).toBe(true);
-    expect(testScenarioAuthoringSchema.safeParse({ title: 'Another scenario', scenarioKey: 'AUTH-1' }).success).toBe(true);
-    expect(testScenarioAuthoringSchema.safeParse({ title: 'Scenario', scenarioKey: 'K'.repeat(101) }).success).toBe(false);
-  });
-
-  it('rejects line breaks in Scenario keys', () => {
-    const result = testScenarioAuthoringSchema.safeParse({ title: 'Scenario', scenarioKey: 'AUTH\nLOGIN' });
-
-    expect(result.success).toBe(false);
-    if (!result.success) expect(result.error.flatten().fieldErrors.scenarioKey).toContain('Scenario key must be a single line');
+  it('excludes immutable scenario keys from authoring', () => {
+    expect(testScenarioAuthoringSchema.parse({ title: 'Scenario', scenarioKey: 'ignored' })).not.toHaveProperty('scenarioKey');
   });
 
   it('rejects blank step actions and accepts optional multiline expected results', () => {
@@ -72,7 +59,7 @@ describe('Test Scenario authoring schema', () => {
   });
   it('accepts optional priority and trimmed HTTP(S) issue URLs', () => {
     expect(testScenarioAuthoringSchema.parse({ title: 'Scenario', priority: 'low', relatedIssueUrl: ' https://example.test/TP-20 ' })).toMatchObject({ priority: 'low', relatedIssueUrl: 'https://example.test/TP-20' });
-    expect(testScenarioAuthoringSchema.safeParse({ title: 'Scenario', priority: '', relatedIssueUrl: '' }).success).toBe(true);
+    expect(testScenarioAuthoringSchema.safeParse({ title: 'Scenario', priority: '', relatedIssueUrl: '' }).success).toBe(false);
   });
   it.each(['/relative', 'https:example.test/TP-20', 'https:/example.test/TP-20', 'http:example.test/TP-20', 'http:/example.test/TP-20', 'javascript:alert(1)', 'ftp://example.test', 'not a url'])('rejects invalid Related issue URL %s', (relatedIssueUrl) => {
     const result = testScenarioAuthoringSchema.safeParse({ title: 'Scenario', relatedIssueUrl });

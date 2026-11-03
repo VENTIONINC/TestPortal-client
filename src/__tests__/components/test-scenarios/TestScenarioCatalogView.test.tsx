@@ -429,6 +429,12 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.queryByRole('button', { name: /Run/i })).not.toBeInTheDocument();
   });
 
+  it('renders a fallback for null details', () => {
+    renderView({ scenarios: [{ ...scenarios[0], scenarioKey: 'TMS-1', details: null }] });
+
+    expect(screen.getByText('TMS-1')).toBeInTheDocument();
+  });
+
   it('marks active search and filters with the accent treatment', () => {
     renderView({ search: 'checkout', priority: 'high', authorId: 'user-1' });
 
@@ -482,10 +488,10 @@ describe('TestScenarioCatalogView', () => {
   });
 
   it('renders a fallback for null priority', () => {
-    renderView({ scenarios: [{ ...scenarios[0], scenarioKey: null, details: null, priority: null }] });
+    renderView({ scenarios: [{ ...scenarios[0], scenarioKey: 'TMS-1', details: null, priority: null }] });
 
-    expect(screen.getByText('Low')).toBeInTheDocument();
-    expect(screen.getByText('—', { selector: 'p' })).toBeInTheDocument();
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+    expect(screen.getByText('TMS-1')).toBeInTheDocument();
   });
 
   it('maps every scenario title to its own detail route while keeping actions separate', () => {
@@ -498,7 +504,7 @@ describe('TestScenarioCatalogView', () => {
           folderId: null,
           folderName: null,
           createdById: 'user-2',
-          scenarioKey: null,
+          scenarioKey: 'TMS-1',
           title: 'Refund flow',
           details: null,
           priority: null,

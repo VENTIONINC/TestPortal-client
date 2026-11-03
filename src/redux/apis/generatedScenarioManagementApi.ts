@@ -458,7 +458,7 @@ export type TestScenarioSummary = {
   projectId: string;
   createdById: string;
   title: string;
-  scenarioKey: string | null;
+  scenarioKey: string;
   details: string | null;
   priority: ("low" | "medium" | "high") | null;
   createdBy: TestScenarioCreatorSummary;

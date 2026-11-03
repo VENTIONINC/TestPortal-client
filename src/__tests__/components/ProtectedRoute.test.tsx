@@ -18,7 +18,7 @@ const LocationProbe = () => <output data-testid="location">{useLocation().pathna
 
 const renderProtectedRoute = () =>
   render(
-    <MemoryRouter initialEntries={['/test-scenarios']}>
+    <MemoryRouter initialEntries={['/test-management']}>
       <ProtectedRoute>
         <div>Test Scenario catalog</div>
       </ProtectedRoute>
@@ -37,7 +37,7 @@ describe('ProtectedRoute', () => {
     renderProtectedRoute();
 
     expect(screen.getByText('Test Scenario catalog')).toBeInTheDocument();
-    expect(screen.getByTestId('location')).toHaveTextContent('/test-scenarios');
+    expect(screen.getByTestId('location')).toHaveTextContent('/test-management');
   });
 
   it('redirects an unauthenticated user to login', () => {

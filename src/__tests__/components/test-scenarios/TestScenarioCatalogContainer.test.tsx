@@ -135,7 +135,7 @@ const createResponse = (page: number) => ({
       folderId: null,
       folderName: null,
       createdById: 'user-1',
-      scenarioKey: null,
+      scenarioKey: 'TMS-1',
       title: `Scenario page ${page}`,
       details: `Details page ${page}`,
       priority: null,
@@ -178,7 +178,7 @@ describe('TestScenarioCatalogContainer', () => {
   });
 
   it('combines priority and author filters and resets pagination independently', () => {
-    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
       projectId: 'project-1',
       page: 1,
@@ -207,7 +207,7 @@ describe('TestScenarioCatalogContainer', () => {
 
   it('loads project and No folder totals independently of the visible list filters', () => {
     mockedScenarioQuery.mockClear();
-    renderHook(() => useTestScenarioCatalog('project-1'));
+    renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     expect(mockedScenarioQuery).toHaveBeenNthCalledWith(1, { projectId: 'project-1', page: 1, limit: 1 });
     expect(mockedScenarioQuery).toHaveBeenNthCalledWith(2, {
       projectId: 'project-1',
@@ -225,7 +225,7 @@ describe('TestScenarioCatalogContainer', () => {
       };
     });
     mockedSelectionQuery.mockReturnValue([trigger, { isLoading: false }] as never);
-    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     act(() => {
       result.current.toggleSelected('visible-id');
       result.current.onPageChange(2);
@@ -268,7 +268,7 @@ describe('TestScenarioCatalogContainer', () => {
         }),
     }));
     mockedSelectionQuery.mockReturnValue([trigger, { isLoading: false }] as never);
-    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     let resolution: Promise<void> | undefined;
     act(() => {
       resolution = result.current.selectAllMatching();
@@ -289,7 +289,7 @@ describe('TestScenarioCatalogContainer', () => {
       },
     }));
     mockedSelectionQuery.mockReturnValue([trigger, { isLoading: false }] as never);
-    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     act(() => result.current.toggleSelected('visible-id'));
     await act(async () => {
       await result.current.selectAllMatching();
@@ -314,7 +314,7 @@ describe('TestScenarioCatalogContainer', () => {
       };
     });
     mockedBulkMoveMutation.mockReturnValue([moveTrigger, { isLoading: false }] as never);
-    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     await act(async () => {
       await result.current.selectAllMatching();
     });
@@ -340,7 +340,7 @@ describe('TestScenarioCatalogContainer', () => {
       return { unwrap: async () => ({}) };
     });
     mockedBulkMoveMutation.mockReturnValue([moveTrigger, { isLoading: false }] as never);
-    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
 
     let report;
     await act(async () => {
@@ -369,7 +369,7 @@ describe('TestScenarioCatalogContainer', () => {
       },
     }));
     mockedDeleteMutation.mockReturnValue([deleteTrigger, { isLoading: false }] as never);
-    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     act(() => result.current.onPageChange(3));
     expect(result.current.pagination.page).toBe(3);
     let report;
@@ -382,7 +382,7 @@ describe('TestScenarioCatalogContainer', () => {
   });
 
   it('does not reconcile a suite operation into a changed selection', () => {
-    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     act(() => result.current.toggleSelected('scenario-1'));
     act(() => result.current.startSuiteOperation());
     act(() => result.current.toggleSelected('scenario-2'));
@@ -399,7 +399,7 @@ describe('TestScenarioCatalogContainer', () => {
         }),
     }));
     mockedBulkMoveMutation.mockReturnValue([moveTrigger, { isLoading: false }] as never);
-    const { result } = renderHook(() => useTestScenarioCatalog('project-1'));
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     act(() => result.current.toggleSelected('scenario-1'));
     let firstOperation: Promise<unknown> | undefined;
     act(() => {
@@ -432,6 +432,7 @@ describe('TestScenarioCatalogContainer', () => {
     mockedBulkMoveMutation.mockReturnValue([moveTrigger, { isLoading: false }] as never);
     const { result, rerender } = renderHook(({ projectId }) => useTestScenarioCatalog(projectId), {
       initialProps: { projectId: 'project-1' },
+      wrapper: MemoryRouter,
     });
     act(() => result.current.toggleSelected('scenario-1'));
     let operation: Promise<unknown> | undefined;
@@ -463,6 +464,26 @@ describe('TestScenarioCatalogContainer', () => {
     );
     expect(mockedDetailQuery).not.toHaveBeenCalled();
     expect(screen.getByText('Scenario page 1')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['unfiled', { folderId: 'unfiled' }],
+    ['folder-a', { folderId: 'folder-a', includeDescendants: true }],
+    ['removed-folder', {}],
+  ])('restores catalog folder scope %s from a direct-entry URL', async (folderId, expected) => {
+    render(
+      <ChakraProvider>
+        <MemoryRouter initialEntries={[`/test-scenarios?projectId=project-1&folderId=${folderId}`]}>
+          <TestScenarioCatalogContainer projectId="project-1" />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
+    await waitFor(() =>
+      expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
+        { projectId: 'project-1', page: 1, limit: 25, sortField: 'updatedAt', sortDirection: 'desc', ...expected },
+        { skip: false },
+      ),
+    );
   });
 
   it('requests the selected page for the same project and limit', async () => {

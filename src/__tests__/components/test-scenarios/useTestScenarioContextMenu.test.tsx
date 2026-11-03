@@ -63,6 +63,6 @@ describe('useTestScenarioContextMenu', () => {
     );
 
     openDeleteDialog.mock.calls[0][3]();
-    expect(navigate).toHaveBeenCalledWith('/test-scenarios');
+    expect(navigate).toHaveBeenCalledWith('/test-management');
   });
 });

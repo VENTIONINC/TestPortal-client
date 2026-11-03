@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 
 import {
   useGetApiV2TestScenarioFoldersQuery,
@@ -27,11 +28,13 @@ import {
 } from '@/redux/apis/generatedApi';
 
 import { TEST_SCENARIO_PAGE_LIMIT, TEST_SCENARIO_PAGE_SIZES, type TestScenarioPageSize } from '../constants';
-import { executeScenarioOperation, toggleScenarioSelection, type ScenarioOperationReport } from '../utils';
+import { executeScenarioOperation, flattenScenarioFolders, toggleScenarioSelection, type ScenarioOperationReport } from '../utils';
 
 const SEARCH_DEBOUNCE_MS = 500;
 
 export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'scenarios' | 'suites') => {
+  const [searchParams] = useSearchParams();
+  const requestedFolder = searchParams.get('projectId') && searchParams.get('projectId') !== projectId ? null : searchParams.get('folderId');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<TestScenarioPageSize>(TEST_SCENARIO_PAGE_LIMIT as TestScenarioPageSize);
   const [search, setSearch] = useState('');
@@ -49,7 +52,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [priority, setPriority] = useState<NonNullable<GetApiV2TestScenariosApiArg['priority']> | ''>('');
   const [authorIds, setAuthorIds] = useState<string[]>([]);
   const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>(() =>
-    organizationTab === 'suites' ? { kind: 'suite' } : { kind: 'all' },
+    organizationTab === 'suites' ? { kind: 'suite' } : requestedFolder === 'unfiled' ? { kind: 'unfiled' } : requestedFolder ? { kind: 'folder', id: requestedFolder } : { kind: 'all' },
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const selectionRevision = useRef(0);
@@ -72,6 +75,9 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [deleteSuiteRequest] = useDeleteApiV2TestSuitesBySuiteIdMutation();
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
   const suitesQuery = useGetApiV2TestSuitesQuery({ projectId });
+  useEffect(() => {
+    if (scope.kind === 'folder' && foldersQuery.currentData && !flattenScenarioFolders(foldersQuery.currentData).some((folder) => folder.id === scope.id)) setScope({ kind: 'all' });
+  }, [foldersQuery.currentData, scope]);
   const projectCountQuery = useGetApiV2TestScenariosQuery({ projectId, page: 1, limit: 1 });
   const unfiledCountQuery = useGetApiV2TestScenariosQuery({ projectId, page: 1, limit: 1, folderId: 'unfiled' });
   const queryArgs = useMemo(

@@ -110,7 +110,7 @@ describe('TestScenarioDetailContainer', () => {
     expect(screen.queryByRole('button', { name: 'Delete Scenario' })).not.toBeInTheDocument();
     expect(screen.queryByText('Read-only Test Scenario details')).not.toBeInTheDocument();
     expect(screen.queryByText('Markdown Preview')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Return to Test Scenarios' })).toHaveAttribute('href', '/test-scenarios');
+    expect(screen.getByRole('link', { name: 'Return to Test Scenarios' })).toHaveAttribute('href', '/test-management');
   });
 
   it('uses the shared scenario context menu without making the details content editable', async () => {
@@ -156,7 +156,7 @@ describe('TestScenarioDetailContainer', () => {
 
     expect(screen.getByText('Test Scenario unavailable')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Return to Test Scenarios' }));
-    expect(navigate).toHaveBeenCalledWith('/test-scenarios');
+    expect(navigate).toHaveBeenCalledWith('/test-management');
   });
 
   it('renders a retryable error state for other request failures', async () => {

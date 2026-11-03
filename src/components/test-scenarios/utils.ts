@@ -9,6 +9,7 @@ import type {
   UpdateTestScenarioStepRequest,
 } from '@/redux/apis/generatedApi';
 import { testScenarioAuthoringSchema } from '@/schemas';
+import { PATHS } from '@/types/paths';
 
 import {
   TEST_SCENARIO_EDITABLE_FIELDS,
@@ -25,11 +26,6 @@ export type {
 } from './types';
 
 export const normalizeScenarioText = (value: string | null | undefined) => value?.trim() ?? '';
-
-export const normalizeOptionalScenarioText = (value: string | null | undefined) => {
-  const normalized = normalizeScenarioText(value);
-  return normalized || null;
-};
 
 interface FolderOptionNode {
   id?: string;
@@ -111,11 +107,9 @@ export const executeScenarioOperation = async (
 };
 
 const metadataSchema = testScenarioAuthoringSchema.pick({ priority: true, relatedIssueUrl: true });
-const validateMetadata = (values: TestScenarioEditableValues) =>
-  metadataSchema.parse({
-    priority: values.priority ?? '',
-    relatedIssueUrl: values.relatedIssueUrl ?? '',
-  });
+const validateMetadata = (values: TestScenarioEditableValues) => metadataSchema.parse({
+  priority: values.priority || 'medium', relatedIssueUrl: values.relatedIssueUrl ?? '',
+});
 
 export const getTestScenarioCreatePayload = (
   projectId: string,
@@ -126,6 +120,7 @@ export const getTestScenarioCreatePayload = (
   validateMetadata(values);
   const payload: CreateTestScenarioRequest = {
     projectId,
+    priority: values.priority || 'medium',
     title: normalizeScenarioText(values.title),
     ...(folderId !== undefined ? { folderId } : {}),
   };
@@ -134,7 +129,7 @@ export const getTestScenarioCreatePayload = (
     if (field === 'title') continue;
     const value = normalizeScenarioText(values[field]);
     if (field === 'priority') {
-      if (values.priority) payload.priority = values.priority;
+      payload.priority = values.priority || 'medium';
     } else if (value) payload[field] = value;
   }
 
@@ -161,7 +156,7 @@ export const getTestScenarioPatchPayload = (
     if (field === 'title') {
       payload.title = value;
     } else if (field === 'priority') {
-      payload.priority = values.priority || null;
+      payload.priority = values.priority || 'medium';
     } else {
       payload[field] = value || null;
     }
@@ -171,7 +166,7 @@ export const getTestScenarioPatchPayload = (
 };
 
 export const serializeInitialSteps = (steps: TestScenarioInitialStepDraft[]): CreateTestScenarioStep[] =>
-  steps.map(({ action, expectedResult }) => ({
+  steps.filter((step) => step.id || step.action.trim() || step.expectedResult.trim()).map(({ action, expectedResult }) => ({
     action: normalizeScenarioText(action),
     ...(normalizeScenarioText(expectedResult) ? { expectedResult: normalizeScenarioText(expectedResult) } : {}),
   }));
@@ -205,4 +200,10 @@ export const getTestScenarioEditableValues = (scenario: TestScenario): TestScena
     {} as TestScenarioEditableValues,
   );
 
-export const getTestScenarioUpdatePayload = getTestScenarioPatchPayload;
+/** A reloadable, project-scoped catalog destination for the current draft folder. */
+export const getScenarioFolderReturnPath = (projectId: string, folderId: string | null, folders: Array<{ id: string }>) => {
+  const search = new URLSearchParams({ projectId });
+  if (!folderId) search.set('folderId', 'unfiled');
+  else if (folders.some((folder) => folder.id === folderId)) search.set('folderId', folderId);
+  return `${PATHS.TEST_SCENARIOS}?${search.toString()}`;
+};

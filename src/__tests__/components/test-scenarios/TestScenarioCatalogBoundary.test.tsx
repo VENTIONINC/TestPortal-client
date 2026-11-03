@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ReactNode } from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -23,6 +23,9 @@ vi.mock('@/components/ui', async (importOriginal) => {
     Tooltip: ({ children }: { children: ReactNode }) => children,
   };
 });
+
+const restoreProject = vi.hoisted(() => vi.fn());
+vi.mock('@/redux/slices/projects', () => ({ useProjectsActions: () => ({ setSelectedProjectId: restoreProject }) }));
 
 vi.mock('@/hooks/useSelectedProject', () => ({
   useSelectedProject: vi.fn(),
@@ -84,7 +87,7 @@ const createResponse = (projectId: string, page: number) => ({
       folderId: null,
       folderName: null,
       createdById: 'user-1',
-      scenarioKey: null,
+      scenarioKey: 'TMS-1',
       title: `${projectId} scenario`,
       details: `${projectId} details`,
       priority: null,
@@ -124,6 +127,7 @@ describe('TestScenarioCatalog project boundary', () => {
   });
 
   it('resets to page 1 and hides the previous project while the new request is pending', async () => {
+    vi.useFakeTimers();
     const user = userEvent.setup();
     const { rerender } = render(
       <ChakraProvider>
@@ -132,6 +136,9 @@ describe('TestScenarioCatalog project boundary', () => {
         </MemoryRouter>
       </ChakraProvider>,
     );
+
+    act(() => vi.advanceTimersByTime(500));
+    vi.useRealTimers();
 
     await user.click(screen.getByRole('button', { name: 'Next Page' }));
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
@@ -159,5 +166,19 @@ describe('TestScenarioCatalog project boundary', () => {
     expect(screen.queryByText('project-a details')).not.toBeInTheDocument();
     expect(screen.queryByText('project-a c.')).not.toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Searching scenarios…');
+  });
+  it('consumes a return URL project once and allows a subsequent deliberate project change', () => {
+    restoreProject.mockClear();
+    const content = () => (
+      <ChakraProvider>
+        <MemoryRouter initialEntries={['/test-management?projectId=project-a&folderId=unfiled']}>
+          <TestScenarioCatalog />
+        </MemoryRouter>
+      </ChakraProvider>
+    );
+    const view = render(content());
+    selectedProjectId = 'project-b';
+    view.rerender(content());
+    expect(restoreProject).not.toHaveBeenCalled();
   });
 });

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRef, useState } from 'react';
-import { Box, Button, HStack, Input, Popover, Portal, Text } from '@chakra-ui/react';
+import { Box, Button, HStack, IconButton, Input, Popover, Portal, Text } from '@chakra-ui/react';
 import { FiLayers, FiList, FiPlus, FiSearch } from 'react-icons/fi';
 
 import {
@@ -21,7 +21,7 @@ interface SuitePickerProps {
   onBusyChange?: (busy: boolean) => void;
 }
 
-export const SuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyChange }: SuitePickerProps) => {
+const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyChange }: SuitePickerProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
@@ -240,3 +240,63 @@ export const SuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBu
     </Popover.Root>
   );
 };
+
+interface DraftSuitePickerProps {
+  mode: 'draft';
+  suites: Array<{ id: string; name: string; members?: unknown[] }>;
+  selectedNames: string[];
+  disabled?: boolean;
+  onSelect: (suite: { id: string; name: string; isNew?: boolean }) => void;
+}
+
+const DraftSuitePicker = ({ suites, selectedNames, disabled, onSelect }: DraftSuitePickerProps) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  const name = search.trim();
+  const filtered = suites.filter((suite) => suite.name.toLocaleLowerCase().includes(name.toLocaleLowerCase()));
+  const exists = [...suites.map((suite) => suite.name), ...selectedNames].some(
+    (item) => item.toLocaleLowerCase() === name.toLocaleLowerCase(),
+  );
+  const select = (suite: { id: string; name: string; isNew?: boolean }) => {
+    onSelect(suite);
+    setOpen(false);
+  };
+  return (
+    <Popover.Root open={open} onOpenChange={({ open: next }) => { setOpen(next); if (next) setSearch(''); }}
+      positioning={{ placement: 'bottom-start' }} initialFocusEl={() => inputRef.current}>
+      <Popover.Trigger asChild>
+        <IconButton type="button" variant="outline" size="xs" borderStyle="dashed" borderRadius="full"
+          aria-label="Select suites" disabled={disabled}><FiPlus /></IconButton>
+      </Popover.Trigger>
+      <Portal><Popover.Positioner><Popover.Content w="300px" maxW="calc(100vw - 24px)" bg="bg.card" p={2}>
+        <Popover.Body p={0}>
+          <Input ref={inputRef} aria-label="Find or create a suite" placeholder="Find or create a suite"
+            value={search} maxLength={200} size="sm" disabled={disabled} onChange={(event) => setSearch(event.currentTarget.value)}
+            onKeyDown={(event) => { if (event.key === 'Enter') event.preventDefault(); }} />
+          <Box maxH="250px" overflowY="auto" mt={1}>
+            {filtered.map((suite) => (
+              <Button type="button" key={suite.id} variant="ghost" w="full" h="auto" minH="44px"
+                justifyContent="flex-start" px={2} py={1}
+                disabled={disabled || selectedNames.some((item) => item.toLocaleLowerCase() === suite.name.toLocaleLowerCase())}
+                onClick={() => select({ id: suite.id, name: suite.name })}>
+                <HStack gap={3}><FiList aria-hidden="true" /><Box textAlign="left">
+                  <Text fontSize="sm">{suite.name}</Text>
+                  <Text fontSize="xs" color="text.secondary">{suite.members?.length ?? 0} scenarios</Text>
+                </Box></HStack>
+              </Button>
+            ))}
+            {name && !exists && <Button type="button" variant="ghost" color="blue.500" w="full" disabled={disabled}
+              justifyContent="flex-start" onClick={() => select({ id: `suite-draft-${crypto.randomUUID()}`, name, isNew: true })}>
+              <FiPlus /> Create suite “{name}”
+            </Button>}
+            {!name && !suites.length && <Text fontSize="sm" color="text.secondary" p={2}>No suites yet. Enter a name to create one.</Text>}
+          </Box>
+        </Popover.Body>
+      </Popover.Content></Popover.Positioner></Portal>
+    </Popover.Root>
+  );
+};
+
+export const SuitePicker = (props: SuitePickerProps | DraftSuitePickerProps) =>
+  'mode' in props ? <DraftSuitePicker {...props} /> : <BulkSuitePicker {...props} />;

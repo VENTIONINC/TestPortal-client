@@ -11,10 +11,9 @@ export const createReadableLabelSchema = (label: string) =>
     .transform((value) => value.trim());
 
 export const testScenarioAuthoringSchema = z.object({
-  scenarioKey: createReadableLabelSchema('Scenario key').optional(),
   title: z.string().trim().min(1, 'Title is required'),
   details: z.string().trim().optional(),
-  priority: z.enum(['', 'low', 'medium', 'high']).optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
   relatedIssueUrl: z.string().trim().refine((value) => {
     if (!value) return true;
     if (!/^https?:\/\//i.test(value)) return false;

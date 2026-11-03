@@ -3112,12 +3112,27 @@ export type TestScenario = {
   projectId: string;
   folderId: string | null;
   createdById: string;
+  revision: number;
+  createdBy: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  updatedBy: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  suites: {
+    id: string;
+    name: string;
+  }[];
   title: string;
-  scenarioKey: string | null;
+  scenarioKey: string;
   details: string | null;
   preconditions: string | null;
   testData: string | null;
-  priority: ("low" | "medium" | "high") | null;
+  priority: "low" | "medium" | "high";
   relatedIssueUrl: string | null;
   steps: {
     id: string;
@@ -3134,12 +3149,21 @@ export type TestScenario = {
 export type UpdateTestScenarioRequest = {
   folderId?: string | null;
   title?: string;
-  scenarioKey?: string | null;
   details?: string | null;
   preconditions?: string | null;
   testData?: string | null;
-  priority?: ("low" | "medium" | "high") | null;
+  priority?: "low" | "medium" | "high";
   relatedIssueUrl?: string | null;
+  expectedRevision?: number;
+  steps?: {
+    id?: string;
+    action: string;
+    expectedResult?: string | null;
+  }[];
+  suiteIds?: string[];
+  newSuites?: {
+    name: string;
+  }[];
 };
 export type AppendTestScenarioStepRequest = {
   action: string;
@@ -3203,13 +3227,16 @@ export type CreateTestScenarioRequest = {
   projectId: string;
   folderId?: string | null;
   title: string;
-  scenarioKey?: string | null;
   details?: string;
   preconditions?: string;
   testData?: string;
-  priority?: ("low" | "medium" | "high") | null;
+  priority?: "low" | "medium" | "high";
   relatedIssueUrl?: string | null;
   steps?: CreateTestScenarioStep[];
+  suiteIds?: string[];
+  newSuites?: {
+    name: string;
+  }[];
 };
 export type TestScenarioCreatorSummary = {
   id: string;
@@ -3221,7 +3248,7 @@ export type TestScenarioSummary = {
   projectId: string;
   createdById: string;
   title: string;
-  scenarioKey: string | null;
+  scenarioKey: string;
   details: string | null;
   priority: ("low" | "medium" | "high") | null;
   createdBy: TestScenarioCreatorSummary;
