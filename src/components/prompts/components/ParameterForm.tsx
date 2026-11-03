@@ -1,10 +1,11 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { memo } from 'react';
+import { memo, type ChangeEvent } from 'react';
 import { HStack, Text, VStack, SimpleGrid } from '@chakra-ui/react';
 
 import { Field } from '@/components/ui/field';
+import { NativeSelect } from '@/components/ui/native-select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { PromptConfig, PromptParameter } from '@/redux/apis/generatedApi';
@@ -28,12 +29,24 @@ export const ParameterForm = memo(function ParameterForm({
     const value = values[name] || '';
     const error = errors[name];
     const isRequired = parameter.required;
+    const selectItems = [
+      { value: '', label: 'Not specified' },
+      ...(parameter.enum ?? []).map((item) => ({
+        value: item,
+        label: item === 'human_guided' ? 'Human guided' : item === 'client_executed' ? 'Client executed' : item,
+      })),
+    ];
 
     const handleChange = (newValue: string) => {
       onChange(name, newValue);
     };
 
+    const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
+      handleChange(event.target.value);
+    };
+
     const useTextarea =
+      (prompt.name === 'tms-workflow-assistant' && name === 'task') ||
       parameter.description.toLowerCase().includes('description') ||
       parameter.description.toLowerCase().includes('context') ||
       (parameter.example && parameter.example.length > 50);
@@ -57,7 +70,14 @@ export const ParameterForm = memo(function ParameterForm({
         invalid={!!error}
         errorText={error}
       >
-        {useTextarea ? (
+        {parameter.enum ? (
+          <NativeSelect
+            aria-label={name.replace(/_/g, ' ')}
+            value={value}
+            onChange={handleSelectChange}
+            items={selectItems}
+          />
+        ) : useTextarea ? (
           <Textarea
             name={name}
             value={value}
@@ -84,7 +104,7 @@ export const ParameterForm = memo(function ParameterForm({
       </Text>
 
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-        {Object.entries(prompt.parameters).map(([name, parameter]) => renderField(name, parameter))}
+        {Object.entries(prompt.parameters).filter(([name]) => prompt.name !== 'tms-workflow-assistant' || name !== 'project_id').map(([name, parameter]) => renderField(name, parameter))}
       </SimpleGrid>
       {requiredFieldsEmpty && (
         <Text fontSize="sm" color="status.error.text" textAlign="center">
