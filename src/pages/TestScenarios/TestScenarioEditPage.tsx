@@ -4,9 +4,12 @@
 import { TestScenarioEditBoundary } from '@/components/test-scenarios';
 import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
 
+import { ScenarioPageTabs } from './TestManagementTabs';
+
 export function TestScenarioEditPage() {
   return (
     <MainTemplate pageHeader="Edit Test Scenario">
+      <ScenarioPageTabs />
       <TestScenarioEditBoundary />
     </MainTemplate>
   );

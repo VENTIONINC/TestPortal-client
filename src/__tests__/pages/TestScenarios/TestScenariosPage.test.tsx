@@ -3,11 +3,12 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ChakraProvider } from '@/components/ui';
 import { TestScenariosPage } from '@/pages/TestScenarios';
+import { ScenarioPageTabs } from '@/pages/TestScenarios/TestManagementTabs';
 
 const projectState = vi.hoisted(() => ({ id: 'project-1', missingCounts: false, refreshingCounts: false, failedCounts: false, requestedProjects: [] as string[] }));
 const catalogTab = vi.hoisted(() => vi.fn());
@@ -108,6 +109,22 @@ describe('TestScenariosPage', () => {
 
     expect(screen.getByRole('tab', { name: /Suites/ })).toHaveAttribute('aria-selected', 'true');
     await waitFor(() => expect(catalogTab).toHaveBeenLastCalledWith('suites'));
+  });
+
+  it('navigates from a scenario page to the selected Test Management section', async () => {
+    const user = userEvent.setup();
+    render(
+      <ChakraProvider><MemoryRouter initialEntries={['/test-scenarios/123/edit']}>
+        <Routes>
+          <Route path="/test-scenarios/:id/edit" element={<ScenarioPageTabs />} />
+          <Route path="/test-scenarios" element={<TestScenariosPage />} />
+        </Routes>
+      </MemoryRouter></ChakraProvider>,
+    );
+    expect(screen.getByRole('tab', { name: /Scenarios 12/ })).toHaveAttribute('aria-selected', 'true');
+    await user.click(screen.getByRole('tab', { name: /Suites 2/ }));
+    expect(screen.getByRole('tab', { name: /Suites 2/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Test Scenario catalog: suites')).toBeInTheDocument();
   });
 
   it('selects Manual runs for the legacy route', () => {
