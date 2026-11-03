@@ -1,0 +1,27 @@
+src/__tests__/components/prompts/ParameterForm.test.tsx
+  s_b4a8323e57813d::t_7163e3c263af80 1-31
+src/__tests__/components/prompts/PromptBuilderView.test.tsx
+  s_b4a8323e57813d::t_56b53ad68c99b4 1-22
+src/__tests__/components/prompts/PromptGalleryView.test.tsx
+  s_b4a8323e57813d::t_40b66cbd2df40b 1-27
+src/__tests__/components/prompts/PromptPreview.test.tsx
+  s_b4a8323e57813d::t_cdc8c2200ec582 1-21
+src/redux/apis/generatedApi.ts
+  s_b4a8323e57813d::t_f2bb6956ec78bf 1664-1665,1675-1676,2763,2789-2795,2797-2799
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f27565429912756d66a67ba72cb6d16602f23d7d",
+  "prompts": {},
+  "sessions": {
+    "s_b4a8323e57813d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a0f5-9489-79d0-b1ea-68ac0d6ef055",
+        "model": "gpt-6.1-terra"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
