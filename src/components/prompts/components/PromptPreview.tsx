@@ -19,7 +19,7 @@ export const PromptPreview = memo(function PromptPreview({ prompt, isGenerating,
         <Heading size="md" color="text.main">
           Generated Prompt
         </Heading>
-        {prompt && !isGenerating && <CopyButton text={prompt} />}
+        {prompt && !isGenerating && !error && <CopyButton text={prompt} />}
       </HStack>
 
       <Box
