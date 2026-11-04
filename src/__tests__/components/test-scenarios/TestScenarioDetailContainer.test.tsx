@@ -10,280 +10,139 @@ import { TestScenarioDetailContainer } from '@/components/test-scenarios/contain
 import { ChakraProvider, toaster } from '@/components/ui';
 import { useTestScenarioContextMenu } from '@/components/test-scenarios/hooks/useTestScenarioContextMenu';
 import { useGetApiV2TestScenariosByScenarioIdQuery } from '@/redux/apis/generatedApi';
-import { usePostApiV2TestScenariosByScenarioIdManualRunsMutation } from '@/redux/apis/extendedApi';
+import {
+  useDeleteApiV2TestSuitesBySuiteIdMembersMutation,
+  useGetApiV2TestScenarioFoldersQuery,
+  useGetApiV2TestSuitesQuery,
+} from '@/redux/apis/extendedApi';
 
 const navigate = vi.fn();
-const refetch = vi.fn();
+const refetchScenario = vi.fn();
+const refetchSuites = vi.fn();
 const contextMenu = vi.fn();
-const startManualRun = vi.fn();
+const removeMembers = vi.fn();
 
 const persistedScenario = {
-  id: 'scenario-1',
-  projectId: 'project-1',
-  createdById: 'user-1',
-  scenarioKey: 'AUTH-1',
-  title: 'Checkout flow',
-  contentMd: '# Checkout flow\n\nExact source\n',
-  details: 'Scenario details',
-  priority: 'high',
-  relatedIssueUrl: 'https://example.test/TP-20',
-  preconditions: 'Signed in',
-  testData: null,
-
-  steps: [],
-  contentMdHash: 'hash-1',
-  contentMdFormatVersion: 1,
-  createdAt: '2026-09-01T10:00:00.000Z',
-  updatedAt: '2026-09-02T11:00:00.000Z',
+  id: 'scenario-1', projectId: 'project-1', folderId: 'nested-folder', createdById: 'user-1', revision: 1,
+  createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' }, updatedBy: null,
+  suites: [{ id: 'suite-1', name: 'Smoke' }], scenarioKey: 'AUTH-1', title: 'Checkout flow', contentMd: '# Checkout flow',
+  details: 'Scenario details', priority: 'high', relatedIssueUrl: 'https://example.test/TP-20', preconditions: 'Signed in', testData: null,
+  steps: [], contentMdHash: 'hash-1', contentMdFormatVersion: 1,
+  createdAt: '2026-09-01T10:00:00.000Z', updatedAt: '2026-09-02T11:00:00.000Z',
 };
+const nestedFolders = [{ id: 'parent', projectId: 'project-1', parentId: null, name: 'Checkout', description: null,
+  position: 0, createdAt: '', updatedAt: '', scenarioCount: 0, _count: { scenarios: 0 }, children: [
+    { id: 'nested-folder', projectId: 'project-1', parentId: 'parent', name: 'Payments', description: null,
+      position: 0, createdAt: '', updatedAt: '', scenarioCount: 0, _count: { scenarios: 0 }, children: [] },
+  ] }];
 
 vi.mock('react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router')>();
-
   return { ...actual, useNavigate: () => navigate };
 });
-vi.mock('@/components/test-scenarios/hooks/useTestScenarioContextMenu', () => ({
-  useTestScenarioContextMenu: vi.fn(),
-}));
+vi.mock('@/components/test-scenarios/hooks/useTestScenarioContextMenu', () => ({ useTestScenarioContextMenu: vi.fn() }));
 vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/redux/apis/generatedApi')>();
-
-  return {
-    ...actual,
-    useGetApiV2TestScenariosByScenarioIdQuery: vi.fn(),
-  };
+  return { ...actual, useGetApiV2TestScenariosByScenarioIdQuery: vi.fn() };
 });
 vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
   return {
     ...actual,
-    usePostApiV2TestScenariosByScenarioIdManualRunsMutation: vi.fn(),
-    useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery: vi.fn(() => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() })),
-    usePostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
-    usePatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
-    useDeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
+    useGetApiV2TestScenarioFoldersQuery: vi.fn(),
+    useGetApiV2TestSuitesQuery: vi.fn(),
+    useDeleteApiV2TestSuitesBySuiteIdMembersMutation: vi.fn(),
   };
 });
+vi.mock('@/components/test-scenarios/components/SuitePicker', () => ({
+  SuitePicker: ({ selectedIds, onComplete }: { selectedIds: string[]; onComplete: (report: unknown, ids: string[]) => void }) => (
+    <button onClick={() => onComplete({ succeededIds: selectedIds, failedIds: [], uncertainIds: [], unattemptedIds: [] }, selectedIds)}>Add to suite</button>
+  ),
+}));
 
 const mockedGetScenario = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
-const mockedStartManualRun = vi.mocked(usePostApiV2TestScenariosByScenarioIdManualRunsMutation);
+const mockedFolders = vi.mocked(useGetApiV2TestScenarioFoldersQuery);
+const mockedSuites = vi.mocked(useGetApiV2TestSuitesQuery);
+const mockedRemove = vi.mocked(useDeleteApiV2TestSuitesBySuiteIdMembersMutation);
 const mockedContextMenu = vi.mocked(useTestScenarioContextMenu);
-
-const renderContainer = (projectId = 'project-1', scenarioId = 'scenario-1') =>
-  render(
-    <ChakraProvider>
-      <MemoryRouter>
-        <TestScenarioDetailContainer projectId={projectId} scenarioId={scenarioId} />
-      </MemoryRouter>
-    </ChakraProvider>,
-  );
+const renderContainer = (projectId = 'project-1', scenarioId = 'scenario-1') => render(
+  <ChakraProvider><MemoryRouter><TestScenarioDetailContainer projectId={projectId} scenarioId={scenarioId} /></MemoryRouter></ChakraProvider>,
+);
 
 describe('TestScenarioDetailContainer', () => {
   beforeEach(() => {
-    navigate.mockReset();
-    refetch.mockReset();
-    startManualRun.mockReset();
-    contextMenu.mockReset();
+    navigate.mockReset(); refetchScenario.mockReset(); refetchSuites.mockReset(); contextMenu.mockReset(); removeMembers.mockReset();
     mockedContextMenu.mockReturnValue(contextMenu);
-    mockedStartManualRun.mockReturnValue([startManualRun, { isLoading: false }] as never);
-    mockedGetScenario.mockReturnValue({
-      data: persistedScenario,
-      currentData: persistedScenario,
-      isLoading: false,
-      isFetching: false,
-      error: undefined,
-      refetch,
-    } as never);
+    mockedGetScenario.mockReturnValue({ data: persistedScenario, currentData: persistedScenario, isLoading: false, isFetching: false, error: undefined, refetch: refetchScenario } as never);
+    mockedFolders.mockReturnValue({ currentData: nestedFolders, isLoading: false, isFetching: false, isError: false } as never);
+    mockedSuites.mockReturnValue({ currentData: [], isLoading: false, isFetching: false, isError: false, refetch: refetchSuites } as never);
+    mockedRemove.mockReturnValue([removeMembers, { isLoading: false }] as never);
     vi.spyOn(toaster, 'create').mockClear();
   });
 
-  it('requests both identities and renders persisted structured details without Markdown', () => {
+  it('resolves nested folder labels and return paths within the selected project', () => {
     renderContainer();
-
     expect(mockedGetScenario).toHaveBeenCalledWith({ scenarioId: 'scenario-1', projectId: 'project-1' });
-    expect(screen.getAllByRole('heading', { name: 'Checkout flow' })).not.toHaveLength(0);
-    expect(screen.getByText('Scenario key: AUTH-1')).toBeInTheDocument();
-    expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Save Test Scenario' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Edit Scenario' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Delete Scenario' })).not.toBeInTheDocument();
-    expect(screen.queryByText('Read-only Test Scenario details')).not.toBeInTheDocument();
-    expect(screen.queryByText('Markdown Preview')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Return to Test Scenarios' })).toHaveAttribute('href', '/test-management');
+    expect(mockedFolders).toHaveBeenCalledWith({ projectId: 'project-1' });
+    expect(screen.getByRole('link', { name: 'Back to Payments' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=nested-folder');
+    expect(screen.getByText('Payments')).toBeInTheDocument();
   });
 
-  it('uses the shared scenario context menu without making the details content editable', async () => {
-    const user = userEvent.setup();
-
+  it('returns unfiled scenarios to the No folder scope', () => {
+    mockedGetScenario.mockReturnValue({ data: { ...persistedScenario, folderId: null }, currentData: { ...persistedScenario, folderId: null }, isLoading: false, isFetching: false, error: undefined, refetch: refetchScenario } as never);
     renderContainer();
+    expect(screen.getByRole('link', { name: 'Back to No folder' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=unfiled');
+  });
+
+  it('falls back to all scenarios when a saved folder no longer exists', () => {
+    mockedFolders.mockReturnValue({ currentData: [], isLoading: false, isFetching: false, isError: false } as never);
+    renderContainer();
+    expect(screen.getByRole('link', { name: 'Back to Folder unavailable' })).toHaveAttribute('href', '/test-management?projectId=project-1');
+  });
+
+  it('opens the existing editor and keeps run actions off the detail page', async () => {
+    const user = userEvent.setup();
+    renderContainer();
+    expect(screen.queryByRole('button', { name: 'Start manual run' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Run history' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1/edit');
     await user.click(screen.getByRole('button', { name: 'Actions for Checkout flow' }));
-
-    expect(mockedContextMenu).toHaveBeenCalledWith('project-1');
+    expect(mockedContextMenu).toHaveBeenCalledWith('project-1', undefined, false);
     expect(contextMenu).toHaveBeenCalledWith(expect.anything(), persistedScenario);
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Save Test Scenario' })).not.toBeInTheDocument();
   });
 
-  it('renders a loading state before current-scope data arrives', () => {
-    mockedGetScenario.mockReturnValue({
-      data: undefined,
-      currentData: undefined,
-      isLoading: true,
-      isFetching: true,
-      error: undefined,
-      refetch,
-    } as never);
-
-    renderContainer();
-
-    expect(screen.getByText('Loading Test Scenario...')).toBeInTheDocument();
-    expect(screen.queryByTestId('markdown-preview')).not.toBeInTheDocument();
-  });
-
-  it('renders the unavailable state and returns to the catalog for a 404', async () => {
-    const user = userEvent.setup();
-    mockedGetScenario.mockReturnValue({
-      data: undefined,
-      currentData: undefined,
-      isLoading: false,
-      isFetching: false,
-      error: { status: 404 },
-      refetch,
-    } as never);
-
-    renderContainer();
-
-    expect(screen.getByText('Test Scenario unavailable')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Return to Test Scenarios' }));
-    expect(navigate).toHaveBeenCalledWith('/test-management');
-  });
-
-  it('renders a retryable error state for other request failures', async () => {
-    const user = userEvent.setup();
-    mockedGetScenario.mockReturnValue({
-      data: undefined,
-      currentData: undefined,
-      isLoading: false,
-      isFetching: false,
-      error: { status: 503 },
-      refetch,
-    } as never);
-
-    renderContainer();
-
-    expect(screen.getByRole('alert')).toHaveTextContent('Failed to load Test Scenario');
-    await user.click(screen.getByRole('button', { name: 'Try again' }));
-    expect(refetch).toHaveBeenCalledTimes(1);
-  });
-
-  it('starts with an empty body and navigates only after the server returns the run identity', async () => {
-    const user = userEvent.setup();
-    startManualRun.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'run-1' }) });
-
-    renderContainer();
-    await user.click(screen.getByRole('button', { name: 'Start manual run' }));
-    expect(screen.getByRole('textbox', { name: 'Run key (optional)' })).toHaveValue('');
-    await user.click(screen.getByRole('button', { name: 'Start run' }));
-
-    expect(startManualRun).toHaveBeenCalledWith({
-      scenarioId: 'scenario-1',
-      projectId: 'project-1',
-      manualTestRunStartRequest: {},
-    });
-    expect(navigate).toHaveBeenCalledWith('/manual-test-runs/run-1');
-  });
-
-  it('submits the entered key', async () => {
-    const user = userEvent.setup();
-    startManualRun.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'run-keyed' }) });
-
-    renderContainer();
-    const trigger = screen.getByRole('button', { name: 'Start manual run' });
-    await user.click(trigger);
-    await user.type(screen.getByRole('textbox', { name: 'Run key (optional)' }), '  RUN-1  ');
-    await user.click(screen.getByRole('button', { name: 'Start run' }));
-
-    expect(startManualRun).toHaveBeenCalledWith({
-      scenarioId: 'scenario-1',
-      projectId: 'project-1',
-      manualTestRunStartRequest: { runKey: 'RUN-1' },
-    });
-
-  });
-
-  it('restores trigger focus after cancellation without starting a run', async () => {
+  it('shows confirmed suite membership and refreshes it after a successful add', async () => {
     const user = userEvent.setup();
     renderContainer();
-    const trigger = screen.getByRole('button', { name: 'Start manual run' });
-    await user.click(trigger);
-    await user.type(screen.getByRole('textbox', { name: 'Run key (optional)' }), 'Unsaved run key');
-    await user.keyboard('{Escape}');
-    expect(startManualRun).not.toHaveBeenCalled();
-    await waitFor(() => expect(trigger).toHaveFocus());
+    expect(screen.getByText('Smoke')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Add to suite' }));
+    await waitFor(() => expect(refetchScenario).toHaveBeenCalled());
+    expect(refetchSuites).toHaveBeenCalled();
   });
 
-  it('reports uncertain transport failures without retrying automatically', async () => {
+  it('preserves membership on failed removal and reports the failure', async () => {
     const user = userEvent.setup();
-    startManualRun.mockReturnValue({ unwrap: () => Promise.reject({ status: 'FETCH_ERROR' }) });
-
+    removeMembers.mockReturnValue({ unwrap: () => Promise.reject({ status: 500, data: { message: 'Service unavailable' } }) });
     renderContainer();
-    await user.click(screen.getByRole('button', { name: 'Start manual run' }));
-    await user.click(screen.getByRole('button', { name: 'Start run' }));
-
-    expect(startManualRun).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('alert')).toHaveTextContent('A run may have been created');
-    expect(navigate).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Remove Smoke suite' }));
+    await waitFor(() => expect(screen.getByText(/Service unavailable/)).toBeInTheDocument());
+    expect(screen.getByText('Smoke')).toBeInTheDocument();
+    expect(removeMembers).toHaveBeenCalledWith({ suiteId: 'suite-1', body: { projectId: 'project-1', scenarioIds: ['scenario-1'] } });
   });
 
-  it('retains a Run key on server errors and requires confirmation before an uncertain retry', async () => {
+  it('updates membership after a successful removal', async () => {
     const user = userEvent.setup();
-    startManualRun
-      .mockReturnValueOnce({ unwrap: () => Promise.reject({ status: 422, data: { error: 'Invalid run key' } }) })
-      .mockReturnValueOnce({ unwrap: () => Promise.reject({ status: 'FETCH_ERROR' }) })
-      .mockReturnValueOnce({ unwrap: () => Promise.resolve({ id: 'run-retried' }) });
-
+    removeMembers.mockReturnValue({ unwrap: () => Promise.resolve([]) });
     renderContainer();
-    await user.click(screen.getByRole('button', { name: 'Start manual run' }));
-    const input = screen.getByRole('textbox', { name: 'Run key (optional)' });
-    await user.type(input, 'RUN-1');
-    await user.click(screen.getByRole('button', { name: 'Start run' }));
-
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Invalid run key'));
-    expect(input).toHaveValue('RUN-1');
-    await user.click(screen.getByRole('button', { name: 'Start run' }));
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('A run may have been created'));
-    expect(input).toHaveValue('RUN-1');
-
-    await user.click(screen.getByRole('button', { name: 'Start run' }));
-    expect(startManualRun).toHaveBeenCalledTimes(2);
-    expect(screen.getByText(/starting again could create a duplicate/i)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Start another run' }));
-
-    expect(startManualRun).toHaveBeenCalledTimes(3);
-    expect(navigate).toHaveBeenCalledWith('/manual-test-runs/run-retried');
+    await user.click(screen.getByRole('button', { name: 'Remove Smoke suite' }));
+    await waitFor(() => expect(refetchScenario).toHaveBeenCalled());
+    expect(toaster.create).toHaveBeenCalledWith({ title: 'Removed from suite.', type: 'success' });
   });
 
-  it('closes and resets the dialog when project scope changes during a start', async () => {
-    const user = userEvent.setup();
-    let resolveStart!: (value: { id: string }) => void;
-    startManualRun.mockReturnValue({ unwrap: () => new Promise((resolve) => (resolveStart = resolve)) });
-
-    const { rerender } = renderContainer();
-    await user.click(screen.getByRole('button', { name: 'Start manual run' }));
-    await user.type(screen.getByRole('textbox', { name: 'Run key (optional)' }), 'OLD-SCOPE');
-    await user.click(screen.getByRole('button', { name: 'Start run' }));
-
-    rerender(
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioDetailContainer projectId="project-2" scenarioId="scenario-2" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    resolveStart({ id: 'late-run' });
-    await waitFor(() => expect(navigate).not.toHaveBeenCalled());
-    expect(toaster.create).not.toHaveBeenCalled();
+  it('uses the new project scope after a project switch', () => {
+    renderContainer('project-2', 'scenario-2');
+    expect(mockedGetScenario).toHaveBeenCalledWith({ scenarioId: 'scenario-2', projectId: 'project-2' });
+    expect(mockedFolders).toHaveBeenCalledWith({ projectId: 'project-2' });
   });
 });

@@ -22,6 +22,7 @@ export type TestScenarioContextMenuHandler = (
 export const useTestScenarioContextMenu = (
   projectId?: string,
   onRemoveFromSuite?: (scenario: TestScenarioContextMenuScenario) => void,
+  includeEdit = true,
 ): TestScenarioContextMenuHandler => {
   const openContextMenu = useOpenContextMenu();
   const openDeleteDialog = useDeleteTestScenarioDialog();
@@ -33,11 +34,11 @@ export const useTestScenarioContextMenu = (
   return useCallback(
     (event, scenario) => {
       openContextMenu(event, [
-        {
+        ...(includeEdit ? [{
           title: 'Edit Scenario',
           icon: FiEdit,
           onClick: () => navigate(getTestScenarioEditPath(scenario.id)),
-        },
+        }] : []),
         ...(onRemoveFromSuite
           ? [{
               title: 'Remove from suite',
@@ -54,6 +55,6 @@ export const useTestScenarioContextMenu = (
         },
       ]);
     },
-    [currentProjectId, navigate, onDeleted, onRemoveFromSuite, openContextMenu, openDeleteDialog],
+    [currentProjectId, includeEdit, navigate, onDeleted, onRemoveFromSuite, openContextMenu, openDeleteDialog],
   );
 };

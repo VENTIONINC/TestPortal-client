@@ -17,11 +17,12 @@ interface SuitePickerProps {
   projectId: string;
   selectedIds: string[];
   disabled?: boolean;
-  onComplete: (report: ScenarioOperationReport, selection: string[]) => void;
+  onComplete: (report: ScenarioOperationReport, selection: string[]) => void | Promise<void>;
   onBusyChange?: (busy: boolean) => void;
+  compact?: boolean;
 }
 
-const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyChange }: SuitePickerProps) => {
+const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyChange, compact }: SuitePickerProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
@@ -29,6 +30,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
   const [uncertainName, setUncertainName] = useState('');
   const lock = useRef(false);
   const [retrySuite, setRetrySuite] = useState<{ id: string; name: string } | null>(null);
+  const [refreshRequired, setRefreshRequired] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const {
     data: suites,
@@ -46,11 +48,12 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
     const report = await executeScenarioOperation(ids, (scenarioIds) =>
       addMembers({ suiteId, body: { projectId, scenarioIds } }).unwrap(),
     );
-    onComplete(report, ids);
+    await onComplete(report, ids);
     if (report.failedIds.length || report.unattemptedIds.length || report.uncertainIds.length) {
       setError(
-        `${report.errorMessage ?? 'Could not add scenarios.'}${report.uncertainIds.length ? ' Check unknown outcomes before retrying.' : ' Please try again.'}`,
+        `${report.errorMessage ?? 'Could not add scenarios.'}${report.uncertainIds.length ? ' Close and reopen the picker to refresh memberships before trying again.' : ' Please try again.'}`,
       );
+      setRefreshRequired(report.uncertainIds.length > 0);
     } else {
       setRetrySuite(null);
       setOpen(false);
@@ -98,6 +101,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
             setError('');
             setRetrySuite(null);
             setUncertainName('');
+            setRefreshRequired(false);
           }
         }
       }}
@@ -105,6 +109,10 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
       initialFocusEl={() => inputRef.current}
     >
       <Popover.Trigger asChild>
+        {compact ? (
+          <IconButton size="xs" variant="outline" borderStyle="dashed" borderRadius="full"
+            aria-label="Add to suite" disabled={disabled || busy}><FiPlus /></IconButton>
+        ) : (
         <Button
           size="sm"
           variant="ghost"
@@ -115,6 +123,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
         >
           <FiLayers aria-hidden="true" /> Add to suite
         </Button>
+        )}
       </Popover.Trigger>
       <Portal>
         <Popover.Positioner>
@@ -148,6 +157,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                   aria-label="Find or create a suite"
                   placeholder="Find or create a suite"
                   value={search}
+                  maxLength={200}
                   onChange={(event) => setSearch(event.currentTarget.value)}
                   disabled={busy}
                   size="sm"
@@ -179,7 +189,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                         justifyContent="flex-start"
                         px={2}
                         py={1}
-                        disabled={busy}
+                        disabled={busy || refreshRequired || already === selectedIds.length}
                         onClick={() => void run({ id: suite.id, name: suite.name })}
                       >
                         <HStack align="center" gap={3} w="full">
@@ -210,7 +220,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                         h="auto"
                         py={2}
                         whiteSpace="normal"
-                        disabled={busy}
+                        disabled={busy || refreshRequired}
                         onClick={() => void run()}
                       >
                         <FiPlus aria-hidden="true" /> Create suite “{search.trim()}” and add {selectedIds.length}
@@ -229,7 +239,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                 </Text>
               )}
               {retrySuite && error && (
-                <Button size="sm" variant="ghost" disabled={busy} onClick={() => void run(retrySuite)}>
+                <Button size="sm" variant="ghost" disabled={busy || refreshRequired} onClick={() => void run(retrySuite)}>
                   Retry adding to {retrySuite.name}
                 </Button>
               )}

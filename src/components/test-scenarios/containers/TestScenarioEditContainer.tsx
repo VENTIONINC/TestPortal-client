@@ -179,7 +179,7 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
             onDirtyChange={setDirty}
             onReload={() => void reload()}
             onSubmit={handleSubmit}
-            onCancel={(folderId) => navigate(getScenarioFolderReturnPath(projectId, folderId ?? null, flatFolders))}
+            onCancel={() => navigate(`/test-scenarios/${scenarioId}`)}
           />
         )}
       </TestScenarioDetailStateView>

@@ -8,40 +8,75 @@ import { ChakraProvider } from '@/components/ui';
 import { TestScenarioDetailsView } from '@/components/test-scenarios/components/TestScenarioDetailsView';
 import type { TestScenario } from '@/redux/apis/generatedApi';
 
+vi.mock('@/components/test-scenarios/components/SuitePicker', () => ({
+  SuitePicker: () => <button type="button">Add to suite</button>,
+}));
+
 const scenario: TestScenario = {
-  revision: 1, suites: [], createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' }, updatedBy: null,
-  folderId: null, id: 'scenario-1', projectId: 'project-1', createdById: 'user-1', title: 'Checkout', scenarioKey: 'TMS-1',
+  revision: 1, suites: [{ id: 'suite-1', name: 'Smoke R2.4' }], createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' }, updatedBy: null,
+  folderId: 'folder-1', id: 'scenario-1', projectId: 'project-1', createdById: 'user-1', title: 'Checkout', scenarioKey: 'TMS-1',
   details: 'Details content', priority: 'high', relatedIssueUrl: 'https://example.test/TP-20',
-  preconditions: 'Ready', testData: 'Input', contentMd: '# Checkout', contentMdHash: 'hash',
-  contentMdFormatVersion: 1, createdAt: '', updatedAt: '',
-  steps: [{ id: 'step-1', position: 0, action: 'Run', expectedResult: 'Works' }],
+  preconditions: 'Ready\nUser is logged out', testData: 'Input', contentMd: '# Checkout', contentMdHash: 'hash',
+  contentMdFormatVersion: 1, createdAt: '2026-10-20T10:00:00.000Z', updatedAt: '2026-10-26T10:00:00.000Z',
+  steps: [
+    { id: 'step-2', position: 2, action: 'Confirm order', expectedResult: 'Email sent' },
+    { id: 'step-1', position: 1, action: 'Open product page', expectedResult: null },
+    { id: 'step-3', position: 3, action: 'Check final summary', expectedResult: '' },
+  ],
 };
 const renderView = (overrides: Partial<TestScenario> = {}) => render(
-  <ChakraProvider><MemoryRouter><TestScenarioDetailsView scenario={{ ...scenario, ...overrides }} onContextMenu={vi.fn()} /></MemoryRouter></ChakraProvider>,
+  <ChakraProvider><MemoryRouter><TestScenarioDetailsView
+    scenario={{ ...scenario, ...overrides }}
+    folderName="Checkout"
+    backPath="/test-management?projectId=project-1&folderId=folder-1"
+    projectId="project-1"
+    onEdit={vi.fn()}
+    onContextMenu={vi.fn()}
+    onAddSuiteComplete={vi.fn()}
+    onRemoveSuite={vi.fn()}
+    removingSuiteIds={[]}
+  /></MemoryRouter></ChakraProvider>,
 );
+
 describe('TestScenarioDetailsView', () => {
-  it('shows TP-20 sections read-only and retains step expected results', () => {
+  it('shows the scenario header, setup, ordered action/result table and responsive navigation', () => {
     renderView();
-    const fields = screen.getByRole('heading', { name: 'Scenario fields' });
-    const setup = screen.getByRole('heading', { name: 'Test setup' });
-    const steps = screen.getByRole('heading', { name: 'Scenario steps (1)' });
-    expect(fields.compareDocumentPosition(setup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(setup.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getByText('Details content')).toBeInTheDocument();
-    expect(screen.getByText('High')).toBeInTheDocument();
-    expect(screen.getByText('Works')).toBeInTheDocument();
-    expect(screen.queryByText('Objective')).not.toBeInTheDocument();
-    expect(screen.queryByText('Notes')).not.toBeInTheDocument();
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getByText('TMS-1')).toBeInTheDocument();
+    expect(screen.getAllByText('Checkout')).toHaveLength(2);
+    expect(screen.getByRole('heading', { name: 'Checkout' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.getByText('Preconditions').compareDocumentPosition(screen.getByText('Steps')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const rows = screen.getAllByRole('row', { hidden: true });
+    expect(rows[1]).toHaveTextContent('1Open product pageNo expected result');
+    expect(rows[2]).toHaveTextContent('2Confirm orderEmail sent');
+    expect(rows[3]).toHaveTextContent('3Check final summaryNo expected result');
+    expect(screen.getByTestId('scenario-mobile-steps')).toBeInTheDocument();
+    expect(screen.getByText('Step 1')).toBeInTheDocument();
+    expect(screen.getByText(/Ready\s+User is logged out/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back to Checkout' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=folder-1');
     expect(screen.getByRole('link', { name: 'https://example.test/TP-20' })).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(screen.queryByText('Start manual run')).not.toBeInTheDocument();
+    expect(screen.queryByText('Run history')).not.toBeInTheDocument();
+    expect(screen.queryByText('Clone')).not.toBeInTheDocument();
   });
-  it('shows consistent empty metadata without a link', () => {
-    renderView({ relatedIssueUrl: null });
-    expect(screen.getAllByText('No value')).toHaveLength(1);
+
+  it('shows empty setup, empty steps, suite state and metadata fallbacks', () => {
+    renderView({ preconditions: null, testData: '', relatedIssueUrl: null, steps: [], suites: [], createdAt: '', updatedAt: '', createdBy: null as never });
+    expect(screen.getAllByText('No value')).toHaveLength(3);
+    expect(screen.getByText('No steps saved.')).toBeInTheDocument();
+    expect(screen.getByText('No suites yet.')).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.textContent === 'Created Unknown by Unknown')).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.textContent === 'Updated Unknown by Unknown')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /example.test/ })).not.toBeInTheDocument();
   });
+
   it('does not render an unsafe related issue URL as a link', () => {
     renderView({ relatedIssueUrl: 'javascript:alert(1)' });
     expect(screen.queryByRole('link', { name: 'javascript:alert(1)' })).not.toBeInTheDocument();
+  });
+
+  it('allows an absolute HTTP related issue link', () => {
+    renderView({ relatedIssueUrl: 'http://example.test/TP-21' });
+    expect(screen.getByRole('link', { name: 'http://example.test/TP-21' })).toHaveAttribute('target', '_blank');
   });
 });

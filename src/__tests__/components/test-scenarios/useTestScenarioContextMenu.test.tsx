@@ -37,6 +37,16 @@ const Harness = () => {
   );
 };
 
+const DeleteOnlyHarness = () => {
+  const openMenu = useTestScenarioContextMenu('project-1', undefined, false);
+
+  return (
+    <button onClick={(event) => openMenu(event, { id: 'scenario-1', title: 'Checkout flow' })}>
+      Open details actions
+    </button>
+  );
+};
+
 describe('useTestScenarioContextMenu', () => {
   it('opens ordered icon-bearing actions for the selected scenario and project', async () => {
     const user = userEvent.setup();
@@ -64,5 +74,15 @@ describe('useTestScenarioContextMenu', () => {
 
     openDeleteDialog.mock.calls[0][3]();
     expect(navigate).toHaveBeenCalledWith('/test-management');
+  });
+
+  it('keeps only Delete Scenario in the details overflow menu', async () => {
+    const user = userEvent.setup();
+    openContextMenu.mockClear();
+    render(<DeleteOnlyHarness />);
+    await user.click(screen.getByRole('button', { name: 'Open details actions' }));
+    const options = openContextMenu.mock.calls[0][1];
+    expect(options.map((option: { title: string }) => option.title)).toEqual(['Delete Scenario']);
+    expect(options[0].icon).toBe(FiTrash2);
   });
 });
