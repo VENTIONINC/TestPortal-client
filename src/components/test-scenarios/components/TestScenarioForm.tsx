@@ -213,11 +213,13 @@ export const TestScenarioForm = ({
     >
       <VStack align="stretch" gap={4}>
         <HStack justify="space-between" flexWrap="wrap">
-          <Button type="button" variant="ghost" onClick={cancel} disabled={pending}>
-            <FiArrowLeft />
+          <Button type="button" variant="ghost" onClick={cancel} disabled={pending}
+            h="5" minW={0} p={0} gap={2} fontSize="sm" fontWeight="normal" color="text.secondary" textDecoration="none" flexShrink={0}
+            _hover={{ bg: 'bg.subtle' }}>
+            <FiArrowLeft size={16} aria-hidden="true" style={{ width: 16, height: 16, flex: '0 0 16px' }} />
             Back to {backLabel}
           </Button>
-          <HStack position={{ base: 'static', md: 'absolute' }} top={{ md: '72px' }} right={{ md: 6 }}>
+          <HStack gap={2} position={{ base: 'static', md: 'absolute' }} top={{ md: '72px' }} right={{ md: 6 }}>
             <Button type="button" variant="ghost" onClick={cancel} disabled={pending}>
               Cancel
             </Button>

@@ -29,6 +29,12 @@ const safeIssueUrl = (value: string | null) => {
   try { const url = new URL(value); return url.protocol === 'http:' || url.protocol === 'https:' ? value : null; } catch { return null; }
 };
 
+const authorLabel = (name?: string | null) => {
+  const parts = name?.trim().split(/\s+/).filter(Boolean) ?? [];
+  if (!parts.length) return 'Unknown';
+  return parts.length === 1 ? parts[0] : `${parts[0]} ${Array.from(parts[parts.length - 1])[0].toLocaleUpperCase()}.`;
+};
+
 const orderedSteps = (scenario: TestScenario) =>
   [...scenario.steps].sort((left, right) => left.position - right.position);
 
@@ -49,12 +55,12 @@ export const TestScenarioDetailsView = ({
   const issueUrl = safeIssueUrl(scenario.relatedIssueUrl);
 
   const priorityLabel = scenario.priority ? ({ low: 'Low', medium: 'Medium', high: 'High' })[scenario.priority] : 'No priority';
-  const createdBy = scenario.createdBy?.name || 'Unknown';
-  const updatedBy = scenario.updatedBy?.name || 'Unknown';
+  const createdBy = authorLabel(scenario.createdBy?.name);
+  const updatedBy = authorLabel(scenario.updatedBy?.name);
   const dateLabel = (value?: string | null) => value ? new Date(value).toLocaleDateString('en-US') : 'Unknown';
 
   return (
-    <VStack align="stretch" gap={0} mx={{ base: 3, md: 4 }} my={4} p={{ base: 4, md: 6 }} bg="bg.card" borderRadius="xl" minH="calc(100vh - 130px)">
+    <VStack align="stretch" gap={0} mx={{ base: 3, md: 6 }} my={4} p={{ base: 4, md: 6 }} bg="bg.card" borderRadius="xl" minH="calc(100vh - 130px)">
       <HStack justify="space-between" align="end" gap={4} flexWrap="wrap" pb={4} borderBottomWidth="1px" borderColor="border.main">
         <VStack align="start" gap={3} minW={0} flex="1">
           <Link
@@ -64,11 +70,16 @@ export const TestScenarioDetailsView = ({
             display="inline-flex"
             alignItems="center"
             justifyContent="center"
+            h="5"
+            minW={0}
+            p={0}
+            textDecoration="none"
+            fontSize="sm"
             gap={2}
             color="text.secondary"
             _hover={{ bg: 'bg.subtle' }}
           >
-            <FiArrowLeft size={16} aria-hidden="true" />
+            <FiArrowLeft size={16} aria-hidden="true" style={{ width: 16, height: 16, flex: '0 0 16px' }} />
             <Text fontSize="sm">Back to {folderName || 'Test Scenarios'}</Text>
           </Link>
           <HStack gap={2} flexWrap="wrap">
@@ -109,7 +120,7 @@ export const TestScenarioDetailsView = ({
               <>
               <Box display={{ base: 'none', md: 'block' }} borderWidth="1px" borderColor="border.main" borderRadius="lg" overflow="hidden">
                 <Table.Root size="sm" minW="100%" css={{ tableLayout: 'fixed' }}>
-                  <Table.Header bg="bg.section" fontSize="xs" color="text.secondary"><Table.Row><Table.ColumnHeader w="48px">#</Table.ColumnHeader><Table.ColumnHeader>Action</Table.ColumnHeader><Table.ColumnHeader>Expected result</Table.ColumnHeader></Table.Row></Table.Header>
+                  <Table.Header fontSize="xs" color="text.secondary"><Table.Row bg="bg.subtle"><Table.ColumnHeader w="48px">#</Table.ColumnHeader><Table.ColumnHeader>Action</Table.ColumnHeader><Table.ColumnHeader>Expected result</Table.ColumnHeader></Table.Row></Table.Header>
                   <Table.Body>{steps.map((step, index) => <Table.Row key={step.id}>
                     <Table.Cell>{index + 1}</Table.Cell>
                     <Table.Cell whiteSpace="pre-wrap" overflowWrap="anywhere">{step.action}</Table.Cell>
@@ -131,7 +142,7 @@ export const TestScenarioDetailsView = ({
           </VStack>
         </VStack>
         <VStack align="stretch" gap={6} minW={0}>
-          <Box><Text fontSize="xs" color="text.secondary" mb={2}>Suites</Text>
+          <Box><Text fontSize="14px" mb={2}>Suites</Text>
             <HStack wrap="wrap" gap={2}>
               {(scenario.suites ?? []).map((suite) => <HStack key={suite.id} bg="blue.subtle" color="blue.fg" borderRadius="full" pl={2} pr={1} py={0.5} gap={1}>
                 <Text fontSize="sm">{suite.name}</Text><IconButton size="2xs" minW="auto" h="auto" p={0.5} variant="ghost" aria-label={`Remove ${suite.name} suite`} loading={removingSuiteIds.includes(suite.id)} onClick={() => onRemoveSuite(suite.id)}><FiX /></IconButton>
@@ -141,10 +152,10 @@ export const TestScenarioDetailsView = ({
             {scenario.suites?.length === 0 && <Text fontSize="sm" color="text.secondary" mt={2}>No suites yet.</Text>}
             {suiteError && <Text role="alert" fontSize="sm" color="fg.error" mt={2}>{suiteError}</Text>}
           </Box>
-          <Box><Text fontSize="xs" color="text.secondary" mb={2}>Requirement or ticket</Text>
+          <Box><Text fontSize="14px" mb={2}>Requirement or ticket</Text>
             {issueUrl ? <Link href={issueUrl} target="_blank" rel="noopener noreferrer" color="blue.500" fontSize="sm" overflowWrap="anywhere" display="inline-flex" alignItems="start" gap={1}><FiLink aria-hidden="true" />{scenario.relatedIssueUrl}</Link> : <Text color="text.secondary" overflowWrap="anywhere">{scenario.relatedIssueUrl || 'No value'}</Text>}
           </Box>
-          <Box><Text fontSize="xs" color="text.secondary" mb={2}>History</Text>
+          <Box><Text fontSize="14px" mb={2}>History</Text>
             <Text fontSize="sm" color="text.secondary">Updated {dateLabel(scenario.updatedAt)} by {updatedBy}</Text>
             <Text fontSize="sm" color="text.secondary">Created {dateLabel(scenario.createdAt)} by {createdBy}</Text>
           </Box>
