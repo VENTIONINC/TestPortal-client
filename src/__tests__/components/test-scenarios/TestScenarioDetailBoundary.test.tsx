@@ -55,8 +55,11 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
   return {
     ...actual,
     usePatchApiV2TestScenariosByScenarioIdMutation: vi.fn(),
+    useDeleteApiV2TestSuitesBySuiteIdMembersMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
     useGetApiV2TestScenarioFoldersQuery: vi.fn(() => ({ currentData: [] })),
     useGetApiV2TestSuitesQuery: vi.fn(() => ({ currentData: [] })),
+    usePostApiV2TestSuitesMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
+    usePostApiV2TestSuitesBySuiteIdMembersMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
     usePostApiV2TestScenariosByScenarioIdManualRunsMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
     useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery: vi.fn(() => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() })),
     usePostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),

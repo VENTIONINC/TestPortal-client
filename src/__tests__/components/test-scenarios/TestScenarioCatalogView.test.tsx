@@ -18,7 +18,11 @@ vi.mock('@/components/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/components/ui')>();
   return {
     ...actual,
-    Tooltip: ({ children }: { children: ReactNode }) => children,
+    Tooltip: ({ children, content, openDelay, disabled }: { children: ReactNode; content: ReactNode; openDelay?: number; disabled?: boolean }) => (
+      <span data-tooltip-content={disabled ? undefined : content} data-tooltip-open-delay={disabled ? undefined : openDelay}>
+        {children}
+      </span>
+    ),
   };
 });
 
@@ -58,6 +62,7 @@ const pagination = {
 
 const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination' | 'isLoading' | 'onPageChange'> = {
   projectId: 'project-1',
+  organizationTab: 'scenarios',
   search: '',
   projectScenarioCount: 1,
   unfiledScenarioCount: 0,
@@ -131,6 +136,39 @@ const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>
   );
 
 describe('TestScenarioCatalogView', () => {
+  it('disables Run suite for an empty suite and provides its delayed tooltip without opening a run', async () => {
+    const user = userEvent.setup();
+    renderView({
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-empty' },
+      suites: [{ id: 'suite-empty', name: 'Empty suite', description: null, purpose: null, release: null, membershipRevision: 0, members: [] }],
+    });
+
+    const runSuite = screen.getByRole('button', { name: 'Run suite' });
+    expect(runSuite).toHaveAttribute('aria-disabled', 'true');
+    expect(runSuite).not.toBeDisabled();
+    expect(runSuite.parentElement).toHaveAttribute('data-tooltip-content', 'Add scenarios to run this suite');
+    expect(runSuite.parentElement).toHaveAttribute('data-tooltip-open-delay', '500');
+
+    await user.click(runSuite);
+    expect(screen.queryByText(/New manual run/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps Run suite inert for a suite with scenarios', async () => {
+    const user = userEvent.setup();
+    renderView({
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-populated' },
+      suites: [{ id: 'suite-populated', name: 'Populated suite', description: null, purpose: null, release: null, membershipRevision: 0, members: [{ testScenarioId: 'scenario-1' }] }],
+    });
+
+    const runSuite = screen.getByRole('button', { name: 'Run suite' });
+    expect(runSuite).not.toHaveAttribute('aria-disabled', 'true');
+    await user.click(runSuite);
+    expect(screen.queryByText(/New manual run/i)).not.toBeInTheDocument();
+    expect(runSuite.parentElement).not.toHaveAttribute('data-tooltip-content', 'Add scenarios to run this suite');
+  });
+
   it('creates a same-name suite inline and selects its returned UUID', async () => {
     const user = userEvent.setup();
     const onCreateSuite = vi.fn(async () => ({ id: 'suite-new' }));
@@ -430,6 +468,7 @@ describe('TestScenarioCatalogView', () => {
     const onPageSizeChange = vi.fn();
     const StatefulCatalog = () => {
       const [priority, setPriority] = useState('');
+      const [sort, setSort] = useState<TestScenarioCatalogViewProps['sort']>();
       return (
         <TestScenarioCatalogView
           {...defaultProps}
@@ -438,11 +477,15 @@ describe('TestScenarioCatalogView', () => {
           isLoading={false}
           onPageChange={vi.fn()}
           priority={priority}
+          sort={sort}
           onPriorityChange={(value) => {
             onPriorityChange(value);
             setPriority(value);
           }}
-          onSortChange={onSortChange}
+          onSortChange={(value) => {
+            onSortChange(value);
+            setSort(value);
+          }}
           onAuthorChange={onAuthorChange}
           onSortDirectionChange={onSortDirectionChange}
           onPageSizeChange={onPageSizeChange}
@@ -470,7 +513,7 @@ describe('TestScenarioCatalogView', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Ada Lovelace' }));
     expect(onAuthorChange).toHaveBeenCalledWith(['user-1']);
     await user.click(screen.getByRole('button', { name: 'Done' }));
-    await user.click(screen.getByRole('button', { name: 'Sort: Updated' }));
+    await user.click(screen.getByRole('button', { name: 'Sort: Run order' }));
     await user.click(screen.getByRole('button', { name: /^Key$/ }));
     await user.click(screen.getByRole('button', { name: 'Sort descending' }));
     await user.selectOptions(screen.getByLabelText('Rows per page'), '50');
@@ -489,12 +532,12 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByText('TMS-1')).toBeInTheDocument();
   });
 
-  it('marks active search and filters with the accent treatment', () => {
+  it('keeps the active search and filters visible without filling the search field', () => {
     renderView({ search: 'checkout', priority: 'high', authorId: 'user-1' });
 
-    expect(screen.getByRole('textbox', { name: 'Search scenarios' })).toHaveStyle({
-      background: 'var(--chakra-colors-bg-active)',
-    });
+    expect(screen.getByRole('textbox', { name: 'Search scenarios' })).toHaveValue('checkout');
+    expect(screen.getByText('1 search term active')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Priority:High' })).toBeInTheDocument();
   });
 
   it('requires count-based delete confirmation for the exact selected UUIDs', async () => {
@@ -534,11 +577,32 @@ describe('TestScenarioCatalogView', () => {
   it('closes the bulk toolbar with a keyboard accessible clear control', async () => {
     const user = userEvent.setup();
     const toggleSelected = vi.fn();
-    renderView({ selectedIds: ['scenario-1', 'scenario-2'], toggleSelected });
-    await user.click(screen.getByRole('button', { name: 'Close bulk scenario actions and clear selection' }));
+    const StatefulCatalog = () => {
+      const [selectedIds, setSelectedIds] = useState(['scenario-1', 'scenario-2']);
+      return (
+        <ChakraProvider>
+          <MemoryRouter>
+            <TestScenarioCatalogView
+              scenarios={scenarios}
+              pagination={pagination}
+              isLoading={false}
+              onPageChange={vi.fn()}
+              {...defaultProps}
+              selectedIds={selectedIds}
+              toggleSelected={(id) => {
+                toggleSelected(id);
+                setSelectedIds((current) => current.filter((selectedId) => selectedId !== id));
+              }}
+            />
+          </MemoryRouter>
+        </ChakraProvider>
+      );
+    };
+    render(<StatefulCatalog />);
+    await user.click(screen.getByRole('button', { name: 'Clear selection' }));
     expect(toggleSelected).toHaveBeenCalledWith('scenario-1');
     expect(toggleSelected).toHaveBeenCalledWith('scenario-2');
-    expect(screen.queryByRole('button', { name: /Run/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Run selected' })).not.toBeInTheDocument();
   });
 
   it('renders a fallback for null priority', () => {
@@ -624,7 +688,6 @@ describe('TestScenarioCatalogView', () => {
   });
 
   it('drags an unselected suite row to reorder without changing the selection', async () => {
-    const user = userEvent.setup();
     const onSuiteOperationComplete = vi.fn();
     const onReorderSuite = vi.fn(async () => {});
     const members = [
@@ -653,8 +716,8 @@ describe('TestScenarioCatalogView', () => {
     await waitFor(() => expect(onReorderSuite).toHaveBeenCalledWith('suite-1', ['scenario-2', 'scenario-1']));
     expect(screen.getByRole('checkbox', { name: 'Select Checkout flow' })).toBeChecked();
 
-    await user.click(screen.getByRole('button', { name: 'Add to suite' }));
-    expect(onSuiteOperationComplete).toHaveBeenCalledWith(expect.objectContaining({ succeededIds: ['scenario-1'] }), ['scenario-1']);
+    expect(screen.getByRole('button', { name: 'Run suite' })).toBeInTheDocument();
+    expect(onSuiteOperationComplete).not.toHaveBeenCalled();
   });
 
   it('removes selected suite membership and restores it through the ten-second Undo action', async () => {
@@ -757,10 +820,16 @@ describe('TestScenarioCatalogView', () => {
       unattemptedIds: [],
       uncertainIds: [],
     }));
-    renderView({ scope: { kind: 'suite', id: 'suite-1' }, selectedIds: ['scenario-1'], onMoveSelected });
+    renderView({
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-1' },
+      selectedIds: ['scenario-1'],
+      suites: [{ id: 'suite-1', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+      onMoveSelected,
+    });
     expect(screen.queryByRole('button', { name: 'More bulk actions' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Remove from suite' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add to suite' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Run selected' })).toBeInTheDocument();
     expect(onMoveSelected).not.toHaveBeenCalled();
   });
 

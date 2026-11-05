@@ -459,7 +459,7 @@ describe('TestScenarioCatalogContainer', () => {
     render(
       <ChakraProvider>
         <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" />
+          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
         </MemoryRouter>
       </ChakraProvider>,
     );
@@ -480,7 +480,7 @@ describe('TestScenarioCatalogContainer', () => {
     render(
       <ChakraProvider>
         <MemoryRouter initialEntries={[`/test-scenarios?projectId=project-1&folderId=${folderId}`]}>
-          <TestScenarioCatalogContainer projectId="project-1" />
+          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
         </MemoryRouter>
       </ChakraProvider>,
     );
@@ -498,7 +498,7 @@ describe('TestScenarioCatalogContainer', () => {
     render(
       <ChakraProvider>
         <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" />
+          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
         </MemoryRouter>
       </ChakraProvider>,
     );
@@ -519,7 +519,7 @@ describe('TestScenarioCatalogContainer', () => {
     render(
       <ChakraProvider>
         <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" />
+          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
         </MemoryRouter>
       </ChakraProvider>,
     );
@@ -534,7 +534,7 @@ describe('TestScenarioCatalogContainer', () => {
     render(
       <ChakraProvider>
         <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" />
+          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
         </MemoryRouter>
       </ChakraProvider>,
     );
@@ -575,7 +575,7 @@ describe('TestScenarioCatalogContainer', () => {
     render(
       <ChakraProvider>
         <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" />
+          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
         </MemoryRouter>
       </ChakraProvider>,
     );
@@ -608,7 +608,7 @@ describe('TestScenarioCatalogContainer', () => {
     render(
       <ChakraProvider>
         <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" />
+          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
         </MemoryRouter>
       </ChakraProvider>,
     );

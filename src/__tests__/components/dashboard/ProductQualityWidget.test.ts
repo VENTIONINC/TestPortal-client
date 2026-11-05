@@ -35,6 +35,7 @@ vi.mock('@chakra-ui/react', () => {
 
 vi.mock('@/components/ui', () => ({
   Badge: ({ children }: { children?: ReactNode }) => createElement('span', null, children),
+  Tooltip: ({ children }: { children?: ReactNode }) => createElement('span', null, children),
 }));
 vi.mock('@/components/ui/progress', () => ({
   ProgressBar: ({ children }: { children?: ReactNode }) => createElement('div', null, children),
@@ -75,12 +76,14 @@ describe('ProductQualityWidget', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-08-07T12:00:00Z'));
 
-    mockedIssuesQuery
-      .mockReturnValueOnce({ data: { issues: [] }, isLoading: false } as never)
-      .mockReturnValueOnce({
-        data: { issues: [issue({ bug: 1, infra: 0, performance: 0, script: 0, other: 0 }, 0, 1, 1)] },
-        isLoading: false,
-      } as never);
+    mockedIssuesQuery.mockImplementation((args) => ({
+      data: {
+        issues: typeof args !== 'symbol' && args.statFrom === '2026-08-04'
+          ? [issue({ bug: 1, infra: 0, performance: 0, script: 0, other: 0 }, 0, 1, 1)]
+          : [],
+      },
+      isLoading: false,
+    }) as never);
     mockedDashboardQuery.mockReturnValue({
       data: {
         history: [
@@ -107,13 +110,13 @@ describe('ProductQualityWidget', () => {
 });
 
 describe('calculateIWQS', () => {
-  it('weights a mixed category distribution instead of its display category', () => {
+  it('uses the issue display category weight for mixed category metadata', () => {
     const result = calculateIWQS(
       [issue({ bug: 1, infra: 1, performance: 0, script: 0, other: 0 }, 0)],
       undefined,
     );
 
-    expect(result).toEqual({ weightedSum: 10, totalLinkedFailures: 10, score: 10 });
+    expect(result).toEqual({ weightedSum: 10, totalLinkedFailures: 10, score: 0 });
   });
 
   it('uses the configured infra weight', () => {
