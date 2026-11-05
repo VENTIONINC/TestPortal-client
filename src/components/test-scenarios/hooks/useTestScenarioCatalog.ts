@@ -209,6 +209,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const priorityCountArgs = useMemo<GetApiV2TestScenariosPriorityCountsApiArg>(
     () => ({
       projectId,
+      ...(authorIds.length ? { createdByIds: authorIds.join(',') } : {}),
       ...(debouncedColumnFilters.scenarioKey.trim() ? { scenarioKey: debouncedColumnFilters.scenarioKey.trim() } : {}),
       ...(debouncedColumnFilters.title.trim() ? { title: debouncedColumnFilters.title.trim() } : {}),
       ...(debouncedColumnFilters.details.trim() ? { details: debouncedColumnFilters.details.trim() } : {}),
@@ -219,7 +220,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants: true } : {}),
       ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
     }),
-    [debouncedColumnFilters, debouncedSearch, projectId, scope],
+    [authorIds, debouncedColumnFilters, debouncedSearch, projectId, scope],
   );
   const priorityCountQuery = useGetApiV2TestScenariosPriorityCountsQuery(priorityCountArgs, {
     skip: isAwaitingSuiteSelection,

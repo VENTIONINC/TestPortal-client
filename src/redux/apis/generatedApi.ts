@@ -1047,6 +1047,8 @@ const injectedRtkApi = api
           params: {
             projectId: queryArg.projectId,
             search: queryArg.search,
+            createdById: queryArg.createdById,
+            createdByIds: queryArg.createdByIds,
             scenarioKey: queryArg.scenarioKey,
             title: queryArg.title,
             details: queryArg.details,
@@ -2045,6 +2047,8 @@ export type GetApiV2TestScenariosPriorityCountsApiResponse =
 export type GetApiV2TestScenariosPriorityCountsApiArg = {
   projectId: string;
   search?: string;
+  createdById?: string;
+  createdByIds?: string;
   scenarioKey?: string;
   title?: string;
   details?: string;
@@ -2383,8 +2387,8 @@ export type PutApiV2TestSuitesBySuiteIdMembersOrderApiArg = {
   suiteId: string;
   body: {
     projectId: string;
-    expectedMembershipRevision: number;
-    expectedScenarioIds: string[];
+    expectedMembershipRevision?: number;
+    expectedScenarioIds?: string[];
     scenarioIds: string[];
   };
 };

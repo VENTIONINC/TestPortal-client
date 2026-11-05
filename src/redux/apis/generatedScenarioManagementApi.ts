@@ -439,8 +439,8 @@ export type PutApiV2TestSuitesBySuiteIdMembersOrderApiArg = {
   suiteId: string;
   body: {
     projectId: string;
-    expectedMembershipRevision: number;
-    expectedScenarioIds: string[];
+    expectedMembershipRevision?: number;
+    expectedScenarioIds?: string[];
     scenarioIds: string[];
   };
 };

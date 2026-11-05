@@ -2326,7 +2326,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   borderRadius="md"
                   boxShadow="lg"
                   px={4}
-                  py={3}
+                  py={2}
                 >
                   <Text fontSize="sm" lineHeight="short" flex="1">
                     {pendingSuiteUndo.message}
