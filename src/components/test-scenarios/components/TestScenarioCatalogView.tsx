@@ -4,7 +4,6 @@
 import {
   memo,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type DragEvent,
@@ -14,7 +13,6 @@ import {
 import {
   Box,
   Button,
-  Collapsible,
   Grid,
   Heading,
   HStack,
@@ -30,17 +28,18 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import {
-  FiArrowDown,
-  FiArrowUp,
-  FiChevronsUp,
+  FiCheck,
   FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
   FiEdit,
   FiFolder,
   FiLayers,
+  FiList,
+  FiMinusCircle,
   FiMoreHorizontal,
   FiPlus,
+  FiPlay,
   FiSearch,
   FiTrash2,
   FiX,
@@ -53,17 +52,42 @@ import {
   DialogBody,
   DialogFooter,
   NativeSelect,
-  Pagination,
   Tooltip,
   Wrap,
 } from '@/components/ui';
 import { extractApiError } from '@/utils/apiErrors';
+import type {
+  PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse,
+  PostApiV2TestSuitesMovesApiResponse,
+} from '@/redux/apis/generatedApi';
 
 import { TestSuiteAddScenariosDialogContainer } from '../containers/TestSuiteAddScenariosDialogContainer';
 import { SuitePicker } from './SuitePicker';
 import { getTestScenarioDetailPath } from '../constants';
 import type { ScenarioOperationReport } from '../utils';
 import type { TestScenarioPagination, TestScenarioSummary } from '../types';
+
+type SuiteMembershipUndo = Pick<PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse, 'restoreData'> & {
+  expectedMembershipRevision: number;
+  expectedScenarioIds: string[];
+};
+type SuiteMoveUndo = Pick<PostApiV2TestSuitesMovesApiResponse, 'restoreData'> & {
+  expectedSourceMembershipRevision: number;
+  expectedDestinationMembershipRevision: number;
+  expectedSourceScenarioIds: string[];
+  expectedDestinationScenarioIds: string[];
+  alreadyInDestination: string[];
+};
+
+const getMembershipChangeMessage = (addedCount: number, removedCount: number, suiteName: string) => {
+  if (addedCount > 0 && removedCount > 0)
+    return `${addedCount} scenario${addedCount === 1 ? '' : 's'} added and ${removedCount} removed from ${suiteName}`;
+  if (addedCount > 0) return `${addedCount} scenario${addedCount === 1 ? '' : 's'} added to ${suiteName}`;
+  return `${removedCount} scenario${removedCount === 1 ? '' : 's'} removed from ${suiteName}`;
+};
+
+const CATALOG_TAB = { scenarios: 'scenarios', suites: 'suites' } as const;
+const CATALOG_SCOPE = { all: 'all', unfiled: 'unfiled', folder: 'folder', suite: 'suite' } as const;
 
 export interface CatalogFolder {
   id: string;
@@ -82,6 +106,7 @@ const getFolderChildren = (folder: CatalogFolder): CatalogFolder[] =>
 
 export interface CatalogSuite {
   id: string;
+  membershipRevision: number;
   name: string;
   description: string | null;
   purpose: string | null;
@@ -107,7 +132,7 @@ export interface TestScenarioCatalogViewProps {
   onSearchChange: (value: string) => void;
   sort?: 'scenarioKey' | 'title' | 'details' | 'folder' | 'createdBy' | 'createdAt' | 'updatedAt';
   sortDirection: 'asc' | 'desc';
-  onSortChange: (value: NonNullable<TestScenarioCatalogViewProps['sort']>) => void;
+  onSortChange: (value: TestScenarioCatalogViewProps['sort']) => void;
   onSortDirectionChange: (value: 'asc' | 'desc') => void;
   priority: string;
   priorityCounts?: Partial<Record<'high' | 'medium' | 'low', number | undefined>>;
@@ -141,6 +166,11 @@ export interface TestScenarioCatalogViewProps {
   onSuiteOperationComplete: (report: ScenarioOperationReport, selection: string[]) => void;
   onDeleteSelected: (scenarioIds: string[]) => Promise<ScenarioOperationReport>;
   onRemoveSelectedFromSuite: () => Promise<ScenarioOperationReport>;
+  removeSuiteMembership: (suiteId: string, scenarioIds: string[]) => Promise<SuiteMembershipUndo>;
+  restoreSuiteMembership: (undo: SuiteMembershipUndo) => Promise<void>;
+  moveSuiteMembership: (sourceSuiteId: string, destinationSuiteId: string, scenarioIds: string[]) => Promise<SuiteMoveUndo>;
+  restoreSuiteMove: (undo: SuiteMoveUndo) => Promise<void>;
+  refreshSuiteData: () => Promise<void>;
   onReorderSuite: (suiteId: string, scenarioIds: string[]) => Promise<void>;
   onCreateFolder: (name: string, parentId: string | null, description?: string | null) => Promise<unknown>;
   onUpdateFolder: (
@@ -161,25 +191,6 @@ export interface TestScenarioCatalogViewProps {
   onDeleteSuite: (suiteId: string) => Promise<void>;
 }
 
-const formatScenarioDate = (timestamp: string) => {
-  const date = new Date(timestamp);
-  return {
-    date: date.toLocaleDateString('en-US'),
-    time: date.toLocaleTimeString('en-US'),
-  };
-};
-
-const ScenarioTimestamp = ({ timestamp }: { timestamp: string }) => {
-  const { date, time } = formatScenarioDate(timestamp);
-  return (
-    <VStack align="start" gap={0} whiteSpace="nowrap" fontSize="xs">
-      <Text>{date}</Text>
-      <Text>{time}</Text>
-    </VStack>
-  );
-};
-
-const TABLE_CELL_PADDING = { px: 4, py: 4 } as const;
 const UNFILED_DESTINATION = '__unfiled__';
 
 const UnfiledFolderIcon = () => (
@@ -198,175 +209,6 @@ const UnfiledFolderIcon = () => (
     <path d="M2.5 6.5a2 2 0 0 1 2-2h4.8l2.6 2.6h7.6a2 2 0 0 1 2 2v8.4a2 2 0 0 1-2 2H4.5a2 2 0 0 1-2-2z" strokeDasharray="2 2" />
   </svg>
 );
-
-const ScenarioColumnHeader = ({
-  label,
-  field,
-  sort,
-  sortDirection,
-  onSortChange,
-  filterValue,
-  onFilterChange,
-  openFilter,
-  onFilterDisclosureChange,
-}: {
-  label: string;
-  field: NonNullable<TestScenarioCatalogViewProps['sort']>;
-  sort?: TestScenarioCatalogViewProps['sort'];
-  sortDirection: 'asc' | 'desc';
-  onSortChange: TestScenarioCatalogViewProps['onSortChange'];
-  filterValue?: string;
-  onFilterChange?: (value: string) => void;
-  openFilter: string | null;
-  onFilterDisclosureChange: (field: string | null) => void;
-}) => {
-  // The API's implicit order is newest first. Show that state in the header
-  // even while the request leaves the default sort parameters out.
-  const activeSort = sort === field || (!sort && field === 'createdAt');
-  const activeDirection = sortDirection;
-  const filterRef = useRef<HTMLDetailsElement>(null);
-  const filterInputRef = useRef<HTMLInputElement>(null);
-  const [filterPosition, setFilterPosition] = useState<{ top: number; left: number } | null>(null);
-  useLayoutEffect(() => {
-    if (openFilter !== field || !filterRef.current) return;
-    const updatePosition = () => {
-      const anchor = filterRef.current?.querySelector('summary')?.getBoundingClientRect();
-      if (!anchor) return;
-      const width = 260;
-      setFilterPosition({
-        top: Math.min(anchor.bottom + 6, window.innerHeight - 170),
-        left: Math.max(8, Math.min(anchor.left, window.innerWidth - width - 8)),
-      });
-    };
-    updatePosition();
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
-    return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
-    };
-  }, [field, filterValue, openFilter]);
-  useEffect(() => {
-    if (openFilter === field && filterPosition) filterInputRef.current?.focus();
-  }, [field, filterPosition, openFilter]);
-  return (
-    <HStack gap={1} minW={0} justify="flex-start" flexWrap="nowrap">
-      <Button
-        size="xs"
-        variant="ghost"
-        px={1}
-        minW={0}
-        flex="1"
-        h="auto"
-        whiteSpace="nowrap"
-        textAlign="start"
-        justifyContent="flex-start"
-        aria-label={`Sort by ${label}${activeSort ? ` ${activeDirection === 'asc' ? 'ascending' : 'descending'}` : ''}`}
-        onClick={() => onSortChange(field)}
-      >
-        <Text as="span" overflow="hidden" textOverflow="ellipsis">
-          {label}
-        </Text>
-        {activeSort ? (
-          activeDirection === 'asc' ? (
-            <FiArrowUp aria-hidden="true" />
-          ) : (
-            <FiArrowDown aria-hidden="true" />
-          )
-        ) : (
-          <FiChevronsUp aria-hidden="true" />
-        )}
-      </Button>
-      {onFilterChange && (
-        <details
-          ref={filterRef}
-          data-filter-field={field}
-          open={openFilter === field}
-          onToggle={(event) => onFilterDisclosureChange(event.currentTarget.open ? field : null)}
-          style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}
-        >
-          <Box
-            as="summary"
-            role="button"
-            aria-label={`Filter by ${label}${filterValue ? ', filter active' : ''}`}
-            aria-pressed={Boolean(filterValue)}
-            display="inline-flex"
-            alignItems="center"
-            justifyContent="center"
-            listStyleType="none"
-            cursor="pointer"
-            borderRadius="md"
-            w="24px"
-            h="24px"
-            color={filterValue ? 'blue.600' : 'text.muted'}
-            bg={filterValue ? 'blue.subtle' : undefined}
-            _hover={{ bg: 'bg.subtle', color: 'text.main' }}
-          >
-            <FiSearch aria-hidden="true" />
-          </Box>
-          {openFilter === field && filterPosition && (
-            <Portal>
-              <VStack
-                data-filter-panel={field}
-                align="stretch"
-                gap={2}
-                position="fixed"
-                zIndex="popover"
-                top={`${filterPosition.top}px`}
-                left={`${filterPosition.left}px`}
-                p={3}
-                w="260px"
-                bg="bg.panel"
-                borderWidth="1px"
-                borderColor="border.main"
-                borderRadius="md"
-                boxShadow="lg"
-                fontWeight="normal"
-              >
-                <Box>
-                  <Text fontSize="sm" fontWeight="medium">
-                    Search {label}
-                  </Text>
-                  <Text fontSize="xs" color="text.muted">
-                    Match text anywhere in this column
-                  </Text>
-                </Box>
-                <HStack>
-                  <Input
-                    ref={filterInputRef}
-                    size="sm"
-                    aria-label={`${label} filter`}
-                    placeholder={`Search ${label.toLowerCase()}`}
-                    value={filterValue ?? ''}
-                    onChange={(event) => onFilterChange(event.currentTarget.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === 'Escape') {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onFilterDisclosureChange(null);
-                      }
-                    }}
-                    autoFocus
-                  />
-                  {filterValue && (
-                    <IconButton
-                      size="sm"
-                      variant="ghost"
-                      aria-label={`Clear ${label} filter`}
-                      onClick={() => onFilterChange('')}
-                    >
-                      <FiX />
-                    </IconButton>
-                  )}
-                </HStack>
-              </VStack>
-            </Portal>
-          )}
-        </details>
-      )}
-    </HStack>
-  );
-};
 
 const getActionErrorMessage = (error: unknown) => {
   if (error && typeof error === 'object' && ('data' in error || 'status' in error)) {
@@ -395,11 +237,16 @@ const ErrorState = () => (
   </Alert.Root>
 );
 
-const EmptyState = ({ searchActive = false }: { searchActive?: boolean }) => (
-  <VStack py={8}>
+const EmptyState = ({ searchActive = false, emptySuite = false, suiteView = false, onAddScenarios }: { searchActive?: boolean; emptySuite?: boolean; suiteView?: boolean; onAddScenarios?: () => void }) => (
+  <VStack py={8} gap={3}>
     <Text color="text.muted">
-      {searchActive ? 'No scenarios match the current search.' : 'No Test Scenarios are available for this project.'}
+      {emptySuite
+        ? 'No scenarios in this suite yet'
+        : searchActive
+          ? suiteView ? 'No scenarios in this suite match the search and filters.' : 'No scenarios match the current search.'
+          : 'No Test Scenarios are available for this project.'}
     </Text>
+    {emptySuite && onAddScenarios && <Button size="sm" variant="outline" onClick={onAddScenarios}>Add scenarios</Button>}
   </VStack>
 );
 
@@ -411,15 +258,26 @@ const ScenarioTable = ({
   onToggleSelected,
   showFolder,
   folderPathById,
-  sort,
-  sortDirection,
-  onSortChange,
-  columnFilters,
-  onColumnFilterChange,
-  openFilter,
-  onFilterDisclosureChange,
   searchActive,
+  emptySuite,
+  onAddScenarios,
+  projectId,
+  enableSuiteDrag,
+  enableSuiteReorder,
+  onDragPayload,
+  onDragEnd,
+  onSuiteRowDrop,
+  dragOverScenarioId,
+  onSuiteRowDragOver,
 }: {
+  projectId?: string;
+  enableSuiteDrag: boolean;
+  enableSuiteReorder: boolean;
+  onDragPayload: (projectId: string, scenarioIds: string[]) => void;
+  onDragEnd: () => void;
+  onSuiteRowDrop: (event: DragEvent<HTMLElement>, scenarioId: string) => void;
+  dragOverScenarioId: string | null;
+  onSuiteRowDragOver: (event: DragEvent<HTMLElement>, scenarioId: string) => void;
   scenarios: TestScenarioSummary[];
   isLoading: boolean;
   selectedIds: string[];
@@ -427,14 +285,9 @@ const ScenarioTable = ({
   onToggleSelected: (id: string) => void;
   showFolder: boolean;
   folderPathById: Map<string, string>;
-  sort?: TestScenarioCatalogViewProps['sort'];
-  sortDirection: 'asc' | 'desc';
-  onSortChange: TestScenarioCatalogViewProps['onSortChange'];
-  columnFilters: TestScenarioCatalogViewProps['columnFilters'];
-  onColumnFilterChange: TestScenarioCatalogViewProps['onColumnFilterChange'];
-  openFilter: string | null;
-  onFilterDisclosureChange: (field: string | null) => void;
   searchActive: boolean;
+  emptySuite: boolean;
+  onAddScenarios: () => void;
 }) => {
   const [anchorScenarioId, setAnchorScenarioId] = useState<string | null>(null);
   const extendSelectionRef = useRef(false);
@@ -453,10 +306,11 @@ const ScenarioTable = ({
   };
   return (
     <Box overflowX="auto">
-      <Table.Root size="sm" variant="outline" w="100%" minW={showFolder ? '1100px' : '960px'} tableLayout="fixed">
+      <Table.Root size="sm" variant="outline" w="100%" minW="980px" tableLayout="fixed">
         <Table.Header>
           <Table.Row bg="bg.subtle">
-            <Table.ColumnHeader {...TABLE_CELL_PADDING} w="48px">
+            {enableSuiteDrag && <Table.ColumnHeader w="30px" py={2}><Text srOnly>Drag to another suite or reorder</Text></Table.ColumnHeader>}
+            <Table.ColumnHeader px={3} py={2} w="44px">
               <input
                 type="checkbox"
                 aria-label="Select all scenarios on this page"
@@ -477,107 +331,38 @@ const ScenarioTable = ({
               />
               <Text srOnly>Select</Text>
             </Table.ColumnHeader>
-            <Table.ColumnHeader px={0} py={2} w="130px">
-              <ScenarioColumnHeader
-                label="Scenario key"
-                field="scenarioKey"
-                sort={sort}
-                sortDirection={sortDirection}
-                onSortChange={onSortChange}
-                filterValue={columnFilters.scenarioKey}
-                onFilterChange={(value) => onColumnFilterChange('scenarioKey', value)}
-                openFilter={openFilter}
-                onFilterDisclosureChange={onFilterDisclosureChange}
-              />
+            <Table.ColumnHeader w="120px" px={2} py={2}>
+              Key
             </Table.ColumnHeader>
-            <Table.ColumnHeader {...TABLE_CELL_PADDING} w={{ base: '29%', xl: '20%' }}>
-              <ScenarioColumnHeader
-                label="Title"
-                field="title"
-                sort={sort}
-                sortDirection={sortDirection}
-                onSortChange={onSortChange}
-                filterValue={columnFilters.title}
-                onFilterChange={(value) => onColumnFilterChange('title', value)}
-                openFilter={openFilter}
-                onFilterDisclosureChange={onFilterDisclosureChange}
-              />
+            <Table.ColumnHeader px={3} py={2}>
+              Title
             </Table.ColumnHeader>
-            <Table.ColumnHeader {...TABLE_CELL_PADDING} w={{ base: '31%', xl: '22%' }}>
-              <ScenarioColumnHeader
-                label="Details"
-                field="details"
-                sort={sort}
-                sortDirection={sortDirection}
-                onSortChange={onSortChange}
-                filterValue={columnFilters.details}
-                onFilterChange={(value) => onColumnFilterChange('details', value)}
-                openFilter={openFilter}
-                onFilterDisclosureChange={onFilterDisclosureChange}
-              />
+            <Table.ColumnHeader w="110px" px={3} py={2}>
+              Priority
             </Table.ColumnHeader>
             {showFolder && (
-              <Table.ColumnHeader px={1} py={2} w="180px">
-                <ScenarioColumnHeader
-                  label="Folder"
-                  field="folder"
-                  sort={sort}
-                  sortDirection={sortDirection}
-                  onSortChange={onSortChange}
-                  filterValue={columnFilters.folder}
-                  onFilterChange={(value) => onColumnFilterChange('folder', value)}
-                  openFilter={openFilter}
-                  onFilterDisclosureChange={onFilterDisclosureChange}
-                />
+              <Table.ColumnHeader w="190px" px={3} py={2}>
+                Folder
               </Table.ColumnHeader>
             )}
-            <Table.ColumnHeader {...TABLE_CELL_PADDING} w="18%">
-              <ScenarioColumnHeader
-                label="Created by"
-                field="createdBy"
-                sort={sort}
-                sortDirection={sortDirection}
-                onSortChange={onSortChange}
-                filterValue={columnFilters.createdBy}
-                onFilterChange={(value) => onColumnFilterChange('createdBy', value)}
-                openFilter={openFilter}
-                onFilterDisclosureChange={onFilterDisclosureChange}
-              />
+            <Table.ColumnHeader w="120px" px={3} py={2}>
+              Updated
             </Table.ColumnHeader>
-            <Table.ColumnHeader px={1} py={2} w="90px">
-              <ScenarioColumnHeader
-                label="Created"
-                field="createdAt"
-                sort={sort}
-                sortDirection={sortDirection}
-                onSortChange={onSortChange}
-                openFilter={openFilter}
-                onFilterDisclosureChange={onFilterDisclosureChange}
-              />
-            </Table.ColumnHeader>
-            <Table.ColumnHeader px={1} py={2} w="90px">
-              <ScenarioColumnHeader
-                label="Updated"
-                field="updatedAt"
-                sort={sort}
-                sortDirection={sortDirection}
-                onSortChange={onSortChange}
-                openFilter={openFilter}
-                onFilterDisclosureChange={onFilterDisclosureChange}
-              />
+            <Table.ColumnHeader w="180px" px={3} py={2}>
+              Author
             </Table.ColumnHeader>
           </Table.Row>
         </Table.Header>
         <Table.Body>
           {scenarios.length === 0 ? (
             <Table.Row>
-              <Table.Cell colSpan={showFolder ? 9 : 8} py={8} textAlign="center">
+              <Table.Cell colSpan={6 + Number(showFolder) + Number(enableSuiteDrag)} py={8} textAlign="center">
                 {isLoading ? (
                   <Text role="status" color="text.muted">
                     Searching scenarios…
                   </Text>
                 ) : (
-                  <EmptyState searchActive={searchActive} />
+                  <EmptyState searchActive={searchActive} emptySuite={emptySuite} suiteView={enableSuiteDrag} onAddScenarios={onAddScenarios} />
                 )}
               </Table.Cell>
             </Table.Row>
@@ -586,12 +371,45 @@ const ScenarioTable = ({
               <Table.Row
                 key={scenario.id}
                 data-testid={`test-scenario-${scenario.id}`}
-                bg={selectedIds.includes(scenario.id) ? 'bg.subtle' : undefined}
-                borderStartWidth={selectedIds.includes(scenario.id) ? '3px' : undefined}
-                borderStartColor={selectedIds.includes(scenario.id) ? 'border.focus' : undefined}
-                _hover={{ bg: 'bg.subtle' }}
+                bg={
+                  dragOverScenarioId === scenario.id
+                    ? 'blue.subtle'
+                    : selectedIds.includes(scenario.id)
+                      ? 'blue.50'
+                      : undefined
+                }
+                _hover={{
+                  bg: selectedIds.includes(scenario.id) ? 'blue.50' : 'bg.subtle',
+                }}
+                onDragOver={enableSuiteReorder ? (event) => onSuiteRowDragOver(event, scenario.id) : undefined}
+                onDrop={enableSuiteReorder ? (event) => onSuiteRowDrop(event, scenario.id) : undefined}
+                css={enableSuiteReorder && dragOverScenarioId === scenario.id
+                  ? { '& > td': { boxShadow: 'inset 0 2px 0 #3182ce' } }
+                  : undefined}
+                draggable={enableSuiteDrag && !selectionDisabled && Boolean(projectId)}
+                onDragStart={enableSuiteDrag ? (event) => {
+                  const scenarioIds = selectedIds.includes(scenario.id) ? selectedIds : [scenario.id];
+                  onDragPayload(projectId ?? '', scenarioIds);
+                  event.dataTransfer.effectAllowed = 'move';
+                  event.dataTransfer.setData('application/x-testportal-scenarios', JSON.stringify({ projectId, scenarioIds }));
+                } : undefined}
+                onDragEnd={enableSuiteDrag ? onDragEnd : undefined}
               >
-                <Table.Cell {...TABLE_CELL_PADDING}>
+                {enableSuiteDrag && (
+                  <Table.Cell px={1}>
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="ghost"
+                      aria-label={`Drag ${scenario.title} to another suite or reorder`}
+                      title="Drag to another suite or reorder"
+                      disabled={selectionDisabled || !projectId}
+                    >
+                      ⠿
+                    </Button>
+                  </Table.Cell>
+                )}
+                <Table.Cell px={3} py={2}>
                   <input
                     type="checkbox"
                     aria-label={`Select ${scenario.title}`}
@@ -606,14 +424,14 @@ const ScenarioTable = ({
                     }}
                   />
                 </Table.Cell>
-                <Table.Cell px={2} py={4} maxW="180px" whiteSpace="pre-wrap" overflowWrap="anywhere">
-                  {scenario.scenarioKey ?? (
-                    <Text as="span" color="text.muted">
-                      —
+                <Table.Cell px={2} py={2}>
+                  <Tooltip content={scenario.scenarioKey ?? 'N/A'}>
+                    <Text display="block" maxW="100%" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={scenario.scenarioKey ?? 'N/A'}>
+                      {scenario.scenarioKey ?? 'N/A'}
                     </Text>
-                  )}
+                  </Tooltip>
                 </Table.Cell>
-                <Table.Cell {...TABLE_CELL_PADDING} minW={0} overflow="hidden">
+                <Table.Cell px={3} py={2} minW={0} overflow="hidden">
                   <Tooltip content={scenario.title}>
                     <ChakraLink
                       asChild
@@ -631,14 +449,24 @@ const ScenarioTable = ({
                     </ChakraLink>
                   </Tooltip>
                 </Table.Cell>
-                <Table.Cell
-                  {...TABLE_CELL_PADDING}
-                  maxW="320px"
-                  whiteSpace="pre-wrap"
-                  overflowWrap="anywhere"
-                  color="text.secondary"
-                >
-                  {scenario.details ?? 'No details'}
+                <Table.Cell px={3} py={2}>
+                  {scenario.priority ? (
+                    <Text
+                      as="span"
+                      display="inline-flex"
+                      px={2}
+                      py={0.5}
+                      borderRadius="full"
+                      fontSize="xs"
+                      fontWeight="semibold"
+                      bg={priorityColors[scenario.priority].bg}
+                      color={priorityColors[scenario.priority].color}
+                    >
+                      {scenario.priority.charAt(0).toUpperCase() + scenario.priority.slice(1)}
+                    </Text>
+                  ) : (
+                    <Text color="text.muted">—</Text>
+                  )}
                 </Table.Cell>
                 {showFolder &&
                   (() => {
@@ -646,11 +474,11 @@ const ScenarioTable = ({
                       ? (folderPathById.get(scenario.folderId) ?? scenario.folderName ?? 'Unknown folder')
                       : 'Unfiled';
                     return (
-                      <Table.Cell px={2} py={4} w="180px" maxW="180px">
+                      <Table.Cell px={3} py={2}>
                         <Tooltip content={folderPath} openDelay={300} closeDelay={100}>
                           <Text
                             display="block"
-                            maxW="148px"
+                            maxW="100%"
                             overflow="hidden"
                             textOverflow="ellipsis"
                             whiteSpace="nowrap"
@@ -662,19 +490,33 @@ const ScenarioTable = ({
                       </Table.Cell>
                     );
                   })()}
-                <Table.Cell {...TABLE_CELL_PADDING}>
-                  <VStack align="start" gap={0}>
-                    <Text>{scenario.createdBy.name}</Text>
-                    <Text color="text.secondary" fontSize="sm" overflowWrap="anywhere">
-                      {scenario.createdBy.email}
-                    </Text>
-                  </VStack>
+                <Table.Cell px={3} py={2} whiteSpace="nowrap" color="text.secondary">
+                  {compactDate(scenario.updatedAt)}
                 </Table.Cell>
-                <Table.Cell px={1} py={4} color="text.secondary" fontSize="sm">
-                  <ScenarioTimestamp timestamp={scenario.createdAt} />
-                </Table.Cell>
-                <Table.Cell px={1} py={4} color="text.secondary" fontSize="sm">
-                  <ScenarioTimestamp timestamp={scenario.updatedAt} />
+                <Table.Cell px={3} py={2}>
+                  <Tooltip content={`${scenario.createdBy.name} (${scenario.createdBy.email})`}>
+                    <HStack gap={2} minW={0} title={`${scenario.createdBy.name} (${scenario.createdBy.email})`}>
+                      <Box
+                        aria-hidden="true"
+                        display="inline-flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        w="6"
+                        h="6"
+                        flexShrink={0}
+                        borderRadius="full"
+                        bg="blue.subtle"
+                        color="blue.fg"
+                        fontSize="xs"
+                        fontWeight="semibold"
+                      >
+                        {authorInitials(scenario.createdBy.name)}
+                      </Box>
+                      <Text overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                        {shortAuthorName(scenario.createdBy.name)}
+                      </Text>
+                    </HStack>
+                  </Tooltip>
                 </Table.Cell>
               </Table.Row>
             ))
@@ -682,19 +524,6 @@ const ScenarioTable = ({
         </Table.Body>
       </Table.Root>
     </Box>
-  );
-};
-
-const PaginationSummary = ({ pagination }: { pagination: TestScenarioPagination }) => {
-  const firstItem = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1;
-  const lastItem = Math.min(pagination.page * pagination.limit, pagination.total);
-
-  return (
-    <HStack justify="flex-end" align="center" gap={4} flexWrap="wrap" w="100%">
-      <Text color="text.secondary" fontSize="sm" textAlign="right">
-        Showing {firstItem}-{lastItem} of {pagination.total} Test Scenarios
-      </Text>
-    </HStack>
   );
 };
 
@@ -951,9 +780,11 @@ const AuthorFilter = ({
 const ScenarioSortSelect = ({
   value,
   onChange,
+  allowRunOrder,
 }: {
-  value: NonNullable<TestScenarioCatalogViewProps['sort']>;
-  onChange: (value: NonNullable<TestScenarioCatalogViewProps['sort']>) => void;
+  value: TestScenarioCatalogViewProps['sort'];
+  onChange: (value: TestScenarioCatalogViewProps['sort']) => void;
+  allowRunOrder: boolean;
 }) => {
   const [open, setOpen] = useState(false);
   const options: Array<{ value: typeof value; label: string }> = [
@@ -963,7 +794,7 @@ const ScenarioSortSelect = ({
     { value: 'updatedAt', label: 'Updated' },
     { value: 'createdBy', label: 'Author' },
   ];
-  const selectedLabel = options.find((option) => option.value === value)?.label ?? 'Updated';
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? 'Run order';
 
   return (
     <Popover.Root open={open} onOpenChange={({ open: nextOpen }) => setOpen(nextOpen)}>
@@ -985,6 +816,12 @@ const ScenarioSortSelect = ({
           <Popover.Content w="132px" bg="bg.card" p={1}>
             <Popover.Body p={0}>
               <VStack align="stretch" gap={0}>
+                {allowRunOrder && (
+                  <Button variant="ghost" size="sm" justifyContent="flex-start" fontWeight={!value ? 'semibold' : 'normal'}
+                    aria-current={!value ? 'true' : undefined} onClick={() => { onChange(undefined); setOpen(false); }}>
+                    Run order
+                  </Button>
+                )}
                 {options.map((option) => (
                   <Button
                     key={option.value}
@@ -1356,7 +1193,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   onSuiteOperationStart,
   onSuiteOperationComplete,
   onDeleteSelected,
-  onRemoveSelectedFromSuite,
+  removeSuiteMembership,
+  restoreSuiteMembership,
+  moveSuiteMembership,
+  restoreSuiteMove,
+  refreshSuiteData,
   onReorderSuite,
   onCreateFolder,
   onUpdateFolder,
@@ -1365,7 +1206,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   onUpdateSuite,
   onDeleteSuite,
 }: TestScenarioCatalogViewProps) {
-  const isScenariosTab = organizationTab !== 'suites';
+  const isScenariosTab = organizationTab === CATALOG_TAB.scenarios;
+  const isSuitesTab = organizationTab === CATALOG_TAB.suites;
   const currentProjectId = useRef(projectId);
   currentProjectId.current = projectId;
   const selectedAuthorIds = authorIds ?? (authorId ? [authorId] : []);
@@ -1399,6 +1241,21 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [moveScenariosTarget, setMoveScenariosTarget] = useState('');
   const [moveScenariosError, setMoveScenariosError] = useState<string | null>(null);
   const [operationFeedback, setOperationFeedback] = useState<string | null>(null);
+  const [pendingSuiteUndo, setPendingSuiteUndo] = useState<
+    | { kind: 'membership'; payload: SuiteMembershipUndo; expiresAt: number; message: string }
+    | { kind: 'move'; payload: SuiteMoveUndo; expiresAt: number; message: string }
+    | { kind: 'reorder'; payload: { suiteId: string; scenarioIds: string[] }; expiresAt: number; message: string }
+    | null
+  >(null);
+  const [isUndoingSuiteChange, setIsUndoingSuiteChange] = useState(false);
+  useEffect(() => {
+    setPendingSuiteUndo(null);
+  }, [projectId, organizationTab]);
+  useEffect(() => {
+    if (!pendingSuiteUndo || isUndoingSuiteChange) return;
+    const timeout = window.setTimeout(() => setPendingSuiteUndo(null), Math.max(0, pendingSuiteUndo.expiresAt - Date.now()));
+    return () => window.clearTimeout(timeout);
+  }, [isUndoingSuiteChange, pendingSuiteUndo]);
   const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
@@ -1427,7 +1284,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const folderRows = flattenFolders(folders);
-  const showFolderColumn = scope.kind === 'all' || scope.kind === 'suite' || scope.kind === 'folder';
+  const showFolderColumn = scope.kind === CATALOG_SCOPE.all || scope.kind === CATALOG_SCOPE.suite || scope.kind === CATALOG_SCOPE.folder;
   const folderPathById = new Map<string, string>();
   const folderScenarioCounts = new Map<string, number>();
   folderRows.forEach((folder) => {
@@ -1443,8 +1300,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       );
     }
   });
-  const selectedFolder = scope.kind === 'folder' ? folderRows.find((folder) => folder.id === scope.id) : undefined;
-  const selectedSuite = scope.kind === 'suite' ? suites.find((suite) => suite.id === scope.id) : undefined;
+  const selectedFolder = scope.kind === CATALOG_SCOPE.folder ? folderRows.find((folder) => folder.id === scope.id) : undefined;
+  const selectedSuite = scope.kind === CATALOG_SCOPE.suite ? suites.find((suite) => suite.id === scope.id) : undefined;
+  const isSelectedSuiteEmpty = selectedSuite !== undefined && (selectedSuite.members?.length ?? 0) === 0;
+  const isEmptySuitesState = isSuitesTab && !organizationLoading && !organizationError && suites.length === 0;
   const activeColumnFilters = (Object.entries(columnFilters) as Array<[keyof typeof columnFilters, string]>).filter(
     ([, value]) => value.trim().length > 0,
   );
@@ -1518,12 +1377,14 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       if (createDialog === 'folder') {
         await onCreateFolder(createName.trim(), selectedFolder?.id ?? null, createDescription.trim() || null);
       } else if (createDialog === 'suite') {
-        await onCreateSuite({
+        const created = await onCreateSuite({
           name: createName.trim(),
           purpose: createPurpose.trim() || undefined,
           release: createRelease.trim() || undefined,
           description: createDescription.trim() || undefined,
         });
+        if (created && typeof created === 'object' && 'id' in created && typeof created.id === 'string')
+          onScopeChange({ kind: 'suite', id: created.id });
       } else if (createDialog === 'rename-folder' && targetFolder) {
         await onUpdateFolder(targetFolder.id, {
           name: createName.trim(),
@@ -1569,7 +1430,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     if (
       isMovingScenarios ||
       selectedIds.length === 0 ||
-      scope.kind === 'suite' ||
+      scope.kind === CATALOG_SCOPE.suite ||
       moveDialogScope.current !== latestScope.current
     )
       return;
@@ -1603,7 +1464,17 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setIsRemovingFromSuite(true);
     setRemoveFromSuiteError(null);
     try {
-      showOperationReport(await onRemoveSelectedFromSuite());
+      if (scope.kind !== CATALOG_SCOPE.suite || !scope.id) return;
+      const undo = await removeSuiteMembership(scope.id, selectedIds);
+      setPendingSuiteUndo({
+        kind: 'membership',
+        payload: undo,
+        expiresAt: Date.now() + 10_000,
+        message: getMembershipChangeMessage(0, selectedIds.length, selectedSuite?.name ?? 'the suite'),
+      });
+      setOperationFeedback(null);
+      clearSelection();
+      await refreshSuiteData();
       setRemoveFromSuiteOpen(false);
     } catch (error) {
       setRemoveFromSuiteError(getActionErrorMessage(error));
@@ -1654,6 +1525,105 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       return;
     }
   };
+  const handleSuiteDrop = (event: DragEvent<HTMLElement>, destinationSuiteId: string) => {
+    if (isScenariosTab || !projectId || !scope.id || scope.id === destinationSuiteId || !event.dataTransfer.types.includes(scenarioDragMime)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setDragOverFolderId(null);
+    setIsDraggingScenario(false);
+    const active = activeDrag.current;
+    activeDrag.current = null;
+    try {
+      const payload = JSON.parse(event.dataTransfer.getData(scenarioDragMime)) as { projectId?: string; scenarioIds?: unknown };
+      if (payload.projectId !== projectId || !Array.isArray(payload.scenarioIds) || !payload.scenarioIds.every((id) => typeof id === 'string')) return;
+      const ids = [...new Set(payload.scenarioIds as string[])];
+      if (!ids.length || active?.projectId !== projectId || ids.some((id) => !active.scenarioIds.includes(id))) return;
+      void moveSuiteMembership(scope.id, destinationSuiteId, ids).then(async (undo) => {
+        const destinationName = suites.find((suite) => suite.id === destinationSuiteId)?.name ?? 'the suite';
+        const sourceName = suites.find((suite) => suite.id === scope.id)?.name ?? 'the suite';
+        const skipped = undo.alreadyInDestination.length;
+        const moved = ids.length - skipped;
+        let message: string;
+        if (skipped === ids.length && ids.length === 1) {
+          const scenario = scenarios.find((item) => item.id === ids[0]);
+          message = `${scenario?.scenarioKey ?? scenario?.title ?? 'Scenario'} is already in ${destinationName} — removed from ${sourceName}`;
+        } else if (skipped === ids.length) {
+          message = `${ids.length} scenarios were already in ${destinationName} — removed from ${sourceName}`;
+        } else {
+          message = `${moved} scenario${moved === 1 ? '' : 's'} moved to ${destinationName}${skipped ? ` · ${skipped} ${skipped === 1 ? 'was' : 'were'} already there` : ''}`;
+        }
+        setPendingSuiteUndo({ kind: 'move', payload: undo, expiresAt: Date.now() + 10_000, message });
+        setOperationFeedback(null);
+        clearSelection();
+        await refreshSuiteData();
+      }).catch((error: unknown) => {
+        setOperationFeedback(getActionErrorMessage(error));
+        void refreshSuiteData();
+      });
+    } catch {
+      return;
+    }
+  };
+  const canReorderSuite = Boolean(
+    selectedSuite && scope.kind === CATALOG_SCOPE.suite && (selectedSuite.members?.length ?? 0) <= pageSize && !search.trim() &&
+    !priority && selectedAuthorIds.length === 0 && activeColumnFilters.length === 0 && !sort,
+  );
+  const reorderRequirements = [
+    sort && 'select Run order',
+    (search.trim() || priority || selectedAuthorIds.length > 0 || activeColumnFilters.length > 0) && 'clear search and filters',
+    (selectedSuite?.members?.length ?? 0) > pageSize && 'show all suite scenarios on one page',
+  ].filter(Boolean);
+  const handleSuiteRowDrop = (event: DragEvent<HTMLElement>, targetScenarioId: string) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragOverFolderId(null);
+    const active = activeDrag.current;
+    activeDrag.current = null;
+    if (!canReorderSuite || !selectedSuite || !active || active.projectId !== projectId) return;
+    try {
+      const payload = JSON.parse(event.dataTransfer.getData(scenarioDragMime)) as { projectId?: string; scenarioIds?: unknown };
+      if (payload.projectId !== projectId || !Array.isArray(payload.scenarioIds) || !payload.scenarioIds.every((id) => typeof id === 'string')) return;
+      const movingIds = [...new Set(payload.scenarioIds as string[])];
+      const fullOrder = (selectedSuite.members ?? []).map((member) => member.testScenarioId);
+      if (!movingIds.length || movingIds.includes(targetScenarioId) || movingIds.some((id) => !fullOrder.includes(id))) return;
+      const moving = fullOrder.filter((id) => movingIds.includes(id));
+      const remaining = fullOrder.filter((id) => !movingIds.includes(id));
+      const targetIndex = remaining.indexOf(targetScenarioId);
+      if (targetIndex < 0) return;
+      const movingDown = fullOrder.indexOf(moving[0]) < fullOrder.indexOf(targetScenarioId);
+      const insertionIndex = targetIndex + (movingDown ? 1 : 0);
+      const nextOrder = [...remaining.slice(0, insertionIndex), ...moving, ...remaining.slice(insertionIndex)];
+      if (nextOrder.some((id, index) => id !== fullOrder[index])) {
+        const previousOrder = [...fullOrder];
+        const suiteId = selectedSuite.id;
+        const suiteName = selectedSuite.name;
+        setPendingSuiteUndo(null);
+        void onReorderSuite(suiteId, nextOrder)
+          .then(async () => {
+            await refreshSuiteData();
+            setOperationFeedback(null);
+            setPendingSuiteUndo({
+              kind: 'reorder',
+              payload: { suiteId, scenarioIds: previousOrder },
+              expiresAt: Date.now() + 10_000,
+              message: `Scenario order updated in ${suiteName}`,
+            });
+          })
+          .catch((error: unknown) => {
+            setOperationFeedback(getActionErrorMessage(error));
+            void refreshSuiteData();
+          });
+      }
+    } finally {
+      setIsDraggingScenario(false);
+    }
+  };
+  const handleSuiteRowDragOver = (event: DragEvent<HTMLElement>, scenarioId: string) => {
+    if (!event.dataTransfer.types.includes(scenarioDragMime)) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    setDragOverFolderId(scenarioId);
+  };
   const isInFolderSubtree = (candidateId: string, folderId: string) => {
     let current = folderRows.find((folder) => folder.id === candidateId);
     while (current) {
@@ -1676,7 +1646,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   };
   const renderFolder = (folder: CatalogFolder): ReactNode => {
     const children = getFolderChildren(folder);
-    const selected = scope.kind === 'folder' && scope.id === folder.id;
+    const selected = scope.kind === CATALOG_SCOPE.folder && scope.id === folder.id;
     return (
       <Box key={folder.id}>
         <HStack gap={0}>
@@ -1731,15 +1701,17 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       mx={6}
       p={{ base: 3, md: 5 }}
       ps={{ base: 3, md: '14px' }}
-      pb={selectedIds.length > 0 ? { base: 28, md: 24 } : undefined}
+      minH="calc(100dvh - 140px)"
+      alignItems="stretch"
       bg="bg.card"
       borderRadius="lg"
     >
-      <VStack align="stretch" gap={5} w="100%">
+      <VStack align="stretch" gap={5} w="100%" flex="1">
         <Grid
           templateColumns={{ base: '1fr', lg: '250px minmax(0, 1fr)' }}
           gap={{ base: 4, lg: 6 }}
           alignItems="stretch"
+          flex="1"
         >
           <VStack
             align="stretch"
@@ -1760,11 +1732,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   size="sm"
                   p={1}
                   justifyContent="flex-start"
-                  variant={scope.kind === 'all' ? 'subtle' : 'ghost'}
-                  colorPalette={scope.kind === 'all' ? 'blue' : undefined}
+                  variant={scope.kind === CATALOG_SCOPE.all ? 'subtle' : 'ghost'}
+                  colorPalette={scope.kind === CATALOG_SCOPE.all ? 'blue' : undefined}
                   borderStartWidth="3px"
-                  borderStartColor={scope.kind === 'all' ? 'blue.500' : 'transparent'}
-                  aria-current={scope.kind === 'all' ? 'page' : undefined}
+                  borderStartColor={scope.kind === CATALOG_SCOPE.all ? 'blue.500' : 'transparent'}
+                  aria-current={scope.kind === CATALOG_SCOPE.all ? 'page' : undefined}
                   onClick={() => onScopeChange({ kind: 'all' })}
                 >
                   <FiLayers />
@@ -1850,14 +1822,14 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 </Text>
               </Button>
             )}
-            {organizationTab !== 'scenarios' && (
+            {!isScenariosTab && (
               <Box>
                 <HStack justify="space-between" px={2} mb={1}>
                   <Text
                     fontSize="xs"
                     fontWeight="bold"
                     letterSpacing="wider"
-                    color="text.muted"
+                    color="text.secondary"
                     textTransform="uppercase"
                   >
                     Suites
@@ -1871,6 +1843,41 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     <FiPlus />
                   </IconButton>
                 </HStack>
+                {createDialog === 'suite' && (
+                  <form onSubmit={(event) => void submitCreate(event)}>
+                    <VStack align="stretch" gap={2} px={2} pb={2}>
+                      <HStack gap={1}>
+                        <Input
+                          aria-label="Suite name"
+                          autoFocus
+                          required
+                          maxLength={120}
+                          value={createName}
+                          placeholder="Suite name"
+                          onChange={(event) => setCreateName(event.currentTarget.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Escape') setCreateDialog(null);
+                          }}
+                        />
+                        <IconButton
+                          aria-label="Create suite"
+                          size="sm"
+                          variant="ghost"
+                          type="submit"
+                          disabled={!createName.trim() || isCreating}
+                          loading={isCreating}
+                        >
+                          <FiCheck />
+                        </IconButton>
+                      </HStack>
+                      {createError && (
+                        <Text role="alert" color="fg.error" fontSize="sm">
+                          {createError}
+                        </Text>
+                      )}
+                    </VStack>
+                  </form>
+                )}
                 {organizationLoading ? (
                   <Text px={2} color="text.muted" fontSize="sm">
                     Loading suites…
@@ -1879,14 +1886,16 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   <Text px={2} color="fg.error" fontSize="sm" role="alert">
                     Suites could not be loaded.
                   </Text>
-                ) : suites.length === 0 ? (
-                  <Text px={2} color="text.muted" fontSize="sm">
-                    No suites yet
-                  </Text>
+                ) : suites.length === 0 && createDialog !== 'suite' ? (
+                  <VStack align="stretch" px={2} py={2} gap={2}>
+                    <Text color="text.secondary" fontSize="sm">
+                      No suites yet
+                    </Text>
+                  </VStack>
                 ) : (
                   <VStack align="stretch" gap={0}>
                     {suites.map((suite) => {
-                      const selected = scope.kind === 'suite' && scope.id === suite.id;
+                      const selected = scope.kind === CATALOG_SCOPE.suite && scope.id === suite.id;
                       return (
                         <Button
                           key={suite.id}
@@ -1898,8 +1907,24 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                           justifyContent="flex-start"
                           aria-current={selected ? 'page' : undefined}
                           onClick={() => onScopeChange({ kind: 'suite', id: suite.id })}
+                          onDragOver={(event) => {
+                            if (
+                              !isScenariosTab &&
+                              scope.id !== suite.id &&
+                              projectId &&
+                              event.dataTransfer.types.includes(scenarioDragMime)
+                            ) {
+                              event.preventDefault();
+                              event.dataTransfer.dropEffect = 'move';
+                              setDragOverFolderId(suite.id);
+                            }
+                          }}
+                          onDragLeave={() => setDragOverFolderId((current) => (current === suite.id ? null : current))}
+                          onDrop={(event) => handleSuiteDrop(event, suite.id)}
+                          outline={dragOverFolderId === suite.id ? '2px dashed' : undefined}
+                          outlineColor="blue.500"
                         >
-                          <FiLayers />
+                          <FiList aria-hidden="true" />
                           <Text flex="1" textAlign="left" lineClamp={1}>
                             {suite.name}
                           </Text>
@@ -1916,130 +1941,244 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           </VStack>
 
           <VStack align="stretch" gap={4} minW="0">
-            <Box minH={{ base: 'auto', md: selectedFolder ? '84px' : 'auto' }}>
-              <HStack justify="space-between" align="start" gap={3} flexWrap="wrap">
-                <Box minW="0" flex="1">
-                  <Heading fontSize="lg" lineHeight="1.3">
-                    {selectedFolderPath ??
-                      selectedSuite?.name ??
-                      (scope.kind === 'unfiled' ? 'No folder scenarios' : 'All scenarios')}
-                  </Heading>
-                  {selectedFolder?.description && (
-                    <Text mt={1} color="text.secondary" fontSize="sm">
-                      {selectedFolder.description}
-                    </Text>
+            {!isEmptySuitesState && (
+              <Box minH={{ base: 'auto', md: selectedFolder ? '84px' : 'auto' }}>
+                <HStack justify="space-between" align="start" gap={3} flexWrap="wrap">
+                  <Box minW="0" flex="1">
+                    {createDialog === 'edit-suite' && selectedSuite ? (
+                      <form onSubmit={(event) => void submitCreate(event)}>
+                        <Grid templateColumns={{ base: '1fr', md: 'minmax(0, 1fr) auto' }} alignItems="start" gap={3}>
+                          <VStack align="stretch" gap={2}>
+                            <label>
+                              <Text mb={1} fontSize="xs" color="text.secondary">
+                                Name
+                              </Text>
+                              <Input
+                                aria-label="Suite name"
+                                autoFocus
+                                required
+                                maxLength={120}
+                                value={createName}
+                                onChange={(event) => setCreateName(event.currentTarget.value)}
+                              />
+                            </label>
+                            <label>
+                              <Text mb={1} fontSize="xs" color="text.secondary">
+                                Description
+                              </Text>
+                              <Textarea
+                                aria-label="Suite description"
+                                value={createDescription}
+                                onChange={(event) => setCreateDescription(event.currentTarget.value)}
+                              />
+                            </label>
+                            {createError && (
+                              <Text role="alert" color="fg.error" fontSize="sm">
+                                {createError}
+                              </Text>
+                            )}
+                          </VStack>
+                          <HStack justify="flex-end" pt={{ base: 0, md: 5 }}>
+                            <Button size="sm" variant="ghost" type="button" onClick={() => setCreateDialog(null)}>
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="primary"
+                              type="submit"
+                              disabled={!createName.trim() || isCreating}
+                              loading={isCreating}
+                            >
+                              Save changes
+                            </Button>
+                          </HStack>
+                        </Grid>
+                      </form>
+                    ) : (
+                      <Heading fontSize="lg" lineHeight="1.3">
+                        {selectedFolderPath ??
+                          selectedSuite?.name ??
+                          (isEmptySuitesState
+                            ? 'No suites yet'
+                            : scope.kind === CATALOG_SCOPE.suite
+                              ? 'Select a suite'
+                              : scope.kind === 'unfiled'
+                                ? 'No folder scenarios'
+                                : 'All scenarios')}
+                      </Heading>
+                    )}
+                    {createDialog !== 'edit-suite' && selectedFolder?.description && (
+                      <Text mt={1} color="text.secondary" fontSize="sm">
+                        {selectedFolder.description}
+                      </Text>
+                    )}
+                    {createDialog !== 'edit-suite' &&
+                      (selectedSuite ? (
+                        <Text mt={1} color="text.muted" fontSize="sm">
+                          {selectedSuite.description?.trim() || 'No description'}
+                        </Text>
+                      ) : (
+                        <Text mt={selectedFolder?.description ? 0 : 1} color="text.muted" fontSize="sm">
+                          {selectedFolder
+                            ? `${pagination.total} scenarios`
+                            : scope.kind === 'unfiled'
+                              ? `${pagination.total} scenarios without a folder`
+                              : `${pagination.total} scenarios`}
+                        </Text>
+                      ))}
+                  </Box>
+                  {selectedSuite && createDialog !== 'edit-suite' && (
+                    <HStack>
+                      <Tooltip
+                        content="Add scenarios to run this suite"
+                        openDelay={500}
+                        closeDelay={0}
+                        disabled={!isSelectedSuiteEmpty}
+                      >
+                        <Button
+                          variant="primary"
+                          aria-disabled={isSelectedSuiteEmpty || undefined}
+                          data-disabled={isSelectedSuiteEmpty ? '' : undefined}
+                          cursor={isSelectedSuiteEmpty ? 'not-allowed' : 'pointer'}
+                          bg={isSelectedSuiteEmpty ? 'button.primary.bg.disabled' : undefined}
+                          color={isSelectedSuiteEmpty ? 'button.primary.color' : undefined}
+                          opacity={1}
+                          _hover={isSelectedSuiteEmpty ? { bg: 'button.primary.bg.disabled', boxShadow: 'none' } : undefined}
+                          onClick={(event) => {
+                            if (isSelectedSuiteEmpty) event.preventDefault();
+                          }}
+                        >
+                          <FiPlay aria-hidden="true" />
+                          Run suite
+                        </Button>
+                      </Tooltip>
+                      <Button variant="outline" onClick={() => setAddScenariosToSuiteOpen(true)}>
+                        <FiLayers />
+                        Manage scenarios
+                      </Button>
+                      <Menu.Root>
+                        <Menu.Trigger asChild>
+                          <IconButton aria-label="Suite actions" variant="outline">
+                            <FiMoreHorizontal />
+                          </IconButton>
+                        </Menu.Trigger>
+                        <Menu.Positioner>
+                          <Menu.Content>
+                            <Menu.Item value="edit" onClick={openEditSuiteDialog}>
+                              <HStack justify="left" w="full">
+                                <FiEdit aria-hidden="true" />
+                                <Text>Edit suite details</Text>
+                              </HStack>
+                            </Menu.Item>
+                            <Menu.Item
+                              value="delete"
+                              color="fg.error"
+                              onClick={() => {
+                                setTargetSuite(selectedSuite);
+                                setCreateError(null);
+                                setCreateDialog('delete-suite');
+                              }}
+                            >
+                              <HStack justify="left" w="full">
+                                <FiTrash2 aria-hidden="true" />
+                                <Text>Delete suite</Text>
+                              </HStack>
+                            </Menu.Item>
+                          </Menu.Content>
+                        </Menu.Positioner>
+                      </Menu.Root>
+                    </HStack>
                   )}
-                  <Text mt={selectedFolder?.description ? 0 : 1} color="text.muted" fontSize="sm">
-                    {selectedFolder
-                      ? `${pagination.total} scenarios`
-                      : selectedSuite
-                        ? `${selectedSuite.members?.length ?? 0} scenarios${selectedSuite.release ? ` · ${selectedSuite.release}` : ''}`
-                        : scope.kind === 'unfiled'
-                          ? `${pagination.total} scenarios without a folder`
-                          : `${pagination.total} scenarios`}
-                  </Text>
-                </Box>
-                {selectedSuite && (
-                  <HStack>
-                    <Button size="sm" variant="outline" onClick={() => setAddScenariosToSuiteOpen(true)}>
-                      <FiPlus />
-                      Add scenarios
-                    </Button>
-                    <Menu.Root>
-                      <Menu.Trigger asChild>
-                        <IconButton aria-label="Suite actions" variant="ghost">
-                          <FiMoreHorizontal />
-                        </IconButton>
-                      </Menu.Trigger>
-                      <Menu.Positioner>
-                        <Menu.Content>
-                          <Menu.Item value="edit" onClick={openEditSuiteDialog}>
-                            <HStack justify="space-between" w="full">
-                              <Text>Edit suite</Text>
-                              <FiEdit aria-hidden="true" />
-                            </HStack>
-                          </Menu.Item>
-                          <Menu.Item
-                            value="delete"
-                            color="fg.error"
-                            onClick={() => {
-                              setTargetSuite(selectedSuite);
-                              setCreateError(null);
-                              setCreateDialog('delete-suite');
-                            }}
-                          >
-                            <HStack justify="space-between" w="full">
-                              <Text>Delete suite</Text>
-                              <FiTrash2 aria-hidden="true" />
-                            </HStack>
-                          </Menu.Item>
-                        </Menu.Content>
-                      </Menu.Positioner>
-                    </Menu.Root>
+                  <HStack gap={2}>
+                    {isScenariosTab && (
+                      <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}>
+                        <FiPlus />
+                        Create scenario
+                      </Button>
+                    )}
+                    {isScenariosTab && scope.kind !== CATALOG_SCOPE.all && (
+                      <Menu.Root>
+                        <Menu.Trigger asChild>
+                          <IconButton aria-label="Folder actions" size="md" variant="outline">
+                            <FiMoreHorizontal />
+                          </IconButton>
+                        </Menu.Trigger>
+                        <Menu.Positioner>
+                          <Menu.Content>
+                            <Menu.Item value="create-folder" onClick={() => openCreateDialog('folder')}>
+                              {selectedFolder ? 'Create subfolder' : 'Create folder'}
+                            </Menu.Item>
+                            {selectedFolder && (
+                              <>
+                                <Menu.Item value="rename-folder" onClick={() => openEditFolderDialog(selectedFolder)}>
+                                  Edit folder details
+                                </Menu.Item>
+                                <Menu.Item
+                                  value="move-folder-up"
+                                  disabled={selectedFolderIndex <= 0}
+                                  onClick={() => void reorderFolder(selectedFolder, -1)}
+                                >
+                                  Move up
+                                </Menu.Item>
+                                <Menu.Item
+                                  value="move-folder-down"
+                                  disabled={
+                                    selectedFolderIndex < 0 || selectedFolderIndex >= selectedFolderSiblings.length - 1
+                                  }
+                                  onClick={() => void reorderFolder(selectedFolder, 1)}
+                                >
+                                  Move down
+                                </Menu.Item>
+                                <Menu.Item
+                                  value="move-folder"
+                                  onClick={() => openFolderActionDialog('move-folder', selectedFolder)}
+                                >
+                                  Move
+                                </Menu.Item>
+                                <Menu.Item
+                                  value="delete-folder"
+                                  color="fg.error"
+                                  onClick={() => openFolderActionDialog('delete-folder', selectedFolder)}
+                                >
+                                  Delete folder
+                                </Menu.Item>
+                              </>
+                            )}
+                          </Menu.Content>
+                        </Menu.Positioner>
+                      </Menu.Root>
+                    )}
                   </HStack>
-                )}
-                <HStack gap={2}>
-                  <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}>
-                    <FiPlus />
-                    Create scenario
-                  </Button>
-                  {isScenariosTab && scope.kind !== 'all' && (
-                    <Menu.Root>
-                      <Menu.Trigger asChild>
-                        <IconButton aria-label="Folder actions" size="md" variant="outline">
-                          <FiMoreHorizontal />
-                        </IconButton>
-                      </Menu.Trigger>
-                      <Menu.Positioner>
-                        <Menu.Content>
-                          <Menu.Item value="create-folder" onClick={() => openCreateDialog('folder')}>
-                            {selectedFolder ? 'Create subfolder' : 'Create folder'}
-                          </Menu.Item>
-                          {selectedFolder && (
-                            <>
-                              <Menu.Item value="rename-folder" onClick={() => openEditFolderDialog(selectedFolder)}>
-                                Edit folder details
-                              </Menu.Item>
-                              <Menu.Item
-                                value="move-folder-up"
-                                disabled={selectedFolderIndex <= 0}
-                                onClick={() => void reorderFolder(selectedFolder, -1)}
-                              >
-                                Move up
-                              </Menu.Item>
-                              <Menu.Item
-                                value="move-folder-down"
-                                disabled={
-                                  selectedFolderIndex < 0 || selectedFolderIndex >= selectedFolderSiblings.length - 1
-                                }
-                                onClick={() => void reorderFolder(selectedFolder, 1)}
-                              >
-                                Move down
-                              </Menu.Item>
-                              <Menu.Item
-                                value="move-folder"
-                                onClick={() => openFolderActionDialog('move-folder', selectedFolder)}
-                              >
-                                Move
-                              </Menu.Item>
-                              <Menu.Item
-                                value="delete-folder"
-                                color="fg.error"
-                                onClick={() => openFolderActionDialog('delete-folder', selectedFolder)}
-                              >
-                                Delete folder
-                              </Menu.Item>
-                            </>
-                          )}
-                        </Menu.Content>
-                      </Menu.Positioner>
-                    </Menu.Root>
-                  )}
                 </HStack>
-              </HStack>
-            </Box>
+              </Box>
+            )}
 
-            <VStack align="stretch" gap={2}>
+            {isEmptySuitesState && (
+              <Box
+                flex="1"
+                minH={{ base: '280px', lg: '420px' }}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                textAlign="center"
+                px={4}
+              >
+                <VStack align="center" gap={2} maxW="420px">
+                  <Heading fontSize="lg" fontWeight="bold" lineHeight="1.4">
+                    Create your first suite
+                  </Heading>
+                  <Text color="text.secondary" fontSize="sm" lineHeight="1.5">
+                    A suite is an ordered set of scenarios you run together — a smoke check, a regression pass, a
+                    release check.
+                  </Text>
+                  <Button size="sm" variant="ghost" colorPalette="blue" onClick={() => openCreateDialog('suite')}>
+                    <FiPlus />
+                    New suite
+                  </Button>
+                </VStack>
+              </Box>
+            )}
+            <VStack align="stretch" gap={2} display={isEmptySuitesState ? 'none' : undefined}>
               <HStack gap={2} flexWrap="wrap">
                 <Box
                   position="relative"
@@ -2065,7 +2204,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     onChange={(event) => onSearchChange(event.currentTarget.value)}
                     ps={9}
                     pe={search ? 9 : 3}
-                    bg={search.trim() ? 'bg.active' : 'bg.card'}
+                    bg="bg.card"
                     borderColor={search.trim() ? 'border.active' : undefined}
                   />
                   {search && (
@@ -2083,7 +2222,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     </IconButton>
                   )}
                 </Box>
-                {isScenariosTab ? (
+                {isScenariosTab || selectedSuite ? (
                   <>
                     <PriorityFilter value={priority} counts={priorityCounts} onChange={onPriorityChange} />
                     <AuthorFilter
@@ -2094,10 +2233,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       onChange={onAuthorChange}
                     />
                     <Box flex="1 1 auto" minW={0} />
-                    <ScenarioSortSelect value={sort ?? 'updatedAt'} onChange={onSortChange} />
+                    <ScenarioSortSelect value={sort} onChange={onSortChange} allowRunOrder={!isScenariosTab} />
                     <Tooltip content={sortDirection === 'desc' ? 'Descending' : 'Ascending'}>
                       <IconButton
                         aria-label={`Sort ${sortDirection === 'desc' ? 'descending' : 'ascending'}`}
+                        disabled={!sort}
                         variant="outline"
                         bg="bg.card"
                         color="text.primary"
@@ -2122,20 +2262,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   </Text>
                 )}
               </HStack>
-              {(activeColumnFilters.length > 0 || search.trim()) && (
+              {activeColumnFilters.length > 0 && (
                 <HStack gap={2} flexWrap="wrap" aria-label="Active scenario filters">
-                  {search.trim() && (
-                    <Button
-                      size="xs"
-                      variant="subtle"
-                      colorPalette="blue"
-                      borderRadius="full"
-                      onClick={() => onSearchChange('')}
-                    >
-                      All fields: {search}
-                      <FiX aria-hidden="true" />
-                    </Button>
-                  )}
                   {activeColumnFilters.map(([field, value]) => (
                     <Button
                       key={field}
@@ -2166,76 +2294,73 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
               )}
             </VStack>
 
-            {selectedSuite?.members && selectedSuite.members.length > 0 && (
-              <Collapsible.Root>
-                <Collapsible.Trigger asChild>
-                  <Button variant="ghost" size="sm" alignSelf="flex-start">
-                    Manage suite order ({selectedSuite.members.length})<FiChevronDown />
-                  </Button>
-                </Collapsible.Trigger>
-                <Collapsible.Content>
-                  <VStack
-                    align="stretch"
-                    gap={1}
-                    p={3}
-                    mt={2}
-                    borderWidth="1px"
-                    borderColor="border.main"
-                    borderRadius="md"
-                    maxH="240px"
-                    overflowY="auto"
-                  >
-                    {selectedSuite.members.map((member, index, members) => (
-                      <HStack key={member.testScenarioId}>
-                        <Text flex="1" fontSize="sm" lineClamp={1}>
-                          {index + 1}.{' '}
-                          {scenarios.find((scenario) => scenario.id === member.testScenarioId)?.title ??
-                            member.testScenarioId}
-                        </Text>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          aria-label={`Move member ${index + 1} up`}
-                          disabled={index === 0}
-                          onClick={() => {
-                            const ids = members.map((item) => item.testScenarioId);
-                            [ids[index - 1], ids[index]] = [ids[index], ids[index - 1]];
-                            void onReorderSuite(selectedSuite.id, ids).catch((error: unknown) =>
-                              window.alert(String(error)),
-                            );
-                          }}
-                        >
-                          ↑
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          aria-label={`Move member ${index + 1} down`}
-                          disabled={index === members.length - 1}
-                          onClick={() => {
-                            const ids = members.map((item) => item.testScenarioId);
-                            [ids[index + 1], ids[index]] = [ids[index], ids[index + 1]];
-                            void onReorderSuite(selectedSuite.id, ids).catch((error: unknown) =>
-                              window.alert(String(error)),
-                            );
-                          }}
-                        >
-                          ↓
-                        </Button>
-                      </HStack>
-                    ))}
-                  </VStack>
-                </Collapsible.Content>
-              </Collapsible.Root>
-            )}
-
             {operationFeedback && (
               <HStack role="alert" color="fg.error" fontSize="sm">
                 <Text>{operationFeedback}</Text>
-                <IconButton aria-label="Dismiss operation feedback" size="xs" variant="ghost" onClick={() => setOperationFeedback(null)}>
+                <IconButton
+                  aria-label="Dismiss operation feedback"
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => setOperationFeedback(null)}
+                >
                   <FiX />
                 </IconButton>
               </HStack>
+            )}
+            {pendingSuiteUndo && (
+              <Portal>
+                <HStack
+                  role="status"
+                  aria-label="Suite membership notification"
+                  position="fixed"
+                  bottom={{ base: 3, md: 5 }}
+                  left="50%"
+                  transform="translateX(-50%)"
+                  zIndex={1500}
+                  justify="space-between"
+                  gap={5}
+                  width="max-content"
+                  maxW="calc(100vw - 32px)"
+                  bg="#1f1f23"
+                  color="white"
+                  borderRadius="md"
+                  boxShadow="lg"
+                  px={4}
+                  py={2}
+                >
+                  <Text fontSize="sm" lineHeight="short" flex="1">
+                    {pendingSuiteUndo.message}
+                  </Text>
+                  <Button
+                    size="sm"
+                    variant="plain"
+                    color="#b7c6ff"
+                    flexShrink={0}
+                    disabled={isUndoingSuiteChange}
+                    onClick={async () => {
+                      if (isUndoingSuiteChange) return;
+                      setIsUndoingSuiteChange(true);
+                      try {
+                        if (pendingSuiteUndo.kind === 'membership')
+                          await restoreSuiteMembership(pendingSuiteUndo.payload);
+                        else if (pendingSuiteUndo.kind === 'move') await restoreSuiteMove(pendingSuiteUndo.payload);
+                        else await onReorderSuite(pendingSuiteUndo.payload.suiteId, pendingSuiteUndo.payload.scenarioIds);
+                        setPendingSuiteUndo(null);
+                        setOperationFeedback(null);
+                        await refreshSuiteData();
+                      } catch (error) {
+                        setOperationFeedback(`Undo failed: ${getActionErrorMessage(error)}`);
+                        setPendingSuiteUndo(null);
+                        await refreshSuiteData();
+                      } finally {
+                        setIsUndoingSuiteChange(false);
+                      }
+                    }}
+                  >
+                    {isUndoingSuiteChange ? 'Undoing…' : 'Undo'}
+                  </Button>
+                </HStack>
+              </Portal>
             )}
             {selectionError && (
               <Text role="alert" color="fg.error" fontSize="sm">
@@ -2261,23 +2386,22 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   px={{ base: 2, sm: 3 }}
                   py={2}
                   maxW="calc(100vw - 24px)"
-                  bg="black"
                   color="white"
                   borderRadius="lg"
                   boxShadow="0 8px 28px rgba(0, 0, 0, 0.28)"
                   aria-label="Bulk scenario actions"
                   role="toolbar"
-                  _dark={{ bg: 'white', color: 'gray.900' }}
+                  bg={scope.kind === CATALOG_SCOPE.suite ? 'gray.900' : 'black'}
+                  _dark={{ bg: 'gray.900', color: 'white' }}
                 >
                   <Text px={1} fontSize="sm" fontWeight="semibold" whiteSpace="nowrap">
                     {selectedIds.length} selected
                   </Text>
-                  {isScenariosTab && !allMatchingSelected && selectedIds.length < pagination.total && (
+                  {!allMatchingSelected && selectedIds.length < pagination.total && (
                     <Button
                       size="sm"
                       variant="ghost"
                       color="blue.300"
-                      textDecoration="underline"
                       disabled={isResolvingSelection || isExecutingOperation}
                       onClick={() => void selectAllMatching()}
                       _dark={{ color: 'blue.700' }}
@@ -2286,7 +2410,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       Select all {pagination.total}
                     </Button>
                   )}
-                  {scope.kind !== 'suite' && (
+                  {scope.kind === CATALOG_SCOPE.suite && (
+                    <Box aria-hidden="true" h="6" borderStartWidth="1px" borderColor="whiteAlpha.400" mx={1} />
+                  )}
+                  {scope.kind !== CATALOG_SCOPE.suite && (
                     <Menu.Root>
                       <Menu.Trigger asChild>
                         <IconButton
@@ -2321,7 +2448,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       </Menu.Positioner>
                     </Menu.Root>
                   )}
-                  {projectId && (
+                  {isScenariosTab && projectId && (
                     <SuitePicker
                       key={projectId}
                       projectId={projectId}
@@ -2334,9 +2461,30 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       onComplete={(report, selection) => {
                         if (currentProjectId.current !== projectId) return;
                         onSuiteOperationComplete(report, selection);
+                        if (report.succeededIds.length) setPendingSuiteUndo(null);
                         showOperationReport(report);
                       }}
                     />
+                  )}
+                  {(isSuitesTab || isScenariosTab) && (
+                    <Tooltip
+                      content={`Start a manual run with the ${selectedIds.length === 1 ? 'selected scenario' : `${selectedIds.length} selected scenarios`}`}
+                      openDelay={500}
+                      closeDelay={0}
+                      contentProps={{ maxW: '240px' }}
+                    >
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        color="white"
+                        _hover={{ bg: 'whiteAlpha.200', color: 'white' }}
+                        _active={{ bg: 'whiteAlpha.300', color: 'white' }}
+                        _focusVisible={{ outline: '2px solid', outlineColor: 'blue.300', outlineOffset: '2px' }}
+                      >
+                        <FiPlay aria-hidden="true" />
+                        Run selected
+                      </Button>
+                    </Tooltip>
                   )}
                   {isScenariosTab && (
                     <Button
@@ -2355,158 +2503,179 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       Delete
                     </Button>
                   )}
-                  {scope.kind === 'suite' && (
-                    <Button
+                  {scope.kind === CATALOG_SCOPE.suite && (
+                    <Tooltip
+                      content="Unlink from this suite. The scenarios stay in the catalog."
+                      openDelay={500}
+                      closeDelay={0}
+                      contentProps={{ maxW: '240px' }}
+                    >
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={isExecutingOperation || isAddingToSuite}
+                        onClick={() => {
+                          setRemoveFromSuiteError(null);
+                          setRemoveFromSuiteOpen(true);
+                        }}
+                        color="red.300"
+                        _hover={{ bg: 'whiteAlpha.200' }}
+                      >
+                        <FiMinusCircle aria-hidden="true" />
+                        Remove from suite
+                      </Button>
+                    </Tooltip>
+                  )}
+                  <Tooltip content="Clear selection" openDelay={500} closeDelay={0} contentProps={{ maxW: '240px' }}>
+                    <IconButton
                       size="sm"
                       variant="ghost"
+                      aria-label="Clear selection"
                       disabled={isExecutingOperation || isAddingToSuite}
-                      onClick={() => {
-                        setRemoveFromSuiteError(null);
-                        setRemoveFromSuiteOpen(true);
-                      }}
+                      onClick={clearSelection}
                       color="inherit"
                       _hover={{ bg: 'whiteAlpha.200' }}
                     >
-                      Remove from suite
-                    </Button>
-                  )}
-                  <IconButton
-                    size="sm"
-                    variant="ghost"
-                    aria-label="Close bulk scenario actions and clear selection"
-                    disabled={isExecutingOperation || isAddingToSuite}
-                    onClick={clearSelection}
-                    color="inherit"
-                    _hover={{ bg: 'whiteAlpha.200' }}
-                  >
-                    <FiX />
-                  </IconButton>
+                      <FiX />
+                    </IconButton>
+                  </Tooltip>
                 </HStack>
               </Portal>
             )}
 
-            <Box borderWidth="1px" borderColor="border.main" borderRadius="lg" overflow="hidden" bg="bg.card">
-              {organizationTab === 'suites' && !selectedSuite ? (
-                <Text p={6} textAlign="center" color="text.muted">
-                  Select a suite to view its scenarios.
-                </Text>
-              ) : error ? (
-                <Box p={4}>
-                  <ErrorState />
-                </Box>
-              ) : (
-                <>
-                  {isScenariosTab ? (
-                    <CompactScenarioTable
-                      projectId={projectId ?? ''}
-                      scenarios={scenarios}
-                      isLoading={isLoading}
-                      selectedIds={selectedIds}
-                      selectionDisabled={isExecutingOperation}
-                      onToggleSelected={toggleSelected}
-                      onDragPayload={(dragProjectId, scenarioIds) => {
-                        activeDrag.current = { projectId: dragProjectId, scenarioIds };
-                        setIsDraggingScenario(true);
-                      }}
-                      onDragEnd={() => {
-                        activeDrag.current = null;
-                        setIsDraggingScenario(false);
-                        setDragOverFolderId(null);
-                      }}
-                      folderPathById={folderPathById}
-                      searchActive={Boolean(search.trim()) || Boolean(priority) || selectedAuthorIds.length > 0}
-                    />
-                  ) : (
-                    <ScenarioTable
-                      scenarios={scenarios}
-                      isLoading={isLoading}
-                      selectedIds={selectedIds}
-                      selectionDisabled={isExecutingOperation}
-                      onToggleSelected={toggleSelected}
-                      showFolder={showFolderColumn}
-                      folderPathById={folderPathById}
-                      sort={sort}
-                      sortDirection={sortDirection}
-                      onSortChange={onSortChange}
-                      columnFilters={columnFilters}
-                      onColumnFilterChange={onColumnFilterChange}
-                      openFilter={openFilter}
-                      onFilterDisclosureChange={setOpenFilter}
-                      searchActive={Boolean(search.trim()) || activeColumnFilters.length > 0}
-                    />
-                  )}
-                  {(isScenariosTab || scenarios.length > 0) && (
-                    <HStack
-                      justify="space-between"
-                      flexWrap="wrap"
-                      p={3}
-                      borderTopWidth="1px"
-                      borderColor="border.main"
+            {!isEmptySuitesState && (
+              <Box borderWidth="1px" borderColor="border.main" borderRadius="lg" overflow="hidden" bg="bg.card">
+                {isSuitesTab && !selectedSuite && !isEmptySuitesState ? (
+                  <VStack p={8} gap={3} textAlign="center">
+                    <Heading size="sm">Select a suite to view its scenarios</Heading>
+                    <Text color="text.secondary">Each suite has its own membership and scenario order.</Text>
+                    <Button size="sm" variant="outline" onClick={() => openCreateDialog('suite')}>
+                      Create suite
+                    </Button>
+                  </VStack>
+                ) : error ? (
+                  <Box p={4}>
+                    <ErrorState />
+                  </Box>
+                ) : (
+                  <>
+                    {isScenariosTab ? (
+                      <CompactScenarioTable
+                        projectId={projectId ?? ''}
+                        scenarios={scenarios}
+                        isLoading={isLoading}
+                        selectedIds={selectedIds}
+                        selectionDisabled={isExecutingOperation}
+                        onToggleSelected={toggleSelected}
+                        onDragPayload={(dragProjectId, scenarioIds) => {
+                          activeDrag.current = { projectId: dragProjectId, scenarioIds };
+                          setIsDraggingScenario(true);
+                        }}
+                        onDragEnd={() => {
+                          activeDrag.current = null;
+                          setIsDraggingScenario(false);
+                          setDragOverFolderId(null);
+                        }}
+                        folderPathById={folderPathById}
+                        searchActive={Boolean(search.trim()) || Boolean(priority) || selectedAuthorIds.length > 0}
+                      />
+                    ) : (
+                      <ScenarioTable
+                        projectId={projectId}
+                        enableSuiteDrag={!isScenariosTab}
+                        enableSuiteReorder={canReorderSuite}
+                        onDragPayload={(dragProjectId, scenarioIds) => {
+                          activeDrag.current = { projectId: dragProjectId, scenarioIds };
+                          setIsDraggingScenario(true);
+                        }}
+                        onDragEnd={() => {
+                          activeDrag.current = null;
+                          setIsDraggingScenario(false);
+                          setDragOverFolderId(null);
+                        }}
+                        onSuiteRowDrop={handleSuiteRowDrop}
+                        onSuiteRowDragOver={handleSuiteRowDragOver}
+                        dragOverScenarioId={dragOverFolderId}
+                        scenarios={scenarios}
+                        isLoading={isLoading}
+                        selectedIds={selectedIds}
+                        selectionDisabled={isExecutingOperation}
+                        onToggleSelected={toggleSelected}
+                        showFolder={showFolderColumn}
+                        folderPathById={folderPathById}
+                        searchActive={Boolean(search.trim()) || activeColumnFilters.length > 0}
+                        emptySuite={Boolean(
+                          selectedSuite &&
+                          selectedSuite.members?.length === 0 &&
+                          !search.trim() &&
+                          !priority &&
+                          !selectedAuthorIds.length &&
+                          !activeColumnFilters.length,
+                        )}
+                        onAddScenarios={() => setAddScenariosToSuiteOpen(true)}
+                      />
+                    )}
+                  </>
+                )}
+              </Box>
+            )}
+            {!isEmptySuitesState && !error && (isScenariosTab || selectedSuite) && (
+              <HStack justify="space-between" flexWrap="wrap" gap={3}>
+                <HStack w="full" justify="space-between" gap={3} flexWrap="wrap">
+                  <Text color="text.secondary" fontSize="sm">
+                    {pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}–
+                    {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
+                  </Text>
+                  <HStack as="nav" aria-label="Test Scenario pagination" gap={2}>
+                    <Text color="text.secondary" fontSize="sm" whiteSpace="nowrap">
+                      Rows per page
+                    </Text>
+                    <Box w="64px">
+                      <NativeSelect
+                        id="scenario-page-size"
+                        aria-label="Rows per page"
+                        h="8"
+                        bg="bg.card"
+                        ps={2}
+                        value={String(pageSize)}
+                        onChange={(event) => onPageSizeChange(Number(event.currentTarget.value))}
+                      >
+                        {pageSizes.map((size) => (
+                          <option key={size} value={size}>
+                            {size}
+                          </option>
+                        ))}
+                      </NativeSelect>
+                    </Box>
+                    <IconButton
+                      aria-label="Previous Page"
+                      size="sm"
+                      variant="outline"
+                      disabled={pagination.page <= 1}
+                      onClick={() => onPageChange(pagination.page - 1)}
                     >
-                      {isScenariosTab ? (
-                        <HStack w="full" justify="space-between" gap={3} flexWrap="wrap">
-                          <Text color="text.secondary" fontSize="sm">
-                            {pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.limit + 1}–
-                            {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
-                          </Text>
-                          <HStack as="nav" aria-label="Test Scenario pagination" gap={2}>
-                            <Text color="text.secondary" fontSize="sm" whiteSpace="nowrap">
-                              Rows per page
-                            </Text>
-                            <Box w="64px">
-                              <NativeSelect
-                                id="scenario-page-size"
-                                aria-label="Rows per page"
-                                h="8"
-                                bg="bg.card"
-                                ps={2}
-                                value={String(pageSize)}
-                                onChange={(event) => onPageSizeChange(Number(event.currentTarget.value))}
-                              >
-                                {pageSizes.map((size) => (
-                                  <option key={size} value={size}>
-                                    {size}
-                                  </option>
-                                ))}
-                              </NativeSelect>
-                            </Box>
-                            <IconButton
-                              aria-label="Previous Page"
-                              size="sm"
-                              variant="outline"
-                              disabled={pagination.page <= 1}
-                              onClick={() => onPageChange(pagination.page - 1)}
-                            >
-                              <FiChevronLeft />
-                            </IconButton>
-                            <IconButton
-                              aria-label="Next Page"
-                              size="sm"
-                              variant="outline"
-                              disabled={pagination.page >= pagination.totalPages || pagination.totalPages === 0}
-                              onClick={() => onPageChange(pagination.page + 1)}
-                            >
-                              <FiChevronRight />
-                            </IconButton>
-                          </HStack>
-                        </HStack>
-                      ) : (
-                        <PaginationSummary pagination={pagination} />
-                      )}
-                      {!isScenariosTab && pagination.totalPages > 1 && (
-                        <Box as="nav" aria-label="Test Scenario pagination">
-                          <Pagination
-                            currentPage={pagination.page}
-                            totalPages={pagination.totalPages}
-                            onPageChange={onPageChange}
-                          />
-                        </Box>
-                      )}
-                    </HStack>
-                  )}
-                </>
-              )}
-            </Box>
+                      <FiChevronLeft />
+                    </IconButton>
+                    <IconButton
+                      aria-label="Next Page"
+                      size="sm"
+                      variant="outline"
+                      disabled={pagination.page >= pagination.totalPages || pagination.totalPages === 0}
+                      onClick={() => onPageChange(pagination.page + 1)}
+                    >
+                      <FiChevronRight />
+                    </IconButton>
+                  </HStack>
+                </HStack>
+              </HStack>
+            )}
+            {!error && selectedSuite?.members && selectedSuite.members.length > 0 && (
+              <Text fontSize="sm" color="text.secondary" role="status">
+                {canReorderSuite
+                  ? 'Drag rows to change the run order, or onto another suite on the left to move them. Changes save right away.'
+                  : `To change the run order, ${reorderRequirements.join(', ')}. Drag rows onto another suite on the left to move them. Changes save right away.`}
+              </Text>
+            )}
           </VStack>
         </Grid>
       </VStack>
@@ -2514,7 +2683,25 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
         <TestSuiteAddScenariosDialogContainer
           projectId={projectId}
           suite={selectedSuite}
-          folderOptions={folderRows.map(({ id, name, depth }) => ({ id, name, depth }))}
+          folderOptions={folderRows.map(({ id, name, depth }) => ({
+            id,
+            name,
+            depth,
+            scenarioCount: folderScenarioCounts.get(id) ?? 0,
+          }))}
+          unfiledScenarioCount={unfiledScenarioCount}
+          totalScenarioCount={projectScenarioCount}
+          onSaved={(payload) => {
+            const addedCount = payload.restoreData.addedScenarioIds.length;
+            const removedCount = payload.restoreData.removedMembers.length;
+            setPendingSuiteUndo({
+              kind: 'membership',
+              payload,
+              expiresAt: Date.now() + 10_000,
+              message: getMembershipChangeMessage(addedCount, removedCount, selectedSuite?.name ?? 'the suite'),
+            });
+            setOperationFeedback(null);
+          }}
           onClose={() => setAddScenariosToSuiteOpen(false)}
         />
       )}
@@ -2550,7 +2737,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           </DialogFooter>
         </Dialog>
       )}
-      {moveScenariosOpen && scope.kind !== 'suite' && moveDialogScope.current === scopeKey && (
+      {moveScenariosOpen && scope.kind !== CATALOG_SCOPE.suite && moveDialogScope.current === scopeKey && (
         <Dialog
           title={`Move ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'}`}
           onClose={() => setMoveScenariosOpen(false)}
@@ -2628,31 +2815,27 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           </form>
         </Dialog>
       )}
-      {createDialog && (
+      {createDialog && createDialog !== 'suite' && createDialog !== 'edit-suite' && (
         <Dialog
           title={
             createDialog === 'folder'
               ? selectedFolder
                 ? `Create folder inside ${selectedFolder.name}`
                 : 'Create folder'
-              : createDialog === 'suite'
-                ? 'Create suite'
-                : createDialog === 'rename-folder'
-                  ? 'Rename folder'
-                  : createDialog === 'edit-suite'
-                    ? 'Edit suite'
-                    : createDialog === 'move-folder'
-                      ? `Move ${targetFolder?.name ?? 'folder'}`
-                      : createDialog === 'delete-folder'
-                        ? 'Delete folder'
-                        : 'Delete suite'
+              : createDialog === 'rename-folder'
+                ? 'Rename folder'
+                : createDialog === 'move-folder'
+                  ? `Move ${targetFolder?.name ?? 'folder'}`
+                  : createDialog === 'delete-folder'
+                    ? 'Delete folder'
+                    : `Delete suite “${targetSuite?.name ?? ''}”?`
           }
           onClose={() => setCreateDialog(null)}
         >
           <form onSubmit={(event) => void submitCreate(event)}>
             <DialogBody>
               <VStack align="stretch" gap={4}>
-                {['folder', 'suite', 'rename-folder', 'edit-suite'].includes(createDialog) && (
+                {['folder', 'rename-folder'].includes(createDialog) && (
                   <label>
                     <Text mb={1}>Name</Text>
                     <Input
@@ -2661,17 +2844,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       maxLength={120}
                       value={createName}
                       onChange={(event) => setCreateName(event.currentTarget.value)}
-                      bg={
-                        createDialog === 'rename-folder' || createDialog === 'suite'
-                          ? 'white'
-                          : createDialog === 'edit-suite'
-                            ? 'bg.card'
-                            : undefined
-                      }
+                      bg={createDialog === 'rename-folder' ? 'white' : undefined}
                     />
                   </label>
                 )}
-                {['folder', 'rename-folder', 'suite', 'edit-suite'].includes(createDialog) && (
+                {['folder', 'rename-folder'].includes(createDialog) && (
                   <>
                     {(createDialog === 'folder' || createDialog === 'rename-folder') && (
                       <label>
@@ -2681,40 +2858,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                           onChange={(event) => setCreateDescription(event.currentTarget.value)}
                         />
                       </label>
-                    )}
-                    {(createDialog === 'suite' || createDialog === 'edit-suite') && (
-                      <>
-                        <label>
-                          <Text mb={1}>Purpose (optional)</Text>
-                          <Input
-                            value={createPurpose}
-                            onChange={(event) => setCreatePurpose(event.currentTarget.value)}
-                            bg={
-                              createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined
-                            }
-                          />
-                        </label>
-                        <label>
-                          <Text mb={1}>Release (optional)</Text>
-                          <Input
-                            value={createRelease}
-                            onChange={(event) => setCreateRelease(event.currentTarget.value)}
-                            bg={
-                              createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined
-                            }
-                          />
-                        </label>
-                        <label>
-                          <Text mb={1}>Description (optional)</Text>
-                          <Textarea
-                            value={createDescription}
-                            onChange={(event) => setCreateDescription(event.currentTarget.value)}
-                            bg={
-                              createDialog === 'suite' ? 'white' : createDialog === 'edit-suite' ? 'bg.card' : undefined
-                            }
-                          />
-                        </label>
-                      </>
                     )}
                   </>
                 )}
@@ -2752,7 +2895,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   </>
                 )}
                 {createDialog === 'delete-suite' && (
-                  <Text>Delete “{targetSuite?.name}”? Its scenarios will remain unchanged.</Text>
+                  <Text color="text.secondary">
+                    {targetSuite?.members?.length ?? 0} scenario{targetSuite?.members?.length === 1 ? '' : 's'} will be
+                    unlinked from this suite. The scenarios themselves stay in the catalog. This can’t be undone.
+                  </Text>
                 )}
                 {createError && (
                   <Text role="alert" color="fg.error">
@@ -2769,13 +2915,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 type="submit"
                 variant={['delete-folder', 'delete-suite'].includes(createDialog) ? 'solid' : 'primary'}
                 colorPalette={['delete-folder', 'delete-suite'].includes(createDialog) ? 'red' : undefined}
-                disabled={
-                  isCreating ||
-                  (['folder', 'suite', 'rename-folder', 'edit-suite'].includes(createDialog) && !createName.trim())
-                }
+                disabled={isCreating || (['folder', 'rename-folder'].includes(createDialog) && !createName.trim())}
                 loading={isCreating}
               >
-                {createDialog === 'folder' || createDialog === 'suite'
+                {createDialog === 'folder'
                   ? 'Create'
                   : createDialog === 'move-folder'
                     ? 'Move'

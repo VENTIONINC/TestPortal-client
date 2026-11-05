@@ -117,7 +117,7 @@ describe('TestScenariosPage', () => {
       <ChakraProvider><MemoryRouter initialEntries={['/test-scenarios/123/edit']}>
         <Routes>
           <Route path="/test-scenarios/:id/edit" element={<ScenarioPageTabs />} />
-          <Route path="/test-scenarios" element={<TestScenariosPage />} />
+          <Route path="/test-management" element={<TestScenariosPage />} />
         </Routes>
       </MemoryRouter></ChakraProvider>,
     );

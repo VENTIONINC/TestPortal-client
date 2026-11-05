@@ -55,14 +55,20 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
   const query = vi.fn(() => ({ currentData: [], isLoading: false, error: undefined }));
   const mutation = vi.fn(() => [vi.fn(() => ({ unwrap: () => Promise.resolve({}) })), { isLoading: false }]);
+  const queryResult = vi.fn(() => ({ currentData: undefined, isFetching: false, error: undefined }));
   return {
     ...actual,
     useGetApiV2TestScenarioFoldersQuery: query,
     useGetApiV2TestSuitesQuery: query,
+    useGetApiV2TestScenariosPriorityCountsQuery: queryResult,
     usePatchApiV2TestScenariosBulkFolderMutation: mutation,
     usePostApiV2TestSuitesBySuiteIdMembersMutation: mutation,
     useDeleteApiV2TestSuitesBySuiteIdMembersMutation: mutation,
     usePutApiV2TestSuitesBySuiteIdMembersOrderMutation: mutation,
+    usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation: mutation,
+    usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation: mutation,
+    usePostApiV2TestSuitesMovesMutation: mutation,
+    usePostApiV2TestSuitesMoveRestorationMutation: mutation,
     usePostApiV2TestScenarioFoldersMutation: mutation,
     usePatchApiV2TestScenarioFoldersByFolderIdMutation: mutation,
     useDeleteApiV2TestScenarioFoldersByFolderIdMutation: mutation,
@@ -132,7 +138,7 @@ describe('TestScenarioCatalog project boundary', () => {
     const { rerender } = render(
       <ChakraProvider>
         <MemoryRouter>
-          <TestScenarioCatalog />
+          <TestScenarioCatalog organizationTab="scenarios" />
         </MemoryRouter>
       </ChakraProvider>,
     );
@@ -153,7 +159,7 @@ describe('TestScenarioCatalog project boundary', () => {
     rerender(
       <ChakraProvider>
         <MemoryRouter>
-          <TestScenarioCatalog />
+          <TestScenarioCatalog organizationTab="scenarios" />
         </MemoryRouter>
       </ChakraProvider>,
     );
@@ -172,7 +178,7 @@ describe('TestScenarioCatalog project boundary', () => {
     const content = () => (
       <ChakraProvider>
         <MemoryRouter initialEntries={['/test-management?projectId=project-a&folderId=unfiled']}>
-          <TestScenarioCatalog />
+          <TestScenarioCatalog organizationTab="scenarios" />
         </MemoryRouter>
       </ChakraProvider>
     );

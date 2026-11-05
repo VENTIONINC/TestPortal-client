@@ -673,7 +673,8 @@ export const TestScenarioForm = ({
                 <SuitePicker
                   mode="draft"
                   suites={suites}
-                  selectedNames={selectedSuites.map((suite) => suite.name)}
+                  selectedIds={selectedSuites.filter((suite) => !suite.isNew).map((suite) => suite.id)}
+                  selectedNewNames={selectedSuites.filter((suite) => suite.isNew).map((suite) => suite.name)}
                   disabled={pending}
                   onSelect={(suite) => setSelectedSuites((previous) => [...previous, suite])}
                 />

@@ -179,6 +179,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                   {filtered.map((suite) => {
                     const members = suite.members ?? [];
                     const already = members.filter((member) => selectedIds.includes(member.testScenarioId)).length;
+                    const duplicateName = suites?.filter((candidate) => candidate.name.toLocaleLowerCase() === suite.name.toLocaleLowerCase()).length ?? 0;
                     return (
                       <Button
                         key={suite.id}
@@ -200,6 +201,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                             </Text>
                             <Text fontSize="xs" fontWeight="normal" color="text.secondary">
                               {members.length} scenario{members.length === 1 ? '' : 's'}
+                              {duplicateName > 1 ? ` · suite ${suite.id.slice(0, 8)}` : ''}
                               {already ? ` · ${already} of ${selectedIds.length} already in suite` : ''}
                             </Text>
                           </Box>
@@ -207,8 +209,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                       </Button>
                     );
                   })}
-                  {!filtered.length &&
-                    search.trim() &&
+                  {search.trim() &&
                     !isFetching &&
                     search.trim().toLocaleLowerCase() !== uncertainName &&
                     (!retrySuite || retrySuite.name.toLocaleLowerCase() !== search.trim().toLocaleLowerCase()) && (
@@ -223,7 +224,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                         disabled={busy || refreshRequired}
                         onClick={() => void run()}
                       >
-                        <FiPlus aria-hidden="true" /> Create suite “{search.trim()}” and add {selectedIds.length}
+                        <FiPlus aria-hidden="true" /> {filtered.length ? 'Create another suite' : 'Create suite'} “{search.trim()}” and add {selectedIds.length}
                       </Button>
                     )}
                   {!filtered.length && !search.trim() && (
@@ -254,18 +255,19 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
 interface DraftSuitePickerProps {
   mode: 'draft';
   suites: Array<{ id: string; name: string; members?: unknown[] }>;
-  selectedNames: string[];
+  selectedIds: string[];
+  selectedNewNames: string[];
   disabled?: boolean;
   onSelect: (suite: { id: string; name: string; isNew?: boolean }) => void;
 }
 
-const DraftSuitePicker = ({ suites, selectedNames, disabled, onSelect }: DraftSuitePickerProps) => {
+const DraftSuitePicker = ({ suites, selectedIds, selectedNewNames, disabled, onSelect }: DraftSuitePickerProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const name = search.trim();
   const filtered = suites.filter((suite) => suite.name.toLocaleLowerCase().includes(name.toLocaleLowerCase()));
-  const exists = [...suites.map((suite) => suite.name), ...selectedNames].some(
+  const exists = selectedNewNames.some(
     (item) => item.toLocaleLowerCase() === name.toLocaleLowerCase(),
   );
   const select = (suite: { id: string; name: string; isNew?: boolean }) => {
@@ -288,11 +290,16 @@ const DraftSuitePicker = ({ suites, selectedNames, disabled, onSelect }: DraftSu
             {filtered.map((suite) => (
               <Button type="button" key={suite.id} variant="ghost" w="full" h="auto" minH="44px"
                 justifyContent="flex-start" px={2} py={1}
-                disabled={disabled || selectedNames.some((item) => item.toLocaleLowerCase() === suite.name.toLocaleLowerCase())}
+                disabled={disabled || selectedIds.includes(suite.id)}
                 onClick={() => select({ id: suite.id, name: suite.name })}>
                 <HStack gap={3}><FiList aria-hidden="true" /><Box textAlign="left">
                   <Text fontSize="sm">{suite.name}</Text>
-                  <Text fontSize="xs" color="text.secondary">{suite.members?.length ?? 0} scenarios</Text>
+                  <Text fontSize="xs" color="text.secondary">
+                    {suite.members?.length ?? 0} scenarios
+                    {suites.filter((candidate) => candidate.name.toLocaleLowerCase() === suite.name.toLocaleLowerCase()).length > 1
+                      ? ` · suite ${suite.id.slice(0, 8)}`
+                      : ''}
+                  </Text>
                 </Box></HStack>
               </Button>
             ))}

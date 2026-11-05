@@ -123,7 +123,7 @@ describe('TestScenarioForm', () => {
     expect(screen.getByRole('textbox', { name: 'Step 1 action' })).toHaveValue('First');
     expect(screen.getByRole('textbox', { name: 'Step 2 action' })).toHaveValue('Edited second');
   });
-  it('selects multiple suites, removes pending suite creation and rejects case-insensitive duplicates', async () => {
+  it('selects suites by UUID and permits a draft suite to reuse an existing name', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     setup({
@@ -142,8 +142,12 @@ describe('TestScenarioForm', () => {
     await user.click(screen.getByRole('button', { name: 'Select suites' }));
     const search = screen.getByRole('textbox', { name: 'Find or create a suite' });
     fireEvent.change(search, { target: { value: 'alpha' } });
-    expect(screen.queryByRole('button', { name: 'Create suite “alpha”' })).not.toBeInTheDocument();
-    fireEvent.change(search, { target: { value: 'Pending' } });
+    expect(screen.getByRole('button', { name: 'Create suite “alpha”' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Create suite “alpha”' }));
+    expect(screen.getByRole('button', { name: 'Remove suite alpha' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Remove suite alpha' }));
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Find or create a suite' }), { target: { value: 'Pending' } });
     await user.click(screen.getByRole('button', { name: 'Create suite “Pending”' }));
     await user.click(screen.getByRole('button', { name: 'Remove suite Pending' }));
     await user.click(screen.getByRole('button', { name: 'Select suites' }));
@@ -154,6 +158,23 @@ describe('TestScenarioForm', () => {
     await user.click(screen.getByRole('button', { name: 'Save scenario' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
     expect(onSubmit.mock.calls[0][3]).toEqual({ suiteIds: ['a', 'b'], newSuites: [{ name: 'Release' }] });
+  });
+  it('selects one of two same-name suites by its UUID', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    setup({
+      initialValues: { title: 'Scenario' },
+      suites: [
+        { id: 'aaaaaaaa-one', name: 'Alpha', members: [] },
+        { id: 'bbbbbbbb-two', name: 'Alpha', members: [] },
+      ],
+      onSubmit,
+    });
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
+    await user.click(screen.getByRole('button', { name: /Alpha.*suite bbbbbbbb/ }));
+    await user.click(screen.getByRole('button', { name: 'Save scenario' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    expect(onSubmit.mock.calls[0][3]).toEqual({ suiteIds: ['bbbbbbbb-two'], newSuites: [] });
   });
   it('never submits the scenario when Enter is pressed in suite search', async () => {
     const user = userEvent.setup();

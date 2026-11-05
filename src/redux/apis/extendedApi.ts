@@ -119,6 +119,9 @@ export const extendedApi = generatedApi
       getApiV2TestScenariosAuthors: {
         providesTags: (_result, _error, arg) => [TAGS.TestScenario, scenarioCatalogTag(arg.projectId)],
       },
+      getApiV2TestScenariosPriorityCounts: {
+        providesTags: (_result, _error, arg) => [TAGS.TestScenario, scenarioCatalogTag(arg.projectId)],
+      },
       postApiV2TestScenarios: {
         invalidatesTags: (result, _error, arg) => result ? [TAGS.TestScenario, scenarioCatalogTag(arg.createTestScenarioRequest.projectId), { type: 'ScenarioFolders', id: arg.createTestScenarioRequest.projectId }, { type: 'ScenarioSuites', id: arg.createTestScenarioRequest.projectId }] : [],
       },
@@ -147,6 +150,18 @@ export const extendedApi = generatedApi
         invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
       },
       deleteApiV2TestSuitesBySuiteIdMembers: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+      },
+      postApiV2TestSuitesBySuiteIdMembershipChanges: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+      },
+      postApiV2TestSuitesBySuiteIdMembershipRestoration: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+      },
+      postApiV2TestSuitesMoves: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+      },
+      postApiV2TestSuitesMoveRestoration: {
         invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
       },
       putApiV2TestSuitesBySuiteIdMembersOrder: {
@@ -411,7 +426,12 @@ export const {
   useDeleteApiV2TestSuitesBySuiteIdMutation,
   usePostApiV2TestSuitesBySuiteIdMembersMutation,
   useDeleteApiV2TestSuitesBySuiteIdMembersMutation,
+  usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation,
+  usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation,
+  usePostApiV2TestSuitesMovesMutation,
+  usePostApiV2TestSuitesMoveRestorationMutation,
   usePutApiV2TestSuitesBySuiteIdMembersOrderMutation,
+  useGetApiV2TestScenariosPriorityCountsQuery,
   usePatchApiV2TestScenariosBulkFolderMutation,
   useGetApiV2TestScenariosByScenarioIdManualRunsQuery,
   useLazyGetApiV2TestScenariosByScenarioIdManualRunsQuery,
