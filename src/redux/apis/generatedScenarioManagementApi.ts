@@ -304,6 +304,7 @@ export type GetApiV2TestSuitesApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -324,6 +325,7 @@ export type PostApiV2TestSuitesApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -336,6 +338,7 @@ export type PostApiV2TestSuitesApiResponse =
 export type PostApiV2TestSuitesApiArg = {
   body: {
     projectId: string;
+    /** Nonblank suite name. Names may repeat within the project; suite UUIDs identify suites. */
     name: string;
     description?: string | null;
     purpose?: string | null;
@@ -350,6 +353,7 @@ export type GetApiV2TestSuitesBySuiteIdApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -371,6 +375,7 @@ export type PatchApiV2TestSuitesBySuiteIdApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -434,6 +439,8 @@ export type PutApiV2TestSuitesBySuiteIdMembersOrderApiArg = {
   suiteId: string;
   body: {
     projectId: string;
+    expectedMembershipRevision: number;
+    expectedScenarioIds: string[];
     scenarioIds: string[];
   };
 };

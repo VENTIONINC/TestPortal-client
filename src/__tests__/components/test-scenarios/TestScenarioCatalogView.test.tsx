@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState, type ReactNode } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -62,7 +62,7 @@ const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination
   projectScenarioCount: 1,
   unfiledScenarioCount: 0,
   pageSize: 25,
-  pageSizes: [10, 25, 50, 100],
+  pageSizes: [25, 50, 100],
   onPageSizeChange: vi.fn(),
   onSearchChange: vi.fn(),
   sort: undefined,
@@ -100,6 +100,11 @@ const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination
     unattemptedIds: [],
     uncertainIds: [],
   })),
+  removeSuiteMembership: vi.fn(async () => ({ restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [] }, expectedMembershipRevision: 1, expectedScenarioIds: [] })),
+  restoreSuiteMembership: vi.fn(async () => {}),
+  moveSuiteMembership: vi.fn(async () => ({ restoreData: { sourceSuiteId: 'suite-1', destinationSuiteId: 'suite-2', sourceMembers: [], destinationAddedScenarioIds: [] }, expectedSourceMembershipRevision: 1, expectedDestinationMembershipRevision: 1, expectedSourceScenarioIds: [], expectedDestinationScenarioIds: [], alreadyInDestination: [] })),
+  restoreSuiteMove: vi.fn(async () => {}),
+  refreshSuiteData: vi.fn(async () => {}),
   onReorderSuite: vi.fn(async () => {}),
   onCreateFolder: vi.fn(async () => {}),
   onUpdateFolder: vi.fn(async () => {}),
@@ -126,10 +131,28 @@ const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>
   );
 
 describe('TestScenarioCatalogView', () => {
+  it('creates a same-name suite inline and selects its returned UUID', async () => {
+    const user = userEvent.setup();
+    const onCreateSuite = vi.fn(async () => ({ id: 'suite-new' }));
+    const onScopeChange = vi.fn();
+    renderView({
+      organizationTab: 'suites',
+      suites: [{ id: 'suite-old', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0 }],
+      onCreateSuite,
+      onScopeChange,
+    });
+    await user.click(screen.getAllByRole('button', { name: 'Create suite' })[0]);
+    const name = screen.getByRole('textbox', { name: 'Suite name' });
+    await user.type(name, 'Regression');
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(onCreateSuite).toHaveBeenCalledWith({ name: 'Regression' }));
+    expect(onScopeChange).toHaveBeenCalledWith({ kind: 'suite', id: 'suite-new' });
+  });
+
   it('shows folders and No folder last without suite navigation in Scenarios', () => {
     renderView({
       organizationTab: 'scenarios',
-      suites: [{ id: 'suite-1', name: 'Release checks', description: null, purpose: null, release: null }],
+      suites: [{ id: 'suite-1', name: 'Release checks', description: null, purpose: null, release: null, membershipRevision: 0 }],
     });
 
     expect(screen.getByRole('button', { name: /No folder/ })).toBeInTheDocument();
@@ -221,14 +244,14 @@ describe('TestScenarioCatalogView', () => {
       organizationTab: 'suites',
       scope: { kind: 'suite' },
       folders: [{ id: 'folder-1', name: 'Smoke', parentId: null, scenarioCount: 1 }],
-      suites: [{ id: 'suite-1', name: 'Release checks', description: null, purpose: null, release: null }],
+      suites: [{ id: 'suite-1', name: 'Release checks', description: null, purpose: null, release: null, membershipRevision: 0 }],
     });
 
     expect(screen.getByText('Suites')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Release checks/ })).toBeInTheDocument();
     expect(screen.queryByText('Folders')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /No folder/ })).not.toBeInTheDocument();
-    expect(screen.getByText('Select a suite to view its scenarios.')).toBeInTheDocument();
+    expect(screen.getByText(/Select a suite to view its scenarios/)).toBeInTheDocument();
     expect(screen.queryByText('No Test Scenarios are available for this project.')).not.toBeInTheDocument();
   });
 
@@ -279,6 +302,37 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.queryByText('# Checkout flow')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1');
     expect(screen.queryByRole('button', { name: 'Actions for Checkout flow' })).not.toBeInTheDocument();
+  });
+
+  it('renders suite rows with the columns and compact metadata from the Suites design', () => {
+    renderView({
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-1' },
+      suites: [{
+        id: 'suite-1',
+        name: 'Regression',
+        description: null,
+        purpose: null,
+        release: null,
+        membershipRevision: 1,
+        members: [{ testScenarioId: 'scenario-1' }],
+      }],
+    });
+
+    expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
+      'Drag to another suite or reorder',
+      'Select',
+      'Key',
+      'Title',
+      'Priority',
+      'Folder',
+      'Updated',
+      'Author',
+    ]);
+    expect(screen.getByRole('row', { name: /Checkout flow/ })).toHaveTextContent('High');
+    expect(screen.getByText('Ada L.')).toBeInTheDocument();
+    expect(screen.getByText('9/2/2026')).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: /Details|Created by|Created/ })).not.toBeInTheDocument();
   });
 
   it('drags selected rows as a group and unselected rows by their own UUID', () => {
@@ -554,7 +608,22 @@ describe('TestScenarioCatalogView', () => {
     expect(onDeleteFolder).toHaveBeenCalledWith('folder-1', 'unfiled');
   });
 
-  it('confirms suite membership changes and submits the ordered member UUID list', async () => {
+  it('moves a suite row down when dropped on a later row', async () => {
+    const onReorderSuite = vi.fn(async () => {});
+    const members = [
+      { suiteId: 'suite-1', testScenarioId: 'scenario-1', position: 0, createdAt: '' },
+      { suiteId: 'suite-1', testScenarioId: 'scenario-2', position: 1, createdAt: '' },
+    ];
+    renderView({ organizationTab: 'suites', scenarios: [scenarios[0], { ...scenarios[0], id: 'scenario-2', title: 'Second scenario' }], pagination: { ...pagination, total: 2 }, suites: [{ id: 'suite-1', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0, members }], scope: { kind: 'suite', id: 'suite-1' }, onReorderSuite });
+    const target = screen.getByTestId('test-scenario-scenario-2');
+    vi.spyOn(target, 'getBoundingClientRect').mockReturnValue({ top: 100, bottom: 140, height: 40 } as DOMRect);
+    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    fireEvent.dragStart(screen.getByTestId('test-scenario-scenario-1'), { dataTransfer });
+    fireEvent.drop(target, { dataTransfer, clientY: 135 });
+    await waitFor(() => expect(onReorderSuite).toHaveBeenCalledWith('suite-1', ['scenario-2', 'scenario-1']));
+  });
+
+  it('drags an unselected suite row to reorder without changing the selection', async () => {
     const user = userEvent.setup();
     const onSuiteOperationComplete = vi.fn();
     const onReorderSuite = vi.fn(async () => {});
@@ -564,18 +633,121 @@ describe('TestScenarioCatalogView', () => {
     ];
 
     renderView({
-      suites: [{ id: 'suite-1', name: 'Regression', description: null, purpose: null, release: null, members }],
+      organizationTab: 'suites',
+      scenarios: [scenarios[0], { ...scenarios[0], id: 'scenario-2', title: 'Second scenario' }],
+      pagination: { ...pagination, total: 2 },
+      suites: [{ id: 'suite-1', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0, members }],
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
       onSuiteOperationComplete,
       onReorderSuite,
     });
-    await user.click(screen.getByRole('button', { name: 'Manage suite order (2)' }));
-    await user.click(screen.getByRole('button', { name: 'Move member 1 down' }));
-    expect(onReorderSuite).toHaveBeenCalledWith('suite-1', ['scenario-2', 'scenario-1']);
+    const dragHandle = screen.getByRole('button', { name: 'Drag Second scenario to another suite or reorder' });
+    fireEvent.dragStart(dragHandle, { dataTransfer: { setData: vi.fn(), effectAllowed: '' } });
+    fireEvent.drop(screen.getByTestId('test-scenario-scenario-1'), {
+      dataTransfer: {
+        types: ['application/x-testportal-scenarios'],
+        getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-2'] }),
+      },
+    });
+    await waitFor(() => expect(onReorderSuite).toHaveBeenCalledWith('suite-1', ['scenario-2', 'scenario-1']));
+    expect(screen.getByRole('checkbox', { name: 'Select Checkout flow' })).toBeChecked();
 
     await user.click(screen.getByRole('button', { name: 'Add to suite' }));
     expect(onSuiteOperationComplete).toHaveBeenCalledWith(expect.objectContaining({ succeededIds: ['scenario-1'] }), ['scenario-1']);
+  });
+
+  it('removes selected suite membership and restores it through the ten-second Undo action', async () => {
+    const user = userEvent.setup();
+    const removeSuiteMembership = vi.fn(async () => ({
+      restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+      expectedMembershipRevision: 2,
+      expectedScenarioIds: [],
+    }));
+    const restoreSuiteMembership = vi.fn(async () => {});
+    renderView({
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-1' },
+      selectedIds: ['scenario-1'],
+      suites: [{ id: 'suite-1', name: 'Smoke R2.4', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+      removeSuiteMembership,
+      restoreSuiteMembership,
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Remove from suite' }));
+    await user.click(screen.getByRole('button', { name: 'Remove 1 scenario' }));
+    await waitFor(() => expect(removeSuiteMembership).toHaveBeenCalledWith('suite-1', ['scenario-1']));
+    expect(screen.getByRole('status', { name: 'Suite membership notification' })).toHaveTextContent('1 scenario removed from Smoke R2.4');
+    expect(screen.queryByText(/Undo is available for 10 seconds/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(restoreSuiteMembership).toHaveBeenCalledWith(expect.objectContaining({
+      restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+      expectedMembershipRevision: 2,
+      expectedScenarioIds: [],
+    })));
+  });
+
+  it('moves a dragged suite row to another suite and offers conditional Undo', async () => {
+    const user = userEvent.setup();
+    const moveSuiteMembership = vi.fn(async () => ({
+      restoreData: { sourceSuiteId: 'suite-1', destinationSuiteId: 'suite-2', sourceMembers: [], destinationAddedScenarioIds: [] },
+      expectedSourceMembershipRevision: 2,
+      expectedDestinationMembershipRevision: 3,
+      expectedSourceScenarioIds: [],
+      expectedDestinationScenarioIds: ['scenario-1'],
+      alreadyInDestination: ['scenario-1'],
+    }));
+    const restoreSuiteMove = vi.fn(async () => {});
+    renderView({
+      organizationTab: 'suites',
+      scenarios: [scenarios[0]],
+      pagination: { ...pagination, total: 1 },
+      suites: [
+        { id: 'suite-1', name: 'Source', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] },
+        { id: 'suite-2', name: 'Destination', description: null, purpose: null, release: null, membershipRevision: 2, members: [] },
+      ],
+      scope: { kind: 'suite', id: 'suite-1' },
+      moveSuiteMembership,
+      restoreSuiteMove,
+    });
+    const dataTransfer = {
+      setData: vi.fn(),
+      effectAllowed: '',
+      types: ['application/x-testportal-scenarios'],
+      getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }),
+    };
+    fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to another suite or reorder' }), { dataTransfer });
+    fireEvent.drop(screen.getByRole('button', { name: /Destination 0/ }), { dataTransfer });
+    await waitFor(() => expect(moveSuiteMembership).toHaveBeenCalledWith('suite-1', 'suite-2', ['scenario-1']));
+    expect(screen.getByRole('status', { name: 'Suite membership notification' })).toHaveTextContent('AUTH-1 is already in Destination — removed from Source');
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(restoreSuiteMove).toHaveBeenCalled());
+  });
+
+  it('prevents duplicate Undo requests while restoration is pending', async () => {
+    const user = userEvent.setup();
+    let finishRestore: (() => void) | undefined;
+    const restoreSuiteMembership = vi.fn(() => new Promise<void>((resolve) => { finishRestore = resolve; }));
+    renderView({
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-1' },
+      selectedIds: ['scenario-1'],
+      suites: [{ id: 'suite-1', name: 'Smoke R2.4', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+      removeSuiteMembership: vi.fn(async () => ({
+        restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+        expectedMembershipRevision: 2,
+        expectedScenarioIds: [],
+      })),
+      restoreSuiteMembership,
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Remove from suite' }));
+    await user.click(screen.getByRole('button', { name: 'Remove 1 scenario' }));
+    const undo = await screen.findByRole('button', { name: 'Undo' });
+    await user.click(undo);
+    await waitFor(() => expect(restoreSuiteMembership).toHaveBeenCalledTimes(1));
+    expect(undo).toBeDisabled();
+    finishRestore?.();
   });
 
   it('hides the bulk Move menu in suite scope while retaining membership actions', () => {

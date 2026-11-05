@@ -4,7 +4,7 @@
 import { PATHS } from '@/types/paths';
 
 export const TEST_SCENARIO_PAGE_LIMIT = 25;
-export const TEST_SCENARIO_PAGE_SIZES = [10, 25, 50, 100] as const;
+export const TEST_SCENARIO_PAGE_SIZES = [25, 50, 100] as const;
 export type TestScenarioPageSize = (typeof TEST_SCENARIO_PAGE_SIZES)[number];
 
 export const getTestScenarioDetailPath = (scenarioId: string) =>

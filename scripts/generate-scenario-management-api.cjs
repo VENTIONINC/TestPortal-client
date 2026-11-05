@@ -17,8 +17,13 @@ const operationIds = new Map([
   ['POST /api/v2/test-suites/{suiteId}/members', 'postApiV2TestSuitesBySuiteIdMembers'],
   ['DELETE /api/v2/test-suites/{suiteId}/members', 'deleteApiV2TestSuitesBySuiteIdMembers'],
   ['PUT /api/v2/test-suites/{suiteId}/members/order', 'putApiV2TestSuitesBySuiteIdMembersOrder'],
+  ['POST /api/v2/test-suites/{suiteId}/membership-changes', 'postApiV2TestSuitesBySuiteIdMembershipChanges'],
+  ['POST /api/v2/test-suites/{suiteId}/membership-restoration', 'postApiV2TestSuitesBySuiteIdMembershipRestoration'],
+  ['POST /api/v2/test-suites/moves', 'postApiV2TestSuitesMoves'],
+  ['POST /api/v2/test-suites/move-restoration', 'postApiV2TestSuitesMoveRestoration'],
   ['PATCH /api/v2/test-scenarios/bulk-folder', 'patchApiV2TestScenariosBulkFolder'],
   ['GET /api/v2/test-scenarios/authors', 'getApiV2TestScenariosAuthors'],
+  ['GET /api/v2/test-scenarios/priority-counts', 'getApiV2TestScenariosPriorityCounts'],
   ['GET /api/v2/test-scenarios/selection', 'getApiV2TestScenariosSelection'],
 ]);
 

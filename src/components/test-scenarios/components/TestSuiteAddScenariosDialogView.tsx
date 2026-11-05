@@ -1,10 +1,10 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Box, Button, Grid, Heading, HStack, Input, Table, Text, VStack } from '@chakra-ui/react';
-import { FiCheckCircle, FiSearch } from 'react-icons/fi';
+import { Box, Button, Grid, HStack, Input, Table, Text, VStack } from '@chakra-ui/react';
+import { FiSearch } from 'react-icons/fi';
 
-import { Dialog, DialogBody, DialogFooter, NativeSelect, Pagination } from '@/components/ui';
+import { Dialog, DialogBody, DialogFooter, Pagination } from '@/components/ui';
 
 import type { TestScenarioSummary } from '../types';
 
@@ -12,21 +12,25 @@ export interface ScenarioFolderOption {
   id: string;
   name: string;
   depth: number;
+  scenarioCount?: number;
 }
 
 export interface TestSuiteAddScenariosDialogViewProps {
   suiteName: string;
   folderOptions: ScenarioFolderOption[];
+  unfiledScenarioCount: number;
+  totalScenarioCount: number;
+  currentTotal: number;
   search: string;
   onSearchChange: (value: string) => void;
   folderId: string;
   onFolderChange: (value: string) => void;
   scenarios: TestScenarioSummary[];
   selectedIds: string[];
+  existingIds: string[];
   emptyState: 'already-added' | 'no-results';
   onToggleScenario: (id: string) => void;
   onTogglePage: () => void;
-  onClearSelection: () => void;
   onClearFilters: () => void;
   allPageSelected: boolean;
   somePageSelected: boolean;
@@ -34,8 +38,10 @@ export interface TestSuiteAddScenariosDialogViewProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   isLoading: boolean;
+  isUpdating?: boolean;
   error?: string;
   isAdding: boolean;
+  hasChanges: boolean;
   onAdd: () => void;
   onClose: () => void;
 }
@@ -43,59 +49,69 @@ export interface TestSuiteAddScenariosDialogViewProps {
 export const TestSuiteAddScenariosDialogView = ({
   suiteName,
   folderOptions,
+  unfiledScenarioCount,
+  totalScenarioCount,
+  currentTotal,
   search,
   onSearchChange,
   folderId,
   onFolderChange,
   scenarios,
   selectedIds,
-  emptyState,
+  existingIds,
   onToggleScenario,
   onTogglePage,
-  onClearSelection,
-  onClearFilters,
   allPageSelected,
   somePageSelected,
   page,
   totalPages,
   onPageChange,
   isLoading,
+  isUpdating = false,
   error,
   isAdding,
+  hasChanges,
   onAdd,
   onClose,
 }: TestSuiteAddScenariosDialogViewProps) => (
   <Dialog
-    title={`Add scenarios to ${suiteName}`}
+    title={`Manage scenarios in ${suiteName}`}
     onClose={onClose}
     size="xl"
-    contentProps={{ maxW: '820px', w: 'calc(100vw - 2rem)', maxH: '86vh' }}
+    contentProps={{ maxW: '1100px', w: 'calc(100vw - 2rem)', maxH: '86vh', bg: 'bg.card' }}
+    headerProps={{ borderBottomWidth: '1px', borderColor: 'border.main' }}
   >
-    <DialogBody overflowY="auto">
-      <VStack align="stretch" gap={3}>
-        <Text color="text.secondary">Choose project scenarios to include in this suite.</Text>
-        <Grid templateColumns={{ base: '1fr', md: 'minmax(0, 1fr) 240px' }} alignItems="end" gap={3}>
+    <DialogBody overflow="hidden" p={0}>
+      <Grid templateColumns={{ base: '1fr', md: '210px minmax(0, 1fr)' }} templateRows={{ base: '140px minmax(0, 1fr)', md: 'minmax(440px, 1fr)' }} minH="440px" maxH="calc(86vh - 132px)">
+        <VStack align="stretch" gap={1} p={2} borderEndWidth={{ base: 0, md: '1px' }} borderBottomWidth={{ base: '1px', md: 0 }} borderColor="border.main" overflowY="auto">
+          <Button size="sm" variant={folderId === '' ? 'subtle' : 'ghost'} colorPalette={folderId === '' ? 'blue' : undefined} justifyContent="space-between" onClick={() => onFolderChange('')}>
+            <Text>All scenarios</Text><Text color="text.muted" fontSize="xs">{totalScenarioCount}</Text>
+          </Button>
+          {folderOptions.map((folder) => (
+            <Button key={folder.id} size="sm" variant={folderId === folder.id ? 'subtle' : 'ghost'} colorPalette={folderId === folder.id ? 'blue' : undefined} justifyContent="space-between" ps={`${12 + folder.depth * 12}px`} onClick={() => onFolderChange(folder.id)}>
+              <Text textAlign="left" lineClamp={1}>{folder.name}</Text><Text color="text.muted" fontSize="xs">{folder.scenarioCount ?? 0}</Text>
+            </Button>
+          ))}
+          <Button size="sm" variant={folderId === '__unfiled__' ? 'subtle' : 'ghost'} colorPalette={folderId === '__unfiled__' ? 'blue' : undefined} justifyContent="space-between" onClick={() => onFolderChange('__unfiled__')}>
+            <Text>No folder</Text><Text color="text.muted" fontSize="xs">{unfiledScenarioCount}</Text>
+          </Button>
+        </VStack>
+
+        <VStack align="stretch" gap={2} p={3} minW="0" overflow="hidden">
+          <Box position="relative">
+          <Box position="absolute" insetStart={3} top="50%" transform="translateY(-50%)" zIndex={1} color="text.muted" pointerEvents="none">
+            <FiSearch aria-hidden="true" size={14} />
+          </Box>
           <Input
             aria-label="Search available scenarios"
             placeholder="Search by title or key"
             value={search}
-            bg="bg.input"
+            bg="bg.card"
+            ps={9}
             onChange={(event) => onSearchChange(event.currentTarget.value)}
             minW="0"
           />
-          <NativeSelect
-            aria-label="Filter scenarios by folder"
-            value={folderId}
-            onChange={(event) => onFolderChange(event.currentTarget.value)}
-            w="100%"
-          >
-            <option value="">All folders</option>
-            <option value="__unfiled__">Unfiled</option>
-            {folderOptions.map((folder) => (
-              <option key={folder.id} value={folder.id}>{`${'　'.repeat(folder.depth)}${folder.name}`}</option>
-            ))}
-          </NativeSelect>
-        </Grid>
+          </Box>
 
         {error ? (
           <Text role="alert" color="fg.error">
@@ -105,80 +121,61 @@ export const TestSuiteAddScenariosDialogView = ({
           <Text py={8} textAlign="center" color="text.secondary">
             Loading scenarios…
           </Text>
-        ) : scenarios.length === 0 ? (
-          <VStack
-            gap={2}
-            py={9}
-            px={4}
-            borderWidth="1px"
-            borderStyle="dashed"
-            borderColor="border.main"
-            borderRadius="lg"
-            textAlign="center"
-          >
-            <Box p={3} borderRadius="full" bg="bg.subtle" color="text.secondary">
-              {emptyState === 'already-added' ? <FiCheckCircle size={22} /> : <FiSearch size={22} />}
-            </Box>
-            <Heading size="sm">
-              {emptyState === 'already-added' ? 'Already in this suite' : 'No scenarios found'}
-            </Heading>
-            <Text maxW="460px" color="text.secondary" fontSize="sm">
-              {emptyState === 'already-added'
-                ? 'Every scenario on this page is already included. Try another folder or clear the filters to find more.'
-                : 'Try a different search or folder. You can also clear the filters to browse all project scenarios.'}
-            </Text>
-            {(search || folderId) && (
-              <Button size="sm" variant="outline" onClick={onClearFilters}>
-                Clear filters
-              </Button>
-            )}
-          </VStack>
         ) : (
-          <Box borderWidth="1px" borderColor="border.main" borderRadius="md" overflow="auto" maxH="360px">
-            <Table.Root size="sm" minW="560px">
+          <Box borderWidth="1px" borderColor="border.main" borderRadius="md" overflow="auto" flex="1" minH="0" aria-busy={isUpdating}>
+            <Table.Root size="sm" minW="620px">
               <Table.Header>
                 <Table.Row bg="bg.subtle" position="sticky" top="0" zIndex="1">
-                  <Table.ColumnHeader w="48px" px={3}>
+                  <Table.ColumnHeader px={3} colSpan={5}>
+                    <HStack gap={2} align="center" css={{ '& input[type="checkbox"]:disabled:not(:checked):not(:indeterminate)': { appearance: 'none', width: '13px', height: '13px', background: 'white', border: '1px solid #cbd5e0', borderRadius: '2px' } }}>
                     <input
                       type="checkbox"
-                      aria-label="Select all scenarios on this page"
+                      aria-label={`Select all ${currentTotal} shown`}
+                      disabled={isUpdating || !scenarios.some((scenario) => !selectedIds.includes(scenario.id))}
                       checked={allPageSelected}
                       ref={(element) => {
                         if (element) element.indeterminate = somePageSelected;
                       }}
                       onChange={onTogglePage}
                     />
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader px={3} bg="bg.subtle">
-                    Scenario key
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader px={3} bg="bg.subtle">
-                    Title
-                  </Table.ColumnHeader>
-                  <Table.ColumnHeader px={3} bg="bg.subtle">
-                    Folder
+                    <Text as="span" fontSize="xs" fontWeight="medium">Select all {currentTotal} shown</Text>
+                    {scenarios.length > 0 && <Text as="span" color="text.secondary" fontSize="xs">· {existingIds.length} already in suite</Text>}
+                    </HStack>
                   </Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
+                {scenarios.length === 0 && (
+                  <Table.Row>
+                    <Table.Cell colSpan={5} textAlign="center" py={12} color="text.secondary" borderBottomWidth="0">
+                      No scenarios match the search in this folder
+                    </Table.Cell>
+                  </Table.Row>
+                )}
                 {scenarios.map((scenario) => (
-                  <Table.Row key={scenario.id} _hover={{ bg: 'bg.subtle' }}>
-                    <Table.Cell px={3}>
+                  <Table.Row key={scenario.id} bg={existingIds.includes(scenario.id) && !selectedIds.includes(scenario.id) ? 'orange.subtle' : selectedIds.includes(scenario.id) && !existingIds.includes(scenario.id) ? 'blue.subtle' : undefined} _hover={{ bg: 'bg.subtle' }}>
+                    <Table.Cell px={3} colSpan={1}>
                       <input
                         type="checkbox"
                         aria-label={`Select ${scenario.title}`}
+                        disabled={isUpdating}
                         checked={selectedIds.includes(scenario.id)}
                         onChange={() => onToggleScenario(scenario.id)}
                       />
                     </Table.Cell>
-                    <Table.Cell px={3} color="text.secondary">
+                    <Table.Cell px={3} color="text.secondary" textDecoration={!selectedIds.includes(scenario.id) && existingIds.includes(scenario.id) ? 'line-through' : undefined}>
                       {scenario.scenarioKey ?? '—'}
                     </Table.Cell>
-                    <Table.Cell px={3} fontWeight="medium">
+                    <Table.Cell px={3} fontWeight="medium" textDecoration={!selectedIds.includes(scenario.id) && existingIds.includes(scenario.id) ? 'line-through' : undefined}>
                       {scenario.title}
                     </Table.Cell>
-                    <Table.Cell px={3} color="text.secondary">
+                    <Table.Cell px={3} color="text.secondary" textDecoration={!selectedIds.includes(scenario.id) && existingIds.includes(scenario.id) ? 'line-through' : undefined}>
                       {scenario.folderName ?? 'Unfiled'}
+                    </Table.Cell>
+                    <Table.Cell px={3} textAlign="right" textDecoration={!selectedIds.includes(scenario.id) && existingIds.includes(scenario.id) ? 'line-through' : undefined}>
+                      {existingIds.includes(scenario.id) && selectedIds.includes(scenario.id) ? (
+                        <Text display="inline-block" px={2} py={0.5} borderRadius="full" bg="bg.subtle" color="text.secondary" fontSize="xs">In suite</Text>
+                      ) : null}
                     </Table.Cell>
                   </Table.Row>
                 ))}
@@ -192,23 +189,17 @@ export const TestSuiteAddScenariosDialogView = ({
             <Text color="text.secondary" fontSize="sm">
               Page {page} of {totalPages}
             </Text>
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={onPageChange} />
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={(nextPage) => { if (!isUpdating) onPageChange(nextPage); }} />
           </HStack>
         )}
-      </VStack>
+        </VStack>
+      </Grid>
     </DialogBody>
     <DialogFooter borderTopWidth="1px" borderColor="border.main" justifyContent="stretch">
       <HStack w="100%" justify="space-between" gap={3} flexWrap="wrap">
-        <HStack gap={3}>
-          <Text fontSize="sm" color="text.secondary" aria-live="polite">
-            {selectedIds.length} selected{selectedIds.length === 100 ? ' · Limit 100 per action' : ''}
-          </Text>
-          {selectedIds.length > 0 && (
-            <Button size="xs" variant="ghost" onClick={onClearSelection}>
-              Clear selection
-            </Button>
-          )}
-        </HStack>
+        <Text fontSize="sm" color="text.secondary" aria-live="polite">
+          {selectedIds.filter((id) => !existingIds.includes(id)).length} to add at the end · {existingIds.filter((id) => !selectedIds.includes(id)).length} to remove
+        </Text>
         <HStack>
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
@@ -217,10 +208,10 @@ export const TestSuiteAddScenariosDialogView = ({
             type="button"
             variant="primary"
             loading={isAdding}
-            disabled={selectedIds.length === 0 || isAdding}
+            disabled={!hasChanges || isAdding}
             onClick={onAdd}
           >
-            Add {selectedIds.length} scenario{selectedIds.length === 1 ? '' : 's'}
+            {hasChanges ? 'Save changes' : 'No changes yet'}
           </Button>
         </HStack>
       </HStack>

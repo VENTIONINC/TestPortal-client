@@ -16,6 +16,11 @@ import {
   usePatchApiV2TestScenariosBulkFolderMutation,
   useDeleteApiV2TestSuitesBySuiteIdMembersMutation,
   usePutApiV2TestSuitesBySuiteIdMembersOrderMutation,
+  useGetApiV2TestScenariosPriorityCountsQuery,
+  usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation,
+  usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation,
+  usePostApiV2TestSuitesMovesMutation,
+  usePostApiV2TestSuitesMoveRestorationMutation,
 } from '@/redux/apis/extendedApi';
 import {
   useDeleteApiV2TestScenariosByScenarioIdMutation,
@@ -25,6 +30,7 @@ import {
   type GetApiV2TestScenariosAuthorsApiArg,
   type GetApiV2TestScenariosApiArg,
   type GetApiV2TestScenariosSelectionApiArg,
+  type GetApiV2TestScenariosPriorityCountsApiArg,
 } from '@/redux/apis/generatedApi';
 
 import { TEST_SCENARIO_PAGE_LIMIT, TEST_SCENARIO_PAGE_SIZES, type TestScenarioPageSize } from '../constants';
@@ -39,8 +45,9 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [pageSize, setPageSize] = useState<TestScenarioPageSize>(TEST_SCENARIO_PAGE_LIMIT as TestScenarioPageSize);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState(search);
-  const [sortField, setSortField] = useState<GetApiV2TestScenariosApiArg['sortField']>('updatedAt');
+  const [sortField, setSortField] = useState<GetApiV2TestScenariosApiArg['sortField']>(organizationTab === 'suites' ? undefined : 'updatedAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  useEffect(() => setSortField(organizationTab === 'suites' ? undefined : 'updatedAt'), [organizationTab]);
   const [columnFilters, setColumnFilters] = useState({
     scenarioKey: '',
     title: '',
@@ -67,6 +74,10 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [deleteScenario] = useDeleteApiV2TestScenariosByScenarioIdMutation();
   const [removeSuiteMembers] = useDeleteApiV2TestSuitesBySuiteIdMembersMutation();
   const [reorderSuiteMembers] = usePutApiV2TestSuitesBySuiteIdMembersOrderMutation();
+  const [changeMembership] = usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation();
+  const [restoreMembership] = usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation();
+  const [moveSuiteMembersRequest] = usePostApiV2TestSuitesMovesMutation();
+  const [restoreSuiteMoveRequest] = usePostApiV2TestSuitesMoveRestorationMutation();
   const [createFolderRequest] = usePostApiV2TestScenarioFoldersMutation();
   const [updateFolderRequest] = usePatchApiV2TestScenarioFoldersByFolderIdMutation();
   const [deleteFolderRequest] = useDeleteApiV2TestScenarioFoldersByFolderIdMutation();
@@ -78,6 +89,14 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   useEffect(() => {
     if (scope.kind === 'folder' && foldersQuery.currentData && !flattenScenarioFolders(foldersQuery.currentData).some((folder) => folder.id === scope.id)) setScope({ kind: 'all' });
   }, [foldersQuery.currentData, scope]);
+  useEffect(() => {
+    if (organizationTab !== 'suites' || scope.kind !== 'suite' || !suitesQuery.currentData || suitesQuery.isFetching) return;
+    const available = suitesQuery.currentData;
+    if (!scope.id && available.length === 0) return;
+    if (scope.id && available.some((suite) => suite.id === scope.id)) return;
+    setScope({ kind: 'suite', ...(available[0] ? { id: available[0].id } : {}) });
+    setPage(1);
+  }, [organizationTab, scope, suitesQuery.currentData, suitesQuery.isFetching]);
   const projectCountQuery = useGetApiV2TestScenariosQuery({ projectId, page: 1, limit: 1 });
   const unfiledCountQuery = useGetApiV2TestScenariosQuery({ projectId, page: 1, limit: 1, folderId: 'unfiled' });
   const queryArgs = useMemo(
@@ -85,8 +104,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       projectId,
       page,
       limit: pageSize,
-      sortField: sortField ?? 'updatedAt',
-      sortDirection,
+      ...(scope.kind === 'suite' && !sortField ? {} : { sortField: sortField ?? 'updatedAt', sortDirection }),
       ...(priority ? { priority } : {}),
       ...(authorIds.length ? { createdByIds: authorIds.join(',') } : {}),
       ...(debouncedColumnFilters.scenarioKey.trim() ? { scenarioKey: debouncedColumnFilters.scenarioKey.trim() } : {}),
@@ -166,6 +184,17 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     setSelectionError(null);
   }, []);
   useEffect(() => {
+    if (organizationTab === 'suites' && scope.kind !== 'suite') {
+      invalidateSelection();
+      setScope({ kind: 'suite', ...(suitesQuery.currentData?.[0] ? { id: suitesQuery.currentData[0].id } : {}) });
+      setPage(1);
+    } else if (organizationTab !== 'suites' && scope.kind === 'suite') {
+      invalidateSelection();
+      setScope({ kind: 'all' });
+      setPage(1);
+    }
+  }, [invalidateSelection, organizationTab, scope.kind, suitesQuery.currentData]);
+  useEffect(() => {
     invalidateSelection();
   }, [projectId, organizationTab, invalidateSelection]);
   useEffect(() => {
@@ -177,23 +206,39 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     return () => window.clearTimeout(timeout);
   }, [columnFilters, search]);
   const isAwaitingSuiteSelection = organizationTab === 'suites' && scope.kind === 'suite' && !scope.id;
-  // Count against the current scope and other filters, independent of priority and pagination.
-  const countArgs = { ...queryArgs, page: 1, limit: 1 };
-  const countOptions = { skip: isAwaitingSuiteSelection };
-  const highCount = useGetApiV2TestScenariosQuery({ ...countArgs, priority: 'high' }, countOptions);
-  const mediumCount = useGetApiV2TestScenariosQuery({ ...countArgs, priority: 'medium' }, countOptions);
-  const lowCount = useGetApiV2TestScenariosQuery({ ...countArgs, priority: 'low' }, countOptions);
+  const priorityCountArgs = useMemo<GetApiV2TestScenariosPriorityCountsApiArg>(
+    () => ({
+      projectId,
+      ...(debouncedColumnFilters.scenarioKey.trim() ? { scenarioKey: debouncedColumnFilters.scenarioKey.trim() } : {}),
+      ...(debouncedColumnFilters.title.trim() ? { title: debouncedColumnFilters.title.trim() } : {}),
+      ...(debouncedColumnFilters.details.trim() ? { details: debouncedColumnFilters.details.trim() } : {}),
+      ...(debouncedColumnFilters.folder.trim() ? { folder: debouncedColumnFilters.folder.trim() } : {}),
+      ...(debouncedColumnFilters.createdBy.trim() ? { createdBy: debouncedColumnFilters.createdBy.trim() } : {}),
+      ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
+      ...(scope.kind === 'unfiled' ? { folderId: 'unfiled' as const } : {}),
+      ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants: true } : {}),
+      ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
+    }),
+    [debouncedColumnFilters, debouncedSearch, projectId, scope],
+  );
+  const priorityCountQuery = useGetApiV2TestScenariosPriorityCountsQuery(priorityCountArgs, {
+    skip: isAwaitingSuiteSelection,
+  });
   const priorityCounts = {
-    high: highCount.currentData?.total,
-    medium: mediumCount.currentData?.total,
-    low: lowCount.currentData?.total,
+    high: priorityCountQuery.currentData?.high,
+    medium: priorityCountQuery.currentData?.medium,
+    low: priorityCountQuery.currentData?.low,
   };
   const {
     currentData,
     isLoading: isQueryLoading,
     isFetching,
     error,
+    refetch: refetchScenarios,
   } = useGetApiV2TestScenariosQuery(queryArgs, { skip: isAwaitingSuiteSelection });
+  const refreshSuiteData = useCallback(async () => {
+    await Promise.all([suitesQuery.refetch(), refetchScenarios()]);
+  }, [refetchScenarios, suitesQuery]);
 
   const scenarios = currentData?.scenarios ?? [];
   const pagination = currentData
@@ -215,12 +260,16 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     if (page > lastAvailablePage) setPage(lastAvailablePage);
   }, [currentData, page]);
   const isLoading = isQueryLoading || (isFetching && !currentData);
-  const onPageChange = useCallback((nextPage: number) => setPage(nextPage), []);
+  const onPageChange = useCallback((nextPage: number) => {
+    invalidateSelection();
+    setPage(nextPage);
+  }, [invalidateSelection]);
   const onPageSizeChange = useCallback((value: number) => {
     if (!TEST_SCENARIO_PAGE_SIZES.some((size) => size === value)) return;
+    invalidateSelection();
     setPageSize(value as TestScenarioPageSize);
     setPage(1);
-  }, []);
+  }, [invalidateSelection]);
   const onSearchChange = useCallback(
     (value: string) => {
       invalidateSelection();
@@ -230,8 +279,9 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     [invalidateSelection],
   );
   const onSortChange = useCallback(
-    (field: NonNullable<GetApiV2TestScenariosApiArg['sortField']>) => {
-      if (sortField === field) setSortDirection((direction) => (direction === 'asc' ? 'desc' : 'asc'));
+    (field: GetApiV2TestScenariosApiArg['sortField']) => {
+      if (!field) setSortField(undefined);
+      else if (sortField === field) setSortDirection((direction) => (direction === 'asc' ? 'desc' : 'asc'));
       else if (!sortField && field === 'createdAt') {
         setSortField(field);
         setSortDirection('asc');
@@ -393,11 +443,115 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       return report;
     });
   }, [projectId, reconcileOperation, removeSuiteMembers, runOperation, scope, selectedIds]);
+  const removeSuiteMembership = useCallback(async (suiteId: string, scenarioIds: string[]) => {
+    const suite = suitesQuery.currentData?.find((item) => item.id === suiteId);
+    if (!suite) throw new Error('The suite is no longer available. Refresh and try again.');
+    const expectedScenarioIds = (suite.members ?? []).map((member) => member.testScenarioId);
+    const response = await changeMembership({
+      suiteId,
+      body: {
+        projectId,
+        expectedMembershipRevision: suite.membershipRevision,
+        expectedScenarioIds,
+        addScenarioIds: [],
+        removeScenarioIds: scenarioIds,
+      },
+    }).unwrap();
+    return {
+      restoreData: response.restoreData,
+      expectedMembershipRevision: response.membershipRevision,
+      expectedScenarioIds: response.scenarioIds,
+    };
+  }, [changeMembership, projectId, suitesQuery.currentData]);
+  const restoreSuiteMembership = useCallback(async (undo: {
+    restoreData: NonNullable<Awaited<ReturnType<typeof removeSuiteMembership>>['restoreData']>;
+    expectedMembershipRevision: number;
+    expectedScenarioIds: string[];
+  }) => {
+    const suiteId = undo.restoreData.suiteId;
+    await restoreMembership({
+      suiteId,
+      body: {
+        projectId,
+        expectedMembershipRevision: undo.expectedMembershipRevision,
+        expectedScenarioIds: undo.expectedScenarioIds,
+        restoreData: undo.restoreData,
+      },
+    }).unwrap();
+  }, [projectId, restoreMembership]);
+  const moveSuiteMembership = useCallback(async (sourceSuiteId: string, destinationSuiteId: string, scenarioIds: string[]) => {
+    const suitesNow = suitesQuery.currentData ?? [];
+    const source = suitesNow.find((item) => item.id === sourceSuiteId);
+    const destination = suitesNow.find((item) => item.id === destinationSuiteId);
+    if (!source || !destination) throw new Error('A suite is no longer available. Refresh and try again.');
+    const expectedSourceScenarioIds = (source.members ?? []).map((member) => member.testScenarioId);
+    const expectedDestinationScenarioIds = (destination.members ?? []).map((member) => member.testScenarioId);
+    const response = await moveSuiteMembersRequest({
+      body: {
+        projectId,
+        sourceSuiteId,
+        destinationSuiteId,
+        expectedSourceMembershipRevision: source.membershipRevision,
+        expectedDestinationMembershipRevision: destination.membershipRevision,
+        scenarioIds,
+        expectedSourceScenarioIds,
+        expectedDestinationScenarioIds,
+      },
+    }).unwrap();
+    return {
+      restoreData: response.restoreData,
+      expectedSourceMembershipRevision: response.sourceMembershipRevision,
+      expectedDestinationMembershipRevision: response.destinationMembershipRevision,
+      expectedSourceScenarioIds: response.sourceScenarioIds,
+      expectedDestinationScenarioIds: response.destinationScenarioIds,
+      alreadyInDestination: response.alreadyInDestination,
+    };
+  }, [moveSuiteMembersRequest, projectId, suitesQuery.currentData]);
+  const restoreSuiteMove = useCallback(async (undo: Awaited<ReturnType<typeof moveSuiteMembership>>) => {
+    await restoreSuiteMoveRequest({
+      body: {
+        projectId,
+        expectedSourceMembershipRevision: undo.expectedSourceMembershipRevision,
+        expectedDestinationMembershipRevision: undo.expectedDestinationMembershipRevision,
+        expectedSourceScenarioIds: undo.expectedSourceScenarioIds,
+        expectedDestinationScenarioIds: undo.expectedDestinationScenarioIds,
+        restoreData: undo.restoreData,
+      },
+    }).unwrap();
+  }, [projectId, restoreSuiteMoveRequest]);
   const reorderSuite = useCallback(
     async (suiteId: string, scenarioIds: string[]) => {
-      await reorderSuiteMembers({ suiteId, body: { projectId, scenarioIds } }).unwrap();
+      const submitOrder = async (suite: NonNullable<typeof suitesQuery.currentData>[number]) => {
+        const expectedScenarioIds = (suite.members ?? []).map((member) => member.testScenarioId);
+        if (
+          expectedScenarioIds.length !== scenarioIds.length ||
+          expectedScenarioIds.some((id) => !scenarioIds.includes(id))
+        )
+          throw new Error('Suite membership changed. The latest suite was loaded; drag the row again to reorder.');
+        await reorderSuiteMembers({
+          suiteId,
+          body: {
+            projectId,
+            expectedMembershipRevision: suite.membershipRevision,
+            expectedScenarioIds,
+            scenarioIds,
+          },
+        }).unwrap();
+      };
+
+      const suite = suitesQuery.currentData?.find((item) => item.id === suiteId);
+      if (!suite) throw new Error('The suite is no longer available. Refresh and try again.');
+      try {
+        await submitOrder(suite);
+      } catch (error) {
+        if (typeof error !== 'object' || error === null || !('status' in error) || error.status !== 409) throw error;
+        const latestSuites = await suitesQuery.refetch().unwrap();
+        const latestSuite = latestSuites.find((item) => item.id === suiteId);
+        if (!latestSuite) throw new Error('The suite is no longer available. Refresh and try again.');
+        await submitOrder(latestSuite);
+      }
     },
-    [projectId, reorderSuiteMembers],
+    [projectId, reorderSuiteMembers, suitesQuery],
   );
   const createFolder = useCallback(
     async (name: string, parentId: string | null, description?: string | null) =>
@@ -433,9 +587,14 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const deleteSuite = useCallback(
     async (suiteId: string) => {
       await deleteSuiteRequest({ suiteId, projectId }).unwrap();
-      if (scope.id === suiteId) onScopeChange({ kind: 'all' });
+      if (scope.id === suiteId) {
+        const available = suitesQuery.currentData ?? [];
+        const index = available.findIndex((suite) => suite.id === suiteId);
+        const neighbor = available[index + 1] ?? available[index - 1];
+        onScopeChange(organizationTab === 'suites' ? { kind: 'suite', ...(neighbor ? { id: neighbor.id } : {}) } : { kind: 'all' });
+      }
     },
-    [deleteSuiteRequest, onScopeChange, projectId, scope.id],
+    [deleteSuiteRequest, onScopeChange, organizationTab, projectId, scope.id, suitesQuery.currentData],
   );
   const currentAuthors = authorsQuery.currentData?.authors;
   const cachedAuthorIdentities = authorIdentityCache.current?.projectId === projectId ? authorIdentityCache.current.authors : [];
@@ -493,6 +652,11 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     startSuiteOperation,
     reconcileSuiteOperation,
     removeSelectedFromSuite,
+    removeSuiteMembership,
+    restoreSuiteMembership,
+    moveSuiteMembership,
+    restoreSuiteMove,
+    refreshSuiteData,
     reorderSuite,
     createFolder,
     updateFolder,

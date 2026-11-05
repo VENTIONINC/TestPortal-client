@@ -1038,6 +1038,27 @@ const injectedRtkApi = api
         }),
         providesTags: ["Test Scenarios"],
       }),
+      getApiV2TestScenariosPriorityCounts: build.query<
+        GetApiV2TestScenariosPriorityCountsApiResponse,
+        GetApiV2TestScenariosPriorityCountsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/priority-counts`,
+          params: {
+            projectId: queryArg.projectId,
+            search: queryArg.search,
+            scenarioKey: queryArg.scenarioKey,
+            title: queryArg.title,
+            details: queryArg.details,
+            folder: queryArg.folder,
+            createdBy: queryArg.createdBy,
+            folderId: queryArg.folderId,
+            includeDescendants: queryArg.includeDescendants,
+            suiteId: queryArg.suiteId,
+          },
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
       getApiV2TestScenariosSelection: build.query<
         GetApiV2TestScenariosSelectionApiResponse,
         GetApiV2TestScenariosSelectionApiArg
@@ -1193,6 +1214,50 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/v2/test-suites/${queryArg.suiteId}/members`,
           method: "DELETE",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestSuitesBySuiteIdMembershipChanges: build.mutation<
+        PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse,
+        PostApiV2TestSuitesBySuiteIdMembershipChangesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-suites/${queryArg.suiteId}/membership-changes`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestSuitesBySuiteIdMembershipRestoration: build.mutation<
+        PostApiV2TestSuitesBySuiteIdMembershipRestorationApiResponse,
+        PostApiV2TestSuitesBySuiteIdMembershipRestorationApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-suites/${queryArg.suiteId}/membership-restoration`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestSuitesMoves: build.mutation<
+        PostApiV2TestSuitesMovesApiResponse,
+        PostApiV2TestSuitesMovesApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-suites/moves`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestSuitesMoveRestoration: build.mutation<
+        PostApiV2TestSuitesMoveRestorationApiResponse,
+        PostApiV2TestSuitesMoveRestorationApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-suites/move-restoration`,
+          method: "POST",
           body: queryArg.body,
         }),
         invalidatesTags: ["Test Scenarios"],
@@ -1975,6 +2040,20 @@ export type GetApiV2TestScenariosAuthorsApiArg = {
   includeDescendants?: boolean;
   suiteId?: string;
 };
+export type GetApiV2TestScenariosPriorityCountsApiResponse =
+  /** status 200 Scenario catalog lookup succeeded */ TestScenarioPriorityCountsResponse;
+export type GetApiV2TestScenariosPriorityCountsApiArg = {
+  projectId: string;
+  search?: string;
+  scenarioKey?: string;
+  title?: string;
+  details?: string;
+  folder?: string;
+  createdBy?: string;
+  folderId?: string | "unfiled";
+  includeDescendants?: boolean;
+  suiteId?: string;
+};
 export type GetApiV2TestScenariosSelectionApiResponse =
   /** status 200 Scenario catalog lookup succeeded */ TestScenarioSelectionResponse;
 export type GetApiV2TestScenariosSelectionApiArg = {
@@ -2071,6 +2150,7 @@ export type GetApiV2TestSuitesApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -2091,6 +2171,7 @@ export type PostApiV2TestSuitesApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -2103,6 +2184,7 @@ export type PostApiV2TestSuitesApiResponse =
 export type PostApiV2TestSuitesApiArg = {
   body: {
     projectId: string;
+    /** Nonblank suite name. Names may repeat within the project; suite UUIDs identify suites. */
     name: string;
     description?: string | null;
     purpose?: string | null;
@@ -2117,6 +2199,7 @@ export type GetApiV2TestSuitesBySuiteIdApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -2138,6 +2221,7 @@ export type PatchApiV2TestSuitesBySuiteIdApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -2193,6 +2277,104 @@ export type DeleteApiV2TestSuitesBySuiteIdMembersApiArg = {
     scenarioIds: string[];
   };
 };
+export type PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse =
+  /** status 200 Organization operation succeeded */ {
+    scenarioIds: string[];
+    membershipRevision: number;
+    restoreData: {
+      suiteId: string;
+      addedScenarioIds: string[];
+      removedMembers: {
+        scenarioId: string;
+        position: number;
+      }[];
+    };
+  };
+export type PostApiV2TestSuitesBySuiteIdMembershipChangesApiArg = {
+  suiteId: string;
+  body: {
+    projectId: string;
+    expectedMembershipRevision: number;
+    expectedScenarioIds: string[];
+    addScenarioIds: string[];
+    removeScenarioIds: string[];
+  };
+};
+export type PostApiV2TestSuitesBySuiteIdMembershipRestorationApiResponse =
+  /** status 200 Organization operation succeeded */ {
+    scenarioIds: string[];
+    membershipRevision: number;
+  };
+export type PostApiV2TestSuitesBySuiteIdMembershipRestorationApiArg = {
+  suiteId: string;
+  body: {
+    projectId: string;
+    expectedMembershipRevision: number;
+    expectedScenarioIds: string[];
+    restoreData: {
+      suiteId: string;
+      addedScenarioIds: string[];
+      removedMembers: {
+        scenarioId: string;
+        position: number;
+      }[];
+    };
+  };
+};
+export type PostApiV2TestSuitesMovesApiResponse =
+  /** status 200 Organization operation succeeded */ {
+    sourceScenarioIds: string[];
+    destinationScenarioIds: string[];
+    sourceMembershipRevision: number;
+    destinationMembershipRevision: number;
+    restoreData: {
+      sourceSuiteId: string;
+      destinationSuiteId: string;
+      sourceMembers: {
+        scenarioId: string;
+        position: number;
+      }[];
+      destinationAddedScenarioIds: string[];
+    };
+    alreadyInDestination: string[];
+  };
+export type PostApiV2TestSuitesMovesApiArg = {
+  body: {
+    projectId: string;
+    sourceSuiteId: string;
+    destinationSuiteId: string;
+    expectedSourceMembershipRevision: number;
+    expectedDestinationMembershipRevision: number;
+    scenarioIds: string[];
+    expectedSourceScenarioIds: string[];
+    expectedDestinationScenarioIds: string[];
+  };
+};
+export type PostApiV2TestSuitesMoveRestorationApiResponse =
+  /** status 200 Organization operation succeeded */ {
+    sourceScenarioIds: string[];
+    destinationScenarioIds: string[];
+    sourceMembershipRevision: number;
+    destinationMembershipRevision: number;
+  };
+export type PostApiV2TestSuitesMoveRestorationApiArg = {
+  body: {
+    projectId: string;
+    expectedSourceMembershipRevision: number;
+    expectedDestinationMembershipRevision: number;
+    expectedSourceScenarioIds: string[];
+    expectedDestinationScenarioIds: string[];
+    restoreData: {
+      sourceSuiteId: string;
+      destinationSuiteId: string;
+      sourceMembers: {
+        scenarioId: string;
+        position: number;
+      }[];
+      destinationAddedScenarioIds: string[];
+    };
+  };
+};
 export type PutApiV2TestSuitesBySuiteIdMembersOrderApiResponse =
   /** status 200 Organization operation succeeded */ {
     scenarioIds: string[];
@@ -2201,6 +2383,8 @@ export type PutApiV2TestSuitesBySuiteIdMembersOrderApiArg = {
   suiteId: string;
   body: {
     projectId: string;
+    expectedMembershipRevision: number;
+    expectedScenarioIds: string[];
     scenarioIds: string[];
   };
 };
@@ -3274,6 +3458,12 @@ export type TestScenarioAuthorOption = {
 export type TestScenarioAuthorsResponse = {
   authors: TestScenarioAuthorOption[];
 };
+export type TestScenarioPriorityCountsResponse = {
+  low: number;
+  medium: number;
+  high: number;
+  unprioritized: number;
+};
 export type TestScenarioSelectionResponse = {
   scenarioIds: string[];
   total: number;
@@ -3587,6 +3777,8 @@ export const {
   useLazyGetApiV2TestScenariosQuery,
   useGetApiV2TestScenariosAuthorsQuery,
   useLazyGetApiV2TestScenariosAuthorsQuery,
+  useGetApiV2TestScenariosPriorityCountsQuery,
+  useLazyGetApiV2TestScenariosPriorityCountsQuery,
   useGetApiV2TestScenariosSelectionQuery,
   useLazyGetApiV2TestScenariosSelectionQuery,
   useGetApiV2TestScenarioFoldersQuery,
@@ -3603,6 +3795,10 @@ export const {
   useDeleteApiV2TestSuitesBySuiteIdMutation,
   usePostApiV2TestSuitesBySuiteIdMembersMutation,
   useDeleteApiV2TestSuitesBySuiteIdMembersMutation,
+  usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation,
+  usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation,
+  usePostApiV2TestSuitesMovesMutation,
+  usePostApiV2TestSuitesMoveRestorationMutation,
   usePutApiV2TestSuitesBySuiteIdMembersOrderMutation,
   usePatchApiV2TestScenariosBulkFolderMutation,
   usePostApiV2TestScenariosByScenarioIdManualRunsMutation,

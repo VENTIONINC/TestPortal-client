@@ -55,6 +55,7 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
       isLoading: false,
       error: undefined,
     })),
+    useGetApiV2TestScenariosPriorityCountsQuery: vi.fn(() => ({ currentData: undefined, isFetching: false, error: undefined })),
     useLazyGetApiV2TestScenariosSelectionQuery: vi.fn(() => [
       vi.fn(() => ({ unwrap: async () => ({ scenarioIds: [], total: 0 }) })),
       { isLoading: false },
@@ -107,10 +108,15 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     ...actual,
     useGetApiV2TestScenarioFoldersQuery: foldersQuery,
     useGetApiV2TestSuitesQuery: suitesQuery,
+    useGetApiV2TestScenariosPriorityCountsQuery: vi.fn(() => ({ currentData: undefined, isFetching: false, error: undefined })),
     usePatchApiV2TestScenariosBulkFolderMutation: mutation,
     usePostApiV2TestSuitesBySuiteIdMembersMutation: mutation,
     useDeleteApiV2TestSuitesBySuiteIdMembersMutation: mutation,
     usePutApiV2TestSuitesBySuiteIdMembersOrderMutation: mutation,
+    usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation: mutation,
+    usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation: mutation,
+    usePostApiV2TestSuitesMovesMutation: mutation,
+    usePostApiV2TestSuitesMoveRestorationMutation: mutation,
     usePostApiV2TestScenarioFoldersMutation: mutation,
     usePatchApiV2TestScenarioFoldersByFolderIdMutation: mutation,
     useDeleteApiV2TestScenarioFoldersByFolderIdMutation: mutation,
@@ -217,7 +223,7 @@ describe('TestScenarioCatalogContainer', () => {
     });
   });
 
-  it('keeps UUIDs across page and sort changes, then resolves every current matching UUID', async () => {
+  it('clears selection on page changes, then resolves every current matching UUID', async () => {
     const trigger = vi.fn((_args: GetApiV2TestScenariosSelectionApiArg) => {
       void _args;
       return {
@@ -232,7 +238,7 @@ describe('TestScenarioCatalogContainer', () => {
       result.current.onPageSizeChange(50);
       result.current.onSortChange('title');
     });
-    expect(result.current.selectedIds).toEqual(['visible-id']);
+    expect(result.current.selectedIds).toEqual([]);
     act(() => {
       result.current.onScopeChange({ kind: 'folder', id: 'folder-a' });
       result.current.onPriorityChange('high,medium');
@@ -623,7 +629,7 @@ describe('TestScenarioCatalogContainer', () => {
     render(
       <ChakraProvider>
         <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" />
+          <TestScenarioCatalogContainer projectId="project-1" organizationTab="suites" />
         </MemoryRouter>
       </ChakraProvider>,
     );
@@ -633,8 +639,6 @@ describe('TestScenarioCatalogContainer', () => {
       projectId: 'project-1',
       page: 1,
       limit: 25,
-      sortField: 'updatedAt',
-      sortDirection: 'desc',
       suiteId: 'suite-a',
     });
   });
