@@ -21,7 +21,7 @@ import {
   type TestScenarioSummary,
 } from '@/redux/apis/generatedApi';
 import { useTestScenarioContextMenu } from '@/components/test-scenarios/hooks/useTestScenarioContextMenu';
-import { usePatchApiV2TestScenariosBulkFolderMutation } from '@/redux/apis/extendedApi';
+import { usePatchApiV2TestScenariosBulkFolderMutation, usePostApiV2TestScenarioFoldersMutation } from '@/redux/apis/extendedApi';
 
 const navigate = vi.fn();
 const contextMenu = vi.fn();
@@ -117,9 +117,11 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation: mutation,
     usePostApiV2TestSuitesMovesMutation: mutation,
     usePostApiV2TestSuitesMoveRestorationMutation: mutation,
-    usePostApiV2TestScenarioFoldersMutation: mutation,
+    usePostApiV2TestScenarioFoldersMutation: vi.fn(() => [vi.fn(() => ({ unwrap: () => Promise.resolve({}) })), { isLoading: false }]),
     usePatchApiV2TestScenarioFoldersByFolderIdMutation: mutation,
     useDeleteApiV2TestScenarioFoldersByFolderIdMutation: mutation,
+    usePostApiV2TestScenarioFoldersRestorationMutation: mutation,
+    usePostApiV2TestScenariosFolderRestorationMutation: mutation,
     usePostApiV2TestSuitesMutation: mutation,
     usePatchApiV2TestSuitesBySuiteIdMutation: mutation,
     useDeleteApiV2TestSuitesBySuiteIdMutation: mutation,
@@ -209,6 +211,23 @@ describe('TestScenarioCatalogContainer', () => {
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).not.toHaveProperty('priority');
     act(() => result.current.onPageSizeChange(50));
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({ page: 1, limit: 50, createdByIds: 'user-1' });
+  });
+
+  it('keeps a newly created folder selected while the folder list is stale', async () => {
+    const createFolderMutation = vi.mocked(usePostApiV2TestScenarioFoldersMutation);
+    createFolderMutation.mockReturnValue([
+      vi.fn(() => ({ unwrap: async () => ({ id: 'new-folder' }) })),
+      { isLoading: false },
+    ] as never);
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
+    await act(async () => {
+      const folder = await result.current.createFolder('New folder', null);
+      result.current.onScopeChange({ kind: 'folder', id: folder.id });
+    });
+    expect(result.current.scope).toEqual({ kind: 'folder', id: 'new-folder' });
+    expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({ folderId: 'new-folder' });
+    createFolderMutation.mockReset();
+    createFolderMutation.mockImplementation(() => [vi.fn(() => ({ unwrap: async () => ({}) })), { isLoading: false }] as never);
   });
 
   it('loads project and No folder totals independently of the visible list filters', () => {

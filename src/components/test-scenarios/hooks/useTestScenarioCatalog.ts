@@ -10,6 +10,8 @@ import {
   usePostApiV2TestScenarioFoldersMutation,
   usePatchApiV2TestScenarioFoldersByFolderIdMutation,
   useDeleteApiV2TestScenarioFoldersByFolderIdMutation,
+  usePostApiV2TestScenarioFoldersRestorationMutation,
+  usePostApiV2TestScenariosFolderRestorationMutation,
   usePostApiV2TestSuitesMutation,
   usePatchApiV2TestSuitesBySuiteIdMutation,
   useDeleteApiV2TestSuitesBySuiteIdMutation,
@@ -31,6 +33,7 @@ import {
   type GetApiV2TestScenariosApiArg,
   type GetApiV2TestScenariosSelectionApiArg,
   type GetApiV2TestScenariosPriorityCountsApiArg,
+  type PostApiV2TestScenarioFoldersRestorationApiArg,
 } from '@/redux/apis/generatedApi';
 
 import { TEST_SCENARIO_PAGE_LIMIT, TEST_SCENARIO_PAGE_SIZES, type TestScenarioPageSize } from '../constants';
@@ -81,14 +84,22 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [createFolderRequest] = usePostApiV2TestScenarioFoldersMutation();
   const [updateFolderRequest] = usePatchApiV2TestScenarioFoldersByFolderIdMutation();
   const [deleteFolderRequest] = useDeleteApiV2TestScenarioFoldersByFolderIdMutation();
+  const [restoreFolderDeletionRequest] = usePostApiV2TestScenarioFoldersRestorationMutation();
+  const [restoreScenarioFoldersRequest] = usePostApiV2TestScenariosFolderRestorationMutation();
   const [createSuiteRequest] = usePostApiV2TestSuitesMutation();
   const [updateSuiteRequest] = usePatchApiV2TestSuitesBySuiteIdMutation();
   const [deleteSuiteRequest] = useDeleteApiV2TestSuitesBySuiteIdMutation();
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
   const suitesQuery = useGetApiV2TestSuitesQuery({ projectId });
+  const newlyCreatedFolderId = useRef<string | null>(null);
+  const currentProjectId = useRef(projectId);
+  currentProjectId.current = projectId;
   useEffect(() => {
-    if (scope.kind === 'folder' && foldersQuery.currentData && !flattenScenarioFolders(foldersQuery.currentData).some((folder) => folder.id === scope.id)) setScope({ kind: 'all' });
-  }, [foldersQuery.currentData, scope]);
+    if (scope.kind !== 'folder' || !foldersQuery.currentData) return;
+    const exists = flattenScenarioFolders(foldersQuery.currentData).some((folder) => folder.id === scope.id);
+    if (exists && newlyCreatedFolderId.current === scope.id) newlyCreatedFolderId.current = null;
+    if (!exists && newlyCreatedFolderId.current !== scope.id && !foldersQuery.isFetching) setScope({ kind: 'all' });
+  }, [foldersQuery.currentData, foldersQuery.isFetching, scope]);
   useEffect(() => {
     if (organizationTab !== 'suites' || scope.kind !== 'suite' || !suitesQuery.currentData || suitesQuery.isFetching) return;
     const available = suitesQuery.currentData;
@@ -238,8 +249,8 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     refetch: refetchScenarios,
   } = useGetApiV2TestScenariosQuery(queryArgs, { skip: isAwaitingSuiteSelection });
   const refreshSuiteData = useCallback(async () => {
-    await Promise.all([suitesQuery.refetch(), refetchScenarios()]);
-  }, [refetchScenarios, suitesQuery]);
+    await Promise.all([suitesQuery.refetch(), foldersQuery.refetch(), refetchScenarios()]);
+  }, [foldersQuery, refetchScenarios, suitesQuery]);
 
   const scenarios = currentData?.scenarios ?? [];
   const pagination = currentData
@@ -325,6 +336,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   );
   const onScopeChange = useCallback(
     (nextScope: typeof scope) => {
+      if (nextScope.kind !== 'folder' || nextScope.id !== newlyCreatedFolderId.current) newlyCreatedFolderId.current = null;
       invalidateSelection();
       setScope(nextScope);
       setPage(1);
@@ -389,9 +401,13 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       return runOperation(async () => {
         const ids = [...new Set(idsToMove)];
         const revision = selectionRevision.current;
-        const report = await executeScenarioOperation(ids, (scenarioIds) =>
-          moveScenarios({ body: { projectId, scenarioIds, folderId } }).unwrap(),
-        );
+        const folderRestoreData: NonNullable<ScenarioOperationReport['folderRestoreData']> = [];
+        const report = await executeScenarioOperation(ids, async (scenarioIds) => {
+          const result = await moveScenarios({ body: { projectId, scenarioIds, folderId } }).unwrap();
+          folderRestoreData.push(...(result?.restoreData ?? []));
+          return result;
+        });
+        report.folderRestoreData = folderRestoreData;
         reconcileOperation(report, revision);
         return report;
       });
@@ -555,8 +571,11 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     [projectId, reorderSuiteMembers, suitesQuery],
   );
   const createFolder = useCallback(
-    async (name: string, parentId: string | null, description?: string | null) =>
-      createFolderRequest({ body: { projectId, name, parentId, description } }).unwrap(),
+    async (name: string, parentId: string | null, description?: string | null) => {
+      const created = await createFolderRequest({ body: { projectId, name, parentId, description } }).unwrap();
+      newlyCreatedFolderId.current = created.id;
+      return created;
+    },
     [createFolderRequest, projectId],
   );
   const updateFolder = useCallback(
@@ -567,12 +586,19 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     [projectId, updateFolderRequest],
   );
   const deleteFolder = useCallback(
-    async (folderId: string, disposition: 'parent' | 'unfiled') => {
-      await deleteFolderRequest({ folderId, projectId, disposition }).unwrap();
-      if (scope.id === folderId) onScopeChange({ kind: 'all' });
+    async (folderId: string) => {
+      const result = await deleteFolderRequest({ folderId, projectId }).unwrap();
+      if (currentProjectId.current === projectId) onScopeChange({ kind: 'unfiled' });
+      return result;
     },
-    [deleteFolderRequest, onScopeChange, projectId, scope.id],
+    [deleteFolderRequest, onScopeChange, projectId],
   );
+  const restoreFolderDeletion = useCallback(async (restoreData: PostApiV2TestScenarioFoldersRestorationApiArg['body']['restoreData']) => {
+    await restoreFolderDeletionRequest({ body: { projectId, restoreData } }).unwrap();
+  }, [projectId, restoreFolderDeletionRequest]);
+  const restoreScenarioFolders = useCallback(async (restoreData: NonNullable<ScenarioOperationReport['folderRestoreData']>) => {
+    await restoreScenarioFoldersRequest({ body: { projectId, restoreData } }).unwrap();
+  }, [projectId, restoreScenarioFoldersRequest]);
   const createSuite = useCallback(
     async (body: { name: string; description?: string | null; purpose?: string | null; release?: string | null }) =>
       createSuiteRequest({ body: { projectId, ...body } }).unwrap(),
@@ -662,6 +688,8 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     createFolder,
     updateFolder,
     deleteFolder,
+    restoreFolderDeletion,
+    restoreScenarioFolders,
     createSuite,
     updateSuite,
     deleteSuite,

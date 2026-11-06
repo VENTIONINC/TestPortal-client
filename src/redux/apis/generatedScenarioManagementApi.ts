@@ -81,8 +81,29 @@ const injectedRtkApi = api
           method: "DELETE",
           params: {
             projectId: queryArg.projectId,
-            disposition: queryArg.disposition,
           },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestScenarioFoldersRestoration: build.mutation<
+        PostApiV2TestScenarioFoldersRestorationApiResponse,
+        PostApiV2TestScenarioFoldersRestorationApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenario-folders/restoration`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestScenariosFolderRestoration: build.mutation<
+        PostApiV2TestScenariosFolderRestorationApiResponse,
+        PostApiV2TestScenariosFolderRestorationApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/folder-restoration`,
+          method: "POST",
+          body: queryArg.body,
         }),
         invalidatesTags: ["Test Scenarios"],
       }),
@@ -290,11 +311,66 @@ export type PatchApiV2TestScenarioFoldersByFolderIdApiArg = {
 export type DeleteApiV2TestScenarioFoldersByFolderIdApiResponse =
   /** status 200 Organization operation succeeded */ {
     deleted: true;
+    restoreData: {
+      folders: {
+        id: string;
+        projectId: string;
+        name: string;
+        description: string | null;
+        parentId: string | null;
+        position: number;
+      }[];
+      scenarios: {
+        scenarioId: string;
+        folderId: string;
+        expectedRevision: number;
+      }[];
+    };
   };
 export type DeleteApiV2TestScenarioFoldersByFolderIdApiArg = {
   folderId: string;
   projectId: string;
-  disposition: "parent" | "unfiled";
+};
+export type PostApiV2TestScenarioFoldersRestorationApiResponse =
+  /** status 200 Organization operation succeeded */ {
+    restored: true;
+  };
+export type PostApiV2TestScenarioFoldersRestorationApiArg = {
+  body: {
+    projectId: string;
+    restoreData: {
+      folders: {
+        id: string;
+        projectId: string;
+        name: string;
+        description: string | null;
+        parentId: string | null;
+        position: number;
+      }[];
+      scenarios: {
+        scenarioId: string;
+        folderId: string;
+        expectedRevision: number;
+      }[];
+    };
+  };
+};
+export type PostApiV2TestScenariosFolderRestorationApiResponse =
+  /** status 200 Organization operation succeeded */ {
+    id: string;
+    folderId: string | null;
+    revision: number;
+  }[];
+export type PostApiV2TestScenariosFolderRestorationApiArg = {
+  body: {
+    projectId: string;
+    restoreData: {
+      scenarioId: string;
+      folderId: string | null;
+      expectedFolderId: string | null;
+      expectedRevision: number;
+    }[];
+  };
 };
 export type GetApiV2TestSuitesApiResponse =
   /** status 200 Organization operation succeeded */ {
@@ -447,6 +523,12 @@ export type PutApiV2TestSuitesBySuiteIdMembersOrderApiArg = {
 export type PatchApiV2TestScenariosBulkFolderApiResponse =
   /** status 200 Organization operation succeeded */ {
     moved: number;
+    restoreData: {
+      scenarioId: string;
+      folderId: string | null;
+      expectedFolderId: string | null;
+      expectedRevision: number;
+    }[];
   };
 export type PatchApiV2TestScenariosBulkFolderApiArg = {
   body: {
@@ -508,6 +590,8 @@ export const {
   usePostApiV2TestScenarioFoldersMutation,
   usePatchApiV2TestScenarioFoldersByFolderIdMutation,
   useDeleteApiV2TestScenarioFoldersByFolderIdMutation,
+  usePostApiV2TestScenarioFoldersRestorationMutation,
+  usePostApiV2TestScenariosFolderRestorationMutation,
   useGetApiV2TestSuitesQuery,
   useLazyGetApiV2TestSuitesQuery,
   usePostApiV2TestSuitesMutation,

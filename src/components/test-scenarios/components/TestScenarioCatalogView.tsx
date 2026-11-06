@@ -28,16 +28,20 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import {
+  FiArrowDown,
+  FiArrowUp,
   FiCheck,
   FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
   FiEdit,
   FiFolder,
+  FiFolderPlus,
   FiLayers,
   FiList,
   FiMinusCircle,
   FiMoreHorizontal,
+  FiMove,
   FiPlus,
   FiPlay,
   FiSearch,
@@ -59,6 +63,8 @@ import { extractApiError } from '@/utils/apiErrors';
 import type {
   PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse,
   PostApiV2TestSuitesMovesApiResponse,
+  DeleteApiV2TestScenarioFoldersByFolderIdApiResponse,
+  PostApiV2TestScenarioFoldersRestorationApiArg,
 } from '@/redux/apis/generatedApi';
 
 import { TestSuiteAddScenariosDialogContainer } from '../containers/TestSuiteAddScenariosDialogContainer';
@@ -70,6 +76,7 @@ import type { TestScenarioPagination, TestScenarioSummary } from '../types';
 type SuiteMembershipUndo = Pick<PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse, 'restoreData'> & {
   expectedMembershipRevision: number;
   expectedScenarioIds: string[];
+  createdSuiteId?: string;
 };
 type SuiteMoveUndo = Pick<PostApiV2TestSuitesMovesApiResponse, 'restoreData'> & {
   expectedSourceMembershipRevision: number;
@@ -162,6 +169,8 @@ export interface TestScenarioCatalogViewProps {
   selectOnlyScenario?: (id: string) => void;
   onMoveSelected: (folderId: string | null) => Promise<ScenarioOperationReport>;
   onMoveScenarioIds: (scenarioIds: string[], folderId: string | null) => Promise<ScenarioOperationReport>;
+  restoreFolderDeletion: (restoreData: PostApiV2TestScenarioFoldersRestorationApiArg['body']['restoreData']) => Promise<void>;
+  restoreScenarioFolders: (restoreData: NonNullable<ScenarioOperationReport['folderRestoreData']>) => Promise<void>;
   onSuiteOperationStart: () => void;
   onSuiteOperationComplete: (report: ScenarioOperationReport, selection: string[]) => void;
   onDeleteSelected: (scenarioIds: string[]) => Promise<ScenarioOperationReport>;
@@ -177,7 +186,7 @@ export interface TestScenarioCatalogViewProps {
     folderId: string,
     body: { name?: string; parentId?: string | null; position?: number; description?: string | null },
   ) => Promise<unknown>;
-  onDeleteFolder: (folderId: string, disposition: 'parent' | 'unfiled') => Promise<void>;
+  onDeleteFolder: (folderId: string) => Promise<DeleteApiV2TestScenarioFoldersByFolderIdApiResponse>;
   onCreateSuite: (body: {
     name: string;
     description?: string | null;
@@ -240,23 +249,29 @@ const ErrorState = () => (
 const EmptyState = ({
   searchActive = false,
   emptySuite = false,
+  emptyFolder = false,
   suiteView = false,
   onAddScenarios,
+  onCreateScenario,
 }: {
   searchActive?: boolean;
   emptySuite?: boolean;
+  emptyFolder?: boolean;
   suiteView?: boolean;
   onAddScenarios?: () => void;
+  onCreateScenario?: () => void;
 }) => (
   <VStack py={8} gap={3}>
     <Text color="text.muted">
       {emptySuite
         ? 'No scenarios in this suite yet'
-        : searchActive
-          ? suiteView
-            ? 'No scenarios in this suite match the search and filters'
-            : 'No scenarios match the current folder, search and filters'
-          : 'No Test Scenarios are available for this project'}
+        : emptyFolder
+          ? 'No scenarios in this folder yet'
+          : searchActive
+            ? suiteView
+              ? 'No scenarios in this suite match the search and filters'
+              : 'No scenarios match the current folder, search and filters'
+            : 'No Test Scenarios are available for this project.'}
     </Text>
     {emptySuite && onAddScenarios && (
       <Button size="sm" variant="outline" onClick={onAddScenarios}>
@@ -442,7 +457,7 @@ const ScenarioTable = ({
                 </Table.Cell>
                 <Table.Cell px={2} py={2}>
                   <Tooltip content={scenario.scenarioKey ?? 'N/A'}>
-                    <Text display="block" maxW="100%" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={scenario.scenarioKey ?? 'N/A'}>
+                    <Text display="block" maxW="100%" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
                       {scenario.scenarioKey ?? 'N/A'}
                     </Text>
                   </Tooltip>
@@ -459,7 +474,6 @@ const ScenarioTable = ({
                       whiteSpace="nowrap"
                       fontWeight="semibold"
                       color="text.main"
-                      title={scenario.title}
                     >
                       <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
                     </ChakraLink>
@@ -498,7 +512,6 @@ const ScenarioTable = ({
                             overflow="hidden"
                             textOverflow="ellipsis"
                             whiteSpace="nowrap"
-                            title={folderPath}
                           >
                             {folderPath}
                           </Text>
@@ -511,7 +524,7 @@ const ScenarioTable = ({
                 </Table.Cell>
                 <Table.Cell px={3} py={2}>
                   <Tooltip content={`${scenario.createdBy.name} (${scenario.createdBy.email})`}>
-                    <HStack gap={2} minW={0} title={`${scenario.createdBy.name} (${scenario.createdBy.email})`}>
+                    <HStack gap={2} minW={0}>
                       <Box
                         aria-hidden="true"
                         display="inline-flex"
@@ -919,6 +932,8 @@ const CompactScenarioTable = ({
   onDragEnd,
   folderPathById,
   searchActive,
+  emptyFolder,
+  onCreateScenario,
 }: {
   projectId: string;
   scenarios: TestScenarioSummary[];
@@ -930,6 +945,8 @@ const CompactScenarioTable = ({
   onDragEnd: () => void;
   folderPathById: Map<string, string>;
   searchActive: boolean;
+  emptyFolder: boolean;
+  onCreateScenario: () => void;
 }) => {
   const [anchorId, setAnchorId] = useState<string | null>(null);
   const extendSelection = useRef(false);
@@ -1003,7 +1020,7 @@ const CompactScenarioTable = ({
                     Searching scenarios…
                   </Text>
                 ) : (
-                  <EmptyState searchActive={searchActive} />
+                  <EmptyState searchActive={searchActive} emptyFolder={emptyFolder && !searchActive} onCreateScenario={onCreateScenario} />
                 )}
               </Table.Cell>
             </Table.Row>
@@ -1068,7 +1085,6 @@ const CompactScenarioTable = ({
                         overflow="hidden"
                         textOverflow="ellipsis"
                         whiteSpace="nowrap"
-                        title={scenario.scenarioKey ?? 'N/A'}
                       >
                         {scenario.scenarioKey ?? 'N/A'}
                       </Text>
@@ -1086,7 +1102,6 @@ const CompactScenarioTable = ({
                         whiteSpace="nowrap"
                         fontWeight="semibold"
                         color="text.main"
-                        title={scenario.title}
                       >
                         <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
                       </ChakraLink>
@@ -1119,7 +1134,6 @@ const CompactScenarioTable = ({
                         overflow="hidden"
                         textOverflow="ellipsis"
                         whiteSpace="nowrap"
-                        title={folderPath}
                       >
                         {folderPath}
                       </Text>
@@ -1130,7 +1144,7 @@ const CompactScenarioTable = ({
                   </Table.Cell>
                   <Table.Cell px={3} py={2}>
                     <Tooltip content={fullAuthor}>
-                      <HStack gap={2} minW={0} title={fullAuthor}>
+                      <HStack gap={2} minW={0}>
                         <Box
                           aria-hidden="true"
                           display="inline-flex"
@@ -1208,6 +1222,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   selectAllMatching,
   toggleSelected,
   onMoveScenarioIds,
+  restoreFolderDeletion,
+  restoreScenarioFolders,
   onSuiteOperationStart,
   onSuiteOperationComplete,
   onDeleteSelected,
@@ -1251,15 +1267,19 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [targetFolder, setTargetFolder] = useState<CatalogFolder | null>(null);
   const [targetSuite, setTargetSuite] = useState<CatalogSuite | null>(null);
   const [moveParentId, setMoveParentId] = useState('');
-  const [deleteDisposition, setDeleteDisposition] = useState<'parent' | 'unfiled'>('parent');
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [isDraggingScenario, setIsDraggingScenario] = useState(false);
   const activeDrag = useRef<{ projectId: string; scenarioIds: string[] } | null>(null);
   const [operationFeedback, setOperationFeedback] = useState<string | null>(null);
   const [pendingSuiteUndo, setPendingSuiteUndo] = useState<
-    | { kind: 'membership'; payload: SuiteMembershipUndo; expiresAt: number; message: string }
-    | { kind: 'move'; payload: SuiteMoveUndo; expiresAt: number; message: string }
-    | { kind: 'reorder'; payload: { suiteId: string; scenarioIds: string[] }; expiresAt: number; message: string }
+    | { kind: 'membership'; payload: SuiteMembershipUndo; message: string }
+    | { kind: 'move'; payload: SuiteMoveUndo; message: string }
+    | { kind: 'reorder'; payload: { suiteId: string; scenarioIds: string[] }; message: string }
+    | null
+  >(null);
+  const [pendingFolderUndo, setPendingFolderUndo] = useState<
+    | { kind: 'deletion'; restoreData: DeleteApiV2TestScenarioFoldersByFolderIdApiResponse['restoreData']; message: string }
+    | { kind: 'move'; restoreData: NonNullable<ScenarioOperationReport['folderRestoreData']>; message: string }
     | null
   >(null);
   const [isUndoingSuiteChange, setIsUndoingSuiteChange] = useState(false);
@@ -1267,10 +1287,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setPendingSuiteUndo(null);
   }, [projectId, organizationTab]);
   useEffect(() => {
-    if (!pendingSuiteUndo || isUndoingSuiteChange) return;
-    const timeout = window.setTimeout(() => setPendingSuiteUndo(null), Math.max(0, pendingSuiteUndo.expiresAt - Date.now()));
-    return () => window.clearTimeout(timeout);
-  }, [isUndoingSuiteChange, pendingSuiteUndo]);
+    setPendingFolderUndo(null);
+  }, [projectId]);
   const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
@@ -1290,6 +1308,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [createDescription, setCreateDescription] = useState('');
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [inlineFolderParentId, setInlineFolderParentId] = useState<string | null | undefined>(undefined);
+  const [inlineFolderName, setInlineFolderName] = useState('');
+  const [inlineFolderError, setInlineFolderError] = useState<string | null>(null);
   const folderRows = flattenFolders(folders);
   const showFolderColumn = scope.kind === CATALOG_SCOPE.all || scope.kind === CATALOG_SCOPE.suite || scope.kind === CATALOG_SCOPE.folder;
   const folderPathById = new Map<string, string>();
@@ -1308,6 +1329,40 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     }
   });
   const selectedFolder = scope.kind === CATALOG_SCOPE.folder ? folderRows.find((folder) => folder.id === scope.id) : undefined;
+  const changeScope = (nextScope: typeof scope) => {
+    if (pendingFolderUndo?.kind === 'deletion') setPendingFolderUndo(null);
+    if ((scope.kind !== nextScope.kind || scope.id !== nextScope.id) && !(scope.kind === 'suite' && nextScope.kind === 'suite')) setPendingSuiteUndo(null);
+    onScopeChange(nextScope);
+  };
+  const startInlineFolder = (parentId: string | null) => {
+    const parent = parentId ? folderRows.find((folder) => folder.id === parentId) : undefined;
+    if (parent && parent.depth >= 2) return;
+    setPendingFolderUndo(null);
+    setInlineFolderParentId(parentId);
+    setInlineFolderName('');
+    setInlineFolderError(null);
+  };
+  const submitInlineFolder = async () => {
+    const name = inlineFolderName.trim();
+    if (!name) {
+      setInlineFolderParentId(undefined);
+      setInlineFolderName('');
+      return;
+    }
+    setIsCreating(true);
+    setInlineFolderError(null);
+    try {
+      const created = await onCreateFolder(name, inlineFolderParentId ?? null);
+      if (created && typeof created === 'object' && 'id' in created && typeof created.id === 'string')
+        changeScope({ kind: 'folder', id: created.id });
+      setInlineFolderParentId(undefined);
+      setInlineFolderName('');
+    } catch (error) {
+      setInlineFolderError(getActionErrorMessage(error));
+    } finally {
+      setIsCreating(false);
+    }
+  };
   const selectedSuite = scope.kind === CATALOG_SCOPE.suite ? suites.find((suite) => suite.id === scope.id) : undefined;
   const isSelectedSuiteEmpty = selectedSuite !== undefined && (selectedSuite.members?.length ?? 0) === 0;
   const isEmptySuitesState = isSuitesTab && !organizationLoading && !organizationError && suites.length === 0;
@@ -1336,6 +1391,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
         .join(' / ')
     : undefined;
   const openCreateDialog = (kind: 'folder' | 'suite') => {
+    setPendingFolderUndo(null);
     setCreateName('');
     setCreatePurpose('');
     setCreateRelease('');
@@ -1345,6 +1401,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   };
   const openEditFolderDialog = (folder: CatalogFolder | undefined = selectedFolder) => {
     if (!folder) return;
+    setPendingFolderUndo(null);
     setTargetFolder(folder);
     setCreateName(folder.name);
     setCreatePurpose('');
@@ -1364,9 +1421,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setCreateDialog('edit-suite');
   };
   const openFolderActionDialog = (kind: 'move-folder' | 'delete-folder', folder: CatalogFolder) => {
+    setPendingFolderUndo(null);
     setTargetFolder(folder);
     setMoveParentId(folder.parentId ?? '');
-    setDeleteDisposition('parent');
     setCreateError(null);
     setCreateDialog(kind);
   };
@@ -1382,7 +1439,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setCreateError(null);
     try {
       if (createDialog === 'folder') {
-        await onCreateFolder(createName.trim(), selectedFolder?.id ?? null, createDescription.trim() || null);
+        const created = await onCreateFolder(createName.trim(), selectedFolder?.id ?? null, createDescription.trim() || null);
+        if (created && typeof created === 'object' && 'id' in created && typeof created.id === 'string')
+          changeScope({ kind: 'folder', id: created.id });
       } else if (createDialog === 'suite') {
         const created = await onCreateSuite({
           name: createName.trim(),
@@ -1391,7 +1450,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           description: createDescription.trim() || undefined,
         });
         if (created && typeof created === 'object' && 'id' in created && typeof created.id === 'string')
-          onScopeChange({ kind: 'suite', id: created.id });
+          changeScope({ kind: 'suite', id: created.id });
       } else if (createDialog === 'rename-folder' && targetFolder) {
         await onUpdateFolder(targetFolder.id, {
           name: createName.trim(),
@@ -1407,7 +1466,15 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       } else if (createDialog === 'move-folder' && targetFolder) {
         await onUpdateFolder(targetFolder.id, { parentId: moveParentId || null });
       } else if (createDialog === 'delete-folder' && targetFolder) {
-        await onDeleteFolder(targetFolder.id, deleteDisposition);
+        const result = await onDeleteFolder(targetFolder.id);
+        if (currentProjectId.current !== projectId) return;
+        const descendantCount = Math.max(0, flattenFolders([targetFolder]).length - 1);
+        setPendingFolderUndo({
+          kind: 'deletion',
+          restoreData: result.restoreData,
+          message: `Deleted ${targetFolder.name}${descendantCount ? ` and ${descendantCount} nested folder${descendantCount === 1 ? '' : 's'}` : ''}; moved ${result.restoreData.scenarios.length} scenarios to No folder`,
+        });
+        setPendingSuiteUndo(null);
       } else if (createDialog === 'delete-suite' && targetSuite) {
         await onDeleteSuite(targetSuite.id);
       }
@@ -1456,7 +1523,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       setPendingSuiteUndo({
         kind: 'membership',
         payload: undo,
-        expiresAt: Date.now() + 10_000,
         message: getMembershipChangeMessage(0, selectedIds.length, selectedSuite?.name ?? 'the suite'),
       });
       setOperationFeedback(null);
@@ -1468,6 +1534,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     } finally {
       setIsRemovingFromSuite(false);
     }
+  };
+  const handleToggleSelected = (id: string) => {
+    setPendingSuiteUndo(null);
+    setPendingFolderUndo(null);
+    toggleSelected(id);
   };
   const clearSelection = () => selectedIds.forEach((id) => toggleSelected(id));
   const scenarioDragMime = 'application/x-testportal-scenarios';
@@ -1505,8 +1576,20 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       const ids = [...new Set(payload.scenarioIds as string[])];
       if (ids.length === 0 || active?.projectId !== projectId || ids.some((id) => !active.scenarioIds.includes(id)))
         return;
-      void onMoveScenarioIds(ids, destinationId).then(showOperationReport).catch((error: unknown) => {
-        setOperationFeedback(getActionErrorMessage(error));
+      setPendingFolderUndo(null);
+      setPendingSuiteUndo(null);
+      void onMoveScenarioIds(ids, destinationId).then((report) => {
+        if (currentProjectId.current !== projectId) return;
+        showOperationReport(report);
+        if (report.folderRestoreData?.length) {
+          setPendingFolderUndo({
+            kind: 'move',
+            restoreData: report.folderRestoreData,
+            message: `${report.folderRestoreData.length} scenario${report.folderRestoreData.length === 1 ? '' : 's'} moved to ${destinationId === null ? 'No folder' : folderRows.find((folder) => folder.id === destinationId)?.name ?? 'folder'}`,
+          });
+        }
+      }).catch((error: unknown) => {
+        if (currentProjectId.current === projectId) setOperationFeedback(getActionErrorMessage(error));
       });
     } catch {
       return;
@@ -1539,7 +1622,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
         } else {
           message = `${moved} scenario${moved === 1 ? '' : 's'} moved to ${destinationName}${skipped ? ` · ${skipped} ${skipped === 1 ? 'was' : 'were'} already there` : ''}`;
         }
-        setPendingSuiteUndo({ kind: 'move', payload: undo, expiresAt: Date.now() + 10_000, message });
+        setPendingSuiteUndo({ kind: 'move', payload: undo, message });
         setOperationFeedback(null);
         clearSelection();
         await refreshSuiteData();
@@ -1592,7 +1675,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             setPendingSuiteUndo({
               kind: 'reorder',
               payload: { suiteId, scenarioIds: previousOrder },
-              expiresAt: Date.now() + 10_000,
               message: `Scenario order updated in ${suiteName}`,
             });
           })
@@ -1653,7 +1735,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             alignItems="center"
             justifyContent="flex-start"
             aria-current={selected ? 'page' : undefined}
-            onClick={() => onScopeChange({ kind: 'folder', id: folder.id })}
+            onClick={() => changeScope({ kind: 'folder', id: folder.id })}
             onDragOver={(event) => handleScenarioDragOver(event, folder.id)}
             onDragLeave={(event) => {
               if (!event.currentTarget.contains(event.relatedTarget as Node | null))
@@ -1675,6 +1757,34 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             {renderFolder(child)}
           </Box>
         ))}
+        {inlineFolderParentId === folder.id && (
+          <Box ps={4} py={1}>
+            <Input
+              autoFocus
+              size="sm"
+              aria-label="New folder name"
+              placeholder="Subfolder name"
+              border="1px solid"
+              borderColor="blue.500"
+              _focusVisible={{ borderColor: 'blue.500', outline: 'none', boxShadow: 'none' }}
+              value={inlineFolderName}
+              disabled={isCreating}
+              onChange={(event) => setInlineFolderName(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') setInlineFolderParentId(undefined);
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  void submitInlineFolder();
+                }
+              }}
+            />
+            {inlineFolderError && (
+              <Text role="alert" color="fg.error" fontSize="xs">
+                {inlineFolderError}
+              </Text>
+            )}
+          </Box>
+        )}
       </Box>
     );
   };
@@ -1724,7 +1834,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   borderStartWidth="3px"
                   borderStartColor={scope.kind === CATALOG_SCOPE.all ? 'blue.500' : 'transparent'}
                   aria-current={scope.kind === CATALOG_SCOPE.all ? 'page' : undefined}
-                  onClick={() => onScopeChange({ kind: 'all' })}
+                  onClick={() => changeScope({ kind: 'all' })}
                 >
                   <FiLayers />
                   All scenarios
@@ -1752,7 +1862,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     color="text.secondary"
                     aria-label={selectedFolder ? 'Create subfolder' : 'Create folder'}
                     title={selectedFolder ? 'Create inside selected folder' : 'Create folder'}
-                    onClick={() => openCreateDialog('folder')}
+                    disabled={Boolean(selectedFolder && selectedFolder.depth >= 2)}
+                    onClick={() => startInlineFolder(selectedFolder?.id ?? null)}
                   >
                     <FiPlus />
                   </IconButton>
@@ -1765,12 +1876,40 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   <Text px={2} color="fg.error" fontSize="sm" role="alert">
                     Folders could not be loaded.
                   </Text>
-                ) : folders.length === 0 ? (
+                ) : folders.length === 0 && inlineFolderParentId !== null ? (
                   <Text px={2} color="text.muted" fontSize="sm">
                     No folders yet
                   </Text>
                 ) : (
                   <VStack align="stretch" gap={0}>
+                    {inlineFolderParentId === null && (
+                      <Box py={1}>
+                        <Input
+                          autoFocus
+                          size="sm"
+                          aria-label="New folder name"
+                          placeholder="Folder name, Enter to create"
+                          border="1px solid"
+                          borderColor="blue.500"
+                          _focusVisible={{ borderColor: 'blue.500', outline: 'none', boxShadow: 'none' }}
+                          value={inlineFolderName}
+                          disabled={isCreating}
+                          onChange={(event) => setInlineFolderName(event.currentTarget.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Escape') setInlineFolderParentId(undefined);
+                            if (event.key === 'Enter') {
+                              event.preventDefault();
+                              void submitInlineFolder();
+                            }
+                          }}
+                        />
+                        {inlineFolderError && (
+                          <Text role="alert" color="fg.error" fontSize="xs">
+                            {inlineFolderError}
+                          </Text>
+                        )}
+                      </Box>
+                    )}
                     {folders.map(renderFolder)}
                   </VStack>
                 )}
@@ -1786,7 +1925,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 alignItems="center"
                 justifyContent="flex-start"
                 aria-current={scope.kind === 'unfiled' ? 'page' : undefined}
-                onClick={() => onScopeChange({ kind: 'unfiled' })}
+                onClick={() => changeScope({ kind: 'unfiled' })}
                 bg={scope.kind === 'unfiled' || dragOverFolderId === UNFILED_DESTINATION ? 'blue.subtle' : undefined}
                 outline={dragOverFolderId === UNFILED_DESTINATION ? '2px dashed' : undefined}
                 outlineColor="blue.500"
@@ -1832,37 +1971,33 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 </HStack>
                 {createDialog === 'suite' && (
                   <form onSubmit={(event) => void submitCreate(event)}>
-                    <VStack align="stretch" gap={2} px={2} pb={2}>
-                      <HStack gap={1}>
+                    <Box py={1}>
                         <Input
                           aria-label="Suite name"
                           autoFocus
-                          required
+                          size="sm"
                           maxLength={120}
                           value={createName}
-                          placeholder="Suite name"
+                          placeholder="Suite name, Enter to create"
+                          border="1px solid"
+                          borderColor="blue.500"
+                          _focusVisible={{ borderColor: 'blue.500', outline: 'none', boxShadow: 'none' }}
+                          disabled={isCreating}
                           onChange={(event) => setCreateName(event.currentTarget.value)}
                           onKeyDown={(event) => {
                             if (event.key === 'Escape') setCreateDialog(null);
+                            if (event.key === 'Enter' && !createName.trim()) {
+                              event.preventDefault();
+                              setCreateDialog(null);
+                            }
                           }}
                         />
-                        <IconButton
-                          aria-label="Create suite"
-                          size="sm"
-                          variant="ghost"
-                          type="submit"
-                          disabled={!createName.trim() || isCreating}
-                          loading={isCreating}
-                        >
-                          <FiCheck />
-                        </IconButton>
-                      </HStack>
                       {createError && (
-                        <Text role="alert" color="fg.error" fontSize="sm">
+                        <Text role="alert" color="fg.error" fontSize="xs">
                           {createError}
                         </Text>
                       )}
-                    </VStack>
+                    </Box>
                   </form>
                 )}
                 {organizationLoading ? (
@@ -1893,7 +2028,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                           borderStartColor={selected ? 'blue.500' : 'transparent'}
                           justifyContent="flex-start"
                           aria-current={selected ? 'page' : undefined}
-                          onClick={() => onScopeChange({ kind: 'suite', id: suite.id })}
+                          onClick={() => changeScope({ kind: 'suite', id: suite.id })}
                           onDragOver={(event) => {
                             if (
                               !isScenariosTab &&
@@ -1932,29 +2067,32 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
               <Box>
                 <HStack justify="space-between" align="start" gap={3} flexWrap="wrap">
                   <Box minW="0" flex="1">
-                    {createDialog === 'edit-suite' && selectedSuite ? (
+                    {(createDialog === 'edit-suite' && selectedSuite) ||
+                    (createDialog === 'rename-folder' && selectedFolder) ? (
                       <form onSubmit={(event) => void submitCreate(event)}>
                         <Grid templateColumns={{ base: '1fr', md: 'minmax(0, 1fr) auto' }} alignItems="start" gap={3}>
                           <VStack align="stretch" gap={2}>
                             <label>
                               <Text mb={1} fontSize="xs" color="text.secondary">
-                                Name
+                                {createDialog === 'rename-folder' ? 'Folder name' : 'Name'}
                               </Text>
                               <Input
-                                aria-label="Suite name"
+                                aria-label={createDialog === 'rename-folder' ? 'Folder name' : 'Suite name'}
                                 autoFocus
                                 required
-                                maxLength={120}
+                                maxLength={200}
                                 value={createName}
                                 onChange={(event) => setCreateName(event.currentTarget.value)}
                               />
                             </label>
                             <label>
                               <Text mb={1} fontSize="xs" color="text.secondary">
-                                Description
+                                {createDialog === 'rename-folder' ? 'Description (optional)' : 'Description'}
                               </Text>
                               <Textarea
-                                aria-label="Suite description"
+                                aria-label={
+                                  createDialog === 'rename-folder' ? 'Description (optional)' : 'Suite description'
+                                }
                                 value={createDescription}
                                 onChange={(event) => setCreateDescription(event.currentTarget.value)}
                               />
@@ -1994,11 +2132,13 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                                 : 'All scenarios')}
                       </Heading>
                     )}
-                    {createDialog !== 'edit-suite' && selectedFolder?.description && (
-                      <Text mt={1} color="text.secondary" fontSize="sm">
-                        {selectedFolder.description}
-                      </Text>
-                    )}
+                    {createDialog !== 'edit-suite' &&
+                      createDialog !== 'rename-folder' &&
+                      selectedFolder?.description && (
+                        <Text mt={1} color="text.secondary" fontSize="sm">
+                          {selectedFolder.description}
+                        </Text>
+                      )}
                     {createDialog !== 'edit-suite' && selectedSuite && (
                       <Text mt={1} color="text.muted" fontSize="sm">
                         {selectedSuite.description?.trim() || 'No description'}
@@ -2021,7 +2161,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                           bg={isSelectedSuiteEmpty ? 'button.primary.bg.disabled' : undefined}
                           color={isSelectedSuiteEmpty ? 'button.primary.color' : undefined}
                           opacity={1}
-                          _hover={isSelectedSuiteEmpty ? { bg: 'button.primary.bg.disabled', boxShadow: 'none' } : undefined}
+                          _hover={
+                            isSelectedSuiteEmpty ? { bg: 'button.primary.bg.disabled', boxShadow: 'none' } : undefined
+                          }
                           onClick={(event) => {
                             if (isSelectedSuiteEmpty) event.preventDefault();
                           }}
@@ -2068,56 +2210,73 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                     </HStack>
                   )}
                   <HStack gap={2}>
-                    {isScenariosTab && (
+                    {isScenariosTab && createDialog !== 'rename-folder' && (
                       <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}>
                         <FiPlus />
                         Create scenario
                       </Button>
                     )}
-                    {isScenariosTab && scope.kind !== CATALOG_SCOPE.all && (
-                      <Menu.Root>
+                    {isScenariosTab && selectedFolder && createDialog !== 'rename-folder' && (
+                      <Menu.Root positioning={{ placement: 'bottom-end' }}>
                         <Menu.Trigger asChild>
                           <IconButton aria-label="Folder actions" size="md" variant="outline">
                             <FiMoreHorizontal />
                           </IconButton>
                         </Menu.Trigger>
                         <Menu.Positioner>
-                          <Menu.Content>
-                            <Menu.Item value="create-folder" onClick={() => openCreateDialog('folder')}>
-                              {selectedFolder ? 'Create subfolder' : 'Create folder'}
-                            </Menu.Item>
+                          <Menu.Content minW="210px" p="1" borderRadius="lg">
+                            {selectedFolder && selectedFolder.depth < 2 && (
+                              <Menu.Item value="create-folder" minH="32px" gap="3" onClick={() => startInlineFolder(selectedFolder.id)}>
+                                <FiFolderPlus aria-hidden="true" />
+                                New subfolder
+                              </Menu.Item>
+                            )}
                             {selectedFolder && (
                               <>
-                                <Menu.Item value="rename-folder" onClick={() => openEditFolderDialog(selectedFolder)}>
+                                <Menu.Item value="rename-folder" minH="32px" gap="3" onClick={() => openEditFolderDialog(selectedFolder)}>
+                                  <FiEdit aria-hidden="true" />
                                   Edit folder details
                                 </Menu.Item>
                                 <Menu.Item
                                   value="move-folder-up"
+                                  minH="32px"
+                                  gap="3"
                                   disabled={selectedFolderIndex <= 0}
                                   onClick={() => void reorderFolder(selectedFolder, -1)}
                                 >
+                                  <FiArrowUp aria-hidden="true" />
                                   Move up
                                 </Menu.Item>
                                 <Menu.Item
                                   value="move-folder-down"
+                                  minH="32px"
+                                  gap="3"
                                   disabled={
                                     selectedFolderIndex < 0 || selectedFolderIndex >= selectedFolderSiblings.length - 1
                                   }
                                   onClick={() => void reorderFolder(selectedFolder, 1)}
                                 >
+                                  <FiArrowDown aria-hidden="true" />
                                   Move down
                                 </Menu.Item>
                                 <Menu.Item
                                   value="move-folder"
+                                  minH="32px"
+                                  gap="3"
                                   onClick={() => openFolderActionDialog('move-folder', selectedFolder)}
                                 >
+                                  <FiMove aria-hidden="true" />
                                   Move
                                 </Menu.Item>
+                                <Menu.Separator />
                                 <Menu.Item
                                   value="delete-folder"
+                                  minH="32px"
+                                  gap="3"
                                   color="fg.error"
                                   onClick={() => openFolderActionDialog('delete-folder', selectedFolder)}
                                 >
+                                  <FiTrash2 aria-hidden="true" />
                                   Delete folder
                                 </Menu.Item>
                               </>
@@ -2319,16 +2478,73 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       if (isUndoingSuiteChange) return;
                       setIsUndoingSuiteChange(true);
                       try {
-                        if (pendingSuiteUndo.kind === 'membership')
+                        if (pendingSuiteUndo.kind === 'membership') {
                           await restoreSuiteMembership(pendingSuiteUndo.payload);
-                        else if (pendingSuiteUndo.kind === 'move') await restoreSuiteMove(pendingSuiteUndo.payload);
-                        else await onReorderSuite(pendingSuiteUndo.payload.suiteId, pendingSuiteUndo.payload.scenarioIds);
+                          if (pendingSuiteUndo.payload.createdSuiteId)
+                            await onDeleteSuite(pendingSuiteUndo.payload.createdSuiteId);
+                        } else if (pendingSuiteUndo.kind === 'move') await restoreSuiteMove(pendingSuiteUndo.payload);
+                        else
+                          await onReorderSuite(pendingSuiteUndo.payload.suiteId, pendingSuiteUndo.payload.scenarioIds);
                         setPendingSuiteUndo(null);
                         setOperationFeedback(null);
                         await refreshSuiteData();
                       } catch (error) {
                         setOperationFeedback(`Undo failed: ${getActionErrorMessage(error)}`);
                         setPendingSuiteUndo(null);
+                        await refreshSuiteData();
+                      } finally {
+                        setIsUndoingSuiteChange(false);
+                      }
+                    }}
+                  >
+                    {isUndoingSuiteChange ? 'Undoing…' : 'Undo'}
+                  </Button>
+                </HStack>
+              </Portal>
+            )}
+            {pendingFolderUndo && (
+              <Portal>
+                <HStack
+                  role="status"
+                  aria-label="Folder organization notification"
+                  position="fixed"
+                  bottom={{ base: 3, md: 5 }}
+                  left="50%"
+                  transform="translateX(-50%)"
+                  zIndex={1500}
+                  justify="space-between"
+                  gap={5}
+                  width="max-content"
+                  maxW="calc(100vw - 32px)"
+                  bg="#1f1f23"
+                  color="white"
+                  borderRadius="md"
+                  boxShadow="lg"
+                  px={4}
+                  py={2}
+                >
+                  <Text fontSize="sm" lineHeight="short" flex="1">
+                    {pendingFolderUndo.message}
+                  </Text>
+                  <Button
+                    size="sm"
+                    variant="plain"
+                    color="#b7c6ff"
+                    flexShrink={0}
+                    disabled={isUndoingSuiteChange}
+                    onClick={async () => {
+                      if (isUndoingSuiteChange) return;
+                      setIsUndoingSuiteChange(true);
+                      try {
+                        if (pendingFolderUndo.kind === 'deletion')
+                          await restoreFolderDeletion(pendingFolderUndo.restoreData);
+                        else await restoreScenarioFolders(pendingFolderUndo.restoreData);
+                        setPendingFolderUndo(null);
+                        setOperationFeedback(null);
+                        await refreshSuiteData();
+                      } catch (error) {
+                        setOperationFeedback(`Undo failed: ${getActionErrorMessage(error)}`);
+                        setPendingFolderUndo(null);
                         await refreshSuiteData();
                       } finally {
                         setIsUndoingSuiteChange(false);
@@ -2350,7 +2566,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 Resolving all matching scenario IDs…
               </Text>
             )}
-            {selectedIds.length > 0 && (
+            {selectedIds.length > 0 && !pendingSuiteUndo && (
               <Portal>
                 <HStack
                   position="fixed"
@@ -2372,7 +2588,17 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   bg={scope.kind === CATALOG_SCOPE.suite ? 'gray.900' : 'black'}
                   _dark={{ bg: 'gray.900', color: 'white' }}
                 >
-                  <Text as="span" display="inline-flex" alignItems="center" h="8" px={1} fontSize="sm" lineHeight="1.2" fontWeight="semibold" whiteSpace="nowrap">
+                  <Text
+                    as="span"
+                    display="inline-flex"
+                    alignItems="center"
+                    h="8"
+                    px={1}
+                    fontSize="sm"
+                    lineHeight="1.2"
+                    fontWeight="semibold"
+                    whiteSpace="nowrap"
+                  >
                     {selectedIds.length} selected
                   </Text>
                   {!allMatchingSelected && selectedIds.length < pagination.total && (
@@ -2381,7 +2607,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       variant="ghost"
                       color="blue.300"
                       disabled={isResolvingSelection || isExecutingOperation}
-                      onClick={() => void selectAllMatching()}
+                      onClick={() => { setPendingSuiteUndo(null); setPendingFolderUndo(null); void selectAllMatching(); }}
                       _dark={{ color: 'blue.700' }}
                       _hover={{ bg: 'whiteAlpha.200' }}
                     >
@@ -2419,10 +2645,25 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         if (busy) onSuiteOperationStart();
                         setIsAddingToSuite(busy);
                       }}
-                      onComplete={(report, selection) => {
+                      onComplete={(report, selection, undo) => {
                         if (currentProjectId.current !== projectId) return;
                         onSuiteOperationComplete(report, selection);
-                        if (report.succeededIds.length) setPendingSuiteUndo(null);
+                        if (undo) {
+                          const added = undo.restoreData.addedScenarioIds.length;
+                          const already = selection.length - added;
+                          const message = `${added} scenario${added === 1 ? '' : 's'} added to ${undo.suiteName}${already ? ` (${already} already there)` : ''}`;
+                          setPendingSuiteUndo({
+                            kind: 'membership',
+                            payload: {
+                              restoreData: undo.restoreData,
+                              expectedMembershipRevision: undo.membershipRevision,
+                              expectedScenarioIds: undo.scenarioIds,
+                              ...(undo.createdSuiteId ? { createdSuiteId: undo.createdSuiteId } : {}),
+                            },
+                            message: undo.createdSuiteId ? `Suite “${undo.suiteName}” created · ${message}` : message,
+                          });
+                        } else if (report.succeededIds.length) setPendingSuiteUndo(null);
+                        setPendingFolderUndo(null);
                         showOperationReport(report);
                       }}
                     />
@@ -2507,8 +2748,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         isLoading={isLoading}
                         selectedIds={selectedIds}
                         selectionDisabled={isExecutingOperation}
-                        onToggleSelected={toggleSelected}
+                        onToggleSelected={handleToggleSelected}
                         onDragPayload={(dragProjectId, scenarioIds) => {
+                          setPendingFolderUndo(null);
+                          setPendingSuiteUndo(null);
                           activeDrag.current = { projectId: dragProjectId, scenarioIds };
                           setIsDraggingScenario(true);
                         }}
@@ -2518,7 +2761,14 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                           setDragOverFolderId(null);
                         }}
                         folderPathById={folderPathById}
-                        searchActive={Boolean(search.trim()) || Boolean(priority) || selectedAuthorIds.length > 0}
+                        searchActive={
+                          Boolean(search.trim()) ||
+                          Boolean(priority) ||
+                          selectedAuthorIds.length > 0 ||
+                          activeColumnFilters.length > 0
+                        }
+                        emptyFolder={scope.kind === 'folder'}
+                        onCreateScenario={onCreateScenario ?? (() => {})}
                       />
                     ) : (
                       <ScenarioTable
@@ -2526,6 +2776,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         enableSuiteDrag={!isScenariosTab}
                         enableSuiteReorder={canReorderSuite}
                         onDragPayload={(dragProjectId, scenarioIds) => {
+                          setPendingFolderUndo(null);
+                          setPendingSuiteUndo(null);
                           activeDrag.current = { projectId: dragProjectId, scenarioIds };
                           setIsDraggingScenario(true);
                         }}
@@ -2541,7 +2793,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         isLoading={isLoading}
                         selectedIds={selectedIds}
                         selectionDisabled={isExecutingOperation}
-                        onToggleSelected={toggleSelected}
+                        onToggleSelected={handleToggleSelected}
                         showFolder={showFolderColumn}
                         folderPathById={folderPathById}
                         searchActive={Boolean(search.trim()) || activeColumnFilters.length > 0}
@@ -2638,7 +2890,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             setPendingSuiteUndo({
               kind: 'membership',
               payload,
-              expiresAt: Date.now() + 10_000,
               message: getMembershipChangeMessage(addedCount, removedCount, selectedSuite?.name ?? 'the suite'),
             });
             setOperationFeedback(null);
@@ -2710,121 +2961,117 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           </form>
         </Dialog>
       )}
-      {createDialog && createDialog !== 'suite' && createDialog !== 'edit-suite' && (
-        <Dialog
-          title={
-            createDialog === 'folder'
-              ? selectedFolder
-                ? `Create folder inside ${selectedFolder.name}`
-                : 'Create folder'
-              : createDialog === 'rename-folder'
-                ? 'Rename folder'
+      {createDialog &&
+        createDialog !== 'suite' &&
+        createDialog !== 'edit-suite' &&
+        createDialog !== 'rename-folder' && (
+          <Dialog
+            title={
+              createDialog === 'folder'
+                ? selectedFolder
+                  ? `Create folder inside ${selectedFolder.name}`
+                  : 'Create folder'
                 : createDialog === 'move-folder'
                   ? `Move ${targetFolder?.name ?? 'folder'}`
                   : createDialog === 'delete-folder'
-                    ? 'Delete folder'
+                    ? `Delete folder “${targetFolder?.name ?? 'folder'}”?`
                     : `Delete suite “${targetSuite?.name ?? ''}”?`
-          }
-          onClose={() => setCreateDialog(null)}
-        >
-          <form onSubmit={(event) => void submitCreate(event)}>
-            <DialogBody>
-              <VStack align="stretch" gap={4}>
-                {['folder', 'rename-folder'].includes(createDialog) && (
-                  <label>
-                    <Text mb={1}>Name</Text>
-                    <Input
-                      autoFocus
-                      required
-                      maxLength={120}
-                      value={createName}
-                      onChange={(event) => setCreateName(event.currentTarget.value)}
-                      bg={createDialog === 'rename-folder' ? 'white' : undefined}
-                    />
-                  </label>
-                )}
-                {['folder', 'rename-folder'].includes(createDialog) && (
-                  <>
-                    {(createDialog === 'folder' || createDialog === 'rename-folder') && (
-                      <label>
-                        <Text mb={1}>Description (optional)</Text>
-                        <Textarea
-                          value={createDescription}
-                          onChange={(event) => setCreateDescription(event.currentTarget.value)}
-                        />
-                      </label>
-                    )}
-                  </>
-                )}
-                {createDialog === 'move-folder' && targetFolder && (
-                  <NativeSelect
-                    label="Parent folder"
-                    value={moveParentId}
-                    onChange={(event) => setMoveParentId(event.currentTarget.value)}
-                  >
-                    <option value="">Root level</option>
-                    {folderRows
-                      .filter((folder) => !isInFolderSubtree(folder.id, targetFolder.id))
-                      .map((folder) => (
-                        <option key={folder.id} value={folder.id}>
-                          {'　'.repeat(folder.depth)}
-                          {folder.name}
-                        </option>
-                      ))}
-                  </NativeSelect>
-                )}
-                {createDialog === 'delete-folder' && targetFolder && (
-                  <>
-                    <Text>
-                      Direct scenarios will move to the selected destination. Child folders will be promoted to this
-                      folder’s parent.
-                    </Text>
+            }
+            onClose={() => setCreateDialog(null)}
+          >
+            <form onSubmit={(event) => void submitCreate(event)}>
+              <DialogBody>
+                <VStack align="stretch" gap={4}>
+                  {createDialog === 'folder' && (
+                    <label>
+                      <Text mb={1}>Name</Text>
+                      <Input
+                        autoFocus
+                        required
+                        maxLength={200}
+                        value={createName}
+                        onChange={(event) => setCreateName(event.currentTarget.value)}
+                        bg={undefined}
+                      />
+                    </label>
+                  )}
+                  {createDialog === 'folder' && (
+                    <label>
+                      <Text mb={1}>Description (optional)</Text>
+                      <Textarea
+                        value={createDescription}
+                        onChange={(event) => setCreateDescription(event.currentTarget.value)}
+                      />
+                    </label>
+                  )}
+                  {createDialog === 'move-folder' && targetFolder && (
                     <NativeSelect
-                      label="Move direct scenarios to"
-                      value={deleteDisposition}
-                      onChange={(event) => setDeleteDisposition(event.currentTarget.value as 'parent' | 'unfiled')}
+                      label="Parent folder"
+                      value={moveParentId}
+                      onChange={(event) => setMoveParentId(event.currentTarget.value)}
                     >
-                      <option value="parent">Parent folder</option>
-                      <option value="unfiled">No folder</option>
+                      <option value="">Root level</option>
+                      {folderRows
+                        .filter((folder) => !isInFolderSubtree(folder.id, targetFolder.id))
+                        .map((folder) => (
+                          <option key={folder.id} value={folder.id}>
+                            {'　'.repeat(folder.depth)}
+                            {folder.name}
+                          </option>
+                        ))}
                     </NativeSelect>
-                  </>
-                )}
-                {createDialog === 'delete-suite' && (
-                  <Text color="text.secondary">
-                    {targetSuite?.members?.length ?? 0} scenario{targetSuite?.members?.length === 1 ? '' : 's'} will be
-                    unlinked from this suite. The scenarios themselves stay in the catalog. This can’t be undone.
-                  </Text>
-                )}
-                {createError && (
-                  <Text role="alert" color="fg.error">
-                    {createError}
-                  </Text>
-                )}
-              </VStack>
-            </DialogBody>
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setCreateDialog(null)}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant={['delete-folder', 'delete-suite'].includes(createDialog) ? 'solid' : 'primary'}
-                colorPalette={['delete-folder', 'delete-suite'].includes(createDialog) ? 'red' : undefined}
-                disabled={isCreating || (['folder', 'rename-folder'].includes(createDialog) && !createName.trim())}
-                loading={isCreating}
-              >
-                {createDialog === 'folder'
-                  ? 'Create'
-                  : createDialog === 'move-folder'
-                    ? 'Move'
-                    : ['delete-folder', 'delete-suite'].includes(createDialog)
-                      ? 'Delete'
-                      : 'Save'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Dialog>
-      )}
+                  )}
+                  {createDialog === 'delete-folder' &&
+                    targetFolder &&
+                    (() => {
+                      const nestedFolders = flattenFolders([targetFolder]).slice(1);
+                      const nestedFolderCount = nestedFolders.length;
+                      const scenarioCount = folderScenarioCounts.get(targetFolder.id) ?? targetFolder.scenarioCount;
+
+                      return (
+                        <Text>
+                          {nestedFolderCount === 0
+                            ? `All ${scenarioCount} scenarios in this folder will move to No folder. Scenarios are not deleted.`
+                            : `Its ${nestedFolderCount} subfolder${nestedFolderCount === 1 ? '' : 's'} ${nestedFolders.map((folder) => `“${folder.name}”`).join(', ')} will be deleted as well. All ${scenarioCount} scenario${scenarioCount === 1 ? '' : 's'} from these folders will move to No folder. Scenarios are not deleted.`}
+                        </Text>
+                      );
+                    })()}
+                  {createDialog === 'delete-suite' && (
+                    <Text color="text.secondary">
+                      {targetSuite?.members?.length ?? 0} scenario{targetSuite?.members?.length === 1 ? '' : 's'} will
+                      be unlinked from this suite. The scenarios themselves stay in the catalog. This can’t be undone.
+                    </Text>
+                  )}
+                  {createError && (
+                    <Text role="alert" color="fg.error">
+                      {createError}
+                    </Text>
+                  )}
+                </VStack>
+              </DialogBody>
+              <DialogFooter>
+                <Button type="button" variant="ghost" onClick={() => setCreateDialog(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant={['delete-folder', 'delete-suite'].includes(createDialog) ? 'solid' : 'primary'}
+                  colorPalette={['delete-folder', 'delete-suite'].includes(createDialog) ? 'red' : undefined}
+                  disabled={isCreating || (['folder', 'rename-folder'].includes(createDialog) && !createName.trim())}
+                  loading={isCreating}
+                >
+                  {createDialog === 'folder'
+                    ? 'Create'
+                    : createDialog === 'move-folder'
+                      ? 'Move'
+                      : ['delete-folder', 'delete-suite'].includes(createDialog)
+                        ? 'Delete'
+                        : 'Save'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Dialog>
+        )}
     </Wrap>
   );
 });
