@@ -237,16 +237,32 @@ const ErrorState = () => (
   </Alert.Root>
 );
 
-const EmptyState = ({ searchActive = false, emptySuite = false, suiteView = false, onAddScenarios }: { searchActive?: boolean; emptySuite?: boolean; suiteView?: boolean; onAddScenarios?: () => void }) => (
+const EmptyState = ({
+  searchActive = false,
+  emptySuite = false,
+  suiteView = false,
+  onAddScenarios,
+}: {
+  searchActive?: boolean;
+  emptySuite?: boolean;
+  suiteView?: boolean;
+  onAddScenarios?: () => void;
+}) => (
   <VStack py={8} gap={3}>
     <Text color="text.muted">
       {emptySuite
         ? 'No scenarios in this suite yet'
         : searchActive
-          ? suiteView ? 'No scenarios in this suite match the search and filters.' : 'No scenarios match the current search.'
-          : 'No Test Scenarios are available for this project.'}
+          ? suiteView
+            ? 'No scenarios in this suite match the search and filters'
+            : 'No scenarios match the current folder, search and filters'
+          : 'No Test Scenarios are available for this project'}
     </Text>
-    {emptySuite && onAddScenarios && <Button size="sm" variant="outline" onClick={onAddScenarios}>Add scenarios</Button>}
+    {emptySuite && onAddScenarios && (
+      <Button size="sm" variant="outline" onClick={onAddScenarios}>
+        Add scenarios
+      </Button>
+    )}
   </VStack>
 );
 
@@ -702,7 +718,7 @@ const AuthorFilter = ({
       <Portal>
         <Popover.Positioner>
           <Popover.Content w="260px" bg="bg.card" p={0}>
-            <Box position="relative" px={3} py={2} borderBottomWidth="1px" borderColor="border.main">
+            <Box position="relative" px={3} py={0} borderBottomWidth="1px" borderColor="border.main">
               <Box position="absolute" insetStart={3} top="50%" transform="translateY(-50%)" zIndex={1} color="text.muted" pointerEvents="none">
                 <FiSearch aria-hidden="true" size={13} />
               </Box>
@@ -803,6 +819,7 @@ const ScenarioSortSelect = ({
           aria-label={`Sort: ${selectedLabel}`}
           variant="outline"
           bg="bg.card"
+          borderColor={(allowRunOrder ? Boolean(value) : Boolean(value && value !== 'updatedAt')) ? 'border.active' : undefined}
           minW="152px"
           justifyContent="space-between"
           fontSize="sm"
@@ -816,28 +833,30 @@ const ScenarioSortSelect = ({
           <Popover.Content w="132px" bg="bg.card" p={1}>
             <Popover.Body p={0}>
               <VStack align="stretch" gap={0}>
-                {allowRunOrder && (
-                  <Button variant="ghost" size="sm" justifyContent="flex-start" fontWeight={!value ? 'semibold' : 'normal'}
-                    aria-current={!value ? 'true' : undefined} onClick={() => { onChange(undefined); setOpen(false); }}>
-                    Run order
-                  </Button>
-                )}
-                {options.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant="ghost"
-                    size="sm"
-                    justifyContent="flex-start"
-                    fontWeight={option.value === value ? 'semibold' : 'normal'}
-                    aria-current={option.value === value ? 'true' : undefined}
-                    onClick={() => {
-                      onChange(option.value);
-                      setOpen(false);
-                    }}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
+                {(allowRunOrder ? [{ value: undefined, label: 'Run order' }, ...options] : options).map((option) => {
+                  const selected = option.value === value;
+                  return (
+                    <Button
+                      key={option.value ?? 'run-order'}
+                      variant="ghost"
+                      size="sm"
+                      justifyContent="space-between"
+                      fontWeight={selected ? 'semibold' : 'normal'}
+                      color={selected ? 'blue.600' : undefined}
+                      bg={selected ? 'blue.50' : undefined}
+                      _hover={{ bg: selected ? 'blue.100' : 'bg.subtle' }}
+                      _dark={selected ? { color: 'blue.200', bg: 'blue.900', _hover: { bg: 'blue.800' } } : undefined}
+                      aria-current={selected ? 'true' : undefined}
+                      onClick={() => {
+                        onChange(option.value);
+                        setOpen(false);
+                      }}
+                    >
+                      {option.label}
+                      {selected && <FiCheck aria-hidden="true" />}
+                    </Button>
+                  );
+                })}
               </VStack>
             </Popover.Body>
           </Popover.Content>
@@ -1188,7 +1207,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   selectionError,
   selectAllMatching,
   toggleSelected,
-  onMoveSelected,
   onMoveScenarioIds,
   onSuiteOperationStart,
   onSuiteOperationComplete,
@@ -1234,12 +1252,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [targetSuite, setTargetSuite] = useState<CatalogSuite | null>(null);
   const [moveParentId, setMoveParentId] = useState('');
   const [deleteDisposition, setDeleteDisposition] = useState<'parent' | 'unfiled'>('parent');
-  const [moveScenariosOpen, setMoveScenariosOpen] = useState(false);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [isDraggingScenario, setIsDraggingScenario] = useState(false);
   const activeDrag = useRef<{ projectId: string; scenarioIds: string[] } | null>(null);
-  const [moveScenariosTarget, setMoveScenariosTarget] = useState('');
-  const [moveScenariosError, setMoveScenariosError] = useState<string | null>(null);
   const [operationFeedback, setOperationFeedback] = useState<string | null>(null);
   const [pendingSuiteUndo, setPendingSuiteUndo] = useState<
     | { kind: 'membership'; payload: SuiteMembershipUndo; expiresAt: number; message: string }
@@ -1260,18 +1275,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
   const scopeKey = `${scope.kind}:${scope.id ?? ''}`;
-  const latestScope = useRef(scopeKey);
-  const moveDialogScope = useRef<string | null>(null);
-  latestScope.current = scopeKey;
   useEffect(() => {
-    moveDialogScope.current = null;
-    setMoveScenariosOpen(false);
-    setMoveScenariosTarget('');
-    setMoveScenariosError(null);
     setDeleteSelectedOpen(false);
   }, [scopeKey]);
 
-  const [isMovingScenarios, setIsMovingScenarios] = useState(false);
   const [isAddingToSuite, setIsAddingToSuite] = useState(false);
   const [removeFromSuiteOpen, setRemoveFromSuiteOpen] = useState(false);
   const [removeFromSuiteError, setRemoveFromSuiteError] = useState<string | null>(null);
@@ -1424,26 +1431,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     ];
     const guidance = report.uncertainIds.length ? ' Check unknown outcomes before retrying.' : '';
     setOperationFeedback(`${counts.join(' · ')}. ${report.errorMessage ?? 'The operation did not complete.'}${guidance}`);
-  };
-  const submitMoveScenarios = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (
-      isMovingScenarios ||
-      selectedIds.length === 0 ||
-      scope.kind === CATALOG_SCOPE.suite ||
-      moveDialogScope.current !== latestScope.current
-    )
-      return;
-    setIsMovingScenarios(true);
-    setMoveScenariosError(null);
-    try {
-      showOperationReport(await onMoveSelected(moveScenariosTarget === UNFILED_DESTINATION ? null : moveScenariosTarget));
-      setMoveScenariosOpen(false);
-    } catch (error) {
-      setMoveScenariosError(getActionErrorMessage(error));
-    } finally {
-      setIsMovingScenarios(false);
-    }
   };
   const submitDeleteSelected = async () => {
     if (isDeletingSelected || deleteTargetIds.length === 0) return;
@@ -1942,7 +1929,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
 
           <VStack align="stretch" gap={4} minW="0">
             {!isEmptySuitesState && (
-              <Box minH={{ base: 'auto', md: selectedFolder ? '84px' : 'auto' }}>
+              <Box>
                 <HStack justify="space-between" align="start" gap={3} flexWrap="wrap">
                   <Box minW="0" flex="1">
                     {createDialog === 'edit-suite' && selectedSuite ? (
@@ -2012,20 +1999,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         {selectedFolder.description}
                       </Text>
                     )}
-                    {createDialog !== 'edit-suite' &&
-                      (selectedSuite ? (
-                        <Text mt={1} color="text.muted" fontSize="sm">
-                          {selectedSuite.description?.trim() || 'No description'}
-                        </Text>
-                      ) : (
-                        <Text mt={selectedFolder?.description ? 0 : 1} color="text.muted" fontSize="sm">
-                          {selectedFolder
-                            ? `${pagination.total} scenarios`
-                            : scope.kind === 'unfiled'
-                              ? `${pagination.total} scenarios without a folder`
-                              : `${pagination.total} scenarios`}
-                        </Text>
-                      ))}
+                    {createDialog !== 'edit-suite' && selectedSuite && (
+                      <Text mt={1} color="text.muted" fontSize="sm">
+                        {selectedSuite.description?.trim() || 'No description'}
+                      </Text>
+                    )}
                   </Box>
                   {selectedSuite && createDialog !== 'edit-suite' && (
                     <HStack>
@@ -2241,7 +2219,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         variant="outline"
                         bg="bg.card"
                         color="text.primary"
-                        borderColor="border.main"
+                        borderColor={sort && sortDirection !== 'desc' ? 'border.active' : 'border.main'}
                         h="40px"
                         w="40px"
                         minW="40px"
@@ -2394,7 +2372,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   bg={scope.kind === CATALOG_SCOPE.suite ? 'gray.900' : 'black'}
                   _dark={{ bg: 'gray.900', color: 'white' }}
                 >
-                  <Text px={1} fontSize="sm" fontWeight="semibold" whiteSpace="nowrap">
+                  <Text as="span" display="inline-flex" alignItems="center" h="8" px={1} fontSize="sm" lineHeight="1.2" fontWeight="semibold" whiteSpace="nowrap">
                     {selectedIds.length} selected
                   </Text>
                   {!allMatchingSelected && selectedIds.length < pagination.total && (
@@ -2410,62 +2388,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       Select all {pagination.total}
                     </Button>
                   )}
-                  {scope.kind === CATALOG_SCOPE.suite && (
-                    <Box aria-hidden="true" h="6" borderStartWidth="1px" borderColor="whiteAlpha.400" mx={1} />
-                  )}
-                  {scope.kind !== CATALOG_SCOPE.suite && (
-                    <Menu.Root>
-                      <Menu.Trigger asChild>
-                        <IconButton
-                          size="sm"
-                          variant="ghost"
-                          aria-label="More bulk actions"
-                          disabled={isExecutingOperation || isAddingToSuite}
-                          color="inherit"
-                          _hover={{ bg: 'whiteAlpha.200', _dark: { bg: 'blackAlpha.200' } }}
-                          _expanded={{ bg: 'whiteAlpha.200', _dark: { bg: 'blackAlpha.200' } }}
-                        >
-                          <FiMoreHorizontal />
-                        </IconButton>
-                      </Menu.Trigger>
-                      <Menu.Positioner>
-                        <Menu.Content>
-                          <Menu.Item
-                            value="move-selected"
-                            onClick={() => {
-                              moveDialogScope.current = scopeKey;
-                              setMoveScenariosTarget('');
-                              setMoveScenariosError(null);
-                              setMoveScenariosOpen(true);
-                            }}
-                          >
-                            <HStack justify="space-between" w="full">
-                              <Text>Move to folder</Text>
-                              <FiFolder aria-hidden="true" />
-                            </HStack>
-                          </Menu.Item>
-                        </Menu.Content>
-                      </Menu.Positioner>
-                    </Menu.Root>
-                  )}
-                  {isScenariosTab && projectId && (
-                    <SuitePicker
-                      key={projectId}
-                      projectId={projectId}
-                      selectedIds={selectedIds}
-                      disabled={isExecutingOperation || isAddingToSuite}
-                      onBusyChange={(busy) => {
-                        if (busy) onSuiteOperationStart();
-                        setIsAddingToSuite(busy);
-                      }}
-                      onComplete={(report, selection) => {
-                        if (currentProjectId.current !== projectId) return;
-                        onSuiteOperationComplete(report, selection);
-                        if (report.succeededIds.length) setPendingSuiteUndo(null);
-                        showOperationReport(report);
-                      }}
-                    />
-                  )}
+                  <Box aria-hidden="true" h="6" borderStartWidth="1px" borderColor="whiteAlpha.400" mx={1} />
                   {(isSuitesTab || isScenariosTab) && (
                     <Tooltip
                       content={`Start a manual run with the ${selectedIds.length === 1 ? 'selected scenario' : `${selectedIds.length} selected scenarios`}`}
@@ -2485,6 +2408,24 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         Run selected
                       </Button>
                     </Tooltip>
+                  )}
+                  {isScenariosTab && projectId && (
+                    <SuitePicker
+                      key={projectId}
+                      projectId={projectId}
+                      selectedIds={selectedIds}
+                      disabled={isExecutingOperation || isAddingToSuite}
+                      onBusyChange={(busy) => {
+                        if (busy) onSuiteOperationStart();
+                        setIsAddingToSuite(busy);
+                      }}
+                      onComplete={(report, selection) => {
+                        if (currentProjectId.current !== projectId) return;
+                        onSuiteOperationComplete(report, selection);
+                        if (report.succeededIds.length) setPendingSuiteUndo(null);
+                        showOperationReport(report);
+                      }}
+                    />
                   )}
                   {isScenariosTab && (
                     <Button
@@ -2735,52 +2676,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
               Delete {deleteTargetIds.length} scenarios
             </Button>
           </DialogFooter>
-        </Dialog>
-      )}
-      {moveScenariosOpen && scope.kind !== CATALOG_SCOPE.suite && moveDialogScope.current === scopeKey && (
-        <Dialog
-          title={`Move ${selectedIds.length} scenario${selectedIds.length === 1 ? '' : 's'}`}
-          onClose={() => setMoveScenariosOpen(false)}
-        >
-          <form onSubmit={(event) => void submitMoveScenarios(event)}>
-            <DialogBody>
-              <VStack align="stretch" gap={4}>
-                <Text color="text.secondary">Choose where to move the selected scenarios.</Text>
-                <NativeSelect
-                  label="Destination folder"
-                  placeholder="Choose destination"
-                  value={moveScenariosTarget}
-                  onChange={(event) => setMoveScenariosTarget(event.currentTarget.value)}
-                >
-                  <option value={UNFILED_DESTINATION}>No folder</option>
-                  {folderRows.map((folder) => (
-                    <option key={folder.id} value={folder.id}>
-                      {'　'.repeat(folder.depth)}
-                      {folder.name}
-                    </option>
-                  ))}
-                </NativeSelect>
-                {moveScenariosError && (
-                  <Text role="alert" color="fg.error">
-                    {moveScenariosError}
-                  </Text>
-                )}
-              </VStack>
-            </DialogBody>
-            <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setMoveScenariosOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                loading={isMovingScenarios}
-                disabled={!moveScenariosTarget || isMovingScenarios}
-              >
-                Move {selectedIds.length} scenario{selectedIds.length === 1 ? '' : 's'}
-              </Button>
-            </DialogFooter>
-          </form>
         </Dialog>
       )}
       {removeFromSuiteOpen && (

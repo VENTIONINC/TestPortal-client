@@ -813,6 +813,13 @@ describe('TestScenarioCatalogView', () => {
     finishRestore?.();
   });
 
+  it('shows scenario bulk actions in the requested order without a More menu', () => {
+    renderView({ selectedIds: ['scenario-1'] });
+    const toolbar = screen.getByRole('toolbar', { name: 'Bulk scenario actions' });
+    expect(screen.queryByRole('button', { name: 'More bulk actions' })).not.toBeInTheDocument();
+    expect(toolbar.textContent).toMatch(/Run selected.*Add to suite.*Delete/);
+  });
+
   it('hides the bulk Move menu in suite scope while retaining membership actions', () => {
     const onMoveSelected = vi.fn(async () => ({
       succeededIds: [],
@@ -833,21 +840,7 @@ describe('TestScenarioCatalogView', () => {
     expect(onMoveSelected).not.toHaveBeenCalled();
   });
 
-  it.each(['all', 'folder', 'unfiled'] as const)('retains bulk folder assignment in %s scope', async (kind) => {
-    const user = userEvent.setup();
-    const onMoveSelected = vi.fn(async () => ({
-      succeededIds: [],
-      failedIds: [],
-      unattemptedIds: [],
-      uncertainIds: [],
-    }));
-    renderView({ scope: { kind, id: 'folder-1' }, selectedIds: ['scenario-1'], onMoveSelected });
-    await user.click(screen.getByRole('button', { name: 'More bulk actions' }));
-    await user.click(screen.getByRole('menuitem', { name: 'Move to folder' }));
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Destination folder' }), '__unfiled__');
-    await user.click(screen.getByRole('button', { name: 'Move 1 scenario' }));
-    expect(onMoveSelected).toHaveBeenCalledWith(null);
-  });
+
 
   it('retains folder menu moves independently from suite membership', async () => {
     const user = userEvent.setup();
@@ -865,41 +858,6 @@ describe('TestScenarioCatalogView', () => {
     await user.selectOptions(screen.getByRole('combobox', { name: 'Parent folder' }), 'folder-2');
     await user.click(screen.getByRole('button', { name: /^Move$/ }));
     expect(onUpdateFolder).toHaveBeenCalledWith('folder-1', { parentId: 'folder-2' });
-  });
-
-  it('closes a stale Move dialog when switching into a suite and does not reopen it on return', async () => {
-    const user = userEvent.setup();
-    const onMoveSelected = vi.fn(async () => ({
-      succeededIds: [],
-      failedIds: [],
-      unattemptedIds: [],
-      uncertainIds: [],
-    }));
-    const props = {
-      scenarios,
-      pagination,
-      isLoading: false,
-      onPageChange: vi.fn(),
-      ...defaultProps,
-      selectedIds: ['scenario-1'],
-      onMoveSelected,
-    };
-    const tree = (scope: TestScenarioCatalogViewProps['scope']) => (
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioCatalogView {...props} scope={scope} />
-        </MemoryRouter>
-      </ChakraProvider>
-    );
-    const view = render(tree({ kind: 'all' }));
-    await user.click(screen.getByRole('button', { name: 'More bulk actions' }));
-    await user.click(screen.getByRole('menuitem', { name: 'Move to folder' }));
-    expect(screen.getByRole('combobox', { name: 'Destination folder' })).toBeInTheDocument();
-    view.rerender(tree({ kind: 'suite', id: 'suite-1' }));
-    expect(screen.queryByRole('combobox', { name: 'Destination folder' })).not.toBeInTheDocument();
-    view.rerender(tree({ kind: 'all' }));
-    expect(screen.queryByRole('combobox', { name: 'Destination folder' })).not.toBeInTheDocument();
-    expect(onMoveSelected).not.toHaveBeenCalled();
   });
 
   it('renders pagination from the response metadata and reports page selection', async () => {
