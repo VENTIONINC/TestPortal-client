@@ -137,6 +137,12 @@ export const extendedApi = generatedApi
       deleteApiV2TestScenarioFoldersByFolderId: {
         invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.projectId }, scenarioCatalogTag(arg.projectId)] : [],
       },
+      postApiV2TestScenarioFoldersRestoration: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+      },
+      postApiV2TestScenariosFolderRestoration: {
+        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+      },
       postApiV2TestSuites: {
         invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }] : [],
       },
@@ -419,6 +425,8 @@ export const {
   usePostApiV2TestScenarioFoldersMutation,
   usePatchApiV2TestScenarioFoldersByFolderIdMutation,
   useDeleteApiV2TestScenarioFoldersByFolderIdMutation,
+  usePostApiV2TestScenarioFoldersRestorationMutation,
+  usePostApiV2TestScenariosFolderRestorationMutation,
   useGetApiV2TestSuitesQuery,
   usePostApiV2TestSuitesMutation,
   useGetApiV2TestSuitesBySuiteIdQuery,

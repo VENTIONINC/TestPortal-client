@@ -8,16 +8,17 @@ import { FiLayers, FiList, FiPlus, FiSearch } from 'react-icons/fi';
 import {
   useGetApiV2TestSuitesQuery,
   usePostApiV2TestSuitesMutation,
-  usePostApiV2TestSuitesBySuiteIdMembersMutation,
+  usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation,
 } from '@/redux/apis/extendedApi';
+import type { PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse } from '@/redux/apis/generatedApi';
 
-import { executeScenarioOperation, type ScenarioOperationReport } from '../utils';
+import type { ScenarioOperationReport } from '../utils';
 
 interface SuitePickerProps {
   projectId: string;
   selectedIds: string[];
   disabled?: boolean;
-  onComplete: (report: ScenarioOperationReport, selection: string[]) => void | Promise<void>;
+  onComplete: (report: ScenarioOperationReport, selection: string[], undo?: PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse & { suiteName: string; createdSuiteId?: string }) => void | Promise<void>;
   onBusyChange?: (busy: boolean) => void;
   compact?: boolean;
 }
@@ -30,6 +31,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
   const [uncertainName, setUncertainName] = useState('');
   const lock = useRef(false);
   const [retrySuite, setRetrySuite] = useState<{ id: string; name: string } | null>(null);
+  const [newlyCreatedSuiteId, setNewlyCreatedSuiteId] = useState<string | undefined>();
   const [refreshRequired, setRefreshRequired] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const {
@@ -39,25 +41,26 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
     isError,
   } = useGetApiV2TestSuitesQuery({ projectId }, { skip: !open, refetchOnMountOrArgChange: true });
   const [createSuite] = usePostApiV2TestSuitesMutation();
-  const [addMembers] = usePostApiV2TestSuitesBySuiteIdMembersMutation();
+  const [changeMembership] = usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation();
   const filtered = (suites ?? []).filter((suite) =>
     suite.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
   );
 
-  const add = async (suiteId: string, ids: string[]) => {
-    const report = await executeScenarioOperation(ids, (scenarioIds) =>
-      addMembers({ suiteId, body: { projectId, scenarioIds } }).unwrap(),
-    );
-    await onComplete(report, ids);
-    if (report.failedIds.length || report.unattemptedIds.length || report.uncertainIds.length) {
-      setError(
-        `${report.errorMessage ?? 'Could not add scenarios.'}${report.uncertainIds.length ? ' Close and reopen the picker to refresh memberships before trying again.' : ' Please try again.'}`,
-      );
-      setRefreshRequired(report.uncertainIds.length > 0);
-    } else {
-      setRetrySuite(null);
-      setOpen(false);
-    }
+  const add = async (target: { id: string; name: string }, ids: string[], createdSuiteId = newlyCreatedSuiteId) => {
+    const suiteId = target.id;
+    const existingSuite = suites?.find((item) => item.id === suiteId);
+    const expectedScenarioIds = (existingSuite?.members ?? []).map((member) => member.testScenarioId);
+    const response = await changeMembership({ suiteId, body: {
+      projectId,
+      expectedMembershipRevision: existingSuite?.membershipRevision ?? 0,
+      expectedScenarioIds,
+      addScenarioIds: ids.filter((id) => !expectedScenarioIds.includes(id)),
+      removeScenarioIds: [],
+    } }).unwrap();
+    const report: ScenarioOperationReport = { succeededIds: ids, failedIds: [], unattemptedIds: [], uncertainIds: [] };
+    await onComplete(report, ids, { ...response, suiteName: target.name, ...(createdSuiteId === suiteId ? { createdSuiteId: suiteId } : {}) });
+    setRetrySuite(null);
+    setOpen(false);
   };
   const run = async (suite?: { id: string; name: string }) => {
     if (lock.current || !selectedIds.length) return;
@@ -68,14 +71,17 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
     const ids = [...selectedIds];
     try {
       let target = suite;
+      let createdSuiteId: string | undefined;
       if (!target) {
         const name = search.trim();
         if (!name) return;
         const created = await createSuite({ body: { projectId, name } }).unwrap();
         target = { id: created.id, name };
+        setNewlyCreatedSuiteId(created.id);
+        createdSuiteId = created.id;
         setRetrySuite(target);
       }
-      await add(target.id, ids);
+      await add(target, ids, createdSuiteId);
     } catch (cause) {
       const status = cause && typeof cause === 'object' && 'status' in cause ? Number(cause.status) : NaN;
       if (status >= 400 && status < 500) setError('Could not create the suite. Please try again.');
@@ -102,6 +108,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
             setRetrySuite(null);
             setUncertainName('');
             setRefreshRequired(false);
+            setNewlyCreatedSuiteId(undefined);
           }
         }
       }}

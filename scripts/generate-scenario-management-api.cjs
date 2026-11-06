@@ -9,6 +9,8 @@ const operationIds = new Map([
   ['POST /api/v2/test-scenario-folders', 'postApiV2TestScenarioFolders'],
   ['PATCH /api/v2/test-scenario-folders/{folderId}', 'patchApiV2TestScenarioFoldersByFolderId'],
   ['DELETE /api/v2/test-scenario-folders/{folderId}', 'deleteApiV2TestScenarioFoldersByFolderId'],
+  ['POST /api/v2/test-scenario-folders/restoration', 'postApiV2TestScenarioFoldersRestoration'],
+  ['POST /api/v2/test-scenarios/folder-restoration', 'postApiV2TestScenariosFolderRestoration'],
   ['GET /api/v2/test-suites', 'getApiV2TestSuites'],
   ['POST /api/v2/test-suites', 'postApiV2TestSuites'],
   ['GET /api/v2/test-suites/{suiteId}', 'getApiV2TestSuitesBySuiteId'],

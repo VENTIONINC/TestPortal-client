@@ -55,6 +55,7 @@ export interface ScenarioOperationReport {
   unattemptedIds: string[];
   uncertainIds: string[];
   errorMessage?: string;
+  folderRestoreData?: Array<{ scenarioId: string; folderId: string | null; expectedFolderId: string | null; expectedRevision: number }>;
 }
 
 const getScenarioOperationErrorMessage = (error: unknown) => {
