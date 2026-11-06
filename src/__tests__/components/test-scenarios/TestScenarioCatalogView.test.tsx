@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState, type ReactNode } from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -215,6 +215,25 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.queryByText('Suites')).not.toBeInTheDocument();
   });
 
+  it('keeps folder move Undo available after ten seconds', async () => {
+    const restoreData = [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }];
+    renderView({
+      folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }],
+      onMoveScenarioIds: vi.fn(async () => ({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [], folderRestoreData: restoreData })),
+    });
+    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    vi.useFakeTimers();
+    try {
+      fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
+      await act(async () => { fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer }); });
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+      act(() => { vi.advanceTimersByTime(9999); });
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+      act(() => { vi.advanceTimersByTime(1); });
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+    } finally { vi.useRealTimers(); }
+  });
+
   it('undoes a folder row move through the revision guarded restoration data', async () => {
     const user = userEvent.setup();
     const restoreData = [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }];
@@ -232,6 +251,46 @@ describe('TestScenarioCatalogView', () => {
     expect(await screen.findByText('1 scenario moved to Authentication')).toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: 'Undo' }));
     expect(restoreScenarioFolders).toHaveBeenCalledWith(restoreData);
+  });
+
+  it('offers undo for successful batches when a later folder move batch fails', async () => {
+    const user = userEvent.setup();
+    const restoreData = [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }];
+    const restoreScenarioFolders = vi.fn(async () => {});
+    renderView({
+      folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }],
+      onMoveScenarioIds: vi.fn(async () => ({ succeededIds: ['scenario-1'], failedIds: ['scenario-2'], unattemptedIds: [], uncertainIds: [], folderRestoreData: restoreData })),
+      restoreScenarioFolders,
+    });
+    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
+    fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer });
+    await user.click(await screen.findByRole('button', { name: 'Undo' }));
+    expect(restoreScenarioFolders).toHaveBeenCalledWith(restoreData);
+  });
+
+  it('clears folder undo when switching projects, including a move still in flight', async () => {
+    let finishMove!: (value: { succeededIds: string[]; failedIds: string[]; unattemptedIds: string[]; uncertainIds: string[]; folderRestoreData: { scenarioId: string; folderId: null; expectedFolderId: string; expectedRevision: number }[] }) => void;
+    const onMoveScenarioIds = vi.fn(() => new Promise<Parameters<typeof finishMove>[0]>((resolve) => { finishMove = resolve; }));
+    const props = { ...defaultProps, scenarios, pagination, isLoading: false, onPageChange: vi.fn(), folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }], onMoveScenarioIds };
+    const view = render(<ChakraProvider><MemoryRouter><TestScenarioCatalogView {...props} /></MemoryRouter></ChakraProvider>);
+    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
+    fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer });
+    view.rerender(<ChakraProvider><MemoryRouter><TestScenarioCatalogView {...props} projectId="project-2" /></MemoryRouter></ChakraProvider>);
+    await act(async () => finishMove({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [], folderRestoreData: [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }] }));
+    expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
+  });
+
+  it('clears an existing folder undo on project switch', async () => {
+    const props = { ...defaultProps, scenarios, pagination, isLoading: false, onPageChange: vi.fn(), folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }], onMoveScenarioIds: vi.fn(async () => ({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [], folderRestoreData: [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }] })) };
+    const view = render(<ChakraProvider><MemoryRouter><TestScenarioCatalogView {...props} /></MemoryRouter></ChakraProvider>);
+    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
+    fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer });
+    expect(await screen.findByRole('button', { name: 'Undo' })).toBeInTheDocument();
+    view.rerender(<ChakraProvider><MemoryRouter><TestScenarioCatalogView {...props} projectId="project-2" /></MemoryRouter></ChakraProvider>);
+    expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
   });
 
   it('shows project and No folder totals independently of the visible page and aggregates subtree counts', () => {
@@ -818,7 +877,47 @@ describe('TestScenarioCatalogView', () => {
     expect(onSuiteOperationComplete).not.toHaveBeenCalled();
   });
 
-  it('removes selected suite membership and restores it through the ten-second Undo action', async () => {
+  it('keeps suite membership Undo available after ten seconds', async () => {
+    renderView({
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-1' },
+      selectedIds: ['scenario-1'],
+      suites: [{ id: 'suite-1', name: 'Smoke R2.4', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+    });
+    vi.useFakeTimers();
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'Remove from suite' }));
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Remove 1 scenario' })); });
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+      act(() => { vi.advanceTimersByTime(10000); });
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Select Checkout flow' }));
+      expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('keeps suite membership Undo when switching suites', async () => {
+    const user = userEvent.setup();
+    const onScopeChange = vi.fn();
+    renderView({
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-1' },
+      selectedIds: ['scenario-1'],
+      suites: [
+        { id: 'suite-1', name: 'Smoke R2.4', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] },
+        { id: 'suite-2', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0, members: [] },
+      ],
+      onScopeChange,
+    });
+    await user.click(screen.getByRole('button', { name: 'Remove from suite' }));
+    await user.click(screen.getByRole('button', { name: 'Remove 1 scenario' }));
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+    await user.click(screen.getByText('Regression'));
+    expect(onScopeChange).toHaveBeenCalledWith({ kind: 'suite', id: 'suite-2' });
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+  });
+
+  it('removes selected suite membership and restores it through Undo', async () => {
     const user = userEvent.setup();
     const removeSuiteMembership = vi.fn(async () => ({
       restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },

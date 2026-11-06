@@ -92,6 +92,8 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
   const suitesQuery = useGetApiV2TestSuitesQuery({ projectId });
   const newlyCreatedFolderId = useRef<string | null>(null);
+  const currentProjectId = useRef(projectId);
+  currentProjectId.current = projectId;
   useEffect(() => {
     if (scope.kind !== 'folder' || !foldersQuery.currentData) return;
     const exists = flattenScenarioFolders(foldersQuery.currentData).some((folder) => folder.id === scope.id);
@@ -586,7 +588,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const deleteFolder = useCallback(
     async (folderId: string) => {
       const result = await deleteFolderRequest({ folderId, projectId }).unwrap();
-      onScopeChange({ kind: 'unfiled' });
+      if (currentProjectId.current === projectId) onScopeChange({ kind: 'unfiled' });
       return result;
     },
     [deleteFolderRequest, onScopeChange, projectId],

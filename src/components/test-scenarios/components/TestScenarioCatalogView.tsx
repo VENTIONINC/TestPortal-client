@@ -1274,7 +1274,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [pendingSuiteUndo, setPendingSuiteUndo] = useState<
     | { kind: 'membership'; payload: SuiteMembershipUndo; message: string }
     | { kind: 'move'; payload: SuiteMoveUndo; message: string }
-    | { kind: 'reorder'; payload: { suiteId: string; scenarioIds: string[] }; expiresAt: number; message: string }
+    | { kind: 'reorder'; payload: { suiteId: string; scenarioIds: string[] }; message: string }
     | null
   >(null);
   const [pendingFolderUndo, setPendingFolderUndo] = useState<
@@ -1287,10 +1287,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     setPendingSuiteUndo(null);
   }, [projectId, organizationTab]);
   useEffect(() => {
-    if (!pendingSuiteUndo || pendingSuiteUndo.kind !== 'reorder' || isUndoingSuiteChange) return;
-    const timeout = window.setTimeout(() => setPendingSuiteUndo(null), Math.max(0, pendingSuiteUndo.expiresAt - Date.now()));
-    return () => window.clearTimeout(timeout);
-  }, [isUndoingSuiteChange, pendingSuiteUndo]);
+    setPendingFolderUndo(null);
+  }, [projectId]);
   const [deleteSelectedOpen, setDeleteSelectedOpen] = useState(false);
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([]);
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
@@ -1333,6 +1331,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const selectedFolder = scope.kind === CATALOG_SCOPE.folder ? folderRows.find((folder) => folder.id === scope.id) : undefined;
   const changeScope = (nextScope: typeof scope) => {
     if (pendingFolderUndo?.kind === 'deletion') setPendingFolderUndo(null);
+    if ((scope.kind !== nextScope.kind || scope.id !== nextScope.id) && !(scope.kind === 'suite' && nextScope.kind === 'suite')) setPendingSuiteUndo(null);
     onScopeChange(nextScope);
   };
   const startInlineFolder = (parentId: string | null) => {
@@ -1468,6 +1467,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
         await onUpdateFolder(targetFolder.id, { parentId: moveParentId || null });
       } else if (createDialog === 'delete-folder' && targetFolder) {
         const result = await onDeleteFolder(targetFolder.id);
+        if (currentProjectId.current !== projectId) return;
         const descendantCount = Math.max(0, flattenFolders([targetFolder]).length - 1);
         setPendingFolderUndo({
           kind: 'deletion',
@@ -1535,6 +1535,11 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       setIsRemovingFromSuite(false);
     }
   };
+  const handleToggleSelected = (id: string) => {
+    setPendingSuiteUndo(null);
+    setPendingFolderUndo(null);
+    toggleSelected(id);
+  };
   const clearSelection = () => selectedIds.forEach((id) => toggleSelected(id));
   const scenarioDragMime = 'application/x-testportal-scenarios';
   const handleScenarioDragOver = (event: DragEvent<HTMLElement>, destinationId: string) => {
@@ -1574,8 +1579,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       setPendingFolderUndo(null);
       setPendingSuiteUndo(null);
       void onMoveScenarioIds(ids, destinationId).then((report) => {
+        if (currentProjectId.current !== projectId) return;
         showOperationReport(report);
-        if (!report.failedIds.length && !report.unattemptedIds.length && report.folderRestoreData?.length) {
+        if (report.folderRestoreData?.length) {
           setPendingFolderUndo({
             kind: 'move',
             restoreData: report.folderRestoreData,
@@ -1583,7 +1589,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           });
         }
       }).catch((error: unknown) => {
-        setOperationFeedback(getActionErrorMessage(error));
+        if (currentProjectId.current === projectId) setOperationFeedback(getActionErrorMessage(error));
       });
     } catch {
       return;
@@ -1669,7 +1675,6 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             setPendingSuiteUndo({
               kind: 'reorder',
               payload: { suiteId, scenarioIds: previousOrder },
-              expiresAt: Date.now() + 10_000,
               message: `Scenario order updated in ${suiteName}`,
             });
           })
@@ -2602,7 +2607,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       variant="ghost"
                       color="blue.300"
                       disabled={isResolvingSelection || isExecutingOperation}
-                      onClick={() => void selectAllMatching()}
+                      onClick={() => { setPendingSuiteUndo(null); setPendingFolderUndo(null); void selectAllMatching(); }}
                       _dark={{ color: 'blue.700' }}
                       _hover={{ bg: 'whiteAlpha.200' }}
                     >
@@ -2743,7 +2748,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         isLoading={isLoading}
                         selectedIds={selectedIds}
                         selectionDisabled={isExecutingOperation}
-                        onToggleSelected={toggleSelected}
+                        onToggleSelected={handleToggleSelected}
                         onDragPayload={(dragProjectId, scenarioIds) => {
                           setPendingFolderUndo(null);
                           setPendingSuiteUndo(null);
@@ -2788,7 +2793,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         isLoading={isLoading}
                         selectedIds={selectedIds}
                         selectionDisabled={isExecutingOperation}
-                        onToggleSelected={toggleSelected}
+                        onToggleSelected={handleToggleSelected}
                         showFolder={showFolderColumn}
                         folderPathById={folderPathById}
                         searchActive={Boolean(search.trim()) || activeColumnFilters.length > 0}
