@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, Button, HStack, IconButton, Input, Popover, Portal, Text } from '@chakra-ui/react';
 import { FiLayers, FiList, FiPlus, FiSearch } from 'react-icons/fi';
 
@@ -21,9 +21,10 @@ interface SuitePickerProps {
   onComplete: (report: ScenarioOperationReport, selection: string[], undo?: PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse & { suiteName: string; createdSuiteId?: string }) => void | Promise<void>;
   onBusyChange?: (busy: boolean) => void;
   compact?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyChange, compact }: SuitePickerProps) => {
+const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyChange, compact, onOpenChange }: SuitePickerProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
@@ -34,6 +35,8 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
   const [newlyCreatedSuiteId, setNewlyCreatedSuiteId] = useState<string | undefined>();
   const [refreshRequired, setRefreshRequired] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (compact && open) inputRef.current?.focus(); }, [compact, open]);
+  useEffect(() => { onOpenChange?.(open); }, [open, onOpenChange]);
   const {
     data: suites,
     isLoading,
@@ -69,6 +72,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
     onBusyChange?.(true);
     setError('');
     const ids = [...selectedIds];
+    let membershipStarted = false;
     try {
       let target = suite;
       let createdSuiteId: string | undefined;
@@ -81,10 +85,16 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
         createdSuiteId = created.id;
         setRetrySuite(target);
       }
+      membershipStarted = true;
       await add(target, ids, createdSuiteId);
     } catch (cause) {
       const status = cause && typeof cause === 'object' && 'status' in cause ? Number(cause.status) : NaN;
-      if (status >= 400 && status < 500) setError('Could not create the suite. Please try again.');
+      if (membershipStarted) {
+        const uncertain = !Number.isFinite(status) || status >= 500;
+        if (uncertain) setRefreshRequired(true);
+        setError(uncertain ? 'The membership outcome is unknown. Refresh and check before trying again.' : 'Could not update suite membership. Please try again.');
+        await onComplete({ succeededIds: [], failedIds: uncertain ? [] : ids, uncertainIds: uncertain ? ids : [], unattemptedIds: [] }, ids);
+      } else if (status >= 400 && status < 500) setError('Could not create the suite. Please try again.');
       else {
         setUncertainName(search.trim().toLocaleLowerCase());
         setError('The creation outcome is unknown. Close and reopen the picker to refresh suites before trying again.');
@@ -95,6 +105,34 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
       onBusyChange?.(false);
     }
   };
+
+  if (compact) {
+    const available = filtered.filter((suite) => !(suite.members ?? []).some((member) => selectedIds.includes(member.testScenarioId)));
+    const name = search.trim();
+    const exact = suites?.some((suite) => suite.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+    const canCreate = name && suites && !isLoading && !isError && !exact && !isFetching && name.toLocaleLowerCase() !== uncertainName && !retrySuite;
+    return <Box>
+      <IconButton size="xs" variant="outline" borderStyle="dashed" borderRadius="full" aria-label="Add to suite" aria-expanded={open} disabled={disabled || busy}
+        onClick={() => { setOpen(!open); if (!open) { setSearch(''); setError(''); setRetrySuite(null); setUncertainName(''); setRefreshRequired(false); setNewlyCreatedSuiteId(undefined); } }}><FiPlus /></IconButton>
+      {open && <Box w="300px" maxW="100%" p={2} mt={2} borderWidth="1px" borderRadius="md">
+        <Input ref={inputRef} aria-label="Find or create a suite" placeholder="Find or create a suite" value={search} maxLength={200} disabled={busy} size="sm"
+          onChange={(event) => setSearch(event.currentTarget.value)} onKeyDown={(event) => {
+            if (event.key === 'Escape' && !busy) setOpen(false);
+            if (event.key === 'Enter') { event.preventDefault(); if (busy || refreshRequired) return; if (available[0]) void run(available[0]); else if (canCreate) void run(); }
+          }} />
+        {isLoading && <Text p={2}>Loading suites…</Text>}
+        {isError && <Text role="alert" p={2}>Suites could not be loaded.</Text>}
+        {!isLoading && !isError && <Box maxH="250px" overflowY="auto">
+          {available.map((suite) => <Button key={suite.id} type="button" variant="ghost" w="full" h="auto" justifyContent="flex-start" disabled={busy || refreshRequired} onClick={() => void run(suite)}>
+            <Box textAlign="left"><Text>{suite.name}</Text><Text fontSize="xs">{suite.members?.length ?? 0} scenarios</Text></Box>
+          </Button>)}
+          {canCreate && <Button type="button" variant="ghost" w="full" disabled={busy || refreshRequired} onClick={() => void run()}>Create suite “{name}”</Button>}
+        </Box>}
+        {error && <Text role="alert" color="fg.error">{error}</Text>}
+        {retrySuite && error && <Button size="sm" disabled={busy || refreshRequired} onClick={() => void run(retrySuite)}>Retry adding to {retrySuite.name}</Button>}
+      </Box>}
+    </Box>;
+  }
 
   return (
     <Popover.Root
@@ -265,39 +303,47 @@ interface DraftSuitePickerProps {
   selectedIds: string[];
   selectedNewNames: string[];
   disabled?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onSelect: (suite: { id: string; name: string; isNew?: boolean }) => void;
 }
 
-const DraftSuitePicker = ({ suites, selectedIds, selectedNewNames, disabled, onSelect }: DraftSuitePickerProps) => {
+const DraftSuitePicker = ({ suites, selectedIds, selectedNewNames, disabled, onSelect, onOpenChange }: DraftSuitePickerProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
   const name = search.trim();
-  const filtered = suites.filter((suite) => suite.name.toLocaleLowerCase().includes(name.toLocaleLowerCase()));
+  const filtered = suites.filter((suite) => !selectedIds.includes(suite.id) && suite.name.toLocaleLowerCase().includes(name.toLocaleLowerCase()));
   const exists = selectedNewNames.some(
     (item) => item.toLocaleLowerCase() === name.toLocaleLowerCase(),
-  );
+  ) || suites.some((item) => item.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+  const close = () => { setOpen(false); onOpenChange?.(false); triggerRef.current?.focus(); };
   const select = (suite: { id: string; name: string; isNew?: boolean }) => {
     onSelect(suite);
-    setOpen(false);
+    close();
   };
   return (
-    <Popover.Root open={open} onOpenChange={({ open: next }) => { setOpen(next); if (next) setSearch(''); }}
-      positioning={{ placement: 'bottom-start' }} initialFocusEl={() => inputRef.current}>
-      <Popover.Trigger asChild>
-        <IconButton type="button" variant="outline" size="xs" borderStyle="dashed" borderRadius="full"
-          aria-label="Select suites" disabled={disabled}><FiPlus /></IconButton>
-      </Popover.Trigger>
-      <Portal><Popover.Positioner><Popover.Content w="300px" maxW="calc(100vw - 24px)" bg="bg.card" p={2}>
-        <Popover.Body p={0}>
+    <Box>
+        <IconButton ref={triggerRef} type="button" variant="outline" size="xs" borderStyle="dashed" borderRadius="full"
+          aria-label="Select suites" aria-expanded={open} disabled={disabled} onClick={() => { if (open) close(); else { setSearch(''); setOpen(true); onOpenChange?.(true); } }}><FiPlus /></IconButton>
+      {open && <Box w="300px" maxW="100%" bg="bg.card" p={2} mt={2} borderWidth="1px" borderRadius="md">
           <Input ref={inputRef} aria-label="Find or create a suite" placeholder="Find or create a suite"
             value={search} maxLength={200} size="sm" disabled={disabled} onChange={(event) => setSearch(event.currentTarget.value)}
-            onKeyDown={(event) => { if (event.key === 'Enter') event.preventDefault(); }} />
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') { event.preventDefault(); close(); }
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                if (disabled) return;
+                if (filtered[0]) select({ id: filtered[0].id, name: filtered[0].name });
+                else if (name && !exists) select({ id: `suite-draft-${crypto.randomUUID()}`, name, isNew: true });
+              }
+            }} />
           <Box maxH="250px" overflowY="auto" mt={1}>
             {filtered.map((suite) => (
               <Button type="button" key={suite.id} variant="ghost" w="full" h="auto" minH="44px"
                 justifyContent="flex-start" px={2} py={1}
-                disabled={disabled || selectedIds.includes(suite.id)}
+                disabled={disabled}
                 onClick={() => select({ id: suite.id, name: suite.name })}>
                 <HStack gap={3}><FiList aria-hidden="true" /><Box textAlign="left">
                   <Text fontSize="sm">{suite.name}</Text>
@@ -316,9 +362,8 @@ const DraftSuitePicker = ({ suites, selectedIds, selectedNewNames, disabled, onS
             </Button>}
             {!name && !suites.length && <Text fontSize="sm" color="text.secondary" p={2}>No suites yet. Enter a name to create one.</Text>}
           </Box>
-        </Popover.Body>
-      </Popover.Content></Popover.Positioner></Portal>
-    </Popover.Root>
+      </Box>}
+    </Box>
   );
 };
 

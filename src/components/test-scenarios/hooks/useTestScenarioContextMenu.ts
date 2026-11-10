@@ -1,12 +1,12 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, type MouseEvent } from 'react';
-import { FiEdit, FiTrash2 } from 'react-icons/fi';
+import { useCallback, useRef, type MouseEvent } from 'react';
+import { FiCopy, FiEdit, FiTrash2 } from 'react-icons/fi';
 import { useNavigate } from 'react-router';
 
 import { useDeleteTestScenarioDialog } from '@/components/ui';
-import { useOpenContextMenu } from '@/redux/slices/contextMenu';
+import { useCloseContextMenu, useContextMenuState, useOpenContextMenu } from '@/redux/slices/contextMenu';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { PATHS } from '@/types/paths';
 
@@ -23,21 +23,36 @@ export const useTestScenarioContextMenu = (
   projectId?: string,
   onRemoveFromSuite?: (scenario: TestScenarioContextMenuScenario) => void,
   includeEdit = true,
+  onClone?: (scenario: TestScenarioContextMenuScenario) => void,
+  onDeletedOverride?: () => void,
+  editSearch = '',
 ): TestScenarioContextMenuHandler => {
   const openContextMenu = useOpenContextMenu();
+  const closeContextMenu = useCloseContextMenu();
+  const { show } = useContextMenuState();
+  const lastTrigger = useRef<HTMLButtonElement | null>(null);
   const openDeleteDialog = useDeleteTestScenarioDialog();
   const navigate = useNavigate();
   const selectedProjectId = useSelectedProjectId();
   const currentProjectId = projectId ?? selectedProjectId;
-  const onDeleted = useCallback(() => navigate(PATHS.TEST_SCENARIOS), [navigate]);
+  const onDeleted = useCallback(() => onDeletedOverride ? onDeletedOverride() : navigate(PATHS.TEST_SCENARIOS), [navigate, onDeletedOverride]);
 
   return useCallback(
     (event, scenario) => {
+      if (show && lastTrigger.current === event.currentTarget) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeContextMenu();
+        lastTrigger.current = null;
+        return;
+      }
+      lastTrigger.current = event.currentTarget;
       openContextMenu(event, [
+        ...(onClone ? [{ title: 'Clone', icon: FiCopy, onClick: () => onClone(scenario) }] : []),
         ...(includeEdit ? [{
           title: 'Edit Scenario',
           icon: FiEdit,
-          onClick: () => navigate(getTestScenarioEditPath(scenario.id)),
+          onClick: () => navigate(`${getTestScenarioEditPath(scenario.id)}${editSearch}`),
         }] : []),
         ...(onRemoveFromSuite
           ? [{
@@ -55,6 +70,6 @@ export const useTestScenarioContextMenu = (
         },
       ]);
     },
-    [currentProjectId, includeEdit, navigate, onDeleted, onRemoveFromSuite, openContextMenu, openDeleteDialog],
+    [closeContextMenu, currentProjectId, editSearch, includeEdit, navigate, onDeleted, onRemoveFromSuite, onClone, openContextMenu, openDeleteDialog, show],
   );
 };

@@ -3,6 +3,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 
 import { ChakraProvider } from '@/components/ui';
 import { TestScenarioDetailsView } from '@/components/test-scenarios/components/TestScenarioDetailsView';
@@ -24,10 +25,11 @@ const scenario: TestScenario = {
     { id: 'step-3', position: 3, action: 'Check final summary', expectedResult: '' },
   ],
 };
-const renderView = (overrides: Partial<TestScenario> = {}) => render(
+const renderView = (overrides: Partial<TestScenario> = {}, showSavedConfirmation = false) => render(
   <ChakraProvider><MemoryRouter><TestScenarioDetailsView
     scenario={{ ...scenario, ...overrides }}
     folderName="Checkout"
+    backLabel="Checkout"
     backPath="/test-management?projectId=project-1&folderId=folder-1"
     projectId="project-1"
     onEdit={vi.fn()}
@@ -35,14 +37,29 @@ const renderView = (overrides: Partial<TestScenario> = {}) => render(
     onAddSuiteComplete={vi.fn()}
     onRemoveSuite={vi.fn()}
     removingSuiteIds={[]}
+    showSavedConfirmation={showSavedConfirmation}
   /></MemoryRouter></ChakraProvider>,
 );
 
 describe('TestScenarioDetailsView', () => {
+  it('shows save confirmation until the next action', async () => {
+    const user = userEvent.setup();
+    renderView({}, true);
+    expect(screen.getByText('Changes saved.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    expect(screen.queryByText('Changes saved.')).not.toBeInTheDocument();
+  });
+  it('places folder and priority in the sidebar and the scenario key in the breadcrumb', () => {
+    renderView();
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent('TMS-1');
+    expect(screen.getByTestId('scenario-detail-sidebar')).toHaveTextContent('Folder');
+    expect(screen.getByTestId('scenario-detail-sidebar')).toHaveTextContent('Priority');
+    expect(screen.getByTestId('scenario-detail-main')).toContainElement(screen.getByRole('heading', { name: 'Checkout' }));
+  });
   it('shows the scenario header, setup, ordered action/result table and responsive navigation', () => {
     renderView();
     expect(screen.getByText('TMS-1')).toBeInTheDocument();
-    expect(screen.getAllByText('Checkout')).toHaveLength(2);
+    expect(screen.getAllByText('Checkout')).toHaveLength(3);
     expect(screen.getByRole('heading', { name: 'Checkout' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
     expect(screen.getByText('Preconditions').compareDocumentPosition(screen.getByText('Steps')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

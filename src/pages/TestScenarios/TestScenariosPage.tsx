@@ -7,13 +7,16 @@ import { useLocation } from 'react-router';
 import { ManualTestRunHistoryBoundary } from '@/components/manual-test-runs';
 import { TestScenarioCatalog } from '@/components/test-scenarios';
 import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
+import { useSelectedProject } from '@/hooks/useSelectedProject';
 
 import { TestManagementTabList, type TestManagementTab } from './TestManagementTabs';
 
 export function TestScenariosPage({ initialTab }: { initialTab?: TestManagementTab }) {
   const location = useLocation();
+  const { selectedProjectId } = useSelectedProject();
+  const search = new URLSearchParams(location.search);
   const requestedTab = (location.state as { testManagementTab?: TestManagementTab } | null)?.testManagementTab;
-  const tab = initialTab ?? (location.pathname === '/manual-test-runs' ? 'manual-runs' : requestedTab === 'suites' ? 'suites' : 'scenarios');
+  const tab = initialTab ?? (location.pathname === '/manual-test-runs' ? 'manual-runs' : requestedTab === 'suites' || (search.get('projectId') === selectedProjectId && search.get('tab') === 'suites') ? 'suites' : 'scenarios');
 
   return (
     <MainTemplate pageHeader="Test Management">

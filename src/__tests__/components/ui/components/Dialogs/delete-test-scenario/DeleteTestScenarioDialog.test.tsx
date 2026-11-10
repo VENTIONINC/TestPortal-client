@@ -1,156 +1,79 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
-
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  DeleteTestScenarioDialog,
-  type DeleteTestScenarioDialogProps,
-} from '@/components/ui/components/Dialogs/delete-test-scenario/delete-test-scenario-dialog';
+import { DeleteTestScenarioDialog } from '@/components/ui/components/Dialogs/delete-test-scenario/delete-test-scenario-dialog';
 import { ChakraProvider, toaster } from '@/components/ui';
 import { useDeleteApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
-
-const deleteScenario = vi.fn();
+import { useGetApiV2TestScenariosByScenarioIdQuery } from '@/redux/apis/generatedApi';
+const remove = vi.fn();
 const closeDialog = vi.fn();
 const onDeleted = vi.fn();
-
-vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/redux/apis/extendedApi')>();
-
-  return { ...actual, useDeleteApiV2TestScenariosByScenarioIdMutation: vi.fn() };
-});
-
-const mockedDeleteMutation = vi.mocked(useDeleteApiV2TestScenariosByScenarioIdMutation);
-
-const defaultProps: DeleteTestScenarioDialogProps = {
-  scenarioId: 'scenario-1',
-  projectId: 'project-1',
-  scenarioTitle: 'Checkout flow',
-  closeDialog,
-  closeAllDialogs: vi.fn(),
-  onDeleted,
-};
-
-const renderDialog = (props: Partial<DeleteTestScenarioDialogProps> = {}) =>
-  render(
-    <ChakraProvider>
-      <DeleteTestScenarioDialog {...defaultProps} {...props} />
-    </ChakraProvider>,
-  );
-
+vi.mock('@/redux/apis/extendedApi', async (original) => ({ ...(await original<typeof import('@/redux/apis/extendedApi')>()), useDeleteApiV2TestScenariosByScenarioIdMutation: vi.fn() }));
+vi.mock('@/redux/apis/generatedApi', async (original) => ({ ...(await original<typeof import('@/redux/apis/generatedApi')>()), useGetApiV2TestScenariosByScenarioIdQuery: vi.fn() }));
+const renderDialog = () => render(<ChakraProvider><DeleteTestScenarioDialog scenarioId="scenario-1" projectId="project-1" scenarioTitle="Checkout flow" closeDialog={closeDialog} closeAllDialogs={vi.fn()} onDeleted={onDeleted} /></ChakraProvider>);
 describe('DeleteTestScenarioDialog', () => {
   beforeEach(() => {
-    deleteScenario.mockReset();
-    closeDialog.mockReset();
-    onDeleted.mockReset();
-    vi.spyOn(toaster, 'create').mockClear();
-    mockedDeleteMutation.mockReturnValue([deleteScenario, { isLoading: false }] as never);
+    remove.mockReset(); closeDialog.mockReset(); onDeleted.mockReset(); vi.spyOn(toaster, 'create').mockClear();
+    vi.mocked(useDeleteApiV2TestScenariosByScenarioIdMutation).mockReturnValue([remove, { isLoading: false }] as never);
+    vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery).mockReturnValue({ currentData: { id: 'scenario-1', projectId: 'project-1', suites: [{ id: 's', name: 'Smoke' }] }, isFetching: false } as never);
   });
-
-  it('opens with the persisted title and an empty disabled confirmation', () => {
+  it('identifies the scenario and suites, explains history, and deletes without typing', async () => {
+    remove.mockReturnValue({ unwrap: async () => undefined });
     renderDialog();
-
     expect(screen.getByRole('alertdialog')).toHaveTextContent('Checkout flow');
-    expect(screen.getByRole('alertdialog')).toHaveTextContent('Existing manual test runs and their saved snapshots are preserved');
-    expect(screen.getByRole('textbox', { name: 'Scenario title' })).toHaveValue('');
-    expect(screen.getByRole('button', { name: 'Confirm Test Scenario deletion' })).toBeDisabled();
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('Smoke');
+    expect(screen.getByRole('alertdialog')).toHaveTextContent('snapshots are preserved');
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Confirm Test Scenario deletion' }));
+    await waitFor(() => expect(remove).toHaveBeenCalledWith({ scenarioId: 'scenario-1', projectId: 'project-1' }));
+    expect(onDeleted).toHaveBeenCalledOnce();
+    expect(closeDialog).toHaveBeenCalledOnce();
+    expect(toaster.create).not.toHaveBeenCalled();
   });
-
-  it.each(['checkout flow', 'Checkout flow ', ' Checkout flow', ''])('does not permit non-exact title %j', async (value) => {
-    const user = userEvent.setup();
-
+  it('keeps the dialog open after failure and allows retry', async () => {
+    remove.mockReturnValueOnce({ unwrap: async () => { throw { status: 409, data: { error: 'Delete failed' } }; } }).mockReturnValueOnce({ unwrap: async () => undefined });
     renderDialog();
-    const input = screen.getByRole('textbox', { name: 'Scenario title' });
-    if (value) await user.type(input, value);
-
-    expect(screen.getByRole('button', { name: 'Confirm Test Scenario deletion' })).toBeDisabled();
-    expect(deleteScenario).not.toHaveBeenCalled();
-  });
-
-  it('permits only an exact case- and whitespace-sensitive title and sends both identities', async () => {
     const user = userEvent.setup();
-    deleteScenario.mockReturnValue({ unwrap: () => Promise.resolve(undefined) });
-
-    renderDialog();
-    const input = screen.getByRole('textbox', { name: 'Scenario title' });
-    await user.type(input, 'Checkout flow');
-
-    const confirm = screen.getByRole('button', { name: 'Confirm Test Scenario deletion' });
-    expect(confirm).toBeEnabled();
-    await user.click(confirm);
-
-    await waitFor(() => expect(deleteScenario).toHaveBeenCalledWith({ scenarioId: 'scenario-1', projectId: 'project-1' }));
-    expect(closeDialog).toHaveBeenCalledTimes(1);
-    expect(onDeleted).toHaveBeenCalledTimes(1);
-  });
-
-  it('preserves a matching input after an API failure and allows one retry', async () => {
-    const user = userEvent.setup();
-    deleteScenario
-      .mockReturnValueOnce({ unwrap: () => Promise.reject({ status: 409, data: { error: 'Delete failed' } }) })
-      .mockReturnValueOnce({ unwrap: () => Promise.resolve(undefined) });
-
-    renderDialog();
-    const input = screen.getByRole('textbox', { name: 'Scenario title' });
-    await user.type(input, 'Checkout flow');
     await user.click(screen.getByRole('button', { name: 'Confirm Test Scenario deletion' }));
-
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Delete failed'));
-    expect(input).toHaveValue('Checkout flow');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Delete failed');
     expect(closeDialog).not.toHaveBeenCalled();
-    expect(onDeleted).not.toHaveBeenCalled();
-
     await user.click(screen.getByRole('button', { name: 'Confirm Test Scenario deletion' }));
-    await waitFor(() => expect(deleteScenario).toHaveBeenCalledTimes(2));
-    expect(closeDialog).toHaveBeenCalledTimes(1);
-    expect(onDeleted).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(remove).toHaveBeenCalledTimes(2));
   });
-
-  it('supports cancellation and prevents duplicate confirmation while pending', async () => {
-    const user = userEvent.setup();
-    let resolveDelete!: () => void;
-    deleteScenario.mockReturnValue({ unwrap: () => new Promise<void>((resolve) => (resolveDelete = resolve)) });
-
-    const { unmount } = renderDialog();
-    const input = screen.getByRole('textbox', { name: 'Scenario title' });
-    await user.type(input, 'Checkout flow');
-    const confirm = screen.getByRole('button', { name: 'Confirm Test Scenario deletion' });
-    await user.click(confirm);
-
-    expect(confirm).toBeDisabled();
-    await user.click(confirm);
-    expect(deleteScenario).toHaveBeenCalledTimes(1);
-
-    resolveDelete();
-    await waitFor(() => expect(closeDialog).toHaveBeenCalledTimes(1));
-
-    unmount();
-    closeDialog.mockReset();
+  it('shows unavailable impact rather than claiming no suites while loading or on error', () => {
+    vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery).mockReturnValue({ currentData: undefined, isFetching: true } as never);
+    const view = renderDialog();
+    expect(screen.getByText(/Loading affected suites/)).toBeInTheDocument();
+    vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery).mockReturnValue({ currentData: undefined, isFetching: false, isError: true } as never);
+    view.rerender(<ChakraProvider><DeleteTestScenarioDialog scenarioId="scenario-1" projectId="project-1" scenarioTitle="Checkout flow" closeDialog={closeDialog} closeAllDialogs={vi.fn()} /></ChakraProvider>);
+    expect(screen.getByText(/Affected suites could not be loaded/)).toBeInTheDocument();
+  });
+  it('does not present cached suite names as current after a failed refresh', () => {
+    vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery).mockReturnValue({ currentData: { id: 'scenario-1', projectId: 'project-1', suites: [{ id: 's', name: 'Stale suite' }] }, isFetching: false, isError: true } as never);
     renderDialog();
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(closeDialog).toHaveBeenCalledTimes(1);
-    expect(deleteScenario).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/Affected suites could not be loaded/)).toBeInTheDocument();
+    expect(screen.queryByText(/Stale suite/)).not.toBeInTheDocument();
   });
-
-  it('resets confirmation input when the dialog receives another scenario', async () => {
+  it('cancels without sending a request', async () => {
+    renderDialog();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(closeDialog).toHaveBeenCalledOnce();
+    expect(remove).not.toHaveBeenCalled();
+  });
+  it('prevents duplicate deletion while a request is pending', async () => {
+    let finish!: () => void;
+    remove.mockReturnValue({ unwrap: () => new Promise<void>((resolve) => { finish = resolve; }) });
+    renderDialog();
     const user = userEvent.setup();
-    const { rerender } = renderDialog();
-    const input = screen.getByRole('textbox', { name: 'Scenario title' });
-    await user.type(input, 'Checkout flow');
-
-    rerender(
-      <ChakraProvider>
-        <DeleteTestScenarioDialog
-          {...defaultProps}
-          scenarioId="scenario-2"
-          scenarioTitle="Refund flow"
-        />
-      </ChakraProvider>,
-    );
-
-    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Scenario title' })).toHaveValue(''));
-    expect(screen.getByRole('alertdialog')).toHaveTextContent('Refund flow');
+    const button = screen.getByRole('button', { name: 'Confirm Test Scenario deletion' });
+    await user.click(button);
+    expect(button).toBeDisabled();
+    await user.click(button);
+    expect(remove).toHaveBeenCalledOnce();
+    finish();
+    await waitFor(() => expect(closeDialog).toHaveBeenCalledOnce());
   });
 });

@@ -11,11 +11,12 @@ const { navigate, updateScenario, refetch, state } = vi.hoisted(() => ({
   navigate: vi.fn(),
   updateScenario: vi.fn(),
   refetch: vi.fn(),
-  state: { scenario: undefined as unknown },
+  state: { scenario: undefined as unknown, search: '' },
 }));
 vi.mock('react-router', async (original) => ({
   ...(await original<typeof import('react-router')>()),
   useNavigate: () => navigate,
+  useLocation: () => ({ search: state.search }),
 }));
 vi.mock('@/components/test-scenarios/hooks/useTestScenarioDetail', () => ({
   useTestScenarioDetail: () => ({
@@ -70,11 +71,28 @@ const change = (name: string, value: string) =>
 const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
 beforeEach(() => {
   state.scenario = scenario();
+  state.search = '';
   updateScenario.mockReset();
   navigate.mockReset();
   refetch.mockReset();
 });
 describe('TestScenarioEditContainer', () => {
+  it('returns to the scenario with its suite origin when cancelling', async () => {
+    state.search = '?originProject=project-1&originKind=suite&originId=suite-1';
+    setup();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1');
+  });
+  it('does not save a staged new suite when cancelling', async () => {
+    const user = userEvent.setup();
+    setup();
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
+    await user.type(screen.getByRole('textbox', { name: 'Find or create a suite' }), 'Pending{Enter}');
+    expect(screen.getByText('Pending')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(updateScenario).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1');
+  });
   it('keeps steps local, then saves one revision-checked aggregate and adopts IDs and clean baseline', async () => {
     const returned = {
       ...scenario(),
@@ -110,7 +128,15 @@ describe('TestScenarioEditContainer', () => {
     save();
     await screen.findByText('No changes to save.');
     expect(updateScenario).toHaveBeenCalledOnce();
-    expect(navigate).not.toHaveBeenCalled();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?saved=1'));
+  });
+  it('returns to the scenario in context after a successful edit', async () => {
+    state.search = '?originProject=project-1&originKind=suite&originId=suite-1';
+    updateScenario.mockReturnValue({ unwrap: async () => ({ ...scenario(), title: 'Changed', revision: 4 }) });
+    setup();
+    change('Title', 'Changed');
+    save();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1&saved=1'));
   });
   it('does not write when unchanged', async () => {
     setup();

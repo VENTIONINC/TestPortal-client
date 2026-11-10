@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 import { toaster } from '@/components/ui';
 import {
@@ -19,6 +19,7 @@ import { useTestScenarioContextMenu } from '../hooks/useTestScenarioContextMenu'
 import { useTestScenarioDetail } from '../hooks/useTestScenarioDetail';
 import { flattenScenarioFolders, getScenarioFolderReturnPath } from '../utils';
 import type { ScenarioOperationReport } from '../utils';
+import { getScenarioOrigin, scenarioOriginSearch } from '../scenarioOrigin';
 
 export interface TestScenarioDetailContainerProps {
   projectId: string;
@@ -27,7 +28,19 @@ export interface TestScenarioDetailContainerProps {
 
 export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScenarioDetailContainerProps) => {
   const navigate = useNavigate();
-  const onContextMenu = useTestScenarioContextMenu(projectId, undefined, false);
+  const location = useLocation();
+  const search = new URLSearchParams(location.search);
+  const originSearch = search.has('originProject') ? scenarioOriginSearch(projectId, getScenarioOrigin(search, projectId)) : '';
+  const onContextMenu = useTestScenarioContextMenu(projectId, undefined, false, (scenario) => {
+    const params = new URLSearchParams({ clone: scenario.id });
+    new URLSearchParams(originSearch).forEach((value, key) => params.set(key, value));
+    navigate(`${PATHS.TEST_SCENARIO_NEW}?${params}`);
+  }, () => {
+    const destination = origin.kind === 'suite' && originSuite
+      ? `${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId, tab: 'suites' })}`
+      : backPath;
+    navigate(destination);
+  });
   const detail = useTestScenarioDetail(projectId, scenarioId);
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
   const suitesQuery = useGetApiV2TestSuitesQuery({ projectId });
@@ -47,13 +60,20 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
     setRemovingSuiteIds([]);
   }, [projectId, scenarioId]);
   const folders = flattenScenarioFolders(foldersQuery.currentData ?? []);
+  const origin = getScenarioOrigin(search, projectId);
+  const originFolder = origin.kind === 'folder' ? folders.find((item) => item.id === origin.id) : undefined;
+  const originSuite = origin.kind === 'suite' ? suitesQuery.currentData?.find((item) => item.id === origin.id) : undefined;
   const folder = detail.scenario?.folderId
     ? folders.find(({ id }) => id === detail.scenario?.folderId)
     : undefined;
   const folderName = detail.scenario?.folderId ? folder?.name ?? 'Folder unavailable' : 'No folder';
-  const backPath = detail.scenario
-    ? getScenarioFolderReturnPath(projectId, detail.scenario.folderId, folders)
-    : PATHS.TEST_SCENARIOS;
+  const backPath = origin.kind === 'suite'
+    ? originSuite ? `${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId, tab: 'suites', suiteId: originSuite.id })}` : `${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId })}`
+    : origin.kind === 'folder'
+    ? getScenarioFolderReturnPath(projectId, origin.id, folders)
+    : origin.kind === 'unfiled'
+    ? getScenarioFolderReturnPath(projectId, null, folders)
+    : `${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId })}`;
 
   const refreshMembership = async () => {
     await Promise.all([detail.refetch(), suitesQuery.refetch()]);
@@ -89,8 +109,8 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
       toaster.create({ title: 'Removed from suite.', type: 'success' });
     } catch (error) {
       if (!isCurrentScope()) return;
-      const isUncertain = Boolean(error && typeof error === 'object' && 'status' in error &&
-        !Number.isInteger(Number((error as { status: unknown }).status)));
+      const status = error && typeof error === 'object' && 'status' in error ? Number((error as { status: unknown }).status) : NaN;
+      const isUncertain = !Number.isInteger(status) || status >= 500;
       if (isUncertain) await refreshMembership();
       if (!isCurrentScope()) return;
       setSuiteError(
@@ -117,13 +137,16 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
           scenario={scenario}
           projectId={projectId}
           folderName={folderName}
+          backLabel={origin.kind === 'suite' ? originSuite?.name ?? 'All scenarios' : origin.kind === 'folder' ? originFolder?.name ?? 'All scenarios' : origin.kind === 'unfiled' ? 'No folder' : 'All scenarios'}
+          originKind={origin.kind === 'suite' && originSuite ? 'suites' : 'scenarios'}
           backPath={backPath}
-          onEdit={() => navigate(getTestScenarioEditPath(scenario.id))}
+          onEdit={() => navigate(`${getTestScenarioEditPath(scenario.id)}${originSearch}`)}
           onContextMenu={onContextMenu}
           onAddSuiteComplete={(report) => void handleAddSuiteComplete(report)}
           suiteError={suiteError}
           onRemoveSuite={(suiteId) => void handleRemoveSuite(suiteId)}
           removingSuiteIds={removingSuiteIds}
+          showSavedConfirmation={search.get('saved') === '1'}
         />
       )}
     </TestScenarioDetailStateView>

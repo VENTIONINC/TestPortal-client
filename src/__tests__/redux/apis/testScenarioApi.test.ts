@@ -371,6 +371,23 @@ describe('generated Test Scenario cache behavior', () => {
 });
 
 describe('scenario aggregate transport safety', () => {
+  it('refreshes folder and suite data after deleting a scenario', async () => {
+    let folderRequests = 0;
+    let suiteRequests = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const request = input as Request;
+      if (request.method === 'DELETE') return new Response(null, { status: 204 });
+      if (request.url.includes('test-scenario-folders')) folderRequests += 1;
+      if (request.url.includes('test-suites')) suiteRequests += 1;
+      return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    });
+    const folders = store.dispatch(extendedApi.endpoints.getApiV2TestScenarioFolders.initiate({ projectId: 'project-1' }));
+    const suites = store.dispatch(extendedApi.endpoints.getApiV2TestSuites.initiate({ projectId: 'project-1' }));
+    await Promise.all([folders.unwrap(), suites.unwrap()]);
+    await store.dispatch(extendedApi.endpoints.deleteApiV2TestScenariosByScenarioId.initiate({ projectId: 'project-1', scenarioId: 'scenario-1' })).unwrap();
+    await vi.waitFor(() => { expect(folderRequests).toBe(2); expect(suiteRequests).toBe(2); });
+    folders.unsubscribe(); suites.unsubscribe();
+  });
   it.each(['create', 'edit'])('does not automatically retry an uncertain %s', async (operation) => {
     vi.useFakeTimers();
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Network response lost'));

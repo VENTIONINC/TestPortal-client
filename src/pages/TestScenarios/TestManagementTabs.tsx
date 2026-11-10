@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Tabs } from '@chakra-ui/react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 import { useSelectedProject } from '@/hooks/useSelectedProject';
 import { useGetApiV2ManualTestRunsQuery, useGetApiV2TestSuitesQuery } from '@/redux/apis/extendedApi';
 import { useGetApiV2TestScenariosQuery } from '@/redux/apis/generatedApi';
+import { getScenarioOrigin } from '@/components/test-scenarios/scenarioOrigin';
 
 import './TestManagementTabs.css';
 
@@ -48,12 +49,17 @@ export function TestManagementTabList({ onNavigate }: { onNavigate?: (tab: TestM
 
 export function ScenarioPageTabs() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { selectedProjectId } = useSelectedProject();
+  const origin = getScenarioOrigin(new URLSearchParams(location.search), selectedProjectId ?? '');
+  const suites = useGetApiV2TestSuitesQuery({ projectId: selectedProjectId ?? '' }, { skip: !selectedProjectId || origin.kind !== 'suite' });
+  const isSuiteOrigin = origin.kind === 'suite' && Boolean(suites.currentData?.some((suite) => suite.id === origin.id));
   const navigateToTab = (tab: TestManagementTab) => {
     if (tab === 'manual-runs') navigate('/manual-test-runs');
     else navigate('/test-management', { state: { testManagementTab: tab } });
   };
   return (
-    <Tabs.Root className="test-management-tabs" value="scenarios">
+    <Tabs.Root className="test-management-tabs" value={isSuiteOrigin ? 'suites' : 'scenarios'}>
       <TestManagementTabList onNavigate={navigateToTab} />
     </Tabs.Root>
   );

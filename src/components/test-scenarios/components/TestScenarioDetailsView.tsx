@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Button, Grid, Heading, HStack, IconButton, Table, Text, VStack } from '@chakra-ui/react';
-import { FiArrowLeft, FiEdit, FiFolder, FiLink, FiX } from 'react-icons/fi';
+import { FiEdit, FiFolder, FiLink, FiX } from 'react-icons/fi';
+import { useState } from 'react';
 
 import { ContextMenuButton, Link } from '@/components/ui';
 import type { TestScenario } from '@/redux/apis/generatedApi';
@@ -14,6 +15,7 @@ import { SuitePicker } from './SuitePicker';
 export interface TestScenarioDetailsViewProps {
   scenario: TestScenario;
   folderName?: string;
+  backLabel?: string;
   backPath: string;
   projectId: string;
   onEdit: () => void;
@@ -22,6 +24,8 @@ export interface TestScenarioDetailsViewProps {
   suiteError?: string;
   onRemoveSuite: (suiteId: string) => void;
   removingSuiteIds: string[];
+  showSavedConfirmation?: boolean;
+  originKind?: 'scenarios' | 'suites';
 }
 
 const safeIssueUrl = (value: string | null) => {
@@ -41,6 +45,7 @@ const orderedSteps = (scenario: TestScenario) =>
 export const TestScenarioDetailsView = ({
   scenario,
   folderName,
+  backLabel,
   backPath,
   projectId,
   onEdit,
@@ -49,7 +54,11 @@ export const TestScenarioDetailsView = ({
   suiteError,
   onRemoveSuite,
   removingSuiteIds,
+  showSavedConfirmation = false,
+  originKind = 'scenarios',
 }: TestScenarioDetailsViewProps) => {
+  const [suitePickerOpen, setSuitePickerOpen] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(showSavedConfirmation);
   const scenarioKey = scenario.scenarioKey?.trim();
   const steps = orderedSteps(scenario);
   const issueUrl = safeIssueUrl(scenario.relatedIssueUrl);
@@ -60,13 +69,13 @@ export const TestScenarioDetailsView = ({
   const dateLabel = (value?: string | null) => value ? new Date(value).toLocaleDateString('en-US') : 'Unknown';
 
   return (
-    <VStack align="stretch" gap={0} mx={{ base: 3, md: 6 }} my={4} p={{ base: 4, md: 6 }} bg="bg.card" borderRadius="xl" minH="calc(100vh - 130px)">
-      <HStack justify="space-between" align="end" gap={4} flexWrap="wrap" pb={4} borderBottomWidth="1px" borderColor="border.main">
-        <VStack align="start" gap={3} minW={0} flex="1">
+    <VStack align="stretch" gap={0} mx={{ base: 3, md: 6 }} my={4} onClickCapture={() => setShowConfirmation(false)} onKeyDownCapture={() => setShowConfirmation(false)}>
+      {showConfirmation && <Text role="status" color="green.600" mb={3}>Changes saved.</Text>}
+      <HStack justify="space-between" align="center" gap={4} flexWrap="wrap" pb={4}>
+        <HStack as="nav" aria-label="Breadcrumb" gap={2} minW={0} flex="1" wrap="wrap">
           <Link
-            href={backPath}
-            aria-label={`Back to ${folderName || 'Test Scenarios'}`}
-            title={`Back to ${folderName || 'Test Scenarios'}`}
+            href={`/test-management?${new URLSearchParams({ projectId, ...(originKind === 'suites' ? { tab: 'suites' } : {}) })}`}
+            aria-label={backLabel && backLabel !== 'All scenarios' ? undefined : `Back to ${backLabel || folderName || 'Test Scenarios'}`}
             display="inline-flex"
             alignItems="center"
             justifyContent="center"
@@ -79,19 +88,11 @@ export const TestScenarioDetailsView = ({
             color="text.secondary"
             _hover={{ bg: 'bg.subtle' }}
           >
-            <FiArrowLeft size={16} aria-hidden="true" style={{ width: 16, height: 16, flex: '0 0 16px' }} />
-            <Text fontSize="sm">Back to {folderName || 'Test Scenarios'}</Text>
+            <Text fontSize="sm">{originKind === 'suites' ? 'Suites' : 'Scenarios'}</Text>
           </Link>
-          <HStack gap={2} flexWrap="wrap">
-            {scenarioKey && <Text bg="bg.section" px={2} py={1} borderRadius="sm" fontSize="sm">{scenarioKey}</Text>}
-            <HStack fontSize="sm" color="text.secondary" gap={1}><FiFolder aria-hidden="true" /><Text>{folderName || 'No folder'}</Text></HStack>
-            <Text bg={scenario.priority === 'high' ? 'status.attention.bg' : scenario.priority === 'medium' ? 'status.total.bg' : 'status.neutral.bg'} color="text.secondary" px={2} py={0.5} borderRadius="full" fontSize="xs">{priorityLabel}</Text>
-          </HStack>
-          <VStack align="start" gap={1}>
-            <Heading size="xl" fontWeight="semibold">{scenario.title}</Heading>
-            {scenario.details && <Text fontSize="sm" color="text.secondary">{scenario.details}</Text>}
-          </VStack>
-        </VStack>
+          {backLabel && backLabel !== 'All scenarios' && <><Text>›</Text><Link href={backPath} aria-label={`Back to ${backLabel}`} fontSize="sm">{backLabel}</Link></>}
+          <Text>›</Text><Text fontSize="sm">{scenarioKey || 'Scenario'}</Text>
+        </HStack>
         <HStack gap={2} alignSelf="center">
           <Button colorPalette="blue" onClick={onEdit}><FiEdit />Edit</Button>
           <ContextMenuButton
@@ -102,8 +103,12 @@ export const TestScenarioDetailsView = ({
         </HStack>
       </HStack>
 
-      <Grid templateColumns={{ base: 'minmax(0, 1fr)', xl: 'minmax(0, 1fr) 220px' }} gap={{ base: 6, xl: 6 }} alignItems="start" pt={5}>
-        <VStack align="stretch" minW={0} gap={6}>
+      <Grid templateColumns={{ base: 'minmax(0, 1fr)', lg: 'minmax(0, 1fr) 260px' }} gap={6} alignItems="start" p={{ base: 4, md: 6 }} bg="bg.card" borderRadius="xl" shadow="sm">
+        <VStack data-testid="scenario-detail-main" align="stretch" minW={0} gap={6}>
+          <VStack align="start" gap={2} minW={0}>
+            <Heading size="xl" fontWeight="semibold" overflowWrap="anywhere">{scenario.title}</Heading>
+            {scenario.details && <Text fontSize="sm" color="text.secondary" whiteSpace="pre-wrap" overflowWrap="anywhere">{scenario.details}</Text>}
+          </VStack>
           <VStack align="stretch" gap={4}>
             <Grid templateColumns={{ base: '1fr', md: 'repeat(2, minmax(0, 1fr))' }} gap={{ base: 4, md: 6 }}>
               {([['Preconditions', scenario.preconditions], ['Test data', scenario.testData]] as const).map(([label, value]) => (
@@ -141,15 +146,17 @@ export const TestScenarioDetailsView = ({
             )}
           </VStack>
         </VStack>
-        <VStack align="stretch" gap={6} minW={0}>
+        <VStack data-testid="scenario-detail-sidebar" align="stretch" gap={6} minW={0} borderLeftWidth={{ base: 0, lg: '1px' }} borderColor="border.main" pl={{ base: 0, lg: 6 }}>
+          <Box><Text fontSize="14px" mb={2}>Folder</Text><Link href={`/test-management?${new URLSearchParams({ projectId, folderId: scenario.folderId ?? 'unfiled' })}`} display="inline-flex" alignItems="center" gap={1}><FiFolder aria-hidden="true" />{folderName || 'No folder'}</Link></Box>
+          <Box><Text fontSize="14px" mb={2}>Priority</Text><Text as="span" bg={scenario.priority === 'high' ? 'status.attention.bg' : scenario.priority === 'medium' ? 'status.total.bg' : 'status.neutral.bg'} px={2} py={0.5} borderRadius="full" fontSize="xs">{priorityLabel}</Text></Box>
           <Box><Text fontSize="14px" mb={2}>Suites</Text>
-            <HStack wrap="wrap" gap={2}>
+            <HStack wrap="wrap" gap={2} align="start">
               {(scenario.suites ?? []).map((suite) => <HStack key={suite.id} bg="blue.subtle" color="blue.fg" borderRadius="full" pl={2} pr={1} py={0.5} gap={1}>
-                <Text fontSize="sm">{suite.name}</Text><IconButton size="2xs" minW="auto" h="auto" p={0.5} variant="ghost" aria-label={`Remove ${suite.name} suite`} loading={removingSuiteIds.includes(suite.id)} onClick={() => onRemoveSuite(suite.id)}><FiX /></IconButton>
+                <Link href={`/test-management?${new URLSearchParams({ projectId, tab: 'suites', suiteId: suite.id })}`} fontSize="sm">{suite.name}</Link><IconButton size="2xs" minW="auto" h="auto" p={0.5} variant="ghost" aria-label={`Remove ${suite.name} suite`} loading={removingSuiteIds.includes(suite.id)} onClick={() => onRemoveSuite(suite.id)}><FiX /></IconButton>
               </HStack>)}
-              <SuitePicker compact projectId={projectId} selectedIds={[scenario.id]} onComplete={(report) => onAddSuiteComplete(report)} />
+            <SuitePicker compact projectId={projectId} selectedIds={[scenario.id]} onOpenChange={setSuitePickerOpen} onComplete={(report) => onAddSuiteComplete(report)} />
+            {scenario.suites?.length === 0 && !suitePickerOpen && <Text fontSize="sm" color="text.secondary" mt={2}>No suites yet.</Text>}
             </HStack>
-            {scenario.suites?.length === 0 && <Text fontSize="sm" color="text.secondary" mt={2}>No suites yet.</Text>}
             {suiteError && <Text role="alert" fontSize="sm" color="fg.error" mt={2}>{suiteError}</Text>}
           </Box>
           <Box><Text fontSize="14px" mb={2}>Requirement or ticket</Text>

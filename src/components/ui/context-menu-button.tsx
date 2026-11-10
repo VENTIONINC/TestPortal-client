@@ -31,6 +31,7 @@ export const ContextMenuButton = forwardRef<HTMLButtonElement, ContextMenuButton
       transition="all 0.2s"
       borderRadius="md"
       ref={ref}
+      onMouseDown={(event) => event.stopPropagation()}
       onClick={onClick}
       data-testid="context-menu-button"
       {...props}

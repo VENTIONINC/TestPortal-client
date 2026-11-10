@@ -44,6 +44,7 @@ const SEARCH_DEBOUNCE_MS = 500;
 export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'scenarios' | 'suites') => {
   const [searchParams] = useSearchParams();
   const requestedFolder = searchParams.get('projectId') && searchParams.get('projectId') !== projectId ? null : searchParams.get('folderId');
+  const requestedSuite = searchParams.get('projectId') === projectId ? searchParams.get('suiteId') : null;
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<TestScenarioPageSize>(TEST_SCENARIO_PAGE_LIMIT as TestScenarioPageSize);
   const [search, setSearch] = useState('');
@@ -62,7 +63,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [priority, setPriority] = useState<NonNullable<GetApiV2TestScenariosApiArg['priority']> | ''>('');
   const [authorIds, setAuthorIds] = useState<string[]>([]);
   const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>(() =>
-    organizationTab === 'suites' ? { kind: 'suite' } : requestedFolder === 'unfiled' ? { kind: 'unfiled' } : requestedFolder ? { kind: 'folder', id: requestedFolder } : { kind: 'all' },
+    organizationTab === 'suites' ? { kind: 'suite', ...(requestedSuite ? { id: requestedSuite } : {}) } : requestedFolder === 'unfiled' ? { kind: 'unfiled' } : requestedFolder ? { kind: 'folder', id: requestedFolder } : { kind: 'all' },
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const selectionRevision = useRef(0);

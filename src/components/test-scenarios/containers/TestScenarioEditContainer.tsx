@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
-import { toaster } from '@/components/ui';
 import {
   usePatchApiV2TestScenariosByScenarioIdMutation,
   useGetApiV2TestScenarioFoldersQuery,
@@ -13,10 +12,12 @@ import {
 } from '@/redux/apis/extendedApi';
 import type { TestScenario } from '@/redux/apis/generatedApi';
 import { extractApiError } from '@/utils/apiErrors';
+import { PATHS } from '@/types/paths';
 
 import { TestScenarioDetailStateView, TestScenarioForm } from '../components';
 import { ScenarioDraftNavigationGuard } from '../components/ScenarioDraftNavigationGuard';
 import { useTestScenarioDetail } from '../hooks/useTestScenarioDetail';
+import { getScenarioOrigin, scenarioOriginDestination, scenarioOriginSearch } from '../scenarioOrigin';
 import {
   flattenScenarioFolders,
   getScenarioFolderReturnPath,
@@ -38,6 +39,9 @@ const rows = (scenario: TestScenario) =>
   }));
 const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEditContainerProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const search = new URLSearchParams(location.search);
+  const originSearch = search.has('originProject') ? scenarioOriginSearch(projectId, getScenarioOrigin(search, projectId)) : '';
   const detail = useTestScenarioDetail(projectId, scenarioId);
   const { currentData: folders = [] } = useGetApiV2TestScenarioFoldersQuery({ projectId });
   const { currentData: suites = [] } = useGetApiV2TestSuitesQuery({ projectId });
@@ -46,13 +50,17 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
   const [apiError, setApiError] = useState<string>();
   const [successMessage, setSuccessMessage] = useState<string>();
   const [dirty, setDirty] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [token, setToken] = useState(0);
   const inFlight = useRef(false);
+  const allowNavigation = useRef(false);
   const mounted = useRef(true);
   const scope = useRef(`${projectId}:${scenarioId}`);
   scope.current = `${projectId}:${scenarioId}`;
   const flatFolders = flattenScenarioFolders(folders);
+  const origin = getScenarioOrigin(search, projectId);
+  const originDestination = scenarioOriginDestination(projectId, origin, flatFolders, suites);
   const current = () => mounted.current && scope.current === `${projectId}:${scenarioId}`;
   useEffect(() => {
     mounted.current = true;
@@ -112,8 +120,12 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
       const response = await updateScenario({ scenarioId, projectId, updateTestScenarioRequest: request }).unwrap();
       if (!current()) return;
       adopt(response);
+      allowNavigation.current = true;
+      setSaved(true);
       setSuccessMessage('Test Scenario saved successfully.');
-      toaster.create({ title: 'Test Scenario saved successfully.', type: 'success' });
+      const nextSearch = new URLSearchParams(originSearch);
+      nextSearch.set('saved', '1');
+      setTimeout(() => { if (current()) navigate(`/test-scenarios/${encodeURIComponent(scenarioId)}?${nextSearch}`); }, 0);
     } catch (error) {
       if (!current()) return;
       setApiError(
@@ -151,7 +163,7 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
   const scenario = baseline ?? (detail.scenario as EditorScenario | undefined);
   return (
     <>
-      <ScenarioDraftNavigationGuard dirty={dirty} />
+      <ScenarioDraftNavigationGuard dirty={dirty && !saved} allowNavigation={allowNavigation} />
       <TestScenarioDetailStateView
         scenario={scenario}
         isLoading={detail.isLoading}
@@ -165,6 +177,11 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
             key={`${projectId}:${scenarioId}`}
             mode="edit"
             initialValues={saved}
+            history={saved}
+            originLabel={originDestination.label}
+            originKind={origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? 'suites' : 'scenarios'}
+            onNavigateOrigin={() => navigate(originDestination.path)}
+            onNavigateSection={() => navigate(`${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId, ...(origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? { tab: 'suites' } : {}) })}`)}
             initialSteps={rows(saved)}
             initialSuites={(saved as EditorScenario).suites ?? []}
             suites={suites}
@@ -179,7 +196,7 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
             onDirtyChange={setDirty}
             onReload={() => void reload()}
             onSubmit={handleSubmit}
-            onCancel={() => navigate(`/test-scenarios/${scenarioId}`)}
+            onCancel={() => navigate(`/test-scenarios/${scenarioId}${originSearch}`)}
           />
         )}
       </TestScenarioDetailStateView>
