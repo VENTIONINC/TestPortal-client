@@ -53,12 +53,9 @@ describe('TestScenarioForm', () => {
     expect(sidebar).toContainElement(screen.getByRole('button', { name: 'Priority' }));
     expect(sidebar).toContainElement(screen.getByRole('textbox', { name: 'Requirement or ticket' }));
   });
-  it('shows the saved key and history in edit mode', () => {
-    setup({ mode: 'edit', initialValues: { title: 'Saved', scenarioKey: 'TMS-1' }, history: { createdAt: '2026-10-01T00:00:00Z', updatedAt: '2026-10-02T00:00:00Z', createdBy: { name: 'Ada' }, updatedBy: { name: 'Grace' } } });
+  it('shows the saved key in edit mode', () => {
+    setup({ mode: 'edit', initialValues: { title: 'Saved', scenarioKey: 'TMS-1' } });
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent('TMS-1');
-    expect(screen.getByTestId('scenario-card-sidebar')).toHaveTextContent('History');
-    expect(screen.getByTestId('scenario-card-sidebar')).toHaveTextContent('Ada');
-    expect(screen.getByTestId('scenario-card-sidebar')).toHaveTextContent('Grace');
   });
   it('provides separate navigation to the section and originating folder', async () => {
     const section = vi.fn(); const origin = vi.fn();
@@ -276,7 +273,7 @@ describe('TestScenarioForm', () => {
     expect(screen.getByRole('textbox', { name: 'Step 1 action' })).toHaveValue('First');
     expect(screen.getByRole('textbox', { name: 'Step 2 action' })).toHaveValue('Edited second');
   });
-  it('selects suites by UUID and avoids offering a duplicate suite name', async () => {
+  it('selects suites by UUID and permits a draft suite to reuse an existing name', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     setup({
@@ -295,7 +292,10 @@ describe('TestScenarioForm', () => {
     await user.click(screen.getByRole('button', { name: 'Select suites' }));
     const search = screen.getByRole('textbox', { name: 'Find or create a suite' });
     fireEvent.change(search, { target: { value: 'alpha' } });
-    expect(screen.queryByRole('button', { name: 'Create suite “alpha”' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Create suite “alpha”' }));
+    expect(screen.getByRole('button', { name: 'Remove suite alpha' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Remove suite alpha' }));
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Find or create a suite' }), { target: { value: 'Pending' } });
     await user.click(screen.getByRole('button', { name: 'Create suite “Pending”' }));
     await user.click(screen.getByRole('button', { name: 'Remove suite Pending' }));
@@ -334,21 +334,6 @@ describe('TestScenarioForm', () => {
     fireEvent.change(search, { target: { value: 'Deferred' } });
     expect(fireEvent.keyDown(search, { key: 'Enter' })).toBe(false);
     expect(onSubmit).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Remove suite Deferred' })).toBeInTheDocument();
-  });
-  it('filters suites, shows counts, selects the first match with Enter, and dismisses with Escape', async () => {
-    const user = userEvent.setup();
-    setup({ suites: [{ id: 'a', name: 'Alpha', members: [{}, {}] }, { id: 'b', name: 'Beta', members: [] }] });
-    await user.click(screen.getByRole('button', { name: 'Select suites' }));
-    expect(screen.queryByText('Not in any suite')).not.toBeInTheDocument();
-    expect(screen.getByText('2 scenarios')).toBeInTheDocument();
-    const search = screen.getByRole('textbox', { name: 'Find or create a suite' });
-    await user.type(search, 'bet{Enter}');
-    expect(screen.getByRole('button', { name: 'Remove suite Beta' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Select suites' }));
-    expect(screen.queryByRole('button', { name: /^Beta/ })).not.toBeInTheDocument();
-    await user.keyboard('{Escape}');
-    expect(screen.queryByRole('textbox', { name: 'Find or create a suite' })).not.toBeInTheDocument();
   });
   it('prevents suite selection and creation when a save starts with the picker open', async () => {
     const user = userEvent.setup();

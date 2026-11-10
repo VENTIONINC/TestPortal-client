@@ -3,7 +3,6 @@
 
 import { Box, Button, Grid, Heading, HStack, IconButton, Table, Text, VStack } from '@chakra-ui/react';
 import { FiEdit, FiFolder, FiLink, FiX } from 'react-icons/fi';
-import { useState } from 'react';
 
 import { ContextMenuButton, Link } from '@/components/ui';
 import type { TestScenario } from '@/redux/apis/generatedApi';
@@ -67,7 +66,6 @@ export const TestScenarioDetailsView = ({
   removingSuiteIds,
   originKind = 'scenarios',
 }: TestScenarioDetailsViewProps) => {
-  const [suitePickerOpen, setSuitePickerOpen] = useState(false);
   const scenarioKey = scenario.scenarioKey?.trim();
   const steps = orderedSteps(scenario);
   const issueUrl = safeIssueUrl(scenario.relatedIssueUrl);
@@ -162,8 +160,8 @@ export const TestScenarioDetailsView = ({
               {(scenario.suites ?? []).map((suite) => <HStack key={suite.id} bg="blue.subtle" color="blue.fg" borderRadius="full" pl={2} pr={1} py={0.5} gap={1}>
                 <Link href={`/test-management?${new URLSearchParams({ projectId, tab: 'suites', suiteId: suite.id })}`} fontSize="sm">{suite.name}</Link><IconButton size="2xs" minW="auto" h="auto" p={0.5} variant="ghost" aria-label={`Remove ${suite.name} suite`} loading={removingSuiteIds.includes(suite.id)} onClick={() => onRemoveSuite(suite.id)}><FiX /></IconButton>
               </HStack>)}
-            <SuitePicker compact projectId={projectId} selectedIds={[scenario.id]} onOpenChange={setSuitePickerOpen} onComplete={(report) => onAddSuiteComplete(report)} />
-            {scenario.suites?.length === 0 && !suitePickerOpen && <Text fontSize="sm" color="text.secondary" mt={2}>No suites yet.</Text>}
+            <SuitePicker compact projectId={projectId} selectedIds={[scenario.id]} onComplete={(report) => onAddSuiteComplete(report)} />
+            {scenario.suites?.length === 0 && <Text fontSize="sm" color="text.secondary" mt={2}>No suites yet.</Text>}
             </HStack>
             {suiteError && <Text role="alert" fontSize="sm" color="fg.error" mt={2}>{suiteError}</Text>}
           </Box>

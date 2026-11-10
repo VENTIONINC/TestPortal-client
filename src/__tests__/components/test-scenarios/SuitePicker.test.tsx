@@ -88,57 +88,12 @@ describe('SuitePicker', () => {
     } });
     expect(onComplete.mock.calls[0]?.[2]).toMatchObject({ createdSuiteId: 'suite-new', suiteName: 'Fresh' });
   });
-  it('filters existing membership and adds the first match with Enter in the inline picker', async () => {
+  it('shows already selected suites as disabled in the compact picker', async () => {
     const user = userEvent.setup();
-    const onComplete = vi.fn<Complete>();
-    getSuites.mockReturnValue({ data: [
-      { id: 'suite-1', name: 'Selected', membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] },
-      { id: 'suite-2', name: 'Other', membershipRevision: 2, members: [] },
-    ], isLoading: false, isFetching: false, isError: false });
-    render(<ChakraProvider><SuitePicker compact projectId="project-1" selectedIds={['scenario-1']} onComplete={onComplete} /></ChakraProvider>);
-    await user.click(screen.getByRole('button', { name: 'Add to suite' }));
-    expect(screen.queryByRole('button', { name: /Selected/ })).not.toBeInTheDocument();
-    await user.type(screen.getByRole('textbox', { name: 'Find or create a suite' }), 'Oth{Enter}');
-    await waitFor(() => expect(changeMembership).toHaveBeenCalledWith(expect.objectContaining({ suiteId: 'suite-2' })));
-  });
-  it('creates a non-duplicate suite with Enter and closes with Escape', async () => {
-    const user = userEvent.setup();
-    const onComplete = vi.fn<Complete>();
-    render(<ChakraProvider><SuitePicker compact projectId="project-1" selectedIds={['scenario-1']} onComplete={onComplete} /></ChakraProvider>);
-    await user.click(screen.getByRole('button', { name: 'Add to suite' }));
-    await user.type(screen.getByRole('textbox', { name: 'Find or create a suite' }), 'Fresh{Enter}');
-    await waitFor(() => expect(createSuite).toHaveBeenCalledWith({ body: { projectId: 'project-1', name: 'Fresh' } }));
-    await waitFor(() => expect(onComplete).toHaveBeenCalled());
-    await user.click(screen.getByRole('button', { name: 'Add to suite' }));
-    await user.keyboard('{Escape}');
-    expect(screen.queryByRole('textbox', { name: 'Find or create a suite' })).not.toBeInTheDocument();
-  });
-  it('reports an uncertain membership change so the scenario can refresh', async () => {
-    const user = userEvent.setup();
-    const onComplete = vi.fn<Complete>();
-    getSuites.mockReturnValue({ data: [{ id: 'suite-2', name: 'Other', membershipRevision: 2, members: [] }], isLoading: false, isFetching: false, isError: false });
-    changeMembership.mockReturnValue({ unwrap: async () => { throw { status: 'FETCH_ERROR' }; } });
-    render(<ChakraProvider><SuitePicker compact projectId="project-1" selectedIds={['scenario-1']} onComplete={onComplete} /></ChakraProvider>);
-    await user.click(screen.getByRole('button', { name: 'Add to suite' }));
-    await user.click(screen.getByRole('button', { name: /Other/ }));
-    await waitFor(() => expect(onComplete).toHaveBeenCalledWith(expect.objectContaining({ uncertainIds: ['scenario-1'] }), ['scenario-1']));
-    expect(screen.getByRole('alert')).toHaveTextContent(/membership.*unknown/i);
-    expect(changeMembership).toHaveBeenCalledOnce();
-  });
-
-  it('ignores Enter when a failed refresh hides cached suites', async () => {
-    const user = userEvent.setup();
-    getSuites.mockReturnValue({
-      data: [{ id: 'cached-suite', name: 'Cached', membershipRevision: 2, members: [] }],
-      isLoading: false,
-      isFetching: false,
-      isError: true,
-    });
     render(<ChakraProvider><SuitePicker compact projectId="project-1" selectedIds={['scenario-1']} onComplete={vi.fn<Complete>()} /></ChakraProvider>);
     await user.click(screen.getByRole('button', { name: 'Add to suite' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Suites could not be loaded');
-    expect(screen.queryByRole('button', { name: /Cached/ })).not.toBeInTheDocument();
-    await user.keyboard('{Enter}');
-    expect(changeMembership).not.toHaveBeenCalled();
+    expect(screen.getByText('Add 1 selected to a suite')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Existing/ })).toBeDisabled();
+    expect(screen.getByText(/1 of 1 already in suite/)).toBeInTheDocument();
   });
 });

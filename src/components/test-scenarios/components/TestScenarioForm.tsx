@@ -110,7 +110,6 @@ export const TestScenarioForm = ({
   const [folderSearch, setFolderSearch] = useState('');
   const [priorityOpen, setPriorityOpen] = useState(false);
   const [selectedSuites, setSelectedSuites] = useState(initialSuites);
-  const [suitePickerOpen, setSuitePickerOpen] = useState(false);
   const [createAnother, setCreateAnother] = useState(false);
   const [createdConfirmation, setCreatedConfirmation] = useState(false);
   const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
@@ -850,10 +849,9 @@ export const TestScenarioForm = ({
                   selectedIds={selectedSuites.filter((suite) => !suite.isNew).map((suite) => suite.id)}
                   selectedNewNames={selectedSuites.filter((suite) => suite.isNew).map((suite) => suite.name)}
                   disabled={pending}
-                  onOpenChange={setSuitePickerOpen}
                   onSelect={(suite) => setSelectedSuites((previous) => [...previous, suite])}
                 />
-                {!selectedSuites.length && !suitePickerOpen && (
+                {!selectedSuites.length && (
                   <Text color="text.secondary" fontSize="sm">
                     Not in any suite
                   </Text>
