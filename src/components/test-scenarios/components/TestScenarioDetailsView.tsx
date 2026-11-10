@@ -78,26 +78,17 @@ export const TestScenarioDetailsView = ({
   return (
     <VStack align="stretch" gap={0} mx={{ base: 3, md: 6 }} my={4}>
       <HStack justify="space-between" align="center" gap={4} flexWrap="wrap" pb={4}>
-        <HStack as="nav" aria-label="Breadcrumb" gap={2} minW={0} flex="1" wrap="wrap">
-          <Link
-            href={`/test-management?${new URLSearchParams({ projectId, ...(originKind === 'suites' ? { tab: 'suites' } : {}) })}`}
-            aria-label={backLabel && backLabel !== 'All scenarios' ? undefined : `Back to ${backLabel || folderName || 'Test Scenarios'}`}
-            display="inline-flex"
-            alignItems="center"
-            justifyContent="center"
-            h="5"
-            minW={0}
-            p={0}
-            textDecoration="none"
-            fontSize="sm"
-            gap={2}
-            color="text.secondary"
-            _hover={{ textDecoration: 'underline' }}
-          >
-            <Text fontSize="sm">{originKind === 'suites' ? 'Suites' : 'Scenarios'}</Text>
-          </Link>
-          {backLabel && backLabel !== 'All scenarios' && <><Text>›</Text><Link href={backPath} aria-label={`Back to ${backLabel}`} fontSize="sm" color="text.secondary" textDecoration="none" _hover={{ textDecoration: 'underline' }}>{backLabel}</Link></>}
-          <Text>›</Text><Text fontSize="sm">{scenarioKey || 'Scenario'}</Text>
+        <HStack as="nav" aria-label="Breadcrumb" gap={2} minW={0} flex="1" wrap="wrap" fontSize="md" color="text.secondary">
+          <Button asChild variant="ghost" size="xs" fontSize="md" fontWeight="normal" color="text.secondary" _hover={{ bg: 'transparent', textDecoration: 'underline' }}>
+            <Link
+              href={`/test-management?${new URLSearchParams({ projectId, ...(originKind === 'suites' ? { tab: 'suites' } : {}) })}`}
+              aria-label={backLabel && backLabel !== 'All scenarios' ? undefined : `Back to ${backLabel || folderName || 'Test Scenarios'}`}
+            >
+              {originKind === 'suites' ? 'Suites' : 'Scenarios'}
+            </Link>
+          </Button>
+          {backLabel && backLabel !== 'All scenarios' && <><Text>›</Text><Button asChild variant="ghost" size="xs" fontSize="md" fontWeight="normal" color="text.secondary" _hover={{ bg: 'transparent', textDecoration: 'underline' }}><Link href={backPath} aria-label={`Back to ${backLabel}`}>{backLabel}</Link></Button></>}
+          <Text>›</Text><Text color="text.primary">{scenarioKey || 'Scenario'}</Text>
         </HStack>
         <HStack gap={2} alignSelf="center">
           <Button colorPalette="blue" onClick={onEdit}><FiEdit />Edit</Button>

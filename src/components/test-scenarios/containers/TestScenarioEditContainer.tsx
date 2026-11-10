@@ -60,7 +60,11 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
   scope.current = `${projectId}:${scenarioId}`;
   const flatFolders = flattenScenarioFolders(folders);
   const origin = getScenarioOrigin(search, projectId);
-  const originDestination = scenarioOriginDestination(projectId, origin, flatFolders, suites);
+  const savedFolderId = (baseline ?? detail.scenario)?.folderId;
+  const breadcrumbOrigin = origin.kind === 'suite' ? origin : savedFolderId
+    ? { kind: 'folder' as const, id: savedFolderId }
+    : { kind: 'unfiled' as const };
+  const originDestination = scenarioOriginDestination(projectId, breadcrumbOrigin, flatFolders, suites);
   const current = () => mounted.current && scope.current === `${projectId}:${scenarioId}`;
   useEffect(() => {
     mounted.current = true;

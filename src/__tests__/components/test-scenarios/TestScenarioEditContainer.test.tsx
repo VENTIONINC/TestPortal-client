@@ -77,6 +77,26 @@ beforeEach(() => {
   refetch.mockReset();
 });
 describe('TestScenarioEditContainer', () => {
+  it('uses the saved scenario folder rather than its originating folder', async () => {
+    state.scenario = { ...scenario(), folderId: 'folder-1' };
+    state.search = '?originProject=project-1&originKind=folder&originId=parent';
+    setup();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Authentication' }));
+    expect(navigate).toHaveBeenCalledWith('/test-management?projectId=project-1&folderId=folder-1');
+  });
+  it('shows the originating suite in the edit breadcrumb', async () => {
+    state.scenario = { ...scenario(), folderId: 'folder-1' };
+    state.search = '?originProject=project-1&originKind=suite&originId=suite-1';
+    setup();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Regression' }));
+    expect(navigate).toHaveBeenCalledWith('/test-management?projectId=project-1&tab=suites&suiteId=suite-1');
+  });
+  it('uses No folder for an unfiled scenario opened from Scenarios', async () => {
+    state.search = '?originProject=project-1&originKind=all';
+    setup();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'No folder' }));
+    expect(navigate).toHaveBeenCalledWith('/test-management?projectId=project-1&folderId=unfiled');
+  });
   it('returns to the scenario with its suite origin when cancelling', async () => {
     state.search = '?originProject=project-1&originKind=suite&originId=suite-1';
     setup();
