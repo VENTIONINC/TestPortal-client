@@ -52,6 +52,7 @@ import { Link as RouterLink } from 'react-router';
 
 import {
   Alert,
+  ContextMenuButton,
   Dialog,
   DialogBody,
   DialogFooter,
@@ -70,7 +71,9 @@ import type {
 import { TestSuiteAddScenariosDialogContainer } from '../containers/TestSuiteAddScenariosDialogContainer';
 import { SuitePicker } from './SuitePicker';
 import { getTestScenarioDetailPath } from '../constants';
+import { scenarioOriginSearch } from '../scenarioOrigin';
 import type { ScenarioOperationReport } from '../utils';
+import type { TestScenarioContextMenuHandler } from '../hooks/useTestScenarioContextMenu';
 import type { TestScenarioPagination, TestScenarioSummary } from '../types';
 
 type SuiteMembershipUndo = Pick<PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse, 'restoreData'> & {
@@ -135,6 +138,7 @@ export interface TestScenarioCatalogViewProps {
   error?: unknown;
   onPageChange: (page: number) => void;
   onCreateScenario?: () => void;
+  onScenarioActions?: TestScenarioContextMenuHandler;
   search: string;
   onSearchChange: (value: string) => void;
   sort?: 'scenarioKey' | 'title' | 'details' | 'folder' | 'createdBy' | 'createdAt' | 'updatedAt';
@@ -252,7 +256,6 @@ const EmptyState = ({
   emptyFolder = false,
   suiteView = false,
   onAddScenarios,
-  onCreateScenario,
 }: {
   searchActive?: boolean;
   emptySuite?: boolean;
@@ -282,6 +285,7 @@ const EmptyState = ({
 );
 
 const ScenarioTable = ({
+  originSearch,
   scenarios,
   isLoading,
   selectedIds,
@@ -301,6 +305,7 @@ const ScenarioTable = ({
   dragOverScenarioId,
   onSuiteRowDragOver,
 }: {
+  originSearch: string;
   projectId?: string;
   enableSuiteDrag: boolean;
   enableSuiteReorder: boolean;
@@ -475,7 +480,7 @@ const ScenarioTable = ({
                       fontWeight="semibold"
                       color="text.main"
                     >
-                      <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
+                      <RouterLink to={`${getTestScenarioDetailPath(scenario.id)}${originSearch}`}>{scenario.title}</RouterLink>
                     </ChakraLink>
                   </Tooltip>
                 </Table.Cell>
@@ -922,6 +927,8 @@ const authorInitials = (name: string) =>
     .join('') || '?';
 
 const CompactScenarioTable = ({
+  originSearch,
+  onScenarioActions,
   projectId,
   scenarios,
   isLoading,
@@ -935,6 +942,8 @@ const CompactScenarioTable = ({
   emptyFolder,
   onCreateScenario,
 }: {
+  originSearch: string;
+  onScenarioActions?: TestScenarioContextMenuHandler;
   projectId: string;
   scenarios: TestScenarioSummary[];
   isLoading: boolean;
@@ -1009,12 +1018,13 @@ const CompactScenarioTable = ({
             <Table.ColumnHeader w="180px" px={3} py={2}>
               Author
             </Table.ColumnHeader>
+            {onScenarioActions && <Table.ColumnHeader w="48px"><Text srOnly>Actions</Text></Table.ColumnHeader>}
           </Table.Row>
         </Table.Header>
         <Table.Body>
           {scenarios.length === 0 ? (
             <Table.Row>
-              <Table.Cell colSpan={8} py={8} textAlign="center">
+              <Table.Cell colSpan={8 + Number(Boolean(onScenarioActions))} py={8} textAlign="center">
                 {isLoading ? (
                   <Text role="status" color="text.muted">
                     Searching scenarios…
@@ -1103,7 +1113,7 @@ const CompactScenarioTable = ({
                         fontWeight="semibold"
                         color="text.main"
                       >
-                        <RouterLink to={getTestScenarioDetailPath(scenario.id)}>{scenario.title}</RouterLink>
+                        <RouterLink to={`${getTestScenarioDetailPath(scenario.id)}${originSearch}`}>{scenario.title}</RouterLink>
                       </ChakraLink>
                     </Tooltip>
                   </Table.Cell>
@@ -1167,6 +1177,7 @@ const CompactScenarioTable = ({
                       </HStack>
                     </Tooltip>
                   </Table.Cell>
+                  {onScenarioActions && <Table.Cell px={1}><ContextMenuButton aria-label={`Actions for ${scenario.title}`} onClick={(event) => onScenarioActions(event, scenario)} /></Table.Cell>}
                 </Table.Row>
               );
             })
@@ -1239,6 +1250,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   onCreateSuite,
   onUpdateSuite,
   onDeleteSuite,
+  onScenarioActions,
 }: TestScenarioCatalogViewProps) {
   const isScenariosTab = organizationTab === CATALOG_TAB.scenarios;
   const isSuitesTab = organizationTab === CATALOG_TAB.suites;
@@ -2743,6 +2755,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                   <>
                     {isScenariosTab ? (
                       <CompactScenarioTable
+                        onScenarioActions={onScenarioActions}
+                        originSearch={scenarioOriginSearch(projectId ?? '', scope.kind === 'folder' && scope.id ? { kind: 'folder', id: scope.id } : scope.kind === 'unfiled' ? { kind: 'unfiled' } : { kind: 'all' })}
                         projectId={projectId ?? ''}
                         scenarios={scenarios}
                         isLoading={isLoading}
@@ -2772,6 +2786,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       />
                     ) : (
                       <ScenarioTable
+                        originSearch={scenarioOriginSearch(projectId ?? '', scope.kind === 'suite' && scope.id ? { kind: 'suite', id: scope.id } : { kind: 'all' })}
                         projectId={projectId}
                         enableSuiteDrag={!isScenariosTab}
                         enableSuiteReorder={canReorderSuite}

@@ -44,6 +44,7 @@ const SEARCH_DEBOUNCE_MS = 500;
 export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'scenarios' | 'suites') => {
   const [searchParams] = useSearchParams();
   const requestedFolder = searchParams.get('projectId') && searchParams.get('projectId') !== projectId ? null : searchParams.get('folderId');
+  const requestedSuite = searchParams.get('projectId') === projectId ? searchParams.get('suiteId') : null;
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<TestScenarioPageSize>(TEST_SCENARIO_PAGE_LIMIT as TestScenarioPageSize);
   const [search, setSearch] = useState('');
@@ -62,7 +63,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [priority, setPriority] = useState<NonNullable<GetApiV2TestScenariosApiArg['priority']> | ''>('');
   const [authorIds, setAuthorIds] = useState<string[]>([]);
   const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>(() =>
-    organizationTab === 'suites' ? { kind: 'suite' } : requestedFolder === 'unfiled' ? { kind: 'unfiled' } : requestedFolder ? { kind: 'folder', id: requestedFolder } : { kind: 'all' },
+    organizationTab === 'suites' ? { kind: 'suite', ...(requestedSuite ? { id: requestedSuite } : {}) } : requestedFolder === 'unfiled' ? { kind: 'unfiled' } : requestedFolder ? { kind: 'folder', id: requestedFolder } : { kind: 'all' },
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const selectionRevision = useRef(0);
@@ -379,12 +380,16 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       if (revision === selectionRevision.current) setIsResolvingSelection(false);
     }
   }, [resolveSelectionRequest, selectionArgs]);
-  const reconcileOperation = useCallback((report: ScenarioOperationReport, revision: number) => {
+  const reconcileOperation = useCallback(({ succeededIds }: Pick<ScenarioOperationReport, 'succeededIds'>, revision: number) => {
     if (revision !== selectionRevision.current) return;
-    if (report.succeededIds.length)
-      setSelectedIds((current) => current.filter((id) => !report.succeededIds.includes(id)));
+    if (succeededIds.length)
+      setSelectedIds((current) => current.filter((id) => !succeededIds.includes(id)));
     setAllMatchingSelected(false);
   }, []);
+  const reconcileDeletedScenario = useCallback((scenarioId: string) => {
+    reconcileOperation({ succeededIds: [scenarioId] }, ++selectionRevision.current);
+    setIsResolvingSelection(false);
+  }, [reconcileOperation]);
   const runOperation = useCallback(async (operation: () => Promise<ScenarioOperationReport>) => {
     if (operationLock.current) return { succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] };
     operationLock.current = true;
@@ -676,6 +681,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     moveSelected,
     moveScenarioIds,
     deleteSelected,
+    reconcileDeletedScenario,
     startSuiteOperation,
     reconcileSuiteOperation,
     removeSelectedFromSuite,

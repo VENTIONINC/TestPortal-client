@@ -34,11 +34,12 @@ interface FolderOptionNode {
 }
 
 export const flattenScenarioFolders = (folders: FolderOptionNode[]) => {
-  const flattened: Array<{ id: string; name: string; depth: number }> = [];
-  const visit = (folder: FolderOptionNode, depth: number) => {
+  const flattened: Array<{ id: string; name: string; depth: number; path: string }> = [];
+  const visit = (folder: FolderOptionNode, depth: number, parentPath = '') => {
     if (!folder.id || !folder.name) return;
-    flattened.push({ id: folder.id, name: folder.name, depth });
-    folder.children?.forEach((child) => visit(child, depth + 1));
+    const path = parentPath ? `${parentPath} / ${folder.name}` : folder.name;
+    flattened.push({ id: folder.id, name: folder.name, depth, path });
+    folder.children?.forEach((child) => visit(child, depth + 1, path));
   };
   folders.forEach((folder) => visit(folder, 0));
   return flattened;

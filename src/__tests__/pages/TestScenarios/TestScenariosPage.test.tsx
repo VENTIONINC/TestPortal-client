@@ -78,6 +78,19 @@ describe('TestScenariosPage', () => {
     projectState.requestedProjects = [];
   });
 
+  it('opens Suites from a project-scoped suite return link', () => {
+    renderPage('/test-management?projectId=project-1&tab=suites&suiteId=suite-1');
+    expect(screen.getByRole('tab', { name: /Suites/ })).toHaveAttribute('aria-selected', 'true');
+  });
+  it('keeps Suites active when viewing a scenario opened from a suite', () => {
+    render(<ChakraProvider><MemoryRouter initialEntries={['/test-scenarios/123?originProject=project-1&originKind=suite&originId=suite-1']}><ScenarioPageTabs /></MemoryRouter></ChakraProvider>);
+    expect(screen.getByRole('tab', { name: /Suites/ })).toHaveAttribute('aria-selected', 'true');
+  });
+  it('falls back to Scenarios if the originating suite no longer exists', () => {
+    render(<ChakraProvider><MemoryRouter initialEntries={['/test-scenarios/123?originProject=project-1&originKind=suite&originId=removed']}><ScenarioPageTabs /></MemoryRouter></ChakraProvider>);
+    expect(screen.getByRole('tab', { name: /Scenarios/ })).toHaveAttribute('aria-selected', 'true');
+  });
+
   it('renders the catalog in the default Scenarios tab of Test Management', () => {
     renderPage();
 

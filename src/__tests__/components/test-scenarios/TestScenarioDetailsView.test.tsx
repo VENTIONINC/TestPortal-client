@@ -28,6 +28,7 @@ const renderView = (overrides: Partial<TestScenario> = {}) => render(
   <ChakraProvider><MemoryRouter><TestScenarioDetailsView
     scenario={{ ...scenario, ...overrides }}
     folderName="Checkout"
+    backLabel="Checkout"
     backPath="/test-management?projectId=project-1&folderId=folder-1"
     projectId="project-1"
     onEdit={vi.fn()}
@@ -39,10 +40,17 @@ const renderView = (overrides: Partial<TestScenario> = {}) => render(
 );
 
 describe('TestScenarioDetailsView', () => {
+  it('places folder and priority in the sidebar and the scenario key in the breadcrumb', () => {
+    renderView();
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent('TMS-1');
+    expect(screen.getByTestId('scenario-detail-sidebar')).toHaveTextContent('Folder');
+    expect(screen.getByTestId('scenario-detail-sidebar')).toHaveTextContent('Priority');
+    expect(screen.getByTestId('scenario-detail-main')).toContainElement(screen.getByRole('heading', { name: 'Checkout' }));
+  });
   it('shows the scenario header, setup, ordered action/result table and responsive navigation', () => {
     renderView();
     expect(screen.getByText('TMS-1')).toBeInTheDocument();
-    expect(screen.getAllByText('Checkout')).toHaveLength(2);
+    expect(screen.getAllByText('Checkout')).toHaveLength(3);
     expect(screen.getByRole('heading', { name: 'Checkout' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
     expect(screen.getByText('Preconditions').compareDocumentPosition(screen.getByText('Steps')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -68,6 +76,17 @@ describe('TestScenarioDetailsView', () => {
     expect(screen.getByText((_, element) => element?.textContent === 'Created Unknown by Unknown')).toBeInTheDocument();
     expect(screen.getByText((_, element) => element?.textContent === 'Updated Unknown by Unknown')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /example.test/ })).not.toBeInTheDocument();
+  });
+
+  it('shows the issue key and title from a YouTrack link', () => {
+    const url = 'https://yt-wod.ventionteams.com/issue/TP-20/TMS-Incorrect-test-case-fields-and-actions';
+    renderView({ relatedIssueUrl: url });
+    expect(screen.getByRole('link', { name: 'TP-20 TMS Incorrect test case fields and actions' })).toHaveAttribute('href', url);
+  });
+
+  it('shows the issue key when the YouTrack URL has no title', () => {
+    renderView({ relatedIssueUrl: 'https://yt-wod.ventionteams.com/issue/TP-20' });
+    expect(screen.getByRole('link', { name: 'TP-20' })).toBeInTheDocument();
   });
 
   it('does not render an unsafe related issue URL as a link', () => {

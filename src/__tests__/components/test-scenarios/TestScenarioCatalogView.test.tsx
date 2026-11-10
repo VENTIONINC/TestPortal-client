@@ -138,6 +138,20 @@ const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>
   );
 
 describe('TestScenarioCatalogView', () => {
+  it('includes the selected folder as the scenario origin', () => {
+    renderView({ projectId: 'project-1', organizationTab: 'scenarios', scope: { kind: 'folder', id: 'folder-1' } });
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1?originProject=project-1&originKind=folder&originId=folder-1');
+  });
+  it('includes the selected suite as the scenario origin', () => {
+    renderView({ projectId: 'project-1', organizationTab: 'suites', scope: { kind: 'suite', id: 'suite-a' }, suites: [{ id: 'suite-a', name: 'Smoke', description: null, purpose: null, release: null, membershipRevision: 0, members: [{ testScenarioId: 'scenario-1' }] }] });
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-a');
+  });
+  it('opens the selected scenario row actions', async () => {
+    const onScenarioActions = vi.fn();
+    renderView({ organizationTab: 'scenarios', onScenarioActions });
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Actions for Checkout flow' }));
+    expect(onScenarioActions).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: 'scenario-1', title: 'Checkout flow' }));
+  });
   it('disables Run suite for an empty suite and provides its delayed tooltip without opening a run', async () => {
     const user = userEvent.setup();
     renderView({
@@ -465,7 +479,7 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByText('9/2/2026')).toBeInTheDocument();
     expect(screen.queryByText('9/1/2026')).not.toBeInTheDocument();
     expect(screen.queryByText('# Checkout flow')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1');
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1?originProject=project-1&originKind=all');
     expect(screen.queryByRole('button', { name: 'Actions for Checkout flow' })).not.toBeInTheDocument();
   });
 
@@ -760,8 +774,8 @@ describe('TestScenarioCatalogView', () => {
       ],
     });
 
-    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1');
-    expect(screen.getByRole('link', { name: 'Refund flow' })).toHaveAttribute('href', '/test-scenarios/scenario-2');
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1?originProject=project-1&originKind=all');
+    expect(screen.getByRole('link', { name: 'Refund flow' })).toHaveAttribute('href', '/test-scenarios/scenario-2?originProject=project-1&originKind=all');
     expect(screen.getByText('Grace H.')).toBeInTheDocument();
     expect(screen.queryByText('grace@example.com')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Grace Hopper (grace@example.com)')).not.toBeInTheDocument();

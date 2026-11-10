@@ -1,7 +1,7 @@
 import userEvent from '@testing-library/user-event';
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TestScenarioEditContainer } from '@/components/test-scenarios/containers/TestScenarioEditContainer';
@@ -11,11 +11,12 @@ const { navigate, updateScenario, refetch, state } = vi.hoisted(() => ({
   navigate: vi.fn(),
   updateScenario: vi.fn(),
   refetch: vi.fn(),
-  state: { scenario: undefined as unknown },
+  state: { scenario: undefined as unknown, search: '' },
 }));
 vi.mock('react-router', async (original) => ({
   ...(await original<typeof import('react-router')>()),
   useNavigate: () => navigate,
+  useLocation: () => ({ search: state.search }),
 }));
 vi.mock('@/components/test-scenarios/hooks/useTestScenarioDetail', () => ({
   useTestScenarioDetail: () => ({
@@ -70,11 +71,49 @@ const change = (name: string, value: string) =>
 const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
 beforeEach(() => {
   state.scenario = scenario();
+  state.search = '';
   updateScenario.mockReset();
   navigate.mockReset();
   refetch.mockReset();
 });
 describe('TestScenarioEditContainer', () => {
+  it('uses the saved scenario folder rather than its originating folder', async () => {
+    state.scenario = { ...scenario(), folderId: 'folder-1' };
+    state.search = '?originProject=project-1&originKind=folder&originId=parent';
+    setup();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Authentication' }));
+    expect(navigate).toHaveBeenCalledWith('/test-management?projectId=project-1&folderId=folder-1');
+  });
+  it('shows the originating suite in the edit breadcrumb', async () => {
+    state.scenario = { ...scenario(), folderId: 'folder-1' };
+    state.search = '?originProject=project-1&originKind=suite&originId=suite-1';
+    setup();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Regression' }));
+    expect(navigate).toHaveBeenCalledWith('/test-management?projectId=project-1&tab=suites&suiteId=suite-1');
+  });
+  it('uses No folder for an unfiled scenario opened from Scenarios', async () => {
+    state.search = '?originProject=project-1&originKind=all';
+    setup();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'No folder' }));
+    expect(navigate).toHaveBeenCalledWith('/test-management?projectId=project-1&folderId=unfiled');
+  });
+  it('returns to the scenario with its suite origin when cancelling', async () => {
+    state.search = '?originProject=project-1&originKind=suite&originId=suite-1';
+    setup();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1');
+  });
+  it('does not save a staged new suite when cancelling', async () => {
+    const user = userEvent.setup();
+    setup();
+    await user.click(screen.getByRole('button', { name: 'Select suites' }));
+    await user.type(screen.getByRole('textbox', { name: 'Find or create a suite' }), 'Pending');
+    await user.click(screen.getByRole('button', { name: 'Create suite “Pending”' }));
+    expect(screen.getByText('Pending')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(updateScenario).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1');
+  });
   it('keeps steps local, then saves one revision-checked aggregate and adopts IDs and clean baseline', async () => {
     const returned = {
       ...scenario(),
@@ -110,7 +149,15 @@ describe('TestScenarioEditContainer', () => {
     save();
     await screen.findByText('No changes to save.');
     expect(updateScenario).toHaveBeenCalledOnce();
-    expect(navigate).not.toHaveBeenCalled();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1'));
+  });
+  it('returns to the scenario in context after a successful edit', async () => {
+    state.search = '?originProject=project-1&originKind=suite&originId=suite-1';
+    updateScenario.mockReturnValue({ unwrap: async () => ({ ...scenario(), title: 'Changed', revision: 4 }) });
+    setup();
+    change('Title', 'Changed');
+    save();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1'));
   });
   it('does not write when unchanged', async () => {
     setup();
@@ -140,7 +187,7 @@ describe('TestScenarioEditContainer', () => {
     save();
     await screen.findByText(/The saved scenario or suite membership changed/);
     expect(screen.getByText('Pending')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Steps 1' })).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'Scenario steps' })).getAllByRole('listitem')).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: 'Reload saved scenario' }));
     await screen.findByText('Reload failed. Your draft is preserved. Please try again.');
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Local draft');

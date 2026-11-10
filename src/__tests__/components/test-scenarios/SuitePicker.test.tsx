@@ -88,4 +88,12 @@ describe('SuitePicker', () => {
     } });
     expect(onComplete.mock.calls[0]?.[2]).toMatchObject({ createdSuiteId: 'suite-new', suiteName: 'Fresh' });
   });
+  it('shows already selected suites as disabled in the compact picker', async () => {
+    const user = userEvent.setup();
+    render(<ChakraProvider><SuitePicker compact projectId="project-1" selectedIds={['scenario-1']} onComplete={vi.fn<Complete>()} /></ChakraProvider>);
+    await user.click(screen.getByRole('button', { name: 'Add to suite' }));
+    expect(screen.getByText('Add 1 selected to a suite')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Existing/ })).toBeDisabled();
+    expect(screen.getByText(/1 of 1 already in suite/)).toBeInTheDocument();
+  });
 });

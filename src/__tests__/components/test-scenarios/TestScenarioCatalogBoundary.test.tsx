@@ -72,6 +72,8 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     usePostApiV2TestScenarioFoldersMutation: mutation,
     usePatchApiV2TestScenarioFoldersByFolderIdMutation: mutation,
     useDeleteApiV2TestScenarioFoldersByFolderIdMutation: mutation,
+    usePostApiV2TestScenarioFoldersRestorationMutation: mutation,
+    usePostApiV2TestScenariosFolderRestorationMutation: mutation,
     usePostApiV2TestSuitesMutation: mutation,
     usePatchApiV2TestSuitesBySuiteIdMutation: mutation,
     useDeleteApiV2TestSuitesBySuiteIdMutation: mutation,

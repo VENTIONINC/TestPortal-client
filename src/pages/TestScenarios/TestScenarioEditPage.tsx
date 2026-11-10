@@ -8,7 +8,7 @@ import { ScenarioPageTabs } from './TestManagementTabs';
 
 export function TestScenarioEditPage() {
   return (
-    <MainTemplate pageHeader="Edit Test Scenario">
+    <MainTemplate pageHeader="Test Management" collapseSidebarOnNarrow>
       <ScenarioPageTabs />
       <TestScenarioEditBoundary />
     </MainTemplate>

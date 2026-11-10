@@ -8,7 +8,7 @@ import { ScenarioPageTabs } from './TestManagementTabs';
 
 export function TestScenarioCreatePage() {
   return (
-    <MainTemplate pageHeader="Create Test Scenario">
+    <MainTemplate pageHeader="Test Management" collapseSidebarOnNarrow>
       <ScenarioPageTabs />
       <TestScenarioCreateBoundary />
     </MainTemplate>

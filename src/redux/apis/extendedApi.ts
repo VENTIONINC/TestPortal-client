@@ -254,6 +254,9 @@ export const extendedApi = generatedApi
       deleteApiV2TestScenariosByScenarioId: {
         invalidatesTags: (_result, _error, arg: DeleteApiV2TestScenariosByScenarioIdApiArg) => [
           TAGS.TestScenario,
+          scenarioCatalogTag(arg.projectId),
+          { type: 'ScenarioFolders', id: arg.projectId },
+          { type: 'ScenarioSuites', id: arg.projectId },
           manualTestRunProjectHistoryTag(arg.projectId),
           manualTestRunScenarioHistoryTag(arg.projectId, arg.scenarioId),
           manualTestRunProjectDetailsTag(arg.projectId),

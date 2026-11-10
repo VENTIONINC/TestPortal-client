@@ -21,10 +21,11 @@ import {
   type TestScenarioSummary,
 } from '@/redux/apis/generatedApi';
 import { useTestScenarioContextMenu } from '@/components/test-scenarios/hooks/useTestScenarioContextMenu';
-import { usePatchApiV2TestScenariosBulkFolderMutation, usePostApiV2TestScenarioFoldersMutation } from '@/redux/apis/extendedApi';
+import { usePatchApiV2TestScenariosBulkFolderMutation, usePostApiV2TestScenarioFoldersMutation, useGetApiV2TestSuitesQuery } from '@/redux/apis/extendedApi';
 
 const navigate = vi.fn();
 const contextMenu = vi.fn();
+
 
 vi.mock('@/components/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/components/ui')>();
@@ -183,6 +184,36 @@ describe('TestScenarioCatalogContainer', () => {
         error: undefined,
       } as never;
     });
+  });
+
+  it('restores the requested suite for the active project', () => {
+    const mocked = vi.mocked(useGetApiV2TestSuitesQuery);
+    const previous = mocked.getMockImplementation();
+    mocked.mockReturnValue({ currentData: [{ id: 'suite-a' }, { id: 'suite-b' }], isFetching: false } as never);
+    const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter initialEntries={['/test-management?projectId=project-1&tab=suites&suiteId=suite-b']}>{children}</MemoryRouter>;
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1', 'suites'), { wrapper });
+    if (previous) mocked.mockImplementation(previous);
+    expect(result.current.scope).toEqual({ kind: 'suite', id: 'suite-b' });
+  });
+
+  it('preserves the originating folder when starting creation', async () => {
+    render(<ChakraProvider><MemoryRouter initialEntries={['/test-management?projectId=project-1&folderId=folder-a']}><TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" /></MemoryRouter></ChakraProvider>);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Create Test Scenario' }));
+    expect(navigate).toHaveBeenCalledWith('/test-scenarios/new?folderId=folder-a&originProject=project-1&originKind=folder&originId=folder-a');
+  });
+
+  it('clears the selection when a selected row is deleted through its action menu', async () => {
+    const user = userEvent.setup();
+    render(<ChakraProvider><MemoryRouter><TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" /></MemoryRouter></ChakraProvider>);
+    const rowCheckbox = screen.getByRole('checkbox', { name: 'Select Scenario page 1' });
+    await user.click(rowCheckbox);
+    expect(rowCheckbox).toBeChecked();
+
+    const onDeleted = mockedContextMenu.mock.lastCall?.[4];
+    act(() => onDeleted?.('scenario-1'));
+
+    expect(rowCheckbox).not.toBeChecked();
+    expect(screen.queryByText('1 selected')).not.toBeInTheDocument();
   });
 
   it('combines priority and author filters and resets pagination independently', () => {
@@ -545,7 +576,7 @@ describe('TestScenarioCatalogContainer', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
 
-    expect(navigate).toHaveBeenCalledWith('/test-scenarios/new');
+    expect(navigate).toHaveBeenCalledWith('/test-scenarios/new?originProject=project-1&originKind=all');
   });
 
   it('combines folder scope and search in server requests and resets pagination', async () => {

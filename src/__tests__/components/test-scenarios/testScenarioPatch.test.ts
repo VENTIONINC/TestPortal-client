@@ -160,9 +160,10 @@ describe('Test Scenario structured payload helpers', () => {
 
 describe('folder-aware scenario return path', () => {
   it('encodes folder/project scope and uses Unfiled or removed-folder fallback', async () => {
-    const { getScenarioFolderReturnPath } = await import('@/components/test-scenarios/utils');
+    const { getScenarioFolderReturnPath, flattenScenarioFolders } = await import('@/components/test-scenarios/utils');
     expect(getScenarioFolderReturnPath('p', 'f', [{ id: 'f' }])).toBe('/test-management?projectId=p&folderId=f');
     expect(getScenarioFolderReturnPath('p', null, [])).toBe('/test-management?projectId=p&folderId=unfiled');
     expect(getScenarioFolderReturnPath('p', 'removed', [])).toBe('/test-management?projectId=p');
+    expect(flattenScenarioFolders([{ id: 'a', name: 'Account', children: [{ id: 'b', name: 'Checkout', children: [{ id: 'c', name: 'Payments' }] }] }])[2]).toEqual({ id: 'c', name: 'Payments', depth: 2, path: 'Account / Checkout / Payments' });
   });
 });
