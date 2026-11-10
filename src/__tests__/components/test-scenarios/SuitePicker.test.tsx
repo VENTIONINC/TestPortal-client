@@ -125,4 +125,20 @@ describe('SuitePicker', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/membership.*unknown/i);
     expect(changeMembership).toHaveBeenCalledOnce();
   });
+
+  it('ignores Enter when a failed refresh hides cached suites', async () => {
+    const user = userEvent.setup();
+    getSuites.mockReturnValue({
+      data: [{ id: 'cached-suite', name: 'Cached', membershipRevision: 2, members: [] }],
+      isLoading: false,
+      isFetching: false,
+      isError: true,
+    });
+    render(<ChakraProvider><SuitePicker compact projectId="project-1" selectedIds={['scenario-1']} onComplete={vi.fn<Complete>()} /></ChakraProvider>);
+    await user.click(screen.getByRole('button', { name: 'Add to suite' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Suites could not be loaded');
+    expect(screen.queryByRole('button', { name: /Cached/ })).not.toBeInTheDocument();
+    await user.keyboard('{Enter}');
+    expect(changeMembership).not.toHaveBeenCalled();
+  });
 });

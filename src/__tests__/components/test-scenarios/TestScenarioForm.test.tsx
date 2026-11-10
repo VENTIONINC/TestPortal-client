@@ -1,6 +1,6 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 
@@ -35,7 +35,7 @@ describe('TestScenarioForm', () => {
     expect(screen.queryByText('NEW SCENARIO')).not.toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent('New scenario');
     expect(screen.getByRole('button', { name: 'Priority' })).toHaveTextContent('Medium');
-    expect(screen.getByRole('heading', { name: 'Steps 3' })).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'Scenario steps' })).getAllByRole('listitem')).toHaveLength(3);
     expect(screen.getByRole('textbox', { name: 'Step 3 action' })).toHaveValue('');
     expect(screen.queryByRole('textbox', { name: /Scenario key/ })).not.toBeInTheDocument();
     expect(screen.queryByText('Scenario fields')).not.toBeInTheDocument();
@@ -159,7 +159,7 @@ describe('TestScenarioForm', () => {
     expect(onSubmit.mock.calls[0][4]).toBe(true);
     view.rerender(<ChakraProvider><TestScenarioForm mode="create" onCancel={vi.fn()} {...props} createAnotherReset={{ token: 1, suites: [{ id: 'new-suite', name: 'Release' }] }} /></ChakraProvider>);
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('');
-    expect(screen.getByRole('heading', { name: 'Steps 3' })).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'Scenario steps' })).getAllByRole('listitem')).toHaveLength(3);
     expect(screen.getByRole('button', { name: 'Scenario folder' })).toHaveTextContent('Account');
     expect(screen.getByRole('button', { name: 'Priority' })).toHaveTextContent('High');
     expect(screen.getByRole('button', { name: 'Remove suite Release' })).toBeInTheDocument();
@@ -187,11 +187,11 @@ describe('TestScenarioForm', () => {
     const expected = screen.getByRole('textbox', { name: 'Step 3 expected result' });
     fireEvent.keyDown(expected, { key: 'Enter', shiftKey: true });
     fireEvent.keyDown(expected, { key: 'Enter', isComposing: true });
-    expect(screen.queryByText('Steps 4')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Step 4 action' })).not.toBeInTheDocument();
     fireEvent.keyDown(expected, { key: 'Enter' });
     await waitFor(() => expect(screen.getByRole('textbox', { name: 'Step 4 action' })).toHaveFocus());
     fireEvent.keyDown(screen.getByRole('textbox', { name: 'Step 4 expected result' }), { key: 'Enter', repeat: true });
-    expect(screen.queryByText('Steps 5')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Step 5 action' })).not.toBeInTheDocument();
   });
   it('grows step fields to fit their contents', () => {
     setup();

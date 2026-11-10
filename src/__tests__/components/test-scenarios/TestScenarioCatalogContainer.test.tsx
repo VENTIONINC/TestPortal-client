@@ -202,6 +202,20 @@ describe('TestScenarioCatalogContainer', () => {
     expect(navigate).toHaveBeenCalledWith('/test-scenarios/new?folderId=folder-a&originProject=project-1&originKind=folder&originId=folder-a');
   });
 
+  it('clears the selection when a selected row is deleted through its action menu', async () => {
+    const user = userEvent.setup();
+    render(<ChakraProvider><MemoryRouter><TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" /></MemoryRouter></ChakraProvider>);
+    const rowCheckbox = screen.getByRole('checkbox', { name: 'Select Scenario page 1' });
+    await user.click(rowCheckbox);
+    expect(rowCheckbox).toBeChecked();
+
+    const onDeleted = mockedContextMenu.mock.lastCall?.[4];
+    act(() => onDeleted?.('scenario-1'));
+
+    expect(rowCheckbox).not.toBeChecked();
+    expect(screen.queryByText('1 selected')).not.toBeInTheDocument();
+  });
+
   it('combines priority and author filters and resets pagination independently', () => {
     const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({

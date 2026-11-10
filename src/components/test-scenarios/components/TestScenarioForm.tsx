@@ -875,19 +875,6 @@ export const TestScenarioForm = ({
                 error={errors.relatedIssueUrl?.message}
               />
             </Box>
-            {mode === 'edit' && history && (
-              <Box>
-                <Heading size="sm" mb={2}>
-                  History
-                </Heading>
-                <Text fontSize="sm" color="text.secondary">
-                  Updated {new Date(history.updatedAt).toLocaleDateString()} by {history.updatedBy?.name || 'Unknown'}
-                </Text>
-                <Text fontSize="sm" color="text.secondary">
-                  Created {new Date(history.createdAt).toLocaleDateString()} by {history.createdBy?.name || 'Unknown'}
-                </Text>
-              </Box>
-            )}
           </VStack>
         </Grid>
       </VStack>

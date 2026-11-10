@@ -24,7 +24,7 @@ export const useTestScenarioContextMenu = (
   onRemoveFromSuite?: (scenario: TestScenarioContextMenuScenario) => void,
   includeEdit = true,
   onClone?: (scenario: TestScenarioContextMenuScenario) => void,
-  onDeletedOverride?: () => void,
+  onDeletedOverride?: (scenarioId: string) => void,
   editSearch = '',
 ): TestScenarioContextMenuHandler => {
   const openContextMenu = useOpenContextMenu();
@@ -35,7 +35,6 @@ export const useTestScenarioContextMenu = (
   const navigate = useNavigate();
   const selectedProjectId = useSelectedProjectId();
   const currentProjectId = projectId ?? selectedProjectId;
-  const onDeleted = useCallback(() => onDeletedOverride ? onDeletedOverride() : navigate(PATHS.TEST_SCENARIOS), [navigate, onDeletedOverride]);
 
   return useCallback(
     (event, scenario) => {
@@ -69,11 +68,16 @@ export const useTestScenarioContextMenu = (
           iconAtStart: true,
           destructive: true,
           onClick: () => {
-            if (currentProjectId) openDeleteDialog(scenario.id, currentProjectId, scenario.title, onDeleted);
+            if (currentProjectId) {
+              openDeleteDialog(scenario.id, currentProjectId, scenario.title, () => {
+                if (onDeletedOverride) onDeletedOverride(scenario.id);
+                else navigate(PATHS.TEST_SCENARIOS);
+              });
+            }
           },
         },
       ]);
     },
-    [closeContextMenu, currentProjectId, editSearch, includeEdit, navigate, onDeleted, onRemoveFromSuite, onClone, openContextMenu, openDeleteDialog, show],
+    [closeContextMenu, currentProjectId, editSearch, includeEdit, navigate, onDeletedOverride, onRemoveFromSuite, onClone, openContextMenu, openDeleteDialog, show],
   );
 };

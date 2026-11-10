@@ -1,6 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { useSelectedProject } from '@/hooks/useSelectedProject';
@@ -13,7 +14,10 @@ import { TestScenarioDetailStateView } from '../components';
 const CloneBoundary = ({ projectId, scenarioId }: { projectId: string; scenarioId: string }) => {
   const navigate = useNavigate();
   const detail = useTestScenarioDetail(projectId, scenarioId);
-  return <TestScenarioDetailStateView scenario={detail.scenario} isLoading={detail.isLoading} isUnavailable={detail.isUnavailable} isError={detail.isError} onRetry={() => void detail.refetch()} onBack={() => navigate(PATHS.TEST_SCENARIOS)}>
+  const [source, setSource] = useState(detail.scenario);
+  // A refetch can change the source, but the clone is an independent draft once opened.
+  if (!source && detail.scenario) setSource(detail.scenario);
+  return <TestScenarioDetailStateView scenario={source} isLoading={!source && detail.isLoading} isUnavailable={detail.isUnavailable} isError={detail.isError} onRetry={() => void detail.refetch()} onBack={() => navigate(PATHS.TEST_SCENARIOS)}>
     {(scenario) => <TestScenarioCreateContainer projectId={projectId} sourceScenario={scenario} />}
   </TestScenarioDetailStateView>;
 };

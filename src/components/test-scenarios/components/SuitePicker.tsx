@@ -110,23 +110,30 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
     const available = filtered.filter((suite) => !(suite.members ?? []).some((member) => selectedIds.includes(member.testScenarioId)));
     const name = search.trim();
     const exact = suites?.some((suite) => suite.name.toLocaleLowerCase() === name.toLocaleLowerCase());
-    const canCreate = name && suites && !isLoading && !isError && !exact && !isFetching && name.toLocaleLowerCase() !== uncertainName && !retrySuite;
+    const showOptions = !isLoading && !isError;
+    const canChoose = showOptions && !disabled && !busy && !refreshRequired;
+    const canCreate = name && suites && !exact && !isFetching && name.toLocaleLowerCase() !== uncertainName && !retrySuite;
     return <Box>
       <IconButton size="xs" variant="outline" borderStyle="dashed" borderRadius="full" aria-label="Add to suite" aria-expanded={open} disabled={disabled || busy}
         onClick={() => { setOpen(!open); if (!open) { setSearch(''); setError(''); setRetrySuite(null); setUncertainName(''); setRefreshRequired(false); setNewlyCreatedSuiteId(undefined); } }}><FiPlus /></IconButton>
       {open && <Box w="300px" maxW="100%" p={2} mt={2} borderWidth="1px" borderRadius="md">
-        <Input ref={inputRef} aria-label="Find or create a suite" placeholder="Find or create a suite" value={search} maxLength={200} disabled={busy} size="sm"
+        <Input ref={inputRef} aria-label="Find or create a suite" placeholder="Find or create a suite" value={search} maxLength={200} disabled={disabled || busy} size="sm"
           onChange={(event) => setSearch(event.currentTarget.value)} onKeyDown={(event) => {
             if (event.key === 'Escape' && !busy) setOpen(false);
-            if (event.key === 'Enter') { event.preventDefault(); if (busy || refreshRequired) return; if (available[0]) void run(available[0]); else if (canCreate) void run(); }
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              if (!canChoose) return;
+              if (available[0]) void run(available[0]);
+              else if (canCreate) void run();
+            }
           }} />
         {isLoading && <Text p={2}>Loading suites…</Text>}
         {isError && <Text role="alert" p={2}>Suites could not be loaded.</Text>}
-        {!isLoading && !isError && <Box maxH="250px" overflowY="auto">
-          {available.map((suite) => <Button key={suite.id} type="button" variant="ghost" w="full" h="auto" justifyContent="flex-start" disabled={busy || refreshRequired} onClick={() => void run(suite)}>
+        {showOptions && <Box maxH="250px" overflowY="auto">
+          {available.map((suite) => <Button key={suite.id} type="button" variant="ghost" w="full" h="auto" justifyContent="flex-start" disabled={!canChoose} onClick={() => void run(suite)}>
             <Box textAlign="left"><Text>{suite.name}</Text><Text fontSize="xs">{suite.members?.length ?? 0} scenarios</Text></Box>
           </Button>)}
-          {canCreate && <Button type="button" variant="ghost" w="full" disabled={busy || refreshRequired} onClick={() => void run()}>Create suite “{name}”</Button>}
+          {canCreate && <Button type="button" variant="ghost" w="full" disabled={!canChoose} onClick={() => void run()}>Create suite “{name}”</Button>}
         </Box>}
         {error && <Text role="alert" color="fg.error">{error}</Text>}
         {retrySuite && error && <Button size="sm" disabled={busy || refreshRequired} onClick={() => void run(retrySuite)}>Retry adding to {retrySuite.name}</Button>}

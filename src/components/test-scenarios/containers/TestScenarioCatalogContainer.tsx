@@ -21,7 +21,7 @@ export const TestScenarioCatalogContainer = ({ projectId, organizationTab }: Tes
   const navigate = useNavigate();
   const scope = catalog.scope;
   const origin = scope.kind === 'folder' && scope.id ? { kind: 'folder' as const, id: scope.id } : scope.kind === 'unfiled' ? { kind: 'unfiled' as const } : { kind: 'all' as const };
-  const onScenarioActions = useTestScenarioContextMenu(projectId, undefined, true, undefined, () => {}, scenarioOriginSearch(projectId, origin));
+  const onScenarioActions = useTestScenarioContextMenu(projectId, undefined, true, undefined, catalog.reconcileDeletedScenario, scenarioOriginSearch(projectId, origin));
   const onCreateScenario = useCallback(() => {
     const folderId = catalog.scope.kind === 'folder' ? catalog.scope.id : undefined;
     const origin = folderId ? { kind: 'folder' as const, id: folderId } : catalog.scope.kind === 'unfiled' ? { kind: 'unfiled' as const } : { kind: 'all' as const };

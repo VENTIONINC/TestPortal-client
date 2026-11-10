@@ -26,7 +26,12 @@ export interface TestScenarioCreateContainerProps {
 const ScopedScenarioCreateContainer = ({ projectId, initialFolderId = null, sourceScenario }: TestScenarioCreateContainerProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const origin = getScenarioOrigin(new URLSearchParams(location.search), projectId);
+  const search = new URLSearchParams(location.search);
+  const hasExplicitOrigin = search.has('originProject') || search.has('originKind') || search.has('originId');
+  const legacyFolder = hasExplicitOrigin || sourceScenario ? null : initialFolderId;
+  let origin = getScenarioOrigin(search, projectId);
+  if (legacyFolder === 'unfiled') origin = { kind: 'unfiled' };
+  else if (legacyFolder) origin = { kind: 'folder', id: legacyFolder };
   const originSearch = scenarioOriginSearch(projectId, origin);
   const [createScenario, { isLoading }] = usePostApiV2TestScenariosMutation();
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
@@ -103,7 +108,7 @@ const ScopedScenarioCreateContainer = ({ projectId, initialFolderId = null, sour
       }
     }
   };
-  if (origin.kind === 'folder' && !foldersQuery.currentData && !foldersQuery.isError) return <div role="status">Loading folders…</div>;
+  if (!sourceScenario && origin.kind === 'folder' && !foldersQuery.currentData && !foldersQuery.isError) return <div role="status">Loading folders…</div>;
   return (
     <>
       <ScenarioDraftNavigationGuard dirty={dirty && !saved} allowNavigation={allowNavigation} />

@@ -12,6 +12,7 @@ const openContextMenu = vi.fn();
 const openDeleteDialog = vi.fn();
 const navigate = vi.fn();
 const clone = vi.fn();
+const catalogDeleted = vi.fn();
 const { menuState, closeMenu } = vi.hoisted(() => ({ menuState: { show: false }, closeMenu: vi.fn() }));
 
 vi.mock('@/redux/slices/contextMenu', () => ({
@@ -51,7 +52,7 @@ const DeleteOnlyHarness = () => {
   );
 };
 const CatalogHarness = () => {
-  const openMenu = useTestScenarioContextMenu('project-1', undefined, true, undefined, () => {}, '?originProject=project-1&originKind=folder&originId=f');
+  const openMenu = useTestScenarioContextMenu('project-1', undefined, true, undefined, catalogDeleted, '?originProject=project-1&originKind=folder&originId=f');
   return <button onClick={(event) => openMenu(event, { id: 'scenario-1', title: 'Checkout flow' })}>Catalog actions</button>;
 };
 
@@ -112,5 +113,18 @@ describe('useTestScenarioContextMenu', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Catalog actions' }));
     openContextMenu.mock.calls[0][1][0].onClick();
     expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1/edit?originProject=project-1&originKind=folder&originId=f');
+  });
+
+  it('reports the deleted scenario ID to the catalog after confirmation', async () => {
+    openContextMenu.mockClear();
+    openDeleteDialog.mockClear();
+    navigate.mockClear();
+    render(<CatalogHarness />);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Catalog actions' }));
+    openContextMenu.mock.calls[0][1][1].onClick();
+    expect(catalogDeleted).not.toHaveBeenCalled();
+    openDeleteDialog.mock.calls[0][3]();
+    expect(catalogDeleted).toHaveBeenCalledWith('scenario-1');
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

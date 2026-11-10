@@ -1,7 +1,7 @@
 import userEvent from '@testing-library/user-event';
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TestScenarioEditContainer } from '@/components/test-scenarios/containers/TestScenarioEditContainer';
@@ -166,7 +166,7 @@ describe('TestScenarioEditContainer', () => {
     save();
     await screen.findByText(/The saved scenario or suite membership changed/);
     expect(screen.getByText('Pending')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Steps 1' })).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'Scenario steps' })).getAllByRole('listitem')).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: 'Reload saved scenario' }));
     await screen.findByText('Reload failed. Your draft is preserved. Please try again.');
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('Local draft');

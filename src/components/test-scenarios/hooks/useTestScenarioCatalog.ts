@@ -380,12 +380,16 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       if (revision === selectionRevision.current) setIsResolvingSelection(false);
     }
   }, [resolveSelectionRequest, selectionArgs]);
-  const reconcileOperation = useCallback((report: ScenarioOperationReport, revision: number) => {
+  const reconcileOperation = useCallback(({ succeededIds }: Pick<ScenarioOperationReport, 'succeededIds'>, revision: number) => {
     if (revision !== selectionRevision.current) return;
-    if (report.succeededIds.length)
-      setSelectedIds((current) => current.filter((id) => !report.succeededIds.includes(id)));
+    if (succeededIds.length)
+      setSelectedIds((current) => current.filter((id) => !succeededIds.includes(id)));
     setAllMatchingSelected(false);
   }, []);
+  const reconcileDeletedScenario = useCallback((scenarioId: string) => {
+    reconcileOperation({ succeededIds: [scenarioId] }, ++selectionRevision.current);
+    setIsResolvingSelection(false);
+  }, [reconcileOperation]);
   const runOperation = useCallback(async (operation: () => Promise<ScenarioOperationReport>) => {
     if (operationLock.current) return { succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] };
     operationLock.current = true;
@@ -677,6 +681,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     moveSelected,
     moveScenarioIds,
     deleteSelected,
+    reconcileDeletedScenario,
     startSuiteOperation,
     reconcileSuiteOperation,
     removeSelectedFromSuite,
