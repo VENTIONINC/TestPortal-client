@@ -36,7 +36,9 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
     new URLSearchParams(originSearch).forEach((value, key) => params.set(key, value));
     navigate(`${PATHS.TEST_SCENARIO_NEW}?${params}`);
   }, () => {
-    navigate(`${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId })}`);
+    const params = new URLSearchParams({ projectId });
+    if (getScenarioOrigin(search, projectId).kind === 'suite') params.set('tab', 'suites');
+    navigate(`${PATHS.TEST_SCENARIOS}?${params}`);
   });
   const detail = useTestScenarioDetail(projectId, scenarioId);
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });

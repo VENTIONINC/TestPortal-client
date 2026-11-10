@@ -159,11 +159,11 @@ describe('TestScenarioDetailContainer', () => {
     clone?.({ id: 'scenario-1', title: 'Checkout flow' });
     expect(navigate).toHaveBeenCalledWith('/test-scenarios/new?clone=scenario-1&originProject=project-1&originKind=suite&originId=suite-1');
   });
-  it('returns to Scenarios after deleting from a suite', () => {
+  it('returns to the suite list after deleting from a suite', () => {
     mockedSuites.mockReturnValue({ currentData: [{ id: 'suite-1', name: 'Smoke' }], isLoading: false, isFetching: false, isError: false, refetch: refetchSuites } as never);
     renderContainer('project-1', 'scenario-1', '/?originProject=project-1&originKind=suite&originId=suite-1');
     mockedContextMenu.mock.calls.at(-1)?.[4]?.('scenario-1');
-    expect(navigate).toHaveBeenCalledWith('/test-management?projectId=project-1');
+    expect(navigate).toHaveBeenCalledWith('/test-management?projectId=project-1&tab=suites');
   });
 
   it('shows confirmed suite membership and refreshes it after a successful add', async () => {

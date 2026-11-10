@@ -87,7 +87,8 @@ describe('TestScenarioEditContainer', () => {
     const user = userEvent.setup();
     setup();
     await user.click(screen.getByRole('button', { name: 'Select suites' }));
-    await user.type(screen.getByRole('textbox', { name: 'Find or create a suite' }), 'Pending{Enter}');
+    await user.type(screen.getByRole('textbox', { name: 'Find or create a suite' }), 'Pending');
+    await user.click(screen.getByRole('button', { name: 'Create suite “Pending”' }));
     expect(screen.getByText('Pending')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(updateScenario).not.toHaveBeenCalled();
