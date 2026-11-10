@@ -86,35 +86,39 @@ describe('TestScenarioDetailContainer', () => {
     expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1/edit?originProject=project-1&originKind=suite&originId=suite-1');
   });
 
-  it('returns to the originating folder instead of the scenario folder', () => {
+  it('returns to the current scenario folder after it changes', () => {
     renderContainer('project-1', 'scenario-1', '/?originProject=project-1&originKind=folder&originId=parent');
-    expect(screen.getByRole('link', { name: 'Back to Checkout' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=parent');
+    expect(screen.getByRole('link', { name: 'Back to Payments' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=nested-folder');
     expect(screen.getByRole('link', { name: 'Scenarios' })).toHaveAttribute('href', '/test-management?projectId=project-1');
   });
-  it('falls back to all scenarios when the originating folder has been removed', () => {
+  it('uses the saved folder when the originating folder has been removed', () => {
     renderContainer('project-1', 'scenario-1', '/?originProject=project-1&originKind=folder&originId=removed');
-    expect(screen.getByRole('link', { name: 'Back to All scenarios' })).toHaveAttribute('href', '/test-management?projectId=project-1');
+    expect(screen.getByRole('link', { name: 'Back to Payments' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=nested-folder');
+  });
+  it('does not show a save confirmation for old saved links', () => {
+    renderContainer('project-1', 'scenario-1', '/?saved=1');
+    expect(screen.queryByText('Changes saved.')).not.toBeInTheDocument();
   });
   it('returns to the originating suite', () => {
     mockedSuites.mockReturnValue({ currentData: [{ id: 'suite-1', name: 'Smoke' }], isLoading: false, isFetching: false, isError: false, refetch: refetchSuites } as never);
     renderContainer('project-1', 'scenario-1', '/?originProject=project-1&originKind=suite&originId=suite-1');
     expect(screen.getByRole('link', { name: 'Back to Smoke' })).toHaveAttribute('href', '/test-management?projectId=project-1&tab=suites&suiteId=suite-1');
   });
-  it('returns to All scenarios for an all-scenarios origin regardless of the saved folder', () => {
+  it('uses the saved folder for an all-scenarios origin', () => {
     renderContainer('project-1', 'scenario-1', '/?originProject=project-1&originKind=all');
-    expect(screen.getByRole('link', { name: 'Back to All scenarios' })).toHaveAttribute('href', '/test-management?projectId=project-1');
+    expect(screen.getByRole('link', { name: 'Back to Payments' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=nested-folder');
   });
-  it('returns to No folder for an unfiled origin', () => {
+  it('uses the saved folder for an unfiled origin', () => {
     renderContainer('project-1', 'scenario-1', '/?originProject=project-1&originKind=unfiled');
-    expect(screen.getByRole('link', { name: 'Back to No folder' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=unfiled');
+    expect(screen.getByRole('link', { name: 'Back to Payments' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=nested-folder');
   });
-  it('uses All scenarios for a cross-project origin', () => {
+  it('uses the saved folder for a cross-project origin', () => {
     renderContainer('project-1', 'scenario-1', '/?originProject=other&originKind=folder&originId=parent');
-    expect(screen.getByRole('link', { name: 'Back to All scenarios' })).toHaveAttribute('href', '/test-management?projectId=project-1');
+    expect(screen.getByRole('link', { name: 'Back to Payments' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=nested-folder');
   });
-  it('uses All scenarios for a direct link', () => {
+  it('uses the saved folder for a direct link', () => {
     renderContainer();
-    expect(screen.getByRole('link', { name: 'Back to All scenarios' })).toHaveAttribute('href', '/test-management?projectId=project-1');
+    expect(screen.getByRole('link', { name: 'Back to Payments' })).toHaveAttribute('href', '/test-management?projectId=project-1&folderId=nested-folder');
   });
 
   it('resolves nested folder labels and return paths within the selected project', () => {
@@ -155,11 +159,11 @@ describe('TestScenarioDetailContainer', () => {
     clone?.({ id: 'scenario-1', title: 'Checkout flow' });
     expect(navigate).toHaveBeenCalledWith('/test-scenarios/new?clone=scenario-1&originProject=project-1&originKind=suite&originId=suite-1');
   });
-  it('returns to Suites after deleting from a suite', () => {
+  it('returns to Scenarios after deleting from a suite', () => {
     mockedSuites.mockReturnValue({ currentData: [{ id: 'suite-1', name: 'Smoke' }], isLoading: false, isFetching: false, isError: false, refetch: refetchSuites } as never);
     renderContainer('project-1', 'scenario-1', '/?originProject=project-1&originKind=suite&originId=suite-1');
     mockedContextMenu.mock.calls.at(-1)?.[4]?.();
-    expect(navigate).toHaveBeenCalledWith('/test-management?projectId=project-1&tab=suites');
+    expect(navigate).toHaveBeenCalledWith('/test-management?projectId=project-1');
   });
 
   it('shows confirmed suite membership and refreshes it after a successful add', async () => {

@@ -128,7 +128,7 @@ describe('TestScenarioEditContainer', () => {
     save();
     await screen.findByText('No changes to save.');
     expect(updateScenario).toHaveBeenCalledOnce();
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?saved=1'));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1'));
   });
   it('returns to the scenario in context after a successful edit', async () => {
     state.search = '?originProject=project-1&originKind=suite&originId=suite-1';
@@ -136,7 +136,7 @@ describe('TestScenarioEditContainer', () => {
     setup();
     change('Title', 'Changed');
     save();
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1&saved=1'));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1'));
   });
   it('does not write when unchanged', async () => {
     setup();

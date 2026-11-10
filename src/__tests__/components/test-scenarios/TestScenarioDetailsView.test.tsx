@@ -3,7 +3,6 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
-import userEvent from '@testing-library/user-event';
 
 import { ChakraProvider } from '@/components/ui';
 import { TestScenarioDetailsView } from '@/components/test-scenarios/components/TestScenarioDetailsView';
@@ -25,7 +24,7 @@ const scenario: TestScenario = {
     { id: 'step-3', position: 3, action: 'Check final summary', expectedResult: '' },
   ],
 };
-const renderView = (overrides: Partial<TestScenario> = {}, showSavedConfirmation = false) => render(
+const renderView = (overrides: Partial<TestScenario> = {}) => render(
   <ChakraProvider><MemoryRouter><TestScenarioDetailsView
     scenario={{ ...scenario, ...overrides }}
     folderName="Checkout"
@@ -37,18 +36,10 @@ const renderView = (overrides: Partial<TestScenario> = {}, showSavedConfirmation
     onAddSuiteComplete={vi.fn()}
     onRemoveSuite={vi.fn()}
     removingSuiteIds={[]}
-    showSavedConfirmation={showSavedConfirmation}
   /></MemoryRouter></ChakraProvider>,
 );
 
 describe('TestScenarioDetailsView', () => {
-  it('shows save confirmation until the next action', async () => {
-    const user = userEvent.setup();
-    renderView({}, true);
-    expect(screen.getByText('Changes saved.')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Edit' }));
-    expect(screen.queryByText('Changes saved.')).not.toBeInTheDocument();
-  });
   it('places folder and priority in the sidebar and the scenario key in the breadcrumb', () => {
     renderView();
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent('TMS-1');
@@ -85,6 +76,17 @@ describe('TestScenarioDetailsView', () => {
     expect(screen.getByText((_, element) => element?.textContent === 'Created Unknown by Unknown')).toBeInTheDocument();
     expect(screen.getByText((_, element) => element?.textContent === 'Updated Unknown by Unknown')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /example.test/ })).not.toBeInTheDocument();
+  });
+
+  it('shows the issue key and title from a YouTrack link', () => {
+    const url = 'https://yt-wod.ventionteams.com/issue/TP-20/TMS-Incorrect-test-case-fields-and-actions';
+    renderView({ relatedIssueUrl: url });
+    expect(screen.getByRole('link', { name: 'TP-20 TMS Incorrect test case fields and actions' })).toHaveAttribute('href', url);
+  });
+
+  it('shows the issue key when the YouTrack URL has no title', () => {
+    renderView({ relatedIssueUrl: 'https://yt-wod.ventionteams.com/issue/TP-20' });
+    expect(screen.getByRole('link', { name: 'TP-20' })).toBeInTheDocument();
   });
 
   it('does not render an unsafe related issue URL as a link', () => {

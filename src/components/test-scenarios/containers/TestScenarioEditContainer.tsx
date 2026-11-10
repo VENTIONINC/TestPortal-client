@@ -123,9 +123,7 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
       allowNavigation.current = true;
       setSaved(true);
       setSuccessMessage('Test Scenario saved successfully.');
-      const nextSearch = new URLSearchParams(originSearch);
-      nextSearch.set('saved', '1');
-      setTimeout(() => { if (current()) navigate(`/test-scenarios/${encodeURIComponent(scenarioId)}?${nextSearch}`); }, 0);
+      setTimeout(() => { if (current()) navigate(`/test-scenarios/${encodeURIComponent(scenarioId)}${originSearch}`); }, 0);
     } catch (error) {
       if (!current()) return;
       setApiError(

@@ -4,7 +4,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { Button, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
+import { FiTrash2 } from 'react-icons/fi';
 
 import { Alert, Dialog, DialogBody, DialogFooter } from '@/components/ui';
 import { useDeleteApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
@@ -59,19 +60,22 @@ export const DeleteTestScenarioDialog = ({
   };
 
   return (
-    <Dialog title="Delete Test Scenario" onClose={closeDialog} role="alertdialog">
+    <Dialog
+      title={<HStack gap={3}><Box display="flex" alignItems="center" justifyContent="center" boxSize="10" borderRadius="lg" bg="red.100" color="red.600" flexShrink={0}><FiTrash2 size={20} aria-hidden="true" /></Box><Text>Delete scenario{scenario?.scenarioKey ? ` ${scenario.scenarioKey}` : ''}?</Text></HStack>}
+      onClose={closeDialog}
+      role="alertdialog"
+      closeTriggerProps={{ display: 'none' }}
+      contentProps={{ bg: 'bg.card', backdropFilter: 'none' }}
+      titleProps={{ fontWeight: 'semibold' }}
+    >
       <DialogBody>
         <VStack align="stretch" gap={4}>
-          <Text>
-            This permanently deletes <strong>{scenarioTitle}</strong> from the selected project.
+          <Text color="text.secondary">
+            “{scenarioTitle}” will be deleted{!impact.isFetching && !impact.isError && scenario
+              ? ` and removed from ${scenario.suites.length} ${scenario.suites.length === 1 ? `suite (${scenario.suites[0].name})` : 'suites'}`
+              : ''}. Its results in past manual runs are kept. This can’t be undone.
           </Text>
-          <Text>
-            Existing manual test runs and their saved snapshots are preserved. New manual test runs can no longer be started from this scenario.
-          </Text>
-          <Text>This action cannot be undone.</Text>
-          {impact.isFetching ? <Text>Loading affected suites…</Text> : !impact.isError && scenario ? (
-            <Text>Affected suites: {scenario.suites.length ? scenario.suites.map((suite) => suite.name).join(', ') : 'None'}</Text>
-          ) : <Text>Affected suites could not be loaded.</Text>}
+          {impact.isFetching ? <Text color="text.secondary">Loading affected suites…</Text> : impact.isError || !scenario ? <Text color="text.secondary">Affected suites could not be loaded.</Text> : null}
           {apiError && (
             <Alert.Root status="error" role="alert">
               <Alert.Indicator />
@@ -95,9 +99,9 @@ export const DeleteTestScenarioDialog = ({
           onClick={handleConfirm}
           loading={isPending}
           disabled={isPending}
-          aria-label="Confirm Test Scenario deletion"
+          aria-label="Delete scenario"
         >
-          Delete Test Scenario
+          Delete scenario
         </Button>
       </DialogFooter>
     </Dialog>

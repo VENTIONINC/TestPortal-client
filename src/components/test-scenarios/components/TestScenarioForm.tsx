@@ -188,10 +188,24 @@ export const TestScenarioForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createAnotherReset?.token, reset]);
   useEffect(() => {
-    root.current?.querySelectorAll<HTMLTextAreaElement>('[data-autogrow]').forEach((field) => {
-      field.style.height = 'auto';
-      field.style.height = `${field.scrollHeight}px`;
-    });
+    const resizeFields = () => {
+      root.current?.querySelectorAll<HTMLTextAreaElement>('[data-autogrow]').forEach((field) => {
+        field.style.height = 'auto';
+        if (!field.closest('[data-step-key], [data-autogrow-group]')) field.style.height = `${field.scrollHeight}px`;
+      });
+      root.current?.querySelectorAll<HTMLElement>('[data-step-key], [data-autogrow-group]').forEach((row) => {
+        const fields = Array.from(row.querySelectorAll<HTMLTextAreaElement>('[data-autogrow]'));
+        const heights = fields.map((field) => Math.min(160, Math.max(40, field.scrollHeight + field.offsetHeight - field.clientHeight)));
+        const sharedHeight = Math.max(...heights);
+        fields.forEach((field, index) => {
+          field.style.height = `${window.innerWidth >= 768 ? sharedHeight : heights[index]}px`;
+          field.style.overflowY = field.scrollHeight > field.clientHeight ? 'auto' : 'hidden';
+        });
+      });
+    };
+    resizeFields();
+    window.addEventListener('resize', resizeFields);
+    return () => window.removeEventListener('resize', resizeFields);
   }, [steps, values.details, values.preconditions, values.testData]);
   useEffect(() => {
     if (focusStep) {
@@ -252,17 +266,53 @@ export const TestScenarioForm = ({
       as="form"
       ref={root}
       onSubmit={handleSubmit(submit)}
-      onChangeCapture={() => { if (createdConfirmation) setCreatedConfirmation(false); }}
-      onClickCapture={() => { if (createdConfirmation) setTimeout(() => setCreatedConfirmation(false), 0); }}
+      onChangeCapture={() => {
+        if (createdConfirmation) setCreatedConfirmation(false);
+      }}
+      onClickCapture={() => {
+        if (createdConfirmation) setTimeout(() => setCreatedConfirmation(false), 0);
+      }}
       mx={{ base: 3, md: 6 }}
       my={4}
       position="relative"
     >
       <VStack align="stretch" gap={4}>
-        <HStack as="nav" aria-label="Breadcrumb" gap={2} wrap="wrap" fontSize="sm" color="text.secondary">
-          <Button type="button" variant="ghost" size="xs" onClick={onNavigateSection ?? onNavigateOrigin ?? cancel} disabled={pending}>{originKind === 'suites' ? 'Suites' : 'Scenarios'}</Button>
-          {originLabel && originLabel !== 'All scenarios' && <><Text>›</Text><Button type="button" variant="ghost" size="xs" onClick={onNavigateOrigin ?? cancel} disabled={pending}>{originLabel}</Button></>}
-          <Text>›</Text><Text color="text.primary">{mode === 'create' ? 'New scenario' : initialValues.scenarioKey || 'Scenario'}</Text>
+        <HStack as="nav" aria-label="Breadcrumb" gap={2} wrap="wrap" fontSize="md" color="text.secondary">
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            fontSize="md"
+            fontWeight="normal"
+            color="text.secondary"
+            _hover={{ bg: 'transparent', textDecoration: 'underline' }}
+            onClick={onNavigateSection ?? onNavigateOrigin ?? cancel}
+            disabled={pending}
+          >
+            {originKind === 'suites' ? 'Suites' : 'Scenarios'}
+          </Button>
+          {originLabel && originLabel !== 'All scenarios' && (
+            <>
+              <Text>›</Text>
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                fontSize="md"
+                fontWeight="normal"
+                color="text.secondary"
+                _hover={{ bg: 'transparent', textDecoration: 'underline' }}
+                onClick={onNavigateOrigin ?? cancel}
+                disabled={pending}
+              >
+                {originLabel}
+              </Button>
+            </>
+          )}
+          <Text>›</Text>
+          <Text color="text.primary">
+            {mode === 'create' ? 'New scenario' : initialValues.scenarioKey || 'Scenario'}
+          </Text>
         </HStack>
         {(apiError || errorMessage) && (
           <Alert.Root status="error" role="alert">
@@ -283,325 +333,395 @@ export const TestScenarioForm = ({
             </Alert.Content>
           </Alert.Root>
         )}
-        {createdConfirmation && <Alert.Root status="success"><Alert.Content>Scenario created.</Alert.Content></Alert.Root>}
+        {createdConfirmation && (
+          <Alert.Root status="success">
+            <Alert.Content>Scenario created.</Alert.Content>
+          </Alert.Root>
+        )}
         {successMessage && (
           <Alert.Root status="success">
             <Alert.Content>{successMessage}</Alert.Content>
           </Alert.Root>
         )}
-        <Grid templateColumns={{ base: '1fr', lg: 'minmax(0, 1fr) 260px' }} gap={6} p={{ base: 4, md: 6 }} bg="bg.card" borderRadius="12px" shadow="sm">
+        <Grid
+          templateColumns={{ base: '1fr', lg: 'minmax(0, 2fr) minmax(300px, 300px)' }}
+          gap={{ base: 6, lg: 8 }}
+          p={{ base: 4, md: 8 }}
+          bg="bg.card"
+          borderRadius="12px"
+          shadow="sm"
+        >
           <VStack data-testid="scenario-card-main" align="stretch" gap={4}>
-        <VStack align="stretch" gap={2}>
-          <Input
-            {...register('title')}
-            bg="bg.card"
-            name="title"
-            aria-label="Title"
-            fontSize="xl"
-            fontWeight="semibold"
-            h="44px"
-            placeholder="Scenario title"
-            disabled={pending}
-            error={errors.title?.message}
-          />
-          <Textarea
-            {...register('details')}
-            bg="bg.card"
-            name="details"
-            aria-label="Details"
-            placeholder="What this scenario covers and why (optional)"
-            minH="40px"
-            rows={1}
-            resize="none"
-            data-autogrow="true"
-            disabled={pending}
-            error={errors.details?.message}
-          />
-        </VStack>
-          <VStack align="stretch" gap={4}>
-            <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={5}>
-              <Textarea
-                {...register('preconditions')}
+            <VStack align="stretch" gap={2} ml={{ md: '78px' }} mr={{ md: '42px' }}>
+              <Input
+                {...register('title')}
                 bg="bg.card"
-                name="preconditions"
-                label="Preconditions"
-                fieldProps={{ labelProps: { fontSize: 'sm', fontWeight: 'semibold' } }}
-                fontSize="md"
-                placeholder="State the system must be in before step 1"
+                name="title"
+                aria-label="Title"
+                fontSize="xl"
+                fontWeight="semibold"
+                h="44px"
+                placeholder="Scenario title"
+                disabled={pending}
+                error={errors.title?.message}
+              />
+              <Textarea
+                {...register('details')}
+                bg="bg.card"
+                name="details"
+                aria-label="Details"
+                placeholder="What this scenario covers and why (optional)"
                 minH="40px"
                 rows={1}
                 resize="none"
                 data-autogrow="true"
                 disabled={pending}
-                error={errors.preconditions?.message}
+                error={errors.details?.message}
               />
-              <Textarea
-                {...register('testData')}
-                bg="bg.card"
-                name="testData"
-                label="Test data"
-                fieldProps={{ labelProps: { fontSize: 'sm', fontWeight: 'semibold' } }}
-                fontSize="md"
-                placeholder="Accounts, cards, URLs or files the steps need. One per line."
-                minH="40px"
-                rows={1}
-                resize="none"
-                data-autogrow="true"
-                disabled={pending}
-                error={errors.testData?.message}
-              />
-            </Grid>
-            <HStack justify="space-between" flexWrap="wrap">
-              <Heading size="md">
-                Steps{' '}
-                <Text as="span" color="text.secondary">
-                  {steps.length}
-                </Text>
-              </Heading>
-              <Text fontSize="xs" color="text.secondary">
-                Drag to reorder · Enter in the last field adds a step
-              </Text>
-            </HStack>
-            <Grid
-              display={{ base: 'none', md: 'grid' }}
-              templateColumns="30px 24px minmax(0, 1fr) minmax(0, 1fr) 30px"
-              gap={3}
-              fontSize="sm"
-              color="text.primary"
-              fontWeight="semibold"
-              mb={-2}
-              aria-hidden="true"
-            >
-              <Box />
-              <Text>#</Text>
-              <Text>Action</Text>
-              <Text>Expected result</Text>
-              <Box />
-            </Grid>
-            <VStack as="ol" aria-label="Scenario steps" align="stretch" gap={3} m={0} p={0}>
-              {steps.map((step, index) => (
-                <Box
-                  as="li"
-                  key={step.key}
-                  data-step-key={step.key}
-                  data-dragging={draggedStep === step.key || undefined}
-                  data-drop-target={dropTarget === step.key || undefined}
-                  opacity={draggedStep === step.key ? 0.45 : 1}
-                  listStyle="none"
-                  borderRadius="md"
-                  bg={draggedStep === step.key || grabbed === step.key ? 'blue.50' : 'transparent'}
-                  outline={draggedStep === step.key || grabbed === step.key ? '2px solid' : '2px solid transparent'}
-                  outlineColor={draggedStep === step.key || grabbed === step.key ? 'blue.400' : 'transparent'}
-                  boxShadow={dropTarget === step.key && draggedStep !== step.key ? 'inset 0 3px 0 #3182ce' : draggedStep === step.key || grabbed === step.key ? 'md' : 'none'}
-                  _dark={{ bg: draggedStep === step.key || grabbed === step.key ? 'blue.900' : 'transparent' }}
-                >
-                  <Grid
-                    templateColumns={{ base: '24px 20px minmax(0, 1fr) 28px', md: '30px 24px minmax(0, 1fr) minmax(0, 1fr) 30px' }}
-                    gap={3}
-                    alignItems="center"
+            </VStack>
+            <VStack align="stretch" gap={4}>
+              <Grid
+                data-autogrow-group
+                templateColumns={{ base: '1fr', md: '1fr 1fr' }}
+                gap={3}
+                ml={{ md: '78px' }}
+                mr={{ md: '42px' }}
+              >
+                <Textarea
+                  {...register('preconditions')}
+                  bg="bg.card"
+                  name="preconditions"
+                  label="Preconditions"
+                  fieldProps={{ labelProps: { fontSize: 'md', fontWeight: 'semibold' } }}
+                  fontSize="md"
+                  placeholder="State before step 1"
+                  minH="40px"
+                  rows={1}
+                  resize="none"
+                  data-autogrow="true"
+                  disabled={pending}
+                  error={errors.preconditions?.message}
+                />
+                <Textarea
+                  {...register('testData')}
+                  bg="bg.card"
+                  name="testData"
+                  label="Test data"
+                  fieldProps={{ labelProps: { fontSize: 'md', fontWeight: 'semibold' } }}
+                  fontSize="md"
+                  placeholder="Accounts, cards, URLs"
+                  minH="40px"
+                  rows={1}
+                  resize="none"
+                  data-autogrow="true"
+                  disabled={pending}
+                  error={errors.testData?.message}
+                />
+              </Grid>
+              <Grid
+                display={{ base: 'none', md: 'grid' }}
+                templateColumns="30px 24px minmax(0, 1fr) minmax(0, 1fr) 30px"
+                gap={3}
+                fontSize="sm"
+                color="text.primary"
+                fontWeight="semibold"
+                mb={-2}
+                aria-hidden="true"
+              >
+                <Box />
+                <Text color="text.secondary">#</Text>
+                <Text color="text.secondary">Steps</Text>
+                <Text color="text.secondary">Expected result</Text>
+                <Box />
+              </Grid>
+              <VStack as="ol" aria-label="Scenario steps" align="stretch" gap={3} m={0} p={0}>
+                {steps.map((step, index) => (
+                  <Box
+                    as="li"
+                    key={step.key}
+                    data-step-key={step.key}
+                    data-dragging={draggedStep === step.key || undefined}
+                    data-drop-target={dropTarget === step.key || undefined}
+                    opacity={draggedStep === step.key ? 0.45 : 1}
+                    listStyle="none"
+                    position="relative"
+                    borderRadius="md"
+                    bg={draggedStep === step.key || grabbed === step.key ? 'blue.50' : 'transparent'}
+                    outline={draggedStep === step.key || grabbed === step.key ? '2px solid' : '2px solid transparent'}
+                    outlineColor={draggedStep === step.key || grabbed === step.key ? 'blue.400' : 'transparent'}
+                    boxShadow={draggedStep === step.key || grabbed === step.key ? 'md' : 'none'}
+                    _after={
+                      dropTarget === step.key && draggedStep && draggedStep !== step.key
+                        ? {
+                            content: '""',
+                            position: 'absolute',
+                            left: 0,
+                            right: 0,
+                            height: '2px',
+                            bg: 'blue.500',
+                            borderRadius: 'full',
+                            pointerEvents: 'none',
+                            zIndex: 1,
+                            ...(steps.findIndex((row) => row.key === draggedStep) < index
+                              ? { bottom: '-7px' }
+                              : { top: '-7px' }),
+                          }
+                        : undefined
+                    }
+                    _dark={{ bg: draggedStep === step.key || grabbed === step.key ? 'blue.900' : 'transparent' }}
                   >
-                    <IconButton
-                      type="button"
-                      size="xs"
-                      variant="ghost"
-                      aria-label={`Reorder step ${index + 1}`}
-                      aria-pressed={grabbed === step.key}
-                      data-handle-key={step.key}
-                      gridColumn={{ base: '1', md: 'auto' }}
-                      gridRow={{ base: '1 / span 2', md: 'auto' }}
-                      disabled={pending}
-                      cursor={draggedStep === step.key ? 'grabbing' : 'grab'}
-                      color={draggedStep === step.key || grabbed === step.key ? 'blue.600' : 'text.secondary'}
-                      style={{ touchAction: 'none' }}
-                      onPointerDown={(e) => {
-                        if (pending) return;
-                        pointer.current = { key: step.key, id: e.pointerId };
-                        setDraggedStep(step.key);
-                        dropTargetRef.current = step.key;
-                        setDropTarget(step.key);
-                        e.currentTarget.setPointerCapture?.(e.pointerId);
+                    <Grid
+                      templateColumns={{
+                        base: '24px 20px minmax(0, 1fr) 28px',
+                        md: '30px 24px minmax(0, 1fr) minmax(0, 1fr) 30px',
                       }}
-                      onPointerMove={(e) => {
-                        if (pointer.current?.key !== step.key) return;
-                        const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-step-key]');
-                        const key = target?.getAttribute('data-step-key');
-                        if (key) { dropTargetRef.current = key; setDropTarget(key); }
-                      }}
-                      onPointerUp={(e) => {
-                        if (dropTargetRef.current) move(step.key, steps.findIndex((s) => s.key === dropTargetRef.current));
-                        pointer.current = null;
-                        setDraggedStep(undefined);
-                        setDropTarget(undefined);
-                        dropTargetRef.current = undefined;
-                        e.currentTarget.releasePointerCapture?.(e.pointerId);
-                      }}
-                      onPointerCancel={() => {
-                        pointer.current = null;
-                        setDraggedStep(undefined);
-                        setDropTarget(undefined);
-                        dropTargetRef.current = undefined;
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === ' ' || e.key === 'Enter') {
-                          e.preventDefault();
-                          if (grabbed !== step.key) pickedUpOrder.current = steps.map((row) => row.key);
-                          setGrabbed(grabbed === step.key ? undefined : step.key);
-                          setAnnouncement(grabbed === step.key ? 'Step dropped' : `Step ${index + 1} picked up`);
-                        } else if (grabbed === step.key && ['ArrowUp', 'ArrowDown'].includes(e.key)) {
-                          e.preventDefault();
-                          move(step.key, index + (e.key === 'ArrowUp' ? -1 : 1));
-                        } else if (e.key === 'Escape' && grabbed === step.key) {
-                          e.preventDefault();
-                          setSteps((current) => {
-                            const order = new Map(pickedUpOrder.current.map((key, position) => [key, position]));
-                            return [...current].sort(
-                              (left, right) =>
-                                (order.get(left.key) ?? current.length) - (order.get(right.key) ?? current.length),
-                            );
-                          });
-                          setGrabbed(undefined);
-                          setFocusHandle(step.key);
-                          setAnnouncement('Reordering cancelled');
-                        }
-                      }}
+                      gap={3}
+                      alignItems="start"
                     >
-                      <Text aria-hidden="true">⠿</Text>
-                    </IconButton>
-                    <Text gridColumn={{ base: '2', md: 'auto' }} gridRow={{ base: '1', md: 'auto' }} pt={1}>
-                      {index + 1}
-                    </Text>
-                    <Textarea
-                      name={`step-${step.key}-action`}
-                      bg="bg.card"
-                      placeholder="What the tester does"
-                      minH="40px"
-                      rows={1}
-                      aria-label={`Step ${index + 1} action`}
-                      data-action-key={step.key}
-                      fieldProps={{ gridColumn: { base: '3', md: 'auto' }, gridRow: { base: '1', md: 'auto' } }}
-                      data-autogrow="true"
-                      value={step.action}
-                      disabled={pending}
-                      error={stepErrors[step.key]}
-                      onChange={(e) => update(step.key, 'action', e.target.value)}
-                      resize="none"
-                    />
-                    <Box gridColumn={{ base: '3', md: 'auto' }} gridRow={{ base: '2', md: 'auto' }}>
+                      <IconButton
+                        type="button"
+                        size="xs"
+                        mt={1}
+                        variant="ghost"
+                        aria-label={`Reorder step ${index + 1}`}
+                        aria-pressed={grabbed === step.key}
+                        data-handle-key={step.key}
+                        gridColumn={{ base: '1', md: 'auto' }}
+                        gridRow={{ base: '1 / span 2', md: 'auto' }}
+                        disabled={pending}
+                        cursor={draggedStep === step.key ? 'grabbing' : 'grab'}
+                        color={draggedStep === step.key || grabbed === step.key ? 'blue.600' : 'text.secondary'}
+                        style={{ touchAction: 'none' }}
+                        onPointerDown={(e) => {
+                          if (pending) return;
+                          pointer.current = { key: step.key, id: e.pointerId };
+                          setDraggedStep(step.key);
+                          dropTargetRef.current = step.key;
+                          setDropTarget(step.key);
+                          e.currentTarget.setPointerCapture?.(e.pointerId);
+                        }}
+                        onPointerMove={(e) => {
+                          if (pointer.current?.key !== step.key) return;
+                          const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-step-key]');
+                          const key = target?.getAttribute('data-step-key');
+                          if (key) {
+                            dropTargetRef.current = key;
+                            setDropTarget(key);
+                          }
+                        }}
+                        onPointerUp={(e) => {
+                          if (dropTargetRef.current)
+                            move(
+                              step.key,
+                              steps.findIndex((s) => s.key === dropTargetRef.current),
+                            );
+                          pointer.current = null;
+                          setDraggedStep(undefined);
+                          setDropTarget(undefined);
+                          dropTargetRef.current = undefined;
+                          e.currentTarget.releasePointerCapture?.(e.pointerId);
+                        }}
+                        onPointerCancel={() => {
+                          pointer.current = null;
+                          setDraggedStep(undefined);
+                          setDropTarget(undefined);
+                          dropTargetRef.current = undefined;
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === ' ' || e.key === 'Enter') {
+                            e.preventDefault();
+                            if (grabbed !== step.key) pickedUpOrder.current = steps.map((row) => row.key);
+                            setGrabbed(grabbed === step.key ? undefined : step.key);
+                            setAnnouncement(grabbed === step.key ? 'Step dropped' : `Step ${index + 1} picked up`);
+                          } else if (grabbed === step.key && ['ArrowUp', 'ArrowDown'].includes(e.key)) {
+                            e.preventDefault();
+                            move(step.key, index + (e.key === 'ArrowUp' ? -1 : 1));
+                          } else if (e.key === 'Escape' && grabbed === step.key) {
+                            e.preventDefault();
+                            setSteps((current) => {
+                              const order = new Map(pickedUpOrder.current.map((key, position) => [key, position]));
+                              return [...current].sort(
+                                (left, right) =>
+                                  (order.get(left.key) ?? current.length) - (order.get(right.key) ?? current.length),
+                              );
+                            });
+                            setGrabbed(undefined);
+                            setFocusHandle(step.key);
+                            setAnnouncement('Reordering cancelled');
+                          }
+                        }}
+                      >
+                        <Text aria-hidden="true">⠿</Text>
+                      </IconButton>
+                      <Text
+                        gridColumn={{ base: '2', md: 'auto' }}
+                        gridRow={{ base: '1', md: 'auto' }}
+                        pt={1}
+                        color="text.secondary"
+                      >
+                        {index + 1}
+                      </Text>
                       <Textarea
-                        name={`step-${step.key}-expected`}
+                        name={`step-${step.key}-action`}
                         bg="bg.card"
-                        placeholder="What should happen"
+                        placeholder="What the tester does"
                         minH="40px"
                         rows={1}
-                        aria-label={`Step ${index + 1} expected result`}
+                        aria-label={`Step ${index + 1} action`}
+                        data-action-key={step.key}
+                        fieldProps={{ gridColumn: { base: '3', md: 'auto' }, gridRow: { base: '1', md: 'auto' } }}
                         data-autogrow="true"
-                        value={step.expectedResult}
+                        value={step.action}
                         disabled={pending}
-                        onChange={(e) => update(step.key, 'expectedResult', e.target.value)}
-                        onKeyDown={(e) => {
-                          if (
-                            e.key === 'Enter' &&
-                            !e.shiftKey &&
-                            !e.nativeEvent.isComposing &&
-                            index === steps.length - 1
-                          ) {
-                            e.preventDefault();
-                            if (!e.repeat) append();
-                          }
-                        }}
+                        error={stepErrors[step.key]}
+                        onChange={(e) => update(step.key, 'action', e.target.value)}
                         resize="none"
                       />
-                    </Box>
-                    <IconButton
-                      type="button"
-                      aria-label={`Remove step ${index + 1}`}
-                      gridColumn={{ base: '4', md: 'auto' }}
-                      gridRow={{ base: '1', md: 'auto' }}
-                      size="xs"
-                      variant="ghost"
-                      disabled={pending}
-                      onClick={() => setSteps((previous) => previous.filter((s) => s.key !== step.key))}
-                    >
-                      <FiX />
-                    </IconButton>
-                  </Grid>
-                </Box>
-              ))}
-            </VStack>
-            <Button
-              type="button"
-              variant="outline"
-              borderStyle="dashed"
-              borderColor="text.muted"
-              alignSelf={{ base: 'stretch', md: 'auto' }}
-              ml={{ md: '78px' }}
-              mr={{ md: '42px' }}
-              disabled={pending}
-              onClick={append}
-            >
-              <FiPlus />
-              Add step
-            </Button>
-            <Text role="status" aria-live="polite" srOnly>
-              {announcement}
-            </Text>
-          </VStack>
-          <HStack justify="end" gap={2} flexWrap="wrap">
-            {mode === 'create' && <label><input type="checkbox" checked={createAnother} onChange={(event) => setCreateAnother(event.currentTarget.checked)} /> Create another scenario</label>}
-            <Button type="button" variant="ghost" onClick={cancel} disabled={pending}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={pending} disabled={pending}>{mode === 'create' ? 'Save scenario' : 'Save changes'}</Button>
-          </HStack>
-          </VStack>
-          <VStack data-testid="scenario-card-sidebar" align="stretch" gap={6} borderLeftWidth={{ base: 0, lg: '1px' }} borderColor="border.main" pl={{ base: 0, lg: 6 }}>
-            <Box><Text fontSize="sm" mb={2}>Folder</Text>
-            <Popover.Root
-              initialFocusEl={() => folderSearchRef.current}
-              open={folderOpen}
-              onOpenChange={({ open }) => {
-                setFolderOpen(open);
-                if (!open) setFolderSearch('');
-              }}
-            >
-              <Popover.Trigger asChild>
-                <Button type="button" variant="outline" size="sm" aria-label="Scenario folder" disabled={pending}>
-                  <FiFolder /> {folder?.name ?? 'No folder'} <FiChevronDown />
-                </Button>
-              </Popover.Trigger>
-              <Portal>
-                <Popover.Positioner>
-                  <Popover.Content w="260px" bg="bg.card" p={0}>
-                    <Box position="relative" px={3} py={2} borderBottomWidth="1px" borderColor="border.main">
-                      <Box
-                        position="absolute"
-                        left={3}
-                        top="50%"
-                        transform="translateY(-50%)"
-                        zIndex={1}
-                        color="text.muted"
-                      >
-                        <FiSearch />
+                      <Box gridColumn={{ base: '3', md: 'auto' }} gridRow={{ base: '2', md: 'auto' }}>
+                        <Textarea
+                          name={`step-${step.key}-expected`}
+                          bg="bg.card"
+                          placeholder="What should happen"
+                          minH="40px"
+                          rows={1}
+                          aria-label={`Step ${index + 1} expected result`}
+                          data-autogrow="true"
+                          value={step.expectedResult}
+                          disabled={pending}
+                          onChange={(e) => update(step.key, 'expectedResult', e.target.value)}
+                          onKeyDown={(e) => {
+                            if (
+                              e.key === 'Enter' &&
+                              !e.shiftKey &&
+                              !e.nativeEvent.isComposing &&
+                              index === steps.length - 1
+                            ) {
+                              e.preventDefault();
+                              if (!e.repeat) append();
+                            }
+                          }}
+                          resize="none"
+                        />
                       </Box>
-                      <Input
-                        ref={folderSearchRef}
-                        name="folder-search"
-                        aria-label="Search folders"
-                        placeholder="Type to find a folder"
-                        size="sm"
-                        value={folderSearch}
-                        onChange={(event) => setFolderSearch(event.currentTarget.value)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter') {
-                            event.preventDefault();
-                            if (filteredFolders[0]) selectFolder(filteredFolders[0].id);
-                          }
-                        }}
-                        ps={7}
-                        border={0}
-                      />
-                    </Box>
-                    <Popover.Body p={1} maxH="240px" overflowY="auto">
-                      {filteredFolders.length === 0 && <Text p={2} fontSize="sm">No folders found.</Text>}
-                      {filteredFolders.map((item) => (
+                      <IconButton
+                        type="button"
+                        aria-label={`Remove step ${index + 1}`}
+                        gridColumn={{ base: '4', md: 'auto' }}
+                        gridRow={{ base: '1', md: 'auto' }}
+                        size="xs"
+                        mt={1}
+                        variant="ghost"
+                        disabled={pending}
+                        onClick={() => setSteps((previous) => previous.filter((s) => s.key !== step.key))}
+                      >
+                        <FiX />
+                      </IconButton>
+                    </Grid>
+                  </Box>
+                ))}
+              </VStack>
+              <Button
+                type="button"
+                variant="outline"
+                borderStyle="dashed"
+                borderColor="text.muted"
+                alignSelf={{ base: 'stretch', md: 'auto' }}
+                ml={{ md: '78px' }}
+                mr={{ md: '42px' }}
+                disabled={pending}
+                onClick={append}
+              >
+                <FiPlus />
+                Add step
+              </Button>
+              <Text role="status" aria-live="polite" srOnly>
+                {announcement}
+              </Text>
+            </VStack>
+            <HStack justify="end" gap={2} flexWrap="wrap" mr={{ md: '42px' }}>
+              {mode === 'create' && (
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={createAnother}
+                    onChange={(event) => setCreateAnother(event.currentTarget.checked)}
+                  />{' '}
+                  Create another scenario
+                </label>
+              )}
+              <Button type="button" variant="ghost" onClick={cancel} disabled={pending}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" loading={pending} disabled={pending}>
+                {mode === 'create' ? 'Save scenario' : 'Save changes'}
+              </Button>
+            </HStack>
+          </VStack>
+          <VStack
+            data-testid="scenario-card-sidebar"
+            align="stretch"
+            gap={6}
+            borderLeftWidth={{ base: 0, lg: '1px' }}
+            borderColor="border.main"
+            pl={{ base: 0, lg: 6 }}
+          >
+            <Box>
+              <Text fontSize="sm" mb={2}>
+                Folder
+              </Text>
+              <Popover.Root
+                initialFocusEl={() => folderSearchRef.current}
+                open={folderOpen}
+                onOpenChange={({ open }) => {
+                  setFolderOpen(open);
+                  if (!open) setFolderSearch('');
+                }}
+              >
+                <Popover.Trigger asChild>
+                  <Button type="button" variant="outline" size="sm" aria-label="Scenario folder" disabled={pending}>
+                    <FiFolder /> {folder?.name ?? 'No folder'} <FiChevronDown />
+                  </Button>
+                </Popover.Trigger>
+                <Portal>
+                  <Popover.Positioner>
+                    <Popover.Content w="260px" bg="bg.card" p={0}>
+                      <Box position="relative" px={3} py={2} borderBottomWidth="1px" borderColor="border.main">
+                        <Box
+                          position="absolute"
+                          left={5}
+                          top="50%"
+                          transform="translateY(-50%)"
+                          zIndex={1}
+                          color="text.muted"
+                        >
+                          <FiSearch />
+                        </Box>
+                        <Input
+                          ref={folderSearchRef}
+                          name="folder-search"
+                          aria-label="Search folders"
+                          placeholder="Type to find a folder"
+                          size="sm"
+                          bg="bg.card"
+                          value={folderSearch}
+                          onChange={(event) => setFolderSearch(event.currentTarget.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault();
+                              if (filteredFolders[0]) selectFolder(filteredFolders[0].id);
+                            }
+                          }}
+                          ps="33px"
+                          border={0}
+                        />
+                      </Box>
+                      <Popover.Body p={1} maxH="240px" overflowY="auto">
+                        {filteredFolders.length === 0 && (
+                          <Text p={2} fontSize="sm">
+                            No folders found.
+                          </Text>
+                        )}
+                        {filteredFolders.map((item) => (
                           <Button
                             key={item.id}
                             type="button"
@@ -611,83 +731,86 @@ export const TestScenarioForm = ({
                             justifyContent="space-between"
                             aria-label={item.name}
                             aria-pressed={(folderId ?? '') === item.id}
+                            bg={(folderId ?? '') === item.id ? 'blue.subtle' : 'transparent'}
                             onClick={() => selectFolder(item.id)}
                           >
                             <HStack pl={(item.depth ?? 0) * 3}>
                               <FiFolder />
                               <Text>{item.name}</Text>
-                              {item.depth && item.path && <Text color="text.secondary" fontSize="xs">{item.path.slice(0, -(item.name.length + 3))}</Text>}
                             </HStack>
                             {(folderId ?? '') === item.id && <FiCheck />}
                           </Button>
                         ))}
-                    </Popover.Body>
-                  </Popover.Content>
-                </Popover.Positioner>
-              </Portal>
-            </Popover.Root>
+                      </Popover.Body>
+                    </Popover.Content>
+                  </Popover.Positioner>
+                </Portal>
+              </Popover.Root>
             </Box>
-            <Box><Text fontSize="sm" mb={2}>Priority</Text>
-            <Popover.Root open={priorityOpen} onOpenChange={({ open }) => setPriorityOpen(open)}>
-              <Popover.Trigger asChild>
-                <Button type="button" variant="outline" size="sm" aria-label="Priority" disabled={pending}>
-                  <Text
-                    as="span"
-                    px={2}
-                    borderRadius="full"
-                    bg={
-                      values.priority === 'high'
-                        ? 'status.attention.bg'
-                        : values.priority === 'low'
-                          ? 'status.neutral.bg'
-                          : 'status.total.bg'
-                    }
-                    color="text.secondary"
-                  >
-                    {values.priority === 'high' ? 'High' : values.priority === 'low' ? 'Low' : 'Medium'}
-                  </Text>
-                  <FiChevronDown />
-                </Button>
-              </Popover.Trigger>
-              <Portal>
-                <Popover.Positioner>
-                  <Popover.Content w="120px" bg="bg.card" p={1}>
-                    <Popover.Body p={0}>
-                      {(['high', 'medium', 'low'] as const).map((priority) => (
-                        <Button
-                          key={priority}
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          w="full"
-                          justifyContent="flex-start"
-                          onClick={() => {
-                            setValue('priority', priority, { shouldDirty: true, shouldValidate: true });
-                            setPriorityOpen(false);
-                          }}
-                        >
-                          <Text
-                            as="span"
-                            px={2}
-                            borderRadius="full"
-                            bg={
-                              priority === 'high'
-                                ? 'status.attention.bg'
-                                : priority === 'low'
-                                  ? 'status.neutral.bg'
-                                  : 'status.total.bg'
-                            }
-                            color="text.secondary"
+            <Box>
+              <Text fontSize="sm" mb={2}>
+                Priority
+              </Text>
+              <Popover.Root open={priorityOpen} onOpenChange={({ open }) => setPriorityOpen(open)}>
+                <Popover.Trigger asChild>
+                  <Button type="button" variant="outline" size="sm" aria-label="Priority" disabled={pending}>
+                    <Text
+                      as="span"
+                      px={2}
+                      borderRadius="full"
+                      bg={
+                        values.priority === 'high'
+                          ? 'status.attention.bg'
+                          : values.priority === 'low'
+                            ? 'status.neutral.bg'
+                            : 'status.total.bg'
+                      }
+                      color="text.secondary"
+                    >
+                      {values.priority === 'high' ? 'High' : values.priority === 'low' ? 'Low' : 'Medium'}
+                    </Text>
+                    <FiChevronDown />
+                  </Button>
+                </Popover.Trigger>
+                <Portal>
+                  <Popover.Positioner>
+                    <Popover.Content w="120px" bg="bg.card" p={1}>
+                      <Popover.Body p={0}>
+                        {(['high', 'medium', 'low'] as const).map((priority) => (
+                          <Button
+                            key={priority}
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            w="full"
+                            justifyContent="flex-start"
+                            onClick={() => {
+                              setValue('priority', priority, { shouldDirty: true, shouldValidate: true });
+                              setPriorityOpen(false);
+                            }}
                           >
-                            {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                          </Text>
-                        </Button>
-                      ))}
-                    </Popover.Body>
-                  </Popover.Content>
-                </Popover.Positioner>
-              </Portal>
-            </Popover.Root>
+                            <Text
+                              as="span"
+                              px={2}
+                              borderRadius="full"
+                              bg={
+                                priority === 'high'
+                                  ? 'status.attention.bg'
+                                  : priority === 'low'
+                                    ? 'status.neutral.bg'
+                                    : 'status.total.bg'
+                              }
+                              color="text.secondary"
+                            >
+                              {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                            </Text>
+                          </Button>
+                        ))}
+                      </Popover.Body>
+                    </Popover.Content>
+                  </Popover.Positioner>
+                </Portal>
+              </Popover.Root>
             </Box>
             <Box>
               <Heading size="sm" mb={2}>
@@ -752,10 +875,19 @@ export const TestScenarioForm = ({
                 error={errors.relatedIssueUrl?.message}
               />
             </Box>
-            {mode === 'edit' && history && <Box><Heading size="sm" mb={2}>History</Heading>
-              <Text fontSize="sm" color="text.secondary">Updated {new Date(history.updatedAt).toLocaleDateString()} by {history.updatedBy?.name || 'Unknown'}</Text>
-              <Text fontSize="sm" color="text.secondary">Created {new Date(history.createdAt).toLocaleDateString()} by {history.createdBy?.name || 'Unknown'}</Text>
-            </Box>}
+            {mode === 'edit' && history && (
+              <Box>
+                <Heading size="sm" mb={2}>
+                  History
+                </Heading>
+                <Text fontSize="sm" color="text.secondary">
+                  Updated {new Date(history.updatedAt).toLocaleDateString()} by {history.updatedBy?.name || 'Unknown'}
+                </Text>
+                <Text fontSize="sm" color="text.secondary">
+                  Created {new Date(history.createdAt).toLocaleDateString()} by {history.createdBy?.name || 'Unknown'}
+                </Text>
+              </Box>
+            )}
           </VStack>
         </Grid>
       </VStack>

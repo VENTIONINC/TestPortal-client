@@ -14,6 +14,8 @@ interface ContextMenuOption {
   disabled?: boolean;
   icon?: ElementType;
   divider?: boolean;
+  iconAtStart?: boolean;
+  destructive?: boolean;
 }
 
 interface ContextMenuState {

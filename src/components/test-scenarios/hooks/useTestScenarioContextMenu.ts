@@ -48,22 +48,26 @@ export const useTestScenarioContextMenu = (
       }
       lastTrigger.current = event.currentTarget;
       openContextMenu(event, [
-        ...(onClone ? [{ title: 'Clone', icon: FiCopy, onClick: () => onClone(scenario) }] : []),
+        ...(onClone ? [{ title: 'Clone', icon: FiCopy, iconAtStart: true, onClick: () => onClone(scenario) }] : []),
         ...(includeEdit ? [{
           title: 'Edit Scenario',
           icon: FiEdit,
+          iconAtStart: true,
           onClick: () => navigate(`${getTestScenarioEditPath(scenario.id)}${editSearch}`),
         }] : []),
         ...(onRemoveFromSuite
           ? [{
               title: 'Remove from suite',
               icon: FiTrash2,
+              iconAtStart: true,
               onClick: () => onRemoveFromSuite(scenario),
             }]
           : []),
         {
           title: 'Delete Scenario',
           icon: FiTrash2,
+          iconAtStart: true,
+          destructive: true,
           onClick: () => {
             if (currentProjectId) openDeleteDialog(scenario.id, currentProjectId, scenario.title, onDeleted);
           },

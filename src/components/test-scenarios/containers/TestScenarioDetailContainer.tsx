@@ -36,10 +36,7 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
     new URLSearchParams(originSearch).forEach((value, key) => params.set(key, value));
     navigate(`${PATHS.TEST_SCENARIO_NEW}?${params}`);
   }, () => {
-    const destination = origin.kind === 'suite' && originSuite
-      ? `${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId, tab: 'suites' })}`
-      : backPath;
-    navigate(destination);
+    navigate(`${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId })}`);
   });
   const detail = useTestScenarioDetail(projectId, scenarioId);
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
@@ -61,19 +58,14 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
   }, [projectId, scenarioId]);
   const folders = flattenScenarioFolders(foldersQuery.currentData ?? []);
   const origin = getScenarioOrigin(search, projectId);
-  const originFolder = origin.kind === 'folder' ? folders.find((item) => item.id === origin.id) : undefined;
   const originSuite = origin.kind === 'suite' ? suitesQuery.currentData?.find((item) => item.id === origin.id) : undefined;
   const folder = detail.scenario?.folderId
     ? folders.find(({ id }) => id === detail.scenario?.folderId)
     : undefined;
   const folderName = detail.scenario?.folderId ? folder?.name ?? 'Folder unavailable' : 'No folder';
-  const backPath = origin.kind === 'suite'
-    ? originSuite ? `${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId, tab: 'suites', suiteId: originSuite.id })}` : `${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId })}`
-    : origin.kind === 'folder'
-    ? getScenarioFolderReturnPath(projectId, origin.id, folders)
-    : origin.kind === 'unfiled'
-    ? getScenarioFolderReturnPath(projectId, null, folders)
-    : `${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId })}`;
+  const backPath = origin.kind === 'suite' && originSuite
+    ? `${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId, tab: 'suites', suiteId: originSuite.id })}`
+    : getScenarioFolderReturnPath(projectId, detail.scenario?.folderId ?? null, folders);
 
   const refreshMembership = async () => {
     await Promise.all([detail.refetch(), suitesQuery.refetch()]);
@@ -137,7 +129,7 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
           scenario={scenario}
           projectId={projectId}
           folderName={folderName}
-          backLabel={origin.kind === 'suite' ? originSuite?.name ?? 'All scenarios' : origin.kind === 'folder' ? originFolder?.name ?? 'All scenarios' : origin.kind === 'unfiled' ? 'No folder' : 'All scenarios'}
+          backLabel={origin.kind === 'suite' && originSuite ? originSuite.name : detail.scenario?.folderId && !folder ? 'All scenarios' : folderName}
           originKind={origin.kind === 'suite' && originSuite ? 'suites' : 'scenarios'}
           backPath={backPath}
           onEdit={() => navigate(`${getTestScenarioEditPath(scenario.id)}${originSearch}`)}
@@ -146,7 +138,6 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
           suiteError={suiteError}
           onRemoveSuite={(suiteId) => void handleRemoveSuite(suiteId)}
           removingSuiteIds={removingSuiteIds}
-          showSavedConfirmation={search.get('saved') === '1'}
         />
       )}
     </TestScenarioDetailStateView>
