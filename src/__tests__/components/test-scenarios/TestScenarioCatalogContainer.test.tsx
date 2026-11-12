@@ -25,6 +25,7 @@ import { usePatchApiV2TestScenariosBulkFolderMutation, usePostApiV2TestScenarioF
 
 const navigate = vi.fn();
 const contextMenu = vi.fn();
+const createRunMutation = vi.fn();
 
 
 vi.mock('@/components/ui', async (importOriginal) => {
@@ -126,6 +127,7 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     usePostApiV2TestSuitesMutation: mutation,
     usePatchApiV2TestSuitesBySuiteIdMutation: mutation,
     useDeleteApiV2TestSuitesBySuiteIdMutation: mutation,
+    usePostApiV2ManualTestRunsMutation: vi.fn(() => [createRunMutation, { isLoading: false }]),
   };
 });
 
@@ -162,6 +164,8 @@ const createResponse = (page: number) => ({
 describe('TestScenarioCatalogContainer', () => {
   beforeEach(() => {
     navigate.mockReset();
+    createRunMutation.mockReset();
+    createRunMutation.mockReturnValue({ unwrap: () => Promise.resolve({ id: 'run-1', projectId: 'project-1' }) });
     contextMenu.mockReset();
     mockedDetailQuery.mockReset();
     mockedSelectionQuery.mockReturnValue([
@@ -200,6 +204,15 @@ describe('TestScenarioCatalogContainer', () => {
     render(<ChakraProvider><MemoryRouter initialEntries={['/test-management?projectId=project-1&folderId=folder-a']}><TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" /></MemoryRouter></ChakraProvider>);
     await userEvent.setup().click(screen.getByRole('button', { name: 'Create Test Scenario' }));
     expect(navigate).toHaveBeenCalledWith('/test-scenarios/new?folderId=folder-a&originProject=project-1&originKind=folder&originId=folder-a');
+  });
+
+  it('creates one project run from selected scenarios and navigates only after confirmation', async () => {
+    const user = userEvent.setup();
+    render(<ChakraProvider><MemoryRouter><TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" /></MemoryRouter></ChakraProvider>);
+    await user.click(screen.getByRole('checkbox', { name: 'Select Scenario page 1' }));
+    await user.click(screen.getByRole('button', { name: 'Run selected' }));
+    await waitFor(() => expect(createRunMutation).toHaveBeenCalledWith({ projectId: 'project-1', manualTestRunCreateRequest: { scenarioIds: ['scenario-1'] } }));
+    expect(navigate).toHaveBeenCalledWith('/manual-test-runs/run-1', { state: { from: 'manual-test-run-history' } });
   });
 
   it('clears the selection when a selected row is deleted through its action menu', async () => {

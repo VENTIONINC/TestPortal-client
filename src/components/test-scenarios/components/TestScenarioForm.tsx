@@ -87,7 +87,6 @@ export const TestScenarioForm = ({
   reconciliation,
   createAnotherReset,
   focusTitle = false,
-  history,
   originLabel,
   originKind = 'scenarios',
   onNavigateOrigin,

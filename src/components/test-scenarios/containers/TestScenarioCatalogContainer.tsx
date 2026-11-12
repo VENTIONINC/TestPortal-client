@@ -5,11 +5,11 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
 
 import { PATHS } from '@/types/paths';
+import { TestScenarioCatalogView } from '@/components/test-scenarios';
+import { useTestScenarioCatalog } from '@/components/test-scenarios';
+import { useTestScenarioContextMenu } from '@/components/test-scenarios';
 
-import { TestScenarioCatalogView } from '../components/TestScenarioCatalogView';
-import { useTestScenarioCatalog } from '../hooks/useTestScenarioCatalog';
 import { scenarioOriginSearch } from '../scenarioOrigin';
-import { useTestScenarioContextMenu } from '../hooks/useTestScenarioContextMenu';
 
 export interface TestScenarioCatalogContainerProps {
   projectId: string;
@@ -20,6 +20,20 @@ export const TestScenarioCatalogContainer = ({ projectId, organizationTab }: Tes
   const catalog = useTestScenarioCatalog(projectId, organizationTab);
   const navigate = useNavigate();
   const scope = catalog.scope;
+  const onRunSelected = useCallback(async (scenarioIds: string[]) => {
+    const run = await catalog.createManualRun({ scenarioIds });
+    if (!run) return;
+    navigate(PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(run.id)), {
+      state: { from: 'manual-test-run-history' },
+    });
+  }, [catalog, navigate]);
+  const onRunSuite = useCallback(async (suiteId: string) => {
+    const run = await catalog.createManualRun({ suiteId });
+    if (!run) return;
+    navigate(PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(run.id)), {
+      state: { from: 'manual-test-run-history' },
+    });
+  }, [catalog, navigate]);
   const origin = scope.kind === 'folder' && scope.id ? { kind: 'folder' as const, id: scope.id } : scope.kind === 'unfiled' ? { kind: 'unfiled' as const } : { kind: 'all' as const };
   const onScenarioActions = useTestScenarioContextMenu(projectId, undefined, true, undefined, catalog.reconcileDeletedScenario, scenarioOriginSearch(projectId, origin));
   const onCreateScenario = useCallback(() => {
@@ -51,6 +65,8 @@ export const TestScenarioCatalogContainer = ({ projectId, organizationTab }: Tes
       onUpdateSuite={catalog.updateSuite}
       onDeleteSuite={catalog.deleteSuite}
       onCreateScenario={onCreateScenario}
+      onRunSelected={onRunSelected}
+      onRunSuite={onRunSuite}
     />
   );
 };

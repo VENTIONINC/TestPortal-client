@@ -1307,36 +1307,19 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Test Scenarios"],
       }),
-      postApiV2TestScenariosByScenarioIdManualRuns: build.mutation<
-        PostApiV2TestScenariosByScenarioIdManualRunsApiResponse,
-        PostApiV2TestScenariosByScenarioIdManualRunsApiArg
+      postApiV2ManualTestRuns: build.mutation<
+        PostApiV2ManualTestRunsApiResponse,
+        PostApiV2ManualTestRunsApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/manual-runs`,
+          url: `/api/v2/manual-test-runs`,
           method: "POST",
-          body: queryArg.manualTestRunStartRequest,
+          body: queryArg.manualTestRunCreateRequest,
           params: {
             projectId: queryArg.projectId,
           },
         }),
         invalidatesTags: ["Manual Test Runs"],
-      }),
-      getApiV2TestScenariosByScenarioIdManualRuns: build.query<
-        GetApiV2TestScenariosByScenarioIdManualRunsApiResponse,
-        GetApiV2TestScenariosByScenarioIdManualRunsApiArg
-      >({
-        query: (queryArg) => ({
-          url: `/api/v2/test-scenarios/${queryArg.scenarioId}/manual-runs`,
-          params: {
-            projectId: queryArg.projectId,
-            page: queryArg.page,
-            limit: queryArg.limit,
-            startedFrom: queryArg.startedFrom,
-            startedBefore: queryArg.startedBefore,
-            status: queryArg.status,
-          },
-        }),
-        providesTags: ["Manual Test Runs"],
       }),
       getApiV2ManualTestRuns: build.query<
         GetApiV2ManualTestRunsApiResponse,
@@ -1348,11 +1331,12 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
             page: queryArg.page,
             limit: queryArg.limit,
-            startedFrom: queryArg.startedFrom,
-            startedBefore: queryArg.startedBefore,
-            testScenarioId: queryArg.testScenarioId,
-            sourceScenarioKey: queryArg.sourceScenarioKey,
-            status: queryArg.status,
+            search: queryArg.search,
+            show: queryArg.show,
+            period: queryArg.period,
+            timeZone: queryArg.timeZone,
+            dateFrom: queryArg.dateFrom,
+            dateTo: queryArg.dateTo,
           },
         }),
         providesTags: ["Manual Test Runs"],
@@ -1369,48 +1353,63 @@ const injectedRtkApi = api
         }),
         providesTags: ["Manual Test Runs"],
       }),
-      patchApiV2ManualTestRunsByRunId: build.mutation<
-        PatchApiV2ManualTestRunsByRunIdApiResponse,
-        PatchApiV2ManualTestRunsByRunIdApiArg
+      putApiV2ManualTestRunsByRunIdScenariosOrder: build.mutation<
+        PutApiV2ManualTestRunsByRunIdScenariosOrderApiResponse,
+        PutApiV2ManualTestRunsByRunIdScenariosOrderApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/manual-test-runs/${queryArg.runId}`,
-          method: "PATCH",
-          body: queryArg.manualTestRunUpdateRequest,
+          url: `/api/v2/manual-test-runs/${queryArg.runId}/scenarios/order`,
+          method: "PUT",
+          body: queryArg.manualTestRunScenarioOrderRequest,
           params: {
             projectId: queryArg.projectId,
           },
         }),
         invalidatesTags: ["Manual Test Runs"],
       }),
-      patchApiV2ManualTestRunsByRunIdExecutor: build.mutation<
-        PatchApiV2ManualTestRunsByRunIdExecutorApiResponse,
-        PatchApiV2ManualTestRunsByRunIdExecutorApiArg
+      postApiV2ManualTestRunsByRunIdScenariosBulk: build.mutation<
+        PostApiV2ManualTestRunsByRunIdScenariosBulkApiResponse,
+        PostApiV2ManualTestRunsByRunIdScenariosBulkApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/manual-test-runs/${queryArg.runId}/executor`,
-          method: "PATCH",
-          body: queryArg.manualTestRunExecutorReassignmentRequest,
+          url: `/api/v2/manual-test-runs/${queryArg.runId}/scenarios/bulk`,
+          method: "POST",
+          body: queryArg.manualTestRunScenarioBulkRequest,
           params: {
             projectId: queryArg.projectId,
           },
         }),
         invalidatesTags: ["Manual Test Runs"],
       }),
-      patchApiV2ManualTestRunsByRunIdStepsAndStepId: build.mutation<
-        PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse,
-        PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiArg
+      putApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResult: build.mutation<
+        PutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultApiResponse,
+        PutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultApiArg
       >({
         query: (queryArg) => ({
-          url: `/api/v2/manual-test-runs/${queryArg.runId}/steps/${queryArg.stepId}`,
-          method: "PATCH",
-          body: queryArg.manualTestRunStepUpdateRequest,
+          url: `/api/v2/manual-test-runs/${queryArg.runId}/scenarios/${queryArg.scenarioId}/result`,
+          method: "PUT",
+          body: queryArg.manualTestRunScenarioResultRequest,
           params: {
             projectId: queryArg.projectId,
           },
         }),
         invalidatesTags: ["Manual Test Runs"],
       }),
+      patchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssignee:
+        build.mutation<
+          PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeApiResponse,
+          PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeApiArg
+        >({
+          query: (queryArg) => ({
+            url: `/api/v2/manual-test-runs/${queryArg.runId}/scenarios/${queryArg.scenarioId}/assignee`,
+            method: "PATCH",
+            body: queryArg.manualTestRunScenarioAssigneeRequest,
+            params: {
+              projectId: queryArg.projectId,
+            },
+          }),
+          invalidatesTags: ["Manual Test Runs"],
+        }),
       postApiV2ManualTestRunsByRunIdComplete: build.mutation<
         PostApiV2ManualTestRunsByRunIdCompleteApiResponse,
         PostApiV2ManualTestRunsByRunIdCompleteApiArg
@@ -1418,7 +1417,21 @@ const injectedRtkApi = api
         query: (queryArg) => ({
           url: `/api/v2/manual-test-runs/${queryArg.runId}/complete`,
           method: "POST",
-          body: queryArg.manualTestRunCompleteRequest,
+          body: queryArg.body,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: ["Manual Test Runs"],
+      }),
+      postApiV2ManualTestRunsByRunIdReopen: build.mutation<
+        PostApiV2ManualTestRunsByRunIdReopenApiResponse,
+        PostApiV2ManualTestRunsByRunIdReopenApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}/reopen`,
+          method: "POST",
+          body: queryArg.body,
           params: {
             projectId: queryArg.projectId,
           },
@@ -2110,7 +2123,7 @@ export type GetApiV2TestScenarioFoldersApiResponse =
     _count: {
       scenarios: number;
     };
-    children: TestScenarioFolder[];
+    children: any[];
   }[];
 export type GetApiV2TestScenarioFoldersApiArg = {
   projectId: string;
@@ -2485,76 +2498,84 @@ export type PatchApiV2TestScenariosBulkFolderApiArg = {
     folderId: string | null;
   };
 };
-export type PostApiV2TestScenariosByScenarioIdManualRunsApiResponse =
-  /** status 201 Manual test run started */ ManualTestRunRead;
-export type PostApiV2TestScenariosByScenarioIdManualRunsApiArg = {
-  scenarioId: string;
+export type PostApiV2ManualTestRunsApiResponse =
+  /** status 201 Created run with ordered scenario snapshots */ ManualTestRunRead;
+export type PostApiV2ManualTestRunsApiArg = {
   projectId: string;
-  manualTestRunStartRequest: ManualTestRunStartRequest;
-};
-export type GetApiV2TestScenariosByScenarioIdManualRunsApiResponse =
-  /** status 200 Scenario manual-run history */ ManualTestRunPageRead;
-export type GetApiV2TestScenariosByScenarioIdManualRunsApiArg = {
-  scenarioId: string;
-  projectId: string;
-  page?: number;
-  limit?: number;
-  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
-  startedFrom?: string;
-  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
-  startedBefore?: string;
-  status?: ManualTestRunStatus;
+  manualTestRunCreateRequest: ManualTestRunCreateRequest;
 };
 export type GetApiV2ManualTestRunsApiResponse =
-  /** status 200 Project manual-run history */ ManualTestRunPageRead;
+  /** status 200 Paged project run history */ ManualTestRunPage;
 export type GetApiV2ManualTestRunsApiArg = {
   projectId: string;
   page?: number;
   limit?: number;
-  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
-  startedFrom?: string;
-  /** RFC 3339 timestamp with an explicit Z or numeric timezone offset; startedFrom is inclusive and startedBefore is exclusive */
-  startedBefore?: string;
-  /** Immutable source scenario UUID */
-  testScenarioId?: string;
-  /** Exact, case-sensitive captured source label; duplicate labels match multiple scenarios */
-  sourceScenarioKey?: string;
-  status?: ManualTestRunStatus;
+  search?: string;
+  show?: "in_progress" | "completed" | "all";
+  period?:
+    | "recent"
+    | "today"
+    | "yesterday"
+    | "last_7_days"
+    | "last_30_days"
+    | "this_month"
+    | "last_month"
+    | "any_time"
+    | "custom";
+  timeZone?: string;
+  dateFrom?: string;
+  dateTo?: string;
 };
 export type GetApiV2ManualTestRunsByRunIdApiResponse =
-  /** status 200 Manual test run detail */ ManualTestRunRead;
+  /** status 200 Run detail */ ManualTestRunRead;
 export type GetApiV2ManualTestRunsByRunIdApiArg = {
   runId: string;
   projectId: string;
 };
-export type PatchApiV2ManualTestRunsByRunIdApiResponse =
-  /** status 200 Updated manual test run */ ManualTestRunRead;
-export type PatchApiV2ManualTestRunsByRunIdApiArg = {
+export type PutApiV2ManualTestRunsByRunIdScenariosOrderApiResponse =
+  /** status 200 Authoritative updated run detail */ ManualTestRunRead;
+export type PutApiV2ManualTestRunsByRunIdScenariosOrderApiArg = {
   runId: string;
   projectId: string;
-  manualTestRunUpdateRequest: ManualTestRunUpdateRequest;
+  manualTestRunScenarioOrderRequest: ManualTestRunScenarioOrderRequest;
 };
-export type PatchApiV2ManualTestRunsByRunIdExecutorApiResponse =
-  /** status 200 Reassigned run with authoritative Executor identity */ ManualTestRunRead;
-export type PatchApiV2ManualTestRunsByRunIdExecutorApiArg = {
+export type PostApiV2ManualTestRunsByRunIdScenariosBulkApiResponse =
+  /** status 200 Authoritative updated run detail */ ManualTestRunRead;
+export type PostApiV2ManualTestRunsByRunIdScenariosBulkApiArg = {
   runId: string;
   projectId: string;
-  manualTestRunExecutorReassignmentRequest: ManualTestRunExecutorReassignmentRequest;
+  manualTestRunScenarioBulkRequest: ManualTestRunScenarioBulkRequest;
 };
-export type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiResponse =
-  /** status 200 Updated manual test run */ ManualTestRunRead;
-export type PatchApiV2ManualTestRunsByRunIdStepsAndStepIdApiArg = {
+export type PutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultApiResponse =
+  /** status 200 Authoritative updated run detail */ ManualTestRunRead;
+export type PutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultApiArg = {
   runId: string;
-  stepId: string;
+  scenarioId: string;
   projectId: string;
-  manualTestRunStepUpdateRequest: ManualTestRunStepUpdateRequest;
+  manualTestRunScenarioResultRequest: ManualTestRunScenarioResultRequest;
 };
+export type PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeApiResponse =
+  /** status 200 Authoritative updated run detail */ ManualTestRunRead;
+export type PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeApiArg =
+  {
+    runId: string;
+    scenarioId: string;
+    projectId: string;
+    manualTestRunScenarioAssigneeRequest: ManualTestRunScenarioAssigneeRequest;
+  };
 export type PostApiV2ManualTestRunsByRunIdCompleteApiResponse =
-  /** status 200 Completed manual test run */ ManualTestRunRead;
+  /** status 200 Completed run detail */ ManualTestRunRead;
 export type PostApiV2ManualTestRunsByRunIdCompleteApiArg = {
   runId: string;
   projectId: string;
-  manualTestRunCompleteRequest: ManualTestRunCompleteRequest;
+  body: {};
+};
+export type PostApiV2ManualTestRunsByRunIdReopenApiResponse =
+  /** status 200 Reopened run detail */ ManualTestRunRead;
+export type PostApiV2ManualTestRunsByRunIdReopenApiArg = {
+  runId: string;
+  projectId: string;
+  body: {};
 };
 export type GetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesApiResponse =
   /** status 200 Owned profiles in the project */ ManualRunEnvironmentProfile[];
@@ -3554,38 +3575,16 @@ export type TestScenarioSelectionResponse = {
   scenarioIds: string[];
   total: number;
 };
-export type TestScenarioFolder = {
-  id?: string;
-  projectId?: string;
-  parentId?: string | null;
-  name?: string;
-  description?: string | null;
-  position?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  scenarioCount?: number;
-  _count?: {
-    scenarios?: number;
-  };
-  children?: TestScenarioFolder[];
-};
-export type ManualTestRunExecutor = {
+export type ManualTestRunUser = {
   id: string;
   name: string;
   email: string;
 } | null;
-export type ManualTestRunStatus =
-  | "in_progress"
-  | "passed"
-  | "failed"
-  | "blocked"
-  | "skipped";
+export type ManualTestRunStatus = "in_progress" | "completed";
 export type ManualTestRun = {
-  /** Editable nonunique label; UUIDs remain entity identifiers */
-  runKey: string | null;
-  executedBy: ManualTestRunExecutor;
+  executedBy: ManualTestRunUser;
   status: ManualTestRunStatus;
-  notes: string | null;
+  completedBy: ManualTestRunUser;
   browser: string | null;
   operatingSystem: string | null;
   device: string | null;
@@ -3593,87 +3592,82 @@ export type ManualTestRun = {
   build: string | null;
   deployment: string | null;
 };
-export type ManualTestRunStepStatus =
-  | "not_started"
+export type ManualTestRunScenarioResult =
+  | "untested"
   | "passed"
   | "failed"
   | "blocked"
   | "skipped";
-export type ManualTestRunStep = {
-  status: ManualTestRunStepStatus;
-  notes: string | null;
+export type ManualTestRunScenario = {
+  position: number;
+  result: ManualTestRunScenarioResult;
+  assigneeId: string | null;
+  assignee: ManualTestRunUser;
+  resultBy: ManualTestRunUser;
 };
-export type ManualTestRunStepRead = {
+export type ManualTestRunScenarioStep = {};
+export type ManualTestRunScenarioStepRead = {
   id: string;
   position: number;
   action: string;
   expectedResult: string | null;
-  status: ManualTestRunStepStatus;
-  notes: string | null;
-  updatedAt: string;
+};
+export type ManualTestRunScenarioRead = {
+  id: string;
+  sourceScenarioId: string;
+  sourceScenarioKey: string;
+  title: string;
+  position: number;
+  details: string | null;
+  preconditions: string | null;
+  testData: string | null;
+  folderPath: string | null;
+  result: ManualTestRunScenarioResult;
+  assigneeId: string | null;
+  assignee: ManualTestRunUser;
+  resultById: string | null;
+  resultBy: ManualTestRunUser;
+  resultAt: string | null;
+  steps: ManualTestRunScenarioStepRead[];
 };
 export type ManualTestRunRead = {
   id: string;
   projectId: string;
-  sourceTestScenarioId: string;
-  /** Editable nonunique label; UUIDs remain entity identifiers */
-  runKey: string | null;
-  /** Scenario label captured when the run started */
-  sourceScenarioKey: string | null;
-  testScenarioId: string | null;
   executedById: string | null;
-  executedBy: ManualTestRunExecutor;
+  executedBy: ManualTestRunUser;
   status: ManualTestRunStatus;
   startedAt: string;
-  completedAt: string | null;
   updatedAt: string;
+  completedAt: string | null;
+  completedById: string | null;
+  completedBy: ManualTestRunUser;
+  skippedAtCompletion: number;
   title: string;
-  details: string | null;
-  preconditions: string | null;
-  testData: string | null;
-  notes: string | null;
   browser: string | null;
   operatingSystem: string | null;
   device: string | null;
   apiEnvironment: string | null;
   build: string | null;
   deployment: string | null;
-  steps: ManualTestRunStepRead[];
+  scenarios: ManualTestRunScenarioRead[];
 };
-export type ManualTestRunStartRequest = {
-  notes?: string | null;
-  runKey?: string | null;
-  environmentProfileId?: string;
-  browser?: string | null;
-  operatingSystem?: string | null;
-  device?: string | null;
-  apiEnvironment?: string | null;
-  build?: string | null;
-  deployment?: string | null;
-};
+export type ManualTestRunCreateRequest =
+  | {
+      scenarioIds: string[];
+    }
+  | {
+      suiteId: string;
+    };
 export type ManualTestRunSummary = {
-  /** Editable nonunique label; UUIDs remain entity identifiers */
-  runKey: string | null;
-  executedBy: ManualTestRunExecutor;
-  browser: string | null;
-  operatingSystem: string | null;
-  device: string | null;
-  apiEnvironment: string | null;
-  build: string | null;
-  deployment: string | null;
-  status: ManualTestRunStatus;
-};
-export type ManualTestRunSummaryRead = {
   id: string;
   projectId: string;
-  sourceTestScenarioId: string;
-  /** Editable nonunique label; UUIDs remain entity identifiers */
-  runKey: string | null;
-  /** Scenario label captured when the run started */
-  sourceScenarioKey: string | null;
-  testScenarioId: string | null;
   executedById: string | null;
-  executedBy: ManualTestRunExecutor;
+  executedBy: ManualTestRunUser;
+  status: ManualTestRunStatus;
+  startedAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  completedDay: string | null;
   title: string;
   browser: string | null;
   operatingSystem: string | null;
@@ -3681,10 +3675,12 @@ export type ManualTestRunSummaryRead = {
   apiEnvironment: string | null;
   build: string | null;
   deployment: string | null;
-  status: ManualTestRunStatus;
-  startedAt: string;
-  completedAt: string | null;
-  updatedAt: string;
+  scenarioCount: number;
+  untestedCount: number;
+  passedCount: number;
+  failedCount: number;
+  blockedCount: number;
+  skippedCount: number;
 };
 export type ManualTestRunPage = {
   runs: ManualTestRunSummary[];
@@ -3693,28 +3689,19 @@ export type ManualTestRunPage = {
   limit: number;
   totalPages: number;
 };
-export type ManualTestRunPageRead = {
-  runs: ManualTestRunSummaryRead[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+export type ManualTestRunScenarioOrderRequest = {
+  scenarioIds: string[];
 };
-export type ManualTestRunUpdateRequest = {
-  status?: ManualTestRunStatus;
-  notes?: string | null;
-  runKey?: string | null;
+export type ManualTestRunScenarioBulkRequest = {
+  scenarioIds: string[];
+  result?: ManualTestRunScenarioResult;
+  assigneeId?: string | null;
 };
-export type ManualTestRunExecutorReassignmentRequest = {
-  executedById: string;
+export type ManualTestRunScenarioResultRequest = {
+  result: ManualTestRunScenarioResult;
 };
-export type ManualTestRunStepUpdateRequest = {
-  status?: ManualTestRunStepStatus;
-  notes?: string | null;
-};
-export type ManualTestRunCompleteRequest = {
-  status: "passed" | "failed" | "blocked" | "skipped";
-  notes?: string | null;
+export type ManualTestRunScenarioAssigneeRequest = {
+  assigneeId: string | null;
 };
 export type ManualRunEnvironmentProfile = {
   id: string;
@@ -3889,17 +3876,17 @@ export const {
   usePostApiV2TestSuitesMoveRestorationMutation,
   usePutApiV2TestSuitesBySuiteIdMembersOrderMutation,
   usePatchApiV2TestScenariosBulkFolderMutation,
-  usePostApiV2TestScenariosByScenarioIdManualRunsMutation,
-  useGetApiV2TestScenariosByScenarioIdManualRunsQuery,
-  useLazyGetApiV2TestScenariosByScenarioIdManualRunsQuery,
+  usePostApiV2ManualTestRunsMutation,
   useGetApiV2ManualTestRunsQuery,
   useLazyGetApiV2ManualTestRunsQuery,
   useGetApiV2ManualTestRunsByRunIdQuery,
   useLazyGetApiV2ManualTestRunsByRunIdQuery,
-  usePatchApiV2ManualTestRunsByRunIdMutation,
-  usePatchApiV2ManualTestRunsByRunIdExecutorMutation,
-  usePatchApiV2ManualTestRunsByRunIdStepsAndStepIdMutation,
+  usePutApiV2ManualTestRunsByRunIdScenariosOrderMutation,
+  usePostApiV2ManualTestRunsByRunIdScenariosBulkMutation,
+  usePutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultMutation,
+  usePatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeMutation,
   usePostApiV2ManualTestRunsByRunIdCompleteMutation,
+  usePostApiV2ManualTestRunsByRunIdReopenMutation,
   useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery,
   useLazyGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery,
   usePostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesMutation,

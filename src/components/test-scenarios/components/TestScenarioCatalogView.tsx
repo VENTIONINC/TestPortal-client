@@ -67,13 +67,13 @@ import type {
   DeleteApiV2TestScenarioFoldersByFolderIdApiResponse,
   PostApiV2TestScenarioFoldersRestorationApiArg,
 } from '@/redux/apis/generatedApi';
+import { TestSuiteAddScenariosDialogContainer } from '@/components/test-scenarios/containers/TestSuiteAddScenariosDialogContainer';
+import type { TestScenarioContextMenuHandler } from '@/components/test-scenarios';
 
-import { TestSuiteAddScenariosDialogContainer } from '../containers/TestSuiteAddScenariosDialogContainer';
 import { SuitePicker } from './SuitePicker';
 import { getTestScenarioDetailPath } from '../constants';
 import { scenarioOriginSearch } from '../scenarioOrigin';
 import type { ScenarioOperationReport } from '../utils';
-import type { TestScenarioContextMenuHandler } from '../hooks/useTestScenarioContextMenu';
 import type { TestScenarioPagination, TestScenarioSummary } from '../types';
 
 type SuiteMembershipUndo = Pick<PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse, 'restoreData'> & {
@@ -171,6 +171,8 @@ export interface TestScenarioCatalogViewProps {
   selectAllMatching: () => Promise<void>;
   toggleSelected: (id: string) => void;
   selectOnlyScenario?: (id: string) => void;
+  onRunSelected: (scenarioIds: string[]) => Promise<void>;
+  onRunSuite: (suiteId: string) => Promise<void>;
   onMoveSelected: (folderId: string | null) => Promise<ScenarioOperationReport>;
   onMoveScenarioIds: (scenarioIds: string[], folderId: string | null) => Promise<ScenarioOperationReport>;
   restoreFolderDeletion: (restoreData: PostApiV2TestScenarioFoldersRestorationApiArg['body']['restoreData']) => Promise<void>;
@@ -1232,6 +1234,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   selectionError,
   selectAllMatching,
   toggleSelected,
+  onRunSelected,
+  onRunSuite,
   onMoveScenarioIds,
   restoreFolderDeletion,
   restoreScenarioFolders,
@@ -1283,6 +1287,25 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   const [isDraggingScenario, setIsDraggingScenario] = useState(false);
   const activeDrag = useRef<{ projectId: string; scenarioIds: string[] } | null>(null);
   const [operationFeedback, setOperationFeedback] = useState<string | null>(null);
+  const handleRunCreationError = (error: unknown) => {
+    if (currentProjectId.current !== projectId) return;
+    const status = error && typeof error === 'object' && 'status' in error
+      ? (error as { status: unknown }).status
+      : undefined;
+    const uncertain = status === 'FETCH_ERROR' || status === 'TIMEOUT_ERROR' || status === 'PARSING_ERROR' || (typeof status === 'number' && status >= 500);
+    setOperationFeedback(uncertain
+      ? 'The server did not confirm run creation. A run may have been created; check Manual runs before trying again.'
+      : `Could not start the run. ${getActionErrorMessage(error)}`);
+  };
+  const handleRunSelected = async () => {
+    if (!selectedIds.length || isExecutingOperation) return;
+    setOperationFeedback(null);
+    try {
+      await onRunSelected([...selectedIds]);
+    } catch (error) {
+      handleRunCreationError(error);
+    }
+  };
   const [pendingSuiteUndo, setPendingSuiteUndo] = useState<
     | { kind: 'membership'; payload: SuiteMembershipUndo; message: string }
     | { kind: 'move'; payload: SuiteMoveUndo; message: string }
@@ -1377,6 +1400,15 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   };
   const selectedSuite = scope.kind === CATALOG_SCOPE.suite ? suites.find((suite) => suite.id === scope.id) : undefined;
   const isSelectedSuiteEmpty = selectedSuite !== undefined && (selectedSuite.members?.length ?? 0) === 0;
+  const handleRunSuite = async () => {
+    if (!selectedSuite || isSelectedSuiteEmpty || isExecutingOperation) return;
+    setOperationFeedback(null);
+    try {
+      await onRunSuite(selectedSuite.id);
+    } catch (error) {
+      handleRunCreationError(error);
+    }
+  };
   const isEmptySuitesState = isSuitesTab && !organizationLoading && !organizationError && suites.length === 0;
   const activeColumnFilters = (Object.entries(columnFilters) as Array<[keyof typeof columnFilters, string]>).filter(
     ([, value]) => value.trim().length > 0,
@@ -2167,7 +2199,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                       >
                         <Button
                           variant="primary"
-                          aria-disabled={isSelectedSuiteEmpty || undefined}
+                          disabled={isSelectedSuiteEmpty || isExecutingOperation}
+                          loading={isExecutingOperation}
                           data-disabled={isSelectedSuiteEmpty ? '' : undefined}
                           cursor={isSelectedSuiteEmpty ? 'not-allowed' : 'pointer'}
                           bg={isSelectedSuiteEmpty ? 'button.primary.bg.disabled' : undefined}
@@ -2176,9 +2209,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                           _hover={
                             isSelectedSuiteEmpty ? { bg: 'button.primary.bg.disabled', boxShadow: 'none' } : undefined
                           }
-                          onClick={(event) => {
-                            if (isSelectedSuiteEmpty) event.preventDefault();
-                          }}
+                          onClick={() => void handleRunSuite()}
                         >
                           <FiPlay aria-hidden="true" />
                           Run suite
@@ -2638,6 +2669,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         size="sm"
                         variant="ghost"
                         color="white"
+                        disabled={isExecutingOperation || isResolvingSelection}
+                        loading={isExecutingOperation}
+                        onClick={() => void handleRunSelected()}
                         _hover={{ bg: 'whiteAlpha.200', color: 'white' }}
                         _active={{ bg: 'whiteAlpha.300', color: 'white' }}
                         _focusVisible={{ outline: '2px solid', outlineColor: 'blue.300', outlineOffset: '2px' }}

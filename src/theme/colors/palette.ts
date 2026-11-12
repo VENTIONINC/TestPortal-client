@@ -96,6 +96,7 @@ export const grey_alpha_4300 = 'rgba(178, 178, 178, 0.1)';
 // Orange
 export const orange_100 = '#FF874D'; // status/warning
 export const orange_200 = '#E69A2D'; // status/warning
+export const orange_300 = '#A86F00'; // status/blocked
 export const orange_alpha_300 = 'rgba(255, 135, 77, 0.15)';
 export const orange_alpha_400 = 'rgba(230, 154, 45, 0.15)';
 export const orange_alpha_500 = 'rgba(227, 116, 0, 0.2)';

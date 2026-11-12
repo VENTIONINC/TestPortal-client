@@ -10,7 +10,7 @@ import { ChakraProvider } from '@/components/ui';
 import { TestScenariosPage } from '@/pages/TestScenarios';
 import { ScenarioPageTabs } from '@/pages/TestScenarios/TestManagementTabs';
 
-const projectState = vi.hoisted(() => ({ id: 'project-1', missingCounts: false, refreshingCounts: false, failedCounts: false, requestedProjects: [] as string[] }));
+const projectState = vi.hoisted(() => ({ id: 'project-1', missingCounts: false, refreshingCounts: false, failedCounts: false, requestedProjects: [] as string[], runArgs: [] as Array<{ show?: string; period?: string }>, activeRunCount: undefined as number | undefined }));
 const catalogTab = vi.hoisted(() => vi.fn());
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProject: () => ({ selectedProjectId: projectState.id }) }));
 vi.mock('@/redux/apis/generatedApi', () => ({
@@ -33,11 +33,16 @@ vi.mock('@/redux/apis/extendedApi', () => ({
     isFetching: projectState.refreshingCounts,
     error: projectState.failedCounts ? { status: 500 } : undefined,
   }),
-  useGetApiV2ManualTestRunsQuery: (arg: { projectId: string }) => ({
-    currentData: projectState.missingCounts ? undefined : { total: arg.projectId === 'project-1' ? 27 : 4 },
-    isFetching: projectState.refreshingCounts,
-    error: projectState.failedCounts ? { status: 500 } : undefined,
-  }),
+  useGetApiV2ManualTestRunsQuery: (arg: { projectId: string; show?: string; period?: string }) => {
+    projectState.runArgs.push(arg);
+    return {
+      currentData: projectState.missingCounts
+        ? undefined
+        : { total: projectState.activeRunCount ?? (arg.projectId === 'project-1' ? 27 : 4) },
+      isFetching: projectState.refreshingCounts,
+      error: projectState.failedCounts ? { status: 500 } : undefined,
+    };
+  },
 }));
 
 vi.mock('@/components/ui/components/Templates/MainTemplate', () => ({
@@ -76,6 +81,15 @@ describe('TestScenariosPage', () => {
     projectState.failedCounts = false;
     projectState.id = 'project-1';
     projectState.requestedProjects = [];
+    projectState.runArgs = [];
+    projectState.activeRunCount = undefined;
+  });
+
+  it('counts only runs in progress, including zero', () => {
+    projectState.activeRunCount = 0;
+    renderPage();
+    expect(screen.getByRole('tab', { name: /Manual runs 0/ })).toBeInTheDocument();
+    expect(projectState.runArgs).toContainEqual(expect.objectContaining({ show: 'in_progress', period: 'any_time' }));
   });
 
   it('opens Suites from a project-scoped suite return link', () => {

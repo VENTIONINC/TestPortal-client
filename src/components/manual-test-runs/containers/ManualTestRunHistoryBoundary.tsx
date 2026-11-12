@@ -1,33 +1,21 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ReactNode } from 'react';
-import { useParams } from 'react-router';
+import { Link, useParams } from 'react-router';
+import { Box, Heading, Text } from '@chakra-ui/react';
 
+import { PATHS } from '@/types/paths';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
-
-import { ManualTestRunHistoryContainer } from './ManualTestRunHistoryContainer';
+import { ManualTestRunHistoryContainer } from '@/components/manual-test-runs';
 
 export const ManualTestRunHistoryBoundary = () => {
   const { selectedProjectId } = useSelectedProject();
-  const { scenarioId } = useParams<{ scenarioId?: string }>();
-  const normalizedScenarioId = scenarioId?.trim() || undefined;
+  const { runId, scenarioId } = useParams<{ runId?: string; scenarioId?: string }>();
+  const normalizedRunId = runId?.trim() || undefined;
 
   if (!selectedProjectId) return null;
 
-  return (
-    <ManualTestRunHistoryScope key={`${selectedProjectId}:${normalizedScenarioId ?? 'project'}`} projectId={selectedProjectId} scenarioId={normalizedScenarioId}>
-      {({ projectId, scenarioId: scopedScenarioId }) => <ManualTestRunHistoryContainer projectId={projectId} scenarioId={scopedScenarioId} />}
-    </ManualTestRunHistoryScope>
-  );
-};
+  if (scenarioId) return <Box p={6}><Heading size="md">Scenario-specific history is no longer available</Heading><Text mt={2}>Manual runs can now contain multiple scenarios. Browse project runs to find the run you need.</Text><Box mt={4}><Link to={PATHS.MANUAL_TEST_RUNS}>View project runs</Link></Box></Box>;
 
-const ManualTestRunHistoryScope = ({
-  projectId,
-  scenarioId,
-  children,
-}: {
-  projectId: string;
-  scenarioId?: string;
-  children: (scope: { projectId: string; scenarioId?: string }) => ReactNode;
-}) => <>{children({ projectId, scenarioId })}</>;
+  return <ManualTestRunHistoryContainer key={selectedProjectId} projectId={selectedProjectId} selectedRunId={normalizedRunId} />;
+};

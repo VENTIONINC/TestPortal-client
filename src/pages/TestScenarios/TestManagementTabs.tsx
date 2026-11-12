@@ -7,6 +7,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
 import { useGetApiV2ManualTestRunsQuery, useGetApiV2TestSuitesQuery } from '@/redux/apis/extendedApi';
 import { useGetApiV2TestScenariosQuery } from '@/redux/apis/generatedApi';
+import { MANUAL_RUN_PERIOD, MANUAL_RUN_STATUS } from '@/components/manual-test-runs/constants';
 import { getScenarioOrigin } from '@/components/test-scenarios/scenarioOrigin';
 
 import './TestManagementTabs.css';
@@ -23,7 +24,7 @@ export function TestManagementTabList({ onNavigate }: { onNavigate?: (tab: TestM
   const projectId = selectedProjectId ?? '';
   const scenarios = useGetApiV2TestScenariosQuery({ projectId, page: 1, limit: 1 }, { skip: !selectedProjectId });
   const suites = useGetApiV2TestSuitesQuery({ projectId }, { skip: !selectedProjectId });
-  const runs = useGetApiV2ManualTestRunsQuery({ projectId, page: 1, limit: 1 }, { skip: !selectedProjectId });
+  const runs = useGetApiV2ManualTestRunsQuery({ projectId, page: 1, limit: 1, show: MANUAL_RUN_STATUS.IN_PROGRESS, period: MANUAL_RUN_PERIOD.ANY_TIME }, { skip: !selectedProjectId });
   const counts = [
     scenarios.isFetching || scenarios.error ? undefined : scenarios.currentData?.total,
     suites.isFetching || suites.error ? undefined : suites.currentData?.length,
