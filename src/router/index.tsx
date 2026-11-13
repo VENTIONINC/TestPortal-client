@@ -21,7 +21,6 @@ import {
   TestScenarioDetailPage,
   TestScenarioEditPage,
   TestScenariosPage,
-  ManualTestRunPage,
   ManualTestRunHistoryPage,
   UserSettingsPage,
 } from '@/pages';
@@ -162,23 +161,12 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: PATHS.MANUAL_TEST_RUNS,
+    path: `${PATHS.MANUAL_TEST_RUNS}/:runId?`,
     errorElement: <RouterErrorFallback />,
     element: (
       <ProtectedRoute>
         <ProjectGuard>
           <ManualTestRunHistoryPage />
-        </ProjectGuard>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: PATHS.MANUAL_TEST_RUN_DETAILS,
-    errorElement: <RouterErrorFallback />,
-    element: (
-      <ProtectedRoute>
-        <ProjectGuard>
-          <ManualTestRunPage />
         </ProjectGuard>
       </ProtectedRoute>
     ),

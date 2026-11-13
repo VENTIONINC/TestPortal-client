@@ -23,6 +23,7 @@ import {
   usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation,
   usePostApiV2TestSuitesMovesMutation,
   usePostApiV2TestSuitesMoveRestorationMutation,
+  usePostApiV2ManualTestRunsMutation,
 } from '@/redux/apis/extendedApi';
 import {
   useDeleteApiV2TestScenariosByScenarioIdMutation,
@@ -35,6 +36,7 @@ import {
   type GetApiV2TestScenariosPriorityCountsApiArg,
   type PostApiV2TestScenarioFoldersRestorationApiArg,
 } from '@/redux/apis/generatedApi';
+import type { ManualTestRunCreateRequest, ManualTestRunRead } from '@/redux/apis/generatedApi';
 
 import { TEST_SCENARIO_PAGE_LIMIT, TEST_SCENARIO_PAGE_SIZES, type TestScenarioPageSize } from '../constants';
 import { executeScenarioOperation, flattenScenarioFolders, toggleScenarioSelection, type ScenarioOperationReport } from '../utils';
@@ -90,6 +92,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [createSuiteRequest] = usePostApiV2TestSuitesMutation();
   const [updateSuiteRequest] = usePatchApiV2TestSuitesBySuiteIdMutation();
   const [deleteSuiteRequest] = useDeleteApiV2TestSuitesBySuiteIdMutation();
+  const [createManualTestRunRequest] = usePostApiV2ManualTestRunsMutation();
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
   const suitesQuery = useGetApiV2TestSuitesQuery({ projectId });
   const newlyCreatedFolderId = useRef<string | null>(null);
@@ -401,6 +404,23 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       setIsExecutingOperation(false);
     }
   }, []);
+  const createManualRun = useCallback(async (source: ManualTestRunCreateRequest): Promise<ManualTestRunRead | null> => {
+    if (operationLock.current) throw new Error('Another catalog action is still running.');
+    if ('scenarioIds' in source && source.scenarioIds.length === 0)
+      throw new Error('Select at least one scenario to start a run.');
+    operationLock.current = true;
+    setIsExecutingOperation(true);
+    try {
+      const run = await createManualTestRunRequest({
+        projectId,
+        manualTestRunCreateRequest: source,
+      }).unwrap();
+      return currentProjectId.current === projectId ? run : null;
+    } finally {
+      operationLock.current = false;
+      setIsExecutingOperation(false);
+    }
+  }, [createManualTestRunRequest, projectId]);
   const moveScenarioIds = useCallback(
     async (idsToMove: string[], folderId: string | null): Promise<ScenarioOperationReport> => {
       return runOperation(async () => {
@@ -676,6 +696,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     selectionError,
     allMatchingSelected,
     isExecutingOperation,
+    createManualRun,
     toggleSelected,
     selectOnlyScenario,
     moveSelected,

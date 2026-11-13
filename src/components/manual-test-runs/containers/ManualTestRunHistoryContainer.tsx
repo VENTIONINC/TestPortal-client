@@ -3,55 +3,21 @@
 
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { useSelector } from 'react-redux';
 
-import type { RootState } from '@/redux/store';
-import { getUserIdFromToken } from '@/utils/auth';
-import type { ManualTestRunSummaryRead } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
-
-import { ManualTestRunHistoryView } from '../components/ManualTestRunHistoryView';
-import { useManualTestRunHistory } from '../hooks/useManualTestRunHistory';
+import { ManualTestRunWorkspace } from '@/components/manual-test-runs';
 
 export interface ManualTestRunHistoryContainerProps {
   projectId: string;
-  scenarioId?: string;
+  selectedRunId?: string;
 }
 
-export const ManualTestRunHistoryContainer = ({ projectId, scenarioId }: ManualTestRunHistoryContainerProps) => {
-  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
-  const currentUserId = accessToken ? getUserIdFromToken(accessToken) : null;
+export const ManualTestRunHistoryContainer = ({ projectId, selectedRunId }: ManualTestRunHistoryContainerProps) => {
   const navigate = useNavigate();
-  const history = useManualTestRunHistory(projectId, scenarioId);
-  const onSourceHistory = useCallback((run: ManualTestRunSummaryRead) => {
-    navigate(PATHS.MANUAL_TEST_RUNS, {
-      state: { manualTestRunHistory: { sourceTestScenarioId: run.sourceTestScenarioId } },
+  const onSelectRun = useCallback((runId: string) => {
+    navigate(runId ? PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(runId)) : PATHS.MANUAL_TEST_RUNS, {
+      state: { from: 'manual-test-run-history' },
     });
   }, [navigate]);
-
-  return (
-    <ManualTestRunHistoryView
-      currentUserId={currentUserId}
-      data={history.data}
-      error={history.error}
-      isLoading={history.isLoading}
-      isFetching={history.isFetching}
-      isNotFound={history.isNotFound}
-      filters={history.filters}
-      dateError={history.dateError}
-      isFiltered={history.isFiltered}
-      isProjectHistory={history.isProjectHistory}
-      onStatusChange={history.setStatus}
-      onSourceChange={history.setSourceTestScenarioId}
-      onStartDateChange={history.setStartedOnOrAfter}
-      onEndDateChange={history.setStartedOnOrBefore}
-      onSourceKeyChange={(value) => history.setSourceScenarioKey(value)}
-      onApplyFilters={history.applyFilters}
-      onClearFilters={history.clearFilters}
-      onPageChange={history.setPage}
-      onRetry={history.retry}
-      onProjectHistory={history.goToProjectHistory}
-      onSourceHistory={onSourceHistory}
-    />
-  );
+  return <ManualTestRunWorkspace projectId={projectId} selectedRunId={selectedRunId} onSelectRun={onSelectRun} />;
 };

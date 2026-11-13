@@ -119,6 +119,8 @@ const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination
   onCreateSuite: vi.fn(async () => {}),
   onUpdateSuite: vi.fn(async () => {}),
   onDeleteSuite: vi.fn(async () => {}),
+  onRunSelected: vi.fn(async () => {}),
+  onRunSuite: vi.fn(async () => {}),
 };
 
 const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>
@@ -152,7 +154,7 @@ describe('TestScenarioCatalogView', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Actions for Checkout flow' }));
     expect(onScenarioActions).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: 'scenario-1', title: 'Checkout flow' }));
   });
-  it('disables Run suite for an empty suite and provides its delayed tooltip without opening a run', async () => {
+  it('disables Run suite for an empty suite and provides its delayed tooltip', async () => {
     const user = userEvent.setup();
     renderView({
       organizationTab: 'suites',
@@ -161,27 +163,29 @@ describe('TestScenarioCatalogView', () => {
     });
 
     const runSuite = screen.getByRole('button', { name: 'Run suite' });
-    expect(runSuite).toHaveAttribute('aria-disabled', 'true');
-    expect(runSuite).not.toBeDisabled();
+    expect(runSuite).toBeDisabled();
     expect(runSuite.parentElement).toHaveAttribute('data-tooltip-content', 'Add scenarios to run this suite');
     expect(runSuite.parentElement).toHaveAttribute('data-tooltip-open-delay', '500');
 
     await user.click(runSuite);
+    expect(defaultProps.onRunSuite).not.toHaveBeenCalled();
     expect(screen.queryByText(/New manual run/i)).not.toBeInTheDocument();
   });
 
-  it('keeps Run suite inert for a suite with scenarios', async () => {
+  it('starts the selected suite run when Run suite is activated', async () => {
+    const onRunSuite = vi.fn(async () => {});
     const user = userEvent.setup();
     renderView({
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-populated' },
       suites: [{ id: 'suite-populated', name: 'Populated suite', description: null, purpose: null, release: null, membershipRevision: 0, members: [{ testScenarioId: 'scenario-1' }] }],
+      onRunSuite,
     });
 
     const runSuite = screen.getByRole('button', { name: 'Run suite' });
     expect(runSuite).not.toHaveAttribute('aria-disabled', 'true');
     await user.click(runSuite);
-    expect(screen.queryByText(/New manual run/i)).not.toBeInTheDocument();
+    expect(onRunSuite).toHaveBeenCalledWith('suite-populated');
     expect(runSuite.parentElement).not.toHaveAttribute('data-tooltip-content', 'Add scenarios to run this suite');
   });
 
@@ -1029,6 +1033,15 @@ describe('TestScenarioCatalogView', () => {
     const toolbar = screen.getByRole('toolbar', { name: 'Bulk scenario actions' });
     expect(screen.queryByRole('button', { name: 'More bulk actions' })).not.toBeInTheDocument();
     expect(toolbar.textContent).toMatch(/Run selected.*Add to suite.*Delete/);
+  });
+
+  it('starts one run with the selected scenario IDs and preserves selection after an uncertain response', async () => {
+    const onRunSelected = vi.fn(async () => { throw { status: 'FETCH_ERROR' }; });
+    renderView({ selectedIds: ['scenario-1', 'scenario-2'], onRunSelected });
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Run selected' }));
+    expect(onRunSelected).toHaveBeenCalledWith(['scenario-1', 'scenario-2']);
+    expect(await screen.findByText(/A run may have been created/)).toBeInTheDocument();
+    expect(screen.getByText('2 selected')).toBeInTheDocument();
   });
 
   it('hides the bulk Move menu in suite scope while retaining membership actions', () => {

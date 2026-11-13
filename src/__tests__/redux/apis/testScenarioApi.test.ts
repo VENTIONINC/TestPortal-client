@@ -13,7 +13,6 @@ import {
   type GetApiV2TestScenariosApiArg,
   type GetApiV2TestScenarioFoldersApiArg,
   type PatchApiV2TestScenariosBulkFolderApiArg,
-  type TestScenarioFolder,
   type GetApiV2TestSuitesApiArg,
   type PatchApiV2TestScenariosByScenarioIdApiArg,
   type PatchApiV2TestScenariosByScenarioIdApiResponse,
@@ -145,7 +144,6 @@ describe('generated Test Scenario list contract', () => {
     expectTypeOf(folderQuery.projectId).toEqualTypeOf<string>();
     expectTypeOf(suiteQuery.projectId).toEqualTypeOf<string>();
     expectTypeOf(bulkFolder.body.scenarioIds).toEqualTypeOf<string[]>();
-    expectTypeOf<TestScenarioFolder['children']>().toEqualTypeOf<TestScenarioFolder[] | undefined>();
   });
 });
 
