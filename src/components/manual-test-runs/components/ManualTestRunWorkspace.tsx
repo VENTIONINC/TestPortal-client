@@ -11,7 +11,7 @@ import {
   HStack,
   IconButton,
   Input,
-  NativeSelect,
+  Menu,
   Popover,
   Portal,
   Table,
@@ -19,12 +19,13 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import { Link, useNavigate } from 'react-router';
-import { FiCheck, FiChevronDown, FiChevronLeft, FiChevronRight, FiFlag, FiSearch, FiSkipForward, FiSlash, FiSliders, FiUserPlus, FiX } from 'react-icons/fi';
+import { FiCheck, FiCheckCircle, FiChevronDown, FiChevronLeft, FiChevronRight, FiEdit, FiFlag, FiInfo, FiMoreHorizontal, FiRotateCcw, FiSearch, FiSkipForward, FiSlash, FiSliders, FiTrash2, FiUserPlus, FiX } from 'react-icons/fi';
 
 import {
   useGetApiV2ManualTestRunsQuery,
   useGetApiV2ManualTestRunsByRunIdQuery,
   useLazyGetApiV2UsersQuery,
+  useDeleteManualTestRunMutation,
   usePostApiV2ManualTestRunsByRunIdCompleteMutation,
   usePostApiV2ManualTestRunsByRunIdReopenMutation,
   usePostApiV2ManualTestRunsByRunIdScenariosBulkMutation,
@@ -39,7 +40,8 @@ import type {
   ManualTestRunScenarioResult,
 } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
-import { orange_300 } from '@/theme/colors/palette';
+import { grey_2100, orange_300 } from '@/theme/colors/palette';
+import { NativeSelect } from '@/components/ui';
 
 import { MANUAL_RUN_PERIOD, MANUAL_RUN_RESULT, MANUAL_RUN_SHOW, MANUAL_RUN_STATUS, UNASSIGNED_FILTER_VALUE } from '../constants';
 
@@ -64,6 +66,17 @@ const periods = [
 ] as const;
 
 const dateLabel = (date?: string | null) => (date ? new Date(date).toLocaleString() : '—');
+const completedDayLabel = (day: string) => {
+  if (day === 'Completed') return day;
+  const date = new Date(`${day}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return day;
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return 'Today';
+  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+};
 
 const shortName = (name: string) => {
   const parts = name.trim().split(/\s+/);
@@ -98,14 +111,14 @@ const AssigneeOptions = ({ users, selectedId, onSelect }: {
   <VStack align="stretch" gap={0}>
     {users.map((user) => (
       <Button key={user.id} size="sm" variant="ghost" justifyContent="flex-start" px={2}
-        bg={selectedId === user.id ? 'blue.subtle' : undefined}
+        bg={selectedId === user.id ? 'blue.50' : undefined}
         onClick={() => onSelect(user.id)} title={user.name}>
         <AssigneeAvatar name={user.name} />
         <Text overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">{shortName(user.name)}</Text>
       </Button>
     ))}
     <Button size="sm" variant="ghost" justifyContent="flex-start" px={2}
-      bg={selectedId === null ? 'blue.subtle' : undefined} onClick={() => onSelect(null)}>
+      bg={selectedId === null ? 'blue.50' : undefined} onClick={() => onSelect(null)}>
       <AssigneeAvatar />
       Unassigned
     </Button>
@@ -136,10 +149,16 @@ const AssigneePicker = ({ scenario, users, disabled, onOpen, onChange }: Assigne
           aria-label={`Assignee for ${scenario.title}`}
           variant="ghost"
           size="xs"
+          fontSize="13px"
           w="full"
           minW={0}
           p={0}
           justifyContent="flex-start"
+          bg="transparent"
+          cursor={disabled ? 'not-allowed' : 'pointer'}
+          _hover={{ bg: 'transparent' }}
+          _active={{ bg: 'transparent' }}
+          _expanded={{ bg: 'transparent' }}
           disabled={disabled}
           title={scenario.assignee?.name ?? 'Unassigned'}
         >
@@ -353,6 +372,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   }, [filtersOpen]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const activeRunFilterCount = Number(show !== MANUAL_RUN_STATUS.IN_PROGRESS) + Number(period !== MANUAL_RUN_PERIOD.RECENT);
   const [runPage, setRunPage] = useState(1);
   const [scenarioSearch, setScenarioSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
@@ -364,7 +384,9 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const [currentRun, setCurrentRun] = useState<ManualTestRunRead>();
   const [feedback, setFeedback] = useState<string>();
   const [completionOpen, setCompletionOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [expandedScenarioId, setExpandedScenarioId] = useState<string>();
+  const deletedRunRef = useRef<{ projectId: string; runId: string } | null>(null);
   const draggedScenarioId = useRef<string | undefined>(undefined);
   const scopeRef = useRef({ projectId, selectedRunId });
   scopeRef.current = { projectId, selectedRunId };
@@ -383,6 +405,16 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     timeZone,
     ...(period === MANUAL_RUN_PERIOD.CUSTOM ? { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined } : {}),
   });
+  const completedCountQuery = useGetApiV2ManualTestRunsQuery({
+    projectId, page: 1, limit: 1, search: runSearch || undefined,
+    show: MANUAL_RUN_STATUS.COMPLETED, period, timeZone,
+    ...(period === MANUAL_RUN_PERIOD.CUSTOM ? { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined } : {}),
+  }, { skip: show !== MANUAL_RUN_SHOW.ALL });
+  const inProgressCountQuery = useGetApiV2ManualTestRunsQuery({
+    projectId, page: 1, limit: 1, search: runSearch || undefined,
+    show: MANUAL_RUN_STATUS.IN_PROGRESS, period, timeZone,
+    ...(period === MANUAL_RUN_PERIOD.CUSTOM ? { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined } : {}),
+  }, { skip: show !== MANUAL_RUN_SHOW.ALL });
   const allRunsQuery = useGetApiV2ManualTestRunsQuery({
     projectId,
     page: 1,
@@ -398,6 +430,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     { skip: !selectedRunId },
   );
   const [loadUsers, usersQuery] = useLazyGetApiV2UsersQuery();
+  const [deleteRun] = useDeleteManualTestRunMutation();
   const [completeRun] = usePostApiV2ManualTestRunsByRunIdCompleteMutation();
   const [reopenRun] = usePostApiV2ManualTestRunsByRunIdReopenMutation();
   const [bulkScenarios] = usePostApiV2ManualTestRunsByRunIdScenariosBulkMutation();
@@ -416,6 +449,8 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     return [...groups.entries()];
   }, [listedRuns]);
   const activeRuns = listedRuns.filter((item) => item.status === MANUAL_RUN_STATUS.IN_PROGRESS);
+  const completedCount = show === MANUAL_RUN_SHOW.ALL ? completedCountQuery.currentData?.total : listQuery.currentData?.total;
+  const inProgressCount = show === MANUAL_RUN_SHOW.ALL ? inProgressCountQuery.currentData?.total : listQuery.currentData?.total;
   const run = currentRun?.id === selectedRunId ? currentRun : detailQuery.currentData;
   const completed = run?.status === MANUAL_RUN_STATUS.COMPLETED;
   const untestedCount = run?.scenarios.filter((scenario) => scenario.result === MANUAL_RUN_RESULT.UNTESTED).length ?? 0;
@@ -427,6 +462,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     setScenarioPage(1);
     setExpandedScenarioId(undefined);
     setCompletionOpen(false);
+    setDeleteOpen(false);
     setIsSaving(false);
   }, [projectId, selectedRunId]);
   useEffect(() => {
@@ -434,8 +470,9 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
       setCurrentRun(detailQuery.currentData);
   }, [detailQuery.currentData, projectId, selectedRunId]);
   useEffect(() => {
-    if (!selectedRunId && listedRuns[0]) onSelectRun(listedRuns[0].id);
-  }, [listedRuns, onSelectRun, selectedRunId]);
+    const next = listedRuns.find((item) => !(deletedRunRef.current?.projectId === projectId && deletedRunRef.current.runId === item.id));
+    if (!selectedRunId && next) onSelectRun(next.id);
+  }, [listedRuns, onSelectRun, projectId, selectedRunId]);
   useEffect(() => {
     setRunPage(1);
   }, [runSearch, show, period, dateFrom, dateTo]);
@@ -546,6 +583,25 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
       saveOrder({ projectId, runId: run.id, manualTestRunScenarioOrderRequest: { scenarioIds: ids } }).unwrap(),
     );
   };
+  const deleteSelectedRun = async () => {
+    if (!run || isSaving) return;
+    setIsSaving(true);
+    try {
+      await deleteRun({ projectId, runId: run.id }).unwrap();
+      if (!isCurrentScope()) return;
+      deletedRunRef.current = { projectId, runId: run.id };
+      setDeleteOpen(false);
+      setCurrentRun(undefined);
+      onSelectRun('');
+    } catch {
+      if (isCurrentScope()) {
+        setDeleteOpen(false);
+        setFeedback('Could not delete the run. Please try again.');
+      }
+    } finally {
+      if (isCurrentScope()) setIsSaving(false);
+    }
+  };
   const complete = async () => {
     if (!run || completed || isSaving) return;
     setIsSaving(true);
@@ -605,12 +661,29 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
 
   const renderRun = (item: (typeof listedRuns)[number]) => {
     const markedCount = item.scenarioCount - item.untestedCount;
+    if (item.status === MANUAL_RUN_STATUS.COMPLETED) {
+      const resultLabel = item.failedCount > 0 ? 'Failed' : item.blockedCount > 0 || item.skippedCount > 0 ? 'Blocked or skipped' : 'Passed';
+      const resultColor = resultLabel === 'Failed' ? 'red.500' : resultLabel === 'Blocked or skipped' ? orange_300 : 'green.500';
+      return (
+        <Button key={item.id} variant="ghost" bg={selectedRunId === item.id ? 'blue.50' : undefined}
+          h="auto" minH="0" w="full" px={2} py={2} justifyContent="flex-start" textAlign="left"
+          onClick={() => onSelectRun(item.id)}>
+          <HStack align="start" w="full" gap={2}>
+            <Box boxSize="7px" borderRadius="full" bg={resultColor} flexShrink={0} mt="7px" role="img" aria-label={resultLabel} />
+            <VStack align="stretch" gap={0} minW={0} flex="1">
+              <Text fontSize="sm" fontWeight="medium" truncate title={item.title}>{item.title}</Text>
+              <Text fontSize="xs" color="fg.muted">{item.passedCount}/{item.scenarioCount} passed</Text>
+            </VStack>
+          </HStack>
+        </Button>
+      );
+    }
     return (
       <Button
         key={item.id}
         variant={selectedRunId === item.id ? 'subtle' : 'ghost'}
         colorPalette={selectedRunId === item.id ? 'blue' : undefined}
-        bg={selectedRunId === item.id ? 'blue.subtle' : undefined}
+        bg={selectedRunId === item.id ? 'blue.50' : undefined}
         textAlign="left"
         justifyContent="flex-start"
         h="auto"
@@ -725,19 +798,25 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
             <Button
               size="sm"
               h="36px"
+              w="36px"
+              minW="36px"
               variant="outline"
-              px={2}
-              borderColor={filtersOpen ? 'blue.500' : undefined}
-              aria-label="Filters"
+              p={0}
+              position="relative"
+              bg={activeRunFilterCount ? 'blue.50' : undefined}
+              color={activeRunFilterCount ? 'blue.fg' : undefined}
+              borderColor={filtersOpen || activeRunFilterCount ? 'blue.500' : undefined}
+              aria-label={activeRunFilterCount ? `Filters, ${activeRunFilterCount} active` : 'Filters'}
               title="Filters"
               onClick={() => setFiltersOpen((open) => !open)}
               aria-expanded={filtersOpen}
               aria-controls="manual-run-filters"
             >
               <FiSliders />
-              {(show !== MANUAL_RUN_STATUS.IN_PROGRESS ? 1 : 0) + (period !== MANUAL_RUN_PERIOD.RECENT ? 1 : 0) > 0 && (
-                <Badge colorPalette="blue">
-                  {(show !== MANUAL_RUN_STATUS.IN_PROGRESS ? 1 : 0) + (period !== MANUAL_RUN_PERIOD.RECENT ? 1 : 0)}
+              {activeRunFilterCount > 0 && (
+                <Badge position="absolute" top="-6px" right="-6px" borderRadius="full" bg="blue.500" color="white"
+                  minW="18px" h="18px" p={0} display="grid" placeItems="center" fontSize="xs" aria-hidden="true">
+                  {activeRunFilterCount}
                 </Badge>
               )}
             </Button>
@@ -777,8 +856,8 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                       w="100%"
                       justifyContent="space-between"
                       fontWeight="normal"
-                      bg={show === value ? 'blue.subtle' : undefined}
-                      onClick={() => setShow(value)}
+                      bg={show === value ? 'blue.50' : undefined}
+                      onClick={() => { setShow(value); setFiltersOpen(false); }}
                     >
                       {label}
                       {show === value && (
@@ -809,8 +888,8 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                       textAlign="left"
                       whiteSpace="normal"
                       fontWeight="normal"
-                      bg={period === value ? 'blue.subtle' : undefined}
-                      onClick={() => setPeriod(value)}
+                      bg={period === value ? 'blue.50' : undefined}
+                      onClick={() => { setPeriod(value); if (value !== MANUAL_RUN_PERIOD.CUSTOM) setFiltersOpen(false); }}
                     >
                       <Box>
                         <Text>{label}</Text>
@@ -850,13 +929,13 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
             )}
           </HStack>
         )}
-        {!noRunsYet && (
+        {!noRunsYet && show !== MANUAL_RUN_STATUS.COMPLETED && (
           <HStack justify="space-between" px={1} mt={2}>
             <Text fontSize="sm" fontWeight="medium">
-              {show === MANUAL_RUN_STATUS.IN_PROGRESS ? 'In progress' : 'Runs'}
+              In progress
             </Text>
             <Text color="fg.muted" fontSize="xs">
-              {listQuery.currentData?.total ?? 0}
+              {inProgressCount ?? 0}
             </Text>
           </HStack>
         )}
@@ -882,16 +961,20 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
         ) : (
           <>
             {activeRuns.map(renderRun)}
-            {completedGroups.map(([day, groupRuns]) => (
-              <VStack key={day} align="stretch" gap={1} mt={2}>
-                <Text fontSize="xs" fontWeight="semibold" color="fg.muted">
-                  {day === 'Completed'
-                    ? day
-                    : new Date(`${day}T12:00:00`).toLocaleDateString(undefined, { dateStyle: 'full' })}
-                </Text>
-                {groupRuns.map(renderRun)}
+            {completedGroups.length > 0 && (
+              <VStack align="stretch" gap={1} mt={2}>
+                <HStack justify="space-between" px={1}>
+                  <Text fontSize="sm" fontWeight="medium">Completed · {period === MANUAL_RUN_PERIOD.RECENT ? 'last 7 days' : periods.find(([value]) => value === period)?.[1]?.toLowerCase()}</Text>
+                  <Text fontSize="xs" color="fg.muted">{completedCount ?? 0}</Text>
+                </HStack>
+                {completedGroups.map(([day, groupRuns]) => (
+                  <VStack key={day} align="stretch" gap={1} mt={2}>
+                    <Text fontSize="xs" color="fg.muted" px={1}>{completedDayLabel(day)}</Text>
+                    {groupRuns.map(renderRun)}
+                  </VStack>
+                ))}
               </VStack>
-            ))}
+            )}
           </>
         )}
         {listQuery.currentData && listQuery.currentData.totalPages > 1 && (
@@ -978,12 +1061,15 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
             <HStack justify="space-between" align="start" wrap="wrap">
               <Box>
                 <HStack>
-                  <Heading size="md">{run.title}</Heading>
+                  <Heading size="md" fontSize="18px">{run.title}</Heading>
                   <Badge
-                    colorPalette={completed ? 'gray' : 'blue'}
+                    colorPalette={completed ? 'green' : 'blue'}
+                    bg={completed ? 'green.subtle' : 'blue.subtle'}
+                    color={completed ? 'green.fg' : undefined}
+                    borderWidth="0"
                     borderRadius="full"
                     px={3}
-                    py={1}
+                    py={0}
                     fontSize="xs"
                     fontWeight="medium"
                     textTransform="none"
@@ -1006,13 +1092,14 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
               </Box>
               <HStack>
                 {completed ? (
-                  <Button size="sm" variant="outline" disabled={isSaving} onClick={() => void reopen()}>
-                    Reopen
+                  <Button size="sm" h="40px" variant="outline" disabled={isSaving} onClick={() => void reopen()}>
+                    <FiRotateCcw aria-hidden="true" /> Reopen
                   </Button>
                 ) : (
                   <Button
                     ref={completionTriggerRef}
                     size="sm"
+                    h="40px"
                     variant="outline"
                     disabled={isSaving}
                     onClick={(event) => requestCompletion(event.currentTarget)}
@@ -1020,20 +1107,46 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                     <FiFlag /> Complete run
                   </Button>
                 )}
+                <Menu.Root positioning={{ placement: 'bottom-end' }}>
+                  <Menu.Trigger asChild>
+                    <IconButton size="sm" h="40px" w="40px" variant="outline" aria-label="Run actions">
+                      <FiMoreHorizontal aria-hidden="true" />
+                    </IconButton>
+                  </Menu.Trigger>
+                  <Portal>
+                    <Menu.Positioner>
+                      <Menu.Content minW="210px" bg="bg.panel" p={1}>
+                        <Menu.Item value="edit" disabled={completed}>
+                          <FiEdit aria-hidden="true" />
+                          Edit run details
+                        </Menu.Item>
+                        <Menu.Separator />
+                        <Menu.Item value="delete" color="fg.error" disabled={isSaving} onClick={() => setDeleteOpen(true)}>
+                          <FiTrash2 aria-hidden="true" />
+                          Delete run
+                        </Menu.Item>
+                      </Menu.Content>
+                    </Menu.Positioner>
+                  </Portal>
+                </Menu.Root>
               </HStack>
             </HStack>
             {completed && (
-              <Box role="status" borderRadius="md" bg="bg.subtle" p={3}>
-                <Text fontWeight="semibold">Run completed · Results are locked</Text>
-                <Text fontSize="sm" color="fg.muted">
-                  Reopen the run to make changes. Existing results will be preserved.
+              <HStack role="status" borderRadius="md" bg="green.subtle" color="green.fg" p={3} align="start">
+                <Box as={FiCheckCircle} flexShrink={0} mt="0.5" aria-hidden="true" />
+                <Text fontSize="sm">
+                  Completed{run.completedAt ? ` ${new Date(run.completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}
+                  {run.completedBy?.name ? ` by ${run.completedBy.name}` : ''}.
+                  {run.skippedAtCompletion > 0 && ` ${run.skippedAtCompletion} untested ${run.skippedAtCompletion === 1 ? 'scenario was' : 'scenarios were'} marked Skipped.`}
+                  {' '}The results are locked; reopen the run to change them.
                 </Text>
-              </Box>
+              </HStack>
             )}
             {!completed && marked === run.scenarios.length && run.scenarios.length > 0 && (
-              <Box role="status" borderRadius="md" bg="blue.subtle" p={3}>
-                <Text>All scenarios are marked. Complete the run to lock its results.</Text>
-              </Box>
+              <HStack role="status" borderRadius="md" bg="blue.subtle" color="blue.fg" minH="46px" px={4} py={2}>
+                <Box as={FiInfo} boxSize="14px" flexShrink={0} aria-hidden="true" />
+                <Text fontSize="14px">All scenarios are marked. Complete the run to finish it: its results are then locked until you reopen it.</Text>
+              </HStack>
             )}
             <Box position="absolute" w="1px" h="1px" overflow="hidden" clipPath="inset(50%)">
               {(
@@ -1206,7 +1319,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                       onKeyDown={(event) => activateResult(scenario, event)}
                       bg={
                         selectedScenarioIds.includes(scenario.id)
-                          ? 'blue.subtle'
+                          ? 'blue.50'
                           : scenario.result === MANUAL_RUN_RESULT.PASSED
                             ? 'green.subtle'
                             : scenario.result === MANUAL_RUN_RESULT.FAILED
@@ -1268,9 +1381,9 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                                 lineHeight="1"
                                 colorPalette={palettes[result]}
                                 variant={scenario.result === result ? 'solid' : 'outline'}
-                                bg={scenario.result === result ? (result === MANUAL_RUN_RESULT.BLOCKED ? orange_300 : undefined) : 'bg.panel'}
-                                borderColor={scenario.result === result ? (result === MANUAL_RUN_RESULT.BLOCKED ? orange_300 : undefined) : 'border.main'}
-                                _hover={scenario.result === result && result === MANUAL_RUN_RESULT.BLOCKED ? { bg: orange_300 } : undefined}
+                                bg={scenario.result === result ? (result === MANUAL_RUN_RESULT.BLOCKED ? orange_300 : result === MANUAL_RUN_RESULT.SKIPPED ? grey_2100 : undefined) : 'bg.panel'}
+                                borderColor={scenario.result === result ? (result === MANUAL_RUN_RESULT.BLOCKED ? orange_300 : result === MANUAL_RUN_RESULT.SKIPPED ? grey_2100 : undefined) : 'border.main'}
+                                _hover={scenario.result === result && (result === MANUAL_RUN_RESULT.BLOCKED || result === MANUAL_RUN_RESULT.SKIPPED) ? { bg: result === MANUAL_RUN_RESULT.BLOCKED ? orange_300 : grey_2100 } : undefined}
                                 aria-label={`${scenario.title}: mark ${resultLabels[result]}`}
                                 aria-pressed={scenario.result === result}
                                 title={`${resultLabels[result]} (${result[0].toUpperCase()})`}
@@ -1287,7 +1400,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                       <Table.Cell>
                         <VStack align="start" gap={0} minW={0}>
                           <HStack gap={1} align="center" maxW="full" minW={0}>
-                            <Text fontWeight="medium" lineClamp={1} title={scenario.title}>
+                            <Text fontWeight="medium" minW={0} overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={scenario.title}>
                               {scenario.title}
                             </Text>
                             <Button
@@ -1295,7 +1408,8 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                               variant="ghost"
                               minW="5"
                               h="5"
-                              px={1}
+                              p={0}
+                              flexShrink={0}
                               aria-label={`Instructions for ${scenario.title}`}
                               aria-expanded={expandedScenarioId === scenario.id}
                               onClick={() =>
@@ -1341,7 +1455,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                           )}
                         </VStack>
                       </Table.Cell>
-                      <Table.Cell overflowWrap="anywhere">{scenario.folderPath ?? 'Unfiled'}</Table.Cell>
+                      <Table.Cell fontSize="13px" overflowWrap="anywhere">{scenario.folderPath ?? 'Unfiled'}</Table.Cell>
                       <Table.Cell>
                         <AssigneePicker scenario={scenario} users={usersQuery.currentData ?? []}
                           disabled={completed || isSaving} onOpen={() => void loadUsers()}
@@ -1353,18 +1467,21 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
               </Table.Root>
             </Box>
             <HStack justify="space-between" wrap="wrap">
-              <Text fontSize="sm" color="fg.muted">
+              <Text fontSize="sm" color="text.secondary">
                 {filteredScenarios.length
                   ? `${(scenarioPage - 1) * scenarioPageSize + 1}–${Math.min(scenarioPage * scenarioPageSize, filteredScenarios.length)} of ${filteredScenarios.length}`
                   : 'No scenarios match these filters.'}
               </Text>
-              <HStack gap={2}>
-                <Text fontSize="xs" color="fg.muted">
+              <HStack as="nav" aria-label="Run scenarios pagination" gap={2}>
+                <Text fontSize="sm" color="text.secondary" whiteSpace="nowrap">
                   Rows per page
                 </Text>
-                <NativeSelect.Root size="xs" width="72px">
-                  <NativeSelect.Field
+                <Box w="64px">
+                  <NativeSelect
                     aria-label="Rows per page"
+                    h="8"
+                    bg="bg.card"
+                    ps={2}
                     value={scenarioPageSize}
                     onChange={(event) => {
                       setScenarioPageSize(Number(event.target.value));
@@ -1375,11 +1492,10 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                     <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
-                  </NativeSelect.Field>
-                  <NativeSelect.Indicator />
-                </NativeSelect.Root>
-                <Button
-                  size="xs"
+                  </NativeSelect>
+                </Box>
+                <IconButton
+                  size="sm"
                   variant="outline"
                   aria-label="Previous page"
                   disabled={scenarioPage <= 1}
@@ -1389,9 +1505,9 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                   }}
                 >
                   <FiChevronLeft />
-                </Button>
-                <Button
-                  size="xs"
+                </IconButton>
+                <IconButton
+                  size="sm"
                   variant="outline"
                   aria-label="Next page"
                   disabled={scenarioPage >= scenarioPageCount}
@@ -1401,10 +1517,10 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                   }}
                 >
                   <FiChevronRight />
-                </Button>
+                </IconButton>
               </HStack>
             </HStack>
-            {!completed && (
+            {!completed && visibleScenarios.length > 1 && (
               <Text fontSize="xs" color="fg.muted">
                 Drag rows to change the order.
               </Text>
@@ -1484,25 +1600,45 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
           </>
         )}
       </VStack>
+      {deleteOpen && (
+        <Box position="fixed" inset="0" bg="blackAlpha.600" display="grid" placeItems="center" zIndex="modal">
+          <VStack role="alertdialog" aria-modal="true" aria-labelledby="delete-run-title" align="stretch" bg="bg.panel" borderRadius="lg" p={6} maxW="460px" shadow="lg">
+            <Heading id="delete-run-title" size="md">Delete this run?</Heading>
+            <Text>This permanently deletes the run and its results. This cannot be undone.</Text>
+            <HStack justify="end">
+              <Button variant="outline" disabled={isSaving} onClick={() => setDeleteOpen(false)}>Cancel</Button>
+              <Button colorPalette="red" disabled={isSaving} onClick={() => void deleteSelectedRun()}>Delete run</Button>
+            </HStack>
+          </VStack>
+        </Box>
+      )}
       {completionOpen && (
         <Box position="fixed" inset="0" bg="blackAlpha.600" display="grid" placeItems="center" zIndex="modal">
           <VStack
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="complete-run-title"
+            aria-describedby="complete-run-description"
             align="stretch"
             bg="bg.panel"
-            borderRadius="lg"
+            borderRadius="xl"
             p={6}
-            maxW="460px"
+            gap={4}
+            w="calc(100% - 32px)"
+            maxW="420px"
             shadow="lg"
           >
-            <Heading id="complete-run-title" size="md">
-              Complete this run?
-            </Heading>
-            <Text>
-              {untestedCount} of {run?.scenarios.length} scenarios are still untested. Completing the run will mark them
-              Skipped and lock all results.
+            <HStack align="center" gap={3}>
+              <Box display="grid" placeItems="center" boxSize="40px" flexShrink={0} borderRadius="lg" bg="blue.subtle" color="blue.fg">
+                <FiFlag aria-hidden="true" />
+              </Box>
+              <Heading id="complete-run-title" fontSize="18px" lineHeight="short">
+                Complete the run with {untestedCount} untested?
+              </Heading>
+            </HStack>
+            <Text id="complete-run-description" fontSize="14px" lineHeight="1.5" color="text.secondary">
+              {untestedCount} of {run?.scenarios.length} {run?.scenarios.length === 1 ? 'scenario has' : 'scenarios have'} no status yet. Completing the run
+              {' '}marks {untestedCount === 1 ? 'it' : 'them'} as Skipped. The results are locked afterwards; reopen the run to change them.
             </Text>
             <HStack justify="end">
               <Button ref={cancelRef} variant="outline" disabled={isSaving} onClick={cancelCompletion}>

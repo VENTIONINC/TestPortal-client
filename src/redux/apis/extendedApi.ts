@@ -320,6 +320,10 @@ export const extendedApi = generatedApi
   })
   .injectEndpoints({
     endpoints: (build) => ({
+      deleteManualTestRun: build.mutation<void, { projectId: string; runId: string }>({
+        query: ({ projectId, runId }) => ({ url: `/api/v2/manual-test-runs/${encodeURIComponent(runId)}`, method: 'DELETE', params: { projectId } }),
+        invalidatesTags: (_result, error, { projectId }) => error ? [] : [manualTestRunProjectHistoryTag(projectId)],
+      }),
       getResults: build.query<GetResultsResponse, GetResultsRequest>({
         query: (params) => {
           const filteredParams = Object.fromEntries(
@@ -445,6 +449,7 @@ export const {
   usePostApiV2ManualTestRunsByRunIdScenariosBulkMutation,
   usePutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultMutation,
   usePatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeMutation,
+  useDeleteManualTestRunMutation,
   usePostApiV2ManualTestRunsByRunIdCompleteMutation,
   usePostApiV2ManualTestRunsByRunIdReopenMutation,
   useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery,

@@ -15,7 +15,7 @@ export interface ManualTestRunHistoryContainerProps {
 export const ManualTestRunHistoryContainer = ({ projectId, selectedRunId }: ManualTestRunHistoryContainerProps) => {
   const navigate = useNavigate();
   const onSelectRun = useCallback((runId: string) => {
-    navigate(PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(runId)), {
+    navigate(runId ? PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(runId)) : PATHS.MANUAL_TEST_RUNS, {
       state: { from: 'manual-test-run-history' },
     });
   }, [navigate]);
