@@ -33,7 +33,7 @@ import {
   usePutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultMutation,
   usePutApiV2ManualTestRunsByRunIdScenariosOrderMutation,
 } from '@/redux/apis/extendedApi';
-import { useGetApiV2TestScenariosQuery } from '@/redux/apis/generatedApi';
+import { useGetApiV2TestScenariosQuery, usePutApiV2ManualTestRunsByRunIdDetailsMutation } from '@/redux/apis/generatedApi';
 import type {
   ManualTestRunRead,
   ManualTestRunScenarioRead,
@@ -41,8 +41,9 @@ import type {
 } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
 import { grey_2100, orange_300 } from '@/theme/colors/palette';
-import { NativeSelect } from '@/components/ui';
+import { NativeSelect, Tooltip } from '@/components/ui';
 
+import { ManageScenariosDialog } from './ManageScenariosDialog';
 import { MANUAL_RUN_PERIOD, MANUAL_RUN_RESULT, MANUAL_RUN_SHOW, MANUAL_RUN_STATUS, UNASSIGNED_FILTER_VALUE } from '../constants';
 
 const RUN_PAGE_SIZE = 20;
@@ -53,6 +54,12 @@ const resultLabels: Record<ManualTestRunScenarioResult, string> = {
   failed: 'Failed',
   blocked: 'Blocked',
   skipped: 'Skipped',
+};
+const resultExplanations: Record<(typeof RESULTS)[number], string> = {
+  passed: 'Every step gave the expected result.',
+  failed: 'At least one step gave a different result than expected. Add a comment or a bug link.',
+  blocked: 'Could not be checked right now, for example because the test stand is down, test data is missing, or another bug is in the way. Retest later in this run.',
+  skipped: 'Deliberately not checked in this run. Untested scenarios also become Skipped when the run is completed early.',
 };
 const periods = [
   [MANUAL_RUN_PERIOD.RECENT, 'Recent'],
@@ -385,6 +392,13 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const [feedback, setFeedback] = useState<string>();
   const [completionOpen, setCompletionOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [manageOpen, setManageOpen] = useState(false);
+  const [editScenarioPage, setEditScenarioPage] = useState(1);
+  const [editTitle, setEditTitle] = useState('');
+  const [editScenarioIds, setEditScenarioIds] = useState<string[]>([]);
+  const [editEnvironment, setEditEnvironment] = useState<Array<{ name: string; value: string }>>([]);
+  const [confirmRemovedResults, setConfirmRemovedResults] = useState(false);
   const [expandedScenarioId, setExpandedScenarioId] = useState<string>();
   const deletedRunRef = useRef<{ projectId: string; runId: string } | null>(null);
   const draggedScenarioId = useRef<string | undefined>(undefined);
@@ -424,7 +438,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     timeZone,
   });
   const noRunsYet = !allRunsQuery.isLoading && !allRunsQuery.error && allRunsQuery.currentData?.total === 0;
-  const scenarioCountQuery = useGetApiV2TestScenariosQuery({ projectId, page: 1, limit: 1 });
+  const scenarioCountQuery = useGetApiV2TestScenariosQuery({ projectId, page: editScenarioPage, limit: 100 });
   const detailQuery = useGetApiV2ManualTestRunsByRunIdQuery(
     { projectId, runId: selectedRunId ?? '' },
     { skip: !selectedRunId },
@@ -437,6 +451,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const [setScenarioAssignee] = usePatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeMutation();
   const [setScenarioResult] = usePutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultMutation();
   const [saveOrder] = usePutApiV2ManualTestRunsByRunIdScenariosOrderMutation();
+  const [saveDetails] = usePutApiV2ManualTestRunsByRunIdDetailsMutation();
   const listedRuns = useMemo(() => listQuery.currentData?.runs ?? [], [listQuery.currentData?.runs]);
   const noRunsInProgress = Boolean(allRunsQuery.currentData?.total) && !runSearch &&
     show === MANUAL_RUN_STATUS.IN_PROGRESS && period === MANUAL_RUN_PERIOD.RECENT && listedRuns.length === 0;
@@ -454,6 +469,13 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const run = currentRun?.id === selectedRunId ? currentRun : detailQuery.currentData;
   const completed = run?.status === MANUAL_RUN_STATUS.COMPLETED;
   const untestedCount = run?.scenarios.filter((scenario) => scenario.result === MANUAL_RUN_RESULT.UNTESTED).length ?? 0;
+  const selectedScenarios = useMemo(() => {
+    const selectedIds = new Set(selectedScenarioIds);
+    return (run?.scenarios ?? []).filter((scenario) => selectedIds.has(scenario.id));
+  }, [run?.scenarios, selectedScenarioIds]);
+  const selectionIsResolved = selectedScenarioIds.length > 0 && selectedScenarios.length === selectedScenarioIds.length;
+  const bulkStatusWillReset = (result: ManualTestRunScenarioResult) =>
+    selectionIsResolved && selectedScenarios.every((scenario) => scenario.result === result);
 
   useEffect(() => {
     setCurrentRun(undefined);
@@ -535,16 +557,19 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     await detailQuery.refetch();
   };
   const mutate = async (operation: () => Promise<ManualTestRunRead>) => {
-    if (!run || completed || isSaving) return;
+    if (!run || completed || isSaving) return false;
     setIsSaving(true);
     setFeedback(undefined);
+    let saved = false;
     try {
       acceptRun(await operation());
+      saved = true;
     } catch (error) {
       await recover(error);
     } finally {
       if (isCurrentScope()) setIsSaving(false);
     }
+    return saved;
   };
   const updateResult = (scenario: ManualTestRunScenarioRead, result: ManualTestRunScenarioResult) =>
     mutate(async () =>
@@ -572,6 +597,37 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
         manualTestRunScenarioBulkRequest: { scenarioIds: selectedScenarioIds, ...input },
       }).unwrap(),
     );
+  const openEdit = () => {
+    if (!run || completed || isSaving) return;
+    setEditScenarioPage(1);
+    setEditTitle(run.title);
+    setEditScenarioIds(run.scenarios.map((scenario) => scenario.sourceScenarioId));
+    setEditEnvironment(run.environmentProperties.map((property) => ({ ...property })));
+    setConfirmRemovedResults(false);
+    setEditOpen(true);
+  };
+  const commitEdit = async (confirmed = false, selectedIds = editScenarioIds) => {
+    if (!run || completed || isSaving || !editTitle.trim() || !selectedIds.length) return;
+    const selected = new Set(selectedIds);
+    const removedMarked = run.scenarios.filter((scenario) => !selected.has(scenario.sourceScenarioId) && scenario.result !== MANUAL_RUN_RESULT.UNTESTED).length;
+    if (removedMarked > 0 && !confirmed) {
+      setConfirmRemovedResults(true);
+      return;
+    }
+    const saved = await mutate(async () => saveDetails({
+      projectId,
+      runId: run.id,
+      manualTestRunDetailsRequest: {
+        title: editTitle.trim(),
+        scenarioIds: selectedIds,
+        environmentProperties: editEnvironment.filter((item) => item.name.trim() && item.value.trim()).map((item) => ({ name: item.name.trim(), value: item.value.trim() })),
+      },
+    }).unwrap());
+    if (!saved) return;
+    setEditOpen(false);
+    setManageOpen(false);
+    setConfirmRemovedResults(false);
+  };
   const reorderScenarios = (sourceId: string, targetId: string) => {
     if (!run || sourceId === targetId) return;
     const ids = run.scenarios.map((item) => item.id);
@@ -756,7 +812,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
               size="xs"
               variant="ghost"
               aria-label="New manual run"
-              onClick={() => navigate(PATHS.TEST_SCENARIOS)}
+              onClick={() => navigate(PATHS.MANUAL_TEST_RUN_NEW)}
             >
               ＋
             </Button>
@@ -949,15 +1005,20 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
             </Button>
           </Box>
         ) : listedRuns.length === 0 ? (
-          <Text color="fg.muted" fontSize="md" mt={noRunsYet ? 2 : undefined}>
-            {runSearch
-              ? 'No runs match your search.'
-              : noRunsInProgress
-                ? 'No runs in progress'
-                : allRunsQuery.currentData?.total
-                  ? 'No runs match these filters.'
-                  : 'No runs yet'}
-          </Text>
+          <VStack align="start" gap={2} mt={noRunsYet ? 2 : undefined}>
+            <Text color="fg.muted" fontSize="md">
+              {runSearch
+                ? `No runs match “${runSearch}” for ${periods.find(([value]) => value === period)?.[1]?.toLowerCase()}.`
+                : noRunsInProgress
+                  ? 'No runs in progress'
+                  : allRunsQuery.currentData?.total
+                    ? 'No runs match these filters.'
+                    : 'No runs yet'}
+            </Text>
+            {allRunsQuery.currentData?.total && period !== MANUAL_RUN_PERIOD.ANY_TIME && (
+              <Button size="xs" variant="outline" onClick={() => setPeriod(MANUAL_RUN_PERIOD.ANY_TIME)}>Search any time</Button>
+            )}
+          </VStack>
         ) : (
           <>
             {activeRuns.map(renderRun)}
@@ -1030,15 +1091,15 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
             </Text>
             {noRunsInProgress ? (
               <Box asChild color="blue.500" fontSize="sm" _hover={{ textDecoration: 'underline' }}>
-                <Link to={PATHS.TEST_SCENARIOS}>＋ New manual run</Link>
+                <Link to={PATHS.MANUAL_TEST_RUN_NEW}>＋ New manual run</Link>
               </Box>
             ) : (scenarioCountQuery.currentData?.total ?? 0) > 0 ? (
               noRunsYet ? (
                 <Box asChild color="blue.500" fontSize="sm" _hover={{ textDecoration: 'underline' }}>
-                  <Link to={PATHS.TEST_SCENARIOS}>＋ New manual run</Link>
+                  <Link to={PATHS.MANUAL_TEST_RUN_NEW}>＋ New manual run</Link>
                 </Box>
               ) : (
-                <Button colorPalette="blue" onClick={() => navigate(PATHS.TEST_SCENARIOS)}>
+                <Button colorPalette="blue" onClick={() => navigate(PATHS.MANUAL_TEST_RUN_NEW)}>
                   New manual run
                 </Button>
               )
@@ -1091,6 +1152,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                 </Text>
               </Box>
               <HStack>
+                {!completed && <Button size="sm" h="40px" variant="outline" disabled={isSaving} onClick={() => { setEditTitle(run.title); setEditEnvironment(run.environmentProperties.map((property) => ({ ...property }))); setConfirmRemovedResults(false); setManageOpen(true); }}>Manage scenarios</Button>}
                 {completed ? (
                   <Button size="sm" h="40px" variant="outline" disabled={isSaving} onClick={() => void reopen()}>
                     <FiRotateCcw aria-hidden="true" /> Reopen
@@ -1116,7 +1178,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                   <Portal>
                     <Menu.Positioner>
                       <Menu.Content minW="210px" bg="bg.panel" p={1}>
-                        <Menu.Item value="edit" disabled={completed}>
+                        <Menu.Item value="edit" disabled={completed || isSaving} title={completed ? 'Reopen the run before editing its details.' : undefined} onClick={openEdit}>
                           <FiEdit aria-hidden="true" />
                           Edit run details
                         </Menu.Item>
@@ -1142,10 +1204,10 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                 </Text>
               </HStack>
             )}
-            {!completed && marked === run.scenarios.length && run.scenarios.length > 0 && (
+            {!completed && run.hasBeenReopened && marked === run.scenarios.length && run.scenarios.length > 0 && (
               <HStack role="status" borderRadius="md" bg="blue.subtle" color="blue.fg" minH="46px" px={4} py={2}>
                 <Box as={FiInfo} boxSize="14px" flexShrink={0} aria-hidden="true" />
-                <Text fontSize="14px">All scenarios are marked. Complete the run to finish it: its results are then locked until you reopen it.</Text>
+                <Text fontSize="14px">This run was reopened. All scenarios are marked and results are editable again. Complete the run to lock them.</Text>
               </HStack>
             )}
             <Box position="absolute" w="1px" h="1px" overflow="hidden" clipPath="inset(50%)">
@@ -1386,7 +1448,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                                 _hover={scenario.result === result && (result === MANUAL_RUN_RESULT.BLOCKED || result === MANUAL_RUN_RESULT.SKIPPED) ? { bg: result === MANUAL_RUN_RESULT.BLOCKED ? orange_300 : grey_2100 } : undefined}
                                 aria-label={`${scenario.title}: mark ${resultLabels[result]}`}
                                 aria-pressed={scenario.result === result}
-                                title={`${resultLabels[result]} (${result[0].toUpperCase()})`}
+                                title={`${resultLabels[result]} (${result[0].toUpperCase()}). ${resultExplanations[result]} ${scenario.result === result ? 'Select again to reset this scenario to Untested.' : `Select to mark this scenario ${resultLabels[result]}.`}`}
                                 disabled={completed || isSaving}
                                 onClick={() => void updateResult(scenario, result)}
                               >
@@ -1400,9 +1462,9 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                       <Table.Cell>
                         <VStack align="start" gap={0} minW={0}>
                           <HStack gap={1} align="center" maxW="full" minW={0}>
-                            <Text fontWeight="medium" minW={0} overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={scenario.title}>
-                              {scenario.title}
-                            </Text>
+                            <Box asChild fontWeight="medium" minW={0} overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap" title={scenario.title}>
+                              <Link to={`/manual-test-runs/${encodeURIComponent(run.id)}/scenarios/${encodeURIComponent(scenario.id)}`} aria-label={`Open ${scenario.title}`}>{scenario.title}</Link>
+                            </Box>
                             <Button
                               size="xs"
                               variant="ghost"
@@ -1550,36 +1612,53 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                 <Text fontSize="sm" color="gray.400" px={2} borderLeftWidth="1px" borderColor="gray.600">
                   Mark as
                 </Text>
-                {RESULTS.map((result) => (
-                  <Button
-                    key={result}
-                    size="xs"
-                    variant="ghost"
-                    color="white"
-                    _hover={{ bg: 'gray.700', color: 'white' }}
-                    _active={{ bg: 'gray.600', color: 'white' }}
-                    flexShrink={0}
-                    disabled={isSaving}
-                    aria-label={`Mark selected ${resultLabels[result]}`}
-                    onClick={() => void updateBulk({ result })}
-                  >
-                    <Box
-                      w="2"
-                      h="2"
-                      borderRadius="full"
-                      bg={
-                        result === MANUAL_RUN_RESULT.PASSED
-                          ? 'green.500'
-                          : result === MANUAL_RUN_RESULT.FAILED
-                            ? 'red.500'
-                            : result === MANUAL_RUN_RESULT.BLOCKED
-                              ? orange_300
-                              : 'gray.400'
+                {RESULTS.map((result) => {
+                  const willReset = bulkStatusWillReset(result);
+                  const label = resultLabels[result];
+                  return (
+                    <Tooltip
+                      key={result}
+                      openDelay={500}
+                      closeDelay={0}
+                      contentProps={{ maxW: '240px' }}
+                      content={
+                        `${resultExplanations[result]} ${
+                          willReset
+                            ? `Click to reset all selected scenarios to Untested.`
+                            : `Click to mark all selected scenarios as ${label}.`
+                        }`
                       }
-                    />
-                    {resultLabels[result]}
-                  </Button>
-                ))}
+                    >
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        color="white"
+                        _hover={{ bg: 'gray.700', color: 'white' }}
+                        _active={{ bg: 'gray.600', color: 'white' }}
+                        flexShrink={0}
+                        disabled={isSaving}
+                        aria-label={willReset ? 'Reset selected scenarios to Untested' : `Mark selected ${label}`}
+                        onClick={() => void updateBulk({ result: willReset ? MANUAL_RUN_RESULT.UNTESTED : result })}
+                      >
+                        <Box
+                          w="2"
+                          h="2"
+                          borderRadius="full"
+                          bg={
+                            result === MANUAL_RUN_RESULT.PASSED
+                              ? 'green.500'
+                              : result === MANUAL_RUN_RESULT.FAILED
+                                ? 'red.500'
+                                : result === MANUAL_RUN_RESULT.BLOCKED
+                                  ? orange_300
+                                  : 'gray.400'
+                          }
+                        />
+                        {label}
+                      </Button>
+                    </Tooltip>
+                  );
+                })}
                 <Box h="24px" borderLeftWidth="1px" borderColor="gray.600" mx={1} flexShrink={0} />
                 <BulkAssigneePicker count={selectedScenarioIds.length} users={usersQuery.currentData ?? []}
                   disabled={isSaving} onOpen={() => void loadUsers()}
@@ -1600,11 +1679,27 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
           </>
         )}
       </VStack>
+      {manageOpen && run && <ManageScenariosDialog projectId={projectId} runTitle={run.title} existing={run.scenarios} saving={isSaving} onClose={() => { setManageOpen(false); setConfirmRemovedResults(false); }} onSelectionChange={() => setConfirmRemovedResults(false)} warning={confirmRemovedResults} onSave={(ids) => void commitEdit(confirmRemovedResults, ids)} />}
+      {editOpen && run && (
+        <Box position="fixed" inset="0" bg="blackAlpha.600" display="grid" placeItems="center" zIndex="modal" p={4}>
+          <VStack role="dialog" aria-modal="true" aria-labelledby="edit-run-title" align="stretch" bg="bg.panel" borderRadius="lg" p={6} w="100%" maxW="680px" maxH="90vh" overflowY="auto" gap={4}>
+            <HStack justify="space-between"><Heading id="edit-run-title" size="md">Edit run details</Heading><IconButton aria-label="Close" variant="ghost" onClick={() => setEditOpen(false)}><FiX /></IconButton></HStack>
+            <Box><Text mb={1}>Run name</Text><Input aria-label="Run name" value={editTitle} onChange={(event) => setEditTitle(event.target.value)} /></Box>
+            <Box><Text fontWeight="semibold" mb={2}>Scenarios · {editScenarioIds.length} selected</Text><VStack align="stretch" maxH="240px" overflowY="auto" borderWidth="1px" borderColor="border" borderRadius="md" p={2}>
+              {(scenarioCountQuery.currentData?.scenarios ?? []).map((scenario) => <label key={scenario.id}><input type="checkbox" checked={editScenarioIds.includes(scenario.id)} onChange={() => setEditScenarioIds((ids) => ids.includes(scenario.id) ? ids.filter((id) => id !== scenario.id) : [...ids, scenario.id])} /> {scenario.scenarioKey} {scenario.title}</label>)}
+              {run.scenarios.filter((scenario) => !(scenarioCountQuery.currentData?.scenarios ?? []).some((item) => item.id === scenario.sourceScenarioId)).map((scenario) => <label key={scenario.sourceScenarioId}><input type="checkbox" checked={editScenarioIds.includes(scenario.sourceScenarioId)} onChange={() => setEditScenarioIds((ids) => ids.includes(scenario.sourceScenarioId) ? ids.filter((id) => id !== scenario.sourceScenarioId) : [...ids, scenario.sourceScenarioId])} /> {scenario.sourceScenarioKey} {scenario.title} (in run)</label>)}
+            </VStack><HStack mt={2}><Button size="xs" variant="outline" disabled={editScenarioPage <= 1} onClick={() => setEditScenarioPage((page) => page - 1)}>Previous page</Button><Text fontSize="sm">Page {editScenarioPage} of {scenarioCountQuery.currentData?.totalPages ?? 1}</Text><Button size="xs" variant="outline" disabled={editScenarioPage >= (scenarioCountQuery.currentData?.totalPages ?? 1)} onClick={() => setEditScenarioPage((page) => page + 1)}>Next page</Button></HStack></Box>
+            <Box><Text fontWeight="semibold" mb={2}>Environment</Text>{editEnvironment.map((property, index) => <HStack key={index} mb={2}><Input aria-label={`Environment name ${index + 1}`} value={property.name} onChange={(event) => setEditEnvironment((items) => items.map((item, row) => row === index ? { ...item, name: event.target.value } : item))} placeholder="Name" /><Input aria-label={`Environment value ${index + 1}`} value={property.value} onChange={(event) => setEditEnvironment((items) => items.map((item, row) => row === index ? { ...item, value: event.target.value } : item))} placeholder="Value" /><Button aria-label={`Remove environment ${index + 1}`} variant="ghost" onClick={() => setEditEnvironment((items) => items.filter((_, row) => row !== index))}>×</Button></HStack>)}<Button size="sm" variant="outline" onClick={() => setEditEnvironment((items) => [...items, { name: '', value: '' }])}>Add property</Button></Box>
+            {confirmRemovedResults && <Text role="alert" color="orange.700">Removing these scenarios will also remove {run.scenarios.filter((scenario) => !editScenarioIds.includes(scenario.sourceScenarioId) && scenario.result !== MANUAL_RUN_RESULT.UNTESTED).length} saved results. Save these changes?</Text>}
+            <HStack justify="end"><Button variant="outline" disabled={isSaving} onClick={() => { setEditOpen(false); setConfirmRemovedResults(false); }}>Cancel</Button><Button colorPalette="blue" disabled={isSaving || !editTitle.trim() || editScenarioIds.length === 0} onClick={() => void commitEdit(confirmRemovedResults)}>{confirmRemovedResults ? 'Remove results and save' : 'Save changes'}</Button></HStack>
+          </VStack>
+        </Box>
+      )}
       {deleteOpen && (
         <Box position="fixed" inset="0" bg="blackAlpha.600" display="grid" placeItems="center" zIndex="modal">
           <VStack role="alertdialog" aria-modal="true" aria-labelledby="delete-run-title" align="stretch" bg="bg.panel" borderRadius="lg" p={6} maxW="460px" shadow="lg">
-            <Heading id="delete-run-title" size="md">Delete this run?</Heading>
-            <Text>This permanently deletes the run and its results. This cannot be undone.</Text>
+            <Heading id="delete-run-title" size="md">Delete “{run?.title}”?</Heading>
+            <Text>This permanently deletes the run, its {run?.scenarios.length ?? 0} scenarios ({marked} marked), results, comments, defect links, and status history. This cannot be undone. Scenarios and suite membership remain in the catalog.</Text>
             <HStack justify="end">
               <Button variant="outline" disabled={isSaving} onClick={() => setDeleteOpen(false)}>Cancel</Button>
               <Button colorPalette="red" disabled={isSaving} onClick={() => void deleteSelectedRun()}>Delete run</Button>

@@ -22,6 +22,8 @@ export const addTagTypes = [
   "Exports",
   "Test Scenarios",
   "Manual Test Runs",
+  "Manual Test Run History",
+  "Manual Test Run Detail",
   "Manual Run Environment Profiles",
 ] as const;
 const injectedRtkApi = api
@@ -1319,7 +1321,11 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ["Manual Test Runs"],
+        invalidatesTags: [
+          "Manual Test Runs",
+          "Manual Test Run History",
+          "Manual Test Run Detail",
+        ],
       }),
       getApiV2ManualTestRuns: build.query<
         GetApiV2ManualTestRunsApiResponse,
@@ -1339,7 +1345,7 @@ const injectedRtkApi = api
             dateTo: queryArg.dateTo,
           },
         }),
-        providesTags: ["Manual Test Runs"],
+        providesTags: ["Manual Test Runs", "Manual Test Run History"],
       }),
       getApiV2ManualTestRunsByRunId: build.query<
         GetApiV2ManualTestRunsByRunIdApiResponse,
@@ -1351,8 +1357,62 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ["Manual Test Runs"],
+        providesTags: ["Manual Test Runs", "Manual Test Run Detail"],
       }),
+      deleteApiV2ManualTestRunsByRunId: build.mutation<
+        DeleteApiV2ManualTestRunsByRunIdApiResponse,
+        DeleteApiV2ManualTestRunsByRunIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}`,
+          method: "DELETE",
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: [
+          "Manual Test Runs",
+          "Manual Test Run History",
+          "Manual Test Run Detail",
+        ],
+      }),
+      putApiV2ManualTestRunsByRunIdDetails: build.mutation<
+        PutApiV2ManualTestRunsByRunIdDetailsApiResponse,
+        PutApiV2ManualTestRunsByRunIdDetailsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/manual-test-runs/${queryArg.runId}/details`,
+          method: "PUT",
+          body: queryArg.manualTestRunDetailsRequest,
+          params: {
+            projectId: queryArg.projectId,
+          },
+        }),
+        invalidatesTags: [
+          "Manual Test Runs",
+          "Manual Test Run History",
+          "Manual Test Run Detail",
+        ],
+      }),
+      patchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdEvidence:
+        build.mutation<
+          PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdEvidenceApiResponse,
+          PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdEvidenceApiArg
+        >({
+          query: (queryArg) => ({
+            url: `/api/v2/manual-test-runs/${queryArg.runId}/scenarios/${queryArg.scenarioId}/evidence`,
+            method: "PATCH",
+            body: queryArg.manualTestRunScenarioEvidenceRequest,
+            params: {
+              projectId: queryArg.projectId,
+            },
+          }),
+          invalidatesTags: [
+            "Manual Test Runs",
+            "Manual Test Run History",
+            "Manual Test Run Detail",
+          ],
+        }),
       putApiV2ManualTestRunsByRunIdScenariosOrder: build.mutation<
         PutApiV2ManualTestRunsByRunIdScenariosOrderApiResponse,
         PutApiV2ManualTestRunsByRunIdScenariosOrderApiArg
@@ -1365,7 +1425,11 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ["Manual Test Runs"],
+        invalidatesTags: [
+          "Manual Test Runs",
+          "Manual Test Run History",
+          "Manual Test Run Detail",
+        ],
       }),
       postApiV2ManualTestRunsByRunIdScenariosBulk: build.mutation<
         PostApiV2ManualTestRunsByRunIdScenariosBulkApiResponse,
@@ -1379,7 +1443,11 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ["Manual Test Runs"],
+        invalidatesTags: [
+          "Manual Test Runs",
+          "Manual Test Run History",
+          "Manual Test Run Detail",
+        ],
       }),
       putApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResult: build.mutation<
         PutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultApiResponse,
@@ -1393,7 +1461,11 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ["Manual Test Runs"],
+        invalidatesTags: [
+          "Manual Test Runs",
+          "Manual Test Run History",
+          "Manual Test Run Detail",
+        ],
       }),
       patchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssignee:
         build.mutation<
@@ -1408,7 +1480,11 @@ const injectedRtkApi = api
               projectId: queryArg.projectId,
             },
           }),
-          invalidatesTags: ["Manual Test Runs"],
+          invalidatesTags: [
+            "Manual Test Runs",
+            "Manual Test Run History",
+            "Manual Test Run Detail",
+          ],
         }),
       postApiV2ManualTestRunsByRunIdComplete: build.mutation<
         PostApiV2ManualTestRunsByRunIdCompleteApiResponse,
@@ -1422,7 +1498,11 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ["Manual Test Runs"],
+        invalidatesTags: [
+          "Manual Test Runs",
+          "Manual Test Run History",
+          "Manual Test Run Detail",
+        ],
       }),
       postApiV2ManualTestRunsByRunIdReopen: build.mutation<
         PostApiV2ManualTestRunsByRunIdReopenApiResponse,
@@ -1436,7 +1516,11 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ["Manual Test Runs"],
+        invalidatesTags: [
+          "Manual Test Runs",
+          "Manual Test Run History",
+          "Manual Test Run Detail",
+        ],
       }),
       getApiV2ProjectsByProjectIdManualRunEnvironmentProfiles: build.query<
         GetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesApiResponse,
@@ -2532,6 +2616,27 @@ export type GetApiV2ManualTestRunsByRunIdApiArg = {
   runId: string;
   projectId: string;
 };
+export type DeleteApiV2ManualTestRunsByRunIdApiResponse = unknown;
+export type DeleteApiV2ManualTestRunsByRunIdApiArg = {
+  runId: string;
+  projectId: string;
+};
+export type PutApiV2ManualTestRunsByRunIdDetailsApiResponse =
+  /** status 200 Authoritative updated run detail */ ManualTestRunRead;
+export type PutApiV2ManualTestRunsByRunIdDetailsApiArg = {
+  runId: string;
+  projectId: string;
+  manualTestRunDetailsRequest: ManualTestRunDetailsRequest;
+};
+export type PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdEvidenceApiResponse =
+  /** status 200 Authoritative updated run detail */ ManualTestRunRead;
+export type PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdEvidenceApiArg =
+  {
+    runId: string;
+    scenarioId: string;
+    projectId: string;
+    manualTestRunScenarioEvidenceRequest: ManualTestRunScenarioEvidenceRequest;
+  };
 export type PutApiV2ManualTestRunsByRunIdScenariosOrderApiResponse =
   /** status 200 Authoritative updated run detail */ ManualTestRunRead;
 export type PutApiV2ManualTestRunsByRunIdScenariosOrderApiArg = {
@@ -3581,10 +3686,15 @@ export type ManualTestRunUser = {
   email: string;
 } | null;
 export type ManualTestRunStatus = "in_progress" | "completed";
+export type ManualTestRunEnvironmentProperty = {
+  name: string;
+  value: string;
+};
 export type ManualTestRun = {
   executedBy: ManualTestRunUser;
   status: ManualTestRunStatus;
   completedBy: ManualTestRunUser;
+  environmentProperties: ManualTestRunEnvironmentProperty[];
   browser: string | null;
   operatingSystem: string | null;
   device: string | null;
@@ -3601,16 +3711,35 @@ export type ManualTestRunScenarioResult =
 export type ManualTestRunScenario = {
   position: number;
   result: ManualTestRunScenarioResult;
+  executionComment: string | null;
+  defectReference: string | null;
   assigneeId: string | null;
   assignee: ManualTestRunUser;
   resultBy: ManualTestRunUser;
 };
-export type ManualTestRunScenarioStep = {};
+export type ManualTestRunRequirementContext = {
+  type: "requirement" | "ticket";
+  reference: string;
+  title: string;
+  url: string | null;
+};
+export type ManualTestRunScenarioStep = {
+  comment: string | null;
+  failedFlag: boolean;
+  failedComment: string | null;
+  blockedFlag: boolean;
+  blockedComment: string | null;
+};
 export type ManualTestRunScenarioStepRead = {
   id: string;
   position: number;
   action: string;
   expectedResult: string | null;
+  comment: string | null;
+  failedFlag: boolean;
+  failedComment: string | null;
+  blockedFlag: boolean;
+  blockedComment: string | null;
 };
 export type ManualTestRunScenarioRead = {
   id: string;
@@ -3622,7 +3751,11 @@ export type ManualTestRunScenarioRead = {
   preconditions: string | null;
   testData: string | null;
   folderPath: string | null;
+  priority: "low" | "medium" | "high";
+  requirementContext: ManualTestRunRequirementContext[];
   result: ManualTestRunScenarioResult;
+  executionComment: string | null;
+  defectReference: string | null;
   assigneeId: string | null;
   assignee: ManualTestRunUser;
   resultById: string | null;
@@ -3643,6 +3776,8 @@ export type ManualTestRunRead = {
   completedBy: ManualTestRunUser;
   skippedAtCompletion: number;
   title: string;
+  hasBeenReopened: boolean;
+  environmentProperties: ManualTestRunEnvironmentProperty[];
   browser: string | null;
   operatingSystem: string | null;
   device: string | null;
@@ -3654,9 +3789,25 @@ export type ManualTestRunRead = {
 export type ManualTestRunCreateRequest =
   | {
       scenarioIds: string[];
+      title: string;
+      environmentProperties?: ManualTestRunEnvironmentProperty[];
+      browser?: string | null;
+      operatingSystem?: string | null;
+      device?: string | null;
+      apiEnvironment?: string | null;
+      build?: string | null;
+      deployment?: string | null;
     }
   | {
       suiteId: string;
+      title: string;
+      environmentProperties?: ManualTestRunEnvironmentProperty[];
+      browser?: string | null;
+      operatingSystem?: string | null;
+      device?: string | null;
+      apiEnvironment?: string | null;
+      build?: string | null;
+      deployment?: string | null;
     };
 export type ManualTestRunSummary = {
   id: string;
@@ -3669,6 +3820,8 @@ export type ManualTestRunSummary = {
   completedAt: string | null;
   completedDay: string | null;
   title: string;
+  hasBeenReopened: boolean;
+  environmentProperties: ManualTestRunEnvironmentProperty[];
   browser: string | null;
   operatingSystem: string | null;
   device: string | null;
@@ -3688,6 +3841,23 @@ export type ManualTestRunPage = {
   page: number;
   limit: number;
   totalPages: number;
+};
+export type ManualTestRunDetailsRequest = {
+  title: string;
+  scenarioIds: string[];
+  environmentProperties: ManualTestRunEnvironmentProperty[];
+};
+export type ManualTestRunScenarioEvidenceRequest = {
+  executionComment?: string | null;
+  defectReference?: string | null;
+  steps?: {
+    id: string;
+    comment?: string | null;
+    failedFlag?: boolean;
+    failedComment?: string | null;
+    blockedFlag?: boolean;
+    blockedComment?: string | null;
+  }[];
 };
 export type ManualTestRunScenarioOrderRequest = {
   scenarioIds: string[];
@@ -3881,6 +4051,9 @@ export const {
   useLazyGetApiV2ManualTestRunsQuery,
   useGetApiV2ManualTestRunsByRunIdQuery,
   useLazyGetApiV2ManualTestRunsByRunIdQuery,
+  useDeleteApiV2ManualTestRunsByRunIdMutation,
+  usePutApiV2ManualTestRunsByRunIdDetailsMutation,
+  usePatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdEvidenceMutation,
   usePutApiV2ManualTestRunsByRunIdScenariosOrderMutation,
   usePostApiV2ManualTestRunsByRunIdScenariosBulkMutation,
   usePutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultMutation,

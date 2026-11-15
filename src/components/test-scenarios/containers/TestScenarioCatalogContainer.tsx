@@ -21,19 +21,11 @@ export const TestScenarioCatalogContainer = ({ projectId, organizationTab }: Tes
   const navigate = useNavigate();
   const scope = catalog.scope;
   const onRunSelected = useCallback(async (scenarioIds: string[]) => {
-    const run = await catalog.createManualRun({ scenarioIds });
-    if (!run) return;
-    navigate(PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(run.id)), {
-      state: { from: 'manual-test-run-history' },
-    });
-  }, [catalog, navigate]);
+    navigate(PATHS.MANUAL_TEST_RUN_NEW, { state: { scenarioIds } });
+  }, [navigate]);
   const onRunSuite = useCallback(async (suiteId: string) => {
-    const run = await catalog.createManualRun({ suiteId });
-    if (!run) return;
-    navigate(PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(run.id)), {
-      state: { from: 'manual-test-run-history' },
-    });
-  }, [catalog, navigate]);
+    navigate(PATHS.MANUAL_TEST_RUN_NEW, { state: { suiteId } });
+  }, [navigate]);
   const origin = scope.kind === 'folder' && scope.id ? { kind: 'folder' as const, id: scope.id } : scope.kind === 'unfiled' ? { kind: 'unfiled' as const } : { kind: 'all' as const };
   const onScenarioActions = useTestScenarioContextMenu(projectId, undefined, true, undefined, catalog.reconcileDeletedScenario, scenarioOriginSearch(projectId, origin));
   const onCreateScenario = useCallback(() => {
