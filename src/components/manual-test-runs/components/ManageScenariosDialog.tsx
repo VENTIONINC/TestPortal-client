@@ -152,7 +152,7 @@ export const ManageScenariosDialog = ({
       contentProps={{
         maxW: '1100px',
         w: 'calc(100vw - 2rem)',
-        h: pickerMode ? 'min(700px, 86dvh)' : undefined,
+        h: 'min(700px, 86dvh)',
         maxH: '86vh',
         bg: 'bg.card',
         borderRadius: '16px',
@@ -162,9 +162,9 @@ export const ManageScenariosDialog = ({
       <DialogBody p={0} overflow="hidden" minH={0}>
         <Grid
           templateColumns={{ base: '1fr', md: '210px minmax(0, 1fr)' }}
-          templateRows={{ base: '140px minmax(0, 1fr)', md: pickerMode ? 'minmax(0, 1fr)' : 'minmax(440px, 1fr)' }}
-          h={pickerMode ? 'full' : undefined}
-          minH={pickerMode ? 0 : '440px'}
+          templateRows={{ base: '140px minmax(0, 1fr)', md: 'minmax(0, 1fr)' }}
+          h="full"
+          minH={0}
           maxH="calc(86vh - 132px)"
         >
           <VStack align="stretch" gap={1} p={2} borderEndWidth="1px" borderColor="border.main" overflowY="auto">
@@ -252,9 +252,13 @@ export const ManageScenariosDialog = ({
                     variant="outline"
                     bg="bg.card"
                     h="40px"
+                    maxW="250px"
                     borderColor={suiteIds.length ? 'border.active' : undefined}
                   >
-                    Suite{suiteIds.length ? `: ${suiteIds.length}` : ''} <FiChevronDown aria-hidden="true" />
+                    <Text as="span" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                      Suite{suiteIds.length ? `: ${suiteIds.length === 1 ? suites.currentData?.find((suite) => suite.id === suiteIds[0])?.name ?? '1' : suiteIds.length}` : ''}
+                    </Text>
+                    <FiChevronDown aria-hidden="true" />
                   </Button>
                 </Popover.Trigger>
                 <Popover.Positioner>
