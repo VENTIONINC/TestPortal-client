@@ -256,7 +256,10 @@ export const ManageScenariosDialog = ({
                     borderColor={suiteIds.length ? 'border.active' : undefined}
                   >
                     <Text as="span" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-                      Suite{suiteIds.length ? `: ${suiteIds.length === 1 ? suites.currentData?.find((suite) => suite.id === suiteIds[0])?.name ?? '1' : suiteIds.length}` : ''}
+                      Suite
+                      {suiteIds.length
+                        ? `: ${suiteIds.length === 1 ? (suites.currentData?.find((suite) => suite.id === suiteIds[0])?.name ?? '1') : suiteIds.length}`
+                        : ''}
                     </Text>
                     <FiChevronDown aria-hidden="true" />
                   </Button>

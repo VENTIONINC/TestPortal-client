@@ -53,7 +53,10 @@ export function ManualTestRunScenarioPage() {
   const { runId = '', scenarioId = '' } = useParams();
   const projectId = useSelectedProjectId();
   const navigate = useNavigate();
-  const query = useGetApiV2ManualTestRunsByRunIdQuery({ projectId, runId }, { pollingInterval: 15000, refetchOnFocus: true });
+  const query = useGetApiV2ManualTestRunsByRunIdQuery(
+    { projectId, runId },
+    { pollingInterval: 15000, refetchOnFocus: true },
+  );
   const run = query.currentData;
   const scenario = run?.scenarios.find((item) => item.id === scenarioId);
   const sourceQuery = useGetApiV2TestScenariosByScenarioIdQuery(
@@ -144,7 +147,9 @@ export function ManualTestRunScenarioPage() {
   const evidenceKey = evidence ? JSON.stringify(evidence) : '';
   useEffect(() => {
     if (previousCompleted.current === false && completed && evidenceKey && evidenceKey !== savedEvidence.current) {
-      setError(`Your changes were not saved because ${run?.completedBy?.name || 'another user'} completed this run. Your unsaved notes remain visible; copy them before leaving this page.`);
+      setError(
+        `Your changes were not saved because ${run?.completedBy?.name || 'another user'} completed this run. Your unsaved notes remain visible; copy them before leaving this page.`,
+      );
     }
     if (run) previousCompleted.current = completed;
   }, [completed, evidenceKey, run]);
@@ -161,9 +166,11 @@ export function ManualTestRunScenarioPage() {
         return true;
       } catch {
         const refreshed = await query.refetch();
-        setError(refreshed.data?.status === 'completed'
-          ? `Your changes were not saved because ${refreshed.data.completedBy?.name || 'another user'} completed this run. Your unsaved notes remain visible; copy them before leaving this page.`
-          : 'The evidence was not saved. Changes will be retried when you continue editing.');
+        setError(
+          refreshed.data?.status === 'completed'
+            ? `Your changes were not saved because ${refreshed.data.completedBy?.name || 'another user'} completed this run. Your unsaved notes remain visible; copy them before leaving this page.`
+            : 'The evidence was not saved. Changes will be retried when you continue editing.',
+        );
         return false;
       }
     });
@@ -197,9 +204,11 @@ export function ManualTestRunScenarioPage() {
       await query.refetch();
     } catch {
       const refreshed = await query.refetch();
-      setError(refreshed.data?.status === 'completed'
-        ? `The result ${resultLabel(result)} was not saved because ${refreshed.data.completedBy?.name || 'another user'} completed this run. Reopen the run to change the result.`
-        : 'The result was not saved. Refresh and try again.');
+      setError(
+        refreshed.data?.status === 'completed'
+          ? `The result ${resultLabel(result)} was not saved because ${refreshed.data.completedBy?.name || 'another user'} completed this run. Reopen the run to change the result.`
+          : 'The result was not saved. Refresh and try again.',
+      );
     }
   };
   const changeAssignee = async (assigneeId: string | null) => {
@@ -214,9 +223,11 @@ export function ManualTestRunScenarioPage() {
       await query.refetch();
     } catch {
       const refreshed = await query.refetch();
-      setError(refreshed.data?.status === 'completed'
-        ? `The assignee was not saved because ${refreshed.data.completedBy?.name || 'another user'} completed this run. Reopen the run to make changes.`
-        : 'The assignee was not saved. Refresh and try again.');
+      setError(
+        refreshed.data?.status === 'completed'
+          ? `The assignee was not saved because ${refreshed.data.completedBy?.name || 'another user'} completed this run. Reopen the run to make changes.`
+          : 'The assignee was not saved. Refresh and try again.',
+      );
     }
   };
   const complete = async () => {
@@ -388,7 +399,16 @@ export function ManualTestRunScenarioPage() {
                     <LuChevronRight />
                   </Button>
                   {completed ? (
-                    <HStack bg="green.subtle" color="green.fg" borderRadius="md" px={3} h="40px" fontSize="sm" fontWeight="semibold" gap={2}>
+                    <HStack
+                      bg="green.subtle"
+                      color="green.fg"
+                      borderRadius="md"
+                      px={3}
+                      h="40px"
+                      fontSize="sm"
+                      fontWeight="semibold"
+                      gap={2}
+                    >
                       <FiCheck aria-hidden="true" /> <Text>Completed</Text>
                     </HStack>
                   ) : untestedCount === 0 ? (
@@ -415,16 +435,57 @@ export function ManualTestRunScenarioPage() {
                   )}
                 </HStack>
                 {completed && (
-                  <HStack role="status" mt={3} px={4} py={3} align="start" borderRadius="md" bg="green.subtle" color="green.fg" fontSize="sm">
+                  <HStack
+                    role="status"
+                    mt={3}
+                    px={4}
+                    py={3}
+                    align="start"
+                    borderRadius="md"
+                    bg="green.subtle"
+                    color="green.fg"
+                    fontSize="sm"
+                  >
                     <Box as={FiCheckCircle} boxSize="14px" flexShrink={0} mt="3px" aria-hidden="true" />
-                    <Text>Run completed{run.completedAt ? ` on ${new Date(run.completedAt).toLocaleDateString()}` : ''}{run.completedBy?.name ? ` by ${run.completedBy.name}` : ''}. The results are locked. Reopen the run to change them.{' '}<Link to={runPath} style={{ fontWeight: 600, textDecoration: 'underline' }}>Open run</Link></Text>
+                    <Text>
+                      Run completed{run.completedAt ? ` on ${new Date(run.completedAt).toLocaleDateString()}` : ''}
+                      {run.completedBy?.name ? ` by ${run.completedBy.name}` : ''}. The results are locked. Reopen the
+                      run to change them.{' '}
+                      <Link to={runPath} style={{ fontWeight: 600, textDecoration: 'underline' }}>
+                        Open run
+                      </Link>
+                    </Text>
                   </HStack>
                 )}
                 {!completed && untestedCount === 0 && (
-                  <HStack role="status" mt={3} borderRadius="md" bg="blue.subtle" color="blue.fg" minH="46px" px={4} py={2} align="center">
-                    <Box as={run.hasBeenReopened ? FiRotateCcw : FiInfo} boxSize="14px" flexShrink={0} aria-hidden="true" />
+                  <HStack
+                    role="status"
+                    mt={3}
+                    borderRadius="md"
+                    bg="blue.subtle"
+                    color="blue.fg"
+                    minH="46px"
+                    px={4}
+                    py={2}
+                    align="center"
+                  >
+                    <Box
+                      as={run.hasBeenReopened ? FiRotateCcw : FiInfo}
+                      boxSize="14px"
+                      flexShrink={0}
+                      aria-hidden="true"
+                    />
                     <Text fontSize="14px">
-                      {run.hasBeenReopened ? <><Text as="span" fontWeight="medium">Run reopened.</Text> Results are editable again. Complete the run when you’re done.</> : 'All scenarios are marked. Complete the run to finish it: its results are then locked until you reopen it.'}
+                      {run.hasBeenReopened ? (
+                        <>
+                          <Text as="span" fontWeight="medium">
+                            Run reopened.
+                          </Text>{' '}
+                          Results are editable again. Complete the run when you’re done.
+                        </>
+                      ) : (
+                        'All scenarios are marked. Complete the run to finish it: its results are then locked until you reopen it.'
+                      )}
                     </Text>
                   </HStack>
                 )}
@@ -512,11 +573,7 @@ export function ManualTestRunScenarioPage() {
                         blockedComment: '',
                       };
                       const flagged =
-                        flagKind === 'failed'
-                          ? draft.failedFlag
-                          : flagKind === 'blocked'
-                            ? draft.blockedFlag
-                            : false;
+                        flagKind === 'failed' ? draft.failedFlag : flagKind === 'blocked' ? draft.blockedFlag : false;
                       const commentOpen = !flagged && Boolean(openComments[step.id] || draft.comment);
                       const update = (patch: Partial<typeof draft>) =>
                         setStepDraft((items) => ({ ...items, [step.id]: { ...draft, ...patch } }));
@@ -610,7 +667,19 @@ export function ManualTestRunScenarioPage() {
                                   </Button>
                                 </Tooltip>
                               )}
-                              {completed && flagged && <Box display="grid" placeItems="center" w="28px" h="28px" borderRadius="md" bg={flagKind === 'blocked' ? 'orange.subtle' : 'red.subtle'} color={flagKind === 'blocked' ? 'orange.fg' : 'red.fg'}><LuFlag aria-label={`${flagKind} step`} /></Box>}
+                              {completed && flagged && (
+                                <Box
+                                  display="grid"
+                                  placeItems="center"
+                                  w="28px"
+                                  h="28px"
+                                  borderRadius="md"
+                                  bg={flagKind === 'blocked' ? 'orange.subtle' : 'red.subtle'}
+                                  color={flagKind === 'blocked' ? 'orange.fg' : 'red.fg'}
+                                >
+                                  <LuFlag aria-label={`${flagKind} step`} />
+                                </Box>
+                              )}
                             </HStack>
                           </Box>
                           {commentOpen && (
@@ -802,15 +871,32 @@ export function ManualTestRunScenarioPage() {
                 </Text>
                 {scenario.resultHistory.length === 0 ? (
                   <Text color="fg.muted">No results yet</Text>
-                ) : <Box maxH="240px" overflowY="auto" tabIndex={0} role="region" aria-label="Results in this run history">{scenario.resultHistory.map((entry) => (
-                  <HStack key={entry.id} mb={2} gap={1} align="start">
-                    <Text color={entry.result === 'untested' ? 'gray.200' : `${colors[entry.result]}.500`} aria-hidden="true">●</Text>
-                    <Box minW={0}>
-                      <Text>{resultLabel(entry.result)} · {new Date(entry.resultAt).toLocaleString()}</Text>
-                      {entry.resultBy?.name && <Text color="fg.muted">by {shortName(entry.resultBy.name)}</Text>}
-                    </Box>
-                  </HStack>
-                ))}</Box>}
+                ) : (
+                  <Box
+                    maxH="240px"
+                    overflowY="auto"
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Results in this run history"
+                  >
+                    {scenario.resultHistory.map((entry) => (
+                      <HStack key={entry.id} mb={2} gap={1} align="start">
+                        <Text
+                          color={entry.result === 'untested' ? 'gray.200' : `${colors[entry.result]}.500`}
+                          aria-hidden="true"
+                        >
+                          ●
+                        </Text>
+                        <Box minW={0}>
+                          <Text>
+                            {resultLabel(entry.result)} · {new Date(entry.resultAt).toLocaleString()}
+                          </Text>
+                          {entry.resultBy?.name && <Text color="fg.muted">by {shortName(entry.resultBy.name)}</Text>}
+                        </Box>
+                      </HStack>
+                    ))}
+                  </Box>
+                )}
               </Box>
             </VStack>
           </Box>

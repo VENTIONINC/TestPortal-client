@@ -31,22 +31,41 @@ const AssigneeAvatar = ({ name }: { name?: string }) => (
   </Box>
 );
 
-export const AssigneeOptions = ({ users, selectedId, onSelect }: {
+export const AssigneeOptions = ({
+  users,
+  selectedId,
+  onSelect,
+}: {
   users: Array<{ id: string; name: string }>;
   selectedId?: string | null;
   onSelect: (id: string | null) => void;
 }) => (
   <VStack align="stretch" gap={0}>
     {users.map((user) => (
-      <Button key={user.id} size="sm" variant="ghost" justifyContent="flex-start" px={2}
+      <Button
+        key={user.id}
+        size="sm"
+        variant="ghost"
+        justifyContent="flex-start"
+        px={2}
         bg={selectedId === user.id ? 'blue.50' : undefined}
-        onClick={() => onSelect(user.id)} title={user.name}>
+        onClick={() => onSelect(user.id)}
+        title={user.name}
+      >
         <AssigneeAvatar name={user.name} />
-        <Text overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">{shortName(user.name)}</Text>
+        <Text overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+          {shortName(user.name)}
+        </Text>
       </Button>
     ))}
-    <Button size="sm" variant="ghost" justifyContent="flex-start" px={2}
-      bg={selectedId === null ? 'blue.50' : undefined} onClick={() => onSelect(null)}>
+    <Button
+      size="sm"
+      variant="ghost"
+      justifyContent="flex-start"
+      px={2}
+      bg={selectedId === null ? 'blue.50' : undefined}
+      onClick={() => onSelect(null)}
+    >
       <AssigneeAvatar />
       Unassigned
     </Button>
@@ -64,15 +83,18 @@ interface AssigneePickerProps {
 
 export const AssigneePicker = ({ scenario, users, disabled, triggerHeight, onOpen, onChange }: AssigneePickerProps) => {
   const [open, setOpen] = useState(false);
-  const options = scenario.assignee && !users.some((user) => user.id === scenario.assigneeId)
-    ? [scenario.assignee, ...users]
-    : users;
+  const options =
+    scenario.assignee && !users.some((user) => user.id === scenario.assigneeId) ? [scenario.assignee, ...users] : users;
 
   return (
-    <Popover.Root open={open} onOpenChange={({ open: nextOpen }) => {
-      setOpen(nextOpen);
-      if (nextOpen) onOpen();
-    }} positioning={{ placement: 'bottom-start' }}>
+    <Popover.Root
+      open={open}
+      onOpenChange={({ open: nextOpen }) => {
+        setOpen(nextOpen);
+        if (nextOpen) onOpen();
+      }}
+      positioning={{ placement: 'bottom-start' }}
+    >
       <Popover.Trigger asChild>
         <Button
           aria-label={`Assignee for ${scenario.title}`}
@@ -102,8 +124,14 @@ export const AssigneePicker = ({ scenario, users, disabled, triggerHeight, onOpe
         <Popover.Positioner>
           <Popover.Content w="200px" maxW="calc(100vw - 32px)" bg="bg.panel" p={1}>
             <Popover.Body p={0} maxH="240px" overflowY="auto">
-              <AssigneeOptions users={options} selectedId={scenario.assigneeId ?? null}
-                onSelect={(id) => { setOpen(false); if ((scenario.assigneeId ?? null) !== id) onChange(id); }} />
+              <AssigneeOptions
+                users={options}
+                selectedId={scenario.assigneeId ?? null}
+                onSelect={(id) => {
+                  setOpen(false);
+                  if ((scenario.assigneeId ?? null) !== id) onChange(id);
+                }}
+              />
             </Popover.Body>
           </Popover.Content>
         </Popover.Positioner>
@@ -111,4 +139,3 @@ export const AssigneePicker = ({ scenario, users, disabled, triggerHeight, onOpe
     </Popover.Root>
   );
 };
-

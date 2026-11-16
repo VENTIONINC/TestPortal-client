@@ -4,8 +4,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
-import { ManualRunDetailsDialog, normalizeEnvironment } from '@/components/manual-test-runs/components/ManualRunDetailsDialog';
-import { useGetApiV2ManualTestRunsQuery, useGetApiV2TestSuitesQuery, usePostApiV2ManualTestRunsMutation } from '@/redux/apis/extendedApi';
+import {
+  ManualRunDetailsDialog,
+  normalizeEnvironment,
+} from '@/components/manual-test-runs/components/ManualRunDetailsDialog';
+import {
+  useGetApiV2ManualTestRunsQuery,
+  useGetApiV2TestSuitesQuery,
+  usePostApiV2ManualTestRunsMutation,
+} from '@/redux/apis/extendedApi';
 import type { ManualTestRunEnvironmentProperty } from '@/redux/apis/generatedApi';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { PATHS } from '@/types/paths';
@@ -32,26 +39,80 @@ export function NewManualTestRunPage() {
   const sourceRun = runs.currentData?.runs?.[0];
   const sourceSuite = suites.currentData?.find((suite) => suite.id === entry.suiteId);
   const suiteIds = sourceSuite?.members?.map((member) => member.testScenarioId) ?? [];
-  const selectionMatchesSuite = sourceSuite && suiteIds.length === selectedIds.length && suiteIds.every((id) => selectedIds.includes(id));
+  const selectionMatchesSuite =
+    sourceSuite && suiteIds.length === selectedIds.length && suiteIds.every((id) => selectedIds.includes(id));
   useEffect(() => {
     if (!sourceSuite || initializedSuite.current) return;
     initializedSuite.current = true;
     if (!nameEdited.current) setName(`${sourceSuite.name} — ${date()}`);
-    setSelectedIds(sourceSuite.members?.slice().sort((a, b) => a.position - b.position).map((member) => member.testScenarioId) ?? []);
+    setSelectedIds(
+      sourceSuite.members
+        ?.slice()
+        .sort((a, b) => a.position - b.position)
+        .map((member) => member.testScenarioId) ?? [],
+    );
   }, [sourceSuite]);
   useEffect(() => {
     if (!runs.currentData || initializedEnvironment.current) return;
     initializedEnvironment.current = true;
-    setEnvironment((runs.currentData.runs?.[0]?.environmentProperties ?? []).map((item) => ({ ...item, value: item.name.trim().toLowerCase() === 'build' ? '' : item.value })));
+    setEnvironment(
+      (runs.currentData.runs?.[0]?.environmentProperties ?? []).map((item) => ({
+        ...item,
+        value: item.name.trim().toLowerCase() === 'build' ? '' : item.value,
+      })),
+    );
   }, [runs.currentData]);
-  const close = () => navigate(entry.suiteId || entry.scenarioIds ? PATHS.TEST_SCENARIOS : PATHS.MANUAL_TEST_RUNS, { state: entry.suiteId ? { testManagementTab: 'suites' } : undefined });
+  const close = () =>
+    navigate(entry.suiteId || entry.scenarioIds ? PATHS.TEST_SCENARIOS : PATHS.MANUAL_TEST_RUNS, {
+      state: entry.suiteId ? { testManagementTab: 'suites' } : undefined,
+    });
   const start = async () => {
     if (!name.trim() || !selectedIds.length) return;
     setError('');
     try {
-      const run = await createRun({ projectId, manualTestRunCreateRequest: { title: name.trim(), scenarioIds: selectedIds, environmentProperties: normalizeEnvironment(environment) } }).unwrap();
-      navigate(PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(run.id)), { state: { from: 'manual-test-run-history' } });
-    } catch { setError('The run could not be created. Your draft is still here; try again.'); }
+      const run = await createRun({
+        projectId,
+        manualTestRunCreateRequest: {
+          title: name.trim(),
+          scenarioIds: selectedIds,
+          environmentProperties: normalizeEnvironment(environment),
+        },
+      }).unwrap();
+      navigate(PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(run.id)), {
+        state: { from: 'manual-test-run-history' },
+      });
+    } catch {
+      setError('The run could not be created. Your draft is still here; try again.');
+    }
   };
-  return <><TestScenariosPage initialTab={entry.suiteId ? 'suites' : entry.scenarioIds ? 'scenarios' : 'manual-runs'} /><ManualRunDetailsDialog projectId={projectId} mode="new" name={name} onNameChange={(value) => { nameEdited.current = true; setName(value); }} selectedIds={selectedIds} onSelectionChange={(ids) => { initializedSuite.current = true; setSelectedIds(ids); }} environment={environment} onEnvironmentChange={(items) => { initializedEnvironment.current = true; setEnvironment(items); }} sourceSuiteName={selectionMatchesSuite ? sourceSuite.name : undefined} sourceRunTitle={sourceRun?.title} saving={createState.isLoading} error={error} onClose={close} onSubmit={() => void start()} /></>;
+  return (
+    <>
+      <TestScenariosPage initialTab={entry.suiteId ? 'suites' : entry.scenarioIds ? 'scenarios' : 'manual-runs'} />
+      <ManualRunDetailsDialog
+        projectId={projectId}
+        mode="new"
+        name={name}
+        onNameChange={(value) => {
+          nameEdited.current = true;
+          setName(value);
+        }}
+        selectedIds={selectedIds}
+        onSelectionChange={(ids) => {
+          initializedSuite.current = true;
+          setSelectedIds(ids);
+        }}
+        environment={environment}
+        onEnvironmentChange={(items) => {
+          initializedEnvironment.current = true;
+          setEnvironment(items);
+        }}
+        sourceSuiteName={selectionMatchesSuite ? sourceSuite.name : undefined}
+        sourceRunTitle={sourceRun?.title}
+        saving={createState.isLoading}
+        error={error}
+        onClose={close}
+        onSubmit={() => void start()}
+      />
+    </>
+  );
 }
