@@ -64,6 +64,7 @@ import { PATHS } from '@/types/paths';
 import { green_100, grey_2100, grey_skipped, orange_300, red_100, yellow_100 } from '@/theme/colors/palette';
 import { NativeSelect, Tooltip } from '@/components/ui';
 
+import { isRunRecoveryLocked, lockRunRecovery, unlockRunRecovery, useRunRecoveryLocked, wasRunChangeRejected } from '../recoveryLock';
 import { AssigneeOptions, AssigneePicker } from './AssigneePicker';
 import { ManageScenariosDialog } from './ManageScenariosDialog';
 import { ManualRunDetailsDialog, normalizeEnvironment } from './ManualRunDetailsDialog';
@@ -362,6 +363,8 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const scopeRef = useRef({ projectId, selectedRunId });
   scopeRef.current = { projectId, selectedRunId };
   const [isSaving, setIsSaving] = useState(false);
+  const recoveryRequired = useRunRecoveryLocked(projectId, selectedRunId ?? '');
+  const writesBlocked = isSaving || recoveryRequired;
   const cancelRef = useRef<HTMLButtonElement>(null);
   const completionTriggerRef = useRef<HTMLButtonElement>(null);
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -525,20 +528,35 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     setCurrentRun(updated);
     setFeedback(undefined);
   };
+  const refreshForRecovery = async () => {
+    try {
+      const refreshed = await detailQuery.refetch();
+      if (!isCurrentScope()) return;
+      if (refreshed.error || !refreshed.data || refreshed.data.id !== selectedRunId || refreshed.data.projectId !== projectId) {
+        setFeedback('Could not refresh the run. Retry the refresh before making changes.');
+        return;
+      }
+      acceptRun(refreshed.data);
+      const rejected = wasRunChangeRejected(projectId, selectedRunId ?? '');
+      unlockRunRecovery(projectId, selectedRunId ?? '');
+      setFeedback(rejected && refreshed.data.status === 'completed'
+        ? `Your change was not saved because ${refreshed.data.completedBy?.name || 'another user'} completed the run.`
+        : rejected ? 'Your change was not saved. Review the refreshed run before trying again.'
+          : 'The run was refreshed. Review its current values before trying again.');
+    } catch {
+      if (isCurrentScope()) setFeedback('Could not refresh the run. Retry the refresh before making changes.');
+    }
+  };
   const recover = async (error: unknown) => {
+    const rejected = Boolean(error && typeof error === 'object' && 'status' in error && error.status === 409);
+    lockRunRecovery(projectId, selectedRunId ?? '', rejected);
     if (!isCurrentScope()) return;
-    const status =
-      error && typeof error === 'object' && 'status' in error ? (error as { status: unknown }).status : undefined;
-    setFeedback(
-      status === 409 || status === 'FETCH_ERROR' || status === 'TIMEOUT_ERROR' || status === 'PARSING_ERROR'
-        ? 'The server did not confirm this update. Refreshing the run; review its current values before trying again.'
-        : 'Could not update the run. Refresh and try again.',
-    );
+    setFeedback('The server did not confirm this update. Refreshing the run.');
     setCurrentRun(undefined);
-    await detailQuery.refetch();
+    await refreshForRecovery();
   };
   const mutate = async (operation: () => Promise<ManualTestRunRead>) => {
-    if (!run || completed || isSaving) return false;
+    if (!run || completed || writesBlocked || isRunRecoveryLocked(projectId, selectedRunId ?? '')) return false;
     setIsSaving(true);
     setFeedback(undefined);
     let saved = false;
@@ -581,7 +599,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
       }).unwrap(),
     );
   const openEdit = () => {
-    if (!run || completed || isSaving) return;
+    if (!run || completed || writesBlocked) return;
     setEditTitle(run.title);
     setEditScenarioIds(run.scenarios.map((scenario) => scenario.sourceScenarioId));
     setEditEnvironment(run.environmentProperties.map((property) => ({ ...property })));
@@ -589,7 +607,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     setEditOpen(true);
   };
   const commitEdit = async (confirmed = false, selectedIds = editScenarioIds) => {
-    if (!run || completed || isSaving || !editTitle.trim() || !selectedIds.length) return;
+    if (!run || completed || writesBlocked || !editTitle.trim() || !selectedIds.length) return;
     const selected = new Set(selectedIds);
     const removedMarked = run.scenarios.filter(
       (scenario) => !selected.has(scenario.sourceScenarioId) && scenario.result !== MANUAL_RUN_RESULT.UNTESTED,
@@ -626,7 +644,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     );
   };
   const deleteSelectedRun = async () => {
-    if (!run || isSaving) return;
+    if (!run || writesBlocked) return;
     setIsSaving(true);
     try {
       await deleteRun({ projectId, runId: run.id }).unwrap();
@@ -635,17 +653,15 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
       setDeleteOpen(false);
       setCurrentRun(undefined);
       onSelectRun('');
-    } catch {
-      if (isCurrentScope()) {
-        setDeleteOpen(false);
-        setFeedback('Could not delete the run. Please try again.');
-      }
+    } catch (error) {
+      if (isCurrentScope()) setDeleteOpen(false);
+      await recover(error);
     } finally {
       if (isCurrentScope()) setIsSaving(false);
     }
   };
   const complete = async () => {
-    if (!run || completed || isSaving) return;
+    if (!run || completed || writesBlocked) return;
     setIsSaving(true);
     try {
       acceptRun(await completeRun({ projectId, runId: run.id, body: {} }).unwrap());
@@ -658,7 +674,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     }
   };
   const reopen = async () => {
-    if (!run || !completed || isSaving) return;
+    if (!run || !completed || writesBlocked) return;
     setIsSaving(true);
     try {
       acceptRun(await reopenRun({ projectId, runId: run.id, body: {} }).unwrap());
@@ -678,7 +694,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     completionTriggerRef.current?.focus();
   };
   const activateResult = (scenario: ManualTestRunScenarioRead, event: React.KeyboardEvent) => {
-    if (completed || isSaving || event.target !== event.currentTarget) return;
+    if (completed || writesBlocked || event.target !== event.currentTarget) return;
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
       const index = run?.scenarios.findIndex((item) => item.id === scenario.id) ?? -1;
       const neighbor = run?.scenarios[index + (event.key === 'ArrowUp' ? -1 : 1)];
@@ -1212,7 +1228,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                     size="sm"
                     h="40px"
                     variant="outline"
-                    disabled={isSaving}
+                    disabled={writesBlocked}
                     onClick={() => {
                       setEditTitle(run.title);
                       setEditEnvironment(run.environmentProperties.map((property) => ({ ...property })));
@@ -1224,7 +1240,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                   </Button>
                 )}
                 {completed ? (
-                  <Button size="sm" h="40px" variant="outline" disabled={isSaving} onClick={() => void reopen()}>
+                  <Button size="sm" h="40px" variant="outline" disabled={writesBlocked} onClick={() => void reopen()}>
                     <FiRotateCcw aria-hidden="true" /> Reopen
                   </Button>
                 ) : (
@@ -1233,7 +1249,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                     size="sm"
                     h="40px"
                     variant="outline"
-                    disabled={isSaving}
+                    disabled={writesBlocked}
                     onClick={(event) => requestCompletion(event.currentTarget)}
                   >
                     <FiFlag /> Complete run
@@ -1250,7 +1266,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                       <Menu.Content minW="210px" bg="bg.panel" p={1}>
                         <Menu.Item
                           value="edit"
-                          disabled={completed || isSaving}
+                          disabled={completed || writesBlocked}
                           title={completed ? 'Reopen the run before editing its details.' : undefined}
                           onClick={openEdit}
                         >
@@ -1261,7 +1277,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                         <Menu.Item
                           value="delete"
                           color="fg.error"
-                          disabled={isSaving}
+                          disabled={writesBlocked}
                           onClick={() => setDeleteOpen(true)}
                         >
                           <FiTrash2 aria-hidden="true" />
@@ -1341,6 +1357,14 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
               <Text role="alert" color="fg.error">
                 {feedback}
               </Text>
+            )}
+            {recoveryRequired && (
+              <Box>
+                {!feedback && <Text role="alert">Refresh the run before making changes.</Text>}
+                <Button size="sm" disabled={isSaving} onClick={() => void refreshForRecovery()}>
+                  Retry refresh
+                </Button>
+              </Box>
             )}
             <HStack wrap="wrap">
               <Box position="relative" w={{ base: '100%', sm: '260px' }}>
@@ -1466,7 +1490,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                       id={`manual-run-scenario-${scenario.id}`}
                       key={scenario.id}
                       tabIndex={0}
-                      draggable={!completed && !isSaving}
+                      draggable={!completed && !writesBlocked}
                       onDragStart={(event) => {
                         draggedScenarioId.current = scenario.id;
                         event.dataTransfer.effectAllowed = 'move';
@@ -1581,7 +1605,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                                 aria-label={`${scenario.title}: mark ${resultLabels[result]}`}
                                 aria-pressed={scenario.result === result}
                                 title={`${resultLabels[result]} (${result[0].toUpperCase()}). ${resultExplanations[result]} ${scenario.result === result ? 'Select again to reset this scenario to Untested.' : `Select to mark this scenario ${resultLabels[result]}.`}`}
-                                disabled={completed || isSaving}
+                                disabled={completed || writesBlocked}
                                 onClick={() => void updateResult(scenario, result)}
                               >
                                 <ResultIcon size={18} strokeWidth={2.5} aria-hidden="true" />
@@ -1669,7 +1693,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                         <AssigneePicker
                           scenario={scenario}
                           users={usersQuery.currentData ?? []}
-                          disabled={completed || isSaving}
+                          disabled={completed || writesBlocked}
                           onOpen={() => void loadUsers()}
                           onChange={(assigneeId) => void updateAssignee(scenario.id, assigneeId)}
                         />
@@ -1785,7 +1809,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                         _hover={{ bg: 'gray.700', color: 'white' }}
                         _active={{ bg: 'gray.600', color: 'white' }}
                         flexShrink={0}
-                        disabled={isSaving}
+                        disabled={writesBlocked}
                         aria-label={willReset ? 'Reset selected scenarios to Untested' : `Mark selected ${label}`}
                         onClick={() => void updateBulk({ result: willReset ? MANUAL_RUN_RESULT.UNTESTED : result })}
                       >
@@ -1812,7 +1836,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                 <BulkAssigneePicker
                   count={selectedScenarioIds.length}
                   users={usersQuery.currentData ?? []}
-                  disabled={isSaving}
+                  disabled={writesBlocked}
                   onOpen={() => void loadUsers()}
                   onChange={(assigneeId) => void updateBulk({ assigneeId })}
                 />
@@ -1837,7 +1861,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
           projectId={projectId}
           runTitle={run.title}
           existing={run.scenarios}
-          saving={isSaving}
+          saving={writesBlocked}
           onClose={() => {
             setManageOpen(false);
             setConfirmRemovedResults(false);
@@ -1861,7 +1885,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
           environment={editEnvironment}
           onEnvironmentChange={setEditEnvironment}
           existing={run.scenarios}
-          saving={isSaving}
+          saving={writesBlocked}
           warning={confirmRemovedResults}
           onClose={() => {
             setEditOpen(false);
@@ -1892,10 +1916,10 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
               in the catalog.
             </Text>
             <HStack justify="end">
-              <Button variant="outline" disabled={isSaving} onClick={() => setDeleteOpen(false)}>
+              <Button variant="outline" disabled={writesBlocked} onClick={() => setDeleteOpen(false)}>
                 Cancel
               </Button>
-              <Button colorPalette="red" disabled={isSaving} onClick={() => void deleteSelectedRun()}>
+              <Button colorPalette="red" disabled={writesBlocked} onClick={() => void deleteSelectedRun()}>
                 Delete run
               </Button>
             </HStack>
@@ -1941,10 +1965,10 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
               change them.
             </Text>
             <HStack justify="end">
-              <Button ref={cancelRef} variant="outline" disabled={isSaving} onClick={cancelCompletion}>
+              <Button ref={cancelRef} variant="outline" disabled={writesBlocked} onClick={cancelCompletion}>
                 Keep testing
               </Button>
-              <Button colorPalette="blue" disabled={isSaving} onClick={() => void complete()}>
+              <Button colorPalette="blue" disabled={writesBlocked} onClick={() => void complete()}>
                 Complete and skip {untestedCount}
               </Button>
             </HStack>

@@ -16,6 +16,7 @@ import {
 } from 'react-icons/lu';
 import { FiCheck, FiCheckCircle, FiFlag, FiInfo, FiRotateCcw } from 'react-icons/fi';
 
+import { isRunRecoveryLocked, lockRunRecovery, unlockRunRecovery, useRunRecoveryLocked } from '@/components/manual-test-runs/recoveryLock';
 import { TestManagementTabList } from '@/pages/TestScenarios/TestManagementTabs';
 import { AssigneePicker, shortName } from '@/components/manual-test-runs/components/AssigneePicker';
 import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
@@ -53,6 +54,7 @@ export function ManualTestRunScenarioPage() {
   const { runId = '', scenarioId = '' } = useParams();
   const projectId = useSelectedProjectId();
   const navigate = useNavigate();
+  const recoveryLocked = useRunRecoveryLocked(projectId, runId);
   const query = useGetApiV2ManualTestRunsByRunIdQuery(
     { projectId, runId },
     { pollingInterval: 15000, refetchOnFocus: true },
@@ -94,7 +96,7 @@ export function ManualTestRunScenarioPage() {
   const nextUntested = index < 0 ? undefined : ordered.slice(index + 1).find((item) => item.result === 'untested');
 
   useEffect(() => {
-    if (!scenario) return;
+    if (!scenario || recoveryLocked) return;
     const scope = `${projectId}:${runId}:${scenarioId}`;
     if (draftScope === scope) return;
     evidenceBlocked.current = false;
@@ -121,15 +123,15 @@ export function ManualTestRunScenarioPage() {
           step.id,
           {
             comment: step.comment ?? '',
-            failedFlag: step.failedFlag && Boolean(step.failedComment?.trim()),
+            failedFlag: step.failedFlag,
             failedComment: step.failedComment ?? '',
-            blockedFlag: step.blockedFlag && Boolean(step.blockedComment?.trim()),
+            blockedFlag: step.blockedFlag,
             blockedComment: step.blockedComment ?? '',
           },
         ]),
       ),
     );
-  }, [scenario, projectId, runId, scenarioId, draftScope]);
+  }, [scenario, projectId, runId, scenarioId, draftScope, recoveryLocked]);
 
   const scope = `${projectId}:${runId}:${scenarioId}`;
   const evidence =
@@ -141,9 +143,9 @@ export function ManualTestRunScenarioPage() {
             id: step.id,
             ...stepDraft[step.id],
             comment: stepDraft[step.id]?.comment.trim() || null,
-            failedFlag: Boolean(stepDraft[step.id]?.failedFlag && stepDraft[step.id]?.failedComment.trim()),
+            failedFlag: Boolean(stepDraft[step.id]?.failedFlag),
             failedComment: stepDraft[step.id]?.failedComment.trim() || null,
-            blockedFlag: Boolean(stepDraft[step.id]?.blockedFlag && stepDraft[step.id]?.blockedComment.trim()),
+            blockedFlag: Boolean(stepDraft[step.id]?.blockedFlag),
             blockedComment: stepDraft[step.id]?.blockedComment.trim() || null,
           })),
         }
@@ -158,12 +160,12 @@ export function ManualTestRunScenarioPage() {
     if (run) previousCompleted.current = completed;
   }, [completed, evidenceKey, run]);
   const save = () => {
-    if (evidenceBlocked.current) return Promise.resolve(false);
+    if (evidenceBlocked.current || isRunRecoveryLocked(projectId, runId)) return Promise.resolve(false);
     if (!evidence || completed) return Promise.resolve(true);
     const payload = evidence;
     const key = evidenceKey;
     const task = saveQueue.current.then(async () => {
-      if (evidenceBlocked.current) return false;
+      if (evidenceBlocked.current || isRunRecoveryLocked(projectId, runId)) return false;
       if (savedEvidence.current === key) return true;
       try {
         await saveEvidence({ projectId, runId, scenarioId, manualTestRunScenarioEvidenceRequest: payload }).unwrap();
@@ -172,6 +174,7 @@ export function ManualTestRunScenarioPage() {
         return true;
       } catch {
         evidenceBlocked.current = true;
+        lockRunRecovery(projectId, runId);
         setEvidenceRecovery(true);
         const refreshed = await query.refetch();
         setError(
@@ -200,7 +203,7 @@ export function ManualTestRunScenarioPage() {
     [],
   );
   const changeResult = async (result: ManualTestRunScenarioResult) => {
-    if (!run || !scenario || completed || evidenceBlocked.current) return;
+    if (!run || !scenario || completed || evidenceBlocked.current || isRunRecoveryLocked(projectId, runId)) return;
     setError('');
     try {
       await setResult({
@@ -212,6 +215,7 @@ export function ManualTestRunScenarioPage() {
       await query.refetch();
     } catch {
       evidenceBlocked.current = true;
+      lockRunRecovery(projectId, runId);
       setEvidenceRecovery(true);
       const refreshed = await query.refetch();
       setError(
@@ -222,7 +226,7 @@ export function ManualTestRunScenarioPage() {
     }
   };
   const changeAssignee = async (assigneeId: string | null) => {
-    if (!run || !scenario || completed || evidenceBlocked.current) return;
+    if (!run || !scenario || completed || evidenceBlocked.current || isRunRecoveryLocked(projectId, runId)) return;
     try {
       await setAssignee({
         projectId,
@@ -233,6 +237,7 @@ export function ManualTestRunScenarioPage() {
       await query.refetch();
     } catch {
       evidenceBlocked.current = true;
+      lockRunRecovery(projectId, runId);
       setEvidenceRecovery(true);
       const refreshed = await query.refetch();
       setError(
@@ -243,7 +248,7 @@ export function ManualTestRunScenarioPage() {
     }
   };
   const complete = async () => {
-    if (!run || completed || completeState.isLoading || evidenceBlocked.current) return;
+    if (!run || completed || completeState.isLoading || evidenceBlocked.current || isRunRecoveryLocked(projectId, runId)) return;
     if (!(await save())) return;
     setError('');
     try {
@@ -252,12 +257,31 @@ export function ManualTestRunScenarioPage() {
       navigate(PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(runId)));
     } catch {
       evidenceBlocked.current = true;
+      lockRunRecovery(projectId, runId);
       setEvidenceRecovery(true);
       setError('The run could not be completed. Its status has been refreshed; review it before trying again.');
       await query.refetch();
     }
   };
 
+  if (recoveryLocked && !evidenceRecovery) {
+    return (
+      <MainTemplate pageHeader="Test Management">
+        <Box p={8}>
+          <Text role="alert">Refresh the run before making changes.</Text>
+          <Button onClick={() => void (async () => {
+            const refreshed = await query.refetch();
+            if (!refreshed.error && refreshed.data?.id === runId && refreshed.data.projectId === projectId) {
+              unlockRunRecovery(projectId, runId);
+            } else {
+              setError('Could not refresh the run. Try again.');
+            }
+          })()}>Retry refresh</Button>
+          {error && <Text role="alert">{error}</Text>}
+        </Box>
+      </MainTemplate>
+    );
+  }
   if (query.isLoading)
     return (
       <MainTemplate pageHeader="Test Management">
@@ -633,19 +657,28 @@ export function ManualTestRunScenarioPage() {
                                     minW="28px"
                                     p={0}
                                     onClick={() => {
-                                      update(
-                                        flagKind === 'failed'
-                                          ? {
-                                              failedFlag: !draft.failedFlag,
-                                              failedComment: draft.failedFlag ? '' : draft.failedComment,
-                                              comment: '',
+                                      setStepDraft((items) => {
+                                        const next = { ...items };
+                                        const selecting = !flagged;
+                                        if (selecting) {
+                                          for (const [id, item] of Object.entries(next)) {
+                                            if (id === step.id) continue;
+                                            if (flagKind === 'failed' && item.failedFlag) {
+                                              next[id] = { ...item, failedFlag: false, failedComment: '' };
+                                            } else if (flagKind === 'blocked' && item.blockedFlag) {
+                                              next[id] = { ...item, blockedFlag: false, blockedComment: '' };
                                             }
-                                          : {
-                                              blockedFlag: !draft.blockedFlag,
-                                              blockedComment: draft.blockedFlag ? '' : draft.blockedComment,
-                                              comment: '',
-                                            },
-                                      );
+                                          }
+                                        }
+                                        next[step.id] = {
+                                          ...draft,
+                                          ...(flagKind === 'failed'
+                                            ? { failedFlag: selecting, failedComment: selecting ? draft.failedComment : '' }
+                                            : { blockedFlag: selecting, blockedComment: selecting ? draft.blockedComment : '' }),
+                                          comment: '',
+                                        };
+                                        return next;
+                                      });
                                       setOpenComments((items) => ({ ...items, [step.id]: false }));
                                     }}
                                   >
@@ -780,6 +813,7 @@ export function ManualTestRunScenarioPage() {
                     setError('Could not recover an editable run. Your draft is preserved; refresh and review the run.');
                     return;
                   }
+                  unlockRunRecovery(projectId, runId);
                   evidenceBlocked.current = false;
                   setEvidenceRecovery(false);
                   await latestSave.current();
@@ -882,6 +916,13 @@ export function ManualTestRunScenarioPage() {
                   Scenario
                 </Text>
                 <Text color="fg.muted">Steps as saved when the scenario was added to the run.</Text>
+                {sourceQuery.isError && (
+                  <Text color="fg.muted" mt={1}>
+                    {'status' in sourceQuery.error && sourceQuery.error.status === 404
+                      ? 'The source scenario is no longer available.'
+                      : 'Could not check the source scenario. Try again later.'}
+                  </Text>
+                )}
                 {!sourceQuery.isLoading && !sourceQuery.isError && (
                   <Text color="blue.500" mt={1}>
                     <Link
