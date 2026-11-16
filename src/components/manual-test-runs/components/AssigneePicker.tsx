@@ -6,7 +6,7 @@ import { Box, Button, Popover, Portal, Text, VStack } from '@chakra-ui/react';
 
 import type { ManualTestRunScenarioRead } from '@/redux/apis/generatedApi';
 
-const shortName = (name: string) => {
+export const shortName = (name: string) => {
   const parts = name.trim().split(/\s+/);
   return parts.length > 1 ? `${parts[0]} ${Array.from(parts[parts.length - 1])[0]}.` : parts[0];
 };
@@ -57,11 +57,12 @@ interface AssigneePickerProps {
   scenario: ManualTestRunScenarioRead;
   users: Array<{ id: string; name: string }>;
   disabled: boolean;
+  triggerHeight?: string;
   onOpen: () => void;
   onChange: (assigneeId: string | null) => void;
 }
 
-export const AssigneePicker = ({ scenario, users, disabled, onOpen, onChange }: AssigneePickerProps) => {
+export const AssigneePicker = ({ scenario, users, disabled, triggerHeight, onOpen, onChange }: AssigneePickerProps) => {
   const [open, setOpen] = useState(false);
   const options = scenario.assignee && !users.some((user) => user.id === scenario.assigneeId)
     ? [scenario.assignee, ...users]
@@ -77,6 +78,7 @@ export const AssigneePicker = ({ scenario, users, disabled, onOpen, onChange }: 
           aria-label={`Assignee for ${scenario.title}`}
           variant="ghost"
           size="xs"
+          h={triggerHeight}
           fontSize="13px"
           w="full"
           minW={0}

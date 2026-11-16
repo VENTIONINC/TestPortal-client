@@ -14,9 +14,10 @@ import {
   LuMessageSquare,
   LuX,
 } from 'react-icons/lu';
+import { FiCheck, FiCheckCircle, FiFlag, FiInfo, FiRotateCcw } from 'react-icons/fi';
 
 import { TestManagementTabList } from '@/pages/TestScenarios/TestManagementTabs';
-import { AssigneePicker } from '@/components/manual-test-runs/components/AssigneePicker';
+import { AssigneePicker, shortName } from '@/components/manual-test-runs/components/AssigneePicker';
 import { MainTemplate } from '@/components/ui/components/Templates/MainTemplate';
 import { Tooltip } from '@/components/ui';
 import {
@@ -52,7 +53,7 @@ export function ManualTestRunScenarioPage() {
   const { runId = '', scenarioId = '' } = useParams();
   const projectId = useSelectedProjectId();
   const navigate = useNavigate();
-  const query = useGetApiV2ManualTestRunsByRunIdQuery({ projectId, runId });
+  const query = useGetApiV2ManualTestRunsByRunIdQuery({ projectId, runId }, { pollingInterval: 15000, refetchOnFocus: true });
   const run = query.currentData;
   const scenario = run?.scenarios.find((item) => item.id === scenarioId);
   const sourceQuery = useGetApiV2TestScenariosByScenarioIdQuery(
@@ -73,6 +74,7 @@ export function ManualTestRunScenarioPage() {
     >
   >({});
   const [error, setError] = useState('');
+  const previousCompleted = useRef<boolean | undefined>(undefined);
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
   const [draftScope, setDraftScope] = useState('');
   const savedEvidence = useRef('');
@@ -112,9 +114,9 @@ export function ManualTestRunScenarioPage() {
           step.id,
           {
             comment: step.comment ?? '',
-            failedFlag: step.failedFlag,
+            failedFlag: step.failedFlag && Boolean(step.failedComment?.trim()),
             failedComment: step.failedComment ?? '',
-            blockedFlag: step.blockedFlag,
+            blockedFlag: step.blockedFlag && Boolean(step.blockedComment?.trim()),
             blockedComment: step.blockedComment ?? '',
           },
         ]),
@@ -132,12 +134,20 @@ export function ManualTestRunScenarioPage() {
             id: step.id,
             ...stepDraft[step.id],
             comment: stepDraft[step.id]?.comment.trim() || null,
+            failedFlag: Boolean(stepDraft[step.id]?.failedFlag && stepDraft[step.id]?.failedComment.trim()),
             failedComment: stepDraft[step.id]?.failedComment.trim() || null,
+            blockedFlag: Boolean(stepDraft[step.id]?.blockedFlag && stepDraft[step.id]?.blockedComment.trim()),
             blockedComment: stepDraft[step.id]?.blockedComment.trim() || null,
           })),
         }
       : null;
   const evidenceKey = evidence ? JSON.stringify(evidence) : '';
+  useEffect(() => {
+    if (previousCompleted.current === false && completed && evidenceKey && evidenceKey !== savedEvidence.current) {
+      setError(`Your changes were not saved because ${run?.completedBy?.name || 'another user'} completed this run. Your unsaved notes remain visible; copy them before leaving this page.`);
+    }
+    if (run) previousCompleted.current = completed;
+  }, [completed, evidenceKey, run]);
   const save = () => {
     if (!evidence || completed) return Promise.resolve(true);
     const payload = evidence;
@@ -150,7 +160,10 @@ export function ManualTestRunScenarioPage() {
         setError('');
         return true;
       } catch {
-        setError('The evidence was not saved. Changes will be retried when you continue editing.');
+        const refreshed = await query.refetch();
+        setError(refreshed.data?.status === 'completed'
+          ? `Your changes were not saved because ${refreshed.data.completedBy?.name || 'another user'} completed this run. Your unsaved notes remain visible; copy them before leaving this page.`
+          : 'The evidence was not saved. Changes will be retried when you continue editing.');
         return false;
       }
     });
@@ -183,10 +196,10 @@ export function ManualTestRunScenarioPage() {
       }).unwrap();
       await query.refetch();
     } catch {
-      setError(
-        'The result was not saved. The run may have been completed in another session; refresh and review its status.',
-      );
-      await query.refetch();
+      const refreshed = await query.refetch();
+      setError(refreshed.data?.status === 'completed'
+        ? `The result ${resultLabel(result)} was not saved because ${refreshed.data.completedBy?.name || 'another user'} completed this run. Reopen the run to change the result.`
+        : 'The result was not saved. Refresh and try again.');
     }
   };
   const changeAssignee = async (assigneeId: string | null) => {
@@ -200,8 +213,10 @@ export function ManualTestRunScenarioPage() {
       }).unwrap();
       await query.refetch();
     } catch {
-      setError('The assignee was not saved. Refresh and try again.');
-      await query.refetch();
+      const refreshed = await query.refetch();
+      setError(refreshed.data?.status === 'completed'
+        ? `The assignee was not saved because ${refreshed.data.completedBy?.name || 'another user'} completed this run. Reopen the run to make changes.`
+        : 'The assignee was not saved. Refresh and try again.');
     }
   };
   const complete = async () => {
@@ -224,7 +239,7 @@ export function ManualTestRunScenarioPage() {
         <Text p={8}>Loading scenario…</Text>
       </MainTemplate>
     );
-  if (query.error || !run || !scenario)
+  if (!run || !scenario)
     return (
       <MainTemplate pageHeader="Test Management">
         <Box p={8}>
@@ -273,6 +288,7 @@ export function ManualTestRunScenarioPage() {
             asChild
             variant="ghost"
             size="xs"
+            h="40px"
             fontSize="md"
             fontWeight="normal"
             color="text.secondary"
@@ -285,6 +301,7 @@ export function ManualTestRunScenarioPage() {
             asChild
             variant="ghost"
             size="xs"
+            h="40px"
             fontSize="md"
             fontWeight="normal"
             color="text.secondary"
@@ -297,10 +314,10 @@ export function ManualTestRunScenarioPage() {
             {scenario.sourceScenarioKey}
           </Text>
         </HStack>
-        <Box bg="bg.panel" borderRadius="xl" px={{ base: 5, md: 10, lg: 16 }} py={8}>
+        <Box bg="bg.panel" borderRadius="xl" pl={{ base: 5, md: 20, lg: 16 }} pr={{ base: 2.5, md: 10, lg: 8 }} py={8}>
           <Box
             display="grid"
-            gridTemplateColumns={{ base: '1fr', lg: 'minmax(0, 1fr) 230px' }}
+            gridTemplateColumns={{ base: '1fr', lg: 'minmax(0, 1fr) 270px' }}
             gap={{ base: 8, lg: 10 }}
           >
             <Box minW={0}>
@@ -318,10 +335,12 @@ export function ManualTestRunScenarioPage() {
                     <Button
                       key={result}
                       size="sm"
+                      h="40px"
                       variant={scenario.result === result ? 'solid' : 'outline'}
                       bg={scenario.result === result ? undefined : 'bg.panel'}
                       colorPalette={colors[result]}
                       disabled={completed}
+                      _disabled={{ opacity: 1, cursor: 'not-allowed' }}
                       aria-pressed={scenario.result === result}
                       onClick={() => void changeResult(result)}
                     >
@@ -344,9 +363,9 @@ export function ManualTestRunScenarioPage() {
                     size="sm"
                     variant="outline"
                     bg="bg.panel"
-                    w="32px"
-                    minW="32px"
-                    h="32px"
+                    w="40px"
+                    minW="40px"
+                    h="40px"
                     p={0}
                     aria-label="Previous scenario"
                     disabled={!previous}
@@ -358,9 +377,9 @@ export function ManualTestRunScenarioPage() {
                     size="sm"
                     variant="outline"
                     bg="bg.panel"
-                    w="32px"
-                    minW="32px"
-                    h="32px"
+                    w="40px"
+                    minW="40px"
+                    h="40px"
                     p={0}
                     aria-label="Next scenario"
                     disabled={!next}
@@ -369,22 +388,24 @@ export function ManualTestRunScenarioPage() {
                     <LuChevronRight />
                   </Button>
                   {completed ? (
-                    <Text fontSize="sm" fontWeight="semibold">
-                      Completed
-                    </Text>
+                    <HStack bg="green.subtle" color="green.fg" borderRadius="md" px={3} h="40px" fontSize="sm" fontWeight="semibold" gap={2}>
+                      <FiCheck aria-hidden="true" /> <Text>Completed</Text>
+                    </HStack>
                   ) : untestedCount === 0 ? (
                     <Button
                       size="sm"
                       colorPalette="blue"
+                      h="40px"
                       loading={completeState.isLoading}
                       onClick={() => void complete()}
                     >
-                      Complete run
+                      <FiFlag aria-hidden="true" /> Complete run
                     </Button>
                   ) : (
                     <Button
                       size="sm"
                       colorPalette="blue"
+                      h="40px"
                       disabled={!nextUntested}
                       onClick={() => nextUntested && void goToScenario(nextUntested.id)}
                     >
@@ -394,19 +415,18 @@ export function ManualTestRunScenarioPage() {
                   )}
                 </HStack>
                 {completed && (
-                  <Box mt={3} p={3} borderRadius="md" bg="bg.panel" fontSize="sm">
-                    Run completed{run.completedAt ? ` on ${new Date(run.completedAt).toLocaleDateString()}` : ''}
-                    {run.completedBy?.name ? ` by ${run.completedBy.name}` : ''}. Results are locked.{' '}
-                    <Link to={runPath}>Open run</Link>
-                  </Box>
+                  <HStack role="status" mt={3} px={4} py={3} align="start" borderRadius="md" bg="green.subtle" color="green.fg" fontSize="sm">
+                    <Box as={FiCheckCircle} boxSize="14px" flexShrink={0} mt="3px" aria-hidden="true" />
+                    <Text>Run completed{run.completedAt ? ` on ${new Date(run.completedAt).toLocaleDateString()}` : ''}{run.completedBy?.name ? ` by ${run.completedBy.name}` : ''}. The results are locked. Reopen the run to change them.{' '}<Link to={runPath} style={{ fontWeight: 600, textDecoration: 'underline' }}>Open run</Link></Text>
+                  </HStack>
                 )}
                 {!completed && untestedCount === 0 && (
-                  <Box mt={3} p={3} borderRadius="md" bg="bg.panel" fontSize="sm">
-                    {run.hasBeenReopened
-                      ? 'This run was reopened. Results are editable again.'
-                      : 'All scenarios are marked.'}{' '}
-                    Complete the run when you are finished; results will be locked until it is reopened.
-                  </Box>
+                  <HStack role="status" mt={3} borderRadius="md" bg="blue.subtle" color="blue.fg" minH="46px" px={4} py={2} align="center">
+                    <Box as={run.hasBeenReopened ? FiRotateCcw : FiInfo} boxSize="14px" flexShrink={0} aria-hidden="true" />
+                    <Text fontSize="14px">
+                      {run.hasBeenReopened ? <><Text as="span" fontWeight="medium">Run reopened.</Text> Results are editable again. Complete the run when you’re done.</> : 'All scenarios are marked. Complete the run to finish it: its results are then locked until you reopen it.'}
+                    </Text>
+                  </HStack>
                 )}
                 <Box display="grid" gridTemplateColumns={{ base: '1fr', md: '2fr 1fr' }} gap={3} mt={4}>
                   <Box>
@@ -416,12 +436,12 @@ export function ManualTestRunScenarioPage() {
                     <Textarea
                       aria-label="Comment on the scenario"
                       id="run-comment"
-                      bg="bg.panel"
                       size="sm"
                       mt={1}
                       placeholder="Add a comment"
                       value={executionComment}
                       readOnly={completed}
+                      bg={completed ? 'bg.subtle' : 'bg.panel'}
                       onChange={(event) => setExecutionComment(event.target.value)}
                     />
                   </Box>
@@ -432,12 +452,12 @@ export function ManualTestRunScenarioPage() {
                     <Input
                       aria-label="Bug or ticket"
                       id="run-defect"
-                      bg="bg.panel"
                       size="sm"
                       mt={1}
                       placeholder="https://youtrack… or https://jira…"
                       value={defectReference}
                       readOnly={completed}
+                      bg={completed ? 'bg.subtle' : 'bg.panel'}
                       onChange={(event) => setDefectReference(event.target.value)}
                     />
                   </Box>
@@ -496,7 +516,7 @@ export function ManualTestRunScenarioPage() {
                           ? draft.failedFlag
                           : flagKind === 'blocked'
                             ? draft.blockedFlag
-                            : completed && (draft.failedFlag || draft.blockedFlag);
+                            : false;
                       const commentOpen = !flagged && Boolean(openComments[step.id] || draft.comment);
                       const update = (patch: Partial<typeof draft>) =>
                         setStepDraft((items) => ({ ...items, [step.id]: { ...draft, ...patch } }));
@@ -590,7 +610,7 @@ export function ManualTestRunScenarioPage() {
                                   </Button>
                                 </Tooltip>
                               )}
-                              {completed && flagged && <LuFlag />}
+                              {completed && flagged && <Box display="grid" placeItems="center" w="28px" h="28px" borderRadius="md" bg={flagKind === 'blocked' ? 'orange.subtle' : 'red.subtle'} color={flagKind === 'blocked' ? 'orange.fg' : 'red.fg'}><LuFlag aria-label={`${flagKind} step`} /></Box>}
                             </HStack>
                           </Box>
                           {commentOpen && (
@@ -601,6 +621,7 @@ export function ManualTestRunScenarioPage() {
                                 placeholder="Comment on this step (optional)"
                                 value={draft.comment}
                                 readOnly={completed}
+                                bg={completed ? 'bg.subtle' : undefined}
                                 onChange={(event) => update({ comment: event.target.value })}
                               />
                               {!completed && (
@@ -631,6 +652,7 @@ export function ManualTestRunScenarioPage() {
                                 }
                                 value={flagKind === 'failed' ? draft.failedComment : draft.blockedComment}
                                 readOnly={completed}
+                                bg={completed ? 'bg.subtle' : undefined}
                                 onChange={(event) =>
                                   update(
                                     flagKind === 'failed'
@@ -680,6 +702,7 @@ export function ManualTestRunScenarioPage() {
                   Assignee
                 </Text>
                 <AssigneePicker
+                  triggerHeight="40px"
                   scenario={scenario}
                   users={usersQuery.currentData ?? []}
                   disabled={completed}
@@ -777,14 +800,17 @@ export function ManualTestRunScenarioPage() {
                 <Text fontSize="xs" color="fg.muted" mb={1}>
                   Results in this run
                 </Text>
-                <Text>
-                  <Text as="span" color={`${colors[scenario.result]}.500`}>
-                    ●
-                  </Text>{' '}
-                  {resultLabel(scenario.result)}
-                  {scenario.resultAt ? ` · ${new Date(scenario.resultAt).toLocaleString()}` : ''}
-                </Text>
-                {scenario.resultBy?.name && <Text color="fg.muted">by {scenario.resultBy.name}</Text>}
+                {scenario.resultHistory.length === 0 ? (
+                  <Text color="fg.muted">No results yet</Text>
+                ) : <Box maxH="240px" overflowY="auto" tabIndex={0} role="region" aria-label="Results in this run history">{scenario.resultHistory.map((entry) => (
+                  <HStack key={entry.id} mb={2} gap={1} align="start">
+                    <Text color={entry.result === 'untested' ? 'gray.200' : `${colors[entry.result]}.500`} aria-hidden="true">●</Text>
+                    <Box minW={0}>
+                      <Text>{resultLabel(entry.result)} · {new Date(entry.resultAt).toLocaleString()}</Text>
+                      {entry.resultBy?.name && <Text color="fg.muted">by {shortName(entry.resultBy.name)}</Text>}
+                    </Box>
+                  </HStack>
+                ))}</Box>}
               </Box>
             </VStack>
           </Box>

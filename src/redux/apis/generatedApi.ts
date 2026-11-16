@@ -3761,6 +3761,7 @@ export type ManualTestRunScenarioRead = {
   resultById: string | null;
   resultBy: ManualTestRunUser;
   resultAt: string | null;
+  resultHistory: { id: number; result: ManualTestRunScenarioResult; resultById: string | null; resultBy: ManualTestRunUser; resultAt: string }[];
   steps: ManualTestRunScenarioStepRead[];
 };
 export type ManualTestRunRead = {

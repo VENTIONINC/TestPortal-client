@@ -287,7 +287,6 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const [scenarioPageSize, setScenarioPageSize] = useState(25);
   const [selectedScenarioIds, setSelectedScenarioIds] = useState<string[]>([]);
   const [currentRun, setCurrentRun] = useState<ManualTestRunRead>();
-  const [justReopened, setJustReopened] = useState(false);
   const [feedback, setFeedback] = useState<string>();
   const [completionOpen, setCompletionOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -377,7 +376,6 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
 
   useEffect(() => {
     setCurrentRun(undefined);
-    setJustReopened(false);
     setFeedback(undefined);
     setSelectedScenarioIds([]);
     setScenarioPage(1);
@@ -441,7 +439,6 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const acceptRun = (updated: ManualTestRunRead) => {
     if (updated.projectId !== scopeRef.current.projectId || updated.id !== scopeRef.current.selectedRunId) return;
     setCurrentRun(updated);
-    setJustReopened(false);
     setFeedback(undefined);
   };
   const recover = async (error: unknown) => {
@@ -575,7 +572,6 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     setIsSaving(true);
     try {
       acceptRun(await reopenRun({ projectId, runId: run.id, body: {} }).unwrap());
-      if (isCurrentScope()) setJustReopened(true);
     } catch (error) {
       await recover(error);
     } finally {
@@ -1169,7 +1165,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                 </Text>
               </HStack>
             )}
-            {!completed && justReopened && (
+            {!completed && run.hasBeenReopened && marked === run.scenarios.length && run.scenarios.length > 0 && (
               <HStack role="status" borderRadius="md" bg="blue.subtle" color="blue.fg" minH="46px" px={4} py={2}>
                 <Box as={FiRotateCcw} boxSize="14px" flexShrink={0} aria-hidden="true" />
                 <Text fontSize="14px">
@@ -1180,7 +1176,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                 </Text>
               </HStack>
             )}
-            {!completed && !justReopened && marked === run.scenarios.length && run.scenarios.length > 0 && (
+            {!completed && !run.hasBeenReopened && marked === run.scenarios.length && run.scenarios.length > 0 && (
               <HStack role="status" borderRadius="md" bg="blue.subtle" color="blue.fg" minH="46px" px={4} py={2}>
                 <Box as={FiInfo} boxSize="14px" flexShrink={0} aria-hidden="true" />
                 <Text fontSize="14px">
