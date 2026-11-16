@@ -2673,7 +2673,7 @@ export type PostApiV2ManualTestRunsByRunIdCompleteApiResponse =
 export type PostApiV2ManualTestRunsByRunIdCompleteApiArg = {
   runId: string;
   projectId: string;
-  body: {};
+  body: { requireAllMarked?: boolean };
 };
 export type PostApiV2ManualTestRunsByRunIdReopenApiResponse =
   /** status 200 Reopened run detail */ ManualTestRunRead;

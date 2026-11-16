@@ -77,6 +77,8 @@ export function ManualTestRunScenarioPage() {
     >
   >({});
   const [error, setError] = useState('');
+  const [evidenceRecovery, setEvidenceRecovery] = useState(false);
+  const evidenceBlocked = useRef(false);
   const previousCompleted = useRef<boolean | undefined>(undefined);
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
   const [draftScope, setDraftScope] = useState('');
@@ -95,6 +97,8 @@ export function ManualTestRunScenarioPage() {
     if (!scenario) return;
     const scope = `${projectId}:${runId}:${scenarioId}`;
     if (draftScope === scope) return;
+    evidenceBlocked.current = false;
+    setEvidenceRecovery(false);
     savedEvidence.current = JSON.stringify({
       executionComment: scenario.executionComment?.trim() || null,
       defectReference: scenario.defectReference?.trim() || null,
@@ -154,10 +158,12 @@ export function ManualTestRunScenarioPage() {
     if (run) previousCompleted.current = completed;
   }, [completed, evidenceKey, run]);
   const save = () => {
+    if (evidenceBlocked.current) return Promise.resolve(false);
     if (!evidence || completed) return Promise.resolve(true);
     const payload = evidence;
     const key = evidenceKey;
     const task = saveQueue.current.then(async () => {
+      if (evidenceBlocked.current) return false;
       if (savedEvidence.current === key) return true;
       try {
         await saveEvidence({ projectId, runId, scenarioId, manualTestRunScenarioEvidenceRequest: payload }).unwrap();
@@ -165,11 +171,13 @@ export function ManualTestRunScenarioPage() {
         setError('');
         return true;
       } catch {
+        evidenceBlocked.current = true;
+        setEvidenceRecovery(true);
         const refreshed = await query.refetch();
         setError(
           refreshed.data?.status === 'completed'
             ? `Your changes were not saved because ${refreshed.data.completedBy?.name || 'another user'} completed this run. Your unsaved notes remain visible; copy them before leaving this page.`
-            : 'The evidence was not saved. Changes will be retried when you continue editing.',
+            : 'The save result is uncertain. Your draft is preserved. Review the run before explicitly retrying.',
         );
         return false;
       }
@@ -192,7 +200,7 @@ export function ManualTestRunScenarioPage() {
     [],
   );
   const changeResult = async (result: ManualTestRunScenarioResult) => {
-    if (!run || !scenario || completed) return;
+    if (!run || !scenario || completed || evidenceBlocked.current) return;
     setError('');
     try {
       await setResult({
@@ -203,6 +211,8 @@ export function ManualTestRunScenarioPage() {
       }).unwrap();
       await query.refetch();
     } catch {
+      evidenceBlocked.current = true;
+      setEvidenceRecovery(true);
       const refreshed = await query.refetch();
       setError(
         refreshed.data?.status === 'completed'
@@ -212,7 +222,7 @@ export function ManualTestRunScenarioPage() {
     }
   };
   const changeAssignee = async (assigneeId: string | null) => {
-    if (!run || !scenario || completed) return;
+    if (!run || !scenario || completed || evidenceBlocked.current) return;
     try {
       await setAssignee({
         projectId,
@@ -222,6 +232,8 @@ export function ManualTestRunScenarioPage() {
       }).unwrap();
       await query.refetch();
     } catch {
+      evidenceBlocked.current = true;
+      setEvidenceRecovery(true);
       const refreshed = await query.refetch();
       setError(
         refreshed.data?.status === 'completed'
@@ -231,14 +243,16 @@ export function ManualTestRunScenarioPage() {
     }
   };
   const complete = async () => {
-    if (!run || completed || completeState.isLoading) return;
+    if (!run || completed || completeState.isLoading || evidenceBlocked.current) return;
     if (!(await save())) return;
     setError('');
     try {
-      await completeRun({ projectId, runId, body: {} }).unwrap();
+      await completeRun({ projectId, runId, body: { requireAllMarked: true } }).unwrap();
       await query.refetch();
       navigate(PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(runId)));
     } catch {
+      evidenceBlocked.current = true;
+      setEvidenceRecovery(true);
       setError('The run could not be completed. Its status has been refreshed; review it before trying again.');
       await query.refetch();
     }
@@ -350,7 +364,7 @@ export function ManualTestRunScenarioPage() {
                       variant={scenario.result === result ? 'solid' : 'outline'}
                       bg={scenario.result === result ? undefined : 'bg.panel'}
                       colorPalette={colors[result]}
-                      disabled={completed}
+                      disabled={completed || evidenceRecovery}
                       _disabled={{ opacity: 1, cursor: 'not-allowed' }}
                       aria-pressed={scenario.result === result}
                       onClick={() => void changeResult(result)}
@@ -417,6 +431,7 @@ export function ManualTestRunScenarioPage() {
                       colorPalette="blue"
                       h="40px"
                       loading={completeState.isLoading}
+                      disabled={evidenceRecovery}
                       onClick={() => void complete()}
                     >
                       <FiFlag aria-hidden="true" /> Complete run
@@ -757,6 +772,21 @@ export function ManualTestRunScenarioPage() {
                   {error}
                 </Text>
               )}
+              {evidenceRecovery && !completed && (
+                <Button mt={2} size="sm" onClick={() => void (async () => {
+                  await saveQueue.current;
+                  const refreshed = await query.refetch();
+                  if (refreshed.error || !refreshed.data || refreshed.data.status === 'completed') {
+                    setError('Could not recover an editable run. Your draft is preserved; refresh and review the run.');
+                    return;
+                  }
+                  evidenceBlocked.current = false;
+                  setEvidenceRecovery(false);
+                  await latestSave.current();
+                })()}>
+                  Refresh and retry saving draft
+                </Button>
+              )}
             </Box>
             <VStack
               align="stretch"
@@ -774,7 +804,7 @@ export function ManualTestRunScenarioPage() {
                   triggerHeight="40px"
                   scenario={scenario}
                   users={usersQuery.currentData ?? []}
-                  disabled={completed}
+                  disabled={completed || evidenceRecovery}
                   onOpen={() => {}}
                   onChange={(assigneeId) => void changeAssignee(assigneeId)}
                 />

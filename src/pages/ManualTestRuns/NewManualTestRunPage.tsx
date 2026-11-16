@@ -81,8 +81,13 @@ export function NewManualTestRunPage() {
       navigate(PATHS.MANUAL_TEST_RUN_DETAILS.replace(':runId', encodeURIComponent(run.id)), {
         state: { from: 'manual-test-run-history' },
       });
-    } catch {
-      setError('The run could not be created. Your draft is still here; try again.');
+    } catch (failure) {
+      const status = typeof failure === 'object' && failure !== null && 'status' in failure ? failure.status : undefined;
+      const uncertain = status === 'FETCH_ERROR' || status === 'TIMEOUT_ERROR' || status === 'PARSING_ERROR' ||
+        (typeof status === 'number' && status >= 500);
+      setError(uncertain
+        ? 'The server did not confirm run creation. A run may have been created; check Manual runs before trying again. Your draft is preserved.'
+        : 'The run could not be created. Your draft is still here; review the error and try again.');
     }
   };
   return (

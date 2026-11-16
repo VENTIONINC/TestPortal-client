@@ -419,3 +419,18 @@ describe('scenario aggregate transport safety', () => {
     }
   });
 });
+
+describe('manual run transport safety', () => {
+  it.each(['create', 'evidence'])('does not replay an uncertain %s write', async (operation) => {
+    vi.useFakeTimers();
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Network response lost'));
+    try {
+      const pending = operation === 'create'
+        ? store.dispatch(generatedApi.endpoints.postApiV2ManualTestRuns.initiate({ projectId: 'project-1', manualTestRunCreateRequest: { title: 'Run', scenarioIds: ['scenario-1'] } }))
+        : store.dispatch(generatedApi.endpoints.patchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdEvidence.initiate({ projectId: 'project-1', runId: 'run-1', scenarioId: 'scenario-1', manualTestRunScenarioEvidenceRequest: { executionComment: 'note' } }));
+      await vi.runAllTimersAsync();
+      expect(await pending).toHaveProperty('error');
+      expect(fetchMock).toHaveBeenCalledOnce();
+    } finally { vi.useRealTimers(); }
+  });
+});
