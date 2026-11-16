@@ -3,3 +3,5 @@
 
 export { ManualTestRunPage } from './ManualTestRunPage';
 export { ManualTestRunHistoryPage } from './ManualTestRunHistoryPage';
+export { NewManualTestRunPage } from './NewManualTestRunPage';
+export { ManualTestRunScenarioPage } from './ManualTestRunScenarioPage';

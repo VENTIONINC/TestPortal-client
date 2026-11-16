@@ -206,13 +206,13 @@ describe('TestScenarioCatalogContainer', () => {
     expect(navigate).toHaveBeenCalledWith('/test-scenarios/new?folderId=folder-a&originProject=project-1&originKind=folder&originId=folder-a');
   });
 
-  it('creates one project run from selected scenarios and navigates only after confirmation', async () => {
+  it('opens the shared run form with selected scenarios without creating a run yet', async () => {
     const user = userEvent.setup();
     render(<ChakraProvider><MemoryRouter><TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" /></MemoryRouter></ChakraProvider>);
     await user.click(screen.getByRole('checkbox', { name: 'Select Scenario page 1' }));
     await user.click(screen.getByRole('button', { name: 'Run selected' }));
-    await waitFor(() => expect(createRunMutation).toHaveBeenCalledWith({ projectId: 'project-1', manualTestRunCreateRequest: { scenarioIds: ['scenario-1'] } }));
-    expect(navigate).toHaveBeenCalledWith('/manual-test-runs/run-1', { state: { from: 'manual-test-run-history' } });
+    expect(createRunMutation).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('/manual-test-runs/new', { state: { scenarioIds: ['scenario-1'] } });
   });
 
   it('clears the selection when a selected row is deleted through its action menu', async () => {

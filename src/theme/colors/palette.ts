@@ -33,6 +33,7 @@ export const blue_alpha_2600 = 'rgba(20, 113, 235, 0.4)';
 export const blue_alpha_2700 = 'rgba(58, 169, 255, 0.1)'; // dark status/info
 // Green
 
+export const green_100 = '#F0FAF3'; // bg/passed
 export const green_200 = '#BBEF4E'; // status/attention
 export const green_300 = '#3CFF8F'; // dashboard/green
 export const green_400 = '#C6FF2E'; // dashboard/yellow
@@ -54,6 +55,7 @@ export const grey_300 = '#F9FAFB'; // bg/input
 export const grey_400 = '#F6F6F7'; // bg/section
 export const grey_500 = '#F5F5F5';
 export const grey_600 = '#F4F4F5'; // secondary/default || secondary/focused
+export const grey_skipped = '#F5F5F7'; // bg/skipped
 export const grey_700 = '#E8ECFF';
 export const grey_800 = '#E8F0FE';
 
@@ -119,6 +121,7 @@ export const purple_alpha_1000 = 'rgba(122, 91, 158, 0.1)';
 
 // Red
 
+export const red_100 = '#FFF2F1'; // bg/failed
 export const red_200 = '#EA7D7D'; // primary-error/disabled || secondary-error/title-disabled
 export const red_300 = '#FF6A47'; // dashboard/red
 export const red_400 = '#FF4545'; // primary-error/hovered

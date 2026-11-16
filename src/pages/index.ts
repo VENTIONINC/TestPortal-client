@@ -17,3 +17,5 @@ export { SignupPage } from './Signup';
 export { UserSettingsPage } from './UserSettings';
 export { ManualTestRunPage } from './ManualTestRuns';
 export { ManualTestRunHistoryPage } from './ManualTestRuns';
+export { NewManualTestRunPage } from './ManualTestRuns';
+export { ManualTestRunScenarioPage } from './ManualTestRuns';
