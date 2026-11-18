@@ -686,23 +686,21 @@ export function ManualTestRunScenarioPage() {
                                   </Button>
                                 </Tooltip>
                               )}
-                              {!completed && !flagged && (
+                              {!completed && !flagged && !commentOpen && (
                                 <Tooltip content="Comment on this step">
                                   <Button
                                     size="xs"
-                                    variant={commentOpen ? 'subtle' : 'ghost'}
+                                    variant="ghost"
                                     colorPalette="blue"
                                     w="28px"
                                     h="28px"
                                     minW="28px"
                                     p={0}
-                                    aria-pressed={commentOpen}
                                     aria-label={`Comment on this step (${stepIndex + 1})`}
                                     onClick={() => {
-                                      const opening = !commentOpen;
-                                      setOpenComments((items) => ({ ...items, [step.id]: opening }));
+                                      setOpenComments((items) => ({ ...items, [step.id]: true }));
                                       update({
-                                        comment: opening ? draft.comment : '',
+                                        comment: draft.comment,
                                         ...(flagKind === 'failed'
                                           ? { failedFlag: false, failedComment: '' }
                                           : flagKind === 'blocked'

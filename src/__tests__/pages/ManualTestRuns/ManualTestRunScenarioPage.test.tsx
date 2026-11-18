@@ -97,6 +97,46 @@ describe.each(['failed', 'blocked'] as const)('%s step flags without notes', (re
   });
 });
 
+describe('step comments', () => {
+  const setScenario = (comment: string | null, status = 'in_progress') => {
+    state.run = { id: 'r', projectId: 'p', title: 'Run', status, scenarios: [{
+      id: 's', position: 1, sourceScenarioId: 'source', sourceScenarioKey: 'SC-1', title: 'Scenario', result: 'untested',
+      executionComment: null, defectReference: null, requirementContext: [], resultHistory: [],
+      steps: [{ id: 'step', position: 1, action: 'Do something', expectedResult: 'It works', comment,
+        failedFlag: false, failedComment: null, blockedFlag: false, blockedComment: null }],
+    }] };
+  };
+
+  it('keeps an opened comment visible until explicitly cleared', () => {
+    setScenario(null);
+    render(<ChakraProvider><ManualTestRunScenarioPage /></ChakraProvider>);
+    fireEvent.click(screen.getByRole('button', { name: /comment on this step/i }));
+    const field = screen.getByRole('textbox', { name: /comment for step 1/i });
+    expect(screen.queryByRole('button', { name: /comment on this step/i })).not.toBeInTheDocument();
+    fireEvent.change(field, { target: { value: 'Keep this' } });
+    expect(field).toHaveValue('Keep this');
+    expect(screen.queryByRole('button', { name: /comment on this step/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /clear comment for step 1/i }));
+    expect(screen.queryByRole('textbox', { name: /comment for step 1/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /comment on this step/i })).toBeInTheDocument();
+  });
+
+  it('shows a saved comment without the open icon', () => {
+    setScenario('Saved comment');
+    render(<ChakraProvider><ManualTestRunScenarioPage /></ChakraProvider>);
+    expect(screen.getByRole('textbox', { name: /comment for step 1/i })).toHaveValue('Saved comment');
+    expect(screen.queryByRole('button', { name: /comment on this step/i })).not.toBeInTheDocument();
+  });
+
+  it('shows a saved comment read-only in a completed run', () => {
+    setScenario('Saved comment', 'completed');
+    render(<ChakraProvider><ManualTestRunScenarioPage /></ChakraProvider>);
+    expect(screen.getByRole('textbox', { name: /comment for step 1/i })).toHaveAttribute('readonly');
+    expect(screen.queryByRole('button', { name: /clear comment for step 1/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /comment on this step/i })).not.toBeInTheDocument();
+  });
+});
+
 describe('scenario source availability', () => {
   beforeEach(() => {
     state.run = { id: 'r', projectId: 'p', title: 'Run', status: 'in_progress', scenarios: [{
