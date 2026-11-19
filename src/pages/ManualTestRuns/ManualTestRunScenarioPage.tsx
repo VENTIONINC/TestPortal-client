@@ -316,7 +316,7 @@ export function ManualTestRunScenarioPage() {
       <Tabs.Root className="test-management-tabs" value="manual-runs">
         <TestManagementTabList
           onNavigate={(tab) =>
-            navigate(tab === 'manual-runs' ? PATHS.MANUAL_TEST_RUNS : PATHS.TEST_SCENARIOS, {
+            navigate(tab === 'manual-runs' ? PATHS.MANUAL_TEST_RUNS : PATHS.TEST_MANAGEMENT, {
               state: { testManagementTab: tab },
             })
           }

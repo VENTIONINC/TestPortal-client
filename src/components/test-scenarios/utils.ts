@@ -207,5 +207,5 @@ export const getScenarioFolderReturnPath = (projectId: string, folderId: string 
   const search = new URLSearchParams({ projectId });
   if (!folderId) search.set('folderId', 'unfiled');
   else if (folders.some((folder) => folder.id === folderId)) search.set('folderId', folderId);
-  return `${PATHS.TEST_SCENARIOS}?${search.toString()}`;
+  return `${PATHS.TEST_MANAGEMENT}?${search.toString()}`;
 };

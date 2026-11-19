@@ -30,7 +30,7 @@ export const TestScenarioRouteBoundary = ({ children }: TestScenarioRouteBoundar
   const { scenarioId } = useParams<{ scenarioId: string }>();
   const navigate = useNavigate();
   const normalizedScenarioId = scenarioId?.trim() ?? '';
-  const goToCatalog = () => navigate(PATHS.TEST_SCENARIOS);
+  const goToCatalog = () => navigate(PATHS.TEST_MANAGEMENT);
 
   if (!selectedProjectId) return null;
   if (!normalizedScenarioId) return <TestScenarioUnavailableState onBack={goToCatalog} />;

@@ -38,7 +38,7 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
   }, () => {
     const params = new URLSearchParams({ projectId });
     if (getScenarioOrigin(search, projectId).kind === 'suite') params.set('tab', 'suites');
-    navigate(`${PATHS.TEST_SCENARIOS}?${params}`);
+    navigate(`${PATHS.TEST_MANAGEMENT}?${params}`);
   });
   const detail = useTestScenarioDetail(projectId, scenarioId);
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
@@ -66,7 +66,7 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
     : undefined;
   const folderName = detail.scenario?.folderId ? folder?.name ?? 'Folder unavailable' : 'No folder';
   const backPath = origin.kind === 'suite' && originSuite
-    ? `${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId, tab: 'suites', suiteId: originSuite.id })}`
+    ? `${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId, tab: 'suites', suiteId: originSuite.id })}`
     : getScenarioFolderReturnPath(projectId, detail.scenario?.folderId ?? null, folders);
 
   const refreshMembership = async () => {
@@ -124,7 +124,7 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
       isUnavailable={detail.isUnavailable}
       isError={detail.isError}
       onRetry={() => void detail.refetch()}
-      onBack={() => navigate(PATHS.TEST_SCENARIOS)}
+      onBack={() => navigate(PATHS.TEST_MANAGEMENT)}
     >
       {(scenario) => (
         <TestScenarioDetailsView

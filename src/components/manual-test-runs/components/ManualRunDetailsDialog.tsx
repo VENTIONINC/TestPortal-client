@@ -26,7 +26,7 @@ export const normalizeEnvironment = (items: ManualTestRunEnvironmentProperty[]) 
     )
     .map((item) => ({ name: item.name.trim(), value: item.value.trim() }));
 
-type Props = {
+type ManualRunDetailsDialogProps = {
   projectId: string;
   mode: 'new' | 'edit';
   name: string;
@@ -62,7 +62,7 @@ export function ManualRunDetailsDialog({
   error,
   onClose,
   onSubmit,
-}: Props) {
+}: ManualRunDetailsDialogProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [catalog, setCatalog] = useState<TestScenarioSummary[]>([]);
   const [loadScenarios] = useLazyGetApiV2TestScenariosQuery();

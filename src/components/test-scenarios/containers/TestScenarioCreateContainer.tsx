@@ -122,14 +122,14 @@ const ScopedScenarioCreateContainer = ({ projectId, initialFolderId = null, sour
         originLabel={originDestination.label}
         originKind={origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? 'suites' : 'scenarios'}
         onNavigateOrigin={() => navigate(originDestination.path)}
-        onNavigateSection={() => navigate(`${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId, ...(origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? { tab: 'suites' } : {}) })}`)}
+        onNavigateSection={() => navigate(`${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId, ...(origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? { tab: 'suites' } : {}) })}`)}
         folders={flatFolders}
         initialFolderId={clone ? clone.folderId : validInitialFolder}
         createAnotherReset={createAnotherReset}
         suites={suites}
         isSubmitting={submitting || isLoading}
         apiError={apiError}
-        errorCatalogPath={`${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId }).toString()}`}
+        errorCatalogPath={`${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId }).toString()}`}
         onDirtyChange={setDirty}
         onSubmit={handleSubmit}
         onCancel={() => navigate(sourceScenario ? `${getTestScenarioDetailPath(sourceScenario.id)}${originSearch}` : originDestination.path)}

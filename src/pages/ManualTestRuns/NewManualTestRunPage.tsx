@@ -96,7 +96,7 @@ export function NewManualTestRunPage() {
   }, [projectId, loadRuns]);
   const close = () => {
     scope.current.generation += 1;
-    navigate(entry.suiteId || entry.scenarioIds ? PATHS.TEST_SCENARIOS : PATHS.MANUAL_TEST_RUNS, {
+    navigate(entry.suiteId || entry.scenarioIds ? PATHS.TEST_MANAGEMENT : PATHS.MANUAL_TEST_RUNS, {
       state: entry.suiteId ? { testManagementTab: 'suites' } : undefined,
     });
   };

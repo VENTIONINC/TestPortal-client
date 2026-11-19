@@ -22,7 +22,7 @@ interface FolderNode {
 const flattenFolders = (folders: FolderNode[], depth = 0): Array<FolderNode & { depth: number }> =>
   folders.flatMap((folder) => [{ ...folder, depth }, ...flattenFolders(folder.children ?? [], depth + 1)]);
 
-interface Props {
+interface ManageScenariosDialogProps {
   projectId: string;
   runTitle: string;
   existing: { sourceScenarioId: string; result: ManualTestRunScenarioResult }[];
@@ -46,7 +46,7 @@ export const ManageScenariosDialog = ({
   onSelectionChange,
   initialIds,
   pickerMode = false,
-}: Props) => {
+}: ManageScenariosDialogProps) => {
   const [ids, setIds] = useState(() => initialIds ?? existing.map((item) => item.sourceScenarioId));
   const [search, setSearch] = useState('');
   const [folder, setFolder] = useState('');

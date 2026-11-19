@@ -12,7 +12,7 @@ import { PATHS } from '@/types/paths';
 
 describe('Test Scenarios route', () => {
   it('registers the catalog page behind authentication and project guards', () => {
-    const route = router.routes.find((candidate) => candidate.path === PATHS.TEST_SCENARIOS) as
+    const route = router.routes.find((candidate) => candidate.path === PATHS.TEST_MANAGEMENT) as
       | { element?: ReactElement; path?: string }
       | undefined;
 
