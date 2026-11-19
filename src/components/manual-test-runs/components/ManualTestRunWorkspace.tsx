@@ -1723,7 +1723,6 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                     onChange={(event) => {
                       setScenarioPageSize(Number(event.target.value));
                       setScenarioPage(1);
-                      setSelectedScenarioIds([]);
                     }}
                   >
                     <option value="10">10</option>
@@ -1737,7 +1736,6 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                   aria-label="Previous page"
                   disabled={scenarioPage <= 1}
                   onClick={() => {
-                    setSelectedScenarioIds([]);
                     setScenarioPage((page) => page - 1);
                   }}
                 >
@@ -1749,7 +1747,6 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                   aria-label="Next page"
                   disabled={scenarioPage >= scenarioPageCount}
                   onClick={() => {
-                    setSelectedScenarioIds([]);
                     setScenarioPage((page) => page + 1);
                   }}
                 >
@@ -1784,6 +1781,17 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                 <Text fontSize="sm" fontWeight="medium" whiteSpace="nowrap" px={2}>
                   {selectedScenarioIds.length} selected
                 </Text>
+                {filteredScenarios.some((scenario) => !selectedScenarioIds.includes(scenario.id)) && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    color="blue.300"
+                    disabled={writesBlocked}
+                    onClick={() => setSelectedScenarioIds(filteredScenarios.map((scenario) => scenario.id))}
+                  >
+                    Select all {filteredScenarios.length}
+                  </Button>
+                )}
                 <Text fontSize="sm" color="gray.400" px={2} borderLeftWidth="1px" borderColor="gray.600">
                   Mark as
                 </Text>
