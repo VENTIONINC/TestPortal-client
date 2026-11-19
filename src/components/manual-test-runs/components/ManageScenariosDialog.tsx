@@ -1,8 +1,8 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect, useState } from 'react';
-import { Box, Button, Grid, HStack, Input, Popover, Table, Text, VStack } from '@chakra-ui/react';
-import { FiChevronDown, FiSearch } from 'react-icons/fi';
+import { Box, Button, Grid, HStack, Input, Text, VStack } from '@chakra-ui/react';
+import { FiSearch } from 'react-icons/fi';
 
 import { Dialog, DialogBody, DialogFooter } from '@/components/ui';
 import {
@@ -11,21 +11,17 @@ import {
   useGetApiV2TestScenarioFoldersQuery,
   useGetApiV2TestSuitesQuery,
 } from '@/redux/apis/generatedApi';
-import type { ManualTestRunScenarioResult, TestScenarioSummary } from '@/redux/apis/generatedApi';
+import type { TestScenarioSummary } from '@/redux/apis/generatedApi';
 
-interface FolderNode {
-  id: string;
-  name: string;
-  scenarioCount?: number;
-  children?: FolderNode[];
-}
-const flattenFolders = (folders: FolderNode[], depth = 0): Array<FolderNode & { depth: number }> =>
-  folders.flatMap((folder) => [{ ...folder, depth }, ...flattenFolders(folder.children ?? [], depth + 1)]);
+import { ScenarioFolderList } from './ScenarioFolderList';
+import { ScenarioSelectionTable } from './ScenarioSelectionTable';
+import type { ExistingRunScenario } from './ScenarioSelectionTable';
+import { ScenarioSuiteFilter } from './ScenarioSuiteFilter';
 
 interface ManageScenariosDialogProps {
   projectId: string;
   runTitle: string;
-  existing: { sourceScenarioId: string; result: ManualTestRunScenarioResult }[];
+  existing: ExistingRunScenario[];
   saving: boolean;
   onSave: (ids: string[]) => void;
   onClose: () => void;
@@ -51,8 +47,6 @@ export const ManageScenariosDialog = ({
   const [search, setSearch] = useState('');
   const [folder, setFolder] = useState('');
   const [suiteIds, setSuiteIds] = useState<string[]>([]);
-  const [suiteOpen, setSuiteOpen] = useState(false);
-  const [suiteSearch, setSuiteSearch] = useState('');
   const [filteredRows, setFilteredRows] = useState<TestScenarioSummary[]>([]);
   const [filterLoading, setFilterLoading] = useState(false);
   const [filterError, setFilterError] = useState(false);
@@ -127,19 +121,6 @@ export const ManageScenariosDialog = ({
     .filter((item) => item.count > 0)
     .map((item) => `${item.count} ${item.result}`)
     .join(', ');
-  const resultColors: Record<ManualTestRunScenarioResult, { bg: string; color: string }> = {
-    passed: { bg: 'green.subtle', color: 'green.fg' },
-    failed: { bg: 'red.subtle', color: 'red.fg' },
-    blocked: { bg: 'orange.subtle', color: 'orange.fg' },
-    untested: { bg: 'gray.subtle', color: 'fg.muted' },
-    skipped: { bg: 'gray.subtle', color: 'fg.muted' },
-  };
-  const priorityColors = {
-    high: { bg: 'status.attention.bg', color: 'orange.fg' },
-    medium: { bg: 'status.total.bg', color: 'blue.fg' },
-    low: { bg: 'status.neutral.bg', color: 'fg.muted' },
-  };
-  const allSelected = rows.length > 0 && rows.every((row) => ids.includes(row.id));
   const toggle = (id: string) => {
     onSelectionChange?.();
     setIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
@@ -167,50 +148,15 @@ export const ManageScenariosDialog = ({
           minH={0}
           maxH="calc(86vh - 132px)"
         >
-          <VStack align="stretch" gap={1} p={2} borderEndWidth="1px" borderColor="border.main" overflowY="auto">
-            <Button
-              size="sm"
-              variant={folder === '' ? 'subtle' : 'ghost'}
-              colorPalette={folder === '' ? 'blue' : undefined}
-              justifyContent="space-between"
-              onClick={() => {
-                setFolder('');
-                setPage(1);
-              }}
-            >
-              <Text>All scenarios</Text>
-              <Text fontSize="xs">{totalScenarios.currentData?.total ?? 0}</Text>
-            </Button>
-            {flattenFolders(folders.currentData ?? []).map((item) => (
-              <Button
-                key={item.id}
-                size="sm"
-                variant={folder === item.id ? 'subtle' : 'ghost'}
-                colorPalette={folder === item.id ? 'blue' : undefined}
-                justifyContent="space-between"
-                ps={`${12 + item.depth * 12}px`}
-                onClick={() => {
-                  setFolder(item.id);
-                  setPage(1);
-                }}
-              >
-                <Text lineClamp={1}>{item.name}</Text>
-                <Text fontSize="xs">{item.scenarioCount ?? 0}</Text>
-              </Button>
-            ))}
-            <Button
-              size="sm"
-              variant={folder === 'unfiled' ? 'subtle' : 'ghost'}
-              colorPalette={folder === 'unfiled' ? 'blue' : undefined}
-              justifyContent="start"
-              onClick={() => {
-                setFolder('unfiled');
-                setPage(1);
-              }}
-            >
-              No folder
-            </Button>
-          </VStack>
+          <ScenarioFolderList
+            folders={folders.currentData ?? []}
+            folder={folder}
+            total={totalScenarios.currentData?.total ?? 0}
+            onFolderChange={(id) => {
+              setFolder(id);
+              setPage(1);
+            }}
+          />
           <VStack align="stretch" gap={2} p={3} minW={0} overflow="hidden">
             <HStack>
               <Box position="relative" flex="1" minW={0}>
@@ -239,246 +185,43 @@ export const ManageScenariosDialog = ({
                   }}
                 />
               </Box>
-              <Popover.Root
-                open={suiteOpen}
-                onOpenChange={({ open }) => {
-                  setSuiteOpen(open);
-                  if (!open) setSuiteSearch('');
+              <ScenarioSuiteFilter
+                suites={suites.currentData ?? []}
+                suiteIds={suiteIds}
+                loading={suites.isLoading}
+                hasError={Boolean(suites.error)}
+                onToggleSuite={(id) => {
+                  setSuiteIds((current) =>
+                    current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+                  );
+                  setPage(1);
                 }}
-                positioning={{ placement: 'bottom-end' }}
-              >
-                <Popover.Trigger asChild>
-                  <Button
-                    variant="outline"
-                    bg="bg.card"
-                    h="40px"
-                    maxW="250px"
-                    borderColor={suiteIds.length ? 'border.active' : undefined}
-                  >
-                    <Text as="span" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-                      Suite
-                      {suiteIds.length
-                        ? `: ${suiteIds.length === 1 ? (suites.currentData?.find((suite) => suite.id === suiteIds[0])?.name ?? '1') : suiteIds.length}`
-                        : ''}
-                    </Text>
-                    <FiChevronDown aria-hidden="true" />
-                  </Button>
-                </Popover.Trigger>
-                <Popover.Positioner>
-                  <Popover.Content w="260px" bg="bg.card" p={0}>
-                    <Box position="relative" px={3} borderBottomWidth="1px" borderColor="border.main">
-                      <Box
-                        position="absolute"
-                        insetStart={3}
-                        top="50%"
-                        transform="translateY(-50%)"
-                        zIndex={1}
-                        color="text.muted"
-                        pointerEvents="none"
-                      >
-                        <FiSearch aria-hidden="true" size={13} />
-                      </Box>
-                      <Input
-                        aria-label="Search suites"
-                        placeholder="Type to find a suite"
-                        size="sm"
-                        value={suiteSearch}
-                        onChange={(event) => setSuiteSearch(event.target.value)}
-                        ps={7}
-                        border={0}
-                        focusRing="none"
-                      />
-                    </Box>
-                    <Popover.Body p={1} maxH="240px" overflowY="auto">
-                      <VStack align="stretch" gap={0}>
-                        {suites.isLoading && (
-                          <Text px={2} py={2} color="text.secondary" fontSize="sm">
-                            Loading suites…
-                          </Text>
-                        )}
-                        {suites.error && (
-                          <Text px={2} py={2} color="text.secondary" fontSize="sm">
-                            Suites are unavailable.
-                          </Text>
-                        )}
-                        {(suites.currentData ?? [])
-                          .filter((item) =>
-                            item.name.toLocaleLowerCase().includes(suiteSearch.trim().toLocaleLowerCase()),
-                          )
-                          .map((item) => (
-                            <HStack as="label" key={item.id} px={2} py={1.5} cursor="pointer" justify="space-between">
-                              <HStack gap={2} minW={0}>
-                                <input
-                                  type="checkbox"
-                                  aria-label={item.name}
-                                  checked={suiteIds.includes(item.id)}
-                                  onChange={() => {
-                                    setSuiteIds((current) =>
-                                      current.includes(item.id)
-                                        ? current.filter((id) => id !== item.id)
-                                        : [...current, item.id],
-                                    );
-                                    setPage(1);
-                                  }}
-                                />
-                                <Text
-                                  as="span"
-                                  fontSize="sm"
-                                  overflow="hidden"
-                                  textOverflow="ellipsis"
-                                  whiteSpace="nowrap"
-                                >
-                                  {item.name}
-                                </Text>
-                              </HStack>
-                              <Text flexShrink={0} fontSize="xs" color="text.secondary">
-                                {item.members?.length ?? '–'}
-                              </Text>
-                            </HStack>
-                          ))}
-                        {!suites.isLoading &&
-                          !suites.error &&
-                          !(suites.currentData ?? []).some((item) =>
-                            item.name.toLocaleLowerCase().includes(suiteSearch.trim().toLocaleLowerCase()),
-                          ) && (
-                            <Text px={2} py={2} color="text.secondary" fontSize="sm">
-                              No suites found
-                            </Text>
-                          )}
-                      </VStack>
-                    </Popover.Body>
-                    <HStack justify="space-between" p={2} borderTopWidth="1px" borderColor="border.main">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setSuiteIds([]);
-                          setPage(1);
-                          setSuiteOpen(false);
-                          setSuiteSearch('');
-                        }}
-                      >
-                        Clear
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="primary"
-                        onClick={() => {
-                          setSuiteOpen(false);
-                          setSuiteSearch('');
-                        }}
-                      >
-                        Done
-                      </Button>
-                    </HStack>
-                  </Popover.Content>
-                </Popover.Positioner>
-              </Popover.Root>
+                onClear={() => {
+                  setSuiteIds([]);
+                  setPage(1);
+                }}
+              />
             </HStack>
             {scenarios.error || (suiteIds.length > 0 && filterError) ? (
               <Text role="alert">Could not load scenarios.</Text>
             ) : scenarios.isLoading || (suiteIds.length > 0 && (filterLoading || scenarios.isFetching)) ? (
               <Text>Loading scenarios…</Text>
             ) : (
-              <Box
-                borderWidth="1px"
-                borderColor="border.main"
-                borderRadius="md"
-                overflow="auto"
-                flex="1"
-                minH={0}
-                aria-busy={scenarios.isFetching}
-              >
-                <Table.Root size="sm" minW="620px">
-                  <Table.Header>
-                    <Table.Row bg="bg.subtle">
-                      <Table.ColumnHeader colSpan={6}>
-                        <HStack>
-                          <input
-                            type="checkbox"
-                            aria-label="Select all scenarios on this page"
-                            checked={allSelected}
-                            ref={(el) => {
-                              if (el) el.indeterminate = !allSelected && rows.some((row) => ids.includes(row.id));
-                            }}
-                            onChange={() => {
-                              onSelectionChange?.();
-                              setIds((current) =>
-                                allSelected
-                                  ? current.filter((id) => !rows.some((row) => row.id === id))
-                                  : [...new Set([...current, ...rows.map((row) => row.id)])],
-                              );
-                            }}
-                          />
-                          <Text fontSize="sm" fontWeight="medium">
-                            Select all {rows.length} shown
-                          </Text>
-                          <Text fontSize="xs" color="fg.muted">
-                            · {existing.length} already in the run
-                          </Text>
-                        </HStack>
-                      </Table.ColumnHeader>
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
-                    {rows.map((row) => {
-                      const result = existing.find((item) => item.sourceScenarioId === row.id)?.result;
-                      return (
-                        <Table.Row key={row.id} bg={ids.includes(row.id) ? 'blue.50' : undefined}>
-                          <Table.Cell>
-                            <input
-                              type="checkbox"
-                              aria-label={`Select ${row.title}`}
-                              checked={ids.includes(row.id)}
-                              onChange={() => toggle(row.id)}
-                            />
-                          </Table.Cell>
-                          <Table.Cell color="fg.muted">{row.scenarioKey}</Table.Cell>
-                          <Table.Cell fontWeight="medium">{row.title}</Table.Cell>
-                          <Table.Cell color="fg.muted">{row.folderName ?? 'Unfiled'}</Table.Cell>
-                          <Table.Cell>
-                            {result && (
-                              <Text
-                                as="span"
-                                display="inline-block"
-                                borderRadius="full"
-                                px={2}
-                                py="1px"
-                                fontSize="xs"
-                                bg={resultColors[result].bg}
-                                color={resultColors[result].color}
-                              >
-                                {result[0].toUpperCase() + result.slice(1)}
-                              </Text>
-                            )}
-                          </Table.Cell>
-                          <Table.Cell>
-                            {row.priority && (
-                              <Text
-                                as="span"
-                                display="inline-block"
-                                borderRadius="full"
-                                px={2}
-                                py="1px"
-                                fontSize="xs"
-                                bg={priorityColors[row.priority].bg}
-                                color={priorityColors[row.priority].color}
-                              >
-                                {row.priority[0].toUpperCase() + row.priority.slice(1)}
-                              </Text>
-                            )}
-                          </Table.Cell>
-                        </Table.Row>
-                      );
-                    })}
-                    {!rows.length && (
-                      <Table.Row>
-                        <Table.Cell colSpan={6}>No scenarios match these filters.</Table.Cell>
-                      </Table.Row>
-                    )}
-                  </Table.Body>
-                </Table.Root>
-              </Box>
+              <ScenarioSelectionTable
+                rows={rows}
+                ids={ids}
+                existing={existing}
+                fetching={scenarios.isFetching}
+                onToggleScenario={toggle}
+                onTogglePage={(allSelected) => {
+                  onSelectionChange?.();
+                  setIds((current) =>
+                    allSelected
+                      ? current.filter((id) => !rows.some((row) => row.id === id))
+                      : [...new Set([...current, ...rows.map((row) => row.id)])],
+                  );
+                }}
+              />
             )}
             {totalPages > 1 && (
               <HStack>
