@@ -15,15 +15,13 @@ import {
   Text,
   VStack,
 } from '@chakra-ui/react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { FiCheck, FiChevronDown, FiFolder, FiLink, FiPlus, FiSearch, FiX } from 'react-icons/fi';
 
 import { Input, Textarea } from '@/components/ui';
-import { testScenarioAuthoringSchema, type TestScenarioAuthoringFormData } from '@/schemas';
+import type { TestScenarioAuthoringFormData } from '@/schemas';
 
 import { SuitePicker } from './SuitePicker';
+import { useTestScenarioForm } from '../hooks/useTestScenarioForm';
 import type { TestScenarioEditableField, TestScenarioEditableValues, TestScenarioInitialStepDraft } from '../types';
 
 export type TestScenarioFormMode = 'create' | 'edit';
@@ -78,216 +76,61 @@ export interface TestScenarioFormProps {
   ) => void | Promise<void>;
   onCancel: (folderId?: string | null) => void;
 }
-const EMPTY_VALUES = { title: '' };
-const EMPTY_STEPS: TestScenarioInitialStepDraft[] = [];
-const EMPTY_SUITES: ScenarioSuiteDraft[] = [];
-let draftSequence = 0;
-const newStep = (): TestScenarioInitialStepDraft => ({
-  key: `draft-${++draftSequence}`,
-  action: '',
-  expectedResult: '',
-});
-const toValues = (values: TestScenarioFormProps['initialValues']) => ({
-  title: values?.title ?? '',
-  details: values?.details ?? '',
-  priority: values?.priority || ('medium' as const),
-  preconditions: values?.preconditions ?? '',
-  testData: values?.testData ?? '',
-  relatedIssueUrl: values?.relatedIssueUrl ?? '',
-});
-
-export const TestScenarioForm = ({
-  mode,
-  initialValues = EMPTY_VALUES,
-  initialSteps = EMPTY_STEPS,
-  initialSuites = EMPTY_SUITES,
-  suites = [],
-  reconciliation,
-  createAnotherReset,
-  focusTitle = false,
-  originLabel,
-  originKind = 'scenarios',
-  onNavigateOrigin,
-  onNavigateSection,
-  isSubmitting = false,
-  apiError,
-  errorMessage,
-  successMessage,
-  folders = [],
-  initialFolderId = null,
-  onDirtyChange,
-  onReload,
-  errorCatalogPath,
-  onSubmit,
-  onCancel,
-}: TestScenarioFormProps) => {
-  const [steps, setSteps] = useState(() =>
-    initialSteps.length ? initialSteps : mode === 'create' ? [newStep(), newStep(), newStep()] : [],
-  );
-  const [folderId, setFolderId] = useState(initialFolderId);
-  const [folderOpen, setFolderOpen] = useState(false);
-  const [folderSearch, setFolderSearch] = useState('');
-  const [priorityOpen, setPriorityOpen] = useState(false);
-  const [selectedSuites, setSelectedSuites] = useState(initialSuites);
-  const [createAnother, setCreateAnother] = useState(false);
-  const [createdConfirmation, setCreatedConfirmation] = useState(false);
-  const [stepErrors, setStepErrors] = useState<Record<string, string>>({});
-  const [announcement, setAnnouncement] = useState('');
-  const [grabbed, setGrabbed] = useState<string>();
-  const [draggedStep, setDraggedStep] = useState<string>();
-  const [dropTarget, setDropTarget] = useState<string>();
-  const dropTargetRef = useRef<string | undefined>(undefined);
-  const pickedUpOrder = useRef<string[]>([]);
-  const [focusStep, setFocusStep] = useState<string>();
-  const [focusHandle, setFocusHandle] = useState<string>();
-  const root = useRef<HTMLFormElement>(null);
-  const folderSearchRef = useRef<HTMLInputElement>(null);
-  const pointer = useRef<{ key: string; id: number } | null>(null);
-  const baseline = useRef({ steps: initialSteps, suites: initialSuites, folderId: initialFolderId });
+export const TestScenarioForm = (props: TestScenarioFormProps) => {
   const {
+    mode,
+    initialValues,
+    suites = [],
+    originLabel,
+    originKind = 'scenarios',
+    onNavigateOrigin,
+    onNavigateSection,
+    apiError,
+    errorMessage,
+    successMessage,
+    onReload,
+    errorCatalogPath,
+  } = props;
+  const {
+    root,
     register,
     handleSubmit,
-    reset,
-    watch,
+    submit,
+    createdConfirmation,
+    setCreatedConfirmation,
+    pending,
+    errors,
+    steps,
+    draggedStep,
+    dropTarget,
+    grabbed,
+    getStepReorderHandlers,
+    stepErrors,
+    update,
+    append,
+    setSteps,
+    announcement,
+    createAnother,
+    setCreateAnother,
+    cancel,
+    folderId,
+    values,
+    priorityOpen,
+    setPriorityOpen,
     setValue,
-    formState: { errors, isSubmitting: submitting, isDirty },
-  } = useForm<TestScenarioAuthoringFormData>({
-    resolver: zodResolver(testScenarioAuthoringSchema),
-    defaultValues: toValues(initialValues),
-    mode: 'onChange',
-  });
-  const values = watch();
-  const pending = submitting || isSubmitting;
-  useEffect(() => {
-    if (!focusTitle) return;
-    const title = root.current?.querySelector<HTMLInputElement>('input[name="title"]');
-    title?.focus();
-    title?.select();
-  }, [focusTitle]);
-  const meaningfulSteps = steps.filter((s) => s.id || s.action.trim() || s.expectedResult.trim());
-  const dirty =
-    isDirty ||
-    folderId !== baseline.current.folderId ||
-    JSON.stringify(meaningfulSteps) !== JSON.stringify(baseline.current.steps) ||
-    JSON.stringify(selectedSuites) !== JSON.stringify(baseline.current.suites);
-  useEffect(() => {
-    onDirtyChange?.(dirty);
-  }, [dirty, onDirtyChange]);
-  useEffect(() => {
-    const warn = (event: BeforeUnloadEvent) => {
-      if (dirty) {
-        event.preventDefault();
-        event.returnValue = '';
-      }
-    };
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty]);
-  useEffect(() => {
-    if (!reconciliation) return;
-    reset(toValues(reconciliation.values));
-    setSteps(initialSteps);
-    setSelectedSuites(initialSuites);
-    setFolderId(initialFolderId);
-    baseline.current = { steps: initialSteps, suites: initialSuites, folderId: initialFolderId };
-    setStepErrors({});
-    // Only an explicit save/reload token may replace an active draft.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reconciliation?.token, reset]);
-  useEffect(() => {
-    if (!createAnotherReset) return;
-    reset({ ...toValues(undefined), priority: values.priority });
-    setSteps([newStep(), newStep(), newStep()]);
-    setSelectedSuites(createAnotherReset.suites);
-    baseline.current = { steps: [], suites: createAnotherReset.suites, folderId };
-    setStepErrors({});
-    setCreatedConfirmation(true);
-    // Reset only after a confirmed create, not while editing the next draft.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createAnotherReset?.token, reset]);
-  useEffect(() => {
-    const resizeFields = () => {
-      root.current?.querySelectorAll<HTMLTextAreaElement>('[data-autogrow]').forEach((field) => {
-        field.style.height = 'auto';
-        if (!field.closest('[data-step-key], [data-autogrow-group]')) field.style.height = `${field.scrollHeight}px`;
-      });
-      root.current?.querySelectorAll<HTMLElement>('[data-step-key], [data-autogrow-group]').forEach((row) => {
-        const fields = Array.from(row.querySelectorAll<HTMLTextAreaElement>('[data-autogrow]'));
-        const heights = fields.map((field) =>
-          Math.min(160, Math.max(40, field.scrollHeight + field.offsetHeight - field.clientHeight)),
-        );
-        const sharedHeight = Math.max(...heights);
-        fields.forEach((field, index) => {
-          field.style.height = `${window.innerWidth >= 768 ? sharedHeight : heights[index]}px`;
-          field.style.overflowY = field.scrollHeight > field.clientHeight ? 'auto' : 'hidden';
-        });
-      });
-    };
-    resizeFields();
-    window.addEventListener('resize', resizeFields);
-    return () => window.removeEventListener('resize', resizeFields);
-  }, [steps, values.details, values.preconditions, values.testData]);
-  useEffect(() => {
-    if (focusStep) {
-      root.current?.querySelector<HTMLTextAreaElement>(`[data-action-key="${focusStep}"]`)?.focus();
-      setFocusStep(undefined);
-    }
-    if (focusHandle) {
-      root.current?.querySelector<HTMLButtonElement>(`[data-handle-key="${focusHandle}"]`)?.focus();
-      setFocusHandle(undefined);
-    }
-  }, [focusStep, focusHandle, steps]);
-  const append = () => {
-    if (pending) return;
-    let step = newStep();
-    while (steps.some((existing) => existing.key === step.key)) step = newStep();
-    setSteps((previous) => [...previous, step]);
-    setFocusStep(step.key);
-  };
-  const move = (key: string, target: number) => {
-    if (pending) return;
-    setSteps((previous) => {
-      const from = previous.findIndex((s) => s.key === key);
-      if (from < 0 || target < 0 || target >= previous.length || target === from) return previous;
-      const next = [...previous];
-      next.splice(target, 0, next.splice(from, 1)[0]);
-      setAnnouncement(`Step moved to position ${target + 1} of ${next.length}`);
-      return next;
-    });
-    setFocusHandle(key);
-  };
-  const update = (key: string, field: 'action' | 'expectedResult', value: string) => {
-    setSteps((previous) => previous.map((s) => (s.key === key ? { ...s, [field]: value } : s)));
-    setStepErrors((previous) => ({ ...previous, [key]: '' }));
-  };
-  const submit = (data: TestScenarioAuthoringFormData) => {
-    if (pending) return;
-    const invalid = Object.fromEntries(
-      meaningfulSteps.filter((s) => !s.action.trim()).map((s) => [s.key, 'Step action is required']),
-    );
-    setStepErrors(invalid);
-    if (Object.keys(invalid).length) return;
-    return onSubmit(
-      data,
-      meaningfulSteps,
-      folderId,
-      {
-        suiteIds: selectedSuites.filter((s) => !s.isNew).map((s) => s.id),
-        newSuites: selectedSuites.filter((s) => s.isNew).map(({ name }) => ({ name })),
-      },
-      createAnother,
-    );
-  };
-  const folder = folderId ? folders.find((f) => f.id === folderId) : null;
-  const filteredFolders = [{ id: '', name: 'No folder', depth: 0, path: 'No folder' }, ...folders].filter((item) =>
-    (item.path ?? item.name).toLowerCase().includes(folderSearch.toLowerCase().trim()),
-  );
-  const selectFolder = (id: string) => {
-    setFolderId(id || null);
-    setFolderOpen(false);
-    setFolderSearch('');
-  };
-  const cancel = () => onCancel(folderId);
+    selectedSuites,
+    setSelectedSuites,
+    folderPicker: {
+      folder,
+      filteredFolders,
+      selectFolder,
+      folderOpen,
+      changeFolderOpen,
+      folderSearch,
+      setFolderSearch,
+      folderSearchRef,
+    },
+  } = useTestScenarioForm(props);
   return (
     <Box
       as="form"
@@ -338,7 +181,7 @@ export const TestScenarioForm = ({
           )}
           <Text>›</Text>
           <Text color="text.primary">
-            {mode === 'create' ? 'New scenario' : initialValues.scenarioKey || 'Scenario'}
+            {mode === 'create' ? 'New scenario' : initialValues?.scenarioKey || 'Scenario'}
           </Text>
         </HStack>
         {(apiError || errorMessage) && (
@@ -519,64 +362,7 @@ export const TestScenarioForm = ({
                         cursor={draggedStep === step.key ? 'grabbing' : 'grab'}
                         color={draggedStep === step.key || grabbed === step.key ? 'blue.600' : 'text.secondary'}
                         style={{ touchAction: 'none' }}
-                        onPointerDown={(e) => {
-                          if (pending) return;
-                          pointer.current = { key: step.key, id: e.pointerId };
-                          setDraggedStep(step.key);
-                          dropTargetRef.current = step.key;
-                          setDropTarget(step.key);
-                          e.currentTarget.setPointerCapture?.(e.pointerId);
-                        }}
-                        onPointerMove={(e) => {
-                          if (pointer.current?.key !== step.key) return;
-                          const target = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-step-key]');
-                          const key = target?.getAttribute('data-step-key');
-                          if (key) {
-                            dropTargetRef.current = key;
-                            setDropTarget(key);
-                          }
-                        }}
-                        onPointerUp={(e) => {
-                          if (dropTargetRef.current)
-                            move(
-                              step.key,
-                              steps.findIndex((s) => s.key === dropTargetRef.current),
-                            );
-                          pointer.current = null;
-                          setDraggedStep(undefined);
-                          setDropTarget(undefined);
-                          dropTargetRef.current = undefined;
-                          e.currentTarget.releasePointerCapture?.(e.pointerId);
-                        }}
-                        onPointerCancel={() => {
-                          pointer.current = null;
-                          setDraggedStep(undefined);
-                          setDropTarget(undefined);
-                          dropTargetRef.current = undefined;
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === ' ' || e.key === 'Enter') {
-                            e.preventDefault();
-                            if (grabbed !== step.key) pickedUpOrder.current = steps.map((row) => row.key);
-                            setGrabbed(grabbed === step.key ? undefined : step.key);
-                            setAnnouncement(grabbed === step.key ? 'Step dropped' : `Step ${index + 1} picked up`);
-                          } else if (grabbed === step.key && ['ArrowUp', 'ArrowDown'].includes(e.key)) {
-                            e.preventDefault();
-                            move(step.key, index + (e.key === 'ArrowUp' ? -1 : 1));
-                          } else if (e.key === 'Escape' && grabbed === step.key) {
-                            e.preventDefault();
-                            setSteps((current) => {
-                              const order = new Map(pickedUpOrder.current.map((key, position) => [key, position]));
-                              return [...current].sort(
-                                (left, right) =>
-                                  (order.get(left.key) ?? current.length) - (order.get(right.key) ?? current.length),
-                              );
-                            });
-                            setGrabbed(undefined);
-                            setFocusHandle(step.key);
-                            setAnnouncement('Reordering cancelled');
-                          }
-                        }}
+                        {...getStepReorderHandlers(step, index)}
                       >
                         <Text aria-hidden="true">⠿</Text>
                       </IconButton>
@@ -699,10 +485,7 @@ export const TestScenarioForm = ({
               <Popover.Root
                 initialFocusEl={() => folderSearchRef.current}
                 open={folderOpen}
-                onOpenChange={({ open }) => {
-                  setFolderOpen(open);
-                  if (!open) setFolderSearch('');
-                }}
+                onOpenChange={({ open }) => changeFolderOpen(open)}
               >
                 <Popover.Trigger asChild>
                   <Button type="button" variant="outline" size="sm" aria-label="Scenario folder" disabled={pending}>
