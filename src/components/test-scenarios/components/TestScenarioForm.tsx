@@ -1,7 +1,20 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Alert, Box, Button, Grid, Heading, HStack, IconButton, Link, Popover, Portal, Text, VStack } from '@chakra-ui/react';
+import {
+  Alert,
+  Box,
+  Button,
+  Grid,
+  Heading,
+  HStack,
+  IconButton,
+  Link,
+  Popover,
+  Portal,
+  Text,
+  VStack,
+} from '@chakra-ui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -37,7 +50,12 @@ export interface TestScenarioFormProps {
   reconciliation?: TestScenarioFormReconciliation;
   createAnotherReset?: { token: number; suites: ScenarioSuiteDraft[] };
   focusTitle?: boolean;
-  history?: { createdAt: string; updatedAt: string; createdBy?: { name?: string | null } | null; updatedBy?: { name?: string | null } | null };
+  history?: {
+    createdAt: string;
+    updatedAt: string;
+    createdBy?: { name?: string | null } | null;
+    updatedBy?: { name?: string | null } | null;
+  };
   originLabel?: string;
   originKind?: 'scenarios' | 'suites';
   onNavigateOrigin?: () => void;
@@ -103,7 +121,9 @@ export const TestScenarioForm = ({
   onSubmit,
   onCancel,
 }: TestScenarioFormProps) => {
-  const [steps, setSteps] = useState(() => (initialSteps.length ? initialSteps : mode === 'create' ? [newStep(), newStep(), newStep()] : []));
+  const [steps, setSteps] = useState(() =>
+    initialSteps.length ? initialSteps : mode === 'create' ? [newStep(), newStep(), newStep()] : [],
+  );
   const [folderId, setFolderId] = useState(initialFolderId);
   const [folderOpen, setFolderOpen] = useState(false);
   const [folderSearch, setFolderSearch] = useState('');
@@ -193,7 +213,9 @@ export const TestScenarioForm = ({
       });
       root.current?.querySelectorAll<HTMLElement>('[data-step-key], [data-autogrow-group]').forEach((row) => {
         const fields = Array.from(row.querySelectorAll<HTMLTextAreaElement>('[data-autogrow]'));
-        const heights = fields.map((field) => Math.min(160, Math.max(40, field.scrollHeight + field.offsetHeight - field.clientHeight)));
+        const heights = fields.map((field) =>
+          Math.min(160, Math.max(40, field.scrollHeight + field.offsetHeight - field.clientHeight)),
+        );
         const sharedHeight = Math.max(...heights);
         fields.forEach((field, index) => {
           field.style.height = `${window.innerWidth >= 768 ? sharedHeight : heights[index]}px`;
@@ -245,14 +267,21 @@ export const TestScenarioForm = ({
     );
     setStepErrors(invalid);
     if (Object.keys(invalid).length) return;
-    return onSubmit(data, meaningfulSteps, folderId, {
-      suiteIds: selectedSuites.filter((s) => !s.isNew).map((s) => s.id),
-      newSuites: selectedSuites.filter((s) => s.isNew).map(({ name }) => ({ name })),
-    }, createAnother);
+    return onSubmit(
+      data,
+      meaningfulSteps,
+      folderId,
+      {
+        suiteIds: selectedSuites.filter((s) => !s.isNew).map((s) => s.id),
+        newSuites: selectedSuites.filter((s) => s.isNew).map(({ name }) => ({ name })),
+      },
+      createAnother,
+    );
   };
   const folder = folderId ? folders.find((f) => f.id === folderId) : null;
-  const filteredFolders = [{ id: '', name: 'No folder', depth: 0, path: 'No folder' }, ...folders]
-    .filter((item) => (item.path ?? item.name).toLowerCase().includes(folderSearch.toLowerCase().trim()));
+  const filteredFolders = [{ id: '', name: 'No folder', depth: 0, path: 'No folder' }, ...folders].filter((item) =>
+    (item.path ?? item.name).toLowerCase().includes(folderSearch.toLowerCase().trim()),
+  );
   const selectFolder = (id: string) => {
     setFolderId(id || null);
     setFolderOpen(false);

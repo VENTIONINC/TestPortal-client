@@ -45,6 +45,9 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
   const filtered = (suites ?? []).filter((suite) =>
     suite.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
   );
+  const normalizedSearch = search.trim().toLocaleLowerCase();
+  const canCreateSuite = Boolean(normalizedSearch) && !isFetching && normalizedSearch !== uncertainName &&
+    (!retrySuite || retrySuite.name.toLocaleLowerCase() !== normalizedSearch);
 
   const add = async (target: { id: string; name: string }, ids: string[], createdSuiteId = newlyCreatedSuiteId) => {
     const suiteId = target.id;
@@ -96,22 +99,24 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
     }
   };
 
+  const handleOpenChange = ({ open: next }: { open: boolean }) => {
+    if (!busy) {
+      setOpen(next);
+      if (next) {
+        setSearch('');
+        setError('');
+        setRetrySuite(null);
+        setUncertainName('');
+        setRefreshRequired(false);
+        setNewlyCreatedSuiteId(undefined);
+      }
+    }
+  };
+
   return (
     <Popover.Root
       open={open}
-      onOpenChange={({ open: next }) => {
-        if (!busy) {
-          setOpen(next);
-          if (next) {
-            setSearch('');
-            setError('');
-            setRetrySuite(null);
-            setUncertainName('');
-            setRefreshRequired(false);
-            setNewlyCreatedSuiteId(undefined);
-          }
-        }
-      }}
+      onOpenChange={handleOpenChange}
       positioning={{ placement: 'top' }}
       initialFocusEl={() => inputRef.current}
     >
@@ -216,10 +221,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                       </Button>
                     );
                   })}
-                  {search.trim() &&
-                    !isFetching &&
-                    search.trim().toLocaleLowerCase() !== uncertainName &&
-                    (!retrySuite || retrySuite.name.toLocaleLowerCase() !== search.trim().toLocaleLowerCase()) && (
+                  {canCreateSuite && (
                       <Button
                         variant="ghost"
                         color="blue.500"
