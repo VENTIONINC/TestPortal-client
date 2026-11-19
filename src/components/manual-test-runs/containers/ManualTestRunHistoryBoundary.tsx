@@ -15,7 +15,24 @@ export const ManualTestRunHistoryBoundary = () => {
 
   if (!selectedProjectId) return null;
 
-  if (scenarioId) return <Box p={6}><Heading size="md">Scenario-specific history is no longer available</Heading><Text mt={2}>Manual runs can now contain multiple scenarios. Browse project runs to find the run you need.</Text><Box mt={4}><Link to={PATHS.MANUAL_TEST_RUNS}>View project runs</Link></Box></Box>;
+  if (scenarioId)
+    return (
+      <Box p={6}>
+        <Heading size="md">Scenario-specific history is no longer available</Heading>
+        <Text mt={2}>
+          Manual runs can now contain multiple scenarios. Browse project runs to find the run you need.
+        </Text>
+        <Box mt={4}>
+          <Link to={PATHS.MANUAL_TEST_RUNS}>View project runs</Link>
+        </Box>
+      </Box>
+    );
 
-  return <ManualTestRunHistoryContainer key={selectedProjectId} projectId={selectedProjectId} selectedRunId={normalizedRunId} />;
+  return (
+    <ManualTestRunHistoryContainer
+      key={selectedProjectId}
+      projectId={selectedProjectId}
+      selectedRunId={normalizedRunId}
+    />
+  );
 };

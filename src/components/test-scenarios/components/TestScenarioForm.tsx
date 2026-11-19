@@ -131,17 +131,45 @@ export const TestScenarioForm = (props: TestScenarioFormProps) => {
       folderSearchRef,
     },
   } = useTestScenarioForm(props);
+  const handleClearCreatedConfirmation = () => {
+    if (createdConfirmation) setCreatedConfirmation(false);
+  };
+
+  const handleScheduleClearCreatedConfirmation = () => {
+    if (createdConfirmation) setTimeout(() => setCreatedConfirmation(false), 0);
+  };
+
+  const handleSelectFolderOnEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      if (filteredFolders[0]) selectFolder(filteredFolders[0].id);
+    }
+  };
+
+  const handleAppendStepOnEnter = (index: number, e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (
+      e.key === 'Enter' &&
+      !e.shiftKey &&
+      !e.nativeEvent.isComposing &&
+      index === steps.length - 1
+    ) {
+      e.preventDefault();
+      if (!e.repeat) append();
+    }
+  };
+
+  const handleSelectPriority = (priority: 'high' | 'medium' | 'low') => {
+    setValue('priority', priority, { shouldDirty: true, shouldValidate: true });
+    setPriorityOpen(false);
+  };
+
   return (
     <Box
       as="form"
       ref={root}
       onSubmit={handleSubmit(submit)}
-      onChangeCapture={() => {
-        if (createdConfirmation) setCreatedConfirmation(false);
-      }}
-      onClickCapture={() => {
-        if (createdConfirmation) setTimeout(() => setCreatedConfirmation(false), 0);
-      }}
+      onChangeCapture={handleClearCreatedConfirmation}
+      onClickCapture={handleScheduleClearCreatedConfirmation}
       mx={{ base: 3, md: 6 }}
       my={4}
       position="relative"
@@ -402,17 +430,7 @@ export const TestScenarioForm = (props: TestScenarioFormProps) => {
                           value={step.expectedResult}
                           disabled={pending}
                           onChange={(e) => update(step.key, 'expectedResult', e.target.value)}
-                          onKeyDown={(e) => {
-                            if (
-                              e.key === 'Enter' &&
-                              !e.shiftKey &&
-                              !e.nativeEvent.isComposing &&
-                              index === steps.length - 1
-                            ) {
-                              e.preventDefault();
-                              if (!e.repeat) append();
-                            }
-                          }}
+                          onKeyDown={(e) => handleAppendStepOnEnter(index, e)}
                           resize="none"
                         />
                       </Box>
@@ -515,12 +533,7 @@ export const TestScenarioForm = (props: TestScenarioFormProps) => {
                           bg="bg.card"
                           value={folderSearch}
                           onChange={(event) => setFolderSearch(event.currentTarget.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                              event.preventDefault();
-                              if (filteredFolders[0]) selectFolder(filteredFolders[0].id);
-                            }
-                          }}
+                          onKeyDown={handleSelectFolderOnEnter}
                           ps="33px"
                           border={0}
                         />
@@ -594,10 +607,7 @@ export const TestScenarioForm = (props: TestScenarioFormProps) => {
                             size="sm"
                             w="full"
                             justifyContent="flex-start"
-                            onClick={() => {
-                              setValue('priority', priority, { shouldDirty: true, shouldValidate: true });
-                              setPriorityOpen(false);
-                            }}
+                            onClick={() => handleSelectPriority(priority)}
                           >
                             <Text
                               as="span"

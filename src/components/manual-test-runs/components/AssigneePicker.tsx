@@ -86,13 +86,20 @@ export const AssigneePicker = ({ scenario, users, disabled, triggerHeight, onOpe
   const options =
     scenario.assignee && !users.some((user) => user.id === scenario.assigneeId) ? [scenario.assignee, ...users] : users;
 
+  const handleOpenChange = ({ open: nextOpen }: { open: boolean }) => {
+    setOpen(nextOpen);
+    if (nextOpen) onOpen();
+  };
+
+  const handleSelectAssignee = (id: string | null) => {
+    setOpen(false);
+    if ((scenario.assigneeId ?? null) !== id) onChange(id);
+  };
+
   return (
     <Popover.Root
       open={open}
-      onOpenChange={({ open: nextOpen }) => {
-        setOpen(nextOpen);
-        if (nextOpen) onOpen();
-      }}
+      onOpenChange={handleOpenChange}
       positioning={{ placement: 'bottom-start' }}
     >
       <Popover.Trigger asChild>
@@ -127,10 +134,7 @@ export const AssigneePicker = ({ scenario, users, disabled, triggerHeight, onOpe
               <AssigneeOptions
                 users={options}
                 selectedId={scenario.assigneeId ?? null}
-                onSelect={(id) => {
-                  setOpen(false);
-                  if ((scenario.assigneeId ?? null) !== id) onChange(id);
-                }}
+                onSelect={handleSelectAssignee}
               />
             </Popover.Body>
           </Popover.Content>

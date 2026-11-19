@@ -18,6 +18,10 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: { resu
     linkedIds, totalPages, linkButtonRef, isCurrentScope, coverageNeedsRefresh,
   } = management;
 
+  const handleResetPage = () => management.setPage(1);
+  const handlePreviousPage = () => management.setPage((current) => current - 1);
+  const handleNextPage = () => management.setPage((current) => current + 1);
+
   if (!isActive) return null;
 
   if (errorStatus === 404) {
@@ -78,6 +82,9 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: { resu
   }
 
   if (mode === 'picker') {
+    const isPreviousPageDisabled = page <= 1 || pickerQuery.isFetching;
+    const isNextPageDisabled = page >= totalPages || pickerQuery.isFetching;
+
     return (
       <Stack h="full" minH={0} gap={4} p={{ base: 4, md: 6 }} overflowY="auto">
         <Button alignSelf="flex-start" size="sm" variant="ghost" onClick={management.cancelPicker}>
@@ -136,7 +143,7 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: { resu
           <StateMessage
             message="There are no Test Scenarios on this page."
             action={
-              <Button size="sm" variant="outline" onClick={() => management.setPage(1)}>
+              <Button size="sm" variant="outline" onClick={handleResetPage}>
                 Return to page 1
               </Button>
             }
@@ -163,16 +170,16 @@ export const ResultRelatedScenarios = ({ resultId, projectId, isActive }: { resu
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={page <= 1 || pickerQuery.isFetching}
-                  onClick={() => management.setPage((current) => current - 1)}
+                  disabled={isPreviousPageDisabled}
+                  onClick={handlePreviousPage}
                 >
                   Previous
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={page >= totalPages || pickerQuery.isFetching}
-                  onClick={() => management.setPage((current) => current + 1)}
+                  disabled={isNextPageDisabled}
+                  onClick={handleNextPage}
                 >
                   Next
                 </Button>

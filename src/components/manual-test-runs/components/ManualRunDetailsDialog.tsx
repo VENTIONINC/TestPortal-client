@@ -60,6 +60,11 @@ export function ManualRunDetailsDialog({
   onSubmit,
 }: ManualRunDetailsDialogProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const handleSaveScenarios = (ids: string[]) => {
+    onSelectionChange(ids);
+    setPickerOpen(false);
+  };
+
   return (
     <>
       <Dialog
@@ -146,10 +151,7 @@ export function ManualRunDetailsDialog({
           pickerMode
           saving={false}
           onClose={() => setPickerOpen(false)}
-          onSave={(ids) => {
-            onSelectionChange(ids);
-            setPickerOpen(false);
-          }}
+          onSave={handleSaveScenarios}
         />
       )}
     </>

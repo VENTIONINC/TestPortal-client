@@ -745,6 +745,44 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     ? folderRows.filter((folder) => folder.parentId === selectedFolder.parentId)
     : [];
   const selectedFolderIndex = selectedFolderSiblings.findIndex((folder) => folder.id === selectedFolder?.id);
+  const handleDeleteSuite = (suite: CatalogSuite) => {
+    setTargetSuite(suite);
+    setCreateError(null);
+    setCreateDialog('delete-suite');
+  };
+
+  const handleSelectAllMatching = () => {
+    setPendingSuiteUndo(null);
+    setPendingFolderUndo(null);
+    void selectAllMatching();
+  };
+
+  const handleSuitePickerBusyChange = (busy: boolean) => {
+    if (busy) onSuiteOperationStart();
+    setIsAddingToSuite(busy);
+  };
+
+  const handleDeleteSelected = () => {
+    setDeleteTargetIds([...selectedIds]);
+    setDeleteSelectedOpen(true);
+  };
+
+  const handleRemoveFromSuite = () => {
+    setRemoveFromSuiteError(null);
+    setRemoveFromSuiteOpen(true);
+  };
+
+  const handleSuiteMembershipSaved = (payload: SuiteMembershipUndo) => {
+    const addedCount = payload.restoreData.addedScenarioIds.length;
+    const removedCount = payload.restoreData.removedMembers.length;
+    setPendingSuiteUndo({
+      kind: 'membership',
+      payload,
+      message: getMembershipChangeMessage(addedCount, removedCount, selectedSuite?.name ?? 'the suite'),
+    });
+    setOperationFeedback(null);
+  };
+
   return (
     <Wrap
       my={4}
@@ -809,11 +847,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 handleRunSuite={handleRunSuite}
                 onManageScenarios={() => setAddScenariosToSuiteOpen(true)}
                 openEditSuiteDialog={openEditSuiteDialog}
-                onDeleteSuite={(suite) => {
-                  setTargetSuite(suite);
-                  setCreateError(null);
-                  setCreateDialog('delete-suite');
-                }}
+                onDeleteSuite={handleDeleteSuite}
                 onCreateScenario={onCreateScenario}
                 startInlineFolder={startInlineFolder}
                 openEditFolderDialog={openEditFolderDialog}
@@ -921,25 +955,12 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                 isResolvingSelection={isResolvingSelection}
                 isExecutingOperation={isExecutingOperation}
                 isAddingToSuite={isAddingToSuite}
-                onSelectAllMatching={() => {
-                  setPendingSuiteUndo(null);
-                  setPendingFolderUndo(null);
-                  void selectAllMatching();
-                }}
+                onSelectAllMatching={handleSelectAllMatching}
                 handleRunSelected={handleRunSelected}
-                onSuitePickerBusyChange={(busy) => {
-                  if (busy) onSuiteOperationStart();
-                  setIsAddingToSuite(busy);
-                }}
+                onSuitePickerBusyChange={handleSuitePickerBusyChange}
                 onSuitePickerComplete={handleSuitePickerComplete}
-                onDeleteSelected={() => {
-                  setDeleteTargetIds([...selectedIds]);
-                  setDeleteSelectedOpen(true);
-                }}
-                onRemoveFromSuite={() => {
-                  setRemoveFromSuiteError(null);
-                  setRemoveFromSuiteOpen(true);
-                }}
+                onDeleteSelected={handleDeleteSelected}
+                onRemoveFromSuite={handleRemoveFromSuite}
                 clearSelection={clearSelection}
               />
             )}
@@ -1057,16 +1078,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           }))}
           unfiledScenarioCount={unfiledScenarioCount}
           totalScenarioCount={projectScenarioCount}
-          onSaved={(payload) => {
-            const addedCount = payload.restoreData.addedScenarioIds.length;
-            const removedCount = payload.restoreData.removedMembers.length;
-            setPendingSuiteUndo({
-              kind: 'membership',
-              payload,
-              message: getMembershipChangeMessage(addedCount, removedCount, selectedSuite?.name ?? 'the suite'),
-            });
-            setOperationFeedback(null);
-          }}
+          onSaved={handleSuiteMembershipSaved}
           onClose={() => setAddScenariosToSuiteOpen(false)}
         />
       )}

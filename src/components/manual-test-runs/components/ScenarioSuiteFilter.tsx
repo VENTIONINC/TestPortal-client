@@ -26,13 +26,25 @@ export const ScenarioSuiteFilter = ({
   const [suiteOpen, setSuiteOpen] = useState(false);
   const [suiteSearch, setSuiteSearch] = useState('');
 
+  const handleOpenChange = ({ open }: { open: boolean }) => {
+    setSuiteOpen(open);
+    if (!open) setSuiteSearch('');
+  };
+
+  const handleClose = () => {
+    setSuiteOpen(false);
+    setSuiteSearch('');
+  };
+
+  const handleClearSuites = () => {
+    onClear();
+    handleClose();
+  };
+
   return (
     <Popover.Root
       open={suiteOpen}
-      onOpenChange={({ open }) => {
-        setSuiteOpen(open);
-        if (!open) setSuiteSearch('');
-      }}
+      onOpenChange={handleOpenChange}
       positioning={{ placement: 'bottom-end' }}
     >
       <Popover.Trigger asChild>
@@ -124,21 +136,14 @@ export const ScenarioSuiteFilter = ({
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => {
-                onClear();
-                setSuiteOpen(false);
-                setSuiteSearch('');
-              }}
+              onClick={handleClearSuites}
             >
               Clear
             </Button>
             <Button
               size="sm"
               variant="primary"
-              onClick={() => {
-                setSuiteOpen(false);
-                setSuiteSearch('');
-              }}
+              onClick={handleClose}
             >
               Done
             </Button>

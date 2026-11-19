@@ -96,6 +96,10 @@ export const CatalogSidebar = ({
   const renderFolder = (folder: CatalogFolder): ReactNode => {
     const children = getFolderChildren(folder);
     const selected = scope.kind === CATALOG_SCOPE.folder && scope.id === folder.id;
+    const handleFolderDragLeave = (event: React.DragEvent<HTMLButtonElement>) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onDragLeave(folder.id);
+    };
+
     return (
       <Box key={folder.id}>
         <HStack gap={0}>
@@ -117,9 +121,7 @@ export const CatalogSidebar = ({
             aria-current={selected ? 'page' : undefined}
             onClick={() => changeScope({ kind: 'folder', id: folder.id })}
             onDragOver={(event) => handleScenarioDragOver(event, folder.id)}
-            onDragLeave={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onDragLeave(folder.id);
-            }}
+            onDragLeave={handleFolderDragLeave}
             onDrop={(event) => handleScenarioDrop(event, folder.id)}
           >
             <FiFolder size={22} style={{ display: 'block', flexShrink: 0 }} />
@@ -149,13 +151,7 @@ export const CatalogSidebar = ({
               value={inlineFolderName}
               disabled={editor.isSubmitting}
               onChange={(event) => setInlineFolderName(event.currentTarget.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Escape') onCancelFolderDraft();
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  void submitInlineFolder();
-                }
-              }}
+              onKeyDown={handleFolderDraftKeyDown}
             />
             {inlineFolderError && (
               <Text role="alert" color="fg.error" fontSize="xs">
@@ -166,6 +162,26 @@ export const CatalogSidebar = ({
         )}
       </Box>
     );
+  };
+
+  const handleFolderDraftKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') onCancelFolderDraft();
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      void submitInlineFolder();
+    }
+  };
+
+  const handleUnfiledDragLeave = (event: React.DragEvent<HTMLButtonElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onDragLeave(UNFILED_DESTINATION);
+  };
+
+  const handleSuiteDraftKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') editor.onCancel();
+    if (event.key === 'Enter' && !editor.name.trim()) {
+      event.preventDefault();
+      editor.onCancel();
+    }
   };
 
   return (
@@ -254,13 +270,7 @@ export const CatalogSidebar = ({
                     value={inlineFolderName}
                     disabled={editor.isSubmitting}
                     onChange={(event) => setInlineFolderName(event.currentTarget.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Escape') onCancelFolderDraft();
-                      if (event.key === 'Enter') {
-                        event.preventDefault();
-                        void submitInlineFolder();
-                      }
-                    }}
+                    onKeyDown={handleFolderDraftKeyDown}
                   />
                   {inlineFolderError && (
                     <Text role="alert" color="fg.error" fontSize="xs">
@@ -292,9 +302,7 @@ export const CatalogSidebar = ({
           color={scope.kind === 'unfiled' ? 'blue.fg' : 'text.main'}
           _hover={{ bg: 'bg.subtle' }}
           onDragOver={(event) => handleScenarioDragOver(event, UNFILED_DESTINATION)}
-          onDragLeave={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) onDragLeave(UNFILED_DESTINATION);
-          }}
+          onDragLeave={handleUnfiledDragLeave}
           onDrop={(event) => handleScenarioDrop(event, null)}
         >
           <UnfiledFolderIcon />
@@ -337,13 +345,7 @@ export const CatalogSidebar = ({
                   _focusVisible={{ borderColor: 'blue.500', outline: 'none', boxShadow: 'none' }}
                   disabled={editor.isSubmitting}
                   onChange={(event) => editor.onNameChange(event.currentTarget.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Escape') editor.onCancel();
-                    if (event.key === 'Enter' && !editor.name.trim()) {
-                      event.preventDefault();
-                      editor.onCancel();
-                    }
-                  }}
+                  onKeyDown={handleSuiteDraftKeyDown}
                 />
                 {editor.error && (
                   <Text role="alert" color="fg.error" fontSize="xs">

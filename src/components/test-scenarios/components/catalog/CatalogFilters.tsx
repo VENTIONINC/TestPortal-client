@@ -24,6 +24,11 @@ const PriorityFilter = ({
   const selected = value ? (value.split(',') as PriorityValue[]) : [];
   const selectedPriority = selected.length === 1 ? selected[0] : undefined;
   const priorityLabel = (priority: PriorityValue) => priority.charAt(0).toUpperCase() + priority.slice(1);
+  const handleClearSearch = () => {
+    onChange('');
+    setOpen(false);
+  };
+
   return (
     <Popover.Root open={open} onOpenChange={({ open: nextOpen }) => setOpen(nextOpen)}>
       <Popover.Trigger asChild>
@@ -102,10 +107,7 @@ const PriorityFilter = ({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => {
-                  onChange('');
-                  setOpen(false);
-                }}
+                onClick={handleClearSearch}
               >
                 Clear
               </Button>
@@ -151,13 +153,20 @@ const AuthorFilter = ({
     setSearch('');
   };
 
+  const handleOpenChange = ({ open: nextOpen }: { open: boolean }) => {
+    setOpen(nextOpen);
+    if (!nextOpen) setSearch('');
+  };
+
+  const handleClearSelection = () => {
+    onChange([]);
+    close();
+  };
+
   return (
     <Popover.Root
       open={open}
-      onOpenChange={({ open: nextOpen }) => {
-        setOpen(nextOpen);
-        if (!nextOpen) setSearch('');
-      }}
+      onOpenChange={handleOpenChange}
     >
       <Popover.Trigger asChild>
         <Button
@@ -250,10 +259,7 @@ const AuthorFilter = ({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => {
-                  onChange([]);
-                  close();
-                }}
+                onClick={handleClearSelection}
               >
                 Clear
               </Button>
@@ -312,6 +318,11 @@ const ScenarioSortSelect = ({
               <VStack align="stretch" gap={0}>
                 {(allowRunOrder ? [{ value: undefined, label: 'Run order' }, ...options] : options).map((option) => {
                   const selected = option.value === value;
+                  const handleSelectOption = () => {
+                    onChange(option.value);
+                    setOpen(false);
+                  };
+
                   return (
                     <Button
                       key={option.value ?? 'run-order'}
@@ -324,10 +335,7 @@ const ScenarioSortSelect = ({
                       _hover={{ bg: selected ? 'blue.100' : 'bg.subtle' }}
                       _dark={selected ? { color: 'blue.200', bg: 'blue.900', _hover: { bg: 'blue.800' } } : undefined}
                       aria-current={selected ? 'true' : undefined}
-                      onClick={() => {
-                        onChange(option.value);
-                        setOpen(false);
-                      }}
+                      onClick={handleSelectOption}
                     >
                       {option.label}
                       {selected && <FiCheck aria-hidden="true" />}
@@ -414,120 +422,124 @@ export const CatalogFilters = ({
   onSortDirectionChange: TestScenarioCatalogViewProps['onSortDirectionChange'];
   activeColumnFilters: Array<[keyof TestScenarioCatalogViewProps['columnFilters'], string]>;
   onColumnFilterChange: TestScenarioCatalogViewProps['onColumnFilterChange'];
-}) => (
-  <VStack align="stretch" gap={2} display={hidden ? 'none' : undefined}>
-    <HStack gap={2} flexWrap="wrap">
-      <Box
-        position="relative"
-        flex={{ base: '1 1 100%', md: '0 1 260px' }}
-        w={{ base: '100%', md: '260px' }}
-        maxW="100%"
-      >
+}) => {
+  const handleClearFilters = () => {
+    activeColumnFilters.forEach(([field]) => onColumnFilterChange(field, ''));
+    onSearchChange('');
+  };
+
+  return (
+    <VStack align="stretch" gap={2} display={hidden ? 'none' : undefined}>
+      <HStack gap={2} flexWrap="wrap">
         <Box
-          position="absolute"
-          insetStart={3}
-          top="50%"
-          transform="translateY(-50%)"
-          zIndex={1}
-          color="text.muted"
-          pointerEvents="none"
+          position="relative"
+          flex={{ base: '1 1 100%', md: '0 1 260px' }}
+          w={{ base: '100%', md: '260px' }}
+          maxW="100%"
         >
-          <FiSearch aria-hidden="true" size={14} />
-        </Box>
-        <Input
-          aria-label="Search scenarios"
-          placeholder="Search by title or key"
-          value={search}
-          onChange={(event) => onSearchChange(event.currentTarget.value)}
-          ps={9}
-          pe={search ? 9 : 3}
-          bg="bg.card"
-          borderColor={search.trim() ? 'border.active' : undefined}
-        />
-        {search && (
-          <IconButton
+          <Box
             position="absolute"
-            insetEnd={1}
+            insetStart={3}
             top="50%"
             transform="translateY(-50%)"
-            size="xs"
-            variant="ghost"
-            aria-label="Clear scenario search"
-            onClick={() => onSearchChange('')}
-          >
-            <FiX />
-          </IconButton>
-        )}
-      </Box>
-      {showFilters ? (
-        <>
-          <PriorityFilter value={priority} counts={priorityCounts} onChange={onPriorityChange} />
-          <AuthorFilter
-            value={selectedAuthorIds}
-            authors={authors}
-            loading={authorsLoading}
-            error={authorsError}
-            onChange={onAuthorChange}
-          />
-          <Box flex="1 1 auto" minW={0} />
-          <ScenarioSortSelect value={sort} onChange={onSortChange} allowRunOrder={allowRunOrder} />
-          <Tooltip content={sortDirection === 'desc' ? 'Descending' : 'Ascending'}>
-            <IconButton
-              aria-label={`Sort ${sortDirection === 'desc' ? 'descending' : 'ascending'}`}
-              disabled={!sort}
-              variant="outline"
-              bg="bg.card"
-              color="text.primary"
-              borderColor={sort && sortDirection !== 'desc' ? 'border.active' : 'border.main'}
-              h="40px"
-              w="40px"
-              minW="40px"
-              p={0}
-              borderRadius="md"
-              _hover={{ bg: 'bg.subtle', borderColor: 'border.active' }}
-              onClick={() => onSortDirectionChange(sortDirection === 'desc' ? 'asc' : 'desc')}
-            >
-              <SortDirectionIcon direction={sortDirection} />
-            </IconButton>
-          </Tooltip>
-        </>
-      ) : null}
-      {(search.trim() || activeColumnFilters.length > 0) && (
-        <Text fontSize="xs" color="text.muted">
-          {activeColumnFilters.length + Number(Boolean(search.trim()))} search{' '}
-          {activeColumnFilters.length + Number(Boolean(search.trim())) === 1 ? 'term' : 'terms'} active
-        </Text>
-      )}
-    </HStack>
-    {activeColumnFilters.length > 0 && (
-      <HStack gap={2} flexWrap="wrap" aria-label="Active scenario filters">
-        {activeColumnFilters.map(([field, value]) => (
-          <Button
-            key={field}
-            size="xs"
-            variant="subtle"
-            colorPalette="blue"
-            borderRadius="full"
-            onClick={() => onColumnFilterChange(field, '')}
-          >
-            {filterLabels[field]}: {value}
-            <FiX aria-hidden="true" />
-          </Button>
-        ))}
-        {activeColumnFilters.length + Number(Boolean(search.trim())) > 1 && (
-          <Button
-            size="xs"
-            variant="ghost"
+            zIndex={1}
             color="text.muted"
-            onClick={() => {
-              activeColumnFilters.forEach(([field]) => onColumnFilterChange(field, ''));
-              onSearchChange('');
-            }}
+            pointerEvents="none"
           >
-            Clear all
-          </Button>
+            <FiSearch aria-hidden="true" size={14} />
+          </Box>
+          <Input
+            aria-label="Search scenarios"
+            placeholder="Search by title or key"
+            value={search}
+            onChange={(event) => onSearchChange(event.currentTarget.value)}
+            ps={9}
+            pe={search ? 9 : 3}
+            bg="bg.card"
+            borderColor={search.trim() ? 'border.active' : undefined}
+          />
+          {search && (
+            <IconButton
+              position="absolute"
+              insetEnd={1}
+              top="50%"
+              transform="translateY(-50%)"
+              size="xs"
+              variant="ghost"
+              aria-label="Clear scenario search"
+              onClick={() => onSearchChange('')}
+            >
+              <FiX />
+            </IconButton>
+          )}
+        </Box>
+        {showFilters ? (
+          <>
+            <PriorityFilter value={priority} counts={priorityCounts} onChange={onPriorityChange} />
+            <AuthorFilter
+              value={selectedAuthorIds}
+              authors={authors}
+              loading={authorsLoading}
+              error={authorsError}
+              onChange={onAuthorChange}
+            />
+            <Box flex="1 1 auto" minW={0} />
+            <ScenarioSortSelect value={sort} onChange={onSortChange} allowRunOrder={allowRunOrder} />
+            <Tooltip content={sortDirection === 'desc' ? 'Descending' : 'Ascending'}>
+              <IconButton
+                aria-label={`Sort ${sortDirection === 'desc' ? 'descending' : 'ascending'}`}
+                disabled={!sort}
+                variant="outline"
+                bg="bg.card"
+                color="text.primary"
+                borderColor={sort && sortDirection !== 'desc' ? 'border.active' : 'border.main'}
+                h="40px"
+                w="40px"
+                minW="40px"
+                p={0}
+                borderRadius="md"
+                _hover={{ bg: 'bg.subtle', borderColor: 'border.active' }}
+                onClick={() => onSortDirectionChange(sortDirection === 'desc' ? 'asc' : 'desc')}
+              >
+                <SortDirectionIcon direction={sortDirection} />
+              </IconButton>
+            </Tooltip>
+          </>
+        ) : null}
+        {(search.trim() || activeColumnFilters.length > 0) && (
+          <Text fontSize="xs" color="text.muted">
+            {activeColumnFilters.length + Number(Boolean(search.trim()))} search{' '}
+            {activeColumnFilters.length + Number(Boolean(search.trim())) === 1 ? 'term' : 'terms'} active
+          </Text>
         )}
       </HStack>
-    )}
-  </VStack>
-);
+      {activeColumnFilters.length > 0 && (
+        <HStack gap={2} flexWrap="wrap" aria-label="Active scenario filters">
+          {activeColumnFilters.map(([field, value]) => (
+            <Button
+              key={field}
+              size="xs"
+              variant="subtle"
+              colorPalette="blue"
+              borderRadius="full"
+              onClick={() => onColumnFilterChange(field, '')}
+            >
+              {filterLabels[field]}: {value}
+              <FiX aria-hidden="true" />
+            </Button>
+          ))}
+          {activeColumnFilters.length + Number(Boolean(search.trim())) > 1 && (
+            <Button
+              size="xs"
+              variant="ghost"
+              color="text.muted"
+              onClick={handleClearFilters}
+            >
+              Clear all
+            </Button>
+          )}
+        </HStack>
+      )}
+    </VStack>
+  );
+};

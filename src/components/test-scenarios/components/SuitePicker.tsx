@@ -113,6 +113,10 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
     }
   };
 
+  const handleCloseOnEscape = (event: React.KeyboardEvent) => {
+    if (event.key === 'Escape' && !busy) setOpen(false);
+  };
+
   return (
     <Popover.Root
       open={open}
@@ -145,9 +149,7 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
             bg="bg.card"
             color="text.primary"
             p={2}
-            onKeyDown={(event) => {
-              if (event.key === 'Escape' && !busy) setOpen(false);
-            }}
+            onKeyDown={handleCloseOnEscape}
           >
             <Popover.Body p={0}>
               <Text fontSize="xs" color="text.secondary" px={1} pb={2}>
@@ -283,8 +285,20 @@ const DraftSuitePicker = ({ suites, selectedIds, selectedNewNames, disabled, onS
     onSelect(suite);
     setOpen(false);
   };
+
+  const handleOpenChange = ({ open: next }: { open: boolean }) => {
+    setOpen(next);
+    if (next) setSearch('');
+  };
+
+  const handlePreventEnterSubmit = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') event.preventDefault();
+  };
+
+  const handleCreateDraftSuite = () => select({ id: `suite-draft-${crypto.randomUUID()}`, name, isNew: true });
+
   return (
-    <Popover.Root open={open} onOpenChange={({ open: next }) => { setOpen(next); if (next) setSearch(''); }}
+    <Popover.Root open={open} onOpenChange={handleOpenChange}
       positioning={{ placement: 'bottom-start' }} initialFocusEl={() => inputRef.current}>
       <Popover.Trigger asChild>
         <IconButton type="button" variant="outline" size="xs" borderStyle="dashed" borderRadius="full"
@@ -294,7 +308,7 @@ const DraftSuitePicker = ({ suites, selectedIds, selectedNewNames, disabled, onS
         <Popover.Body p={0}>
           <Input ref={inputRef} aria-label="Find or create a suite" placeholder="Find or create a suite"
             value={search} maxLength={200} size="sm" disabled={disabled} onChange={(event) => setSearch(event.currentTarget.value)}
-            onKeyDown={(event) => { if (event.key === 'Enter') event.preventDefault(); }} />
+            onKeyDown={handlePreventEnterSubmit} />
           <Box maxH="250px" overflowY="auto" mt={1}>
             {filtered.map((suite) => (
               <Button type="button" key={suite.id} variant="ghost" w="full" h="auto" minH="44px"
@@ -313,7 +327,7 @@ const DraftSuitePicker = ({ suites, selectedIds, selectedNewNames, disabled, onS
               </Button>
             ))}
             {name && !exists && <Button type="button" variant="ghost" color="blue.500" w="full" disabled={disabled}
-              justifyContent="flex-start" onClick={() => select({ id: `suite-draft-${crypto.randomUUID()}`, name, isNew: true })}>
+              justifyContent="flex-start" onClick={handleCreateDraftSuite}>
               <FiPlus /> Create suite “{name}”
             </Button>}
             {!name && !suites.length && <Text fontSize="sm" color="text.secondary" p={2}>No suites yet. Enter a name to create one.</Text>}

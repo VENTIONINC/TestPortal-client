@@ -113,6 +113,22 @@ export const SuiteScenarioTable = ({
     }
     setAnchorScenarioId(scenarioId);
   };
+  const handleToggleAll = () => {
+    const allSelected = scenarios.every((scenario) => selectedIds.includes(scenario.id));
+    scenarios
+      .filter((scenario) => selectedIds.includes(scenario.id) === allSelected)
+      .forEach((scenario) => onToggleSelected(scenario.id));
+  };
+
+  const handleCaptureShiftSelection = (event: React.MouseEvent<HTMLInputElement>) => {
+    extendSelectionRef.current = event.shiftKey;
+  };
+
+  const handleToggleScenario = (scenarioId: string, index: number) => {
+    handleScenarioSelection(scenarioId, index, extendSelectionRef.current);
+    extendSelectionRef.current = false;
+  };
+
   return (
     <Box overflowX="auto">
       <Table.Root size="sm" variant="outline" w="100%" minW="980px" tableLayout="fixed">
@@ -135,12 +151,7 @@ export const SuiteScenarioTable = ({
                       scenarios.some((scenario) => selectedIds.includes(scenario.id)) &&
                       !scenarios.every((scenario) => selectedIds.includes(scenario.id));
                 }}
-                onChange={() => {
-                  const allSelected = scenarios.every((scenario) => selectedIds.includes(scenario.id));
-                  scenarios
-                    .filter((scenario) => selectedIds.includes(scenario.id) === allSelected)
-                    .forEach((scenario) => onToggleSelected(scenario.id));
-                }}
+                onChange={handleToggleAll}
               />
               <Text srOnly>Select</Text>
             </Table.ColumnHeader>
@@ -239,13 +250,8 @@ export const SuiteScenarioTable = ({
                     aria-label={`Select ${scenario.title}`}
                     disabled={selectionDisabled}
                     checked={selectedIds.includes(scenario.id)}
-                    onClick={(event) => {
-                      extendSelectionRef.current = event.shiftKey;
-                    }}
-                    onChange={() => {
-                      handleScenarioSelection(scenario.id, index, extendSelectionRef.current);
-                      extendSelectionRef.current = false;
-                    }}
+                    onClick={handleCaptureShiftSelection}
+                    onChange={() => handleToggleScenario(scenario.id, index)}
                   />
                 </Table.Cell>
                 <Table.Cell px={2} py={2}>
@@ -406,6 +412,13 @@ export const CompactScenarioTable = ({
     setAnchorId(id);
     extendSelection.current = false;
   };
+  const handleToggleAll = () => {
+    const allSelected = scenarios.every((scenario) => selectedIds.includes(scenario.id));
+    scenarios
+      .filter((scenario) => selectedIds.includes(scenario.id) === allSelected)
+      .forEach((scenario) => onToggleSelected(scenario.id));
+  };
+
   return (
     <Box overflowX="auto" w="100%">
       <Table.Root size="sm" variant="outline" minW="980px" w="100%" tableLayout="fixed">
@@ -426,12 +439,7 @@ export const CompactScenarioTable = ({
                       scenarios.some((scenario) => selectedIds.includes(scenario.id)) &&
                       !scenarios.every((scenario) => selectedIds.includes(scenario.id));
                 }}
-                onChange={() => {
-                  const allSelected = scenarios.every((scenario) => selectedIds.includes(scenario.id));
-                  scenarios
-                    .filter((scenario) => selectedIds.includes(scenario.id) === allSelected)
-                    .forEach((scenario) => onToggleSelected(scenario.id));
-                }}
+                onChange={handleToggleAll}
               />
               <Text srOnly>Select</Text>
             </Table.ColumnHeader>
@@ -488,6 +496,17 @@ export const CompactScenarioTable = ({
                 : scenario.createdBy.email || 'Unknown author';
               const priority = scenario.priority;
               const priorityStyle = priority ? priorityColors[priority] : undefined;
+              const handleScenarioDragStart = (event: React.DragEvent<HTMLButtonElement>) => {
+                const scenarioIds = selected ? selectedIds : [scenario.id];
+                onDragPayload(projectId, scenarioIds);
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData(SCENARIO_DRAG_MIME, JSON.stringify({ projectId, scenarioIds }));
+              };
+
+              const handleCaptureShiftSelection = (event: React.MouseEvent<HTMLInputElement>) => {
+                extendSelection.current = event.shiftKey;
+              };
+
               return (
                 <Table.Row
                   key={scenario.id}
@@ -504,12 +523,7 @@ export const CompactScenarioTable = ({
                       title="Drag to move into a folder"
                       draggable={!selectionDisabled}
                       disabled={selectionDisabled}
-                      onDragStart={(event) => {
-                        const scenarioIds = selected ? selectedIds : [scenario.id];
-                        onDragPayload(projectId, scenarioIds);
-                        event.dataTransfer.effectAllowed = 'move';
-                        event.dataTransfer.setData(SCENARIO_DRAG_MIME, JSON.stringify({ projectId, scenarioIds }));
-                      }}
+                      onDragStart={handleScenarioDragStart}
                       onDragEnd={onDragEnd}
                     >
                       ⠿
@@ -521,9 +535,7 @@ export const CompactScenarioTable = ({
                       aria-label={`Select ${scenario.title}`}
                       disabled={selectionDisabled}
                       checked={selected}
-                      onClick={(event) => {
-                        extendSelection.current = event.shiftKey;
-                      }}
+                      onClick={handleCaptureShiftSelection}
                       onChange={() => selectRange(scenario.id, index)}
                     />
                   </Table.Cell>
