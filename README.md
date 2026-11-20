@@ -22,9 +22,18 @@ cd test-portal-client
 yarn install
 ```
 
+The install generates Chakra typings and activates the versioned Husky
+pre-commit hook in a Git checkout. It skips CI, production installs, and source
+trees without Git metadata. To reactivate it in an existing clone, run
+`yarn postinstall` and check
+`git config --local --get core.hooksPath` returns `.husky/_`.
+
+The hook runs `yarn eslint`, `yarn tsc`, and `yarn test` in that order.
+
 ### 3. Configure environment variables
 
-Create a `.env` file in the root directory based on `.env.example`
+Create a `.env` file in the root directory based on `.env.example`. Set
+`VITE_API_URL` to your backend URL, for example `http://localhost:3001`.
 
 ### 4. Start the development server
 

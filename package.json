@@ -14,7 +14,7 @@
     "lint": "yarn eslint && yarn tsc",
     "new:file": "node scripts/new-file.js",
     "preview": "vite preview",
-    "prepare": "husky",
+    "postinstall": "node -e \"const fs=require('node:fs');const {spawnSync}=require('node:child_process');const omitted=(process.env.npm_config_omit||'').split(',');if(process.env.HUSKY==='0'||process.env.CI||process.env.NODE_ENV==='production'||process.env.YARN_PRODUCTION==='true'||omitted.includes('dev')||!fs.existsSync('.git'))process.exit(0);for(const [command,args] of [['yarn',['typegen']],['husky',[]]]){const result=spawnSync(command,args,{stdio:'inherit'});if(result.error)throw result.error;if(result.status!==0)process.exit(result.status??1)}\"",
     "generate-api": "npx @rtk-query/codegen-openapi rtk-query-codegen.config.cjs",
     "generate-mcp-api": "npx @rtk-query/codegen-openapi rtk-query-codegen.mcp.config.cjs",
     "typegen": "chakra typegen src/theme/system.ts"
@@ -52,8 +52,6 @@
   },
   "devDependencies": {
     "@chakra-ui/cli": "3.36.0",
-    "@commitlint/cli": "19.8.1",
-    "@commitlint/config-conventional": "19.8.1",
     "@eslint/js": "9.25.0",
     "@faker-js/faker": "10.2.0",
     "@rtk-query/codegen-openapi": "2.0.0",
