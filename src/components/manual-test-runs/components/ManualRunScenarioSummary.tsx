@@ -24,8 +24,10 @@ export function ManualRunScenarioSummary({
 }: ManualRunScenarioSummaryProps) {
   const [catalog, setCatalog] = useState<TestScenarioSummary[]>([]);
   const [loadScenarios] = useLazyGetApiV2TestScenariosQuery();
+
   useEffect(() => {
     let active = true;
+
     const load = async () => {
       try {
         const first = await loadScenarios({ projectId, page: 1, limit: 100 }, true).unwrap();
@@ -34,20 +36,25 @@ export function ManualRunScenarioSummary({
             loadScenarios({ projectId, page: index + 2, limit: 100 }, true).unwrap(),
           ),
         );
+
         if (active) setCatalog([first, ...rest].flatMap((page) => page.scenarios));
       } catch {
         if (active) setCatalog([]);
       }
     };
+
     void load();
+
     return () => {
       active = false;
     };
   }, [projectId, loadScenarios]);
+
   const rows = selectedIds
     .map((id) => {
       const row = catalog.find((item) => item.id === id);
       const snapshot = existing.find((item) => item.sourceScenarioId === id);
+
       return row
         ? { priority: row.priority, folder: row.folderId ?? 'unfiled' }
         : snapshot
@@ -55,11 +62,13 @@ export function ManualRunScenarioSummary({
           : undefined;
     })
     .filter((row) => row !== undefined);
+
   const counts = (['high', 'medium', 'low'] as const).map(
     (priority) =>
       `${priority[0].toUpperCase() + priority.slice(1)} ${rows.filter((row) => row.priority === priority).length}`,
   );
   const completeStats = rows.length === selectedIds.length;
+
   return (
     <Box>
       <Text fontSize="sm" color="fg.muted" mb={2}>

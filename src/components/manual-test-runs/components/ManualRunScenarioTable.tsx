@@ -13,6 +13,17 @@ import { MANUAL_RUN_RESULT } from '../constants';
 import { AssigneePicker } from './AssigneePicker';
 import { RESULTS, resultExplanations, resultLabels } from './manualRunResults';
 
+const selectedResultColors: Partial<Record<(typeof RESULTS)[number], string>> = {
+  [MANUAL_RUN_RESULT.BLOCKED]: orange_300,
+  [MANUAL_RUN_RESULT.SKIPPED]: grey_2100,
+};
+
+const INSTRUCTION_FIELDS = [
+  ['Details', 'details'],
+  ['Preconditions', 'preconditions'],
+  ['Test data', 'testData'],
+] as const;
+
 interface ManualRunScenarioTableProps {
   runId: string;
   completed: boolean;
@@ -67,6 +78,10 @@ export const ManualRunScenarioTable = ({
 
   const handleDragEnd = () => {
     draggedScenarioId.current = undefined;
+  };
+
+  const handleToggleInstructions = (scenarioId: string) => {
+    setExpandedScenarioId((current) => (current === scenarioId ? undefined : scenarioId));
   };
 
   return (
@@ -183,6 +198,12 @@ export const ManualRunScenarioTable = ({
                       skipped: FiSkipForward,
                     } as const;
                     const ResultIcon = icons[result];
+                    const isSelected = scenario.result === result;
+                    const selectedColor = selectedResultColors[result];
+                    const background = isSelected ? selectedColor : 'bg.panel';
+                    const borderColor = isSelected ? selectedColor : 'border.main';
+                    const hoverStyle = isSelected && selectedColor ? { bg: selectedColor } : undefined;
+
                     return (
                       <Button
                         key={result}
@@ -197,34 +218,13 @@ export const ManualRunScenarioTable = ({
                         fontSize="18px"
                         lineHeight="1"
                         colorPalette={palettes[result]}
-                        variant={scenario.result === result ? 'solid' : 'outline'}
-                        bg={
-                          scenario.result === result
-                            ? result === MANUAL_RUN_RESULT.BLOCKED
-                              ? orange_300
-                              : result === MANUAL_RUN_RESULT.SKIPPED
-                                ? grey_2100
-                                : undefined
-                            : 'bg.panel'
-                        }
-                        borderColor={
-                          scenario.result === result
-                            ? result === MANUAL_RUN_RESULT.BLOCKED
-                              ? orange_300
-                              : result === MANUAL_RUN_RESULT.SKIPPED
-                                ? grey_2100
-                                : undefined
-                            : 'border.main'
-                        }
-                        _hover={
-                          scenario.result === result &&
-                          (result === MANUAL_RUN_RESULT.BLOCKED || result === MANUAL_RUN_RESULT.SKIPPED)
-                            ? { bg: result === MANUAL_RUN_RESULT.BLOCKED ? orange_300 : grey_2100 }
-                            : undefined
-                        }
+                        variant={isSelected ? 'solid' : 'outline'}
+                        bg={background}
+                        borderColor={borderColor}
+                        _hover={hoverStyle}
                         aria-label={`${scenario.title}: mark ${resultLabels[result]}`}
-                        aria-pressed={scenario.result === result}
-                        title={`${resultLabels[result]} (${result[0].toUpperCase()}). ${resultExplanations[result]} ${scenario.result === result ? 'Select again to reset this scenario to Untested.' : `Select to mark this scenario ${resultLabels[result]}.`}`}
+                        aria-pressed={isSelected}
+                        title={`${resultLabels[result]} (${result[0].toUpperCase()}). ${resultExplanations[result]} ${isSelected ? 'Select again to reset this scenario to Untested.' : `Select to mark this scenario ${resultLabels[result]}.`}`}
                         disabled={completed || writesBlocked}
                         onClick={() => onUpdateResult(scenario, result)}
                       >
@@ -263,30 +263,24 @@ export const ManualRunScenarioTable = ({
                       flexShrink={0}
                       aria-label={`Instructions for ${scenario.title}`}
                       aria-expanded={expandedScenarioId === scenario.id}
-                      onClick={() =>
-                        setExpandedScenarioId((current) => (current === scenario.id ? undefined : scenario.id))
-                      }
+                      onClick={() => handleToggleInstructions(scenario.id)}
                     >
                       ⓘ
                     </Button>
                   </HStack>
                   {expandedScenarioId === scenario.id && (
                     <Box py={2} whiteSpace="pre-wrap">
-                      {(
-                        [
-                          ['Details', scenario.details],
-                          ['Preconditions', scenario.preconditions],
-                          ['Test data', scenario.testData],
-                        ] as const
-                      ).map(
-                        ([label, value]) =>
+                      {INSTRUCTION_FIELDS.map(([label, field]) => {
+                        const value = scenario[field];
+                        return (
                           value && (
-                            <Box key={label} mb={2}>
+                            <Box key={field} mb={2}>
                               <Text fontWeight="semibold">{label}</Text>
                               <Text>{value}</Text>
                             </Box>
-                          ),
-                      )}
+                          )
+                        );
+                      })}
                       <Text fontWeight="semibold">Steps</Text>
                       {scenario.steps.length ? (
                         [...scenario.steps]

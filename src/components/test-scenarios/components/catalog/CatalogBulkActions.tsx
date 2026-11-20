@@ -12,6 +12,26 @@ import { SuitePicker } from '../SuitePicker';
 type BulkSuitePickerProps = Extract<ComponentProps<typeof SuitePicker>, { projectId: string }>;
 export type SuitePickerCompletion = BulkSuitePickerProps['onComplete'];
 
+interface CatalogBulkActionsProps {
+  selectedIds: string[];
+  total: number;
+  allMatchingSelected: boolean;
+  inSuite: boolean;
+  isSuitesTab: boolean;
+  isScenariosTab: boolean;
+  projectId?: string;
+  isResolvingSelection: boolean;
+  isExecutingOperation: boolean;
+  isAddingToSuite: boolean;
+  onSelectAllMatching: () => void;
+  handleRunSelected: () => Promise<void>;
+  onSuitePickerBusyChange: NonNullable<BulkSuitePickerProps['onBusyChange']>;
+  onSuitePickerComplete: SuitePickerCompletion;
+  onDeleteSelected: () => void;
+  onRemoveFromSuite: () => void;
+  clearSelection: () => void;
+}
+
 export const CatalogBulkActions = ({
   selectedIds,
   total,
@@ -30,25 +50,7 @@ export const CatalogBulkActions = ({
   onDeleteSelected,
   onRemoveFromSuite,
   clearSelection,
-}: {
-  selectedIds: string[];
-  total: number;
-  allMatchingSelected: boolean;
-  inSuite: boolean;
-  isSuitesTab: boolean;
-  isScenariosTab: boolean;
-  projectId?: string;
-  isResolvingSelection: boolean;
-  isExecutingOperation: boolean;
-  isAddingToSuite: boolean;
-  onSelectAllMatching: () => void;
-  handleRunSelected: () => Promise<void>;
-  onSuitePickerBusyChange: NonNullable<BulkSuitePickerProps['onBusyChange']>;
-  onSuitePickerComplete: SuitePickerCompletion;
-  onDeleteSelected: () => void;
-  onRemoveFromSuite: () => void;
-  clearSelection: () => void;
-}) => (
+}: CatalogBulkActionsProps) => (
   <Portal>
     <HStack
       position="fixed"

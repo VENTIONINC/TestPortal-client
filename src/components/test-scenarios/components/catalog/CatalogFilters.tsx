@@ -382,6 +382,28 @@ const filterLabels: Record<keyof TestScenarioCatalogViewProps['columnFilters'], 
   createdBy: 'Created by',
 };
 
+interface CatalogFiltersProps {
+  hidden: boolean;
+  showFilters: boolean;
+  allowRunOrder: boolean;
+  search: string;
+  onSearchChange: TestScenarioCatalogViewProps['onSearchChange'];
+  priority: string;
+  priorityCounts?: TestScenarioCatalogViewProps['priorityCounts'];
+  onPriorityChange: TestScenarioCatalogViewProps['onPriorityChange'];
+  selectedAuthorIds: string[];
+  authors: TestScenarioCatalogViewProps['authors'];
+  authorsLoading: boolean;
+  authorsError?: unknown;
+  onAuthorChange: TestScenarioCatalogViewProps['onAuthorChange'];
+  sort: TestScenarioCatalogViewProps['sort'];
+  sortDirection: TestScenarioCatalogViewProps['sortDirection'];
+  onSortChange: TestScenarioCatalogViewProps['onSortChange'];
+  onSortDirectionChange: TestScenarioCatalogViewProps['onSortDirectionChange'];
+  activeColumnFilters: Array<[keyof TestScenarioCatalogViewProps['columnFilters'], string]>;
+  onColumnFilterChange: TestScenarioCatalogViewProps['onColumnFilterChange'];
+}
+
 export const CatalogFilters = ({
   hidden,
   showFilters,
@@ -402,27 +424,7 @@ export const CatalogFilters = ({
   onSortDirectionChange,
   activeColumnFilters,
   onColumnFilterChange,
-}: {
-  hidden: boolean;
-  showFilters: boolean;
-  allowRunOrder: boolean;
-  search: string;
-  onSearchChange: TestScenarioCatalogViewProps['onSearchChange'];
-  priority: string;
-  priorityCounts?: TestScenarioCatalogViewProps['priorityCounts'];
-  onPriorityChange: TestScenarioCatalogViewProps['onPriorityChange'];
-  selectedAuthorIds: string[];
-  authors: TestScenarioCatalogViewProps['authors'];
-  authorsLoading: boolean;
-  authorsError?: unknown;
-  onAuthorChange: TestScenarioCatalogViewProps['onAuthorChange'];
-  sort: TestScenarioCatalogViewProps['sort'];
-  sortDirection: TestScenarioCatalogViewProps['sortDirection'];
-  onSortChange: TestScenarioCatalogViewProps['onSortChange'];
-  onSortDirectionChange: TestScenarioCatalogViewProps['onSortDirectionChange'];
-  activeColumnFilters: Array<[keyof TestScenarioCatalogViewProps['columnFilters'], string]>;
-  onColumnFilterChange: TestScenarioCatalogViewProps['onColumnFilterChange'];
-}) => {
+}: CatalogFiltersProps) => {
   const handleClearFilters = () => {
     activeColumnFilters.forEach(([field]) => onColumnFilterChange(field, ''));
     onSearchChange('');

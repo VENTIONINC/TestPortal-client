@@ -23,7 +23,11 @@ export interface TestScenarioCreateContainerProps {
   initialFolderId?: string | null;
   sourceScenario?: TestScenario;
 }
-const ScopedScenarioCreateContainer = ({ projectId, initialFolderId = null, sourceScenario }: TestScenarioCreateContainerProps) => {
+const ScopedScenarioCreateContainer = ({
+  projectId,
+  initialFolderId = null,
+  sourceScenario,
+}: TestScenarioCreateContainerProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const search = new URLSearchParams(location.search);
@@ -41,7 +45,10 @@ const ScopedScenarioCreateContainer = ({ projectId, initialFolderId = null, sour
   const [dirty, setDirty] = useState(false);
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [createAnotherReset, setCreateAnotherReset] = useState<{ token: number; suites: Array<{ id: string; name: string }> }>();
+  const [createAnotherReset, setCreateAnotherReset] = useState<{
+    token: number;
+    suites: Array<{ id: string; name: string }>;
+  }>();
   const inFlight = useRef(false);
   const allowNavigation = useRef(false);
   const mounted = useRef(true);
@@ -57,7 +64,10 @@ const ScopedScenarioCreateContainer = ({ projectId, initialFolderId = null, sour
   const flatFolders = flattenScenarioFolders(folders);
   const clone = sourceScenario ? scenarioCloneDraft(sourceScenario) : undefined;
   const originDestination = scenarioOriginDestination(projectId, origin, flatFolders, suites);
-  const validInitialFolder = origin.kind === 'folder' && origin.id === initialFolderId && flatFolders.some(({ id }) => id === origin.id) ? origin.id : null;
+  const validInitialFolder =
+    origin.kind === 'folder' && origin.id === initialFolderId && flatFolders.some(({ id }) => id === origin.id)
+      ? origin.id
+      : null;
   const handleSubmit: ComponentProps<typeof TestScenarioForm>['onSubmit'] = async (
     values,
     steps,
@@ -95,7 +105,11 @@ const ScopedScenarioCreateContainer = ({ projectId, initialFolderId = null, sour
     } catch (error) {
       if (!current()) return;
       const status = (error as FetchBaseQueryError).status;
-      const uncertain = status === 'FETCH_ERROR' || status === 'TIMEOUT_ERROR' || status === 'PARSING_ERROR' || (typeof status === 'number' && status >= 500);
+      const uncertain =
+        status === 'FETCH_ERROR' ||
+        status === 'TIMEOUT_ERROR' ||
+        status === 'PARSING_ERROR' ||
+        (typeof status === 'number' && status >= 500);
       setApiError(
         uncertain
           ? 'The save result is uncertain. Inspect the scenario catalog before explicitly retrying to avoid creating a duplicate. Your draft is preserved.'
@@ -108,7 +122,8 @@ const ScopedScenarioCreateContainer = ({ projectId, initialFolderId = null, sour
       }
     }
   };
-  if (!sourceScenario && origin.kind === 'folder' && !foldersQuery.currentData && !foldersQuery.isError) return <div role="status">Loading folders…</div>;
+  if (!sourceScenario && origin.kind === 'folder' && !foldersQuery.currentData && !foldersQuery.isError)
+    return <div role="status">Loading folders…</div>;
   return (
     <>
       <ScenarioDraftNavigationGuard dirty={dirty && !saved} allowNavigation={allowNavigation} />
@@ -122,7 +137,11 @@ const ScopedScenarioCreateContainer = ({ projectId, initialFolderId = null, sour
         originLabel={originDestination.label}
         originKind={origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? 'suites' : 'scenarios'}
         onNavigateOrigin={() => navigate(originDestination.path)}
-        onNavigateSection={() => navigate(`${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId, ...(origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? { tab: 'suites' } : {}) })}`)}
+        onNavigateSection={() =>
+          navigate(
+            `${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId, ...(origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? { tab: 'suites' } : {}) })}`,
+          )
+        }
         folders={flatFolders}
         initialFolderId={clone ? clone.folderId : validInitialFolder}
         createAnotherReset={createAnotherReset}
@@ -132,7 +151,11 @@ const ScopedScenarioCreateContainer = ({ projectId, initialFolderId = null, sour
         errorCatalogPath={`${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId }).toString()}`}
         onDirtyChange={setDirty}
         onSubmit={handleSubmit}
-        onCancel={() => navigate(sourceScenario ? `${getTestScenarioDetailPath(sourceScenario.id)}${originSearch}` : originDestination.path)}
+        onCancel={() =>
+          navigate(
+            sourceScenario ? `${getTestScenarioDetailPath(sourceScenario.id)}${originSearch}` : originDestination.path,
+          )
+        }
       />
     </>
   );
