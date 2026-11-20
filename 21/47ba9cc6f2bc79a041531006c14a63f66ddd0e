@@ -1,0 +1,21 @@
+.husky/pre-commit
+  s_fbe32e58cf1208::t_6efcaabb848e02 1-17
+yarn.lock
+  s_fbe32e58cf1208::t_03c36c9074894c 3532,4392,5555,7306,9605
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2147ba9cc6f2bc79a041531006c14a63f66ddd0e",
+  "prompts": {},
+  "sessions": {
+    "s_fbe32e58cf1208": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1f365-57d9-79e1-a57e-6b68e09bbd8b",
+        "model": "gpt-6-luna"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
