@@ -9,7 +9,11 @@ import { useSelectedProject } from '@/hooks/useSelectedProject';
 
 import { TestScenarioCatalogContainer } from './TestScenarioCatalogContainer';
 
-export const TestScenarioCatalog = ({ organizationTab }: { organizationTab?: 'scenarios' | 'suites' } = {}) => {
+interface TestScenarioCatalogProps {
+  organizationTab?: 'scenarios' | 'suites';
+}
+
+export const TestScenarioCatalog = ({ organizationTab }: TestScenarioCatalogProps = {}) => {
   const { selectedProjectId } = useSelectedProject();
   const [searchParams] = useSearchParams();
   const { setSelectedProjectId } = useProjectsActions();

@@ -12,6 +12,28 @@ import type { TestScenarioSummary } from '../../types';
 import { CatalogTableEmptyState } from './CatalogTableStates';
 import { authorInitials, compactDate, priorityColors, SCENARIO_DRAG_MIME, shortAuthorName } from './utils';
 
+interface SuiteScenarioTableProps {
+  originSearch: string;
+  projectId?: string;
+  enableSuiteDrag: boolean;
+  enableSuiteReorder: boolean;
+  onDragPayload: (projectId: string, scenarioIds: string[]) => void;
+  onDragEnd: () => void;
+  onSuiteRowDrop: (event: DragEvent<HTMLElement>, scenarioId: string) => void;
+  dragOverScenarioId: string | null;
+  onSuiteRowDragOver: (event: DragEvent<HTMLElement>, scenarioId: string) => void;
+  scenarios: TestScenarioSummary[];
+  isLoading: boolean;
+  selectedIds: string[];
+  selectionDisabled: boolean;
+  onToggleSelected: (id: string) => void;
+  showFolder: boolean;
+  folderPathById: Map<string, string>;
+  searchActive: boolean;
+  emptySuite: boolean;
+  onAddScenarios: () => void;
+}
+
 export const SuiteScenarioTable = ({
   originSearch,
   scenarios,
@@ -32,27 +54,7 @@ export const SuiteScenarioTable = ({
   onSuiteRowDrop,
   dragOverScenarioId,
   onSuiteRowDragOver,
-}: {
-  originSearch: string;
-  projectId?: string;
-  enableSuiteDrag: boolean;
-  enableSuiteReorder: boolean;
-  onDragPayload: (projectId: string, scenarioIds: string[]) => void;
-  onDragEnd: () => void;
-  onSuiteRowDrop: (event: DragEvent<HTMLElement>, scenarioId: string) => void;
-  dragOverScenarioId: string | null;
-  onSuiteRowDragOver: (event: DragEvent<HTMLElement>, scenarioId: string) => void;
-  scenarios: TestScenarioSummary[];
-  isLoading: boolean;
-  selectedIds: string[];
-  selectionDisabled: boolean;
-  onToggleSelected: (id: string) => void;
-  showFolder: boolean;
-  folderPathById: Map<string, string>;
-  searchActive: boolean;
-  emptySuite: boolean;
-  onAddScenarios: () => void;
-}) => {
+}: SuiteScenarioTableProps) => {
   const [anchorScenarioId, setAnchorScenarioId] = useState<string | null>(null);
   const extendSelectionRef = useRef(false);
   const handleScenarioSelection = (scenarioId: string, index: number, extendSelection: boolean) => {

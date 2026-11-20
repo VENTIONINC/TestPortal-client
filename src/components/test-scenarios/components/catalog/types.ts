@@ -105,7 +105,6 @@ export interface TestScenarioCatalogViewProps {
   onSuiteOperationStart: () => void;
   onSuiteOperationComplete: (report: ScenarioOperationReport, selection: string[]) => void;
   onDeleteSelected: (scenarioIds: string[]) => Promise<ScenarioOperationReport>;
-  onRemoveSelectedFromSuite: () => Promise<ScenarioOperationReport>;
   removeSuiteMembership: (suiteId: string, scenarioIds: string[]) => Promise<SuiteMembershipUndo>;
   restoreSuiteMembership: (undo: SuiteMembershipUndo) => Promise<void>;
   moveSuiteMembership: (
@@ -114,7 +113,7 @@ export interface TestScenarioCatalogViewProps {
     scenarioIds: string[],
   ) => Promise<SuiteMoveUndo>;
   restoreSuiteMove: (undo: SuiteMoveUndo) => Promise<void>;
-  refreshSuiteData: () => Promise<void>;
+  refreshSuiteData: (options?: { reportErrors?: boolean }) => Promise<void>;
   onReorderSuite: (suiteId: string, scenarioIds: string[]) => Promise<void>;
   onCreateFolder: (name: string, parentId: string | null, description?: string | null) => Promise<unknown>;
   onUpdateFolder: (
@@ -137,14 +136,7 @@ export interface TestScenarioCatalogViewProps {
 
 export type CatalogFolderRow = CatalogFolder & { depth: number };
 
-export type CatalogEditor =
-  | 'folder'
-  | 'suite'
-  | 'rename-folder'
-  | 'edit-suite'
-  | 'move-folder'
-  | 'delete-folder'
-  | 'delete-suite';
+export type CatalogInlineEditor = 'suite' | 'rename-folder' | 'edit-suite';
 
 export interface CatalogEditorForm {
   name: string;

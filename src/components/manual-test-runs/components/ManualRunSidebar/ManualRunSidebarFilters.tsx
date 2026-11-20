@@ -5,8 +5,8 @@ import { Badge, Box, Button, HStack, IconButton, Input, Text, VStack } from '@ch
 import { FiCheck, FiSearch, FiSliders, FiX } from 'react-icons/fi';
 
 import { MANUAL_RUN_PERIOD, MANUAL_RUN_SHOW, MANUAL_RUN_STATUS } from '../../constants';
-import { periods, type useManualRunList } from '../useManualRunList';
-import { useRunFiltersPopover } from '../useRunFiltersPopover';
+import { periods, type useManualRunList } from '../ManualTestRunWorkspace/hooks/useManualRunList';
+import { useRunFiltersPopover } from './hooks/useRunFiltersPopover';
 
 interface ManualRunSidebarFiltersProps {
   runList: Pick<

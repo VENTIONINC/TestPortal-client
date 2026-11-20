@@ -15,20 +15,22 @@ export const CatalogLoadError = () => (
   </Alert.Root>
 );
 
-export const CatalogTableEmptyState = ({
-  searchActive = false,
-  emptySuite = false,
-  emptyFolder = false,
-  suiteView = false,
-  onAddScenarios,
-}: {
+interface CatalogTableEmptyStateProps {
   searchActive?: boolean;
   emptySuite?: boolean;
   emptyFolder?: boolean;
   suiteView?: boolean;
   onAddScenarios?: () => void;
   onCreateScenario?: () => void;
-}) => (
+}
+
+export const CatalogTableEmptyState = ({
+  searchActive = false,
+  emptySuite = false,
+  emptyFolder = false,
+  suiteView = false,
+  onAddScenarios,
+}: CatalogTableEmptyStateProps) => (
   <VStack py={8} gap={3}>
     <Text color="text.muted">
       {emptySuite

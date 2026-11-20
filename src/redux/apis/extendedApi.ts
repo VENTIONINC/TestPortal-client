@@ -322,7 +322,10 @@ export const extendedApi = generatedApi
     endpoints: (build) => ({
       deleteManualTestRun: build.mutation<void, { projectId: string; runId: string }>({
         query: ({ projectId, runId }) => ({ url: `/api/v2/manual-test-runs/${encodeURIComponent(runId)}`, method: 'DELETE', params: { projectId } }),
-        invalidatesTags: (_result, error, { projectId }) => error ? [] : [manualTestRunProjectHistoryTag(projectId)],
+        invalidatesTags: (_result, error, { projectId, runId }) => error ? [] : [
+          manualTestRunProjectHistoryTag(projectId),
+          manualTestRunDetailTag(projectId, runId),
+        ],
       }),
       getResults: build.query<GetResultsResponse, GetResultsRequest>({
         query: (params) => {

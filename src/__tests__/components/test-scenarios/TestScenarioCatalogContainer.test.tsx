@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ReactNode } from 'react';
-import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
+import { act, renderHook, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ChakraProvider } from '@/components/ui';
 import { TestScenarioCatalogContainer } from '@/components/test-scenarios/containers/TestScenarioCatalogContainer';
 import { useTestScenarioCatalog } from '@/components/test-scenarios/hooks/useTestScenarioCatalog';
 import {
@@ -21,7 +20,14 @@ import {
   type TestScenarioSummary,
 } from '@/redux/apis/generatedApi';
 import { useTestScenarioContextMenu } from '@/components/test-scenarios/hooks/useTestScenarioContextMenu';
-import { usePatchApiV2TestScenariosBulkFolderMutation, usePostApiV2TestScenarioFoldersMutation, useGetApiV2TestSuitesQuery } from '@/redux/apis/extendedApi';
+import {
+  useGetApiV2TestSuitesQuery,
+  usePatchApiV2TestScenariosBulkFolderMutation,
+  usePostApiV2TestScenarioFoldersMutation,
+  usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation,
+} from '@/redux/apis/extendedApi';
+
+import { renderWithCatalogProviders } from './renderWithCatalogProviders';
 
 const navigate = vi.fn();
 const contextMenu = vi.fn();
@@ -87,6 +93,7 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     ],
     isLoading: false,
     error: undefined,
+    refetch: async () => ({}),
   }));
   const suitesQuery = vi.fn(() => ({
     currentData: [
@@ -97,6 +104,7 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
         description: null,
         purpose: null,
         release: 'R1',
+        membershipRevision: 1,
         createdAt: '',
         updatedAt: '',
         members: [],
@@ -104,6 +112,7 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     ],
     isLoading: false,
     error: undefined,
+    refetch: async () => ({}),
   }));
   const mutation = vi.fn(() => [vi.fn(() => ({ unwrap: () => Promise.resolve({}) })), { isLoading: false }]);
   return {
@@ -113,9 +122,8 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     useGetApiV2TestScenariosPriorityCountsQuery: vi.fn(() => ({ currentData: undefined, isFetching: false, error: undefined })),
     usePatchApiV2TestScenariosBulkFolderMutation: mutation,
     usePostApiV2TestSuitesBySuiteIdMembersMutation: mutation,
-    useDeleteApiV2TestSuitesBySuiteIdMembersMutation: mutation,
     usePutApiV2TestSuitesBySuiteIdMembersOrderMutation: mutation,
-    usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation: mutation,
+    usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation: vi.fn(),
     usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation: mutation,
     usePostApiV2TestSuitesMovesMutation: mutation,
     usePostApiV2TestSuitesMoveRestorationMutation: mutation,
@@ -135,6 +143,7 @@ const mockedScenarioQuery = vi.mocked(useGetApiV2TestScenariosQuery);
 const mockedSelectionQuery = vi.mocked(useLazyGetApiV2TestScenariosSelectionQuery);
 const mockedBulkMoveMutation = vi.mocked(usePatchApiV2TestScenariosBulkFolderMutation);
 const mockedDeleteMutation = vi.mocked(useDeleteApiV2TestScenariosByScenarioIdMutation);
+const mockedMembershipChange = vi.mocked(usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation);
 const mockedDetailQuery = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
 const mockedContextMenu = vi.mocked(useTestScenarioContextMenu);
 
@@ -177,6 +186,7 @@ describe('TestScenarioCatalogContainer', () => {
       { isLoading: false },
     ] as never);
     mockedDeleteMutation.mockReturnValue([vi.fn(() => ({ unwrap: async () => ({}) })), { isLoading: false }] as never);
+    mockedMembershipChange.mockReturnValue([vi.fn(), { isLoading: false }] as never);
     mockedContextMenu.mockReturnValue(contextMenu);
     mockedScenarioQuery.mockImplementation((args) => {
       const queryArgs = args as GetApiV2TestScenariosApiArg;
@@ -200,15 +210,43 @@ describe('TestScenarioCatalogContainer', () => {
     expect(result.current.scope).toEqual({ kind: 'suite', id: 'suite-b' });
   });
 
+  it('reports a failed catalog refresh when explicitly requested', async () => {
+    const error = { status: 500, data: { message: 'Could not refresh scenarios' } };
+    mockedScenarioQuery.mockReturnValue({
+      currentData: createResponse(1),
+      isLoading: false,
+      isFetching: false,
+      refetch: async () => ({ error }),
+    } as never);
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
+
+    await expect(result.current.refreshSuiteData()).resolves.toBeUndefined();
+    await expect(result.current.refreshSuiteData({ reportErrors: true })).rejects.toEqual(error);
+  });
+
+  it('opens Manage Scenarios for the selected suite and closes it when the project changes', async () => {
+    const user = userEvent.setup();
+    const view = renderWithCatalogProviders(
+      <TestScenarioCatalogContainer projectId="project-1" organizationTab="suites" />,
+      ['/test-management?projectId=project-1&suiteId=suite-a'],
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Manage scenarios' }));
+    expect(screen.getByRole('dialog', { name: 'Manage scenarios in Regression' })).toBeInTheDocument();
+
+    view.rerender(<TestScenarioCatalogContainer projectId="project-2" organizationTab="suites" />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('preserves the originating folder when starting creation', async () => {
-    render(<ChakraProvider><MemoryRouter initialEntries={['/test-management?projectId=project-1&folderId=folder-a']}><TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" /></MemoryRouter></ChakraProvider>);
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />, ['/test-management?projectId=project-1&folderId=folder-a']);
     await userEvent.setup().click(screen.getByRole('button', { name: 'Create Test Scenario' }));
     expect(navigate).toHaveBeenCalledWith('/test-scenarios/new?folderId=folder-a&originProject=project-1&originKind=folder&originId=folder-a');
   });
 
   it('opens the shared run form with selected scenarios without creating a run yet', async () => {
     const user = userEvent.setup();
-    render(<ChakraProvider><MemoryRouter><TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" /></MemoryRouter></ChakraProvider>);
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />);
     await user.click(screen.getByRole('checkbox', { name: 'Select Scenario page 1' }));
     await user.click(screen.getByRole('button', { name: 'Run selected' }));
     expect(createRunMutation).not.toHaveBeenCalled();
@@ -217,7 +255,7 @@ describe('TestScenarioCatalogContainer', () => {
 
   it('clears the selection when a selected row is deleted through its action menu', async () => {
     const user = userEvent.setup();
-    render(<ChakraProvider><MemoryRouter><TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" /></MemoryRouter></ChakraProvider>);
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />);
     const rowCheckbox = screen.getByRole('checkbox', { name: 'Select Scenario page 1' });
     await user.click(rowCheckbox);
     expect(rowCheckbox).toBeChecked();
@@ -459,6 +497,65 @@ describe('TestScenarioCatalogContainer', () => {
     expect(result.current.selectedIds).toEqual(['scenario-1', 'scenario-2']);
   });
 
+  it('reconciles only the removed suite members while returning the new revision for Undo', async () => {
+    const suites = vi.mocked(useGetApiV2TestSuitesQuery);
+    const previousSuites = suites.getMockImplementation();
+    const changeMembership = vi.fn(() => ({
+      unwrap: async () => ({
+        scenarioIds: ['scenario-2'],
+        membershipRevision: 4,
+        restoreData: {
+          suiteId: 'suite-a', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }],
+        },
+      }),
+    }));
+    suites.mockReturnValue({
+      currentData: [{
+        id: 'suite-a', projectId: 'project-1', name: 'Regression', membershipRevision: 3,
+        description: null, purpose: null, release: null, createdAt: '', updatedAt: '',
+        members: [
+          { suiteId: 'suite-a', testScenarioId: 'scenario-1', position: 0, createdAt: '' },
+          { suiteId: 'suite-a', testScenarioId: 'scenario-2', position: 1, createdAt: '' },
+        ],
+      }],
+      isFetching: false,
+    } as never);
+    mockedMembershipChange.mockReturnValue([changeMembership, { isLoading: false }] as never);
+    try {
+      const { result } = renderHook(() => useTestScenarioCatalog('project-1', 'suites'), { wrapper: MemoryRouter });
+      act(() => {
+        result.current.toggleSelected('scenario-1');
+        result.current.toggleSelected('scenario-2');
+      });
+
+      await act(async () => {
+        expect(await result.current.removeSuiteMembership('suite-a', ['scenario-1'])).toEqual({
+          expectedMembershipRevision: 4,
+          expectedScenarioIds: ['scenario-2'],
+          restoreData: {
+            suiteId: 'suite-a',
+            addedScenarioIds: [],
+            removedMembers: [{ scenarioId: 'scenario-1', position: 0 }],
+          },
+        });
+      });
+
+      expect(changeMembership).toHaveBeenCalledWith({
+        suiteId: 'suite-a',
+        body: {
+          projectId: 'project-1',
+          expectedMembershipRevision: 3,
+          expectedScenarioIds: ['scenario-1', 'scenario-2'],
+          addScenarioIds: [],
+          removeScenarioIds: ['scenario-1'],
+        },
+      });
+      expect(result.current.selectedIds).toEqual(['scenario-2']);
+    } finally {
+      if (previousSuites) suites.mockImplementation(previousSuites);
+    }
+  });
+
   it('locks selection and duplicate operations while a batch is pending', async () => {
     let finishRequest: (() => void) | undefined;
     const moveTrigger = vi.fn(() => ({
@@ -519,13 +616,7 @@ describe('TestScenarioCatalogContainer', () => {
   });
 
   it('requests the selected project first with page 1 and limit 10', () => {
-    render(
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />);
 
     expect(mockedScenarioQuery).toHaveBeenCalledWith(
       { projectId: 'project-1', page: 1, limit: 25, sortField: 'updatedAt', sortDirection: 'desc' },
@@ -540,13 +631,7 @@ describe('TestScenarioCatalogContainer', () => {
     ['folder-a', { folderId: 'folder-a', includeDescendants: true }],
     ['removed-folder', {}],
   ])('restores catalog folder scope %s from a direct-entry URL', async (folderId, expected) => {
-    render(
-      <ChakraProvider>
-        <MemoryRouter initialEntries={[`/test-scenarios?projectId=project-1&folderId=${folderId}`]}>
-          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />, [`/test-scenarios?projectId=project-1&folderId=${folderId}`]);
     await waitFor(() =>
       expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
         { projectId: 'project-1', page: 1, limit: 25, sortField: 'updatedAt', sortDirection: 'desc', ...expected },
@@ -558,13 +643,7 @@ describe('TestScenarioCatalogContainer', () => {
   it('requests the selected page for the same project and limit', async () => {
     const user = userEvent.setup();
 
-    render(
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />);
 
     await user.click(screen.getByRole('button', { name: 'Next Page' }));
 
@@ -579,13 +658,7 @@ describe('TestScenarioCatalogContainer', () => {
   it('navigates to the create route from the catalog action', async () => {
     const user = userEvent.setup();
 
-    render(
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />);
 
     await user.click(screen.getByRole('button', { name: 'Create Test Scenario' }));
 
@@ -594,13 +667,7 @@ describe('TestScenarioCatalogContainer', () => {
 
   it('combines folder scope and search in server requests and resets pagination', async () => {
     const user = userEvent.setup();
-    render(
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />);
 
     await user.click(screen.getByRole('button', { name: /Authentication 3/ }));
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
@@ -635,13 +702,7 @@ describe('TestScenarioCatalogContainer', () => {
       isLoading: false,
       error: undefined,
     } as never);
-    render(
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />);
 
     await user.click(screen.getByRole('button', { name: 'Sort: Updated' }));
     await user.click(screen.getByRole('button', { name: /^Title$/ }));
@@ -668,13 +729,7 @@ describe('TestScenarioCatalogContainer', () => {
 
   it('uses the backend unfiled scope rather than filtering loaded rows', async () => {
     const user = userEvent.setup();
-    render(
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />);
 
     await user.click(screen.getByRole('button', { name: /No folder/ }));
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
@@ -689,13 +744,7 @@ describe('TestScenarioCatalogContainer', () => {
 
   it('filters suites on the server using the selected suite UUID', async () => {
     const user = userEvent.setup();
-    render(
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioCatalogContainer projectId="project-1" organizationTab="suites" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="suites" />);
 
     await user.click(screen.getByRole('button', { name: /Regression 0/ }));
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({

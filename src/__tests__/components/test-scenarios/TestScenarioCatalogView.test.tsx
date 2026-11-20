@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState, type ReactNode } from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ChakraProvider } from '@/components/ui';
 import {
   TestScenarioCatalogView,
   type TestScenarioCatalogViewProps,
 } from '@/components/test-scenarios/components/TestScenarioCatalogView';
 import type { TestScenarioSummary } from '@/redux/apis/generatedApi';
+
+import { renderWithCatalogProviders } from './renderWithCatalogProviders';
 
 vi.mock('@/components/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/components/ui')>();
@@ -101,12 +101,6 @@ const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination
   onSuiteOperationStart: vi.fn(),
   onSuiteOperationComplete: vi.fn(),
   onDeleteSelected: vi.fn(async () => ({ succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] })),
-  onRemoveSelectedFromSuite: vi.fn(async () => ({
-    succeededIds: [],
-    failedIds: [],
-    unattemptedIds: [],
-    uncertainIds: [],
-  })),
   removeSuiteMembership: vi.fn(async () => ({ restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [] }, expectedMembershipRevision: 1, expectedScenarioIds: [] })),
   restoreSuiteMembership: vi.fn(async () => {}),
   moveSuiteMembership: vi.fn(async () => ({ restoreData: { sourceSuiteId: 'suite-1', destinationSuiteId: 'suite-2', sourceMembers: [], destinationAddedScenarioIds: [] }, expectedSourceMembershipRevision: 1, expectedDestinationMembershipRevision: 1, expectedSourceScenarioIds: [], expectedDestinationScenarioIds: [], alreadyInDestination: [] })),
@@ -123,21 +117,18 @@ const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination
   onRunSuite: vi.fn(async () => {}),
 };
 
-const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>
-  render(
-    <ChakraProvider>
-      <MemoryRouter>
-        <TestScenarioCatalogView
-          scenarios={scenarios}
-          pagination={pagination}
-          isLoading={false}
-          onPageChange={vi.fn()}
-          {...defaultProps}
-          {...props}
-        />
-      </MemoryRouter>
-    </ChakraProvider>,
-  );
+const catalogView = (props: Partial<TestScenarioCatalogViewProps>) => (
+  <TestScenarioCatalogView
+    scenarios={scenarios}
+    pagination={pagination}
+    isLoading={false}
+    onPageChange={vi.fn()}
+    {...defaultProps}
+    {...props}
+  />
+);
+
+const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) => renderWithCatalogProviders(catalogView(props));
 
 describe('TestScenarioCatalogView', () => {
   it('includes the selected folder as the scenario origin', () => {
@@ -291,23 +282,23 @@ describe('TestScenarioCatalogView', () => {
     let finishMove!: (value: { succeededIds: string[]; failedIds: string[]; unattemptedIds: string[]; uncertainIds: string[]; folderRestoreData: { scenarioId: string; folderId: null; expectedFolderId: string; expectedRevision: number }[] }) => void;
     const onMoveScenarioIds = vi.fn(() => new Promise<Parameters<typeof finishMove>[0]>((resolve) => { finishMove = resolve; }));
     const props = { ...defaultProps, scenarios, pagination, isLoading: false, onPageChange: vi.fn(), folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }], onMoveScenarioIds };
-    const view = render(<ChakraProvider><MemoryRouter><TestScenarioCatalogView {...props} /></MemoryRouter></ChakraProvider>);
+    const view = renderWithCatalogProviders(<TestScenarioCatalogView {...props} />);
     const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
     fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
     fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer });
-    view.rerender(<ChakraProvider><MemoryRouter><TestScenarioCatalogView {...props} projectId="project-2" /></MemoryRouter></ChakraProvider>);
+    view.rerender(<TestScenarioCatalogView {...props} projectId="project-2" />);
     await act(async () => finishMove({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [], folderRestoreData: [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }] }));
     expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
   });
 
   it('clears an existing folder undo on project switch', async () => {
     const props = { ...defaultProps, scenarios, pagination, isLoading: false, onPageChange: vi.fn(), folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }], onMoveScenarioIds: vi.fn(async () => ({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [], folderRestoreData: [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }] })) };
-    const view = render(<ChakraProvider><MemoryRouter><TestScenarioCatalogView {...props} /></MemoryRouter></ChakraProvider>);
+    const view = renderWithCatalogProviders(<TestScenarioCatalogView {...props} />);
     const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
     fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
     fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer });
     expect(await screen.findByRole('button', { name: 'Undo' })).toBeInTheDocument();
-    view.rerender(<ChakraProvider><MemoryRouter><TestScenarioCatalogView {...props} projectId="project-2" /></MemoryRouter></ChakraProvider>);
+    view.rerender(<TestScenarioCatalogView {...props} projectId="project-2" />);
     expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
   });
 
@@ -570,26 +561,22 @@ describe('TestScenarioCatalogView', () => {
     const StatefulView = () => {
       const [selectedIds, setSelectedIds] = useState<string[]>(['scenario-4']);
       return (
-        <ChakraProvider>
-          <MemoryRouter>
-            <TestScenarioCatalogView
-              scenarios={rows.slice(0, 3)}
-              pagination={pagination}
-              isLoading={false}
-              onPageChange={vi.fn()}
-              {...defaultProps}
-              selectedIds={selectedIds}
-              toggleSelected={(id) =>
-                setSelectedIds((current) =>
-                  current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
-                )
-              }
-            />
-          </MemoryRouter>
-        </ChakraProvider>
+        <TestScenarioCatalogView
+          scenarios={rows.slice(0, 3)}
+          pagination={pagination}
+          isLoading={false}
+          onPageChange={vi.fn()}
+          {...defaultProps}
+          selectedIds={selectedIds}
+          toggleSelected={(id) =>
+            setSelectedIds((current) =>
+              current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+            )
+          }
+        />
       );
     };
-    render(<StatefulView />);
+    renderWithCatalogProviders(<StatefulView />);
     await user.click(screen.getByRole('checkbox', { name: 'Select Checkout flow' }));
     await user.keyboard('{Shift>}');
     await user.click(screen.getByRole('checkbox', { name: 'Select Profile flow' }));
@@ -637,13 +624,7 @@ describe('TestScenarioCatalogView', () => {
         />
       );
     };
-    render(
-      <ChakraProvider>
-        <MemoryRouter>
-          <StatefulCatalog />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    renderWithCatalogProviders(<StatefulCatalog />);
 
     await user.click(screen.getByRole('button', { name: 'Priority' }));
     await user.click(screen.getByRole('checkbox', { name: 'High' }));
@@ -719,31 +700,43 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('1 not attempted');
   });
 
+  it('dismisses an unconfirmed bulk delete when the project changes', async () => {
+    const user = userEvent.setup();
+    const onDeleteSelected = vi.fn(async (ids: string[]) => ({
+      succeededIds: ids, failedIds: [], unattemptedIds: [], uncertainIds: [],
+    }));
+    const props = { selectedIds: ['scenario-1'], onDeleteSelected };
+    const view = renderView(props);
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(screen.getByRole('heading', { name: 'Delete 1 selected scenario?' })).toBeInTheDocument();
+
+    view.rerender(catalogView({ ...props, projectId: 'project-2' }));
+
+    expect(screen.queryByRole('heading', { name: 'Delete 1 selected scenario?' })).not.toBeInTheDocument();
+    expect(onDeleteSelected).not.toHaveBeenCalled();
+  });
+
   it('closes the bulk toolbar with a keyboard accessible clear control', async () => {
     const user = userEvent.setup();
     const toggleSelected = vi.fn();
     const StatefulCatalog = () => {
       const [selectedIds, setSelectedIds] = useState(['scenario-1', 'scenario-2']);
       return (
-        <ChakraProvider>
-          <MemoryRouter>
-            <TestScenarioCatalogView
-              scenarios={scenarios}
-              pagination={pagination}
-              isLoading={false}
-              onPageChange={vi.fn()}
-              {...defaultProps}
-              selectedIds={selectedIds}
-              toggleSelected={(id) => {
-                toggleSelected(id);
-                setSelectedIds((current) => current.filter((selectedId) => selectedId !== id));
-              }}
-            />
-          </MemoryRouter>
-        </ChakraProvider>
+        <TestScenarioCatalogView
+          scenarios={scenarios}
+          pagination={pagination}
+          isLoading={false}
+          onPageChange={vi.fn()}
+          {...defaultProps}
+          selectedIds={selectedIds}
+          toggleSelected={(id) => {
+            toggleSelected(id);
+            setSelectedIds((current) => current.filter((selectedId) => selectedId !== id));
+          }}
+        />
       );
     };
-    render(<StatefulCatalog />);
+    renderWithCatalogProviders(<StatefulCatalog />);
     await user.click(screen.getByRole('button', { name: 'Clear selection' }));
     expect(toggleSelected).toHaveBeenCalledWith('scenario-1');
     expect(toggleSelected).toHaveBeenCalledWith('scenario-2');
@@ -807,6 +800,7 @@ describe('TestScenarioCatalogView', () => {
       scenarios: [{ scenarioId: 'scenario-1', folderId: 'folder-1', expectedRevision: 2 }],
     };
     const onDeleteFolder = vi.fn(async () => ({ deleted: true as const, restoreData }));
+    const onScopeChange = vi.fn();
     const restoreFolderDeletion = vi.fn(async () => {});
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
@@ -822,6 +816,7 @@ describe('TestScenarioCatalogView', () => {
       ],
       scope: { kind: 'folder', id: 'folder-1' },
       onDeleteFolder,
+      onScopeChange,
       restoreFolderDeletion,
     });
     await user.click(screen.getByRole('button', { name: 'Folder actions' }));
@@ -830,8 +825,36 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByText('Its 4 subfolders “Payments”, “Profile”, “Promo codes”, “Cart” will be deleted as well. All 7 scenarios from these folders will move to No folder. Scenarios are not deleted.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(onDeleteFolder).toHaveBeenCalledWith('folder-1');
+    expect(onScopeChange).toHaveBeenCalledWith({ kind: 'unfiled' });
     await user.click(await screen.findByRole('button', { name: 'Undo' }));
     expect(restoreFolderDeletion).toHaveBeenCalledWith(restoreData);
+  });
+
+  it('keeps the current scope when a dismissed folder deletion finishes', async () => {
+    const user = userEvent.setup();
+    const result = { deleted: true as const, restoreData: { folders: [], scenarios: [] } };
+    let finishDelete!: () => void;
+    const onDeleteFolder = vi.fn(() => new Promise<typeof result>((resolve) => {
+      finishDelete = () => resolve(result);
+    }));
+    const onScopeChange = vi.fn();
+    const props: Partial<TestScenarioCatalogViewProps> = {
+      folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 1 }],
+      scope: { kind: 'folder', id: 'folder-1' },
+      onDeleteFolder,
+      onScopeChange,
+    };
+    const view = renderView(props);
+    await user.click(screen.getByRole('button', { name: 'Folder actions' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete folder' }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    view.rerender(catalogView({ ...props, scope: { kind: 'all' } }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await act(async () => finishDelete());
+
+    expect(onScopeChange).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
   });
 
   it('explains that scenarios in a folder without children are not deleted', async () => {
@@ -963,6 +986,96 @@ describe('TestScenarioCatalogView', () => {
       expectedMembershipRevision: 2,
       expectedScenarioIds: [],
     })));
+  });
+
+  it('submits the confirmed scenarios even when the selection and membership callback have changed', async () => {
+    const user = userEvent.setup();
+    const removeSuiteMembership = vi.fn(async () => ({
+      restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+      expectedMembershipRevision: 2,
+      expectedScenarioIds: ['scenario-2', 'scenario-3'],
+    }));
+    const props: Partial<TestScenarioCatalogViewProps> = {
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-1' },
+      selectedIds: ['scenario-1'],
+      suites: [{
+        id: 'suite-1', name: 'Smoke', description: null, purpose: null, release: null, membershipRevision: 1,
+        members: ['scenario-1', 'scenario-2', 'scenario-3'].map((testScenarioId) => ({ testScenarioId })),
+      }],
+    };
+    const view = renderView(props);
+    await user.click(screen.getByRole('button', { name: 'Remove from suite' }));
+    view.rerender(catalogView({ ...props, selectedIds: ['scenario-2', 'scenario-3'], removeSuiteMembership }));
+
+    await user.click(screen.getByRole('button', { name: 'Remove 1 scenario' }));
+
+    expect(removeSuiteMembership).toHaveBeenCalledWith('suite-1', ['scenario-1']);
+  });
+
+  it('ignores a removal completion after leaving and returning to the same suite', async () => {
+    const user = userEvent.setup();
+    const undo = {
+      restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+      expectedMembershipRevision: 2,
+      expectedScenarioIds: [],
+    };
+    let finishRemoval!: (value: typeof undo) => void;
+    const removeSuiteMembership = vi.fn(() => new Promise<typeof undo>((resolve) => { finishRemoval = resolve; }));
+    const props: Partial<TestScenarioCatalogViewProps> = {
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-1' },
+      selectedIds: ['scenario-1'],
+      suites: [
+        { id: 'suite-1', name: 'Smoke', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] },
+        { id: 'suite-2', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0, members: [] },
+      ],
+      removeSuiteMembership,
+    };
+    const view = renderView(props);
+    await user.click(screen.getByRole('button', { name: 'Remove from suite' }));
+    const confirm = screen.getByRole('button', { name: 'Remove 1 scenario' });
+    const form = confirm.closest('form')!;
+    await user.click(confirm);
+    fireEvent.submit(form);
+    await user.keyboard('{Escape}');
+    expect(removeSuiteMembership).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    view.rerender(catalogView({ ...props, scope: { kind: 'suite', id: 'suite-2' } }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    view.rerender(catalogView(props));
+    await user.click(screen.getByRole('button', { name: 'Remove from suite' }));
+    await act(async () => finishRemoval(undo));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
+  });
+
+  it('keeps Undo and closes the removal confirmation when the follow-up refresh fails', async () => {
+    const user = userEvent.setup();
+    const refreshSuiteData = vi.fn(async () => { throw new Error('Could not load suite data'); });
+    const removeSuiteMembership = vi.fn(async () => ({
+      restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+      expectedMembershipRevision: 2,
+      expectedScenarioIds: [],
+    }));
+    renderView({
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-1' },
+      selectedIds: ['scenario-1'],
+      suites: [{ id: 'suite-1', name: 'Smoke', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+      removeSuiteMembership,
+      refreshSuiteData,
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Remove from suite' }));
+    await user.click(screen.getByRole('button', { name: 'Remove 1 scenario' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load suite data');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+    expect(removeSuiteMembership).toHaveBeenCalledTimes(1);
   });
 
   it('moves a dragged suite row to another suite and offers conditional Undo', async () => {

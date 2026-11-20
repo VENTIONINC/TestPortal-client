@@ -5,7 +5,10 @@ import userEvent from '@testing-library/user-event';
 import { expect, it, vi } from 'vitest';
 
 import { ChakraProvider } from '@/components/ui';
-import { ManageScenariosDialog } from '@/components/manual-test-runs/components/ManageScenariosDialog';
+import { ManageScenariosDialog } from '@/components/manual-test-runs/components/ManageScenariosDialog/ManageScenariosDialog';
+import { SelectScenariosDialog } from '@/components/manual-test-runs/components/ManageScenariosDialog/SelectScenariosDialog';
+import type { ExistingRunScenario } from '@/components/manual-test-runs/components/ManageScenariosDialog/ScenarioSelectionTable';
+import type { ManualTestRunRead } from '@/redux/apis/generatedApi';
 
 const scenariosData = { scenarios: [
   { id: 'a', scenarioKey: 'A-1', title: 'Existing', folderName: null, priority: 'high' },
@@ -16,27 +19,106 @@ const suitesData = [
   { id: 'two', name: 'Regression', members: [{ testScenarioId: 'a' }, { testScenarioId: 'b' }] },
 ];
 const loadScenarios = vi.fn();
+const saveDetails = vi.fn();
 vi.mock('@/redux/apis/generatedApi', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/redux/apis/generatedApi')>()),
   useGetApiV2TestScenariosQuery: () => ({ currentData: scenariosData }),
   useLazyGetApiV2TestScenariosQuery: () => [loadScenarios],
   useGetApiV2TestScenarioFoldersQuery: () => ({ currentData: [] }),
+  usePutApiV2ManualTestRunsByRunIdDetailsMutation: () => [saveDetails],
   useGetApiV2TestSuitesQuery: () => ({ currentData: suitesData }),
 }));
 
+const dialogControls = {
+  closeDialog: () => {},
+  closeAllDialogs: () => {},
+};
+
+const pickerProps = {
+  ...dialogControls,
+  projectId: 'p',
+  existing: [],
+  initialIds: [],
+  onSelectionChange: () => {},
+  finalFocusEl: () => null,
+};
+
+const manageProps = (existing: ExistingRunScenario[]) => {
+  const run: ManualTestRunRead = {
+    id: 'r',
+    projectId: 'p',
+    title: 'Run',
+    status: 'in_progress',
+    executedById: null,
+    executedBy: null,
+    startedAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+    completedAt: null,
+    completedById: null,
+    completedBy: null,
+    skippedAtCompletion: 0,
+    hasBeenReopened: false,
+    environmentProperties: [],
+    browser: null,
+    operatingSystem: null,
+    device: null,
+    apiEnvironment: null,
+    build: null,
+    deployment: null,
+    scenarios: existing.map((scenario, position) => ({
+      ...scenario,
+      id: 'run-' + scenario.sourceScenarioId,
+      sourceScenarioKey: scenario.sourceScenarioId,
+      title: 'Scenario ' + scenario.sourceScenarioId,
+      position,
+      details: null,
+      preconditions: null,
+      testData: null,
+      folderPath: null,
+      priority: 'low',
+      requirementContext: [],
+      executionComment: null,
+      defectReference: null,
+      assigneeId: null,
+      assignee: null,
+      resultById: null,
+      resultBy: null,
+      resultAt: null,
+      resultHistory: [],
+      steps: [],
+    })),
+  };
+  saveDetails.mockReturnValue({ unwrap: () => Promise.resolve(run) });
+  return {
+    ...dialogControls,
+    projectId: 'p',
+    runId: 'r',
+    runTitle: 'Run',
+    existing,
+    getRun: () => run,
+    mutate: async (operation: (id: string) => Promise<ManualTestRunRead>) => {
+      await operation('r');
+      return true;
+    },
+  };
+};
+
 it('shows existing results and summarizes membership changes before saving', async () => {
-  const onSave = vi.fn();
-  render(<ChakraProvider><ManageScenariosDialog projectId="p" runTitle="Run" existing={[{sourceScenarioId: 'a', result: 'passed'}]} onSave={onSave} onClose={() => {}} saving={false} /></ChakraProvider>);
+  saveDetails.mockClear();
+  render(<ChakraProvider><ManageScenariosDialog {...manageProps([{ sourceScenarioId: 'a', result: 'passed' }])} /></ChakraProvider>);
   const user = userEvent.setup();
   expect(screen.getByText('Passed')).toBeInTheDocument();
   await user.click(screen.getByRole('checkbox', { name: 'Select New' }));
   expect(screen.getByText('1 to add as Untested · 0 to remove')).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Save changes' }));
-  expect(onSave).toHaveBeenCalledWith(['a', 'b']);
+  expect(saveDetails).toHaveBeenCalledWith({
+    projectId: 'p', runId: 'r',
+    manualTestRunDetailsRequest: { title: 'Run', environmentProperties: [], scenarioIds: ['a', 'b'] },
+  });
 });
 
 it('filters by multiple suites, shows counts, searches and clears the filter', async () => {
-  render(<ChakraProvider><ManageScenariosDialog projectId="p" runTitle="Run" existing={[]} onSave={() => {}} onClose={() => {}} saving={false} pickerMode /></ChakraProvider>);
+  render(<ChakraProvider><SelectScenariosDialog {...pickerProps} /></ChakraProvider>);
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: 'Suite' }));
   expect(screen.getByText('Smoke').closest('label')).toHaveTextContent('1');
@@ -54,30 +136,34 @@ it('filters by multiple suites, shows counts, searches and clears the filter', a
 });
 
 it('shows the number and result breakdown when removing a marked scenario', async () => {
-  const onSave = vi.fn();
+  saveDetails.mockClear();
   const existing = [{ sourceScenarioId: 'a', result: 'passed' as const }, { sourceScenarioId: 'b', result: 'untested' as const }];
-  const view = render(<ChakraProvider><ManageScenariosDialog projectId="p" runTitle="Run" existing={existing} onSave={onSave} onClose={() => {}} saving={false} /></ChakraProvider>);
+  render(<ChakraProvider><ManageScenariosDialog {...manageProps(existing)} /></ChakraProvider>);
   const user = userEvent.setup();
   await user.click(screen.getByRole('checkbox', { name: 'Select Existing' }));
   await user.click(screen.getByRole('button', { name: 'Save changes' }));
-  expect(onSave).toHaveBeenCalledWith(['b']);
-  view.rerender(<ChakraProvider><ManageScenariosDialog projectId="p" runTitle="Run" existing={existing} onSave={onSave} onClose={() => {}} saving={false} warning /></ChakraProvider>);
+  expect(saveDetails).not.toHaveBeenCalled();
   expect(screen.getByRole('alert')).toHaveTextContent('1 saved results (1 passed)');
-  expect(screen.getByRole('button', { name: 'Remove results and save' })).toBeEnabled();
+  await user.click(screen.getByRole('checkbox', { name: 'Select Existing' }));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('checkbox', { name: 'Select Existing' }));
+  await user.click(screen.getByRole('button', { name: 'Save changes' }));
+  await user.click(screen.getByRole('button', { name: 'Remove results and save' }));
+  expect(saveDetails).toHaveBeenCalledOnce();
 });
 
 it('applies a draft selection without saving the run', async () => {
-  const onSave = vi.fn();
-  render(<ChakraProvider><ManageScenariosDialog projectId="p" runTitle="Run" existing={[{ sourceScenarioId: 'a', result: 'passed' }]} initialIds={['b']} pickerMode onSave={onSave} onClose={() => {}} saving={false} /></ChakraProvider>);
+  const onSelectionChange = vi.fn();
+  render(<ChakraProvider><SelectScenariosDialog {...pickerProps} existing={[{ sourceScenarioId: 'a', result: 'passed' }]} initialIds={['b']} onSelectionChange={onSelectionChange} /></ChakraProvider>);
   const user = userEvent.setup();
   expect(screen.getByRole('checkbox', { name: 'Select New' })).toBeChecked();
   await user.click(screen.getByRole('checkbox', { name: 'Select Existing' }));
   await user.click(screen.getByRole('button', { name: 'Done' }));
-  expect(onSave).toHaveBeenCalledWith(['b', 'a']);
+  expect(onSelectionChange).toHaveBeenCalledWith(['b', 'a']);
 });
 
 it('shows the suite name for one selection and the count for multiple selections', async () => {
-  render(<ChakraProvider><ManageScenariosDialog projectId="p" runTitle="Run" existing={[]} onSave={() => {}} onClose={() => {}} saving={false} pickerMode /></ChakraProvider>);
+  render(<ChakraProvider><SelectScenariosDialog {...pickerProps} /></ChakraProvider>);
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: 'Suite' }));
   await user.click(screen.getByRole('checkbox', { name: 'Smoke' }));

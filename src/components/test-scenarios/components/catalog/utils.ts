@@ -1,12 +1,21 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
+import { extractApiError } from '@/utils/apiErrors';
+
 import type { CatalogFolder, CatalogFolderRow } from './types';
 
 export const CATALOG_TAB = { scenarios: 'scenarios', suites: 'suites' } as const;
 export const CATALOG_SCOPE = { all: 'all', unfiled: 'unfiled', folder: 'folder', suite: 'suite' } as const;
 
 export const SCENARIO_DRAG_MIME = 'application/x-testportal-scenarios';
+
+export const getActionErrorMessage = (error: unknown) => {
+  if (error && typeof error === 'object' && ('data' in error || 'status' in error)) {
+    return extractApiError(error as Parameters<typeof extractApiError>[0]);
+  }
+  return error instanceof Error ? error.message : String(error);
+};
 
 export const getFolderChildren = (folder: CatalogFolder): CatalogFolder[] =>
   (folder.children ?? []).filter(

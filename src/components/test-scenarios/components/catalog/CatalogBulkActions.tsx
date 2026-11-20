@@ -183,17 +183,19 @@ export const CatalogBulkActions = ({
   </Portal>
 );
 
+interface CatalogUndoNotificationProps {
+  label: string;
+  message: string;
+  isUndoing: boolean;
+  onUndo: () => Promise<void>;
+}
+
 export const CatalogUndoNotification = ({
   label,
   message,
   isUndoing,
   onUndo,
-}: {
-  label: string;
-  message: string;
-  isUndoing: boolean;
-  onUndo: () => Promise<void>;
-}) => (
+}: CatalogUndoNotificationProps) => (
   <Portal>
     <HStack
       role="status"

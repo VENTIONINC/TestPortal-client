@@ -2,12 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ReactNode } from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ChakraProvider } from '@/components/ui';
 import { TestScenarioCatalog } from '@/components/test-scenarios/containers/TestScenarioCatalogBoundary';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
 import {
@@ -15,6 +13,8 @@ import {
   type GetApiV2TestScenariosApiArg,
   type TestScenarioSummary,
 } from '@/redux/apis/generatedApi';
+
+import { renderWithCatalogProviders } from './renderWithCatalogProviders';
 
 vi.mock('@/components/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/components/ui')>();
@@ -63,7 +63,6 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     useGetApiV2TestScenariosPriorityCountsQuery: queryResult,
     usePatchApiV2TestScenariosBulkFolderMutation: mutation,
     usePostApiV2TestSuitesBySuiteIdMembersMutation: mutation,
-    useDeleteApiV2TestSuitesBySuiteIdMembersMutation: mutation,
     usePutApiV2TestSuitesBySuiteIdMembersOrderMutation: mutation,
     usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation: mutation,
     usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation: mutation,
@@ -137,13 +136,7 @@ describe('TestScenarioCatalog project boundary', () => {
   it('resets to page 1 and hides the previous project while the new request is pending', async () => {
     vi.useFakeTimers();
     const user = userEvent.setup();
-    const { rerender } = render(
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioCatalog organizationTab="scenarios" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    const { rerender } = renderWithCatalogProviders(<TestScenarioCatalog organizationTab="scenarios" />);
 
     act(() => vi.advanceTimersByTime(500));
     vi.useRealTimers();
@@ -158,13 +151,7 @@ describe('TestScenarioCatalog project boundary', () => {
     expect(screen.getByText('project-a c.')).toBeInTheDocument();
 
     selectedProjectId = 'project-b';
-    rerender(
-      <ChakraProvider>
-        <MemoryRouter>
-          <TestScenarioCatalog organizationTab="scenarios" />
-        </MemoryRouter>
-      </ChakraProvider>,
-    );
+    rerender(<TestScenarioCatalog organizationTab="scenarios" />);
 
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
       { projectId: 'project-b', page: 1, limit: 25, sortField: 'updatedAt', sortDirection: 'desc' },
@@ -177,16 +164,10 @@ describe('TestScenarioCatalog project boundary', () => {
   });
   it('consumes a return URL project once and allows a subsequent deliberate project change', () => {
     restoreProject.mockClear();
-    const content = () => (
-      <ChakraProvider>
-        <MemoryRouter initialEntries={['/test-management?projectId=project-a&folderId=unfiled']}>
-          <TestScenarioCatalog organizationTab="scenarios" />
-        </MemoryRouter>
-      </ChakraProvider>
-    );
-    const view = render(content());
+    const content = <TestScenarioCatalog organizationTab="scenarios" />;
+    const view = renderWithCatalogProviders(content, ['/test-management?projectId=project-a&folderId=unfiled']);
     selectedProjectId = 'project-b';
-    view.rerender(content());
+    view.rerender(<TestScenarioCatalog organizationTab="scenarios" />);
     expect(restoreProject).not.toHaveBeenCalled();
   });
 });

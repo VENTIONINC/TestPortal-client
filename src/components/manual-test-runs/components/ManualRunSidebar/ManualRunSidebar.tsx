@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router';
 
 import { PATHS } from '@/types/paths';
 
-import type { useManualRunList } from '../useManualRunList';
+import type { useManualRunList } from '../ManualTestRunWorkspace/hooks/useManualRunList';
 import { ManualRunSidebarFilters } from './ManualRunSidebarFilters';
 import { ManualRunSidebarList } from './ManualRunSidebarList';
 

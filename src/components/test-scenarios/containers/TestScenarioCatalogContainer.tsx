@@ -48,7 +48,6 @@ export const TestScenarioCatalogContainer = ({ projectId, organizationTab }: Tes
       onSuiteOperationStart={catalog.startSuiteOperation}
       onSuiteOperationComplete={catalog.reconcileSuiteOperation}
       onDeleteSelected={catalog.deleteSelected}
-      onRemoveSelectedFromSuite={catalog.removeSelectedFromSuite}
       onReorderSuite={catalog.reorderSuite}
       onCreateFolder={catalog.createFolder}
       onUpdateFolder={catalog.updateFolder}

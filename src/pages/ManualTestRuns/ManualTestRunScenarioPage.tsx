@@ -6,11 +6,11 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { Box, Button, Heading, HStack, Tabs, Text } from '@chakra-ui/react';
 
 import { resultLabels } from '@/components/manual-test-runs/components/manualRunResults';
-import { ManualRunScenarioEvidence } from '@/components/manual-test-runs/components/scenario-execution/ManualRunScenarioEvidence';
-import { ManualRunScenarioResults } from '@/components/manual-test-runs/components/scenario-execution/ManualRunScenarioResults';
-import { ManualRunScenarioSidebar } from '@/components/manual-test-runs/components/scenario-execution/ManualRunScenarioSidebar';
-import type { StepDraft } from '@/components/manual-test-runs/components/scenario-execution/ManualRunScenarioStep';
-import { ManualRunScenarioSteps } from '@/components/manual-test-runs/components/scenario-execution/ManualRunScenarioSteps';
+import { ManualRunScenarioEvidence } from '@/components/manual-test-runs/components/ScenarioExecution/ManualRunScenarioEvidence';
+import { ManualRunScenarioResults } from '@/components/manual-test-runs/components/ScenarioExecution/ManualRunScenarioResults';
+import { ManualRunScenarioSidebar } from '@/components/manual-test-runs/components/ScenarioExecution/ManualRunScenarioSidebar';
+import type { StepDraft } from '@/components/manual-test-runs/components/ScenarioExecution/ManualRunScenarioStep';
+import { ManualRunScenarioSteps } from '@/components/manual-test-runs/components/ScenarioExecution/ManualRunScenarioSteps';
 import {
   isRunRecoveryLocked,
   lockRunRecovery,

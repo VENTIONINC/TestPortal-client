@@ -152,6 +152,7 @@ export function NewManualTestRunPage() {
       <TestScenariosPage initialTab={entry.suiteId ? 'suites' : entry.scenarioIds ? 'scenarios' : 'manual-runs'} />
       <ManualRunDetailsDialog
         projectId={projectId}
+        pickerScopeKey={location.key}
         mode="new"
         name={name}
         onNameChange={handleNameChange}

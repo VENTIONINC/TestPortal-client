@@ -13,6 +13,23 @@ import type { TestScenarioSummary } from '../../types';
 import { CatalogTableEmptyState } from './CatalogTableStates';
 import { authorInitials, compactDate, priorityColors, SCENARIO_DRAG_MIME, shortAuthorName } from './utils';
 
+interface CompactScenarioTableProps {
+  originSearch: string;
+  onScenarioActions?: TestScenarioContextMenuHandler;
+  projectId: string;
+  scenarios: TestScenarioSummary[];
+  isLoading: boolean;
+  selectedIds: string[];
+  selectionDisabled: boolean;
+  onToggleSelected: (id: string) => void;
+  onDragPayload: (projectId: string, scenarioIds: string[]) => void;
+  onDragEnd: () => void;
+  folderPathById: Map<string, string>;
+  searchActive: boolean;
+  emptyFolder: boolean;
+  onCreateScenario: () => void;
+}
+
 export const CompactScenarioTable = ({
   originSearch,
   onScenarioActions,
@@ -28,22 +45,7 @@ export const CompactScenarioTable = ({
   searchActive,
   emptyFolder,
   onCreateScenario,
-}: {
-  originSearch: string;
-  onScenarioActions?: TestScenarioContextMenuHandler;
-  projectId: string;
-  scenarios: TestScenarioSummary[];
-  isLoading: boolean;
-  selectedIds: string[];
-  selectionDisabled: boolean;
-  onToggleSelected: (id: string) => void;
-  onDragPayload: (projectId: string, scenarioIds: string[]) => void;
-  onDragEnd: () => void;
-  folderPathById: Map<string, string>;
-  searchActive: boolean;
-  emptyFolder: boolean;
-  onCreateScenario: () => void;
-}) => {
+}: CompactScenarioTableProps) => {
   const [anchorId, setAnchorId] = useState<string | null>(null);
   const extendSelection = useRef(false);
   const selectRange = (id: string, index: number) => {

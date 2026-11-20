@@ -8,19 +8,21 @@ import { NativeSelect } from '@/components/ui';
 
 import type { TestScenarioPagination } from '../../types';
 
+interface CatalogPaginationProps {
+  pagination: TestScenarioPagination;
+  pageSize: number;
+  pageSizes: readonly number[];
+  onPageSizeChange: (value: number) => void;
+  onPageChange: (page: number) => void;
+}
+
 export const CatalogPagination = ({
   pagination,
   pageSize,
   pageSizes,
   onPageSizeChange,
   onPageChange,
-}: {
-  pagination: TestScenarioPagination;
-  pageSize: number;
-  pageSizes: readonly number[];
-  onPageSizeChange: (value: number) => void;
-  onPageChange: (page: number) => void;
-}) => (
+}: CatalogPaginationProps) => (
   <HStack justify="space-between" flexWrap="wrap" gap={3}>
     <HStack w="full" justify="space-between" gap={3} flexWrap="wrap">
       <Text color="text.secondary" fontSize="sm">

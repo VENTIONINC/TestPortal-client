@@ -18,7 +18,7 @@ import {
 import { Tooltip } from '@/components/ui';
 
 import type {
-  CatalogEditor,
+  CatalogInlineEditor,
   CatalogEditorForm,
   CatalogFolder,
   CatalogFolderRow,
@@ -27,29 +27,8 @@ import type {
 } from './types';
 import { CATALOG_SCOPE } from './utils';
 
-export const CatalogHeader = ({
-  createDialog,
-  selectedSuite,
-  selectedFolder,
-  selectedFolderPath,
-  scope,
-  isScenariosTab,
-  isSelectedSuiteEmpty,
-  isExecutingOperation,
-  handleRunSuite,
-  onManageScenarios,
-  openEditSuiteDialog,
-  onDeleteSuite,
-  onCreateScenario,
-  startInlineFolder,
-  openEditFolderDialog,
-  selectedFolderIndex,
-  selectedFolderSiblingCount,
-  reorderFolder,
-  openFolderActionDialog,
-  editor,
-}: {
-  createDialog: CatalogEditor | null;
+interface CatalogHeaderProps {
+  inlineEditor: CatalogInlineEditor | null;
   selectedSuite?: CatalogSuite;
   selectedFolder?: CatalogFolderRow;
   selectedFolderPath?: string;
@@ -59,30 +38,53 @@ export const CatalogHeader = ({
   isExecutingOperation: boolean;
   handleRunSuite: () => Promise<void>;
   onManageScenarios: () => void;
-  openEditSuiteDialog: () => void;
+  startEditSuite: () => void;
   onDeleteSuite: (suite: CatalogSuite) => void;
   onCreateScenario?: () => void;
   startInlineFolder: (parentId: string | null) => void;
-  openEditFolderDialog: (folder: CatalogFolder) => void;
+  startRenameFolder: (folder: CatalogFolder) => void;
   selectedFolderIndex: number;
   selectedFolderSiblingCount: number;
   reorderFolder: (folder: CatalogFolder, direction: -1 | 1) => Promise<void>;
   openFolderActionDialog: (kind: 'move-folder' | 'delete-folder', folder: CatalogFolder) => void;
   editor: CatalogEditorForm;
-}) => (
+}
+
+export const CatalogHeader = ({
+  inlineEditor,
+  selectedSuite,
+  selectedFolder,
+  selectedFolderPath,
+  scope,
+  isScenariosTab,
+  isSelectedSuiteEmpty,
+  isExecutingOperation,
+  handleRunSuite,
+  onManageScenarios,
+  startEditSuite,
+  onDeleteSuite,
+  onCreateScenario,
+  startInlineFolder,
+  startRenameFolder,
+  selectedFolderIndex,
+  selectedFolderSiblingCount,
+  reorderFolder,
+  openFolderActionDialog,
+  editor,
+}: CatalogHeaderProps) => (
   <Box>
     <HStack justify="space-between" align="start" gap={3} flexWrap="wrap">
       <Box minW="0" flex="1">
-        {(createDialog === 'edit-suite' && selectedSuite) || (createDialog === 'rename-folder' && selectedFolder) ? (
+        {(inlineEditor === 'edit-suite' && selectedSuite) || (inlineEditor === 'rename-folder' && selectedFolder) ? (
           <form onSubmit={(event) => void editor.onSubmit(event)}>
             <Grid templateColumns={{ base: '1fr', md: 'minmax(0, 1fr) auto' }} alignItems="start" gap={3}>
               <VStack align="stretch" gap={2}>
                 <label>
                   <Text mb={1} fontSize="xs" color="text.secondary">
-                    {createDialog === 'rename-folder' ? 'Folder name' : 'Name'}
+                    {inlineEditor === 'rename-folder' ? 'Folder name' : 'Name'}
                   </Text>
                   <Input
-                    aria-label={createDialog === 'rename-folder' ? 'Folder name' : 'Suite name'}
+                    aria-label={inlineEditor === 'rename-folder' ? 'Folder name' : 'Suite name'}
                     autoFocus
                     required
                     maxLength={200}
@@ -92,10 +94,10 @@ export const CatalogHeader = ({
                 </label>
                 <label>
                   <Text mb={1} fontSize="xs" color="text.secondary">
-                    {createDialog === 'rename-folder' ? 'Description (optional)' : 'Description'}
+                    {inlineEditor === 'rename-folder' ? 'Description (optional)' : 'Description'}
                   </Text>
                   <Textarea
-                    aria-label={createDialog === 'rename-folder' ? 'Description (optional)' : 'Suite description'}
+                    aria-label={inlineEditor === 'rename-folder' ? 'Description (optional)' : 'Suite description'}
                     value={editor.description}
                     onChange={(event) => editor.onDescriptionChange(event.currentTarget.value)}
                   />
@@ -133,18 +135,18 @@ export const CatalogHeader = ({
                   : 'All scenarios')}
           </Heading>
         )}
-        {createDialog !== 'edit-suite' && createDialog !== 'rename-folder' && selectedFolder?.description && (
+        {inlineEditor !== 'edit-suite' && inlineEditor !== 'rename-folder' && selectedFolder?.description && (
           <Text mt={1} color="text.secondary" fontSize="sm">
             {selectedFolder.description}
           </Text>
         )}
-        {createDialog !== 'edit-suite' && selectedSuite && (
+        {inlineEditor !== 'edit-suite' && selectedSuite && (
           <Text mt={1} color="text.muted" fontSize="sm">
             {selectedSuite.description?.trim() || 'No description'}
           </Text>
         )}
       </Box>
-      {selectedSuite && createDialog !== 'edit-suite' && (
+      {selectedSuite && inlineEditor !== 'edit-suite' && (
         <HStack>
           <Tooltip
             content="Add scenarios to run this suite"
@@ -168,7 +170,7 @@ export const CatalogHeader = ({
               Run suite
             </Button>
           </Tooltip>
-          <Button variant="outline" onClick={() => onManageScenarios()}>
+          <Button variant="outline" onClick={onManageScenarios}>
             <FiLayers />
             Manage scenarios
           </Button>
@@ -180,7 +182,7 @@ export const CatalogHeader = ({
             </Menu.Trigger>
             <Menu.Positioner>
               <Menu.Content>
-                <Menu.Item value="edit" onClick={openEditSuiteDialog}>
+                <Menu.Item value="edit" onClick={startEditSuite}>
                   <HStack justify="left" w="full">
                     <FiEdit aria-hidden="true" />
                     <Text>Edit suite details</Text>
@@ -198,13 +200,13 @@ export const CatalogHeader = ({
         </HStack>
       )}
       <HStack gap={2}>
-        {isScenariosTab && createDialog !== 'rename-folder' && (
+        {isScenariosTab && inlineEditor !== 'rename-folder' && (
           <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}>
             <FiPlus />
             Create scenario
           </Button>
         )}
-        {isScenariosTab && selectedFolder && createDialog !== 'rename-folder' && (
+        {isScenariosTab && selectedFolder && inlineEditor !== 'rename-folder' && (
           <Menu.Root positioning={{ placement: 'bottom-end' }}>
             <Menu.Trigger asChild>
               <IconButton aria-label="Folder actions" size="md" variant="outline">
@@ -230,7 +232,7 @@ export const CatalogHeader = ({
                       value="rename-folder"
                       minH="32px"
                       gap="3"
-                      onClick={() => openEditFolderDialog(selectedFolder)}
+                      onClick={() => startRenameFolder(selectedFolder)}
                     >
                       <FiEdit aria-hidden="true" />
                       Edit folder details

@@ -11,7 +11,12 @@ import { useTestScenarioDetail } from '@/components/test-scenarios';
 
 import { TestScenarioDetailStateView } from '../components';
 
-const CloneBoundary = ({ projectId, scenarioId }: { projectId: string; scenarioId: string }) => {
+interface CloneBoundaryProps {
+  projectId: string;
+  scenarioId: string;
+}
+
+const CloneBoundary = ({ projectId, scenarioId }: CloneBoundaryProps) => {
   const navigate = useNavigate();
   const detail = useTestScenarioDetail(projectId, scenarioId);
   const [source, setSource] = useState(detail.scenario);

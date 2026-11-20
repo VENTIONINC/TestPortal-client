@@ -10,15 +10,17 @@ import { Tooltip } from '@/components/ui';
 import type { TestScenarioCatalogViewProps } from './types';
 import { priorityColors, shortAuthorName, type PriorityValue } from './utils';
 
+interface PriorityFilterProps {
+  value: string;
+  counts?: Partial<Record<PriorityValue, number | undefined>>;
+  onChange: (value: string) => void;
+}
+
 const PriorityFilter = ({
   value,
   counts,
   onChange,
-}: {
-  value: string;
-  counts?: Partial<Record<PriorityValue, number | undefined>>;
-  onChange: (value: string) => void;
-}) => {
+}: PriorityFilterProps) => {
   const [open, setOpen] = useState(false);
   const values: PriorityValue[] = ['high', 'medium', 'low'];
   const selected = value ? (value.split(',') as PriorityValue[]) : [];
@@ -122,19 +124,21 @@ const PriorityFilter = ({
   );
 };
 
+interface AuthorFilterProps {
+  value: string[];
+  authors: Array<{ id: string; name: string; email: string; scenarioCount?: number }>;
+  loading: boolean;
+  error?: unknown;
+  onChange: (value: string[]) => void;
+}
+
 const AuthorFilter = ({
   value,
   authors,
   loading,
   error,
   onChange,
-}: {
-  value: string[];
-  authors: Array<{ id: string; name: string; email: string; scenarioCount?: number }>;
-  loading: boolean;
-  error?: unknown;
-  onChange: (value: string[]) => void;
-}) => {
+}: AuthorFilterProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const selectedAuthors = authors.filter((author) => value.includes(author.id));
@@ -274,15 +278,17 @@ const AuthorFilter = ({
   );
 };
 
+interface ScenarioSortSelectProps {
+  value: TestScenarioCatalogViewProps['sort'];
+  onChange: (value: TestScenarioCatalogViewProps['sort']) => void;
+  allowRunOrder: boolean;
+}
+
 const ScenarioSortSelect = ({
   value,
   onChange,
   allowRunOrder,
-}: {
-  value: TestScenarioCatalogViewProps['sort'];
-  onChange: (value: TestScenarioCatalogViewProps['sort']) => void;
-  allowRunOrder: boolean;
-}) => {
+}: ScenarioSortSelectProps) => {
   const [open, setOpen] = useState(false);
   const options: Array<{ value: typeof value; label: string }> = [
     { value: 'scenarioKey', label: 'Key' },
@@ -351,7 +357,11 @@ const ScenarioSortSelect = ({
   );
 };
 
-const SortDirectionIcon = ({ direction }: { direction: 'asc' | 'desc' }) => {
+interface SortDirectionIconProps {
+  direction: 'asc' | 'desc';
+}
+
+const SortDirectionIcon = ({ direction }: SortDirectionIconProps) => {
   const widths = direction === 'desc' ? [9, 7, 5] : [5, 7, 9];
 
   return (

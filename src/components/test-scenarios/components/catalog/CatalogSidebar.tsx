@@ -34,6 +34,37 @@ const UnfiledFolderIcon = () => (
   </svg>
 );
 
+interface CatalogSidebarProps {
+  organizationTab?: TestScenarioCatalogViewProps['organizationTab'];
+  scope: TestScenarioCatalogViewProps['scope'];
+  folders: CatalogFolder[];
+  suites: CatalogSuite[];
+  organizationLoading: boolean;
+  organizationError?: unknown;
+  projectScenarioCount: number;
+  unfiledScenarioCount: number;
+  selectedFolder?: CatalogFolderRow;
+  folderScenarioCounts: Map<string, number>;
+  isDraggingScenario: boolean;
+  dragOverFolderId: string | null;
+  changeScope: TestScenarioCatalogViewProps['onScopeChange'];
+  startInlineFolder: (parentId: string | null) => void;
+  inlineFolderParentId: string | null | undefined;
+  inlineFolderName: string;
+  inlineFolderError: string | null;
+  setInlineFolderName: (name: string) => void;
+  onCancelFolderDraft: () => void;
+  submitInlineFolder: () => Promise<void>;
+  showSuiteDraft: boolean;
+  onCreateSuite: () => void;
+  handleScenarioDragOver: (event: DragEvent<HTMLElement>, destinationId: string) => void;
+  handleScenarioDrop: (event: DragEvent<HTMLElement>, destinationId: string | null) => void;
+  onDragLeave: (destinationId: string) => void;
+  onSuiteDragOver: (event: DragEvent<HTMLElement>, suiteId: string) => void;
+  handleSuiteDrop: (event: DragEvent<HTMLElement>, suiteId: string) => void;
+  editor: CatalogEditorForm;
+}
+
 export const CatalogSidebar = ({
   organizationTab,
   scope,
@@ -63,36 +94,7 @@ export const CatalogSidebar = ({
   onSuiteDragOver,
   handleSuiteDrop,
   editor,
-}: {
-  organizationTab?: TestScenarioCatalogViewProps['organizationTab'];
-  scope: TestScenarioCatalogViewProps['scope'];
-  folders: CatalogFolder[];
-  suites: CatalogSuite[];
-  organizationLoading: boolean;
-  organizationError?: unknown;
-  projectScenarioCount: number;
-  unfiledScenarioCount: number;
-  selectedFolder?: CatalogFolderRow;
-  folderScenarioCounts: Map<string, number>;
-  isDraggingScenario: boolean;
-  dragOverFolderId: string | null;
-  changeScope: TestScenarioCatalogViewProps['onScopeChange'];
-  startInlineFolder: (parentId: string | null) => void;
-  inlineFolderParentId: string | null | undefined;
-  inlineFolderName: string;
-  inlineFolderError: string | null;
-  setInlineFolderName: (name: string) => void;
-  onCancelFolderDraft: () => void;
-  submitInlineFolder: () => Promise<void>;
-  showSuiteDraft: boolean;
-  onCreateSuite: () => void;
-  handleScenarioDragOver: (event: DragEvent<HTMLElement>, destinationId: string) => void;
-  handleScenarioDrop: (event: DragEvent<HTMLElement>, destinationId: string | null) => void;
-  onDragLeave: (destinationId: string) => void;
-  onSuiteDragOver: (event: DragEvent<HTMLElement>, suiteId: string) => void;
-  handleSuiteDrop: (event: DragEvent<HTMLElement>, suiteId: string) => void;
-  editor: CatalogEditorForm;
-}) => {
+}: CatalogSidebarProps) => {
   const renderFolder = (folder: CatalogFolder): ReactNode => {
     const children = getFolderChildren(folder);
     const selected = scope.kind === CATALOG_SCOPE.folder && scope.id === folder.id;

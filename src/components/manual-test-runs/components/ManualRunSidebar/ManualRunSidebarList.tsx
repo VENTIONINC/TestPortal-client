@@ -6,7 +6,7 @@ import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
 import type { ManualTestRunSummary } from '@/redux/apis/generatedApi';
 
 import { MANUAL_RUN_PERIOD, MANUAL_RUN_STATUS } from '../../constants';
-import { periods, type useManualRunList } from '../useManualRunList';
+import { periods, type useManualRunList } from '../ManualTestRunWorkspace/hooks/useManualRunList';
 import { ManualRunSidebarItem } from './ManualRunSidebarItem';
 
 const completedDayLabel = (day: string) => {
