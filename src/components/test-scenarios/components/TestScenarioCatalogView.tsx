@@ -20,8 +20,11 @@ import {
 } from './catalog/CatalogDialogs';
 import { CatalogFilters } from './catalog/CatalogFilters';
 import { CatalogHeader } from './catalog/CatalogHeader';
+import { CatalogPagination } from './catalog/CatalogPagination';
 import { CatalogSidebar } from './catalog/CatalogSidebar';
-import { CatalogLoadError, CatalogPagination, CompactScenarioTable, SuiteScenarioTable } from './catalog/CatalogTables';
+import { CatalogLoadError } from './catalog/CatalogTableStates';
+import { CompactScenarioTable } from './catalog/CompactScenarioTable';
+import { SuiteScenarioTable } from './catalog/SuiteScenarioTable';
 import type {
   CatalogEditor,
   CatalogEditorForm,

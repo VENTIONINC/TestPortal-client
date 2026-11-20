@@ -37,4 +37,14 @@ export const shortAuthorName = (name: string) => {
   return `${parts[0]} ${parts.at(-1)?.[0] ?? ''}.`;
 };
 
+export const compactDate = (value: string) => new Date(value).toLocaleDateString('en-US');
+export const authorInitials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || '?';
+
 export const UNFILED_DESTINATION = '__unfiled__';
