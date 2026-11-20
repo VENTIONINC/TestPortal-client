@@ -9,6 +9,8 @@ const operationIds = new Map([
   ['POST /api/v2/test-scenario-folders', 'postApiV2TestScenarioFolders'],
   ['PATCH /api/v2/test-scenario-folders/{folderId}', 'patchApiV2TestScenarioFoldersByFolderId'],
   ['DELETE /api/v2/test-scenario-folders/{folderId}', 'deleteApiV2TestScenarioFoldersByFolderId'],
+  ['POST /api/v2/test-scenario-folders/restoration', 'postApiV2TestScenarioFoldersRestoration'],
+  ['POST /api/v2/test-scenarios/folder-restoration', 'postApiV2TestScenariosFolderRestoration'],
   ['GET /api/v2/test-suites', 'getApiV2TestSuites'],
   ['POST /api/v2/test-suites', 'postApiV2TestSuites'],
   ['GET /api/v2/test-suites/{suiteId}', 'getApiV2TestSuitesBySuiteId'],
@@ -17,7 +19,14 @@ const operationIds = new Map([
   ['POST /api/v2/test-suites/{suiteId}/members', 'postApiV2TestSuitesBySuiteIdMembers'],
   ['DELETE /api/v2/test-suites/{suiteId}/members', 'deleteApiV2TestSuitesBySuiteIdMembers'],
   ['PUT /api/v2/test-suites/{suiteId}/members/order', 'putApiV2TestSuitesBySuiteIdMembersOrder'],
+  ['POST /api/v2/test-suites/{suiteId}/membership-changes', 'postApiV2TestSuitesBySuiteIdMembershipChanges'],
+  ['POST /api/v2/test-suites/{suiteId}/membership-restoration', 'postApiV2TestSuitesBySuiteIdMembershipRestoration'],
+  ['POST /api/v2/test-suites/moves', 'postApiV2TestSuitesMoves'],
+  ['POST /api/v2/test-suites/move-restoration', 'postApiV2TestSuitesMoveRestoration'],
   ['PATCH /api/v2/test-scenarios/bulk-folder', 'patchApiV2TestScenariosBulkFolder'],
+  ['GET /api/v2/test-scenarios/authors', 'getApiV2TestScenariosAuthors'],
+  ['GET /api/v2/test-scenarios/priority-counts', 'getApiV2TestScenariosPriorityCounts'],
+  ['GET /api/v2/test-scenarios/selection', 'getApiV2TestScenariosSelection'],
 ]);
 
 async function readOpenApi(source) {
@@ -38,6 +47,7 @@ function typeFolderChildren(openApi) {
       projectId: { type: 'string', format: 'uuid' },
       parentId: { type: ['string', 'null'], format: 'uuid' },
       name: { type: 'string' },
+      description: { type: ['string', 'null'] },
       position: { type: 'integer' },
       createdAt: { type: 'string' },
       updatedAt: { type: 'string' },

@@ -103,7 +103,7 @@ describe('AssignIssueModal evidence tabs', () => {
     expect(mocks.trigger).toHaveBeenLastCalledWith({ resultId: 'result-1', projectId: 'project-1' });
 
     await user.click(screen.getByRole('button', { name: 'Link Test Scenario' }));
-    await user.type(screen.getByRole('textbox', { name: 'Search title or scenario key' }), 'checkout');
+    await user.type(screen.getByRole('textbox', { name: 'Search by title or key' }), 'checkout');
     await user.click(screen.getByRole('button', { name: 'Search' }));
     await user.click(screen.getByRole('button', { name: 'Back to Test Scenarios' }));
 

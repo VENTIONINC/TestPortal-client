@@ -9,6 +9,7 @@ import type {
   UpdateTestScenarioStepRequest,
 } from '@/redux/apis/generatedApi';
 import { testScenarioAuthoringSchema } from '@/schemas';
+import { PATHS } from '@/types/paths';
 
 import {
   TEST_SCENARIO_EDITABLE_FIELDS,
@@ -26,11 +27,6 @@ export type {
 
 export const normalizeScenarioText = (value: string | null | undefined) => value?.trim() ?? '';
 
-export const normalizeOptionalScenarioText = (value: string | null | undefined) => {
-  const normalized = normalizeScenarioText(value);
-  return normalized || null;
-};
-
 interface FolderOptionNode {
   id?: string;
   name?: string;
@@ -38,11 +34,12 @@ interface FolderOptionNode {
 }
 
 export const flattenScenarioFolders = (folders: FolderOptionNode[]) => {
-  const flattened: Array<{ id: string; name: string; depth: number }> = [];
-  const visit = (folder: FolderOptionNode, depth: number) => {
+  const flattened: Array<{ id: string; name: string; depth: number; path: string }> = [];
+  const visit = (folder: FolderOptionNode, depth: number, parentPath = '') => {
     if (!folder.id || !folder.name) return;
-    flattened.push({ id: folder.id, name: folder.name, depth });
-    folder.children?.forEach((child) => visit(child, depth + 1));
+    const path = parentPath ? `${parentPath} / ${folder.name}` : folder.name;
+    flattened.push({ id: folder.id, name: folder.name, depth, path });
+    folder.children?.forEach((child) => visit(child, depth + 1, path));
   };
   folders.forEach((folder) => visit(folder, 0));
   return flattened;
@@ -50,12 +47,70 @@ export const flattenScenarioFolders = (folders: FolderOptionNode[]) => {
 
 export const toggleScenarioSelection = (selectedIds: string[], scenarioId: string): string[] => {
   if (selectedIds.includes(scenarioId)) return selectedIds.filter((selectedId) => selectedId !== scenarioId);
-  return selectedIds.length < 100 ? [...selectedIds, scenarioId] : selectedIds;
+  return [...selectedIds, scenarioId];
+};
+
+export interface ScenarioOperationReport {
+  succeededIds: string[];
+  failedIds: string[];
+  unattemptedIds: string[];
+  uncertainIds: string[];
+  errorMessage?: string;
+  folderRestoreData?: Array<{ scenarioId: string; folderId: string | null; expectedFolderId: string | null; expectedRevision: number }>;
+}
+
+const getScenarioOperationErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object') {
+    if ('message' in error && typeof error.message === 'string') return error.message;
+    if (
+      'data' in error &&
+      error.data &&
+      typeof error.data === 'object' &&
+      'message' in error.data &&
+      typeof error.data.message === 'string'
+    )
+      return error.data.message;
+    if ('status' in error) return `Request failed (${String(error.status)}).`;
+  }
+  return String(error);
+};
+
+const uniqueChunks = (ids: string[], size: number) => {
+  const uniqueIds = [...new Set(ids)];
+  const chunks: string[][] = [];
+  for (let index = 0; index < uniqueIds.length; index += size) chunks.push(uniqueIds.slice(index, index + size));
+  return chunks;
+};
+
+export const executeScenarioOperation = async (
+  ids: string[],
+  operation: (ids: string[]) => Promise<unknown>,
+  chunkSize = 100,
+): Promise<ScenarioOperationReport> => {
+  if (!Number.isInteger(chunkSize) || chunkSize < 1 || chunkSize > 100)
+    throw new Error('Scenario operation chunk size must be between 1 and 100.');
+  const chunks = uniqueChunks(ids, chunkSize);
+  const report: ScenarioOperationReport = { succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] };
+  for (const [index, chunk] of chunks.entries()) {
+    try {
+      await operation(chunk);
+      report.succeededIds.push(...chunk);
+    } catch (error) {
+      const status = error && typeof error === 'object' && 'status' in error ? Number(error.status) : NaN;
+      if (status >= 400 && status < 500) report.failedIds.push(...chunk);
+      else report.uncertainIds.push(...chunk);
+      report.unattemptedIds.push(...chunks.slice(index + 1).flat());
+      report.errorMessage = getScenarioOperationErrorMessage(error);
+      break;
+    }
+  }
+  return report;
 };
 
 const metadataSchema = testScenarioAuthoringSchema.pick({ priority: true, relatedIssueUrl: true });
 const validateMetadata = (values: TestScenarioEditableValues) => metadataSchema.parse({
-  priority: values.priority ?? '', relatedIssueUrl: values.relatedIssueUrl ?? '',
+  priority: values.priority || 'medium', relatedIssueUrl: values.relatedIssueUrl ?? '',
 });
 
 export const getTestScenarioCreatePayload = (
@@ -67,6 +122,7 @@ export const getTestScenarioCreatePayload = (
   validateMetadata(values);
   const payload: CreateTestScenarioRequest = {
     projectId,
+    priority: values.priority || 'medium',
     title: normalizeScenarioText(values.title),
     ...(folderId !== undefined ? { folderId } : {}),
   };
@@ -75,7 +131,7 @@ export const getTestScenarioCreatePayload = (
     if (field === 'title') continue;
     const value = normalizeScenarioText(values[field]);
     if (field === 'priority') {
-      if (values.priority) payload.priority = values.priority;
+      payload.priority = values.priority || 'medium';
     } else if (value) payload[field] = value;
   }
 
@@ -102,7 +158,7 @@ export const getTestScenarioPatchPayload = (
     if (field === 'title') {
       payload.title = value;
     } else if (field === 'priority') {
-      payload.priority = values.priority || null;
+      payload.priority = values.priority || 'medium';
     } else {
       payload[field] = value || null;
     }
@@ -112,7 +168,7 @@ export const getTestScenarioPatchPayload = (
 };
 
 export const serializeInitialSteps = (steps: TestScenarioInitialStepDraft[]): CreateTestScenarioStep[] =>
-  steps.map(({ action, expectedResult }) => ({
+  steps.filter((step) => step.id || step.action.trim() || step.expectedResult.trim()).map(({ action, expectedResult }) => ({
     action: normalizeScenarioText(action),
     ...(normalizeScenarioText(expectedResult) ? { expectedResult: normalizeScenarioText(expectedResult) } : {}),
   }));
@@ -146,4 +202,10 @@ export const getTestScenarioEditableValues = (scenario: TestScenario): TestScena
     {} as TestScenarioEditableValues,
   );
 
-export const getTestScenarioUpdatePayload = getTestScenarioPatchPayload;
+/** A reloadable, project-scoped catalog destination for the current draft folder. */
+export const getScenarioFolderReturnPath = (projectId: string, folderId: string | null, folders: Array<{ id: string }>) => {
+  const search = new URLSearchParams({ projectId });
+  if (!folderId) search.set('folderId', 'unfiled');
+  else if (folders.some((folder) => folder.id === folderId)) search.set('folderId', folderId);
+  return `${PATHS.TEST_MANAGEMENT}?${search.toString()}`;
+};

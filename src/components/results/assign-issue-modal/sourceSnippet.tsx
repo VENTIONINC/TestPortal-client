@@ -19,13 +19,27 @@ export type SourceSnippetData = {
 
 type HighlightToken = { content: string; color?: string };
 
-// eslint-disable-next-line no-control-regex -- Playwright embeds terminal ANSI escape sequences in snippets.
-const ANSI_ESCAPE_PATTERN = new RegExp('[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[-a-zA-Z\\d/#&.:=?%@~_]+)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))', 'g');
+const ANSI_ESCAPE_PATTERN = new RegExp(
+  // eslint-disable-next-line no-control-regex
+  '[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[-a-zA-Z\\d/#&.:=?%@~_]+)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))',
+  'g',
+);
 // eslint-disable-next-line no-control-regex -- OSC hyperlinks are emitted by terminals as ANSI escape sequences.
 const OSC_ESCAPE_PATTERN = new RegExp('\\u001B\\][^\\u0007]*(?:\\u0007|\\u001B\\\\)', 'g');
 const languageByExtension = {
-  ts: 'typescript', tsx: 'tsx', js: 'javascript', jsx: 'jsx', json: 'json', py: 'python',
-  sh: 'bash', bash: 'bash', yml: 'yaml', yaml: 'yaml', css: 'css', html: 'html', md: 'markdown',
+  ts: 'typescript',
+  tsx: 'tsx',
+  js: 'javascript',
+  jsx: 'jsx',
+  json: 'json',
+  py: 'python',
+  sh: 'bash',
+  bash: 'bash',
+  yml: 'yaml',
+  yaml: 'yaml',
+  css: 'css',
+  html: 'html',
+  md: 'markdown',
 } as const;
 const createHighlighter = createBundledHighlighter({
   themes: {
@@ -51,7 +65,9 @@ const { codeToTokens } = createSingletonShorthands(createHighlighter);
 
 export const stripAnsi = (value: string) => value.replace(OSC_ESCAPE_PATTERN, '').replace(ANSI_ESCAPE_PATTERN, '');
 
-export const getSnippetLanguage = (path: string): (typeof languageByExtension)[keyof typeof languageByExtension] | 'text' => {
+export const getSnippetLanguage = (
+  path: string,
+): (typeof languageByExtension)[keyof typeof languageByExtension] | 'text' => {
   const extension = path.split('.').pop()?.toLowerCase();
   return extension && extension in languageByExtension
     ? languageByExtension[extension as keyof typeof languageByExtension]
@@ -66,7 +82,13 @@ const SourceLine = ({ line, failing }: { line: HighlightToken[]; failing: boolea
     data-failing-line={failing ? 'true' : undefined}
   >
     <Text as="code" px={3} whiteSpace="pre">
-      {line.length === 0 ? ' ' : line.map((token, index) => <span key={`${index}-${token.content}`} style={{ color: token.color }}>{token.content}</span>)}
+      {line.length === 0
+        ? ' '
+        : line.map((token, index) => (
+            <span key={`${index}-${token.content}`} style={{ color: token.color }}>
+              {token.content}
+            </span>
+          ))}
     </Text>
   </Flex>
 );
@@ -82,17 +104,22 @@ export const SourceSnippet = ({ snippet }: { snippet: SourceSnippetData }) => {
     let active = true;
     setHighlightedLines(null);
     if (language === 'text') return;
-    void codeToTokens(cleanedText, { lang: language, theme }).then((result) => {
-      if (active) setHighlightedLines(result.tokens as HighlightToken[][]);
-    }).catch(() => {
-      if (active) setHighlightedLines([]);
-    });
-    return () => { active = false; };
+    void codeToTokens(cleanedText, { lang: language, theme })
+      .then((result) => {
+        if (active) setHighlightedLines(result.tokens as HighlightToken[][]);
+      })
+      .catch(() => {
+        if (active) setHighlightedLines([]);
+      });
+    return () => {
+      active = false;
+    };
   }, [cleanedText, language, theme]);
 
-  const lines = highlightedLines && highlightedLines.length > 0
-    ? highlightedLines
-    : cleanedText.split('\n').map((content) => [{ content }]);
+  const lines =
+    highlightedLines && highlightedLines.length > 0
+      ? highlightedLines
+      : cleanedText.split('\n').map((content) => [{ content }]);
 
   const copy = async () => {
     try {
@@ -106,15 +133,33 @@ export const SourceSnippet = ({ snippet }: { snippet: SourceSnippetData }) => {
 
   return (
     <Box borderWidth="1px" borderColor="border.main" borderRadius="md" overflow="hidden" bg="bg.input">
-      <Flex align="center" justify="space-between" px={4} py={2} bg="bg.panel" borderBottomWidth="1px" borderColor="border.main">
-        <Text fontSize="xs" color="text.secondary" truncate>{snippet.path}</Text>
+      <Flex
+        align="center"
+        justify="space-between"
+        px={4}
+        py={2}
+        bg="bg.panel"
+        borderBottomWidth="1px"
+        borderColor="border.main"
+      >
+        <Text fontSize="xs" color="text.secondary" truncate>
+          {snippet.path}
+        </Text>
         <Tooltip content={copied ? 'Copied' : 'Copy snippet'}>
           <IconButton aria-label="Copy snippet" size="xs" variant="ghost" onClick={() => void copy()}>
             {copied ? <LuCheck /> : <LuClipboard />}
           </IconButton>
         </Tooltip>
       </Flex>
-      <Box role="region" aria-label="Snippet content" tabIndex={0} py={3} overflow="auto" fontFamily="mono" fontSize="xs">
+      <Box
+        role="region"
+        aria-label="Snippet content"
+        tabIndex={0}
+        py={3}
+        overflow="auto"
+        fontFamily="mono"
+        fontSize="xs"
+      >
         {lines.map((line, index) => {
           const lineNumber = snippet.failingLine + index;
           return <SourceLine key={`${lineNumber}-${index}`} line={line} failing={lineNumber === snippet.failingLine} />;

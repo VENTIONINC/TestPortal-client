@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Box, Grid, GridItem } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Breadcrumb } from '@/components/ui';
 import { useFilterContext } from '@/contexts/FilterContext';
@@ -15,6 +15,7 @@ interface MainTemplateProps {
   pageHeader: string;
   actionButton?: React.ReactNode;
   isIncludeBreadcrumb?: boolean;
+  collapseSidebarOnNarrow?: boolean;
 }
 
 const getInitialCollapsedState = () => {
@@ -27,9 +28,16 @@ const setCollapsedState = (collapsed: boolean) => {
   return !collapsed;
 };
 
-export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBreadcrumb }: MainTemplateProps) => {
-  const [collapsed, setCollapsed] = useState(() => getInitialCollapsedState());
+export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBreadcrumb, collapseSidebarOnNarrow = false }: MainTemplateProps) => {
+  const [collapsed, setCollapsed] = useState(() => collapseSidebarOnNarrow && window.matchMedia('(max-width: 767px)').matches ? true : getInitialCollapsedState());
   const { setShowFilters } = useFilterContext();
+  useEffect(() => {
+    if (!collapseSidebarOnNarrow) return;
+    const media = window.matchMedia('(max-width: 767px)');
+    const onChange = () => setCollapsed(media.matches ? true : getInitialCollapsedState());
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, [collapseSidebarOnNarrow]);
 
   const handleSetCollapsed = () => {
     // Trigger isTransitioning in the filter context to hide charts
@@ -44,7 +52,7 @@ export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBrea
 
   return (
     <Grid
-      templateColumns={`${collapsed ? '64px' : '250px'} 1fr`}
+      templateColumns={`${collapsed ? '64px' : '250px'} minmax(0, 1fr)`}
       flex="1"
       h="100vh"
       overflow="hidden"
@@ -74,7 +82,7 @@ export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBrea
           zIndex="20"
           transition="left 0.2s, width 0.2s"
         >
-          <Header title={pageHeader} actionButton={actionButton} />
+          <Header title={pageHeader} actionButton={actionButton} compactOnNarrow={collapseSidebarOnNarrow} />
         </Box>
 
         <BasicWrapper>

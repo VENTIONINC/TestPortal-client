@@ -1,20 +1,25 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { useNavigate } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 
-import { RunKeyStartDialog, type ManualTestRunStartValues } from '@/components/manual-test-runs/components';
 import { toaster } from '@/components/ui';
-import { usePostApiV2TestScenariosByScenarioIdManualRunsMutation } from '@/redux/apis/extendedApi';
+import {
+  useDeleteApiV2TestSuitesBySuiteIdMembersMutation,
+  useGetApiV2TestScenarioFoldersQuery,
+  useGetApiV2TestSuitesQuery,
+} from '@/redux/apis/extendedApi';
 import { PATHS } from '@/types/paths';
-import { extractApiError, isNetworkError } from '@/utils/apiErrors';
+import { extractApiError } from '@/utils/apiErrors';
 
 import { TestScenarioDetailStateView, TestScenarioDetailsView } from '../components';
-import { getManualTestRunPath } from '../constants';
+import { getTestScenarioEditPath } from '../constants';
 import { useTestScenarioContextMenu } from '../hooks/useTestScenarioContextMenu';
 import { useTestScenarioDetail } from '../hooks/useTestScenarioDetail';
+import { flattenScenarioFolders, getScenarioFolderReturnPath } from '../utils';
+import type { ScenarioOperationReport } from '../utils';
+import { getScenarioOrigin, scenarioOriginSearch } from '../scenarioOrigin';
 
 export interface TestScenarioDetailContainerProps {
   projectId: string;
@@ -23,137 +28,120 @@ export interface TestScenarioDetailContainerProps {
 
 export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScenarioDetailContainerProps) => {
   const navigate = useNavigate();
-  const onContextMenu = useTestScenarioContextMenu(projectId);
+  const location = useLocation();
+  const search = new URLSearchParams(location.search);
+  const originSearch = search.has('originProject') ? scenarioOriginSearch(projectId, getScenarioOrigin(search, projectId)) : '';
+  const onContextMenu = useTestScenarioContextMenu(projectId, undefined, false, (scenario) => {
+    const params = new URLSearchParams({ clone: scenario.id });
+    new URLSearchParams(originSearch).forEach((value, key) => params.set(key, value));
+    navigate(`${PATHS.TEST_SCENARIO_NEW}?${params}`);
+  }, () => {
+    const params = new URLSearchParams({ projectId });
+    if (getScenarioOrigin(search, projectId).kind === 'suite') params.set('tab', 'suites');
+    navigate(`${PATHS.TEST_MANAGEMENT}?${params}`);
+  });
   const detail = useTestScenarioDetail(projectId, scenarioId);
-  const [startManualRun, { isLoading: isStartingManualRun }] = usePostApiV2TestScenariosByScenarioIdManualRunsMutation();
-  const [startError, setStartError] = useState<string>();
-  const [startUncertain, setStartUncertain] = useState(false);
-  const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
-  const [runKeyDraft, setRunKeyDraft] = useState('');
-  const [isRetryConfirmationRequired, setIsRetryConfirmationRequired] = useState(false);
-  const startInFlight = useRef(false);
-  const startTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const restoreFocusOnClose = useRef(false);
-  const mountedRef = useRef(true);
-  const latestScope = useRef(`${projectId}:${scenarioId}`);
-  const goToCatalog = () => navigate(PATHS.TEST_SCENARIOS);
-
-  latestScope.current = `${projectId}:${scenarioId}`;
-  useEffect(() => () => {
-    mountedRef.current = false;
+  const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
+  const suitesQuery = useGetApiV2TestSuitesQuery({ projectId });
+  const [removeSuiteMembers] = useDeleteApiV2TestSuitesBySuiteIdMembersMutation();
+  const [removingSuiteIds, setRemovingSuiteIds] = useState<string[]>([]);
+  const [suiteError, setSuiteError] = useState<string>();
+  const mounted = useRef(true);
+  const scope = useRef(`${projectId}:${scenarioId}`);
+  scope.current = `${projectId}:${scenarioId}`;
+  const isCurrentScope = () => mounted.current && scope.current === `${projectId}:${scenarioId}`;
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
   }, []);
-
-  const isCurrentScope = useCallback(
-    () => mountedRef.current && latestScope.current === `${projectId}:${scenarioId}`,
-    [projectId, scenarioId],
-  );
-
   useEffect(() => {
-    if (isStartDialogOpen || !restoreFocusOnClose.current) return;
-    restoreFocusOnClose.current = false;
-    startTriggerRef.current?.focus();
-  }, [isStartDialogOpen]);
-
-  useEffect(() => {
-    startInFlight.current = false;
-    setIsStartDialogOpen(false);
-    setRunKeyDraft('');
-    setStartError(undefined);
-    setStartUncertain(false);
-    setIsRetryConfirmationRequired(false);
-    restoreFocusOnClose.current = false;
+    setSuiteError(undefined);
+    setRemovingSuiteIds([]);
   }, [projectId, scenarioId]);
+  const folders = flattenScenarioFolders(foldersQuery.currentData ?? []);
+  const origin = getScenarioOrigin(search, projectId);
+  const originSuite = origin.kind === 'suite' ? suitesQuery.currentData?.find((item) => item.id === origin.id) : undefined;
+  const folder = detail.scenario?.folderId
+    ? folders.find(({ id }) => id === detail.scenario?.folderId)
+    : undefined;
+  const folderName = detail.scenario?.folderId ? folder?.name ?? 'Folder unavailable' : 'No folder';
+  const backPath = origin.kind === 'suite' && originSuite
+    ? `${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId, tab: 'suites', suiteId: originSuite.id })}`
+    : getScenarioFolderReturnPath(projectId, detail.scenario?.folderId ?? null, folders);
 
-  const openStartDialog = (trigger: HTMLButtonElement) => {
-    startTriggerRef.current = trigger;
-    setRunKeyDraft('');
-    setStartError(undefined);
-    setStartUncertain(false);
-    setIsRetryConfirmationRequired(false);
-    setIsStartDialogOpen(true);
+  const refreshMembership = async () => {
+    await Promise.all([detail.refetch(), suitesQuery.refetch()]);
   };
 
-  const closeStartDialog = () => {
-    if (startInFlight.current) return;
-    restoreFocusOnClose.current = true;
-    setIsStartDialogOpen(false);
-    setRunKeyDraft('');
-    setStartError(undefined);
-    setStartUncertain(false);
-    setIsRetryConfirmationRequired(false);
+  const handleAddSuiteComplete = async (report: ScenarioOperationReport) => {
+    if (!isCurrentScope()) return;
+    if (report.succeededIds.includes(scenarioId) && !report.failedIds.length && !report.uncertainIds.length) {
+      setSuiteError(undefined);
+      await refreshMembership();
+      return;
+    }
+
+    await suitesQuery.refetch();
+    if (report.uncertainIds.length && isCurrentScope()) await detail.refetch();
+    if (!isCurrentScope()) return;
+    setSuiteError(
+      report.uncertainIds.length
+        ? 'The suite update could not be confirmed. Memberships were refreshed; check the list before trying again.'
+        : `${report.errorMessage ?? 'Could not add this scenario to the suite.'} The confirmed suite membership is unchanged.`,
+    );
   };
 
-  const handleStartManualRun = async ({ runKey, environment }: ManualTestRunStartValues) => {
-    if (startInFlight.current || !detail.scenario) return;
-
-    startInFlight.current = true;
-    setStartError(undefined);
-    setStartUncertain(false);
-    setIsRetryConfirmationRequired(false);
-
+  const handleRemoveSuite = async (suiteId: string) => {
+    if (removingSuiteIds.includes(suiteId)) return;
+    setSuiteError(undefined);
+    setRemovingSuiteIds((current) => [...current, suiteId]);
     try {
-      const run = await startManualRun({
-        scenarioId,
-        projectId,
-        manualTestRunStartRequest: { ...(runKey ? { runKey } : {}), ...environment },
-      }).unwrap();
-
+      await removeSuiteMembers({ suiteId, body: { projectId, scenarioIds: [scenarioId] } }).unwrap();
       if (!isCurrentScope()) return;
-      setIsStartDialogOpen(false);
-      setRunKeyDraft('');
-      toaster.create({ title: 'Manual test run started.', type: 'success' });
-      navigate(getManualTestRunPath(run.id));
+      await refreshMembership();
+      if (!isCurrentScope()) return;
+      toaster.create({ title: 'Removed from suite.', type: 'success' });
     } catch (error) {
       if (!isCurrentScope()) return;
-      const message = isNetworkError(error as FetchBaseQueryError)
-        ? 'The request did not confirm whether a run was created. A run may have been created; starting again could create another run.'
-        : extractApiError(error as FetchBaseQueryError);
-      const uncertain = isNetworkError(error as FetchBaseQueryError);
-      setStartUncertain(uncertain);
-      setStartError(message);
-      toaster.create({ title: uncertain ? 'Start result is uncertain.' : message, type: uncertain ? 'warning' : 'error' });
+      const status = error && typeof error === 'object' && 'status' in error ? Number((error as { status: unknown }).status) : NaN;
+      const isUncertain = !Number.isInteger(status) || status >= 500;
+      if (isUncertain) await refreshMembership();
+      if (!isCurrentScope()) return;
+      setSuiteError(
+        isUncertain
+          ? 'The removal outcome is unknown. Memberships were refreshed; check the list before trying again.'
+          : `${extractApiError(error as never)} The saved suite membership was kept.`,
+      );
     } finally {
-      if (isCurrentScope()) startInFlight.current = false;
+      if (isCurrentScope()) setRemovingSuiteIds((current) => current.filter((id) => id !== suiteId));
     }
   };
 
   return (
-    <>
-      <TestScenarioDetailStateView
-        scenario={detail.scenario}
-        isLoading={detail.isLoading}
-        isUnavailable={detail.isUnavailable}
-        isError={detail.isError}
-        onRetry={() => void detail.refetch()}
-        onBack={goToCatalog}
-      >
-        {(scenario) => (
-          <TestScenarioDetailsView
-            scenario={scenario}
-            onContextMenu={onContextMenu}
-            onStartManualRun={openStartDialog}
-            isStartingManualRun={isStartingManualRun || startInFlight.current}
-          />
-        )}
-      </TestScenarioDetailStateView>
-      <RunKeyStartDialog
-        projectId={projectId}
-        isOpen={isStartDialogOpen}
-        context="start"
-        scenarioStepCount={detail.scenario?.steps.length}
-        value={runKeyDraft}
-        error={startError}
-        isUncertain={startUncertain}
-        isRetryConfirmationRequired={isRetryConfirmationRequired}
-        isSubmitting={isStartingManualRun || startInFlight.current}
-        onValueChange={(value) => {
-          setRunKeyDraft(value);
-          setStartError(undefined);
-        }}
-        onCancel={closeStartDialog}
-        onRequireRetryConfirmation={() => setIsRetryConfirmationRequired(true)}
-        onSubmit={(runKey) => void handleStartManualRun(runKey)}
-      />
-    </>
+    <TestScenarioDetailStateView
+      scenario={detail.scenario}
+      isLoading={detail.isLoading}
+      isUnavailable={detail.isUnavailable}
+      isError={detail.isError}
+      onRetry={() => void detail.refetch()}
+      onBack={() => navigate(PATHS.TEST_MANAGEMENT)}
+    >
+      {(scenario) => (
+        <TestScenarioDetailsView
+          scenario={scenario}
+          projectId={projectId}
+          folderName={folderName}
+          backLabel={origin.kind === 'suite' && originSuite ? originSuite.name : detail.scenario?.folderId && !folder ? 'All scenarios' : folderName}
+          originKind={origin.kind === 'suite' && originSuite ? 'suites' : 'scenarios'}
+          backPath={backPath}
+          onEdit={() => navigate(`${getTestScenarioEditPath(scenario.id)}${originSearch}`)}
+          onContextMenu={onContextMenu}
+          onAddSuiteComplete={(report) => void handleAddSuiteComplete(report)}
+          suiteError={suiteError}
+          onRemoveSuite={(suiteId) => void handleRemoveSuite(suiteId)}
+          removingSuiteIds={removingSuiteIds}
+        />
+      )}
+    </TestScenarioDetailStateView>
   );
 };

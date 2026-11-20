@@ -16,11 +16,12 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
 const mockedDetailQuery = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
 
 const scenario: TestScenario = {
+  revision: 1, suites: [], createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' }, updatedBy: null,
   folderId: null,
   id: 'scenario-1',
   projectId: 'project-1',
   createdById: 'user-1',
-  scenarioKey: null,
+  scenarioKey: 'TMS-1',
   title: 'Checkout flow',
   contentMd: '# Checkout flow',
   details: 'Original details',
@@ -80,7 +81,7 @@ describe('useTestScenarioDetail', () => {
     );
 
     const { result, rerender } = renderHook(() => useTestScenarioDetail('project-1', 'scenario-1'));
-    await waitFor(() => expect(result.current.scenario?.scenarioKey).toBeNull());
+    await waitFor(() => expect(result.current.scenario?.scenarioKey).toBe('TMS-1'));
 
     response = { ...scenario, scenarioKey: 'R1' };
     rerender();

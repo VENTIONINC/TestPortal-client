@@ -18,6 +18,8 @@ const injectedRtkApi = api
             limit: queryArg.limit,
             search: queryArg.search,
             createdById: queryArg.createdById,
+            createdByIds: queryArg.createdByIds,
+            priority: queryArg.priority,
             sort: queryArg.sort,
             sortField: queryArg.sortField,
             sortDirection: queryArg.sortDirection,
@@ -79,8 +81,29 @@ const injectedRtkApi = api
           method: "DELETE",
           params: {
             projectId: queryArg.projectId,
-            disposition: queryArg.disposition,
           },
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestScenarioFoldersRestoration: build.mutation<
+        PostApiV2TestScenarioFoldersRestorationApiResponse,
+        PostApiV2TestScenarioFoldersRestorationApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenario-folders/restoration`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2TestScenariosFolderRestoration: build.mutation<
+        PostApiV2TestScenariosFolderRestorationApiResponse,
+        PostApiV2TestScenariosFolderRestorationApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/test-scenarios/folder-restoration`,
+          method: "POST",
+          body: queryArg.body,
         }),
         invalidatesTags: ["Test Scenarios"],
       }),
@@ -202,6 +225,8 @@ export type GetApiV2TestScenariosForResultLinkManagementApiArg = {
   limit?: number;
   search?: string;
   createdById?: string;
+  createdByIds?: string;
+  priority?: string;
   sort?: "recently_created" | "recently_updated" | "title_asc";
   sortField?:
     | "scenarioKey"
@@ -227,6 +252,7 @@ export type GetApiV2TestScenarioFoldersApiResponse =
     projectId: string;
     parentId: string | null;
     name: string;
+    description: string | null;
     position: number;
     createdAt: string;
     updatedAt: string;
@@ -245,6 +271,7 @@ export type PostApiV2TestScenarioFoldersApiResponse =
     projectId: string;
     parentId: string | null;
     name: string;
+    description: string | null;
     position: number;
     createdAt: string;
     updatedAt: string;
@@ -253,6 +280,8 @@ export type PostApiV2TestScenarioFoldersApiArg = {
   body: {
     projectId: string;
     name: string;
+    /** Optional folder description. Omission leaves it unchanged; null or blank clears it. */
+    description?: string | null;
     parentId?: string | null;
     position?: number;
   };
@@ -263,6 +292,7 @@ export type PatchApiV2TestScenarioFoldersByFolderIdApiResponse =
     projectId: string;
     parentId: string | null;
     name: string;
+    description: string | null;
     position: number;
     createdAt: string;
     updatedAt: string;
@@ -272,6 +302,8 @@ export type PatchApiV2TestScenarioFoldersByFolderIdApiArg = {
   projectId: string;
   body: {
     name?: string;
+    /** Optional folder description. Omission leaves it unchanged; null or blank clears it. */
+    description?: string | null;
     parentId?: string | null;
     position?: number;
   };
@@ -279,11 +311,66 @@ export type PatchApiV2TestScenarioFoldersByFolderIdApiArg = {
 export type DeleteApiV2TestScenarioFoldersByFolderIdApiResponse =
   /** status 200 Organization operation succeeded */ {
     deleted: true;
+    restoreData: {
+      folders: {
+        id: string;
+        projectId: string;
+        name: string;
+        description: string | null;
+        parentId: string | null;
+        position: number;
+      }[];
+      scenarios: {
+        scenarioId: string;
+        folderId: string;
+        expectedRevision: number;
+      }[];
+    };
   };
 export type DeleteApiV2TestScenarioFoldersByFolderIdApiArg = {
   folderId: string;
   projectId: string;
-  disposition: "parent" | "unfiled";
+};
+export type PostApiV2TestScenarioFoldersRestorationApiResponse =
+  /** status 200 Organization operation succeeded */ {
+    restored: true;
+  };
+export type PostApiV2TestScenarioFoldersRestorationApiArg = {
+  body: {
+    projectId: string;
+    restoreData: {
+      folders: {
+        id: string;
+        projectId: string;
+        name: string;
+        description: string | null;
+        parentId: string | null;
+        position: number;
+      }[];
+      scenarios: {
+        scenarioId: string;
+        folderId: string;
+        expectedRevision: number;
+      }[];
+    };
+  };
+};
+export type PostApiV2TestScenariosFolderRestorationApiResponse =
+  /** status 200 Organization operation succeeded */ {
+    id: string;
+    folderId: string | null;
+    revision: number;
+  }[];
+export type PostApiV2TestScenariosFolderRestorationApiArg = {
+  body: {
+    projectId: string;
+    restoreData: {
+      scenarioId: string;
+      folderId: string | null;
+      expectedFolderId: string | null;
+      expectedRevision: number;
+    }[];
+  };
 };
 export type GetApiV2TestSuitesApiResponse =
   /** status 200 Organization operation succeeded */ {
@@ -293,6 +380,7 @@ export type GetApiV2TestSuitesApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -313,6 +401,7 @@ export type PostApiV2TestSuitesApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -325,6 +414,7 @@ export type PostApiV2TestSuitesApiResponse =
 export type PostApiV2TestSuitesApiArg = {
   body: {
     projectId: string;
+    /** Nonblank suite name. Names may repeat within the project; suite UUIDs identify suites. */
     name: string;
     description?: string | null;
     purpose?: string | null;
@@ -339,6 +429,7 @@ export type GetApiV2TestSuitesBySuiteIdApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -360,6 +451,7 @@ export type PatchApiV2TestSuitesBySuiteIdApiResponse =
     description: string | null;
     purpose: string | null;
     release: string | null;
+    membershipRevision: number;
     createdAt: string;
     updatedAt: string;
     members?: {
@@ -423,12 +515,20 @@ export type PutApiV2TestSuitesBySuiteIdMembersOrderApiArg = {
   suiteId: string;
   body: {
     projectId: string;
+    expectedMembershipRevision?: number;
+    expectedScenarioIds?: string[];
     scenarioIds: string[];
   };
 };
 export type PatchApiV2TestScenariosBulkFolderApiResponse =
   /** status 200 Organization operation succeeded */ {
     moved: number;
+    restoreData: {
+      scenarioId: string;
+      folderId: string | null;
+      expectedFolderId: string | null;
+      expectedRevision: number;
+    }[];
   };
 export type PatchApiV2TestScenariosBulkFolderApiArg = {
   body: {
@@ -447,8 +547,9 @@ export type TestScenarioSummary = {
   projectId: string;
   createdById: string;
   title: string;
-  scenarioKey: string | null;
+  scenarioKey: string;
   details: string | null;
+  priority: ("low" | "medium" | "high") | null;
   createdBy: TestScenarioCreatorSummary;
   createdAt: string;
   updatedAt: string;
@@ -471,6 +572,7 @@ export type TestScenarioFolder = {
   projectId?: string;
   parentId?: string | null;
   name?: string;
+  description?: string | null;
   position?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -488,6 +590,8 @@ export const {
   usePostApiV2TestScenarioFoldersMutation,
   usePatchApiV2TestScenarioFoldersByFolderIdMutation,
   useDeleteApiV2TestScenarioFoldersByFolderIdMutation,
+  usePostApiV2TestScenarioFoldersRestorationMutation,
+  usePostApiV2TestScenariosFolderRestorationMutation,
   useGetApiV2TestSuitesQuery,
   useLazyGetApiV2TestSuitesQuery,
   usePostApiV2TestSuitesMutation,

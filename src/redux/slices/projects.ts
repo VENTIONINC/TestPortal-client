@@ -37,6 +37,7 @@ export const useProjectsActions = () => {
   return {
     setSelectedProjectId: useCallback(
       (projectId: string) => {
+        if (!window.dispatchEvent(new Event('testportal:project-change', { cancelable: true }))) return;
         dispatch(projectsSlice.actions.setSelectedProjectId(projectId));
       },
       [dispatch],

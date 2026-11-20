@@ -4,10 +4,12 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { Button, Text, VStack } from '@chakra-ui/react';
+import { Box, Button, HStack, Text, VStack } from '@chakra-ui/react';
+import { FiTrash2 } from 'react-icons/fi';
 
-import { Alert, Dialog, DialogBody, DialogFooter, Input, toaster } from '@/components/ui';
+import { Alert, Dialog, DialogBody, DialogFooter } from '@/components/ui';
 import { useDeleteApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
+import { useGetApiV2TestScenariosByScenarioIdQuery } from '@/redux/apis/generatedApi';
 import type { DefaultDialogProps } from '@/types';
 import { extractApiError } from '@/utils/apiErrors';
 
@@ -25,21 +27,20 @@ export const DeleteTestScenarioDialog = ({
   scenarioTitle,
   onDeleted,
 }: DeleteTestScenarioDialogProps) => {
-  const [confirmationTitle, setConfirmationTitle] = useState('');
   const [apiError, setApiError] = useState<string>();
+  const impact = useGetApiV2TestScenariosByScenarioIdQuery({ scenarioId, projectId }, { refetchOnMountOrArgChange: true });
+  const scenario = impact.currentData?.id === scenarioId && impact.currentData?.projectId === projectId ? impact.currentData : undefined;
   const [deleteScenario, { isLoading }] = useDeleteApiV2TestScenariosByScenarioIdMutation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitInFlight = useRef(false);
   const isPending = isLoading || isSubmitting;
-  const hasExactTitle = scenarioTitle.length > 0 && confirmationTitle === scenarioTitle;
 
   useEffect(() => {
-    setConfirmationTitle('');
     setApiError(undefined);
   }, [scenarioId, projectId, scenarioTitle]);
 
   const handleConfirm = async () => {
-    if (submitInFlight.current || isPending || !hasExactTitle) return;
+    if (submitInFlight.current || isPending) return;
 
     submitInFlight.current = true;
     setIsSubmitting(true);
@@ -47,13 +48,11 @@ export const DeleteTestScenarioDialog = ({
 
     try {
       await deleteScenario({ scenarioId, projectId }).unwrap();
-      toaster.create({ title: 'Test Scenario deleted successfully.', type: 'success' });
       closeDialog();
       onDeleted?.();
     } catch (error) {
       const message = extractApiError(error as FetchBaseQueryError | SerializedError);
       setApiError(message);
-      toaster.create({ title: message, type: 'error' });
     } finally {
       submitInFlight.current = false;
       setIsSubmitting(false);
@@ -61,24 +60,22 @@ export const DeleteTestScenarioDialog = ({
   };
 
   return (
-    <Dialog title="Delete Test Scenario" onClose={closeDialog} role="alertdialog">
+    <Dialog
+      title={<HStack gap={3}><Box display="flex" alignItems="center" justifyContent="center" boxSize="10" borderRadius="lg" bg="red.100" color="red.600" flexShrink={0}><FiTrash2 size={20} aria-hidden="true" /></Box><Text>Delete scenario{scenario?.scenarioKey ? ` ${scenario.scenarioKey}` : ''}?</Text></HStack>}
+      onClose={closeDialog}
+      role="alertdialog"
+      closeTriggerProps={{ display: 'none' }}
+      contentProps={{ bg: 'bg.card', backdropFilter: 'none' }}
+      titleProps={{ fontWeight: 'semibold' }}
+    >
       <DialogBody>
         <VStack align="stretch" gap={4}>
-          <Text>
-            This permanently deletes <strong>{scenarioTitle}</strong> from the selected project.
+          <Text color="text.secondary">
+            “{scenarioTitle}” will be deleted{!impact.isFetching && !impact.isError && scenario
+              ? ` and removed from ${scenario.suites.length} ${scenario.suites.length === 1 ? `suite (${scenario.suites[0].name})` : 'suites'}`
+              : ''}. Its results in past manual runs are kept. This can’t be undone.
           </Text>
-          <Text>
-            Existing manual test runs and their saved snapshots are preserved. New manual test runs can no longer be started from this scenario.
-          </Text>
-          <Text>Enter the exact scenario title to confirm. Matching is case-sensitive and whitespace-sensitive.</Text>
-          <Input
-            name="scenario-delete-confirmation"
-            label="Scenario title"
-            value={confirmationTitle}
-            onChange={(event) => setConfirmationTitle(event.target.value)}
-            autoComplete="off"
-            disabled={isPending}
-          />
+          {impact.isFetching ? <Text color="text.secondary">Loading affected suites…</Text> : impact.isError || !scenario ? <Text color="text.secondary">Affected suites could not be loaded.</Text> : null}
           {apiError && (
             <Alert.Root status="error" role="alert">
               <Alert.Indicator />
@@ -101,10 +98,10 @@ export const DeleteTestScenarioDialog = ({
           color="white"
           onClick={handleConfirm}
           loading={isPending}
-          disabled={!hasExactTitle || isPending}
-          aria-label="Confirm Test Scenario deletion"
+          disabled={isPending}
+          aria-label="Delete scenario"
         >
-          Delete Test Scenario
+          Delete scenario
         </Button>
       </DialogFooter>
     </Dialog>
