@@ -183,7 +183,7 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
             originLabel={originDestination.label}
             originKind={origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? 'suites' : 'scenarios'}
             onNavigateOrigin={() => navigate(originDestination.path)}
-            onNavigateSection={() => navigate(`${PATHS.TEST_SCENARIOS}?${new URLSearchParams({ projectId, ...(origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? { tab: 'suites' } : {}) })}`)}
+            onNavigateSection={() => navigate(`${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId, ...(origin.kind === 'suite' && originDestination.label !== 'All scenarios' ? { tab: 'suites' } : {}) })}`)}
             initialSteps={rows(saved)}
             initialSuites={(saved as EditorScenario).suites ?? []}
             suites={suites}

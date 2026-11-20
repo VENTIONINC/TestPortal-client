@@ -265,18 +265,20 @@ export function ManualTestRunScenarioPage() {
   };
 
   if (recoveryLocked && !evidenceRecovery) {
+    const handleRetry = async () => {
+      const refreshed = await query.refetch();
+      if (!refreshed.error && refreshed.data?.id === runId && refreshed.data.projectId === projectId) {
+        unlockRunRecovery(projectId, runId);
+      } else {
+        setError('Could not refresh the run. Try again.');
+      }
+    };
+
     return (
       <MainTemplate pageHeader="Test Management">
         <Box p={8}>
           <Text role="alert">Refresh the run before making changes.</Text>
-          <Button onClick={() => void (async () => {
-            const refreshed = await query.refetch();
-            if (!refreshed.error && refreshed.data?.id === runId && refreshed.data.projectId === projectId) {
-              unlockRunRecovery(projectId, runId);
-            } else {
-              setError('Could not refresh the run. Try again.');
-            }
-          })()}>Retry refresh</Button>
+          <Button onClick={handleRetry}>Retry refresh</Button>
           {error && <Text role="alert">{error}</Text>}
         </Box>
       </MainTemplate>
@@ -311,12 +313,25 @@ export function ManualTestRunScenarioPage() {
   const flagKind = scenario.result === 'failed' ? 'failed' : scenario.result === 'blocked' ? 'blocked' : null;
   const colors = { passed: 'green', failed: 'red', blocked: 'orange', skipped: 'gray', untested: 'gray' } as const;
 
+  const handleRecoverExecution = async () => {
+    await saveQueue.current;
+    const refreshed = await query.refetch();
+    if (refreshed.error || !refreshed.data || refreshed.data.status === 'completed') {
+      setError('Could not recover an editable run. Your draft is preserved; refresh and review the run.');
+      return;
+    }
+    unlockRunRecovery(projectId, runId);
+    evidenceBlocked.current = false;
+    setEvidenceRecovery(false);
+    await latestSave.current();
+  };
+
   return (
     <MainTemplate pageHeader="Test Management">
       <Tabs.Root className="test-management-tabs" value="manual-runs">
         <TestManagementTabList
           onNavigate={(tab) =>
-            navigate(tab === 'manual-runs' ? PATHS.MANUAL_TEST_RUNS : PATHS.TEST_SCENARIOS, {
+            navigate(tab === 'manual-runs' ? PATHS.MANUAL_TEST_RUNS : PATHS.TEST_MANAGEMENT, {
               state: { testManagementTab: tab },
             })
           }
@@ -620,6 +635,49 @@ export function ManualTestRunScenarioPage() {
                         flagKind === 'failed'
                           ? 'Mark this step as the one that failed'
                           : 'Mark this step as the one that got blocked';
+                      const handleToggleStepFlag = () => {
+                        setStepDraft((items) => {
+                          const next = { ...items };
+                          const selecting = !flagged;
+                          if (selecting) {
+                            for (const [id, item] of Object.entries(next)) {
+                              if (id === step.id) continue;
+                              if (flagKind === 'failed' && item.failedFlag) {
+                                next[id] = { ...item, failedFlag: false, failedComment: '' };
+                              } else if (flagKind === 'blocked' && item.blockedFlag) {
+                                next[id] = { ...item, blockedFlag: false, blockedComment: '' };
+                              }
+                            }
+                          }
+                          next[step.id] = {
+                            ...draft,
+                            ...(flagKind === 'failed'
+                              ? { failedFlag: selecting, failedComment: selecting ? draft.failedComment : '' }
+                              : { blockedFlag: selecting, blockedComment: selecting ? draft.blockedComment : '' }),
+                            comment: '',
+                          };
+                          return next;
+                        });
+                        setOpenComments((items) => ({ ...items, [step.id]: false }));
+                      };
+
+                      const handleOpenStepComment = () => {
+                        setOpenComments((items) => ({ ...items, [step.id]: true }));
+                        update({
+                          comment: draft.comment,
+                          ...(flagKind === 'failed'
+                            ? { failedFlag: false, failedComment: '' }
+                            : flagKind === 'blocked'
+                              ? { blockedFlag: false, blockedComment: '' }
+                              : {}),
+                        });
+                      };
+
+                      const handleClearStepComment = () => {
+                        update({ comment: '' });
+                        setOpenComments((items) => ({ ...items, [step.id]: false }));
+                      };
+
                       return (
                         <Box
                           key={step.id}
@@ -656,31 +714,7 @@ export function ManualTestRunScenarioPage() {
                                     h="28px"
                                     minW="28px"
                                     p={0}
-                                    onClick={() => {
-                                      setStepDraft((items) => {
-                                        const next = { ...items };
-                                        const selecting = !flagged;
-                                        if (selecting) {
-                                          for (const [id, item] of Object.entries(next)) {
-                                            if (id === step.id) continue;
-                                            if (flagKind === 'failed' && item.failedFlag) {
-                                              next[id] = { ...item, failedFlag: false, failedComment: '' };
-                                            } else if (flagKind === 'blocked' && item.blockedFlag) {
-                                              next[id] = { ...item, blockedFlag: false, blockedComment: '' };
-                                            }
-                                          }
-                                        }
-                                        next[step.id] = {
-                                          ...draft,
-                                          ...(flagKind === 'failed'
-                                            ? { failedFlag: selecting, failedComment: selecting ? draft.failedComment : '' }
-                                            : { blockedFlag: selecting, blockedComment: selecting ? draft.blockedComment : '' }),
-                                          comment: '',
-                                        };
-                                        return next;
-                                      });
-                                      setOpenComments((items) => ({ ...items, [step.id]: false }));
-                                    }}
+                                    onClick={handleToggleStepFlag}
                                   >
                                     <LuFlag />
                                   </Button>
@@ -697,17 +731,7 @@ export function ManualTestRunScenarioPage() {
                                     minW="28px"
                                     p={0}
                                     aria-label={`Comment on this step (${stepIndex + 1})`}
-                                    onClick={() => {
-                                      setOpenComments((items) => ({ ...items, [step.id]: true }));
-                                      update({
-                                        comment: draft.comment,
-                                        ...(flagKind === 'failed'
-                                          ? { failedFlag: false, failedComment: '' }
-                                          : flagKind === 'blocked'
-                                            ? { blockedFlag: false, blockedComment: '' }
-                                            : {}),
-                                      });
-                                    }}
+                                    onClick={handleOpenStepComment}
                                   >
                                     <LuMessageSquare />
                                   </Button>
@@ -747,10 +771,7 @@ export function ManualTestRunScenarioPage() {
                                   minW="28px"
                                   p={0}
                                   aria-label={`Clear comment for step ${stepIndex + 1}`}
-                                  onClick={() => {
-                                    update({ comment: '' });
-                                    setOpenComments((items) => ({ ...items, [step.id]: false }));
-                                  }}
+                                  onClick={handleClearStepComment}
                                 >
                                   <LuX />
                                 </Button>
@@ -804,18 +825,7 @@ export function ManualTestRunScenarioPage() {
                 </Text>
               )}
               {evidenceRecovery && !completed && (
-                <Button mt={2} size="sm" onClick={() => void (async () => {
-                  await saveQueue.current;
-                  const refreshed = await query.refetch();
-                  if (refreshed.error || !refreshed.data || refreshed.data.status === 'completed') {
-                    setError('Could not recover an editable run. Your draft is preserved; refresh and review the run.');
-                    return;
-                  }
-                  unlockRunRecovery(projectId, runId);
-                  evidenceBlocked.current = false;
-                  setEvidenceRecovery(false);
-                  await latestSave.current();
-                })()}>
+                <Button mt={2} size="sm" onClick={handleRecoverExecution}>
                   Refresh and retry saving draft
                 </Button>
               )}

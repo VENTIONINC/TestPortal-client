@@ -71,7 +71,7 @@ export const useTestScenarioContextMenu = (
             if (currentProjectId) {
               openDeleteDialog(scenario.id, currentProjectId, scenario.title, () => {
                 if (onDeletedOverride) onDeletedOverride(scenario.id);
-                else navigate(PATHS.TEST_SCENARIOS);
+                else navigate(PATHS.TEST_MANAGEMENT);
               });
             }
           },

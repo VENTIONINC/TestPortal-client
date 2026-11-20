@@ -12,11 +12,20 @@ const RouteGuard = ({ dirty, allowNavigation }: { dirty: boolean; allowNavigatio
   }, [blocker]);
   return null;
 };
-export const ScenarioDraftNavigationGuard = ({ dirty, allowNavigation }: { dirty: boolean; allowNavigation?: RefObject<boolean> }) => {
+
+export const ScenarioDraftNavigationGuard = ({
+  dirty,
+  allowNavigation,
+}: {
+  dirty: boolean;
+  allowNavigation?: RefObject<boolean>;
+}) => {
   const router = useContext(UNSAFE_DataRouterContext);
   useEffect(() => {
     const guard = (event: Event) => {
-      if (dirty && !allowNavigation?.current && !window.confirm('Discard unsaved scenario changes?')) event.preventDefault();
+      if (dirty && !allowNavigation?.current && !window.confirm('Discard unsaved scenario changes?')) {
+        event.preventDefault();
+      }
     };
     window.addEventListener('testportal:project-change', guard);
     return () => window.removeEventListener('testportal:project-change', guard);

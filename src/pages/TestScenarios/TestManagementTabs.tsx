@@ -9,10 +9,17 @@ import { useGetApiV2ManualTestRunsQuery, useGetApiV2TestSuitesQuery } from '@/re
 import { useGetApiV2TestScenariosQuery } from '@/redux/apis/generatedApi';
 import { MANUAL_RUN_PERIOD, MANUAL_RUN_STATUS } from '@/components/manual-test-runs/constants';
 import { getScenarioOrigin } from '@/components/test-scenarios/scenarioOrigin';
+import { PATHS } from '@/types/paths';
 
 import './TestManagementTabs.css';
 
 export type TestManagementTab = 'scenarios' | 'suites' | 'manual-runs';
+
+const tabs = [
+  { value: 'scenarios', title: 'Scenarios', label: 'scenario' },
+  { value: 'suites', title: 'Suites', label: 'suite' },
+  { value: 'manual-runs', title: 'Manual runs', label: 'manual run' },
+] as const;
 
 const triggerStyle = {
   px: 3, py: 2, fontSize: 'sm', lineHeight: 'shorter', whiteSpace: 'nowrap',
@@ -30,12 +37,6 @@ export function TestManagementTabList({ onNavigate }: { onNavigate?: (tab: TestM
     suites.isFetching || suites.error ? undefined : suites.currentData?.length,
     runs.isFetching || runs.error ? undefined : runs.currentData?.total,
   ];
-  const tabs = [
-    { value: 'scenarios', title: 'Scenarios', label: 'scenario' },
-    { value: 'suites', title: 'Suites', label: 'suite' },
-    { value: 'manual-runs', title: 'Manual runs', label: 'manual run' },
-  ] as const;
-
   return (
     <Tabs.List aria-label="Test Management" w="full" gap={0} ps={6} borderBottomWidth="1px"
       borderColor="border.default" overflowX="auto">
@@ -56,8 +57,8 @@ export function ScenarioPageTabs() {
   const suites = useGetApiV2TestSuitesQuery({ projectId: selectedProjectId ?? '' }, { skip: !selectedProjectId || origin.kind !== 'suite' });
   const isSuiteOrigin = origin.kind === 'suite' && Boolean(suites.currentData?.some((suite) => suite.id === origin.id));
   const navigateToTab = (tab: TestManagementTab) => {
-    if (tab === 'manual-runs') navigate('/manual-test-runs');
-    else navigate('/test-management', { state: { testManagementTab: tab } });
+    if (tab === 'manual-runs') navigate(PATHS.MANUAL_TEST_RUNS);
+    else navigate(PATHS.TEST_MANAGEMENT, { state: { testManagementTab: tab } });
   };
   return (
     <Tabs.Root className="test-management-tabs" value={isSuiteOrigin ? 'suites' : 'scenarios'}>

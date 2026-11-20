@@ -13,7 +13,7 @@ export const navigationMenuConfig: NavigationMenuGroup[] = [
     title: 'Main',
     items: [
       { id: 'dashboard', icon: FiGrid, label: 'Dashboard', path: PATHS.DASHBOARD },
-      { id: 'test-management', icon: FiClipboard, label: 'Test Management', path: PATHS.TEST_SCENARIOS },
+      { id: 'test-management', icon: FiClipboard, label: 'Test Management', path: PATHS.TEST_MANAGEMENT },
       { id: 'results', icon: FiFileText, label: 'Results', path: PATHS.RESULTS, active: true },
       { id: 'issues', icon: FiAlertTriangle, label: 'Issues', path: PATHS.ISSUES },
       { id: 'prompts', icon: FiMessageSquare, label: 'Prompts', path: PATHS.PROMPTS },

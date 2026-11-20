@@ -108,7 +108,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: PATHS.TEST_SCENARIOS,
+    path: PATHS.TEST_MANAGEMENT,
     errorElement: <RouterErrorFallback />,
     element: (
       <ProtectedRoute>

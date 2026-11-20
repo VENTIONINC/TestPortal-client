@@ -1,46 +1,12 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import {
-  Badge,
-  Box,
-  Button,
-  Flex,
-  Heading,
-  HStack,
-  IconButton,
-  Input,
-  Menu,
-  Popover,
-  Portal,
-  Table,
-  Text,
-  VStack,
-} from '@chakra-ui/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Box, Button, Flex, Heading, HStack, IconButton, Input, Text, VStack } from '@chakra-ui/react';
 import { Link, useNavigate } from 'react-router';
-import {
-  FiCheck,
-  FiCheckCircle,
-  FiChevronDown,
-  FiChevronLeft,
-  FiChevronRight,
-  FiEdit,
-  FiFlag,
-  FiInfo,
-  FiMoreHorizontal,
-  FiRotateCcw,
-  FiSearch,
-  FiSkipForward,
-  FiSlash,
-  FiSliders,
-  FiTrash2,
-  FiUserPlus,
-  FiX,
-} from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiSearch, FiX } from 'react-icons/fi';
 
 import {
-  useGetApiV2ManualTestRunsQuery,
   useGetApiV2ManualTestRunsByRunIdQuery,
   useLazyGetApiV2UsersQuery,
   useDeleteManualTestRunMutation,
@@ -51,261 +17,36 @@ import {
   usePutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultMutation,
   usePutApiV2ManualTestRunsByRunIdScenariosOrderMutation,
 } from '@/redux/apis/extendedApi';
-import {
-  useGetApiV2TestScenariosQuery,
-  usePutApiV2ManualTestRunsByRunIdDetailsMutation,
-} from '@/redux/apis/generatedApi';
+import { usePutApiV2ManualTestRunsByRunIdDetailsMutation } from '@/redux/apis/generatedApi';
 import type {
   ManualTestRunRead,
   ManualTestRunScenarioRead,
   ManualTestRunScenarioResult,
 } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
-import { green_100, grey_2100, grey_skipped, orange_300, red_100, yellow_100 } from '@/theme/colors/palette';
+import { orange_300 } from '@/theme/colors/palette';
 import { NativeSelect, Tooltip } from '@/components/ui';
 
-import { isRunRecoveryLocked, lockRunRecovery, unlockRunRecovery, useRunRecoveryLocked, wasRunChangeRejected } from '../recoveryLock';
-import { AssigneeOptions, AssigneePicker } from './AssigneePicker';
+import {
+  isRunRecoveryLocked,
+  lockRunRecovery,
+  unlockRunRecovery,
+  useRunRecoveryLocked,
+  wasRunChangeRejected,
+} from '../recoveryLock';
 import { ManageScenariosDialog } from './ManageScenariosDialog';
 import { ManualRunDetailsDialog, normalizeEnvironment } from './ManualRunDetailsDialog';
-import {
-  MANUAL_RUN_PERIOD,
-  MANUAL_RUN_RESULT,
-  MANUAL_RUN_SHOW,
-  MANUAL_RUN_STATUS,
-  UNASSIGNED_FILTER_VALUE,
-} from '../constants';
-
-const RUN_PAGE_SIZE = 20;
-const RESULTS = [
-  MANUAL_RUN_RESULT.PASSED,
-  MANUAL_RUN_RESULT.FAILED,
-  MANUAL_RUN_RESULT.BLOCKED,
-  MANUAL_RUN_RESULT.SKIPPED,
-] as const;
-const resultLabels: Record<ManualTestRunScenarioResult, string> = {
-  untested: 'Untested',
-  passed: 'Passed',
-  failed: 'Failed',
-  blocked: 'Blocked',
-  skipped: 'Skipped',
-};
-const resultExplanations: Record<(typeof RESULTS)[number], string> = {
-  passed: 'Every step gave the expected result.',
-  failed: 'At least one step gave a different result than expected. Add a comment or a bug link.',
-  blocked:
-    'Could not be checked right now, for example because the test stand is down, test data is missing, or another bug is in the way. Retest later in this run.',
-  skipped:
-    'Deliberately not checked in this run. Untested scenarios also become Skipped when the run is completed early.',
-};
-const periods = [
-  [MANUAL_RUN_PERIOD.RECENT, 'Recent'],
-  [MANUAL_RUN_PERIOD.TODAY, 'Today'],
-  [MANUAL_RUN_PERIOD.LAST_7_DAYS, 'Last 7 days'],
-  [MANUAL_RUN_PERIOD.LAST_30_DAYS, 'Last 30 days'],
-  [MANUAL_RUN_PERIOD.THIS_MONTH, 'This month'],
-  [MANUAL_RUN_PERIOD.LAST_MONTH, 'Last month'],
-  [MANUAL_RUN_PERIOD.ANY_TIME, 'Any time'],
-  [MANUAL_RUN_PERIOD.CUSTOM, 'Custom range'],
-] as const;
-
-const dateLabel = (date?: string | null) => (date ? new Date(date).toLocaleString() : '—');
-const completedDayLabel = (day: string) => {
-  if (day === 'Completed') return day;
-  const date = new Date(`${day}T12:00:00`);
-  if (Number.isNaN(date.getTime())) return day;
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  if (date.toDateString() === today.toDateString()) return 'Today';
-  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-};
-
-const BulkAssigneePicker = ({
-  count,
-  users,
-  disabled,
-  onOpen,
-  onChange,
-}: {
-  count: number;
-  users: Array<{ id: string; name: string }>;
-  disabled: boolean;
-  onOpen: () => void;
-  onChange: (id: string | null) => void;
-}) => {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover.Root
-      open={open}
-      onOpenChange={({ open: nextOpen }) => {
-        setOpen(nextOpen);
-        if (nextOpen) onOpen();
-      }}
-      positioning={{ placement: 'top-end' }}
-    >
-      <Popover.Trigger asChild>
-        <Button
-          size="xs"
-          variant="ghost"
-          color="white"
-          disabled={disabled}
-          aria-label="Bulk assign"
-          _hover={{ bg: 'gray.700', color: 'white' }}
-          _active={{ bg: 'gray.600', color: 'white' }}
-          _expanded={{ bg: 'gray.700', color: 'white' }}
-        >
-          <FiUserPlus aria-hidden="true" /> Assign
-        </Button>
-      </Popover.Trigger>
-      <Portal>
-        <Popover.Positioner>
-          <Popover.Content w="200px" maxW="calc(100vw - 32px)" bg="bg.panel" color="text.primary" p={1}>
-            <Popover.Body p={0} maxH="240px" overflowY="auto">
-              <Text fontSize="xs" color="text.secondary" px={2} py={2}>
-                Assign {count} selected to
-              </Text>
-              <AssigneeOptions
-                users={users}
-                onSelect={(id) => {
-                  setOpen(false);
-                  onChange(id);
-                }}
-              />
-            </Popover.Body>
-          </Popover.Content>
-        </Popover.Positioner>
-      </Portal>
-    </Popover.Root>
-  );
-};
-
-interface SearchableFilterProps {
-  label: string;
-  value: string[];
-  options: Array<{ value: string; label: string; count?: number }>;
-  onChange: (value: string[]) => void;
-}
-
-const SearchableFilter = ({ label, value, options, onChange }: SearchableFilterProps) => {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const matches = options.filter((option) =>
-    option.label.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
-  );
-  const toggle = (optionValue: string) =>
-    onChange(value.includes(optionValue) ? value.filter((item) => item !== optionValue) : [...value, optionValue]);
-  const close = () => {
-    setOpen(false);
-    setSearch('');
-  };
-  const onSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && matches[0]) {
-      event.preventDefault();
-      toggle(matches[0].value);
-    }
-  };
-  return (
-    <Popover.Root
-      open={open}
-      onOpenChange={({ open: nextOpen }) => {
-        setOpen(nextOpen);
-        if (!nextOpen) setSearch('');
-      }}
-    >
-      <Popover.Trigger asChild>
-        <Button
-          variant="outline"
-          bg="bg.card"
-          borderColor={value.length ? 'border.active' : undefined}
-          color={value.length ? 'text.primary' : undefined}
-          minW="90px"
-          maxW="250px"
-          justifyContent="space-between"
-          fontSize="sm"
-        >
-          {value.length ? `${label}: ${value.length}` : label}
-          <FiChevronDown aria-hidden="true" />
-        </Button>
-      </Popover.Trigger>
-      <Portal>
-        <Popover.Positioner>
-          <Popover.Content w="260px" maxW="calc(100vw - 32px)" bg="bg.card" p={0}>
-            <Box position="relative" px={3} borderBottomWidth="1px" borderColor="border.main">
-              <Box
-                position="absolute"
-                insetStart={3}
-                top="50%"
-                transform="translateY(-50%)"
-                zIndex={1}
-                color="text.muted"
-                pointerEvents="none"
-              >
-                <FiSearch aria-hidden="true" size={13} />
-              </Box>
-              <Input
-                size="sm"
-                aria-label={`Search ${label} options`}
-                placeholder={`Type to find ${label === 'Assignee' ? 'an assignee' : label === 'Status' ? 'a status' : 'a folder'}`}
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                onKeyDown={onSearchKeyDown}
-                ps={7}
-                border={0}
-                focusRing="none"
-              />
-            </Box>
-            <Popover.Body p={1} maxH="240px" overflowY="auto">
-              <VStack align="stretch" gap={0}>
-                {matches.map((option) => (
-                  <HStack as="label" key={option.value} px={2} py={1.5} cursor="pointer" justify="space-between">
-                    <HStack gap={2} minW={0}>
-                      <input
-                        type="checkbox"
-                        aria-label={option.label}
-                        checked={value.includes(option.value)}
-                        onChange={() => toggle(option.value)}
-                      />
-                      <Text as="span" fontSize="sm" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-                        {option.label}
-                      </Text>
-                    </HStack>
-                    {option.count !== undefined && (
-                      <Text flexShrink={0} fontSize="xs" color="text.secondary">
-                        {option.count}
-                      </Text>
-                    )}
-                  </HStack>
-                ))}
-                {matches.length === 0 && (
-                  <Text fontSize="sm" color="text.secondary" px={2} py={2}>
-                    No matches for “{search}”
-                  </Text>
-                )}
-              </VStack>
-            </Popover.Body>
-            <HStack justify="space-between" p={2} borderTopWidth="1px" borderColor="border.main">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  onChange([]);
-                  close();
-                }}
-              >
-                Clear
-              </Button>
-              <Button size="sm" variant="primary" onClick={close}>
-                Done
-              </Button>
-            </HStack>
-          </Popover.Content>
-        </Popover.Positioner>
-      </Portal>
-    </Popover.Root>
-  );
-};
+import { BulkAssigneePicker } from './BulkAssigneePicker';
+import { CompleteManualRunDialog } from './CompleteManualRunDialog';
+import { DeleteManualRunDialog } from './DeleteManualRunDialog';
+import { ManualRunHeader } from './ManualRunHeader';
+import { ManualRunScenarioTable } from './ManualRunScenarioTable';
+import { ManualRunSidebar } from './ManualRunSidebar';
+import { SearchableFilter } from './SearchableFilter';
+import { RESULTS, resultExplanations, resultLabels } from './manualRunResults';
+import { useManualRunList } from './useManualRunList';
+import { useManualRunScenarioFilters } from './useManualRunScenarioFilters';
+import { MANUAL_RUN_RESULT, MANUAL_RUN_STATUS, UNASSIGNED_FILTER_VALUE } from '../constants';
 
 export interface ManualTestRunWorkspaceProps {
   projectId: string;
@@ -315,38 +56,8 @@ export interface ManualTestRunWorkspaceProps {
 
 export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }: ManualTestRunWorkspaceProps) => {
   const navigate = useNavigate();
-  const [runSearch, setRunSearch] = useState('');
-  const [show, setShow] = useState<(typeof MANUAL_RUN_SHOW)[keyof typeof MANUAL_RUN_SHOW]>(MANUAL_RUN_SHOW.IN_PROGRESS);
-  const [period, setPeriod] = useState<(typeof periods)[number][0]>(MANUAL_RUN_PERIOD.RECENT);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const filtersRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!filtersOpen) return;
-    const closeOutside = (event: MouseEvent) => {
-      if (!filtersRef.current?.contains(event.target as Node)) setFiltersOpen(false);
-    };
-    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') setFiltersOpen(false);
-    };
-    document.addEventListener('mousedown', closeOutside);
-    document.addEventListener('keydown', closeOnEscape);
-    return () => {
-      document.removeEventListener('mousedown', closeOutside);
-      document.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [filtersOpen]);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const activeRunFilterCount =
-    Number(show !== MANUAL_RUN_STATUS.IN_PROGRESS) + Number(period !== MANUAL_RUN_PERIOD.RECENT);
-  const [runPage, setRunPage] = useState(1);
-  const [scenarioSearch, setScenarioSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [folderFilter, setFolderFilter] = useState<string[]>([]);
-  const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
-  const [scenarioPage, setScenarioPage] = useState(1);
-  const [scenarioPageSize, setScenarioPageSize] = useState(25);
-  const [selectedScenarioIds, setSelectedScenarioIds] = useState<string[]>([]);
+  const runList = useManualRunList(projectId);
+  const { listQuery, allRunsQuery, scenarioCountQuery, noRunsYet, listedRuns, noRunsInProgress } = runList;
   const [currentRun, setCurrentRun] = useState<ManualTestRunRead>();
   const [feedback, setFeedback] = useState<string>();
   const [completionOpen, setCompletionOpen] = useState(false);
@@ -358,8 +69,8 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const [editEnvironment, setEditEnvironment] = useState<Array<{ name: string; value: string }>>([]);
   const [confirmRemovedResults, setConfirmRemovedResults] = useState(false);
   const [expandedScenarioId, setExpandedScenarioId] = useState<string>();
+
   const deletedRunRef = useRef<{ projectId: string; runId: string } | null>(null);
-  const draggedScenarioId = useRef<string | undefined>(undefined);
   const scopeRef = useRef({ projectId, selectedRunId });
   scopeRef.current = { projectId, selectedRunId };
   const [isSaving, setIsSaving] = useState(false);
@@ -367,59 +78,13 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const writesBlocked = isSaving || recoveryRequired;
   const cancelRef = useRef<HTMLButtonElement>(null);
   const completionTriggerRef = useRef<HTMLButtonElement>(null);
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  const listQuery = useGetApiV2ManualTestRunsQuery({
-    projectId,
-    page: runPage,
-    limit: RUN_PAGE_SIZE,
-    search: runSearch || undefined,
-    show,
-    period,
-    timeZone,
-    ...(period === MANUAL_RUN_PERIOD.CUSTOM ? { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined } : {}),
-  });
-  const completedCountQuery = useGetApiV2ManualTestRunsQuery(
-    {
-      projectId,
-      page: 1,
-      limit: 1,
-      search: runSearch || undefined,
-      show: MANUAL_RUN_STATUS.COMPLETED,
-      period,
-      timeZone,
-      ...(period === MANUAL_RUN_PERIOD.CUSTOM ? { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined } : {}),
-    },
-    { skip: show !== MANUAL_RUN_SHOW.ALL },
-  );
-  const inProgressCountQuery = useGetApiV2ManualTestRunsQuery(
-    {
-      projectId,
-      page: 1,
-      limit: 1,
-      search: runSearch || undefined,
-      show: MANUAL_RUN_STATUS.IN_PROGRESS,
-      period,
-      timeZone,
-      ...(period === MANUAL_RUN_PERIOD.CUSTOM ? { dateFrom: dateFrom || undefined, dateTo: dateTo || undefined } : {}),
-    },
-    { skip: show !== MANUAL_RUN_SHOW.ALL },
-  );
-  const allRunsQuery = useGetApiV2ManualTestRunsQuery({
-    projectId,
-    page: 1,
-    limit: 1,
-    show: MANUAL_RUN_SHOW.ALL,
-    period: MANUAL_RUN_PERIOD.ANY_TIME,
-    timeZone,
-  });
-  const noRunsYet = !allRunsQuery.isLoading && !allRunsQuery.error && allRunsQuery.currentData?.total === 0;
-  const scenarioCountQuery = useGetApiV2TestScenariosQuery({ projectId, page: 1, limit: 1 });
   const detailQuery = useGetApiV2ManualTestRunsByRunIdQuery(
     { projectId, runId: selectedRunId ?? '' },
     { skip: !selectedRunId },
   );
   const [loadUsers, usersQuery] = useLazyGetApiV2UsersQuery();
+
   const [deleteRun] = useDeleteManualTestRunMutation();
   const [completeRun] = usePostApiV2ManualTestRunsByRunIdCompleteMutation();
   const [reopenRun] = usePostApiV2ManualTestRunsByRunIdReopenMutation();
@@ -428,27 +93,27 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const [setScenarioResult] = usePutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultMutation();
   const [saveOrder] = usePutApiV2ManualTestRunsByRunIdScenariosOrderMutation();
   const [saveDetails] = usePutApiV2ManualTestRunsByRunIdDetailsMutation();
-  const listedRuns = useMemo(() => listQuery.currentData?.runs ?? [], [listQuery.currentData?.runs]);
-  const noRunsInProgress =
-    Boolean(allRunsQuery.currentData?.total) &&
-    !runSearch &&
-    show === MANUAL_RUN_STATUS.IN_PROGRESS &&
-    period === MANUAL_RUN_PERIOD.RECENT &&
-    listedRuns.length === 0;
-  const completedGroups = useMemo(() => {
-    const groups = new Map<string, typeof listedRuns>();
-    for (const item of listedRuns.filter((candidate) => candidate.status === MANUAL_RUN_STATUS.COMPLETED)) {
-      const group = item.completedDay ?? 'Completed';
-      groups.set(group, [...(groups.get(group) ?? []), item]);
-    }
-    return [...groups.entries()];
-  }, [listedRuns]);
-  const activeRuns = listedRuns.filter((item) => item.status === MANUAL_RUN_STATUS.IN_PROGRESS);
-  const completedCount =
-    show === MANUAL_RUN_SHOW.ALL ? completedCountQuery.currentData?.total : listQuery.currentData?.total;
-  const inProgressCount =
-    show === MANUAL_RUN_SHOW.ALL ? inProgressCountQuery.currentData?.total : listQuery.currentData?.total;
   const run = currentRun?.id === selectedRunId ? currentRun : detailQuery.currentData;
+  const {
+    scenarioSearch,
+    setScenarioSearch,
+    statusFilter,
+    setStatusFilter,
+    folderFilter,
+    setFolderFilter,
+    assigneeFilter,
+    setAssigneeFilter,
+    scenarioPage,
+    setScenarioPage,
+    scenarioPageSize,
+    setScenarioPageSize,
+    selectedScenarioIds,
+    setSelectedScenarioIds,
+    filteredScenarios,
+    scenarioPageCount,
+    visibleScenarios,
+    folders,
+  } = useManualRunScenarioFilters(projectId, selectedRunId, run?.scenarios);
   const completed = run?.status === MANUAL_RUN_STATUS.COMPLETED;
   const untestedCount = run?.scenarios.filter((scenario) => scenario.result === MANUAL_RUN_RESULT.UNTESTED).length ?? 0;
   const selectedScenarios = useMemo(() => {
@@ -462,8 +127,6 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   useEffect(() => {
     setCurrentRun(undefined);
     setFeedback(undefined);
-    setSelectedScenarioIds([]);
-    setScenarioPage(1);
     setExpandedScenarioId(undefined);
     setCompletionOpen(false);
     setDeleteOpen(false);
@@ -479,35 +142,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     );
     if (!selectedRunId && next) onSelectRun(next.id);
   }, [listedRuns, onSelectRun, projectId, selectedRunId]);
-  useEffect(() => {
-    setRunPage(1);
-  }, [runSearch, show, period, dateFrom, dateTo]);
-  useEffect(() => {
-    setScenarioPage(1);
-    setSelectedScenarioIds([]);
-  }, [scenarioSearch, statusFilter, folderFilter, assigneeFilter, selectedRunId]);
-  useEffect(() => {
-    if (completionOpen) cancelRef.current?.focus();
-  }, [completionOpen]);
 
-  const filteredScenarios = useMemo(
-    () =>
-      (run?.scenarios ?? []).filter((scenario) => {
-        const needle = scenarioSearch.trim().toLocaleLowerCase();
-        if (needle && !`${scenario.title} ${scenario.sourceScenarioKey}`.toLocaleLowerCase().includes(needle))
-          return false;
-        if (statusFilter.length && !statusFilter.includes(scenario.result)) return false;
-        if (folderFilter.length && !folderFilter.includes(scenario.folderPath ?? 'Unfiled')) return false;
-        return !(assigneeFilter.length && !assigneeFilter.includes(scenario.assigneeId ?? UNASSIGNED_FILTER_VALUE));
-      }),
-    [assigneeFilter, folderFilter, run?.scenarios, scenarioSearch, statusFilter],
-  );
-  const scenarioPageCount = Math.max(1, Math.ceil(filteredScenarios.length / scenarioPageSize));
-  const visibleScenarios = filteredScenarios.slice(
-    (scenarioPage - 1) * scenarioPageSize,
-    scenarioPage * scenarioPageSize,
-  );
-  const folders = [...new Set((run?.scenarios ?? []).map((scenario) => scenario.folderPath ?? 'Unfiled'))];
   const counts = useMemo(
     () =>
       (run?.scenarios ?? []).reduce<Record<ManualTestRunScenarioResult, number>>(
@@ -532,17 +167,25 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     try {
       const refreshed = await detailQuery.refetch();
       if (!isCurrentScope()) return;
-      if (refreshed.error || !refreshed.data || refreshed.data.id !== selectedRunId || refreshed.data.projectId !== projectId) {
+      if (
+        refreshed.error ||
+        !refreshed.data ||
+        refreshed.data.id !== selectedRunId ||
+        refreshed.data.projectId !== projectId
+      ) {
         setFeedback('Could not refresh the run. Retry the refresh before making changes.');
         return;
       }
       acceptRun(refreshed.data);
       const rejected = wasRunChangeRejected(projectId, selectedRunId ?? '');
       unlockRunRecovery(projectId, selectedRunId ?? '');
-      setFeedback(rejected && refreshed.data.status === 'completed'
-        ? `Your change was not saved because ${refreshed.data.completedBy?.name || 'another user'} completed the run.`
-        : rejected ? 'Your change was not saved. Review the refreshed run before trying again.'
-          : 'The run was refreshed. Review its current values before trying again.');
+      setFeedback(
+        rejected && refreshed.data.status === 'completed'
+          ? `Your change was not saved because ${refreshed.data.completedBy?.name || 'another user'} completed the run.`
+          : rejected
+            ? 'Your change was not saved. Review the refreshed run before trying again.'
+            : 'The run was refreshed. Review its current values before trying again.',
+      );
     } catch {
       if (isCurrentScope()) setFeedback('Could not refresh the run. Retry the refresh before making changes.');
     }
@@ -660,6 +303,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
       if (isCurrentScope()) setIsSaving(false);
     }
   };
+
   const complete = async () => {
     if (!run || completed || writesBlocked) return;
     setIsSaving(true);
@@ -673,6 +317,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
       if (isCurrentScope()) setIsSaving(false);
     }
   };
+
   const reopen = async () => {
     if (!run || !completed || writesBlocked) return;
     setIsSaving(true);
@@ -684,15 +329,17 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
       if (isCurrentScope()) setIsSaving(false);
     }
   };
+
   const requestCompletion = (trigger: HTMLButtonElement) => {
     completionTriggerRef.current = trigger;
     if (untestedCount) setCompletionOpen(true);
     else void complete();
   };
+
   const cancelCompletion = () => {
     setCompletionOpen(false);
-    completionTriggerRef.current?.focus();
   };
+
   const activateResult = (scenario: ManualTestRunScenarioRead, event: React.KeyboardEvent) => {
     if (completed || writesBlocked || event.target !== event.currentTarget) return;
     if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
@@ -722,96 +369,43 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
     }
   };
 
-  const renderRun = (item: (typeof listedRuns)[number]) => {
-    const markedCount = item.scenarioCount - item.untestedCount;
-    if (item.status === MANUAL_RUN_STATUS.COMPLETED) {
-      const resultLabel =
-        item.failedCount > 0
-          ? 'Failed'
-          : item.blockedCount > 0 || item.skippedCount > 0
-            ? 'Blocked or skipped'
-            : 'Passed';
-      const resultColor =
-        resultLabel === 'Failed' ? 'red.500' : resultLabel === 'Blocked or skipped' ? orange_300 : 'green.500';
-      return (
-        <Button
-          key={item.id}
-          variant="ghost"
-          bg={selectedRunId === item.id ? 'blue.50' : undefined}
-          h="auto"
-          minH="0"
-          w="full"
-          px={2}
-          py={2}
-          justifyContent="flex-start"
-          textAlign="left"
-          onClick={() => onSelectRun(item.id)}
-        >
-          <HStack align="start" w="full" gap={2}>
-            <Box
-              boxSize="7px"
-              borderRadius="full"
-              bg={resultColor}
-              flexShrink={0}
-              mt="7px"
-              role="img"
-              aria-label={resultLabel}
-            />
-            <VStack align="stretch" gap={0} minW={0} flex="1">
-              <Text fontSize="sm" fontWeight="medium" truncate title={item.title}>
-                {item.title}
-              </Text>
-              <Text fontSize="xs" color="fg.muted">
-                {item.passedCount}/{item.scenarioCount} passed
-              </Text>
-            </VStack>
-          </HStack>
-        </Button>
-      );
-    }
-    return (
-      <Button
-        key={item.id}
-        variant={selectedRunId === item.id ? 'subtle' : 'ghost'}
-        colorPalette={selectedRunId === item.id ? 'blue' : undefined}
-        bg={selectedRunId === item.id ? 'blue.50' : undefined}
-        textAlign="left"
-        justifyContent="flex-start"
-        h="auto"
-        minH="60px"
-        px={2}
-        py={2}
-        whiteSpace="normal"
-        onClick={() => onSelectRun(item.id)}
-      >
-        <VStack align="stretch" gap={1} w="100%">
-          <Text fontSize="sm" fontWeight="medium" lineClamp={1} title={item.title}>
-            {item.title}
-          </Text>
-          <Text fontSize="xs" color="fg.muted">
-            {new Date(item.completedAt ?? item.startedAt).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-            })}{' '}
-            · {markedCount}/{item.scenarioCount} marked
-          </Text>
-          <Flex
-            h="1.5"
-            borderRadius="full"
-            overflow="hidden"
-            bg="bg.subtle"
-            aria-label={`${markedCount} of ${item.scenarioCount} marked`}
-          >
-            {item.passedCount > 0 && <Box flex={item.passedCount} bg="green.500" />}
-            {item.failedCount > 0 && <Box flex={item.failedCount} bg="red.500" />}
-            {item.blockedCount > 0 && <Box flex={item.blockedCount} bg={orange_300} />}
-            {item.skippedCount > 0 && <Box flex={item.skippedCount} bg="gray.500" />}
-            {item.untestedCount > 0 && <Box flex={item.untestedCount} bg="gray.200" />}
-          </Flex>
-        </VStack>
-      </Button>
-    );
+  const handleManageScenarios = () => {
+    if (!run) return;
+
+    setEditTitle(run.title);
+    setEditEnvironment(run.environmentProperties.map((property) => ({ ...property })));
+    setConfirmRemovedResults(false);
+    setManageOpen(true);
   };
+
+  const handleScenarioPageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setScenarioPageSize(Number(event.target.value));
+    setScenarioPage(1);
+  };
+
+  const handlePreviousScenarioPage = () => {
+    setScenarioPage((page) => page - 1);
+  };
+
+  const handleNextScenarioPage = () => {
+    setScenarioPage((page) => page + 1);
+  };
+
+  const handleCloseManageScenarios = () => {
+    setManageOpen(false);
+    setConfirmRemovedResults(false);
+  };
+
+  const handleEditSelectionChange = (ids: string[]) => {
+    setEditScenarioIds(ids);
+    setConfirmRemovedResults(false);
+  };
+
+  const handleCloseEdit = () => {
+    setEditOpen(false);
+    setConfirmRemovedResults(false);
+  };
+
   return (
     <Flex
       align="stretch"
@@ -826,310 +420,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
       borderRadius="lg"
       direction={{ base: 'column', lg: 'row' }}
     >
-      <VStack
-        align="stretch"
-        gap={2}
-        bg="bg.panel"
-        borderRightWidth={{ base: 0, lg: '1px' }}
-        borderBottomWidth={{ base: '1px', lg: 0 }}
-        borderColor="border"
-        borderLeftRadius="lg"
-        p={3}
-        w={{ base: '100%', lg: '240px' }}
-        flexShrink={0}
-      >
-        <HStack justify="space-between">
-          <Text fontSize="xs" color="fg.muted">
-            RUNS
-          </Text>
-          {((scenarioCountQuery.currentData?.total ?? 1) > 0 || Boolean(allRunsQuery.currentData?.total)) && (
-            <Text
-              fontSize="20px"
-              color="fg.muted"
-              aria-label="New manual run"
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate(PATHS.MANUAL_TEST_RUN_NEW)}
-            >
-              +
-            </Text>
-          )}
-        </HStack>
-        {!noRunsYet && (
-          <HStack ref={filtersRef} gap={1} position="relative">
-            <Box position="relative" flex="1" minW={0}>
-              <Box
-                position="absolute"
-                left={3}
-                top="50%"
-                transform="translateY(-50%)"
-                zIndex={1}
-                color="text.muted"
-                pointerEvents="none"
-              >
-                <FiSearch aria-hidden="true" size={14} />
-              </Box>
-              <Input
-                pl={9}
-                pe={runSearch ? 9 : 3}
-                size="sm"
-                h="36px"
-                bg="bg.card"
-                borderColor={runSearch.trim() ? 'border.active' : undefined}
-                aria-label="Search runs"
-                placeholder="Search runs"
-                value={runSearch}
-                onChange={(e) => setRunSearch(e.target.value)}
-              />
-              {runSearch && (
-                <IconButton
-                  position="absolute"
-                  insetEnd={1}
-                  top="50%"
-                  transform="translateY(-50%)"
-                  size="xs"
-                  variant="ghost"
-                  aria-label="Clear run search"
-                  onClick={() => setRunSearch('')}
-                >
-                  <FiX />
-                </IconButton>
-              )}
-            </Box>
-            <Button
-              size="sm"
-              h="36px"
-              w="36px"
-              minW="36px"
-              variant="outline"
-              p={0}
-              position="relative"
-              bg={activeRunFilterCount ? 'blue.50' : undefined}
-              color={activeRunFilterCount ? 'blue.fg' : undefined}
-              borderColor={filtersOpen || activeRunFilterCount ? 'blue.500' : undefined}
-              aria-label={activeRunFilterCount ? `Filters, ${activeRunFilterCount} active` : 'Filters'}
-              title="Filters"
-              onClick={() => setFiltersOpen((open) => !open)}
-              aria-expanded={filtersOpen}
-              aria-controls="manual-run-filters"
-            >
-              <FiSliders />
-              {activeRunFilterCount > 0 && (
-                <Badge
-                  position="absolute"
-                  top="-6px"
-                  right="-6px"
-                  borderRadius="full"
-                  bg="blue.500"
-                  color="white"
-                  minW="18px"
-                  h="18px"
-                  p={0}
-                  display="grid"
-                  placeItems="center"
-                  fontSize="xs"
-                  aria-hidden="true"
-                >
-                  {activeRunFilterCount}
-                </Badge>
-              )}
-            </Button>
-            {filtersOpen && (
-              <Box
-                id="manual-run-filters"
-                position="absolute"
-                top="calc(100% + 4px)"
-                left={0}
-                zIndex="popover"
-                w="252px"
-                maxW="min(252px, calc(100vw - 32px))"
-                bg="bg.panel"
-                borderWidth="1px"
-                borderColor="border"
-                borderRadius="lg"
-                boxShadow="lg"
-                py={1}
-              >
-                <Box role="radiogroup" aria-label="Show runs" px={1} pb={1}>
-                  <Text fontSize="xs" color="fg.muted" px={2} py={1}>
-                    Show
-                  </Text>
-                  {(
-                    [
-                      [MANUAL_RUN_STATUS.IN_PROGRESS, 'In progress'],
-                      [MANUAL_RUN_STATUS.COMPLETED, 'Completed'],
-                      [MANUAL_RUN_SHOW.ALL, 'All runs'],
-                    ] as const
-                  ).map(([value, label]) => (
-                    <Button
-                      key={value}
-                      role="radio"
-                      aria-checked={show === value}
-                      variant="ghost"
-                      size="sm"
-                      w="100%"
-                      justifyContent="space-between"
-                      fontWeight="normal"
-                      bg={show === value ? 'blue.50' : undefined}
-                      onClick={() => {
-                        setShow(value);
-                        setFiltersOpen(false);
-                      }}
-                    >
-                      {label}
-                      {show === value && (
-                        <Box color="blue.500">
-                          <FiCheck />
-                        </Box>
-                      )}
-                    </Button>
-                  ))}
-                </Box>
-                <Box role="radiogroup" aria-label="Run period" borderTopWidth="1px" borderColor="border" px={1} pt={1}>
-                  <Text fontSize="xs" color="fg.muted" px={2} py={1}>
-                    Period
-                  </Text>
-                  {periods.map(([value, label]) => (
-                    <Button
-                      key={value}
-                      role="radio"
-                      aria-label={label}
-                      aria-checked={period === value}
-                      variant="ghost"
-                      size="sm"
-                      w="100%"
-                      h="auto"
-                      minH="8"
-                      py={1}
-                      justifyContent="space-between"
-                      textAlign="left"
-                      whiteSpace="normal"
-                      fontWeight="normal"
-                      bg={period === value ? 'blue.50' : undefined}
-                      onClick={() => {
-                        setPeriod(value);
-                        if (value !== MANUAL_RUN_PERIOD.CUSTOM) setFiltersOpen(false);
-                      }}
-                    >
-                      <Box>
-                        <Text>{label}</Text>
-                        {value === MANUAL_RUN_PERIOD.RECENT && (
-                          <Text fontSize="xs" color="fg.muted" fontWeight="normal">
-                            All runs in progress, and runs completed in the last 7 days
-                          </Text>
-                        )}
-                      </Box>
-                      {period === value && (
-                        <Box color="blue.500" flexShrink={0}>
-                          <FiCheck />
-                        </Box>
-                      )}
-                    </Button>
-                  ))}
-                  {period === MANUAL_RUN_PERIOD.CUSTOM && (
-                    <VStack align="stretch" gap={2} p={2}>
-                      <Input
-                        size="sm"
-                        aria-label="Period from"
-                        type="date"
-                        value={dateFrom}
-                        onChange={(e) => setDateFrom(e.target.value)}
-                      />
-                      <Input
-                        size="sm"
-                        aria-label="Period to"
-                        type="date"
-                        value={dateTo}
-                        onChange={(e) => setDateTo(e.target.value)}
-                      />
-                    </VStack>
-                  )}
-                </Box>
-              </Box>
-            )}
-          </HStack>
-        )}
-        {!noRunsYet && show !== MANUAL_RUN_STATUS.COMPLETED && (
-          <HStack justify="space-between" px={1} mt={2}>
-            <Text fontSize="sm" fontWeight="medium">
-              In progress
-            </Text>
-            <Text color="fg.muted" fontSize="xs">
-              {inProgressCount ?? 0}
-            </Text>
-          </HStack>
-        )}
-        {listQuery.isLoading ? (
-          <Text>Loading runs…</Text>
-        ) : listQuery.error ? (
-          <Box>
-            <Text role="alert">Could not load runs.</Text>
-            <Button size="sm" onClick={() => void listQuery.refetch()}>
-              Retry
-            </Button>
-          </Box>
-        ) : listedRuns.length === 0 ? (
-          <VStack align="start" gap={2} mt={noRunsYet ? 2 : undefined}>
-            <Text color="fg.muted" fontSize="md">
-              {runSearch
-                ? `No runs match “${runSearch}” for ${periods.find(([value]) => value === period)?.[1]?.toLowerCase()}.`
-                : noRunsInProgress
-                  ? 'No runs in progress'
-                  : allRunsQuery.currentData?.total
-                    ? 'No runs match these filters.'
-                    : 'No runs yet'}
-            </Text>
-            {allRunsQuery.currentData?.total && period !== MANUAL_RUN_PERIOD.ANY_TIME && (
-              <Button size="xs" variant="outline" onClick={() => setPeriod(MANUAL_RUN_PERIOD.ANY_TIME)}>
-                Search any time
-              </Button>
-            )}
-          </VStack>
-        ) : (
-          <>
-            {activeRuns.map(renderRun)}
-            {completedGroups.length > 0 && (
-              <VStack align="stretch" gap={1} mt={2}>
-                <HStack justify="space-between" px={1}>
-                  <Text fontSize="sm" fontWeight="medium">
-                    Completed ·{' '}
-                    {period === MANUAL_RUN_PERIOD.RECENT
-                      ? 'last 7 days'
-                      : periods.find(([value]) => value === period)?.[1]?.toLowerCase()}
-                  </Text>
-                  <Text fontSize="xs" color="fg.muted">
-                    {completedCount ?? 0}
-                  </Text>
-                </HStack>
-                {completedGroups.map(([day, groupRuns]) => (
-                  <VStack key={day} align="stretch" gap={1} mt={2}>
-                    <Text fontSize="xs" color="fg.muted" px={1}>
-                      {completedDayLabel(day)}
-                    </Text>
-                    {groupRuns.map(renderRun)}
-                  </VStack>
-                ))}
-              </VStack>
-            )}
-          </>
-        )}
-        {listQuery.currentData && listQuery.currentData.totalPages > 1 && (
-          <HStack justify="space-between">
-            <Button size="xs" disabled={runPage <= 1} onClick={() => setRunPage((p) => p - 1)}>
-              Previous
-            </Button>
-            <Text fontSize="xs">
-              Page {runPage} of {listQuery.currentData.totalPages}
-            </Text>
-            <Button
-              size="xs"
-              disabled={runPage >= listQuery.currentData.totalPages}
-              onClick={() => setRunPage((p) => p + 1)}
-            >
-              Next
-            </Button>
-          </HStack>
-        )}
-      </VStack>
+      <ManualRunSidebar runList={runList} selectedRunId={selectedRunId} onSelectRun={onSelectRun} />
 
       <VStack align="stretch" gap={3} flex="1" minW={0} bg="bg.panel" p={{ base: 3, md: 4 }}>
         {!selectedRunId && !listQuery.isLoading && (
@@ -1188,171 +479,19 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
         )}
         {run && (
           <>
-            <HStack justify="space-between" align="start" wrap="wrap">
-              <Box>
-                <HStack>
-                  <Heading size="md" fontSize="18px">
-                    {run.title}
-                  </Heading>
-                  <Badge
-                    colorPalette={completed ? 'green' : 'blue'}
-                    bg={completed ? 'green.subtle' : 'blue.subtle'}
-                    color={completed ? 'green.fg' : undefined}
-                    borderWidth="0"
-                    borderRadius="full"
-                    px={3}
-                    py={0}
-                    fontSize="xs"
-                    fontWeight="medium"
-                    textTransform="none"
-                  >
-                    {completed ? 'Completed' : 'In Progress'}
-                  </Badge>
-                </HStack>
-                <Text color="fg.muted" fontSize="xs" mt={1}>
-                  {[
-                    run.browser,
-                    run.operatingSystem,
-                    run.device,
-                    run.apiEnvironment,
-                    run.build ? `build ${run.build}` : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ') || 'Environment not set'}{' '}
-                  · Started {dateLabel(run.startedAt)} by {run.executedBy?.name ?? 'Unknown user'}
-                </Text>
-              </Box>
-              <HStack>
-                {!completed && (
-                  <Button
-                    size="sm"
-                    h="40px"
-                    variant="outline"
-                    disabled={writesBlocked}
-                    onClick={() => {
-                      setEditTitle(run.title);
-                      setEditEnvironment(run.environmentProperties.map((property) => ({ ...property })));
-                      setConfirmRemovedResults(false);
-                      setManageOpen(true);
-                    }}
-                  >
-                    Manage scenarios
-                  </Button>
-                )}
-                {completed ? (
-                  <Button size="sm" h="40px" variant="outline" disabled={writesBlocked} onClick={() => void reopen()}>
-                    <FiRotateCcw aria-hidden="true" /> Reopen
-                  </Button>
-                ) : (
-                  <Button
-                    ref={completionTriggerRef}
-                    size="sm"
-                    h="40px"
-                    variant="outline"
-                    disabled={writesBlocked}
-                    onClick={(event) => requestCompletion(event.currentTarget)}
-                  >
-                    <FiFlag /> Complete run
-                  </Button>
-                )}
-                <Menu.Root positioning={{ placement: 'bottom-end' }}>
-                  <Menu.Trigger asChild>
-                    <IconButton size="sm" h="40px" w="40px" variant="outline" aria-label="Run actions">
-                      <FiMoreHorizontal aria-hidden="true" />
-                    </IconButton>
-                  </Menu.Trigger>
-                  <Portal>
-                    <Menu.Positioner>
-                      <Menu.Content minW="210px" bg="bg.panel" p={1}>
-                        <Menu.Item
-                          value="edit"
-                          disabled={completed || writesBlocked}
-                          title={completed ? 'Reopen the run before editing its details.' : undefined}
-                          onClick={openEdit}
-                        >
-                          <FiEdit aria-hidden="true" />
-                          Edit run details
-                        </Menu.Item>
-                        <Menu.Separator />
-                        <Menu.Item
-                          value="delete"
-                          color="fg.error"
-                          disabled={writesBlocked}
-                          onClick={() => setDeleteOpen(true)}
-                        >
-                          <FiTrash2 aria-hidden="true" />
-                          Delete run
-                        </Menu.Item>
-                      </Menu.Content>
-                    </Menu.Positioner>
-                  </Portal>
-                </Menu.Root>
-              </HStack>
-            </HStack>
-            {completed && (
-              <HStack role="status" borderRadius="md" bg="green.subtle" color="green.fg" p={3} align="start">
-                <Box as={FiCheckCircle} flexShrink={0} mt="0.5" aria-hidden="true" />
-                <Text fontSize="sm">
-                  Completed
-                  {run.completedAt
-                    ? ` ${new Date(run.completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-                    : ''}
-                  {run.completedBy?.name ? ` by ${run.completedBy.name}` : ''}.
-                  {run.skippedAtCompletion > 0 &&
-                    ` ${run.skippedAtCompletion} untested ${run.skippedAtCompletion === 1 ? 'scenario was' : 'scenarios were'} marked Skipped.`}{' '}
-                  The results are locked; reopen the run to change them.
-                </Text>
-              </HStack>
-            )}
-            {!completed && run.hasBeenReopened && marked === run.scenarios.length && run.scenarios.length > 0 && (
-              <HStack role="status" borderRadius="md" bg="blue.subtle" color="blue.fg" minH="46px" px={4} py={2}>
-                <Box as={FiRotateCcw} boxSize="14px" flexShrink={0} aria-hidden="true" />
-                <Text fontSize="14px">
-                  <Text as="span" fontWeight="medium">
-                    Run reopened.
-                  </Text>{' '}
-                  Results are editable again. Complete the run when you’re done.
-                </Text>
-              </HStack>
-            )}
-            {!completed && !run.hasBeenReopened && marked === run.scenarios.length && run.scenarios.length > 0 && (
-              <HStack role="status" borderRadius="md" bg="blue.subtle" color="blue.fg" minH="46px" px={4} py={2}>
-                <Box as={FiInfo} boxSize="14px" flexShrink={0} aria-hidden="true" />
-                <Text fontSize="14px">
-                  All scenarios are marked. Complete the run to finish it: its results are then locked until you reopen
-                  it.
-                </Text>
-              </HStack>
-            )}
-            <Box position="absolute" w="1px" h="1px" overflow="hidden" clipPath="inset(50%)">
-              {(
-                [
-                  MANUAL_RUN_RESULT.PASSED,
-                  MANUAL_RUN_RESULT.FAILED,
-                  MANUAL_RUN_RESULT.BLOCKED,
-                  MANUAL_RUN_RESULT.SKIPPED,
-                  MANUAL_RUN_RESULT.UNTESTED,
-                ] as const
-              ).map((key) => (
-                <Text key={key}>
-                  {resultLabels[key]} {counts[key]}
-                </Text>
-              ))}
-            </Box>
-            <Flex
-              role="img"
-              aria-label={`Run progress: ${marked} of ${run.scenarios.length} marked`}
-              h="1.5"
-              borderRadius="full"
-              overflow="hidden"
-              bg="bg.subtle"
-            >
-              {counts.passed > 0 && <Box flex={counts.passed} bg="green.500" />}
-              {counts.failed > 0 && <Box flex={counts.failed} bg="red.500" />}
-              {counts.blocked > 0 && <Box flex={counts.blocked} bg={orange_300} />}
-              {counts.skipped > 0 && <Box flex={counts.skipped} bg="gray.500" />}
-              {counts.untested > 0 && <Box flex={counts.untested} bg="gray.200" />}
-            </Flex>
+            <ManualRunHeader
+              run={run}
+              completed={completed}
+              counts={counts}
+              marked={marked}
+              writesBlocked={writesBlocked}
+              completionTriggerRef={completionTriggerRef}
+              onComplete={requestCompletion}
+              onReopen={() => void reopen()}
+              onManageScenarios={handleManageScenarios}
+              onEdit={openEdit}
+              onDelete={() => setDeleteOpen(true)}
+            />
             {feedback && (
               <Text role="alert" color="fg.error">
                 {feedback}
@@ -1434,275 +573,22 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                 />
               </Box>
             </HStack>
-            <Box overflowX="auto" borderWidth="1px" borderColor="border" borderRadius="md">
-              <Table.Root size="sm" variant="line" tableLayout="fixed" minW="810px" w="full">
-                <colgroup>
-                  <col style={{ width: '28px' }} />
-                  <col style={{ width: '40px' }} />
-                  <col style={{ width: '152px' }} />
-                  <col style={{ width: '80px' }} />
-                  <col />
-                  <col style={{ width: '160px' }} />
-                  <col style={{ width: '150px' }} />
-                </colgroup>
-                <Table.Header>
-                  <Table.Row bg="bg.subtle">
-                    <Table.ColumnHeader aria-label="Reorder" w="28px"></Table.ColumnHeader>
-                    <Table.ColumnHeader textAlign="center" verticalAlign="middle">
-                      <input
-                        aria-label="Select visible scenarios"
-                        type="checkbox"
-                        style={{ width: '16px', height: '16px', display: 'block', margin: 'auto' }}
-                        disabled={completed}
-                        checked={
-                          visibleScenarios.length > 0 &&
-                          visibleScenarios.every((item) => selectedScenarioIds.includes(item.id))
-                        }
-                        onChange={(event) =>
-                          setSelectedScenarioIds((current) =>
-                            event.target.checked
-                              ? [...new Set([...current, ...visibleScenarios.map((item) => item.id)])]
-                              : current.filter((id) => !visibleScenarios.some((item) => item.id === id)),
-                          )
-                        }
-                      />
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader color="fg.muted" fontSize="xs">
-                      Status
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader color="fg.muted" fontSize="xs">
-                      Key
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader color="fg.muted" fontSize="xs">
-                      Title
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader color="fg.muted" fontSize="xs">
-                      Folder
-                    </Table.ColumnHeader>
-                    <Table.ColumnHeader color="fg.muted" fontSize="xs">
-                      Assignee
-                    </Table.ColumnHeader>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {visibleScenarios.map((scenario) => (
-                    <Table.Row
-                      id={`manual-run-scenario-${scenario.id}`}
-                      key={scenario.id}
-                      tabIndex={0}
-                      draggable={!completed && !writesBlocked}
-                      onDragStart={(event) => {
-                        draggedScenarioId.current = scenario.id;
-                        event.dataTransfer.effectAllowed = 'move';
-                        event.dataTransfer.setData('text/plain', scenario.id);
-                      }}
-                      onDragOver={(event) => {
-                        event.preventDefault();
-                        event.dataTransfer.dropEffect = 'move';
-                      }}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        if (draggedScenarioId.current) reorderScenarios(draggedScenarioId.current, scenario.id);
-                        draggedScenarioId.current = undefined;
-                      }}
-                      onDragEnd={() => {
-                        draggedScenarioId.current = undefined;
-                      }}
-                      onKeyDown={(event) => activateResult(scenario, event)}
-                      bg={
-                        selectedScenarioIds.includes(scenario.id)
-                          ? 'blue.50'
-                          : scenario.result === MANUAL_RUN_RESULT.PASSED
-                            ? green_100
-                            : scenario.result === MANUAL_RUN_RESULT.FAILED
-                              ? red_100
-                              : scenario.result === MANUAL_RUN_RESULT.BLOCKED
-                                ? yellow_100
-                                : scenario.result === MANUAL_RUN_RESULT.SKIPPED
-                                  ? grey_skipped
-                                  : undefined
-                      }
-                    >
-                      <Table.Cell
-                        color="fg.muted"
-                        cursor={completed ? 'default' : 'grab'}
-                        aria-label={`Drag ${scenario.title} to reorder`}
-                        title="Drag to reorder"
-                      >
-                        ⠿
-                      </Table.Cell>
-                      <Table.Cell textAlign="center" verticalAlign="middle">
-                        <input
-                          aria-label={`Select ${scenario.title}`}
-                          type="checkbox"
-                          style={{ width: '16px', height: '16px', display: 'block', margin: 'auto' }}
-                          disabled={completed}
-                          checked={selectedScenarioIds.includes(scenario.id)}
-                          onChange={(event) =>
-                            setSelectedScenarioIds((current) =>
-                              event.target.checked
-                                ? [...current, scenario.id]
-                                : current.filter((id) => id !== scenario.id),
-                            )
-                          }
-                        />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <HStack gap={1}>
-                          {RESULTS.map((result) => {
-                            const palettes = {
-                              passed: 'green',
-                              failed: 'red',
-                              blocked: 'orange',
-                              skipped: 'gray',
-                            } as const;
-                            const icons = {
-                              passed: FiCheck,
-                              failed: FiX,
-                              blocked: FiSlash,
-                              skipped: FiSkipForward,
-                            } as const;
-                            const ResultIcon = icons[result];
-                            return (
-                              <Button
-                                key={result}
-                                size="xs"
-                                minW="30px"
-                                w="30px"
-                                h="30px"
-                                p={0}
-                                display="inline-flex"
-                                alignItems="center"
-                                justifyContent="center"
-                                fontSize="18px"
-                                lineHeight="1"
-                                colorPalette={palettes[result]}
-                                variant={scenario.result === result ? 'solid' : 'outline'}
-                                bg={
-                                  scenario.result === result
-                                    ? result === MANUAL_RUN_RESULT.BLOCKED
-                                      ? orange_300
-                                      : result === MANUAL_RUN_RESULT.SKIPPED
-                                        ? grey_2100
-                                        : undefined
-                                    : 'bg.panel'
-                                }
-                                borderColor={
-                                  scenario.result === result
-                                    ? result === MANUAL_RUN_RESULT.BLOCKED
-                                      ? orange_300
-                                      : result === MANUAL_RUN_RESULT.SKIPPED
-                                        ? grey_2100
-                                        : undefined
-                                    : 'border.main'
-                                }
-                                _hover={
-                                  scenario.result === result &&
-                                  (result === MANUAL_RUN_RESULT.BLOCKED || result === MANUAL_RUN_RESULT.SKIPPED)
-                                    ? { bg: result === MANUAL_RUN_RESULT.BLOCKED ? orange_300 : grey_2100 }
-                                    : undefined
-                                }
-                                aria-label={`${scenario.title}: mark ${resultLabels[result]}`}
-                                aria-pressed={scenario.result === result}
-                                title={`${resultLabels[result]} (${result[0].toUpperCase()}). ${resultExplanations[result]} ${scenario.result === result ? 'Select again to reset this scenario to Untested.' : `Select to mark this scenario ${resultLabels[result]}.`}`}
-                                disabled={completed || writesBlocked}
-                                onClick={() => void updateResult(scenario, result)}
-                              >
-                                <ResultIcon size={18} strokeWidth={2.5} aria-hidden="true" />
-                              </Button>
-                            );
-                          })}
-                        </HStack>
-                      </Table.Cell>
-                      <Table.Cell>{scenario.sourceScenarioKey}</Table.Cell>
-                      <Table.Cell>
-                        <VStack align="start" gap={0} minW={0}>
-                          <HStack gap={1} align="center" maxW="full" minW={0}>
-                            <Box
-                              asChild
-                              fontWeight="medium"
-                              minW={0}
-                              overflow="hidden"
-                              textOverflow="ellipsis"
-                              whiteSpace="nowrap"
-                              title={scenario.title}
-                            >
-                              <Link
-                                to={`/manual-test-runs/${encodeURIComponent(run.id)}/scenarios/${encodeURIComponent(scenario.id)}`}
-                                aria-label={`Open ${scenario.title}`}
-                              >
-                                {scenario.title}
-                              </Link>
-                            </Box>
-                            <Button
-                              size="xs"
-                              variant="ghost"
-                              minW="5"
-                              h="5"
-                              p={0}
-                              flexShrink={0}
-                              aria-label={`Instructions for ${scenario.title}`}
-                              aria-expanded={expandedScenarioId === scenario.id}
-                              onClick={() =>
-                                setExpandedScenarioId((current) => (current === scenario.id ? undefined : scenario.id))
-                              }
-                            >
-                              ⓘ
-                            </Button>
-                          </HStack>
-                          {expandedScenarioId === scenario.id && (
-                            <Box py={2} whiteSpace="pre-wrap">
-                              {(
-                                [
-                                  ['Details', scenario.details],
-                                  ['Preconditions', scenario.preconditions],
-                                  ['Test data', scenario.testData],
-                                ] as const
-                              ).map(
-                                ([label, value]) =>
-                                  value && (
-                                    <Box key={label} mb={2}>
-                                      <Text fontWeight="semibold">{label}</Text>
-                                      <Text>{value}</Text>
-                                    </Box>
-                                  ),
-                              )}
-                              <Text fontWeight="semibold">Steps</Text>
-                              {scenario.steps.length ? (
-                                [...scenario.steps]
-                                  .sort((a, b) => a.position - b.position)
-                                  .map((step, index) => (
-                                    <Box key={step.id} mt={2}>
-                                      <Text>
-                                        {index + 1}. {step.action}
-                                      </Text>
-                                      <Text color="fg.muted">Expected: {step.expectedResult || 'Not specified'}</Text>
-                                    </Box>
-                                  ))
-                              ) : (
-                                <Text color="fg.muted">No steps captured.</Text>
-                              )}
-                            </Box>
-                          )}
-                        </VStack>
-                      </Table.Cell>
-                      <Table.Cell fontSize="13px" overflowWrap="anywhere">
-                        {scenario.folderPath ?? 'Unfiled'}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <AssigneePicker
-                          scenario={scenario}
-                          users={usersQuery.currentData ?? []}
-                          disabled={completed || writesBlocked}
-                          onOpen={() => void loadUsers()}
-                          onChange={(assigneeId) => void updateAssignee(scenario.id, assigneeId)}
-                        />
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-            </Box>
+            <ManualRunScenarioTable
+              runId={run.id}
+              completed={completed}
+              writesBlocked={writesBlocked}
+              visibleScenarios={visibleScenarios}
+              selectedScenarioIds={selectedScenarioIds}
+              setSelectedScenarioIds={setSelectedScenarioIds}
+              expandedScenarioId={expandedScenarioId}
+              setExpandedScenarioId={setExpandedScenarioId}
+              users={usersQuery.currentData ?? []}
+              onLoadUsers={() => void loadUsers()}
+              onUpdateAssignee={updateAssignee}
+              onUpdateResult={updateResult}
+              onScenarioKeyDown={activateResult}
+              onReorder={reorderScenarios}
+            />
             <HStack justify="space-between" wrap="wrap">
               <Text fontSize="sm" color="text.secondary">
                 {filteredScenarios.length
@@ -1720,10 +606,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                     bg="bg.card"
                     ps={2}
                     value={scenarioPageSize}
-                    onChange={(event) => {
-                      setScenarioPageSize(Number(event.target.value));
-                      setScenarioPage(1);
-                    }}
+                    onChange={handleScenarioPageSizeChange}
                   >
                     <option value="10">10</option>
                     <option value="25">25</option>
@@ -1735,9 +618,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                   variant="outline"
                   aria-label="Previous page"
                   disabled={scenarioPage <= 1}
-                  onClick={() => {
-                    setScenarioPage((page) => page - 1);
-                  }}
+                  onClick={handlePreviousScenarioPage}
                 >
                   <FiChevronLeft />
                 </IconButton>
@@ -1746,9 +627,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
                   variant="outline"
                   aria-label="Next page"
                   disabled={scenarioPage >= scenarioPageCount}
-                  onClick={() => {
-                    setScenarioPage((page) => page + 1);
-                  }}
+                  onClick={handleNextScenarioPage}
                 >
                   <FiChevronRight />
                 </IconButton>
@@ -1870,10 +749,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
           runTitle={run.title}
           existing={run.scenarios}
           saving={writesBlocked}
-          onClose={() => {
-            setManageOpen(false);
-            setConfirmRemovedResults(false);
-          }}
+          onClose={handleCloseManageScenarios}
           onSelectionChange={() => setConfirmRemovedResults(false)}
           warning={confirmRemovedResults}
           onSave={(ids) => void commitEdit(confirmRemovedResults, ids)}
@@ -1886,102 +762,36 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
           name={editTitle}
           onNameChange={setEditTitle}
           selectedIds={editScenarioIds}
-          onSelectionChange={(ids) => {
-            setEditScenarioIds(ids);
-            setConfirmRemovedResults(false);
-          }}
+          onSelectionChange={handleEditSelectionChange}
           environment={editEnvironment}
           onEnvironmentChange={setEditEnvironment}
           existing={run.scenarios}
           saving={writesBlocked}
           warning={confirmRemovedResults}
-          onClose={() => {
-            setEditOpen(false);
-            setConfirmRemovedResults(false);
-          }}
+          onClose={handleCloseEdit}
           onSubmit={() => void commitEdit(confirmRemovedResults)}
         />
       )}
       {deleteOpen && (
-        <Box position="fixed" inset="0" bg="blackAlpha.600" display="grid" placeItems="center" zIndex="modal">
-          <VStack
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="delete-run-title"
-            align="stretch"
-            bg="bg.panel"
-            borderRadius="lg"
-            p={6}
-            maxW="460px"
-            shadow="lg"
-          >
-            <Heading id="delete-run-title" size="md">
-              Delete “{run?.title}”?
-            </Heading>
-            <Text>
-              This permanently deletes the run, its {run?.scenarios.length ?? 0} scenarios ({marked} marked), results,
-              comments, defect links, and status history. This cannot be undone. Scenarios and suite membership remain
-              in the catalog.
-            </Text>
-            <HStack justify="end">
-              <Button variant="outline" disabled={writesBlocked} onClick={() => setDeleteOpen(false)}>
-                Cancel
-              </Button>
-              <Button colorPalette="red" disabled={writesBlocked} onClick={() => void deleteSelectedRun()}>
-                Delete run
-              </Button>
-            </HStack>
-          </VStack>
-        </Box>
+        <DeleteManualRunDialog
+          title={run?.title}
+          scenarioCount={run?.scenarios.length ?? 0}
+          marked={marked}
+          writesBlocked={writesBlocked}
+          onCancel={() => setDeleteOpen(false)}
+          onDelete={() => void deleteSelectedRun()}
+        />
       )}
       {completionOpen && (
-        <Box position="fixed" inset="0" bg="blackAlpha.600" display="grid" placeItems="center" zIndex="modal">
-          <VStack
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="complete-run-title"
-            aria-describedby="complete-run-description"
-            align="stretch"
-            bg="bg.panel"
-            borderRadius="xl"
-            p={6}
-            gap={4}
-            w="calc(100% - 32px)"
-            maxW="420px"
-            shadow="lg"
-          >
-            <HStack align="center" gap={3}>
-              <Box
-                display="grid"
-                placeItems="center"
-                boxSize="40px"
-                flexShrink={0}
-                borderRadius="lg"
-                bg="blue.subtle"
-                color="blue.fg"
-              >
-                <FiFlag aria-hidden="true" />
-              </Box>
-              <Heading id="complete-run-title" fontSize="18px" lineHeight="short">
-                Complete the run with {untestedCount} untested?
-              </Heading>
-            </HStack>
-            <Text id="complete-run-description" fontSize="14px" lineHeight="1.5" color="text.secondary">
-              {untestedCount} of {run?.scenarios.length}{' '}
-              {run?.scenarios.length === 1 ? 'scenario has' : 'scenarios have'} no status yet. Completing the run marks{' '}
-              {untestedCount === 1 ? 'it' : 'them'} as Skipped. The results are locked afterwards; reopen the run to
-              change them.
-            </Text>
-            <HStack justify="end">
-              <Button ref={cancelRef} variant="outline" disabled={writesBlocked} onClick={cancelCompletion}>
-                Keep testing
-              </Button>
-              <Button colorPalette="blue" disabled={writesBlocked} onClick={() => void complete()}>
-                Complete and skip {untestedCount}
-              </Button>
-            </HStack>
-          </VStack>
-        </Box>
+        <CompleteManualRunDialog
+          untestedCount={untestedCount}
+          scenarioCount={run?.scenarios.length}
+          writesBlocked={writesBlocked}
+          cancelRef={cancelRef}
+          triggerRef={completionTriggerRef}
+          onCancel={cancelCompletion}
+          onComplete={() => void complete()}
+        />
       )}
     </Flex>
   );

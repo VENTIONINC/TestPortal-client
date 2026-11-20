@@ -96,7 +96,7 @@ export function NewManualTestRunPage() {
   }, [projectId, loadRuns]);
   const close = () => {
     scope.current.generation += 1;
-    navigate(entry.suiteId || entry.scenarioIds ? PATHS.TEST_SCENARIOS : PATHS.MANUAL_TEST_RUNS, {
+    navigate(entry.suiteId || entry.scenarioIds ? PATHS.TEST_MANAGEMENT : PATHS.MANUAL_TEST_RUNS, {
       state: entry.suiteId ? { testManagementTab: 'suites' } : undefined,
     });
   };
@@ -132,6 +132,21 @@ export function NewManualTestRunPage() {
     }
   };
   if (draftInvalid.current) return null;
+  const handleNameChange = (value: string) => {
+    nameEdited.current = true;
+    setName(value);
+  };
+
+  const handleSelectionChange = (ids: string[]) => {
+    initializedSuite.current = true;
+    setSelectedIds(ids);
+  };
+
+  const handleEnvironmentChange = (items: Array<{ name: string; value: string }>) => {
+    initializedEnvironment.current = true;
+    setEnvironment(items);
+  };
+
   return (
     <>
       <TestScenariosPage initialTab={entry.suiteId ? 'suites' : entry.scenarioIds ? 'scenarios' : 'manual-runs'} />
@@ -139,20 +154,11 @@ export function NewManualTestRunPage() {
         projectId={projectId}
         mode="new"
         name={name}
-        onNameChange={(value) => {
-          nameEdited.current = true;
-          setName(value);
-        }}
+        onNameChange={handleNameChange}
         selectedIds={selectedIds}
-        onSelectionChange={(ids) => {
-          initializedSuite.current = true;
-          setSelectedIds(ids);
-        }}
+        onSelectionChange={handleSelectionChange}
         environment={environment}
-        onEnvironmentChange={(items) => {
-          initializedEnvironment.current = true;
-          setEnvironment(items);
-        }}
+        onEnvironmentChange={handleEnvironmentChange}
         sourceSuiteName={selectionMatchesSuite ? sourceSuite.name : undefined}
         sourceRunTitle={sourceRun?.title}
         saving={createState.isLoading}
