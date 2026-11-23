@@ -18,7 +18,11 @@ interface SuitePickerProps {
   projectId: string;
   selectedIds: string[];
   disabled?: boolean;
-  onComplete: (report: ScenarioOperationReport, selection: string[], undo?: PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse & { suiteName: string; createdSuiteId?: string }) => void | Promise<void>;
+  onComplete: (
+    report: ScenarioOperationReport,
+    selection: string[],
+    undo?: PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse & { suiteName: string; createdSuiteId?: string },
+  ) => void | Promise<void>;
   onBusyChange?: (busy: boolean) => void;
   compact?: boolean;
 }
@@ -46,22 +50,32 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
     suite.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()),
   );
   const normalizedSearch = search.trim().toLocaleLowerCase();
-  const canCreateSuite = Boolean(normalizedSearch) && !isFetching && normalizedSearch !== uncertainName &&
+  const canCreateSuite =
+    Boolean(normalizedSearch) &&
+    !isFetching &&
+    normalizedSearch !== uncertainName &&
     (!retrySuite || retrySuite.name.toLocaleLowerCase() !== normalizedSearch);
 
   const add = async (target: { id: string; name: string }, ids: string[], createdSuiteId = newlyCreatedSuiteId) => {
     const suiteId = target.id;
     const existingSuite = suites?.find((item) => item.id === suiteId);
     const expectedScenarioIds = (existingSuite?.members ?? []).map((member) => member.testScenarioId);
-    const response = await changeMembership({ suiteId, body: {
-      projectId,
-      expectedMembershipRevision: existingSuite?.membershipRevision ?? 0,
-      expectedScenarioIds,
-      addScenarioIds: ids.filter((id) => !expectedScenarioIds.includes(id)),
-      removeScenarioIds: [],
-    } }).unwrap();
+    const response = await changeMembership({
+      suiteId,
+      body: {
+        projectId,
+        expectedMembershipRevision: existingSuite?.membershipRevision ?? 0,
+        expectedScenarioIds,
+        addScenarioIds: ids.filter((id) => !expectedScenarioIds.includes(id)),
+        removeScenarioIds: [],
+      },
+    }).unwrap();
     const report: ScenarioOperationReport = { succeededIds: ids, failedIds: [], unattemptedIds: [], uncertainIds: [] };
-    await onComplete(report, ids, { ...response, suiteName: target.name, ...(createdSuiteId === suiteId ? { createdSuiteId: suiteId } : {}) });
+    await onComplete(report, ids, {
+      ...response,
+      suiteName: target.name,
+      ...(createdSuiteId === suiteId ? { createdSuiteId: suiteId } : {}),
+    });
     setRetrySuite(null);
     setOpen(false);
   };
@@ -126,19 +140,27 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
     >
       <Popover.Trigger asChild>
         {compact ? (
-          <IconButton size="xs" variant="outline" borderStyle="dashed" borderRadius="full"
-            aria-label="Add to suite" disabled={disabled || busy}><FiPlus /></IconButton>
+          <IconButton
+            size="xs"
+            variant="outline"
+            borderStyle="dashed"
+            borderRadius="full"
+            aria-label="Add to suite"
+            disabled={disabled || busy}
+          >
+            <FiPlus />
+          </IconButton>
         ) : (
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={disabled || busy}
-          color="inherit"
-          _hover={{ bg: 'whiteAlpha.200', _dark: { bg: 'blackAlpha.200' } }}
-          _expanded={{ bg: 'whiteAlpha.200', _dark: { bg: 'blackAlpha.200' } }}
-        >
-          <FiLayers aria-hidden="true" /> Add to suite
-        </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={disabled || busy}
+            color="inherit"
+            _hover={{ bg: 'whiteAlpha.200', _dark: { bg: 'blackAlpha.200' } }}
+            _expanded={{ bg: 'whiteAlpha.200', _dark: { bg: 'blackAlpha.200' } }}
+          >
+            <FiLayers aria-hidden="true" /> Add to suite
+          </Button>
         )}
       </Popover.Trigger>
       <Portal>
@@ -193,7 +215,10 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                   {filtered.map((suite) => {
                     const members = suite.members ?? [];
                     const already = members.filter((member) => selectedIds.includes(member.testScenarioId)).length;
-                    const duplicateName = suites?.filter((candidate) => candidate.name.toLocaleLowerCase() === suite.name.toLocaleLowerCase()).length ?? 0;
+                    const duplicateName =
+                      suites?.filter(
+                        (candidate) => candidate.name.toLocaleLowerCase() === suite.name.toLocaleLowerCase(),
+                      ).length ?? 0;
                     return (
                       <Button
                         key={suite.id}
@@ -224,20 +249,21 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                     );
                   })}
                   {canCreateSuite && (
-                      <Button
-                        variant="ghost"
-                        color="blue.500"
-                        w="full"
-                        justifyContent="flex-start"
-                        h="auto"
-                        py={2}
-                        whiteSpace="normal"
-                        disabled={busy || refreshRequired}
-                        onClick={() => void run()}
-                      >
-                        <FiPlus aria-hidden="true" /> {filtered.length ? 'Create another suite' : 'Create suite'} “{search.trim()}” and add {selectedIds.length}
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      color="blue.500"
+                      w="full"
+                      justifyContent="flex-start"
+                      h="auto"
+                      py={2}
+                      whiteSpace="normal"
+                      disabled={busy || refreshRequired}
+                      onClick={() => void run()}
+                    >
+                      <FiPlus aria-hidden="true" /> {filtered.length ? 'Create another suite' : 'Create suite'} “
+                      {search.trim()}” and add {selectedIds.length}
+                    </Button>
+                  )}
                   {!filtered.length && !search.trim() && (
                     <Text fontSize="sm" color="text.secondary" p={2}>
                       No suites yet. Enter a name to create one.
@@ -251,7 +277,12 @@ const BulkSuitePicker = ({ projectId, selectedIds, disabled, onComplete, onBusyC
                 </Text>
               )}
               {retrySuite && error && (
-                <Button size="sm" variant="ghost" disabled={busy || refreshRequired} onClick={() => void run(retrySuite)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy || refreshRequired}
+                  onClick={() => void run(retrySuite)}
+                >
                   Retry adding to {retrySuite.name}
                 </Button>
               )}
@@ -278,9 +309,7 @@ const DraftSuitePicker = ({ suites, selectedIds, selectedNewNames, disabled, onS
   const inputRef = useRef<HTMLInputElement>(null);
   const name = search.trim();
   const filtered = suites.filter((suite) => suite.name.toLocaleLowerCase().includes(name.toLocaleLowerCase()));
-  const exists = selectedNewNames.some(
-    (item) => item.toLocaleLowerCase() === name.toLocaleLowerCase(),
-  );
+  const exists = selectedNewNames.some((item) => item.toLocaleLowerCase() === name.toLocaleLowerCase());
   const select = (suite: { id: string; name: string; isNew?: boolean }) => {
     onSelect(suite);
     setOpen(false);
@@ -298,42 +327,94 @@ const DraftSuitePicker = ({ suites, selectedIds, selectedNewNames, disabled, onS
   const handleCreateDraftSuite = () => select({ id: `suite-draft-${crypto.randomUUID()}`, name, isNew: true });
 
   return (
-    <Popover.Root open={open} onOpenChange={handleOpenChange}
-      positioning={{ placement: 'bottom-start' }} initialFocusEl={() => inputRef.current}>
+    <Popover.Root
+      open={open}
+      onOpenChange={handleOpenChange}
+      positioning={{ placement: 'bottom-start' }}
+      initialFocusEl={() => inputRef.current}
+    >
       <Popover.Trigger asChild>
-        <IconButton type="button" variant="outline" size="xs" borderStyle="dashed" borderRadius="full"
-          aria-label="Select suites" disabled={disabled}><FiPlus /></IconButton>
+        <IconButton
+          type="button"
+          variant="outline"
+          size="xs"
+          borderStyle="dashed"
+          borderRadius="full"
+          aria-label="Select suites"
+          disabled={disabled}
+        >
+          <FiPlus />
+        </IconButton>
       </Popover.Trigger>
-      <Portal><Popover.Positioner><Popover.Content w="300px" maxW="calc(100vw - 24px)" bg="bg.card" p={2}>
-        <Popover.Body p={0}>
-          <Input ref={inputRef} aria-label="Find or create a suite" placeholder="Find or create a suite"
-            value={search} maxLength={200} size="sm" disabled={disabled} onChange={(event) => setSearch(event.currentTarget.value)}
-            onKeyDown={handlePreventEnterSubmit} />
-          <Box maxH="250px" overflowY="auto" mt={1}>
-            {filtered.map((suite) => (
-              <Button type="button" key={suite.id} variant="ghost" w="full" h="auto" minH="44px"
-                justifyContent="flex-start" px={2} py={1}
-                disabled={disabled || selectedIds.includes(suite.id)}
-                onClick={() => select({ id: suite.id, name: suite.name })}>
-                <HStack gap={3}><FiList aria-hidden="true" /><Box textAlign="left">
-                  <Text fontSize="sm">{suite.name}</Text>
-                  <Text fontSize="xs" color="text.secondary">
-                    {suite.members?.length ?? 0} scenarios
-                    {suites.filter((candidate) => candidate.name.toLocaleLowerCase() === suite.name.toLocaleLowerCase()).length > 1
-                      ? ` · suite ${suite.id.slice(0, 8)}`
-                      : ''}
+      <Portal>
+        <Popover.Positioner>
+          <Popover.Content w="300px" maxW="calc(100vw - 24px)" bg="bg.card" p={2}>
+            <Popover.Body p={0}>
+              <Input
+                ref={inputRef}
+                aria-label="Find or create a suite"
+                placeholder="Find or create a suite"
+                value={search}
+                maxLength={200}
+                size="sm"
+                disabled={disabled}
+                onChange={(event) => setSearch(event.currentTarget.value)}
+                onKeyDown={handlePreventEnterSubmit}
+              />
+              <Box maxH="250px" overflowY="auto" mt={1}>
+                {filtered.map((suite) => (
+                  <Button
+                    type="button"
+                    key={suite.id}
+                    variant="ghost"
+                    w="full"
+                    h="auto"
+                    minH="44px"
+                    justifyContent="flex-start"
+                    px={2}
+                    py={1}
+                    disabled={disabled || selectedIds.includes(suite.id)}
+                    onClick={() => select({ id: suite.id, name: suite.name })}
+                  >
+                    <HStack gap={3}>
+                      <FiList aria-hidden="true" />
+                      <Box textAlign="left">
+                        <Text fontSize="sm">{suite.name}</Text>
+                        <Text fontSize="xs" color="text.secondary">
+                          {suite.members?.length ?? 0} scenarios
+                          {suites.filter(
+                            (candidate) => candidate.name.toLocaleLowerCase() === suite.name.toLocaleLowerCase(),
+                          ).length > 1
+                            ? ` · suite ${suite.id.slice(0, 8)}`
+                            : ''}
+                        </Text>
+                      </Box>
+                    </HStack>
+                  </Button>
+                ))}
+                {name && !exists && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    color="blue.500"
+                    w="full"
+                    disabled={disabled}
+                    justifyContent="flex-start"
+                    onClick={handleCreateDraftSuite}
+                  >
+                    <FiPlus /> Create suite “{name}”
+                  </Button>
+                )}
+                {!name && !suites.length && (
+                  <Text fontSize="sm" color="text.secondary" p={2}>
+                    No suites yet. Enter a name to create one.
                   </Text>
-                </Box></HStack>
-              </Button>
-            ))}
-            {name && !exists && <Button type="button" variant="ghost" color="blue.500" w="full" disabled={disabled}
-              justifyContent="flex-start" onClick={handleCreateDraftSuite}>
-              <FiPlus /> Create suite “{name}”
-            </Button>}
-            {!name && !suites.length && <Text fontSize="sm" color="text.secondary" p={2}>No suites yet. Enter a name to create one.</Text>}
-          </Box>
-        </Popover.Body>
-      </Popover.Content></Popover.Positioner></Portal>
+                )}
+              </Box>
+            </Popover.Body>
+          </Popover.Content>
+        </Popover.Positioner>
+      </Portal>
     </Popover.Root>
   );
 };

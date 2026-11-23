@@ -28,8 +28,16 @@ const setCollapsedState = (collapsed: boolean) => {
   return !collapsed;
 };
 
-export const MainTemplate = ({ children, pageHeader, actionButton, isIncludeBreadcrumb, collapseSidebarOnNarrow = false }: MainTemplateProps) => {
-  const [collapsed, setCollapsed] = useState(() => collapseSidebarOnNarrow && window.matchMedia('(max-width: 767px)').matches ? true : getInitialCollapsedState());
+export const MainTemplate = ({
+  children,
+  pageHeader,
+  actionButton,
+  isIncludeBreadcrumb,
+  collapseSidebarOnNarrow = false,
+}: MainTemplateProps) => {
+  const [collapsed, setCollapsed] = useState(() =>
+    collapseSidebarOnNarrow && window.matchMedia('(max-width: 767px)').matches ? true : getInitialCollapsedState(),
+  );
   const { setShowFilters } = useFilterContext();
   useEffect(() => {
     if (!collapseSidebarOnNarrow) return;

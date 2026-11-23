@@ -5,6 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 import eslintConfigPrettier from 'eslint-config-prettier';
+import prettierPlugin from 'eslint-plugin-prettier';
 
 export default tseslint.config(
   { ignores: ['dist', '**/.worktrees/**', '.yarn/**', 'src/redux/apis/generatedApi.ts'] },
@@ -38,5 +39,10 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    plugins: { prettier: prettierPlugin },
+    rules: { 'prettier/prettier': 'error' },
   },
 );

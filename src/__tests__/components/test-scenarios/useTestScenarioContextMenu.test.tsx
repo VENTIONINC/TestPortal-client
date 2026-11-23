@@ -52,8 +52,17 @@ const DeleteOnlyHarness = () => {
   );
 };
 const CatalogHarness = () => {
-  const openMenu = useTestScenarioContextMenu('project-1', undefined, true, undefined, catalogDeleted, '?originProject=project-1&originKind=folder&originId=f');
-  return <button onClick={(event) => openMenu(event, { id: 'scenario-1', title: 'Checkout flow' })}>Catalog actions</button>;
+  const openMenu = useTestScenarioContextMenu(
+    'project-1',
+    undefined,
+    true,
+    undefined,
+    catalogDeleted,
+    '?originProject=project-1&originKind=folder&originId=f',
+  );
+  return (
+    <button onClick={(event) => openMenu(event, { id: 'scenario-1', title: 'Checkout flow' })}>Catalog actions</button>
+  );
 };
 
 describe('useTestScenarioContextMenu', () => {
@@ -74,12 +83,7 @@ describe('useTestScenarioContextMenu', () => {
     expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1/edit');
 
     options[1].onClick();
-    expect(openDeleteDialog).toHaveBeenCalledWith(
-      'scenario-1',
-      'project-1',
-      'Checkout flow',
-      expect.any(Function),
-    );
+    expect(openDeleteDialog).toHaveBeenCalledWith('scenario-1', 'project-1', 'Checkout flow', expect.any(Function));
 
     openDeleteDialog.mock.calls[0][3]();
     expect(navigate).toHaveBeenCalledWith('/test-management');
@@ -97,7 +101,8 @@ describe('useTestScenarioContextMenu', () => {
     expect(options[1].icon).toBe(FiTrash2);
   });
   it('closes an already open menu when the same trigger is clicked again', async () => {
-    menuState.show = false; closeMenu.mockClear();
+    menuState.show = false;
+    closeMenu.mockClear();
     const user = userEvent.setup();
     const view = render(<DeleteOnlyHarness />);
     await user.click(screen.getByRole('button', { name: 'Open details actions' }));
@@ -108,11 +113,14 @@ describe('useTestScenarioContextMenu', () => {
     menuState.show = false;
   });
   it('keeps folder context when editing from a catalog row', async () => {
-    openContextMenu.mockClear(); navigate.mockClear();
+    openContextMenu.mockClear();
+    navigate.mockClear();
     render(<CatalogHarness />);
     await userEvent.setup().click(screen.getByRole('button', { name: 'Catalog actions' }));
     openContextMenu.mock.calls[0][1][0].onClick();
-    expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1/edit?originProject=project-1&originKind=folder&originId=f');
+    expect(navigate).toHaveBeenCalledWith(
+      '/test-scenarios/scenario-1/edit?originProject=project-1&originKind=folder&originId=f',
+    );
   });
 
   it('reports the deleted scenario ID to the catalog after confirmation', async () => {

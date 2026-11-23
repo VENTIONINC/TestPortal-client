@@ -22,7 +22,6 @@ describe('Test Scenario authoring schema', () => {
       relatedIssueUrl: ' https://example.test/TP-20 ',
       preconditions: '  User is signed in\n  Cart has an item  ',
       testData: '  Account: qa@example.com  ',
-
     });
 
     expect(result).toEqual({
@@ -32,7 +31,6 @@ describe('Test Scenario authoring schema', () => {
       relatedIssueUrl: 'https://example.test/TP-20',
       preconditions: 'User is signed in\n  Cart has an item',
       testData: 'Account: qa@example.com',
-
     });
   });
 
@@ -44,7 +42,9 @@ describe('Test Scenario authoring schema', () => {
   });
 
   it('excludes immutable scenario keys from authoring', () => {
-    expect(testScenarioAuthoringSchema.parse({ title: 'Scenario', scenarioKey: 'ignored' })).not.toHaveProperty('scenarioKey');
+    expect(testScenarioAuthoringSchema.parse({ title: 'Scenario', scenarioKey: 'ignored' })).not.toHaveProperty(
+      'scenarioKey',
+    );
   });
 
   it('rejects blank step actions and accepts optional multiline expected results', () => {
@@ -52,16 +52,35 @@ describe('Test Scenario authoring schema', () => {
     expect(invalid.success).toBe(false);
     if (!invalid.success) expect(invalid.error.flatten().fieldErrors.action).toContain('Step action is required');
 
-    expect(testScenarioStepSchema.parse({ action: '  Open checkout  ', expectedResult: '  Ready\n  to pay  ' })).toEqual({
+    expect(
+      testScenarioStepSchema.parse({ action: '  Open checkout  ', expectedResult: '  Ready\n  to pay  ' }),
+    ).toEqual({
       action: 'Open checkout',
       expectedResult: 'Ready\n  to pay',
     });
   });
   it('accepts optional priority and trimmed HTTP(S) issue URLs', () => {
-    expect(testScenarioAuthoringSchema.parse({ title: 'Scenario', priority: 'low', relatedIssueUrl: ' https://example.test/TP-20 ' })).toMatchObject({ priority: 'low', relatedIssueUrl: 'https://example.test/TP-20' });
-    expect(testScenarioAuthoringSchema.safeParse({ title: 'Scenario', priority: '', relatedIssueUrl: '' }).success).toBe(false);
+    expect(
+      testScenarioAuthoringSchema.parse({
+        title: 'Scenario',
+        priority: 'low',
+        relatedIssueUrl: ' https://example.test/TP-20 ',
+      }),
+    ).toMatchObject({ priority: 'low', relatedIssueUrl: 'https://example.test/TP-20' });
+    expect(
+      testScenarioAuthoringSchema.safeParse({ title: 'Scenario', priority: '', relatedIssueUrl: '' }).success,
+    ).toBe(false);
   });
-  it.each(['/relative', 'https:example.test/TP-20', 'https:/example.test/TP-20', 'http:example.test/TP-20', 'http:/example.test/TP-20', 'javascript:alert(1)', 'ftp://example.test', 'not a url'])('rejects invalid Related issue URL %s', (relatedIssueUrl) => {
+  it.each([
+    '/relative',
+    'https:example.test/TP-20',
+    'https:/example.test/TP-20',
+    'http:example.test/TP-20',
+    'http:/example.test/TP-20',
+    'javascript:alert(1)',
+    'ftp://example.test',
+    'not a url',
+  ])('rejects invalid Related issue URL %s', (relatedIssueUrl) => {
     const result = testScenarioAuthoringSchema.safeParse({ title: 'Scenario', relatedIssueUrl });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.flatten().fieldErrors.relatedIssueUrl).toBeDefined();
@@ -69,5 +88,4 @@ describe('Test Scenario authoring schema', () => {
   it('rejects unsupported priority', () => {
     expect(testScenarioAuthoringSchema.safeParse({ title: 'Scenario', priority: 'urgent' }).success).toBe(false);
   });
-
 });

@@ -31,10 +31,17 @@ export const scenarioOriginDestination = (
     label = 'No folder';
   } else if (origin.kind === 'folder') {
     const folder = folders.find(({ id }) => id === origin.id);
-    if (folder) { search.set('folderId', folder.id); label = folder.name; }
+    if (folder) {
+      search.set('folderId', folder.id);
+      label = folder.name;
+    }
   } else if (origin.kind === 'suite') {
     const suite = suites.find(({ id }) => id === origin.id);
-    if (suite) { search.set('tab', 'suites'); search.set('suiteId', suite.id); label = suite.name; }
+    if (suite) {
+      search.set('tab', 'suites');
+      search.set('suiteId', suite.id);
+      label = suite.name;
+    }
   }
   return { path: `/test-management?${search}`, label };
 };

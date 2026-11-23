@@ -28,8 +28,14 @@ export const DeleteTestScenarioDialog = ({
   onDeleted,
 }: DeleteTestScenarioDialogProps) => {
   const [apiError, setApiError] = useState<string>();
-  const impact = useGetApiV2TestScenariosByScenarioIdQuery({ scenarioId, projectId }, { refetchOnMountOrArgChange: true });
-  const scenario = impact.currentData?.id === scenarioId && impact.currentData?.projectId === projectId ? impact.currentData : undefined;
+  const impact = useGetApiV2TestScenariosByScenarioIdQuery(
+    { scenarioId, projectId },
+    { refetchOnMountOrArgChange: true },
+  );
+  const scenario =
+    impact.currentData?.id === scenarioId && impact.currentData?.projectId === projectId
+      ? impact.currentData
+      : undefined;
   const [deleteScenario, { isLoading }] = useDeleteApiV2TestScenariosByScenarioIdMutation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitInFlight = useRef(false);
@@ -61,7 +67,23 @@ export const DeleteTestScenarioDialog = ({
 
   return (
     <Dialog
-      title={<HStack gap={3}><Box display="flex" alignItems="center" justifyContent="center" boxSize="10" borderRadius="lg" bg="red.100" color="red.600" flexShrink={0}><FiTrash2 size={20} aria-hidden="true" /></Box><Text>Delete scenario{scenario?.scenarioKey ? ` ${scenario.scenarioKey}` : ''}?</Text></HStack>}
+      title={
+        <HStack gap={3}>
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            boxSize="10"
+            borderRadius="lg"
+            bg="red.100"
+            color="red.600"
+            flexShrink={0}
+          >
+            <FiTrash2 size={20} aria-hidden="true" />
+          </Box>
+          <Text>Delete scenario{scenario?.scenarioKey ? ` ${scenario.scenarioKey}` : ''}?</Text>
+        </HStack>
+      }
       onClose={closeDialog}
       role="alertdialog"
       closeTriggerProps={{ display: 'none' }}
@@ -71,11 +93,17 @@ export const DeleteTestScenarioDialog = ({
       <DialogBody>
         <VStack align="stretch" gap={4}>
           <Text color="text.secondary">
-            “{scenarioTitle}” will be deleted{!impact.isFetching && !impact.isError && scenario
+            “{scenarioTitle}” will be deleted
+            {!impact.isFetching && !impact.isError && scenario
               ? ` and removed from ${scenario.suites.length} ${scenario.suites.length === 1 ? `suite (${scenario.suites[0].name})` : 'suites'}`
-              : ''}. Its results in past manual runs are kept. This can’t be undone.
+              : ''}
+            . Its results in past manual runs are kept. This can’t be undone.
           </Text>
-          {impact.isFetching ? <Text color="text.secondary">Loading affected suites…</Text> : impact.isError || !scenario ? <Text color="text.secondary">Affected suites could not be loaded.</Text> : null}
+          {impact.isFetching ? (
+            <Text color="text.secondary">Loading affected suites…</Text>
+          ) : impact.isError || !scenario ? (
+            <Text color="text.secondary">Affected suites could not be loaded.</Text>
+          ) : null}
           {apiError && (
             <Alert.Root status="error" role="alert">
               <Alert.Indicator />

@@ -37,28 +37,28 @@ import {
 } from './generatedApi';
 import { TAGS } from './tags';
 
-export const manualTestRunTag = (id: string) => ({ type: TAGS.ManualTestRun, id } as const);
+export const manualTestRunTag = (id: string) => ({ type: TAGS.ManualTestRun, id }) as const;
 
 export const manualTestRunDetailTag = (projectId: string, runId: string) =>
   manualTestRunTag(`detail:${projectId}:${runId}`);
 
-export const manualTestRunProjectHistoryTag = (projectId: string) =>
-  manualTestRunTag(`project-history:${projectId}`);
+export const manualTestRunProjectHistoryTag = (projectId: string) => manualTestRunTag(`project-history:${projectId}`);
 
-export const manualTestRunProjectDetailsTag = (projectId: string) =>
-  manualTestRunTag(`project-details:${projectId}`);
+export const manualTestRunProjectDetailsTag = (projectId: string) => manualTestRunTag(`project-details:${projectId}`);
 
-export const manualRunEnvironmentProfilesTag = (projectId: string) => ({
-  type: 'Manual Run Environment Profiles',
-  id: projectId,
-} as const);
+export const manualRunEnvironmentProfilesTag = (projectId: string) =>
+  ({
+    type: 'Manual Run Environment Profiles',
+    id: projectId,
+  }) as const;
 
-export const resultSpecCoverageTag = (projectId: string) => ({ type: 'ResultSpecCoverage', id: projectId } as const);
-export const scenarioCatalogTag = (projectId: string) => ({ type: 'ScenarioCatalog', id: projectId } as const);
-export const scenarioSpecLinkTag = (projectId: string, scenarioId: string) => ({
-  type: 'ScenarioSpecLink',
-  id: `${projectId}:${scenarioId}`,
-} as const);
+export const resultSpecCoverageTag = (projectId: string) => ({ type: 'ResultSpecCoverage', id: projectId }) as const;
+export const scenarioCatalogTag = (projectId: string) => ({ type: 'ScenarioCatalog', id: projectId }) as const;
+export const scenarioSpecLinkTag = (projectId: string, scenarioId: string) =>
+  ({
+    type: 'ScenarioSpecLink',
+    id: `${projectId}:${scenarioId}`,
+  }) as const;
 
 const getRunScopeTags = (run: Pick<ManualTestRunRead, 'projectId' | 'id'>) => [
   manualTestRunDetailTag(run.projectId, run.id),
@@ -89,11 +89,7 @@ export interface ReplaceSkillPackageMutationInput extends SkillPackageMutationIn
   id: string;
 }
 
-const createSkillPackageFormData = ({
-  package: skillPackage,
-  title,
-  category,
-}: SkillPackageMutationInput) => {
+const createSkillPackageFormData = ({ package: skillPackage, title, category }: SkillPackageMutationInput) => {
   const formData = new FormData();
 
   formData.append('package', skillPackage, skillPackage.name);
@@ -105,7 +101,15 @@ const createSkillPackageFormData = ({
 
 export const extendedApi = generatedApi
   .enhanceEndpoints({
-    addTagTypes: ['Results', 'ResultSpecCoverage', 'ScenarioCatalog', 'ScenarioSpecLink', 'ScenarioFolders', 'ScenarioSuites', 'Manual Run Environment Profiles'],
+    addTagTypes: [
+      'Results',
+      'ResultSpecCoverage',
+      'ScenarioCatalog',
+      'ScenarioSpecLink',
+      'ScenarioFolders',
+      'ScenarioSuites',
+      'Manual Run Environment Profiles',
+    ],
     endpoints: {
       getApiV2TestScenarioFolders: {
         providesTags: (_result, _error, arg) => [{ type: 'ScenarioFolders', id: arg.projectId }],
@@ -123,58 +127,93 @@ export const extendedApi = generatedApi
         providesTags: (_result, _error, arg) => [TAGS.TestScenario, scenarioCatalogTag(arg.projectId)],
       },
       postApiV2TestScenarios: {
-        invalidatesTags: (result, _error, arg) => result ? [TAGS.TestScenario, scenarioCatalogTag(arg.createTestScenarioRequest.projectId), { type: 'ScenarioFolders', id: arg.createTestScenarioRequest.projectId }, { type: 'ScenarioSuites', id: arg.createTestScenarioRequest.projectId }] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result
+            ? [
+                TAGS.TestScenario,
+                scenarioCatalogTag(arg.createTestScenarioRequest.projectId),
+                { type: 'ScenarioFolders', id: arg.createTestScenarioRequest.projectId },
+                { type: 'ScenarioSuites', id: arg.createTestScenarioRequest.projectId },
+              ]
+            : [],
       },
       patchApiV2TestScenariosByScenarioId: {
-        invalidatesTags: (result, _error, arg) => result ? [TAGS.TestScenario, 'Results', scenarioCatalogTag(arg.projectId), { type: 'ScenarioFolders', id: arg.projectId }, { type: 'ScenarioSuites', id: arg.projectId }] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result
+            ? [
+                TAGS.TestScenario,
+                'Results',
+                scenarioCatalogTag(arg.projectId),
+                { type: 'ScenarioFolders', id: arg.projectId },
+                { type: 'ScenarioSuites', id: arg.projectId },
+              ]
+            : [],
       },
       postApiV2TestScenarioFolders: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }] : [],
+        invalidatesTags: (result, _error, arg) => (result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }] : []),
       },
       patchApiV2TestScenarioFoldersByFolderId: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.projectId }, scenarioCatalogTag(arg.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioFolders', id: arg.projectId }, scenarioCatalogTag(arg.projectId)] : [],
       },
       deleteApiV2TestScenarioFoldersByFolderId: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.projectId }, scenarioCatalogTag(arg.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioFolders', id: arg.projectId }, scenarioCatalogTag(arg.projectId)] : [],
       },
       postApiV2TestScenarioFoldersRestoration: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
       },
       postApiV2TestScenariosFolderRestoration: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
       },
       postApiV2TestSuites: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }] : [],
+        invalidatesTags: (result, _error, arg) => (result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }] : []),
       },
       patchApiV2TestSuitesBySuiteId: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.projectId }] : [],
+        invalidatesTags: (result, _error, arg) => (result ? [{ type: 'ScenarioSuites', id: arg.projectId }] : []),
       },
       deleteApiV2TestSuitesBySuiteId: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.projectId }, scenarioCatalogTag(arg.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioSuites', id: arg.projectId }, scenarioCatalogTag(arg.projectId)] : [],
       },
       postApiV2TestSuitesBySuiteIdMembers: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
       },
       deleteApiV2TestSuitesBySuiteIdMembers: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
       },
       postApiV2TestSuitesBySuiteIdMembershipChanges: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
       },
       postApiV2TestSuitesBySuiteIdMembershipRestoration: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
       },
       postApiV2TestSuitesMoves: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
       },
       postApiV2TestSuitesMoveRestoration: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId)] : [],
       },
       putApiV2TestSuitesBySuiteIdMembersOrder: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }] : [],
+        invalidatesTags: (result, _error, arg) => (result ? [{ type: 'ScenarioSuites', id: arg.body.projectId }] : []),
       },
       patchApiV2TestScenariosBulkFolder: {
-        invalidatesTags: (result, _error, arg) => result ? [{ type: 'ScenarioFolders', id: arg.body.projectId }, scenarioCatalogTag(arg.body.projectId), { type: 'ScenarioSuites', id: arg.body.projectId }] : [],
+        invalidatesTags: (result, _error, arg) =>
+          result
+            ? [
+                { type: 'ScenarioFolders', id: arg.body.projectId },
+                scenarioCatalogTag(arg.body.projectId),
+                { type: 'ScenarioSuites', id: arg.body.projectId },
+              ]
+            : [],
       },
       postApiV2TestScenariosByScenarioIdSpecLinks: {
         extraOptions: { maxRetries: 0 },
@@ -254,10 +293,11 @@ export const extendedApi = generatedApi
       },
       postApiV2ManualTestRuns: {
         extraOptions: { maxRetries: 0 },
-        invalidatesTags: (_result: PostApiV2ManualTestRunsApiResponse | undefined, _error, arg: PostApiV2ManualTestRunsApiArg) => [
-          manualTestRunProjectHistoryTag(arg.projectId),
-          manualTestRunProjectDetailsTag(arg.projectId),
-        ],
+        invalidatesTags: (
+          _result: PostApiV2ManualTestRunsApiResponse | undefined,
+          _error,
+          arg: PostApiV2ManualTestRunsApiArg,
+        ) => [manualTestRunProjectHistoryTag(arg.projectId), manualTestRunProjectDetailsTag(arg.projectId)],
       },
       getApiV2ManualTestRuns: {
         providesTags: (_result, _error, arg: GetApiV2ManualTestRunsApiArg) => [
@@ -268,40 +308,55 @@ export const extendedApi = generatedApi
         providesTags: (_result, _error, arg) => [manualRunEnvironmentProfilesTag(arg.projectId)],
       },
       postApiV2ProjectsByProjectIdManualRunEnvironmentProfiles: {
-        invalidatesTags: (result, _error, arg) => result ? [manualRunEnvironmentProfilesTag(arg.projectId)] : [],
+        invalidatesTags: (result, _error, arg) => (result ? [manualRunEnvironmentProfilesTag(arg.projectId)] : []),
       },
       patchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileId: {
-        invalidatesTags: (result, _error, arg) => result ? [manualRunEnvironmentProfilesTag(arg.projectId)] : [],
+        invalidatesTags: (result, _error, arg) => (result ? [manualRunEnvironmentProfilesTag(arg.projectId)] : []),
       },
       deleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileId: {
-        invalidatesTags: (_result, error, arg) => error ? [] : [manualRunEnvironmentProfilesTag(arg.projectId)],
+        invalidatesTags: (_result, error, arg) => (error ? [] : [manualRunEnvironmentProfilesTag(arg.projectId)]),
       },
       getApiV2ManualTestRunsByRunId: {
-        providesTags: (result: GetApiV2ManualTestRunsByRunIdApiResponse | undefined, _error, arg: GetApiV2ManualTestRunsByRunIdApiArg) =>
-          result ? getRunScopeTags(result) : getRunArgTags(arg.projectId, arg.runId),
+        providesTags: (
+          result: GetApiV2ManualTestRunsByRunIdApiResponse | undefined,
+          _error,
+          arg: GetApiV2ManualTestRunsByRunIdApiArg,
+        ) => (result ? getRunScopeTags(result) : getRunArgTags(arg.projectId, arg.runId)),
       },
       putApiV2ManualTestRunsByRunIdScenariosOrder: {
         extraOptions: { maxRetries: 0 },
-        invalidatesTags: (result: PutApiV2ManualTestRunsByRunIdScenariosOrderApiResponse | undefined, _error, arg: PutApiV2ManualTestRunsByRunIdScenariosOrderApiArg) =>
-          result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId),
+        invalidatesTags: (
+          result: PutApiV2ManualTestRunsByRunIdScenariosOrderApiResponse | undefined,
+          _error,
+          arg: PutApiV2ManualTestRunsByRunIdScenariosOrderApiArg,
+        ) => (result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId)),
       },
       getApiV2Users: {
         providesTags: ['Users'],
       },
       postApiV2ManualTestRunsByRunIdScenariosBulk: {
         extraOptions: { maxRetries: 0 },
-        invalidatesTags: (result: PostApiV2ManualTestRunsByRunIdScenariosBulkApiResponse | undefined, _error, arg: PostApiV2ManualTestRunsByRunIdScenariosBulkApiArg) =>
-          result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId),
+        invalidatesTags: (
+          result: PostApiV2ManualTestRunsByRunIdScenariosBulkApiResponse | undefined,
+          _error,
+          arg: PostApiV2ManualTestRunsByRunIdScenariosBulkApiArg,
+        ) => (result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId)),
       },
       putApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResult: {
         extraOptions: { maxRetries: 0 },
-        invalidatesTags: (result: PutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultApiResponse | undefined, _error, arg: PutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultApiArg) =>
-          result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId),
+        invalidatesTags: (
+          result: PutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultApiResponse | undefined,
+          _error,
+          arg: PutApiV2ManualTestRunsByRunIdScenariosAndScenarioIdResultApiArg,
+        ) => (result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId)),
       },
       patchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssignee: {
         extraOptions: { maxRetries: 0 },
-        invalidatesTags: (result: PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeApiResponse | undefined, _error, arg: PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeApiArg) =>
-          result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId),
+        invalidatesTags: (
+          result: PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeApiResponse | undefined,
+          _error,
+          arg: PatchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdAssigneeApiArg,
+        ) => (result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId)),
       },
       postApiV2ManualTestRunsByRunIdComplete: {
         extraOptions: { maxRetries: 0 },
@@ -313,19 +368,24 @@ export const extendedApi = generatedApi
       },
       postApiV2ManualTestRunsByRunIdReopen: {
         extraOptions: { maxRetries: 0 },
-        invalidatesTags: (result: PostApiV2ManualTestRunsByRunIdReopenApiResponse | undefined, _error, arg: PostApiV2ManualTestRunsByRunIdReopenApiArg) =>
-          result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId),
+        invalidatesTags: (
+          result: PostApiV2ManualTestRunsByRunIdReopenApiResponse | undefined,
+          _error,
+          arg: PostApiV2ManualTestRunsByRunIdReopenApiArg,
+        ) => (result ? getRunScopeTags(result) : getMutationErrorTags(arg.projectId, arg.runId)),
       },
     },
   })
   .injectEndpoints({
     endpoints: (build) => ({
       deleteManualTestRun: build.mutation<void, { projectId: string; runId: string }>({
-        query: ({ projectId, runId }) => ({ url: `/api/v2/manual-test-runs/${encodeURIComponent(runId)}`, method: 'DELETE', params: { projectId } }),
-        invalidatesTags: (_result, error, { projectId, runId }) => error ? [] : [
-          manualTestRunProjectHistoryTag(projectId),
-          manualTestRunDetailTag(projectId, runId),
-        ],
+        query: ({ projectId, runId }) => ({
+          url: `/api/v2/manual-test-runs/${encodeURIComponent(runId)}`,
+          method: 'DELETE',
+          params: { projectId },
+        }),
+        invalidatesTags: (_result, error, { projectId, runId }) =>
+          error ? [] : [manualTestRunProjectHistoryTag(projectId), manualTestRunDetailTag(projectId, runId)],
       }),
       getResults: build.query<GetResultsResponse, GetResultsRequest>({
         query: (params) => {

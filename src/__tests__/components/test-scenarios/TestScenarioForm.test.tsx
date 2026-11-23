@@ -58,7 +58,8 @@ describe('TestScenarioForm', () => {
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent('TMS-1');
   });
   it('provides separate navigation to the section and originating folder', async () => {
-    const section = vi.fn(); const origin = vi.fn();
+    const section = vi.fn();
+    const origin = vi.fn();
     setup({ originLabel: 'Checkout', onNavigateSection: section, onNavigateOrigin: origin });
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: 'Scenarios' }));
@@ -76,7 +77,14 @@ describe('TestScenarioForm', () => {
   it('filters folders and saves the selected folder and priority', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    setup({ initialValues: { title: 'Scenario' }, folders: [{ id: 'a', name: 'Account' }, { id: 'b', name: 'Checkout' }], onSubmit });
+    setup({
+      initialValues: { title: 'Scenario' },
+      folders: [
+        { id: 'a', name: 'Account' },
+        { id: 'b', name: 'Checkout' },
+      ],
+      onSubmit,
+    });
     await user.click(screen.getByRole('button', { name: 'Scenario folder' }));
     const folderSearch = screen.getByRole('textbox', { name: 'Search folders' });
     await waitFor(() => expect(folderSearch).toHaveFocus());
@@ -112,7 +120,9 @@ describe('TestScenarioForm', () => {
     await user.click(screen.getByRole('button', { name: 'Scenario folder' }));
     await waitFor(() => expect(screen.getByRole('textbox', { name: 'Search folders' })).toHaveFocus());
     await user.keyboard('{Escape}');
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Scenario folder' })).toHaveAttribute('aria-expanded', 'false'));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Scenario folder' })).toHaveAttribute('aria-expanded', 'false'),
+    );
     expect(screen.getByRole('button', { name: 'Scenario folder' })).toHaveTextContent('Account');
   });
   it('marks the selected folder and allows selecting No folder', async () => {
@@ -148,13 +158,27 @@ describe('TestScenarioForm', () => {
   });
   it('resets content after confirmed create-another while retaining organization', async () => {
     const onSubmit = vi.fn();
-    const props = { initialFolderId: 'a', folders: [{ id: 'a', name: 'Account' }], initialValues: { title: 'First', priority: 'high' as const }, onSubmit };
+    const props = {
+      initialFolderId: 'a',
+      folders: [{ id: 'a', name: 'Account' }],
+      initialValues: { title: 'First', priority: 'high' as const },
+      onSubmit,
+    };
     const view = setup(props);
     await userEvent.setup().click(screen.getByRole('checkbox', { name: 'Create another scenario' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save scenario' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
     expect(onSubmit.mock.calls[0][4]).toBe(true);
-    view.rerender(<ChakraProvider><TestScenarioForm mode="create" onCancel={vi.fn()} {...props} createAnotherReset={{ token: 1, suites: [{ id: 'new-suite', name: 'Release' }] }} /></ChakraProvider>);
+    view.rerender(
+      <ChakraProvider>
+        <TestScenarioForm
+          mode="create"
+          onCancel={vi.fn()}
+          {...props}
+          createAnotherReset={{ token: 1, suites: [{ id: 'new-suite', name: 'Release' }] }}
+        />
+      </ChakraProvider>,
+    );
     expect(screen.getByRole('textbox', { name: 'Title' })).toHaveValue('');
     expect(within(screen.getByRole('list', { name: 'Scenario steps' })).getAllByRole('listitem')).toHaveLength(3);
     expect(screen.getByRole('button', { name: 'Scenario folder' })).toHaveTextContent('Account');
@@ -173,7 +197,11 @@ describe('TestScenarioForm', () => {
     const view = setup(props);
     const checkbox = screen.getByRole('checkbox', { name: 'Create another scenario' });
     await user.click(checkbox);
-    view.rerender(<ChakraProvider><TestScenarioForm mode="create" onCancel={vi.fn()} {...props} createAnotherReset={{ token: 1, suites: [] }} /></ChakraProvider>);
+    view.rerender(
+      <ChakraProvider>
+        <TestScenarioForm mode="create" onCancel={vi.fn()} {...props} createAnotherReset={{ token: 1, suites: [] }} />
+      </ChakraProvider>,
+    );
     expect(screen.getByText('Scenario created.')).toBeInTheDocument();
     await user.click(checkbox);
     expect(checkbox).not.toBeChecked();
@@ -341,7 +369,11 @@ describe('TestScenarioForm', () => {
     const view = setup(props);
     await user.click(screen.getByRole('button', { name: 'Select suites' }));
     await user.type(screen.getByRole('textbox', { name: 'Find or create a suite' }), 'Al');
-    view.rerender(<ChakraProvider><TestScenarioForm mode="create" onSubmit={vi.fn()} onCancel={vi.fn()} {...props} isSubmitting /></ChakraProvider>);
+    view.rerender(
+      <ChakraProvider>
+        <TestScenarioForm mode="create" onSubmit={vi.fn()} onCancel={vi.fn()} {...props} isSubmitting />
+      </ChakraProvider>,
+    );
     expect(screen.getByRole('textbox', { name: 'Find or create a suite' })).toBeDisabled();
     expect(screen.getByRole('button', { name: /Alpha/ })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Create suite “Al”' })).toBeDisabled();

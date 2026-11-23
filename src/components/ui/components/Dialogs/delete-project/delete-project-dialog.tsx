@@ -22,9 +22,7 @@ export const DeleteProjectDialog = ({ closeDialog, projectId, projectName }: Del
         <Text>
           Are you sure you want to delete the project <strong>{projectName}</strong>?
         </Text>
-        <Text>
-          This action is permanent and cannot be undone. All associated data will be permanently removed.
-        </Text>
+        <Text>This action is permanent and cannot be undone. All associated data will be permanently removed.</Text>
       </DialogBody>
 
       <DialogFooter>

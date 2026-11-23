@@ -8,17 +8,32 @@ import { describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   context: {
     error: {
-      id: 'error-1', type: 'AssertionError', message: 'Checkout failed', callLog: [], callStack: [], logs: [],
-      sourceSnippet: null, generatedTestCase: null, location: 'checkout.spec.ts:1',
+      id: 'error-1',
+      type: 'AssertionError',
+      message: 'Checkout failed',
+      callLog: [],
+      callStack: [],
+      logs: [],
+      sourceSnippet: null,
+      generatedTestCase: null,
+      location: 'checkout.spec.ts:1',
     },
     result: { id: 'result-1', attempt: 1, startTime: '2026-10-01T12:00:00Z', duration: 20 },
     assignments: { confirmed: null, suggestions: [] },
   },
   scenario: {
-    id: 'scenario-1', title: 'Checkout scenario', scenarioKey: 'PAY-1', details: 'Check the payment flow.', contentMd: '# Checkout steps',
+    id: 'scenario-1',
+    title: 'Checkout scenario',
+    scenarioKey: 'PAY-1',
+    details: 'Check the payment flow.',
+    contentMd: '# Checkout steps',
   },
   linkedScenario: {
-    id: 'scenario-2', title: 'Payment retry scenario', scenarioKey: 'PAY-2', details: 'Retry a failed payment.', contentMd: '# Payment retry steps',
+    id: 'scenario-2',
+    title: 'Payment retry scenario',
+    scenarioKey: 'PAY-2',
+    details: 'Retry a failed payment.',
+    contentMd: '# Payment retry steps',
   },
   coverage: undefined as unknown,
   linkMutation: vi.fn(),
@@ -30,7 +45,11 @@ vi.mock('@/components/results/assign-issue-modal/useAssignIssueModal', async () 
   const React = await import('react');
   return {
     useAssignIssueModal: () => {
-      const [form, setForm] = React.useState({ name: 'Draft issue', description: 'Draft description', category: 'bug' as const });
+      const [form, setForm] = React.useState({
+        name: 'Draft issue',
+        description: 'Draft description',
+        category: 'bug' as const,
+      });
       const noop = () => undefined;
       return {
         state: { status: 'unassigned', form, closed: false, requestId: 1 },
@@ -71,24 +90,33 @@ vi.mock('@/redux/apis/resultDetailApi', async () => {
   const React = await import('react');
   return {
     useLazyGetResultDetailWithRelatedScenariosQuery: () => {
-    const [args, setArgs] = React.useState<{ resultId: string; projectId: string }>();
-    const [currentData, setCurrentData] = React.useState(mocks.coverage);
-    const trigger = React.useCallback((nextArgs: { resultId: string; projectId: string }) => {
-      setArgs(nextArgs);
-      return {
-        unwrap: async () => {
-          setCurrentData(mocks.coverage);
-          return mocks.coverage;
-        },
-      };
-    }, []);
-    return [trigger, { originalArgs: args, currentData, isFetching: false, isLoading: false, isUninitialized: !args }];
+      const [args, setArgs] = React.useState<{ resultId: string; projectId: string }>();
+      const [currentData, setCurrentData] = React.useState(mocks.coverage);
+      const trigger = React.useCallback((nextArgs: { resultId: string; projectId: string }) => {
+        setArgs(nextArgs);
+        return {
+          unwrap: async () => {
+            setCurrentData(mocks.coverage);
+            return mocks.coverage;
+          },
+        };
+      }, []);
+      return [
+        trigger,
+        { originalArgs: args, currentData, isFetching: false, isLoading: false, isUninitialized: !args },
+      ];
     },
   };
 });
 
 vi.mock('@/redux/apis/scenarioManagementApi', () => ({
-  useGetApiV2TestScenariosForResultLinkManagementQuery: () => ({ currentData: { scenarios: [mocks.linkedScenario], total: 1, page: 1, limit: 10, totalPages: 1 }, isFetching: false, isLoading: false, isError: false, refetch: () => ({ unwrap: async () => ({}) }) }),
+  useGetApiV2TestScenariosForResultLinkManagementQuery: () => ({
+    currentData: { scenarios: [mocks.linkedScenario], total: 1, page: 1, limit: 10, totalPages: 1 },
+    isFetching: false,
+    isLoading: false,
+    isError: false,
+    refetch: () => ({ unwrap: async () => ({}) }),
+  }),
 }));
 
 vi.mock('@/redux/apis/extendedApi', () => ({
@@ -105,7 +133,11 @@ describe('AssignIssueModal scenario management', () => {
     mocks.coverage = { id: 'result-1', spec: { id: 'spec-1' }, relatedTestScenarios: [mocks.scenario] };
     mocks.linkMutation.mockImplementation(() => ({
       unwrap: async () => {
-        mocks.coverage = { id: 'result-1', spec: { id: 'spec-1' }, relatedTestScenarios: [mocks.scenario, mocks.linkedScenario] };
+        mocks.coverage = {
+          id: 'result-1',
+          spec: { id: 'spec-1' },
+          relatedTestScenarios: [mocks.scenario, mocks.linkedScenario],
+        };
         return {};
       },
     }));
@@ -122,7 +154,13 @@ describe('AssignIssueModal scenario management', () => {
     });
     render(
       <ChakraProvider>
-        <AssignIssueModal resultErrorId="error-1" projectId="project-1" mode="assign" closeDialog={vi.fn()} closeAllDialogs={vi.fn()} />
+        <AssignIssueModal
+          resultErrorId="error-1"
+          projectId="project-1"
+          mode="assign"
+          closeDialog={vi.fn()}
+          closeAllDialogs={vi.fn()}
+        />
       </ChakraProvider>,
     );
 

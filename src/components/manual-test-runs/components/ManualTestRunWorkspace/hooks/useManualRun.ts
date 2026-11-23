@@ -50,8 +50,9 @@ export const useManualRun = ({ projectId, selectedRunId, listedRuns, onSelectRun
   const deletedRun = selectedRunId !== undefined && deletedRuns.has(runKey(projectId, selectedRunId));
   const missingRun = deletedRun || (loadError && 'status' in loadError && loadError.status === 404);
   const matchingRun = fetchedRun?.projectId === projectId && fetchedRun.id === selectedRunId ? fetchedRun : undefined;
-  const matchingCachedRun = currentRun?.projectId === projectId && currentRun.id === selectedRunId ? currentRun : undefined;
-  const run = missingRun ? undefined : matchingCachedRun ?? matchingRun;
+  const matchingCachedRun =
+    currentRun?.projectId === projectId && currentRun.id === selectedRunId ? currentRun : undefined;
+  const run = missingRun ? undefined : (matchingCachedRun ?? matchingRun);
   const completed = run?.status === MANUAL_RUN_STATUS.COMPLETED;
   const activeRunRef = useRef(run);
 

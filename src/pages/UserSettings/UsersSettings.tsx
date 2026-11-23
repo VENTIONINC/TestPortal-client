@@ -105,7 +105,9 @@ export function UsersSettings() {
     return (
       <Section.Root>
         <Section.Head>Users</Section.Head>
-        <Section.Description>Review account access and current lifecycle status for your workspace.</Section.Description>
+        <Section.Description>
+          Review account access and current lifecycle status for your workspace.
+        </Section.Description>
         <Section.Body>
           <Flex align="center" gap={3} color="text.secondary">
             <Spinner size="sm" />
@@ -135,7 +137,9 @@ export function UsersSettings() {
     return (
       <Section.Root>
         <Section.Head>Users</Section.Head>
-        <Section.Description>Review account access and current lifecycle status for your workspace.</Section.Description>
+        <Section.Description>
+          Review account access and current lifecycle status for your workspace.
+        </Section.Description>
         <Section.Body>
           <Text color="text.secondary">No users were returned by the server.</Text>
         </Section.Body>

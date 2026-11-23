@@ -88,7 +88,9 @@ describe('SkillPackageDialog', () => {
   it('preserves entered values, selected file, and backend feedback after a conflict', async () => {
     const user = userEvent.setup();
     createSkill.mockReturnValue(
-      mutationResult(async () => Promise.reject({ status: 409, data: { error: 'A skill with this name already exists.' } })),
+      mutationResult(async () =>
+        Promise.reject({ status: 409, data: { error: 'A skill with this name already exists.' } }),
+      ),
     );
     renderDialog();
 

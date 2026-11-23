@@ -11,11 +11,13 @@ export const scenarioCloneDraft = (source: TestScenario) => ({
     priority: source.priority,
     relatedIssueUrl: source.relatedIssueUrl,
   },
-  steps: [...source.steps].sort((a, b) => a.position - b.position).map((step, index) => ({
-    key: `clone-step-${index}`,
-    action: step.action,
-    expectedResult: step.expectedResult ?? '',
-  })),
+  steps: [...source.steps]
+    .sort((a, b) => a.position - b.position)
+    .map((step, index) => ({
+      key: `clone-step-${index}`,
+      action: step.action,
+      expectedResult: step.expectedResult ?? '',
+    })),
   folderId: source.folderId,
   suites: source.suites.map(({ id, name }) => ({ id, name })),
 });

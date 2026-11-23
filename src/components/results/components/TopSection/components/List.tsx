@@ -23,15 +23,37 @@ export const List = ({ results, label, onClick, hideIcon = false }: ListProps) =
         const summary = categorySummary ? getIssueCategorySummaryPresentation(categorySummary) : undefined;
         const config = categoriesConfig[summary?.category as keyof typeof categoriesConfig] || categoriesConfig.other;
         const { Icon, color, bg, textColor } = config;
-        const summaryDetails = summary?.details.map(({ label: detailLabel, count: detailCount }) => `${detailLabel}: ${detailCount}`).join(', ');
-        const summaryLabel = summary ? (summary.showMixed ? 'Mixed' : summary.category === null ? summary.label : undefined) : undefined;
+        const summaryDetails = summary?.details
+          .map(({ label: detailLabel, count: detailCount }) => `${detailLabel}: ${detailCount}`)
+          .join(', ');
+        const summaryLabel = summary
+          ? summary.showMixed
+            ? 'Mixed'
+            : summary.category === null
+              ? summary.label
+              : undefined
+          : undefined;
         return (
           <HStack key={id ?? `${title}-${index}-${count}`} textStyle="md" gap={0}>
             <Tooltip content={summaryDetails} disabled={!summaryDetails}>
-              <HStack fontWeight={700} borderRadius="40px" fontSize="xs" color={color} px={2} bg={bg} minW={hideIcon ? 6 : 8}>
+              <HStack
+                fontWeight={700}
+                borderRadius="40px"
+                fontSize="xs"
+                color={color}
+                px={2}
+                bg={bg}
+                minW={hideIcon ? 6 : 8}
+              >
                 {!hideIcon && <Icon size={14} />}
-                <Text fontSize="xs" fontWeight={700} color={textColor}>{count}</Text>
-                {summaryLabel && <Text fontSize="xs" fontWeight={600} color={textColor}>{summaryLabel}</Text>}
+                <Text fontSize="xs" fontWeight={700} color={textColor}>
+                  {count}
+                </Text>
+                {summaryLabel && (
+                  <Text fontSize="xs" fontWeight={600} color={textColor}>
+                    {summaryLabel}
+                  </Text>
+                )}
               </HStack>
             </Tooltip>
             <HStack flex={1} justify="space-between">

@@ -27,9 +27,7 @@ describe('useExecutionTypeOptions', () => {
   it('maps exact project values after the All option', () => {
     queryMock.mockReturnValue({ data: ['Custom Release', 'Nightly'], isFetching: false, isError: false });
 
-    const { result } = renderHook(() =>
-      useExecutionTypeOptions({ projectId: 'project-1', selectedType: 'all' }),
-    );
+    const { result } = renderHook(() => useExecutionTypeOptions({ projectId: 'project-1', selectedType: 'all' }));
 
     expect(result.current.options).toEqual([
       { label: 'All', value: 'all' },
@@ -49,9 +47,7 @@ describe('useExecutionTypeOptions', () => {
   it('exposes loading state and only the All option before values load', () => {
     queryMock.mockReturnValue({ data: undefined, isFetching: true, isError: false });
 
-    const { result } = renderHook(() =>
-      useExecutionTypeOptions({ projectId: 'project-1', selectedType: 'all' }),
-    );
+    const { result } = renderHook(() => useExecutionTypeOptions({ projectId: 'project-1', selectedType: 'all' }));
 
     expect(result.current).toEqual({
       options: [{ label: 'All', value: 'all' }],

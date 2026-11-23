@@ -111,7 +111,9 @@ describe('useAssignIssueModal category workflows', () => {
       }),
     );
 
-    act(() => result.current.actions.updateForm({ category: 'performance', name: '  New issue  ', description: 'Details' }));
+    act(() =>
+      result.current.actions.updateForm({ category: 'performance', name: '  New issue  ', description: 'Details' }),
+    );
     await act(async () => result.current.actions.createAndAssign());
 
     expect(mocks.atomicCreate).toHaveBeenCalledWith({
@@ -219,7 +221,12 @@ describe('useAssignIssueModal category workflows', () => {
 
   it('clears a manually selected issue when it is rejected', () => {
     const { result } = renderHook(() =>
-      useAssignIssueModal({ resultErrorId: 'error-1', projectId: 'project-1', mode: 'assign', selectedAssumptionId: 'missing' }),
+      useAssignIssueModal({
+        resultErrorId: 'error-1',
+        projectId: 'project-1',
+        mode: 'assign',
+        selectedAssumptionId: 'missing',
+      }),
     );
 
     act(() => result.current.actions.selectExistingIssue(issue));

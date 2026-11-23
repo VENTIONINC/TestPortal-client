@@ -15,7 +15,11 @@ describe('mapTopIssues', () => {
       uncategorizedCount: 1,
     };
 
-    expect(mapTopIssues([{ id: 'issue-7', title: 'Duplicate title', count: 4, category: ResultCategory.Bug, categorySummary: summary }])).toEqual([
+    expect(
+      mapTopIssues([
+        { id: 'issue-7', title: 'Duplicate title', count: 4, category: ResultCategory.Bug, categorySummary: summary },
+      ]),
+    ).toEqual([
       { id: 'issue-7', title: 'Duplicate title', count: 4, category: ResultCategory.Bug, categorySummary: summary },
     ]);
   });

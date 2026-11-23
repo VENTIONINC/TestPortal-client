@@ -42,11 +42,7 @@ export const ScenarioSuiteFilter = ({
   };
 
   return (
-    <Popover.Root
-      open={suiteOpen}
-      onOpenChange={handleOpenChange}
-      positioning={{ placement: 'bottom-end' }}
-    >
+    <Popover.Root open={suiteOpen} onOpenChange={handleOpenChange} positioning={{ placement: 'bottom-end' }}>
       <Popover.Trigger asChild>
         <Button
           variant="outline"
@@ -133,18 +129,10 @@ export const ScenarioSuiteFilter = ({
             </VStack>
           </Popover.Body>
           <HStack justify="space-between" p={2} borderTopWidth="1px" borderColor="border.main">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleClearSuites}
-            >
+            <Button size="sm" variant="ghost" onClick={handleClearSuites}>
               Clear
             </Button>
-            <Button
-              size="sm"
-              variant="primary"
-              onClick={handleClose}
-            >
+            <Button size="sm" variant="primary" onClick={handleClose}>
               Done
             </Button>
           </HStack>

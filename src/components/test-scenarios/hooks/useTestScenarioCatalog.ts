@@ -36,20 +36,28 @@ import {
 } from '@/redux/apis/generatedApi';
 
 import { TEST_SCENARIO_PAGE_LIMIT, TEST_SCENARIO_PAGE_SIZES, type TestScenarioPageSize } from '../constants';
-import { executeScenarioOperation, flattenScenarioFolders, toggleScenarioSelection, type ScenarioOperationReport } from '../utils';
+import {
+  executeScenarioOperation,
+  flattenScenarioFolders,
+  toggleScenarioSelection,
+  type ScenarioOperationReport,
+} from '../utils';
 import { useCatalogScopeLifetime } from './useCatalogScopeLifetime';
 
 const SEARCH_DEBOUNCE_MS = 500;
 
 export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'scenarios' | 'suites') => {
   const [searchParams] = useSearchParams();
-  const requestedFolder = searchParams.get('projectId') && searchParams.get('projectId') !== projectId ? null : searchParams.get('folderId');
+  const requestedFolder =
+    searchParams.get('projectId') && searchParams.get('projectId') !== projectId ? null : searchParams.get('folderId');
   const requestedSuite = searchParams.get('projectId') === projectId ? searchParams.get('suiteId') : null;
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<TestScenarioPageSize>(TEST_SCENARIO_PAGE_LIMIT as TestScenarioPageSize);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState(search);
-  const [sortField, setSortField] = useState<GetApiV2TestScenariosApiArg['sortField']>(organizationTab === 'suites' ? undefined : 'updatedAt');
+  const [sortField, setSortField] = useState<GetApiV2TestScenariosApiArg['sortField']>(
+    organizationTab === 'suites' ? undefined : 'updatedAt',
+  );
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   useEffect(() => setSortField(organizationTab === 'suites' ? undefined : 'updatedAt'), [organizationTab]);
   const [columnFilters, setColumnFilters] = useState({
@@ -63,7 +71,13 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const [priority, setPriority] = useState<NonNullable<GetApiV2TestScenariosApiArg['priority']> | ''>('');
   const [authorIds, setAuthorIds] = useState<string[]>([]);
   const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>(() =>
-    organizationTab === 'suites' ? { kind: 'suite', ...(requestedSuite ? { id: requestedSuite } : {}) } : requestedFolder === 'unfiled' ? { kind: 'unfiled' } : requestedFolder ? { kind: 'folder', id: requestedFolder } : { kind: 'all' },
+    organizationTab === 'suites'
+      ? { kind: 'suite', ...(requestedSuite ? { id: requestedSuite } : {}) }
+      : requestedFolder === 'unfiled'
+        ? { kind: 'unfiled' }
+        : requestedFolder
+          ? { kind: 'folder', id: requestedFolder }
+          : { kind: 'all' },
   );
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const selectionRevision = useRef(0);
@@ -100,7 +114,8 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     if (!exists && newlyCreatedFolderId.current !== scope.id && !foldersQuery.isFetching) setScope({ kind: 'all' });
   }, [foldersQuery.currentData, foldersQuery.isFetching, scope]);
   useEffect(() => {
-    if (organizationTab !== 'suites' || scope.kind !== 'suite' || !suitesQuery.currentData || suitesQuery.isFetching) return;
+    if (organizationTab !== 'suites' || scope.kind !== 'suite' || !suitesQuery.currentData || suitesQuery.isFetching)
+      return;
     const available = suitesQuery.currentData;
     if (!scope.id && available.length === 0) return;
     if (scope.id && available.some((suite) => suite.id === scope.id)) return;
@@ -247,13 +262,16 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     error,
     refetch: refetchScenarios,
   } = useGetApiV2TestScenariosQuery(queryArgs, { skip: isAwaitingSuiteSelection });
-  const refreshSuiteData = useCallback(async ({ reportErrors = false } = {}) => {
-    const results = await Promise.all([suitesQuery.refetch(), foldersQuery.refetch(), refetchScenarios()]);
-    if (reportErrors) {
-      const error = results.find((result) => result.error)?.error;
-      if (error) throw error;
-    }
-  }, [foldersQuery, refetchScenarios, suitesQuery]);
+  const refreshSuiteData = useCallback(
+    async ({ reportErrors = false } = {}) => {
+      const results = await Promise.all([suitesQuery.refetch(), foldersQuery.refetch(), refetchScenarios()]);
+      if (reportErrors) {
+        const error = results.find((result) => result.error)?.error;
+        if (error) throw error;
+      }
+    },
+    [foldersQuery, refetchScenarios, suitesQuery],
+  );
 
   const scenarios = currentData?.scenarios ?? [];
   const pagination = currentData
@@ -275,16 +293,22 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     if (page > lastAvailablePage) setPage(lastAvailablePage);
   }, [currentData, page]);
   const isLoading = isQueryLoading || (isFetching && !currentData);
-  const onPageChange = useCallback((nextPage: number) => {
-    invalidateSelection();
-    setPage(nextPage);
-  }, [invalidateSelection]);
-  const onPageSizeChange = useCallback((value: number) => {
-    if (!TEST_SCENARIO_PAGE_SIZES.some((size) => size === value)) return;
-    invalidateSelection();
-    setPageSize(value as TestScenarioPageSize);
-    setPage(1);
-  }, [invalidateSelection]);
+  const onPageChange = useCallback(
+    (nextPage: number) => {
+      invalidateSelection();
+      setPage(nextPage);
+    },
+    [invalidateSelection],
+  );
+  const onPageSizeChange = useCallback(
+    (value: number) => {
+      if (!TEST_SCENARIO_PAGE_SIZES.some((size) => size === value)) return;
+      invalidateSelection();
+      setPageSize(value as TestScenarioPageSize);
+      setPage(1);
+    },
+    [invalidateSelection],
+  );
   const onSearchChange = useCallback(
     (value: string) => {
       invalidateSelection();
@@ -339,7 +363,8 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   );
   const onScopeChange = useCallback(
     (nextScope: typeof scope) => {
-      if (nextScope.kind !== 'folder' || nextScope.id !== newlyCreatedFolderId.current) newlyCreatedFolderId.current = null;
+      if (nextScope.kind !== 'folder' || nextScope.id !== newlyCreatedFolderId.current)
+        newlyCreatedFolderId.current = null;
       invalidateSelection();
       setScope(nextScope);
       setPage(1);
@@ -382,16 +407,21 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       if (revision === selectionRevision.current) setIsResolvingSelection(false);
     }
   }, [resolveSelectionRequest, selectionArgs]);
-  const reconcileOperation = useCallback(({ succeededIds }: Pick<ScenarioOperationReport, 'succeededIds'>, revision: number) => {
-    if (revision !== selectionRevision.current) return;
-    if (succeededIds.length)
-      setSelectedIds((current) => current.filter((id) => !succeededIds.includes(id)));
-    setAllMatchingSelected(false);
-  }, []);
-  const reconcileDeletedScenario = useCallback((scenarioId: string) => {
-    reconcileOperation({ succeededIds: [scenarioId] }, ++selectionRevision.current);
-    setIsResolvingSelection(false);
-  }, [reconcileOperation]);
+  const reconcileOperation = useCallback(
+    ({ succeededIds }: Pick<ScenarioOperationReport, 'succeededIds'>, revision: number) => {
+      if (revision !== selectionRevision.current) return;
+      if (succeededIds.length) setSelectedIds((current) => current.filter((id) => !succeededIds.includes(id)));
+      setAllMatchingSelected(false);
+    },
+    [],
+  );
+  const reconcileDeletedScenario = useCallback(
+    (scenarioId: string) => {
+      reconcileOperation({ succeededIds: [scenarioId] }, ++selectionRevision.current);
+      setIsResolvingSelection(false);
+    },
+    [reconcileOperation],
+  );
   const runOperation = useCallback(async (operation: () => Promise<ScenarioOperationReport>) => {
     if (operationLock.current) return { succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] };
     operationLock.current = true;
@@ -454,84 +484,99 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     },
     [deleteScenario, projectId, reconcileOperation, runOperation],
   );
-  const removeSuiteMembership = useCallback(async (suiteId: string, scenarioIds: string[]) => {
-    const suite = suitesQuery.currentData?.find((item) => item.id === suiteId);
-    if (!suite) throw new Error('The suite is no longer available. Refresh and try again.');
-    const revision = selectionRevision.current;
-    const expectedScenarioIds = (suite.members ?? []).map((member) => member.testScenarioId);
-    const response = await changeMembership({
-      suiteId,
-      body: {
-        projectId,
-        expectedMembershipRevision: suite.membershipRevision,
-        expectedScenarioIds,
-        addScenarioIds: [],
-        removeScenarioIds: scenarioIds,
-      },
-    }).unwrap();
-    reconcileOperation({ succeededIds: response.restoreData.removedMembers.map((member) => member.scenarioId) }, revision);
-    return {
-      restoreData: response.restoreData,
-      expectedMembershipRevision: response.membershipRevision,
-      expectedScenarioIds: response.scenarioIds,
-    };
-  }, [changeMembership, projectId, reconcileOperation, suitesQuery.currentData]);
-  const restoreSuiteMembership = useCallback(async (undo: {
-    restoreData: NonNullable<Awaited<ReturnType<typeof removeSuiteMembership>>['restoreData']>;
-    expectedMembershipRevision: number;
-    expectedScenarioIds: string[];
-  }) => {
-    const suiteId = undo.restoreData.suiteId;
-    await restoreMembership({
-      suiteId,
-      body: {
-        projectId,
-        expectedMembershipRevision: undo.expectedMembershipRevision,
-        expectedScenarioIds: undo.expectedScenarioIds,
-        restoreData: undo.restoreData,
-      },
-    }).unwrap();
-  }, [projectId, restoreMembership]);
-  const moveSuiteMembership = useCallback(async (sourceSuiteId: string, destinationSuiteId: string, scenarioIds: string[]) => {
-    const suitesNow = suitesQuery.currentData ?? [];
-    const source = suitesNow.find((item) => item.id === sourceSuiteId);
-    const destination = suitesNow.find((item) => item.id === destinationSuiteId);
-    if (!source || !destination) throw new Error('A suite is no longer available. Refresh and try again.');
-    const expectedSourceScenarioIds = (source.members ?? []).map((member) => member.testScenarioId);
-    const expectedDestinationScenarioIds = (destination.members ?? []).map((member) => member.testScenarioId);
-    const response = await moveSuiteMembersRequest({
-      body: {
-        projectId,
-        sourceSuiteId,
-        destinationSuiteId,
-        expectedSourceMembershipRevision: source.membershipRevision,
-        expectedDestinationMembershipRevision: destination.membershipRevision,
-        scenarioIds,
-        expectedSourceScenarioIds,
-        expectedDestinationScenarioIds,
-      },
-    }).unwrap();
-    return {
-      restoreData: response.restoreData,
-      expectedSourceMembershipRevision: response.sourceMembershipRevision,
-      expectedDestinationMembershipRevision: response.destinationMembershipRevision,
-      expectedSourceScenarioIds: response.sourceScenarioIds,
-      expectedDestinationScenarioIds: response.destinationScenarioIds,
-      alreadyInDestination: response.alreadyInDestination,
-    };
-  }, [moveSuiteMembersRequest, projectId, suitesQuery.currentData]);
-  const restoreSuiteMove = useCallback(async (undo: Awaited<ReturnType<typeof moveSuiteMembership>>) => {
-    await restoreSuiteMoveRequest({
-      body: {
-        projectId,
-        expectedSourceMembershipRevision: undo.expectedSourceMembershipRevision,
-        expectedDestinationMembershipRevision: undo.expectedDestinationMembershipRevision,
-        expectedSourceScenarioIds: undo.expectedSourceScenarioIds,
-        expectedDestinationScenarioIds: undo.expectedDestinationScenarioIds,
-        restoreData: undo.restoreData,
-      },
-    }).unwrap();
-  }, [projectId, restoreSuiteMoveRequest]);
+  const removeSuiteMembership = useCallback(
+    async (suiteId: string, scenarioIds: string[]) => {
+      const suite = suitesQuery.currentData?.find((item) => item.id === suiteId);
+      if (!suite) throw new Error('The suite is no longer available. Refresh and try again.');
+      const revision = selectionRevision.current;
+      const expectedScenarioIds = (suite.members ?? []).map((member) => member.testScenarioId);
+      const response = await changeMembership({
+        suiteId,
+        body: {
+          projectId,
+          expectedMembershipRevision: suite.membershipRevision,
+          expectedScenarioIds,
+          addScenarioIds: [],
+          removeScenarioIds: scenarioIds,
+        },
+      }).unwrap();
+      reconcileOperation(
+        { succeededIds: response.restoreData.removedMembers.map((member) => member.scenarioId) },
+        revision,
+      );
+      return {
+        restoreData: response.restoreData,
+        expectedMembershipRevision: response.membershipRevision,
+        expectedScenarioIds: response.scenarioIds,
+      };
+    },
+    [changeMembership, projectId, reconcileOperation, suitesQuery.currentData],
+  );
+  const restoreSuiteMembership = useCallback(
+    async (undo: {
+      restoreData: NonNullable<Awaited<ReturnType<typeof removeSuiteMembership>>['restoreData']>;
+      expectedMembershipRevision: number;
+      expectedScenarioIds: string[];
+    }) => {
+      const suiteId = undo.restoreData.suiteId;
+      await restoreMembership({
+        suiteId,
+        body: {
+          projectId,
+          expectedMembershipRevision: undo.expectedMembershipRevision,
+          expectedScenarioIds: undo.expectedScenarioIds,
+          restoreData: undo.restoreData,
+        },
+      }).unwrap();
+    },
+    [projectId, restoreMembership],
+  );
+  const moveSuiteMembership = useCallback(
+    async (sourceSuiteId: string, destinationSuiteId: string, scenarioIds: string[]) => {
+      const suitesNow = suitesQuery.currentData ?? [];
+      const source = suitesNow.find((item) => item.id === sourceSuiteId);
+      const destination = suitesNow.find((item) => item.id === destinationSuiteId);
+      if (!source || !destination) throw new Error('A suite is no longer available. Refresh and try again.');
+      const expectedSourceScenarioIds = (source.members ?? []).map((member) => member.testScenarioId);
+      const expectedDestinationScenarioIds = (destination.members ?? []).map((member) => member.testScenarioId);
+      const response = await moveSuiteMembersRequest({
+        body: {
+          projectId,
+          sourceSuiteId,
+          destinationSuiteId,
+          expectedSourceMembershipRevision: source.membershipRevision,
+          expectedDestinationMembershipRevision: destination.membershipRevision,
+          scenarioIds,
+          expectedSourceScenarioIds,
+          expectedDestinationScenarioIds,
+        },
+      }).unwrap();
+      return {
+        restoreData: response.restoreData,
+        expectedSourceMembershipRevision: response.sourceMembershipRevision,
+        expectedDestinationMembershipRevision: response.destinationMembershipRevision,
+        expectedSourceScenarioIds: response.sourceScenarioIds,
+        expectedDestinationScenarioIds: response.destinationScenarioIds,
+        alreadyInDestination: response.alreadyInDestination,
+      };
+    },
+    [moveSuiteMembersRequest, projectId, suitesQuery.currentData],
+  );
+  const restoreSuiteMove = useCallback(
+    async (undo: Awaited<ReturnType<typeof moveSuiteMembership>>) => {
+      await restoreSuiteMoveRequest({
+        body: {
+          projectId,
+          expectedSourceMembershipRevision: undo.expectedSourceMembershipRevision,
+          expectedDestinationMembershipRevision: undo.expectedDestinationMembershipRevision,
+          expectedSourceScenarioIds: undo.expectedSourceScenarioIds,
+          expectedDestinationScenarioIds: undo.expectedDestinationScenarioIds,
+          restoreData: undo.restoreData,
+        },
+      }).unwrap();
+    },
+    [projectId, restoreSuiteMoveRequest],
+  );
   const reorderSuite = useCallback(
     async (suiteId: string, scenarioIds: string[]) => {
       const submitOrder = async (suite: NonNullable<typeof suitesQuery.currentData>[number]) => {
@@ -585,12 +630,18 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     (folderId: string) => deleteFolderRequest({ folderId, projectId }).unwrap(),
     [deleteFolderRequest, projectId],
   );
-  const restoreFolderDeletion = useCallback(async (restoreData: PostApiV2TestScenarioFoldersRestorationApiArg['body']['restoreData']) => {
-    await restoreFolderDeletionRequest({ body: { projectId, restoreData } }).unwrap();
-  }, [projectId, restoreFolderDeletionRequest]);
-  const restoreScenarioFolders = useCallback(async (restoreData: NonNullable<ScenarioOperationReport['folderRestoreData']>) => {
-    await restoreScenarioFoldersRequest({ body: { projectId, restoreData } }).unwrap();
-  }, [projectId, restoreScenarioFoldersRequest]);
+  const restoreFolderDeletion = useCallback(
+    async (restoreData: PostApiV2TestScenarioFoldersRestorationApiArg['body']['restoreData']) => {
+      await restoreFolderDeletionRequest({ body: { projectId, restoreData } }).unwrap();
+    },
+    [projectId, restoreFolderDeletionRequest],
+  );
+  const restoreScenarioFolders = useCallback(
+    async (restoreData: NonNullable<ScenarioOperationReport['folderRestoreData']>) => {
+      await restoreScenarioFoldersRequest({ body: { projectId, restoreData } }).unwrap();
+    },
+    [projectId, restoreScenarioFoldersRequest],
+  );
   const createSuite = useCallback(
     async (body: { name: string; description?: string | null; purpose?: string | null; release?: string | null }) =>
       createSuiteRequest({ body: { projectId, ...body } }).unwrap(),
@@ -611,13 +662,16 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
         const available = suitesQuery.currentData ?? [];
         const index = available.findIndex((suite) => suite.id === suiteId);
         const neighbor = available[index + 1] ?? available[index - 1];
-        onScopeChange(organizationTab === 'suites' ? { kind: 'suite', ...(neighbor ? { id: neighbor.id } : {}) } : { kind: 'all' });
+        onScopeChange(
+          organizationTab === 'suites' ? { kind: 'suite', ...(neighbor ? { id: neighbor.id } : {}) } : { kind: 'all' },
+        );
       }
     },
     [deleteSuiteRequest, onScopeChange, organizationTab, projectId, scope.id, scopeLifetime, suitesQuery.currentData],
   );
   const currentAuthors = authorsQuery.currentData?.authors;
-  const cachedAuthorIdentities = authorIdentityCache.current?.projectId === projectId ? authorIdentityCache.current.authors : [];
+  const cachedAuthorIdentities =
+    authorIdentityCache.current?.projectId === projectId ? authorIdentityCache.current.authors : [];
   const authorsForFilter = currentAuthors
     ? currentAuthors.map((author) => ({
         ...author,

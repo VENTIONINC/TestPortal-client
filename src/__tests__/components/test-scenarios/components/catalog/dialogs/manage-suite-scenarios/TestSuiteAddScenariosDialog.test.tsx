@@ -15,12 +15,14 @@ vi.mock('@/redux/apis/extendedApi', () => ({
 vi.mock('@/redux/apis/generatedApi', () => ({
   useGetApiV2TestScenariosQuery: () => ({
     currentData: {
-      scenarios: [{
-        id: 'scenario-2',
-        title: 'Checkout',
-        scenarioKey: 'TMS-2',
-        priority: 'medium',
-      }],
+      scenarios: [
+        {
+          id: 'scenario-2',
+          title: 'Checkout',
+          scenarioKey: 'TMS-2',
+          priority: 'medium',
+        },
+      ],
     },
   }),
 }));
@@ -58,9 +60,12 @@ it('saves changes against the membership revision captured when the dialog opene
     scenarioIds: ['scenario-1', 'scenario-2'],
   };
   let finishSave!: () => void;
-  saveMembership.mockReturnValue({ unwrap: () => new Promise((resolve) => {
-    finishSave = () => resolve(result);
-  }) });
+  saveMembership.mockReturnValue({
+    unwrap: () =>
+      new Promise((resolve) => {
+        finishSave = () => resolve(result);
+      }),
+  });
   const { closeDialog, onSaved } = renderDialog();
 
   const save = screen.getByRole('button', { name: 'Save changes' });

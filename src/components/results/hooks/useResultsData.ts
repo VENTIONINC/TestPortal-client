@@ -54,9 +54,7 @@ export const useResultsData = ({
     errorMessage: debouncedFilters.errorMessage || undefined,
     issueName: debouncedFilters.issueName || undefined,
     assumption:
-      debouncedFilters.assumption && debouncedFilters.assumption !== 'any'
-        ? debouncedFilters.assumption
-        : undefined,
+      debouncedFilters.assumption && debouncedFilters.assumption !== 'any' ? debouncedFilters.assumption : undefined,
     dates: debouncedDates,
   });
 
@@ -77,7 +75,15 @@ export const useResultsData = ({
       ...groupedResults,
       availableDates: dateItems,
     };
-  }, [data?.results, data?.rawResults, selectedDates, effectiveFilters.from, effectiveFilters.to, debouncedFilters, activeDates]);
+  }, [
+    data?.results,
+    data?.rawResults,
+    selectedDates,
+    effectiveFilters.from,
+    effectiveFilters.to,
+    debouncedFilters,
+    activeDates,
+  ]);
 
   return {
     results,

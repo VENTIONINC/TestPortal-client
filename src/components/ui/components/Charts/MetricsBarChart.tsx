@@ -137,7 +137,11 @@ export const MetricsBarChart = ({
   const multipleBarGap = 8;
 
   const renderMultipleBarShape = useCallback(
-    ({ x = 0, y = 0, width = 0, height = 0, fill, payload }: MultipleBarShapeProps, item: CategorySeries, itemIndex: number) => {
+    (
+      { x = 0, y = 0, width = 0, height = 0, fill, payload }: MultipleBarShapeProps,
+      item: CategorySeries,
+      itemIndex: number,
+    ) => {
       const activeSeries = series.filter((candidate) => Number(payload?.[candidate.name]) > 0);
       const activeIndex = activeSeries.findIndex((candidate) => candidate.name === item.name);
 
@@ -150,7 +154,15 @@ export const MetricsBarChart = ({
       const activeGroupWidth = activeSeries.length * multipleBarSize + (activeSeries.length - 1) * multipleBarGap;
       const activeGroupStart = groupStart + (groupWidth - activeGroupWidth) / 2;
 
-      return <rect x={activeGroupStart + activeIndex * (multipleBarSize + multipleBarGap)} y={y} width={multipleBarSize} height={height} fill={fill} />;
+      return (
+        <rect
+          x={activeGroupStart + activeIndex * (multipleBarSize + multipleBarGap)}
+          y={y}
+          width={multipleBarSize}
+          height={height}
+          fill={fill}
+        />
+      );
     },
     [multipleBarSize, multipleBarGap, series],
   );
@@ -268,7 +280,8 @@ export const MetricsBarChart = ({
                         barSize={view === 'stacked' ? stackedBarSize : multipleBarSize}
                         shape={
                           view === 'multiple'
-                            ? (props: unknown) => renderMultipleBarShape(props as MultipleBarShapeProps, item, itemIndex)
+                            ? (props: unknown) =>
+                                renderMultipleBarShape(props as MultipleBarShapeProps, item, itemIndex)
                             : undefined
                         }
                       />

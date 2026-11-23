@@ -48,19 +48,25 @@ export const useTestScenarioContextMenu = (
       lastTrigger.current = event.currentTarget;
       openContextMenu(event, [
         ...(onClone ? [{ title: 'Clone', icon: FiCopy, iconAtStart: true, onClick: () => onClone(scenario) }] : []),
-        ...(includeEdit ? [{
-          title: 'Edit Scenario',
-          icon: FiEdit,
-          iconAtStart: true,
-          onClick: () => navigate(`${getTestScenarioEditPath(scenario.id)}${editSearch}`),
-        }] : []),
+        ...(includeEdit
+          ? [
+              {
+                title: 'Edit Scenario',
+                icon: FiEdit,
+                iconAtStart: true,
+                onClick: () => navigate(`${getTestScenarioEditPath(scenario.id)}${editSearch}`),
+              },
+            ]
+          : []),
         ...(onRemoveFromSuite
-          ? [{
-              title: 'Remove from suite',
-              icon: FiTrash2,
-              iconAtStart: true,
-              onClick: () => onRemoveFromSuite(scenario),
-            }]
+          ? [
+              {
+                title: 'Remove from suite',
+                icon: FiTrash2,
+                iconAtStart: true,
+                onClick: () => onRemoveFromSuite(scenario),
+              },
+            ]
           : []),
         {
           title: 'Delete Scenario',
@@ -78,6 +84,18 @@ export const useTestScenarioContextMenu = (
         },
       ]);
     },
-    [closeContextMenu, currentProjectId, editSearch, includeEdit, navigate, onDeletedOverride, onRemoveFromSuite, onClone, openContextMenu, openDeleteDialog, show],
+    [
+      closeContextMenu,
+      currentProjectId,
+      editSearch,
+      includeEdit,
+      navigate,
+      onDeletedOverride,
+      onRemoveFromSuite,
+      onClone,
+      openContextMenu,
+      openDeleteDialog,
+      show,
+    ],
   );
 };

@@ -40,7 +40,10 @@ const mockedDelete = vi.mocked(useDeleteApiV2TestScenariosByScenarioIdStepsAndSt
 const mockedReorder = vi.mocked(usePutApiV2TestScenariosByScenarioIdStepsOrderMutation);
 
 const scenario: TestScenario = {
-  revision: 1, suites: [], createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' }, updatedBy: null,
+  revision: 1,
+  suites: [],
+  createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' },
+  updatedBy: null,
   folderId: null,
   id: 'scenario-1',
   projectId: 'project-1',

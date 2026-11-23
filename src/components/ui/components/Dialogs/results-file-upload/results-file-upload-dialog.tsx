@@ -33,11 +33,7 @@ export const ResultsFileUploadDialog = ({ closeDialog }: DefaultDialogProps) => 
             <option value="ctrf">Common Test Report Format (CTRF)</option>
           </NativeSelect>
 
-          <FileUploadRoot
-            value={fileUpload}
-            cursor="pointer"
-            data-invalid={fileSelectionError ? '' : undefined}
-          >
+          <FileUploadRoot value={fileUpload} cursor="pointer" data-invalid={fileSelectionError ? '' : undefined}>
             <FileUploadDropzone
               label="Drag and drop JSON files or click to select"
               description={`Up to ${MAX_RESULTS_UPLOAD_FILES} JSON files per upload.`}

@@ -66,8 +66,11 @@ export const ScenarioSelectionDialog = ({
     setPage,
   } = useManageScenarioFilters(projectId);
 
-  const { ids, added, removed, toggleScenario, togglePage } =
-    useManageScenarioSelection({ existing, initialIds, onSelectionChange });
+  const { ids, added, removed, toggleScenario, togglePage } = useManageScenarioSelection({
+    existing,
+    initialIds,
+    onSelectionChange,
+  });
   const hasWarning = removedResults.length > 0;
   const resultBreakdown = (['passed', 'failed', 'blocked', 'skipped'] as const)
     .map((result) => ({ result, count: removedResults.filter((item) => item.result === result).length }))
@@ -106,12 +109,7 @@ export const ScenarioSelectionDialog = ({
           minH={0}
           maxH="calc(86vh - 132px)"
         >
-          <ScenarioFolderList
-            folders={folders}
-            folder={folder}
-            total={total}
-            onFolderChange={changeFolder}
-          />
+          <ScenarioFolderList folders={folders} folder={folder} total={total} onFolderChange={changeFolder} />
 
           <VStack align="stretch" gap={2} p={3} minW={0} overflow="hidden">
             <HStack>
@@ -190,7 +188,11 @@ export const ScenarioSelectionDialog = ({
               these changes?
             </Text>
           )}
-          {error && <Text role="alert" color="fg.error">{error}</Text>}
+          {error && (
+            <Text role="alert" color="fg.error">
+              {error}
+            </Text>
+          )}
 
           <HStack justify="space-between">
             <Text fontSize="sm" color="fg.muted" aria-live="polite">

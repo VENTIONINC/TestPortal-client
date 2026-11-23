@@ -50,10 +50,12 @@ describe('NavigationMenu', () => {
       </ChakraProvider>,
     );
 
-    expect(screen.getAllByRole('link').slice(0, 2).map((link) => link.textContent?.trim())).toEqual([
-      'Dashboard',
-      'Test Management',
-    ]);
+    expect(
+      screen
+        .getAllByRole('link')
+        .slice(0, 2)
+        .map((link) => link.textContent?.trim()),
+    ).toEqual(['Dashboard', 'Test Management']);
   });
 
   it('marks Test Management active on the legacy manual runs route', () => {
