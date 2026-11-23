@@ -17,14 +17,12 @@ import {
 } from '@/components/ui';
 import { DefaultDialogProps } from '@/types';
 
-import { useResultsFileUpload } from './hooks';
+import { useResultsFileUpload, MAX_RESULTS_UPLOAD_FILES } from './hooks';
 
 export const ResultsFileUploadDialog = ({ closeDialog }: DefaultDialogProps) => {
   const [uploadMethod, setUploadMethod] = useState('playwright');
-  const { fileUpload, isUploading, uploadProgress, handleUpload } = useResultsFileUpload(
-    closeDialog,
-    uploadMethod as 'playwright' | 'ctrf',
-  );
+  const { fileUpload, fileSelectionError, clearSelectedFiles, isUploading, uploadProgress, handleUpload } =
+    useResultsFileUpload(closeDialog, uploadMethod as 'playwright' | 'ctrf');
 
   return (
     <Dialog title="Upload Results" onClose={closeDialog} size="lg">
@@ -35,9 +33,25 @@ export const ResultsFileUploadDialog = ({ closeDialog }: DefaultDialogProps) => 
             <option value="ctrf">Common Test Report Format (CTRF)</option>
           </NativeSelect>
 
-          <FileUploadRoot value={fileUpload} cursor="pointer">
-            <FileUploadDropzone label="Drag and drop JSON files or click to select" w="100%" minH="120px" p={6} />
+          <FileUploadRoot
+            value={fileUpload}
+            cursor="pointer"
+            data-invalid={fileSelectionError ? '' : undefined}
+          >
+            <FileUploadDropzone
+              label="Drag and drop JSON files or click to select"
+              description={`Up to ${MAX_RESULTS_UPLOAD_FILES} JSON files per upload.`}
+              w="100%"
+              minH="120px"
+              p={6}
+            />
           </FileUploadRoot>
+
+          {fileSelectionError && (
+            <Text color="status.error.text" fontSize="sm">
+              {fileSelectionError}
+            </Text>
+          )}
 
           {fileUpload.acceptedFiles.length > 0 && (
             <VStack align="stretch" gap={3}>
@@ -45,7 +59,7 @@ export const ResultsFileUploadDialog = ({ closeDialog }: DefaultDialogProps) => 
                 <Text fontSize="sm">
                   Selected {fileUpload.acceptedFiles.length} file{fileUpload.acceptedFiles.length > 1 ? 's' : ''}
                 </Text>
-                <LuX size={20} onClick={fileUpload.clearFiles} style={{ cursor: 'pointer' }} />
+                <LuX size={20} onClick={clearSelectedFiles} style={{ cursor: 'pointer' }} />
               </HStack>
 
               {isUploading && (

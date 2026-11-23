@@ -35,6 +35,7 @@ export const initialFilters: ResultsFilters = {
   reviewStatus: '',
   errorMessage: '',
   issueName: '',
+  assumption: 'any',
   from: formatDate(last7DaysStart),
   to: formatDate(today),
   page: 1,

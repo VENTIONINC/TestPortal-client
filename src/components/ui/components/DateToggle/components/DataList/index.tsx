@@ -16,13 +16,13 @@ export const DateList = ({ days, toggleHandler, size = 'default', isBorder = tru
 
   return (
     <HStack overflowX="auto" borderRadius="md" bg="bg.section">
-      <Box borderRadius="md" shadow={isBorder ? 'sm' : 'none'} overflow="hidden" w="100%">
-        <ButtonGroup variant="outline" gap={0} w="100%">
+      <Box borderRadius="md" shadow={isBorder ? 'sm' : 'none'} overflow="hidden" w="100%" minW="max-content">
+        <ButtonGroup variant="outline" gap={0} w="100%" minW="max-content">
           {days.map((day) => (
             <Button
               key={day.yyyy_mm_dd}
               onClick={() => toggleHandler({ yyyy_mm_dd: day.yyyy_mm_dd })}
-              flex={1}
+              flex="1 0 88px"
               justifyContent="center"
               borderRadius="0"
               _first={{ borderLeftRadius: 'md' }}

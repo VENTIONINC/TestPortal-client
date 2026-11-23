@@ -18,6 +18,7 @@ export interface GetResultsRequest {
   reviewStatus?: string;
   errorMessage?: string;
   issueName?: string;
+  assumption?: 'all' | 'confirmed' | 'not-confirmed';
   dates?: string[];
 }
 

@@ -18,8 +18,12 @@ export const filterConfig: FilterConfigSection[] = [
         type: 'select',
         options: [
           {
-            label: 'Last 24 hours',
+            label: 'Today',
             value: '1',
+          },
+          {
+            label: 'Yesterday',
+            value: 'yesterday',
           },
           {
             label: '1 week',

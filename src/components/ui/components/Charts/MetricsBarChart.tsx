@@ -8,6 +8,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { FiBarChart2, FiLayers } from 'react-icons/fi';
 
 import type { CategoriesChartDatum, CategorySeries, MetricsBarChartProps } from '@/types';
+import { computeYAxisTicks } from '@/utils/chartAxis';
 
 type TooltipProps = {
   active?: boolean;
@@ -17,6 +18,15 @@ type TooltipProps = {
   bg: string;
   border: string;
   text: string;
+};
+
+type MultipleBarShapeProps = {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  fill?: string;
+  payload?: CategoriesChartDatum;
 };
 
 export const MetricsBarChart = ({
@@ -65,33 +75,12 @@ export const MetricsBarChart = ({
     series: chartSeries,
   });
 
-  const resolvedYDomain = useMemo(
-    () => (valueMode === 'percent' ? [0, 100] : (yDomain ?? [0, 50])),
-    [valueMode, yDomain],
-  );
+  const yAxis = useMemo(() => {
+    const rawMax = valueMode === 'percent' ? 100 : (yDomain?.[1] ?? 50);
+    return computeYAxisTicks(rawMax);
+  }, [valueMode, yDomain]);
 
   const valueSuffix = useMemo(() => (valueMode === 'percent' ? '%' : ''), [valueMode]);
-
-  const customTicks = useMemo(() => {
-    const [min, max] = resolvedYDomain;
-    if (min !== 0) return undefined;
-
-    // Prioritize powers of 10 as requested ("tens, hundreds, thousands")
-    const possibleSteps = [10000, 1000, 100, 10, 1];
-
-    for (const step of possibleSteps) {
-      if (max >= step && max % step === 0) {
-        const count = max / step;
-        // Ensure not too few ticks (sparse) and not too many (cluttered)
-        // For max=100, step=100 gives count 1 (<2), so it falls to step=10 (count 10)
-        // For max=200, step=100 gives count 2, which creates [0, 100, 200]
-        if (count >= 2 && count <= 30) {
-          return Array.from({ length: count + 1 }, (_, i) => i * step);
-        }
-      }
-    }
-    return undefined;
-  }, [resolvedYDomain]);
 
   const renderTooltip = useCallback(
     ({ active, payload, label, series, bg, border, text }: TooltipProps) => {
@@ -145,6 +134,26 @@ export const MetricsBarChart = ({
   const tooltipWrapperStyle = useMemo(() => ({ zIndex: 10 }), []);
   const xAxisPadding = useMemo(() => ({ left: 20, right: 20 }), []);
   const chartMargin = useMemo(() => ({ top: 10, right: 10, left: 0, bottom: 0 }), []);
+  const multipleBarGap = 8;
+
+  const renderMultipleBarShape = useCallback(
+    ({ x = 0, y = 0, width = 0, height = 0, fill, payload }: MultipleBarShapeProps, item: CategorySeries, itemIndex: number) => {
+      const activeSeries = series.filter((candidate) => Number(payload?.[candidate.name]) > 0);
+      const activeIndex = activeSeries.findIndex((candidate) => candidate.name === item.name);
+
+      if (activeIndex < 0 || height <= 0) {
+        return <></>;
+      }
+
+      const groupWidth = series.length * multipleBarSize + (series.length - 1) * multipleBarGap;
+      const groupStart = x - itemIndex * (width + multipleBarGap);
+      const activeGroupWidth = activeSeries.length * multipleBarSize + (activeSeries.length - 1) * multipleBarGap;
+      const activeGroupStart = groupStart + (groupWidth - activeGroupWidth) / 2;
+
+      return <rect x={activeGroupStart + activeIndex * (multipleBarSize + multipleBarGap)} y={y} width={multipleBarSize} height={height} fill={fill} />;
+    },
+    [multipleBarSize, multipleBarGap, series],
+  );
 
   return (
     <Card.Root>
@@ -221,11 +230,11 @@ export const MetricsBarChart = ({
                   <BarChart
                     data={chart.data}
                     margin={chartMargin}
-                    barGap={view === 'stacked' ? 0 : 8}
+                    barGap={view === 'stacked' ? 0 : multipleBarGap}
                     barCategoryGap={20}
                   >
                     <CartesianGrid
-                      stroke="var(--chakra-colors-border-subtle)"
+                      stroke={chart.color('border.main')}
                       strokeDasharray="3 3"
                       strokeOpacity={0.6}
                       vertical={false}
@@ -244,18 +253,24 @@ export const MetricsBarChart = ({
                       tickLine={false}
                       stroke={chart.color('fg.muted')}
                       fontSize={12}
-                      domain={resolvedYDomain}
-                      ticks={customTicks}
-                      interval={0} // allowDecimals={false}
+                      domain={yAxis.domain}
+                      ticks={yAxis.ticks}
+                      interval={0}
+                      allowDecimals={false}
                     />
                     <Tooltip cursor={tooltipCursor} wrapperStyle={tooltipWrapperStyle} content={tooltipContent} />
-                    {series.map((item) => (
+                    {series.map((item, itemIndex) => (
                       <Bar
                         key={item.name}
                         dataKey={chart.key(item.name)}
                         fill={chart.color(item.color)}
                         stackId={view === 'stacked' ? 'issues' : undefined}
                         barSize={view === 'stacked' ? stackedBarSize : multipleBarSize}
+                        shape={
+                          view === 'multiple'
+                            ? (props: unknown) => renderMultipleBarShape(props as MultipleBarShapeProps, item, itemIndex)
+                            : undefined
+                        }
                       />
                     ))}
                   </BarChart>

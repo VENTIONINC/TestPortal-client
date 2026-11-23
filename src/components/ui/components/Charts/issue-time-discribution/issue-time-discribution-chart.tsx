@@ -1,13 +1,14 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { memo, useId } from 'react';
+import { memo, useId, useMemo } from 'react';
 import { Box, Flex } from '@chakra-ui/react';
 import { Chart, useChart } from '@chakra-ui/charts';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { format } from 'date-fns';
 
 import { IssueTimeDistribution } from '@/types';
+import { computeYAxisTicks } from '@/utils/chartAxis';
 
 interface IssueTimeDiscributionChartProps {
   data: IssueTimeDistribution[];
@@ -17,6 +18,11 @@ interface IssueTimeDiscributionChartProps {
 export const IssueTimeDiscributionChart = memo(({ data, color }: IssueTimeDiscributionChartProps) => {
   const chart = useChart({ data, series: [{ name: 'count', color }] });
   const gradientBaseId = useId();
+
+  const yAxis = useMemo(() => {
+    const maxCount = data.reduce((max, point) => Math.max(max, point.count ?? 0), 0);
+    return computeYAxisTicks(maxCount);
+  }, [data]);
 
   return (
     <Flex
@@ -70,6 +76,10 @@ export const IssueTimeDiscributionChart = memo(({ data, color }: IssueTimeDiscri
                 mirror
                 stroke={chart.color('border.main')}
                 style={{ fontSize: 10 }}
+                domain={yAxis.domain}
+                ticks={yAxis.ticks}
+                interval={0}
+                allowDecimals={false}
               />
               <Tooltip animationDuration={100} cursor={false} content={<Chart.Tooltip />} />
               {chart.series.map((item) => (

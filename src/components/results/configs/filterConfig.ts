@@ -50,6 +50,17 @@ export const filterConfig: FilterConfigSection[] = [
     title: 'Issue',
     fields: [
       {
+        label: 'Assumption:',
+        name: 'assumption',
+        type: 'select',
+        options: [
+          { value: 'any', label: 'Any' },
+          { value: 'all', label: 'All' },
+          { value: 'confirmed', label: 'Confirmed' },
+          { value: 'not-confirmed', label: 'Not confirmed' },
+        ],
+      },
+      {
         label: 'Issue name:',
         name: 'issueName',
         type: 'input',

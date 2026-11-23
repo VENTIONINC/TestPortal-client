@@ -5,8 +5,8 @@ workflow lightweight and predictable.
 
 ## Contribution Flow
 
-1. Start with an issue, discussion, or approved OpenSpec change when the work
-   affects behavior, architecture, or contributor workflow.
+1. Start with an issue or discussion when the work affects behavior, architecture,
+   or contributor workflow.
 2. Create a focused branch from `main`.
 3. Make the change, update docs when needed, and keep generated output in sync.
 4. Run the local validation commands before opening a pull request.

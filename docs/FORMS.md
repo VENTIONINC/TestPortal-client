@@ -152,3 +152,8 @@ Use utility functions (like `extractApiError`) to transform backend errors into 
 ---
 
 This architecture ensures that as the project grows, our forms remain maintainable, type-safe, and easy to test. 🚀
+
+
+### Test Scenario fields
+
+Scenario create, edit and read-only details show **Scenario fields**, **Test setup**, then ordered steps. Scenario fields retain Details and add optional Priority (Low, Medium, High, or Unset) and Related issue URL (absolute HTTP(S)). Test setup contains Preconditions and Test data. Scenario-level Objective, Expected result and Notes were removed; expected results on individual steps remain available. Authoring still requires an explicit save. Empty metadata is omitted on create and sent as null when explicitly cleared on edit; omitted PATCH values are preserved. Read-only details open valid issue links with a protected external link. These fields do not add columns to scenario, suite or manual-run tables.

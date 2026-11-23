@@ -20,12 +20,13 @@ import { extractApiError } from '@/utils/apiErrors';
 import { filterConfig } from '../configs';
 import { DashboardExportSelect, type DashboardExportMode } from './DashboardExportSelect';
 import { DashboardGrid } from './DashboardGrid';
+import { getDashboardDateRange } from '../utils/period';
 
 const DEFAULT_PERIOD = '1';
 
 const initialDashboardFilters: Record<string, string> = {
   type: 'all',
-  period: '',
+  period: DEFAULT_PERIOD,
 };
 
 const formatLocalDate = (date: Date) => {
@@ -62,8 +63,20 @@ const buildDashboardPdfExportRequest = ({
   const parsedPeriod = Number.parseInt(period, 10);
   const periodDays =
     Number.isFinite(parsedPeriod) && parsedPeriod > 0 ? parsedPeriod : Number.parseInt(DEFAULT_PERIOD, 10);
+  const dateRange = getDashboardDateRange(period);
   const periodEnd = new Date();
   const periodStart = new Date(periodEnd);
+
+  if (dateRange) {
+    return {
+      project: projectId,
+      executionType,
+      periodStart: dateRange.dateFrom,
+      periodEnd: dateRange.dateTo,
+      granularity: 'daily',
+      includeAiInsights,
+    };
+  }
 
   periodStart.setDate(periodEnd.getDate() - Math.max(periodDays - 1, 0));
 
@@ -135,10 +148,11 @@ const DashboardContent = () => {
     [areExecutionTypesLoading, executionTypeOptions],
   );
 
-  // Fetch dashboard data for the last 30 days
+  const dateRange = getDashboardDateRange(period);
   const { data, isLoading, error } = useGetApiV2ProjectsByProjectIdDashboardQuery({
     projectId: selectedProjectId,
-    period,
+    period: dateRange ? DEFAULT_PERIOD : period,
+    ...dateRange,
     ...(effectiveType !== 'all' && { type: effectiveType }),
   });
 

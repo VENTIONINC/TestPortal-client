@@ -13,6 +13,7 @@ describe('NavigationMenu', () => {
     ['Dashboard', '/dashboard'],
     ['Results', '/results'],
     ['Issues', '/issues'],
+    ['Test Management', '/test-management'],
     ['Prompts', '/prompts'],
     ['Skills', '/skills'],
     ['Settings', '/settings'],
@@ -26,5 +27,44 @@ describe('NavigationMenu', () => {
     );
 
     expect(screen.getByRole('link', { name: label })).toHaveAttribute('href', path);
+  });
+
+  it('marks Test Management active on its route', () => {
+    render(
+      <ChakraProvider>
+        <MemoryRouter initialEntries={['/test-management']}>
+          <NavigationMenu collapsed={false} />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Test Management' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('places Test Management directly below Dashboard', () => {
+    render(
+      <ChakraProvider>
+        <MemoryRouter>
+          <NavigationMenu collapsed={false} />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
+
+    expect(screen.getAllByRole('link').slice(0, 2).map((link) => link.textContent?.trim())).toEqual([
+      'Dashboard',
+      'Test Management',
+    ]);
+  });
+
+  it('marks Test Management active on the legacy manual runs route', () => {
+    render(
+      <ChakraProvider>
+        <MemoryRouter initialEntries={['/manual-test-runs']}>
+          <NavigationMenu collapsed={false} />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Test Management' })).toHaveAttribute('aria-current', 'page');
   });
 });

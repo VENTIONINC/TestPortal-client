@@ -120,6 +120,47 @@ describe('DashboardContainer', () => {
     expect(mockedDashboardQuery).toHaveBeenCalledWith({ projectId: 'project-123', period: '14' });
   });
 
+  it('defaults to Today and requests the current calendar day', () => {
+    filterState.current = { type: 'all', period: '' };
+    render(<DashboardContainer />);
+
+    expect(mockedDashboardQuery).toHaveBeenCalledWith({
+      projectId: 'project-123',
+      period: '1',
+      dateFrom: '2026-08-07',
+      dateTo: '2026-08-07',
+    });
+  });
+
+  it('requests only yesterday for the Yesterday filter', () => {
+    filterState.current = { type: 'all', period: 'yesterday' };
+    render(<DashboardContainer />);
+
+    expect(mockedDashboardQuery).toHaveBeenCalledWith({
+      projectId: 'project-123',
+      period: '1',
+      dateFrom: '2026-08-06',
+      dateTo: '2026-08-06',
+    });
+  });
+
+  it('exports the selected Yesterday calendar day', async () => {
+    filterState.current = { type: 'all', period: 'yesterday' };
+    render(<DashboardContainer />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Export with AI' }));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(exportDashboardPdf).toHaveBeenCalledWith({
+      pdfExportRequest: expect.objectContaining({
+        periodStart: '2026-08-06',
+        periodEnd: '2026-08-06',
+        granularity: 'daily',
+      }),
+    });
+  });
+
   it('uses the exact selected execution type for dashboard data and PDF export', async () => {
     filterState.current = { type: 'Custom Release', period: '14' };
     render(<DashboardContainer />);

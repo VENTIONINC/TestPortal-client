@@ -137,7 +137,7 @@ export const ContextMenu = () => {
           p={1}
           data-testid="context-menu"
         >
-          {options.map(({ title, subTitle, onClick, disabled, icon: Icon, divider }, index) => {
+          {options.map(({ title, subTitle, onClick, disabled, icon: Icon, divider, iconAtStart, destructive }, index) => {
             const isClickable = !!onClick && !disabled;
 
             return (
@@ -176,11 +176,16 @@ export const ContextMenu = () => {
                   tabIndex={disabled ? -1 : 0}
                 >
                   <HStack justify="space-between" w="full" gap={3}>
+                    {Icon && iconAtStart && (
+                      <Box flexShrink={0} color={disabled ? disabledTextColor : destructive ? "fg.error" : textColor}>
+                        <Icon size={16} />
+                      </Box>
+                    )}
                     <Box flex={1} textAlign="left">
                       <Text
                         fontSize="sm"
                         fontWeight="medium"
-                        color={disabled ? disabledTextColor : textColor}
+                        color={disabled ? disabledTextColor : destructive ? "fg.error" : textColor}
                         lineHeight="tight"
                       >
                         {title}
@@ -191,7 +196,7 @@ export const ContextMenu = () => {
                         </Text>
                       )}
                     </Box>
-                    {Icon && (
+                    {Icon && !iconAtStart && (
                       <Box flexShrink={0} color={disabled ? disabledTextColor : secondaryTextColor}>
                         <Icon size={16} />
                       </Box>

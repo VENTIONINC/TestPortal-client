@@ -14,6 +14,8 @@ interface ContextMenuOption {
   disabled?: boolean;
   icon?: ElementType;
   divider?: boolean;
+  iconAtStart?: boolean;
+  destructive?: boolean;
 }
 
 interface ContextMenuState {
@@ -59,7 +61,7 @@ const getPosition = (evt: MouseEvent) => {
     };
   }
 
-  const target = evt.target as Element;
+  const target = evt.currentTarget as Element;
   const { top, right, height } = target.getBoundingClientRect();
 
   return {
