@@ -17,10 +17,7 @@ export const TagList = ({
 }: TagListProps) => {
   const selectedTags = availableTags.filter((tag) => tagsValue.includes(tag));
   const unselectedTags = availableTags.filter((tag) => !tagsValue.includes(tag));
-  const collapsedTags = [
-    ...selectedTags,
-    ...unselectedTags.slice(0, Math.max(0, 5 - selectedTags.length)),
-  ];
+  const collapsedTags = [...selectedTags, ...unselectedTags.slice(0, Math.max(0, 5 - selectedTags.length))];
   const hasMoreTags = collapsedTags.length < availableTags.length;
   const visibleTags = isExpanded ? availableTags : collapsedTags;
   const hiddenTagsCount = availableTags.length - collapsedTags.length;

@@ -41,10 +41,7 @@ export const SearchableFilter = ({ label, value, options, onChange }: Searchable
   };
 
   return (
-    <Popover.Root
-      open={open}
-      onOpenChange={handleOpenChange}
-    >
+    <Popover.Root open={open} onOpenChange={handleOpenChange}>
       <Popover.Trigger asChild>
         <Button
           variant="outline"
@@ -117,11 +114,7 @@ export const SearchableFilter = ({ label, value, options, onChange }: Searchable
               </VStack>
             </Popover.Body>
             <HStack justify="space-between" p={2} borderTopWidth="1px" borderColor="border.main">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleClear}
-              >
+              <Button size="sm" variant="ghost" onClick={handleClear}>
                 Clear
               </Button>
               <Button size="sm" variant="primary" onClick={close}>

@@ -28,8 +28,10 @@ export const EditManualRunDetailsDialog = ({
   const [name, setName] = useState(runTitle);
   const [selectedIds, setSelectedIds] = useState(() => existing.map((scenario) => scenario.sourceScenarioId));
   const [environment, setEnvironment] = useState(environmentProperties);
-  const { saving, saveBlocked, error, removedResults, clearRemovalWarning, save } =
-    useManualRunDetailsSave({ projectId, runId, getRun, mutate }, closeDialog);
+  const { saving, saveBlocked, error, removedResults, clearRemovalWarning, save } = useManualRunDetailsSave(
+    { projectId, runId, getRun, mutate },
+    closeDialog,
+  );
 
   const handleSelectionChange = (ids: string[]) => {
     setSelectedIds(ids);

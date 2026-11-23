@@ -48,8 +48,8 @@ export const SkillPackageDialog = ({ mode, skill, closeDialog }: SkillPackageDia
   } = useForm<SkillPackageFormData>({
     resolver: zodResolver(skillPackageSchema),
     defaultValues: {
-      title: isReplace ? skill?.title ?? '' : '',
-      category: isReplace ? skill?.category ?? '' : '',
+      title: isReplace ? (skill?.title ?? '') : '',
+      category: isReplace ? (skill?.category ?? '') : '',
     },
   });
   const selectedFile = fileUpload.acceptedFiles[0];
@@ -83,9 +83,7 @@ export const SkillPackageDialog = ({ mode, skill, closeDialog }: SkillPackageDia
       closeDialog();
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : extractApiError(error as FetchBaseQueryError | SerializedError);
+        error instanceof Error ? error.message : extractApiError(error as FetchBaseQueryError | SerializedError);
       setApiError(message);
       toaster.create({ title: message, type: 'error' });
     }
@@ -107,19 +105,8 @@ export const SkillPackageDialog = ({ mode, skill, closeDialog }: SkillPackageDia
                 : 'Upload one ZIP package containing SKILL.md. Name, description, Markdown, and bundled resources are read from the package.'}
             </Text>
 
-            <Input
-              {...register('title')}
-              label="Title"
-              error={errors.title?.message}
-              disabled={isPending}
-              autoFocus
-            />
-            <Input
-              {...register('category')}
-              label="Category"
-              error={errors.category?.message}
-              disabled={isPending}
-            />
+            <Input {...register('title')} label="Title" error={errors.title?.message} disabled={isPending} autoFocus />
+            <Input {...register('category')} label="Category" error={errors.category?.message} disabled={isPending} />
 
             <VStack align="stretch" gap={2}>
               <Text fontSize="sm" fontWeight="medium">
@@ -172,7 +159,12 @@ export const SkillPackageDialog = ({ mode, skill, closeDialog }: SkillPackageDia
           <Button type="button" variant="outline" onClick={closeDialog} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" loading={isPending || isSubmitting} disabled={isPending || isSubmitting}>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={isPending || isSubmitting}
+            disabled={isPending || isSubmitting}
+          >
             {isReplace ? 'Replace skill' : 'Create skill'}
           </Button>
         </DialogFooter>

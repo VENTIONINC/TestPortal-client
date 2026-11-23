@@ -3,7 +3,6 @@
 
 import { z } from 'zod';
 
-
 export * from './result-analysis-schemas';
 export * from './authSchemas';
 export * from './skillPackageSchemas';

@@ -7,7 +7,9 @@ const listeners = new Set<() => void>();
 const key = (projectId: string, runId: string) => JSON.stringify([projectId, runId]);
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
-  return () => { listeners.delete(listener); };
+  return () => {
+    listeners.delete(listener);
+  };
 };
 const notify = () => listeners.forEach((listener) => listener());
 
@@ -21,6 +23,7 @@ export const unlockRunRecovery = (projectId: string, runId: string) => {
   notify();
 };
 export const isRunRecoveryLocked = (projectId: string, runId: string) => lockedRuns.has(key(projectId, runId));
-export const wasRunChangeRejected = (projectId: string, runId: string) => lockedRuns.get(key(projectId, runId)) === true;
+export const wasRunChangeRejected = (projectId: string, runId: string) =>
+  lockedRuns.get(key(projectId, runId)) === true;
 export const useRunRecoveryLocked = (projectId: string, runId: string) =>
   useSyncExternalStore(subscribe, () => isRunRecoveryLocked(projectId, runId));

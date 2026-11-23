@@ -90,9 +90,7 @@ export const ResultSpecSection = memo(
         onVisibleResultIdsChange(
           spec.key,
           getVisibleResultIds(
-            sectionDays.map((day) =>
-              day.yyyy_mm_dd === yyyy_mm_dd ? { ...day, isVisible: !day.isVisible } : day,
-            ),
+            sectionDays.map((day) => (day.yyyy_mm_dd === yyyy_mm_dd ? { ...day, isVisible: !day.isVisible } : day)),
           ),
         );
       }

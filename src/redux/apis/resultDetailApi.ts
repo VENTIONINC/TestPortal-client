@@ -5,10 +5,7 @@ export const resultDetailApi = generatedResultDetailApi.enhanceEndpoints({
   addTagTypes: ['ResultSpecCoverage'],
   endpoints: {
     getResultDetailWithRelatedScenarios: {
-      providesTags: (_result, _error, arg) => [
-        'Results',
-        resultSpecCoverageTag(arg.projectId),
-      ],
+      providesTags: (_result, _error, arg) => ['Results', resultSpecCoverageTag(arg.projectId)],
     },
   },
 });
@@ -20,7 +17,5 @@ export type {
   ResultDetail,
 } from './generatedResultDetailApi';
 
-export const {
-  useGetResultDetailWithRelatedScenariosQuery,
-  useLazyGetResultDetailWithRelatedScenariosQuery,
-} = resultDetailApi;
+export const { useGetResultDetailWithRelatedScenariosQuery, useLazyGetResultDetailWithRelatedScenariosQuery } =
+  resultDetailApi;

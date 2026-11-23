@@ -184,7 +184,9 @@ describe('generated Test Scenario cache behavior', () => {
   it('invalidates scoped author counts when the project catalog changes', async () => {
     const args = { projectId: 'project-1', folderId: 'folder-1' };
     await store.dispatch(generatedApi.util.upsertQueryData('getApiV2TestScenariosAuthors', args, { authors: [] }));
-    const affected = extendedApi.util.selectInvalidatedBy(store.getState(), [{ type: 'ScenarioCatalog', id: 'project-1' }]);
+    const affected = extendedApi.util.selectInvalidatedBy(store.getState(), [
+      { type: 'ScenarioCatalog', id: 'project-1' },
+    ]);
     expect(affected.some((entry) => entry.endpointName === 'getApiV2TestScenariosAuthors')).toBe(true);
   });
 
@@ -379,12 +381,25 @@ describe('scenario aggregate transport safety', () => {
       if (request.url.includes('test-suites')) suiteRequests += 1;
       return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } });
     });
-    const folders = store.dispatch(extendedApi.endpoints.getApiV2TestScenarioFolders.initiate({ projectId: 'project-1' }));
+    const folders = store.dispatch(
+      extendedApi.endpoints.getApiV2TestScenarioFolders.initiate({ projectId: 'project-1' }),
+    );
     const suites = store.dispatch(extendedApi.endpoints.getApiV2TestSuites.initiate({ projectId: 'project-1' }));
     await Promise.all([folders.unwrap(), suites.unwrap()]);
-    await store.dispatch(extendedApi.endpoints.deleteApiV2TestScenariosByScenarioId.initiate({ projectId: 'project-1', scenarioId: 'scenario-1' })).unwrap();
-    await vi.waitFor(() => { expect(folderRequests).toBe(2); expect(suiteRequests).toBe(2); });
-    folders.unsubscribe(); suites.unsubscribe();
+    await store
+      .dispatch(
+        extendedApi.endpoints.deleteApiV2TestScenariosByScenarioId.initiate({
+          projectId: 'project-1',
+          scenarioId: 'scenario-1',
+        }),
+      )
+      .unwrap();
+    await vi.waitFor(() => {
+      expect(folderRequests).toBe(2);
+      expect(suiteRequests).toBe(2);
+    });
+    folders.unsubscribe();
+    suites.unsubscribe();
   });
   it.each(['create', 'edit'])('does not automatically retry an uncertain %s', async (operation) => {
     vi.useFakeTimers();
@@ -425,12 +440,27 @@ describe('manual run transport safety', () => {
     vi.useFakeTimers();
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Network response lost'));
     try {
-      const pending = operation === 'create'
-        ? store.dispatch(generatedApi.endpoints.postApiV2ManualTestRuns.initiate({ projectId: 'project-1', manualTestRunCreateRequest: { title: 'Run', scenarioIds: ['scenario-1'] } }))
-        : store.dispatch(generatedApi.endpoints.patchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdEvidence.initiate({ projectId: 'project-1', runId: 'run-1', scenarioId: 'scenario-1', manualTestRunScenarioEvidenceRequest: { executionComment: 'note' } }));
+      const pending =
+        operation === 'create'
+          ? store.dispatch(
+              generatedApi.endpoints.postApiV2ManualTestRuns.initiate({
+                projectId: 'project-1',
+                manualTestRunCreateRequest: { title: 'Run', scenarioIds: ['scenario-1'] },
+              }),
+            )
+          : store.dispatch(
+              generatedApi.endpoints.patchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdEvidence.initiate({
+                projectId: 'project-1',
+                runId: 'run-1',
+                scenarioId: 'scenario-1',
+                manualTestRunScenarioEvidenceRequest: { executionComment: 'note' },
+              }),
+            );
       await vi.runAllTimersAsync();
       expect(await pending).toHaveProperty('error');
       expect(fetchMock).toHaveBeenCalledOnce();
-    } finally { vi.useRealTimers(); }
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

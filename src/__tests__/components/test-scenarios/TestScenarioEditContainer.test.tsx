@@ -101,7 +101,9 @@ describe('TestScenarioEditContainer', () => {
     state.search = '?originProject=project-1&originKind=suite&originId=suite-1';
     setup();
     await userEvent.setup().click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1');
+    expect(navigate).toHaveBeenCalledWith(
+      '/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1',
+    );
   });
   it('does not save a staged new suite when cancelling', async () => {
     const user = userEvent.setup();
@@ -157,7 +159,11 @@ describe('TestScenarioEditContainer', () => {
     setup();
     change('Title', 'Changed');
     save();
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1'));
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith(
+        '/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1',
+      ),
+    );
   });
   it('does not write when unchanged', async () => {
     setup();

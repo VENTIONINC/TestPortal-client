@@ -18,8 +18,21 @@ vi.mock('@/components/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/components/ui')>();
   return {
     ...actual,
-    Tooltip: ({ children, content, openDelay, disabled }: { children: ReactNode; content: ReactNode; openDelay?: number; disabled?: boolean }) => (
-      <span data-tooltip-content={disabled ? undefined : content} data-tooltip-open-delay={disabled ? undefined : openDelay}>
+    Tooltip: ({
+      children,
+      content,
+      openDelay,
+      disabled,
+    }: {
+      children: ReactNode;
+      content: ReactNode;
+      openDelay?: number;
+      disabled?: boolean;
+    }) => (
+      <span
+        data-tooltip-content={disabled ? undefined : content}
+        data-tooltip-open-delay={disabled ? undefined : openDelay}
+      >
         {children}
       </span>
     ),
@@ -27,8 +40,23 @@ vi.mock('@/components/ui', async (importOriginal) => {
 });
 
 vi.mock('@/components/test-scenarios/components/SuitePicker', () => ({
-  SuitePicker: ({ onComplete, selectedIds }: { onComplete: (report: { succeededIds: string[]; failedIds: string[]; unattemptedIds: string[]; uncertainIds: string[] }, ids: string[]) => void; selectedIds: string[] }) => (
-    <button onClick={() => onComplete({ succeededIds: selectedIds, failedIds: [], unattemptedIds: [], uncertainIds: [] }, selectedIds)}>Add to suite</button>
+  SuitePicker: ({
+    onComplete,
+    selectedIds,
+  }: {
+    onComplete: (
+      report: { succeededIds: string[]; failedIds: string[]; unattemptedIds: string[]; uncertainIds: string[] },
+      ids: string[],
+    ) => void;
+    selectedIds: string[];
+  }) => (
+    <button
+      onClick={() =>
+        onComplete({ succeededIds: selectedIds, failedIds: [], unattemptedIds: [], uncertainIds: [] }, selectedIds)
+      }
+    >
+      Add to suite
+    </button>
   ),
 }));
 
@@ -101,9 +129,25 @@ const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination
   onSuiteOperationStart: vi.fn(),
   onSuiteOperationComplete: vi.fn(),
   onDeleteSelected: vi.fn(async () => ({ succeededIds: [], failedIds: [], unattemptedIds: [], uncertainIds: [] })),
-  removeSuiteMembership: vi.fn(async () => ({ restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [] }, expectedMembershipRevision: 1, expectedScenarioIds: [] })),
+  removeSuiteMembership: vi.fn(async () => ({
+    restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [] },
+    expectedMembershipRevision: 1,
+    expectedScenarioIds: [],
+  })),
   restoreSuiteMembership: vi.fn(async () => {}),
-  moveSuiteMembership: vi.fn(async () => ({ restoreData: { sourceSuiteId: 'suite-1', destinationSuiteId: 'suite-2', sourceMembers: [], destinationAddedScenarioIds: [] }, expectedSourceMembershipRevision: 1, expectedDestinationMembershipRevision: 1, expectedSourceScenarioIds: [], expectedDestinationScenarioIds: [], alreadyInDestination: [] })),
+  moveSuiteMembership: vi.fn(async () => ({
+    restoreData: {
+      sourceSuiteId: 'suite-1',
+      destinationSuiteId: 'suite-2',
+      sourceMembers: [],
+      destinationAddedScenarioIds: [],
+    },
+    expectedSourceMembershipRevision: 1,
+    expectedDestinationMembershipRevision: 1,
+    expectedSourceScenarioIds: [],
+    expectedDestinationScenarioIds: [],
+    alreadyInDestination: [],
+  })),
   restoreSuiteMove: vi.fn(async () => {}),
   refreshSuiteData: vi.fn(async () => {}),
   onReorderSuite: vi.fn(async () => {}),
@@ -128,29 +172,64 @@ const catalogView = (props: Partial<TestScenarioCatalogViewProps>) => (
   />
 );
 
-const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) => renderWithCatalogProviders(catalogView(props));
+const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) =>
+  renderWithCatalogProviders(catalogView(props));
 
 describe('TestScenarioCatalogView', () => {
   it('includes the selected folder as the scenario origin', () => {
     renderView({ projectId: 'project-1', organizationTab: 'scenarios', scope: { kind: 'folder', id: 'folder-1' } });
-    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1?originProject=project-1&originKind=folder&originId=folder-1');
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute(
+      'href',
+      '/test-scenarios/scenario-1?originProject=project-1&originKind=folder&originId=folder-1',
+    );
   });
   it('includes the selected suite as the scenario origin', () => {
-    renderView({ projectId: 'project-1', organizationTab: 'suites', scope: { kind: 'suite', id: 'suite-a' }, suites: [{ id: 'suite-a', name: 'Smoke', description: null, purpose: null, release: null, membershipRevision: 0, members: [{ testScenarioId: 'scenario-1' }] }] });
-    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-a');
+    renderView({
+      projectId: 'project-1',
+      organizationTab: 'suites',
+      scope: { kind: 'suite', id: 'suite-a' },
+      suites: [
+        {
+          id: 'suite-a',
+          name: 'Smoke',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 0,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+      ],
+    });
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute(
+      'href',
+      '/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-a',
+    );
   });
   it('opens the selected scenario row actions', async () => {
     const onScenarioActions = vi.fn();
     renderView({ organizationTab: 'scenarios', onScenarioActions });
     await userEvent.setup().click(screen.getByRole('button', { name: 'Actions for Checkout flow' }));
-    expect(onScenarioActions).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: 'scenario-1', title: 'Checkout flow' }));
+    expect(onScenarioActions).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: 'scenario-1', title: 'Checkout flow' }),
+    );
   });
   it('disables Run suite for an empty suite and provides its delayed tooltip', async () => {
     const user = userEvent.setup();
     renderView({
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-empty' },
-      suites: [{ id: 'suite-empty', name: 'Empty suite', description: null, purpose: null, release: null, membershipRevision: 0, members: [] }],
+      suites: [
+        {
+          id: 'suite-empty',
+          name: 'Empty suite',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 0,
+          members: [],
+        },
+      ],
     });
 
     const runSuite = screen.getByRole('button', { name: 'Run suite' });
@@ -169,7 +248,17 @@ describe('TestScenarioCatalogView', () => {
     renderView({
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-populated' },
-      suites: [{ id: 'suite-populated', name: 'Populated suite', description: null, purpose: null, release: null, membershipRevision: 0, members: [{ testScenarioId: 'scenario-1' }] }],
+      suites: [
+        {
+          id: 'suite-populated',
+          name: 'Populated suite',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 0,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+      ],
       onRunSuite,
     });
 
@@ -186,7 +275,9 @@ describe('TestScenarioCatalogView', () => {
     const onScopeChange = vi.fn();
     renderView({
       organizationTab: 'suites',
-      suites: [{ id: 'suite-old', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0 }],
+      suites: [
+        { id: 'suite-old', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0 },
+      ],
       onCreateSuite,
       onScopeChange,
     });
@@ -216,7 +307,16 @@ describe('TestScenarioCatalogView', () => {
   it('shows folders and No folder last without suite navigation in Scenarios', () => {
     renderView({
       organizationTab: 'scenarios',
-      suites: [{ id: 'suite-1', name: 'Release checks', description: null, purpose: null, release: null, membershipRevision: 0 }],
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Release checks',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 0,
+        },
+      ],
     });
 
     expect(screen.getByRole('button', { name: /No folder/ })).toBeInTheDocument();
@@ -225,35 +325,69 @@ describe('TestScenarioCatalogView', () => {
   });
 
   it('keeps folder move Undo available after ten seconds', async () => {
-    const restoreData = [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }];
+    const restoreData = [
+      { scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 },
+    ];
     renderView({
       folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }],
-      onMoveScenarioIds: vi.fn(async () => ({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [], folderRestoreData: restoreData })),
+      onMoveScenarioIds: vi.fn(async () => ({
+        succeededIds: ['scenario-1'],
+        failedIds: [],
+        unattemptedIds: [],
+        uncertainIds: [],
+        folderRestoreData: restoreData,
+      })),
     });
-    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    const dataTransfer = {
+      setData: vi.fn(),
+      effectAllowed: '',
+      types: ['application/x-testportal-scenarios'],
+      getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }),
+    };
     vi.useFakeTimers();
     try {
       fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
-      await act(async () => { fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer }); });
+      await act(async () => {
+        fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer });
+      });
       expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
-      act(() => { vi.advanceTimersByTime(9999); });
+      act(() => {
+        vi.advanceTimersByTime(9999);
+      });
       expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
-      act(() => { vi.advanceTimersByTime(1); });
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
       expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
-    } finally { vi.useRealTimers(); }
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('undoes a folder row move through the revision guarded restoration data', async () => {
     const user = userEvent.setup();
-    const restoreData = [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }];
-    const onMoveScenarioIds = vi.fn(async () => ({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [], folderRestoreData: restoreData }));
+    const restoreData = [
+      { scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 },
+    ];
+    const onMoveScenarioIds = vi.fn(async () => ({
+      succeededIds: ['scenario-1'],
+      failedIds: [],
+      unattemptedIds: [],
+      uncertainIds: [],
+      folderRestoreData: restoreData,
+    }));
     const restoreScenarioFolders = vi.fn(async () => {});
     renderView({
       folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }],
       onMoveScenarioIds,
       restoreScenarioFolders,
     });
-    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    const dataTransfer = {
+      setData: vi.fn(),
+      effectAllowed: '',
+      types: ['application/x-testportal-scenarios'],
+      getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }),
+    };
     fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
     fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer });
     await waitFor(() => expect(onMoveScenarioIds).toHaveBeenCalledWith(['scenario-1'], 'folder-1'));
@@ -264,14 +398,27 @@ describe('TestScenarioCatalogView', () => {
 
   it('offers undo for successful batches when a later folder move batch fails', async () => {
     const user = userEvent.setup();
-    const restoreData = [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }];
+    const restoreData = [
+      { scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 },
+    ];
     const restoreScenarioFolders = vi.fn(async () => {});
     renderView({
       folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }],
-      onMoveScenarioIds: vi.fn(async () => ({ succeededIds: ['scenario-1'], failedIds: ['scenario-2'], unattemptedIds: [], uncertainIds: [], folderRestoreData: restoreData })),
+      onMoveScenarioIds: vi.fn(async () => ({
+        succeededIds: ['scenario-1'],
+        failedIds: ['scenario-2'],
+        unattemptedIds: [],
+        uncertainIds: [],
+        folderRestoreData: restoreData,
+      })),
       restoreScenarioFolders,
     });
-    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    const dataTransfer = {
+      setData: vi.fn(),
+      effectAllowed: '',
+      types: ['application/x-testportal-scenarios'],
+      getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }),
+    };
     fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
     fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer });
     await user.click(await screen.findByRole('button', { name: 'Undo' }));
@@ -279,22 +426,77 @@ describe('TestScenarioCatalogView', () => {
   });
 
   it('clears folder undo when switching projects, including a move still in flight', async () => {
-    let finishMove!: (value: { succeededIds: string[]; failedIds: string[]; unattemptedIds: string[]; uncertainIds: string[]; folderRestoreData: { scenarioId: string; folderId: null; expectedFolderId: string; expectedRevision: number }[] }) => void;
-    const onMoveScenarioIds = vi.fn(() => new Promise<Parameters<typeof finishMove>[0]>((resolve) => { finishMove = resolve; }));
-    const props = { ...defaultProps, scenarios, pagination, isLoading: false, onPageChange: vi.fn(), folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }], onMoveScenarioIds };
+    let finishMove!: (value: {
+      succeededIds: string[];
+      failedIds: string[];
+      unattemptedIds: string[];
+      uncertainIds: string[];
+      folderRestoreData: { scenarioId: string; folderId: null; expectedFolderId: string; expectedRevision: number }[];
+    }) => void;
+    const onMoveScenarioIds = vi.fn(
+      () =>
+        new Promise<Parameters<typeof finishMove>[0]>((resolve) => {
+          finishMove = resolve;
+        }),
+    );
+    const props = {
+      ...defaultProps,
+      scenarios,
+      pagination,
+      isLoading: false,
+      onPageChange: vi.fn(),
+      folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }],
+      onMoveScenarioIds,
+    };
     const view = renderWithCatalogProviders(<TestScenarioCatalogView {...props} />);
-    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    const dataTransfer = {
+      setData: vi.fn(),
+      effectAllowed: '',
+      types: ['application/x-testportal-scenarios'],
+      getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }),
+    };
     fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
     fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer });
     view.rerender(<TestScenarioCatalogView {...props} projectId="project-2" />);
-    await act(async () => finishMove({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [], folderRestoreData: [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }] }));
+    await act(async () =>
+      finishMove({
+        succeededIds: ['scenario-1'],
+        failedIds: [],
+        unattemptedIds: [],
+        uncertainIds: [],
+        folderRestoreData: [
+          { scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 },
+        ],
+      }),
+    );
     expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
   });
 
   it('clears an existing folder undo on project switch', async () => {
-    const props = { ...defaultProps, scenarios, pagination, isLoading: false, onPageChange: vi.fn(), folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }], onMoveScenarioIds: vi.fn(async () => ({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [], folderRestoreData: [{ scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 }] })) };
+    const props = {
+      ...defaultProps,
+      scenarios,
+      pagination,
+      isLoading: false,
+      onPageChange: vi.fn(),
+      folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 0 }],
+      onMoveScenarioIds: vi.fn(async () => ({
+        succeededIds: ['scenario-1'],
+        failedIds: [],
+        unattemptedIds: [],
+        uncertainIds: [],
+        folderRestoreData: [
+          { scenarioId: 'scenario-1', folderId: null, expectedFolderId: 'folder-1', expectedRevision: 3 },
+        ],
+      })),
+    };
     const view = renderWithCatalogProviders(<TestScenarioCatalogView {...props} />);
-    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    const dataTransfer = {
+      setData: vi.fn(),
+      effectAllowed: '',
+      types: ['application/x-testportal-scenarios'],
+      getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }),
+    };
     fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to a folder' }), { dataTransfer });
     fireEvent.drop(screen.getByRole('button', { name: 'Authentication 0' }), { dataTransfer });
     expect(await screen.findByRole('button', { name: 'Undo' })).toBeInTheDocument();
@@ -366,11 +568,23 @@ describe('TestScenarioCatalogView', () => {
     const user = userEvent.setup();
     renderView({
       scope: { kind: 'folder', id: 'level-3' },
-      folders: [{ id: 'level-1', name: 'One', parentId: null, scenarioCount: 0, children: [
-        { id: 'level-2', name: 'Two', parentId: 'level-1', scenarioCount: 0, children: [
-          { id: 'level-3', name: 'Three', parentId: 'level-2', scenarioCount: 0, children: [] },
-        ] },
-      ] }],
+      folders: [
+        {
+          id: 'level-1',
+          name: 'One',
+          parentId: null,
+          scenarioCount: 0,
+          children: [
+            {
+              id: 'level-2',
+              name: 'Two',
+              parentId: 'level-1',
+              scenarioCount: 0,
+              children: [{ id: 'level-3', name: 'Three', parentId: 'level-2', scenarioCount: 0, children: [] }],
+            },
+          ],
+        },
+      ],
     });
     await user.click(screen.getByRole('button', { name: 'Folder actions' }));
     expect(screen.queryByRole('menuitem', { name: 'New subfolder' })).not.toBeInTheDocument();
@@ -418,7 +632,16 @@ describe('TestScenarioCatalogView', () => {
       organizationTab: 'suites',
       scope: { kind: 'suite' },
       folders: [{ id: 'folder-1', name: 'Smoke', parentId: null, scenarioCount: 1 }],
-      suites: [{ id: 'suite-1', name: 'Release checks', description: null, purpose: null, release: null, membershipRevision: 0 }],
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Release checks',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 0,
+        },
+      ],
     });
 
     expect(screen.getByText('Suites')).toBeInTheDocument();
@@ -474,7 +697,10 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByText('9/2/2026')).toBeInTheDocument();
     expect(screen.queryByText('9/1/2026')).not.toBeInTheDocument();
     expect(screen.queryByText('# Checkout flow')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1?originProject=project-1&originKind=all');
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute(
+      'href',
+      '/test-scenarios/scenario-1?originProject=project-1&originKind=all',
+    );
     expect(screen.queryByRole('button', { name: 'Actions for Checkout flow' })).not.toBeInTheDocument();
   });
 
@@ -482,15 +708,17 @@ describe('TestScenarioCatalogView', () => {
     renderView({
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-1' },
-      suites: [{
-        id: 'suite-1',
-        name: 'Regression',
-        description: null,
-        purpose: null,
-        release: null,
-        membershipRevision: 1,
-        members: [{ testScenarioId: 'scenario-1' }],
-      }],
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Regression',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 1,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+      ],
     });
 
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
@@ -689,7 +917,10 @@ describe('TestScenarioCatalogView', () => {
     renderView({
       selectedIds: ['scenario-1', 'scenario-2', 'scenario-3'],
       onDeleteSelected: vi.fn(async () => ({
-        succeededIds: ['scenario-1'], failedIds: ['scenario-2'], unattemptedIds: ['scenario-3'], uncertainIds: [],
+        succeededIds: ['scenario-1'],
+        failedIds: ['scenario-2'],
+        unattemptedIds: ['scenario-3'],
+        uncertainIds: [],
         errorMessage: 'Permission denied',
       })),
     });
@@ -703,7 +934,10 @@ describe('TestScenarioCatalogView', () => {
   it('dismisses an unconfirmed bulk delete when the project changes', async () => {
     const user = userEvent.setup();
     const onDeleteSelected = vi.fn(async (ids: string[]) => ({
-      succeededIds: ids, failedIds: [], unattemptedIds: [], uncertainIds: [],
+      succeededIds: ids,
+      failedIds: [],
+      unattemptedIds: [],
+      uncertainIds: [],
     }));
     const props = { selectedIds: ['scenario-1'], onDeleteSelected };
     const view = renderView(props);
@@ -771,13 +1005,20 @@ describe('TestScenarioCatalogView', () => {
       ],
     });
 
-    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1?originProject=project-1&originKind=all');
-    expect(screen.getByRole('link', { name: 'Refund flow' })).toHaveAttribute('href', '/test-scenarios/scenario-2?originProject=project-1&originKind=all');
+    expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute(
+      'href',
+      '/test-scenarios/scenario-1?originProject=project-1&originKind=all',
+    );
+    expect(screen.getByRole('link', { name: 'Refund flow' })).toHaveAttribute(
+      'href',
+      '/test-scenarios/scenario-2?originProject=project-1&originKind=all',
+    );
     expect(screen.getByText('Grace H.')).toBeInTheDocument();
     expect(screen.queryByText('grace@example.com')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Grace Hopper (grace@example.com)')).not.toBeInTheDocument();
     expect(screen.getByText('Grace H.').closest('[data-tooltip-content]')).toHaveAttribute(
-      'data-tooltip-content', 'Grace Hopper (grace@example.com)',
+      'data-tooltip-content',
+      'Grace Hopper (grace@example.com)',
     );
     expect(screen.queryAllByTestId('context-menu-button')).toHaveLength(0);
   });
@@ -796,7 +1037,16 @@ describe('TestScenarioCatalogView', () => {
   it('confirms whole-subtree deletion and sends scenarios to No folder', async () => {
     const user = userEvent.setup();
     const restoreData = {
-      folders: [{ id: 'folder-1', projectId: 'project-1', name: 'Authentication', description: null, parentId: null, position: 0 }],
+      folders: [
+        {
+          id: 'folder-1',
+          projectId: 'project-1',
+          name: 'Authentication',
+          description: null,
+          parentId: null,
+          position: 0,
+        },
+      ],
       scenarios: [{ scenarioId: 'scenario-1', folderId: 'folder-1', expectedRevision: 2 }],
     };
     const onDeleteFolder = vi.fn(async () => ({ deleted: true as const, restoreData }));
@@ -807,10 +1057,26 @@ describe('TestScenarioCatalogView', () => {
     renderView({
       folders: [
         {
-          id: 'folder-1', name: 'Authentication', parentId: null, position: 0, scenarioCount: 1,
+          id: 'folder-1',
+          name: 'Authentication',
+          parentId: null,
+          position: 0,
+          scenarioCount: 1,
           children: [
-            { id: 'child-1', name: 'Payments', parentId: 'folder-1', scenarioCount: 2, children: [{ id: 'child-3', name: 'Profile', parentId: 'child-1', scenarioCount: 1, children: [] }] },
-            { id: 'child-2', name: 'Promo codes', parentId: 'folder-1', scenarioCount: 3, children: [{ id: 'child-4', name: 'Cart', parentId: 'child-2', scenarioCount: 0, children: [] }] },
+            {
+              id: 'child-1',
+              name: 'Payments',
+              parentId: 'folder-1',
+              scenarioCount: 2,
+              children: [{ id: 'child-3', name: 'Profile', parentId: 'child-1', scenarioCount: 1, children: [] }],
+            },
+            {
+              id: 'child-2',
+              name: 'Promo codes',
+              parentId: 'folder-1',
+              scenarioCount: 3,
+              children: [{ id: 'child-4', name: 'Cart', parentId: 'child-2', scenarioCount: 0, children: [] }],
+            },
           ],
         },
       ],
@@ -822,7 +1088,11 @@ describe('TestScenarioCatalogView', () => {
     await user.click(screen.getByRole('button', { name: 'Folder actions' }));
     await user.click(screen.getByRole('menuitem', { name: 'Delete folder' }));
     expect(screen.getByRole('heading', { name: 'Delete folder “Authentication”?' })).toBeInTheDocument();
-    expect(screen.getByText('Its 4 subfolders “Payments”, “Profile”, “Promo codes”, “Cart” will be deleted as well. All 7 scenarios from these folders will move to No folder. Scenarios are not deleted.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Its 4 subfolders “Payments”, “Profile”, “Promo codes”, “Cart” will be deleted as well. All 7 scenarios from these folders will move to No folder. Scenarios are not deleted.',
+      ),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Delete' }));
     expect(onDeleteFolder).toHaveBeenCalledWith('folder-1');
     expect(onScopeChange).toHaveBeenCalledWith({ kind: 'unfiled' });
@@ -834,9 +1104,12 @@ describe('TestScenarioCatalogView', () => {
     const user = userEvent.setup();
     const result = { deleted: true as const, restoreData: { folders: [], scenarios: [] } };
     let finishDelete!: () => void;
-    const onDeleteFolder = vi.fn(() => new Promise<typeof result>((resolve) => {
-      finishDelete = () => resolve(result);
-    }));
+    const onDeleteFolder = vi.fn(
+      () =>
+        new Promise<typeof result>((resolve) => {
+          finishDelete = () => resolve(result);
+        }),
+    );
     const onScopeChange = vi.fn();
     const props: Partial<TestScenarioCatalogViewProps> = {
       folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, scenarioCount: 1 }],
@@ -860,14 +1133,18 @@ describe('TestScenarioCatalogView', () => {
   it('explains that scenarios in a folder without children are not deleted', async () => {
     const user = userEvent.setup();
     renderView({
-      folders: [{ id: 'folder-1', name: 'Authentication', parentId: null, position: 0, scenarioCount: 5, children: [] }],
+      folders: [
+        { id: 'folder-1', name: 'Authentication', parentId: null, position: 0, scenarioCount: 5, children: [] },
+      ],
       scope: { kind: 'folder', id: 'folder-1' },
     });
 
     await user.click(screen.getByRole('button', { name: 'Folder actions' }));
     await user.click(screen.getByRole('menuitem', { name: 'Delete folder' }));
 
-    expect(screen.getByText('All 5 scenarios in this folder will move to No folder. Scenarios are not deleted.')).toBeInTheDocument();
+    expect(
+      screen.getByText('All 5 scenarios in this folder will move to No folder. Scenarios are not deleted.'),
+    ).toBeInTheDocument();
   });
 
   it('moves a suite row down when dropped on a later row', async () => {
@@ -876,10 +1153,32 @@ describe('TestScenarioCatalogView', () => {
       { suiteId: 'suite-1', testScenarioId: 'scenario-1', position: 0, createdAt: '' },
       { suiteId: 'suite-1', testScenarioId: 'scenario-2', position: 1, createdAt: '' },
     ];
-    renderView({ organizationTab: 'suites', scenarios: [scenarios[0], { ...scenarios[0], id: 'scenario-2', title: 'Second scenario' }], pagination: { ...pagination, total: 2 }, suites: [{ id: 'suite-1', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0, members }], scope: { kind: 'suite', id: 'suite-1' }, onReorderSuite });
+    renderView({
+      organizationTab: 'suites',
+      scenarios: [scenarios[0], { ...scenarios[0], id: 'scenario-2', title: 'Second scenario' }],
+      pagination: { ...pagination, total: 2 },
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Regression',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 0,
+          members,
+        },
+      ],
+      scope: { kind: 'suite', id: 'suite-1' },
+      onReorderSuite,
+    });
     const target = screen.getByTestId('test-scenario-scenario-2');
     vi.spyOn(target, 'getBoundingClientRect').mockReturnValue({ top: 100, bottom: 140, height: 40 } as DOMRect);
-    const dataTransfer = { setData: vi.fn(), effectAllowed: '', types: ['application/x-testportal-scenarios'], getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }) };
+    const dataTransfer = {
+      setData: vi.fn(),
+      effectAllowed: '',
+      types: ['application/x-testportal-scenarios'],
+      getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }),
+    };
     fireEvent.dragStart(screen.getByTestId('test-scenario-scenario-1'), { dataTransfer });
     fireEvent.drop(target, { dataTransfer, clientY: 135 });
     await waitFor(() => expect(onReorderSuite).toHaveBeenCalledWith('suite-1', ['scenario-2', 'scenario-1']));
@@ -897,7 +1196,17 @@ describe('TestScenarioCatalogView', () => {
       organizationTab: 'suites',
       scenarios: [scenarios[0], { ...scenarios[0], id: 'scenario-2', title: 'Second scenario' }],
       pagination: { ...pagination, total: 2 },
-      suites: [{ id: 'suite-1', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0, members }],
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Regression',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 0,
+          members,
+        },
+      ],
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
       onSuiteOperationComplete,
@@ -923,18 +1232,34 @@ describe('TestScenarioCatalogView', () => {
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
-      suites: [{ id: 'suite-1', name: 'Smoke R2.4', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Smoke R2.4',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 1,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+      ],
     });
     vi.useFakeTimers();
     try {
       fireEvent.click(screen.getByRole('button', { name: 'Remove from suite' }));
-      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Remove 1 scenario' })); });
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Remove 1 scenario' }));
+      });
       expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
-      act(() => { vi.advanceTimersByTime(10000); });
+      act(() => {
+        vi.advanceTimersByTime(10000);
+      });
       expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
       fireEvent.click(screen.getByRole('checkbox', { name: 'Select Checkout flow' }));
       expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
-    } finally { vi.useRealTimers(); }
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('keeps suite membership Undo when switching suites', async () => {
@@ -945,8 +1270,24 @@ describe('TestScenarioCatalogView', () => {
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
       suites: [
-        { id: 'suite-1', name: 'Smoke R2.4', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] },
-        { id: 'suite-2', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0, members: [] },
+        {
+          id: 'suite-1',
+          name: 'Smoke R2.4',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 1,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+        {
+          id: 'suite-2',
+          name: 'Regression',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 0,
+          members: [],
+        },
       ],
       onScopeChange,
     });
@@ -961,7 +1302,11 @@ describe('TestScenarioCatalogView', () => {
   it('removes selected suite membership and restores it through Undo', async () => {
     const user = userEvent.setup();
     const removeSuiteMembership = vi.fn(async () => ({
-      restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+      restoreData: {
+        suiteId: 'suite-1',
+        addedScenarioIds: [],
+        removedMembers: [{ scenarioId: 'scenario-1', position: 0 }],
+      },
       expectedMembershipRevision: 2,
       expectedScenarioIds: [],
     }));
@@ -970,7 +1315,17 @@ describe('TestScenarioCatalogView', () => {
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
-      suites: [{ id: 'suite-1', name: 'Smoke R2.4', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Smoke R2.4',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 1,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+      ],
       removeSuiteMembership,
       restoreSuiteMembership,
     });
@@ -978,20 +1333,34 @@ describe('TestScenarioCatalogView', () => {
     await user.click(screen.getByRole('button', { name: 'Remove from suite' }));
     await user.click(screen.getByRole('button', { name: 'Remove 1 scenario' }));
     await waitFor(() => expect(removeSuiteMembership).toHaveBeenCalledWith('suite-1', ['scenario-1']));
-    expect(screen.getByRole('status', { name: 'Suite membership notification' })).toHaveTextContent('1 scenario removed from Smoke R2.4');
+    expect(screen.getByRole('status', { name: 'Suite membership notification' })).toHaveTextContent(
+      '1 scenario removed from Smoke R2.4',
+    );
     expect(screen.queryByText(/Undo is available for 10 seconds/)).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Undo' }));
-    await waitFor(() => expect(restoreSuiteMembership).toHaveBeenCalledWith(expect.objectContaining({
-      restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
-      expectedMembershipRevision: 2,
-      expectedScenarioIds: [],
-    })));
+    await waitFor(() =>
+      expect(restoreSuiteMembership).toHaveBeenCalledWith(
+        expect.objectContaining({
+          restoreData: {
+            suiteId: 'suite-1',
+            addedScenarioIds: [],
+            removedMembers: [{ scenarioId: 'scenario-1', position: 0 }],
+          },
+          expectedMembershipRevision: 2,
+          expectedScenarioIds: [],
+        }),
+      ),
+    );
   });
 
   it('submits the confirmed scenarios even when the selection and membership callback have changed', async () => {
     const user = userEvent.setup();
     const removeSuiteMembership = vi.fn(async () => ({
-      restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+      restoreData: {
+        suiteId: 'suite-1',
+        addedScenarioIds: [],
+        removedMembers: [{ scenarioId: 'scenario-1', position: 0 }],
+      },
       expectedMembershipRevision: 2,
       expectedScenarioIds: ['scenario-2', 'scenario-3'],
     }));
@@ -999,10 +1368,17 @@ describe('TestScenarioCatalogView', () => {
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
-      suites: [{
-        id: 'suite-1', name: 'Smoke', description: null, purpose: null, release: null, membershipRevision: 1,
-        members: ['scenario-1', 'scenario-2', 'scenario-3'].map((testScenarioId) => ({ testScenarioId })),
-      }],
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Smoke',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 1,
+          members: ['scenario-1', 'scenario-2', 'scenario-3'].map((testScenarioId) => ({ testScenarioId })),
+        },
+      ],
     };
     const view = renderView(props);
     await user.click(screen.getByRole('button', { name: 'Remove from suite' }));
@@ -1016,19 +1392,44 @@ describe('TestScenarioCatalogView', () => {
   it('ignores a removal completion after leaving and returning to the same suite', async () => {
     const user = userEvent.setup();
     const undo = {
-      restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+      restoreData: {
+        suiteId: 'suite-1',
+        addedScenarioIds: [],
+        removedMembers: [{ scenarioId: 'scenario-1', position: 0 }],
+      },
       expectedMembershipRevision: 2,
       expectedScenarioIds: [],
     };
     let finishRemoval!: (value: typeof undo) => void;
-    const removeSuiteMembership = vi.fn(() => new Promise<typeof undo>((resolve) => { finishRemoval = resolve; }));
+    const removeSuiteMembership = vi.fn(
+      () =>
+        new Promise<typeof undo>((resolve) => {
+          finishRemoval = resolve;
+        }),
+    );
     const props: Partial<TestScenarioCatalogViewProps> = {
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
       suites: [
-        { id: 'suite-1', name: 'Smoke', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] },
-        { id: 'suite-2', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 0, members: [] },
+        {
+          id: 'suite-1',
+          name: 'Smoke',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 1,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+        {
+          id: 'suite-2',
+          name: 'Regression',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 0,
+          members: [],
+        },
       ],
       removeSuiteMembership,
     };
@@ -1054,9 +1455,15 @@ describe('TestScenarioCatalogView', () => {
 
   it('keeps Undo and closes the removal confirmation when the follow-up refresh fails', async () => {
     const user = userEvent.setup();
-    const refreshSuiteData = vi.fn(async () => { throw new Error('Could not load suite data'); });
+    const refreshSuiteData = vi.fn(async () => {
+      throw new Error('Could not load suite data');
+    });
     const removeSuiteMembership = vi.fn(async () => ({
-      restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+      restoreData: {
+        suiteId: 'suite-1',
+        addedScenarioIds: [],
+        removedMembers: [{ scenarioId: 'scenario-1', position: 0 }],
+      },
       expectedMembershipRevision: 2,
       expectedScenarioIds: [],
     }));
@@ -1064,7 +1471,17 @@ describe('TestScenarioCatalogView', () => {
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
-      suites: [{ id: 'suite-1', name: 'Smoke', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Smoke',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 1,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+      ],
       removeSuiteMembership,
       refreshSuiteData,
     });
@@ -1081,7 +1498,12 @@ describe('TestScenarioCatalogView', () => {
   it('moves a dragged suite row to another suite and offers conditional Undo', async () => {
     const user = userEvent.setup();
     const moveSuiteMembership = vi.fn(async () => ({
-      restoreData: { sourceSuiteId: 'suite-1', destinationSuiteId: 'suite-2', sourceMembers: [], destinationAddedScenarioIds: [] },
+      restoreData: {
+        sourceSuiteId: 'suite-1',
+        destinationSuiteId: 'suite-2',
+        sourceMembers: [],
+        destinationAddedScenarioIds: [],
+      },
       expectedSourceMembershipRevision: 2,
       expectedDestinationMembershipRevision: 3,
       expectedSourceScenarioIds: [],
@@ -1094,8 +1516,24 @@ describe('TestScenarioCatalogView', () => {
       scenarios: [scenarios[0]],
       pagination: { ...pagination, total: 1 },
       suites: [
-        { id: 'suite-1', name: 'Source', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] },
-        { id: 'suite-2', name: 'Destination', description: null, purpose: null, release: null, membershipRevision: 2, members: [] },
+        {
+          id: 'suite-1',
+          name: 'Source',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 1,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+        {
+          id: 'suite-2',
+          name: 'Destination',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 2,
+          members: [],
+        },
       ],
       scope: { kind: 'suite', id: 'suite-1' },
       moveSuiteMembership,
@@ -1107,10 +1545,14 @@ describe('TestScenarioCatalogView', () => {
       types: ['application/x-testportal-scenarios'],
       getData: () => JSON.stringify({ projectId: 'project-1', scenarioIds: ['scenario-1'] }),
     };
-    fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to another suite or reorder' }), { dataTransfer });
+    fireEvent.dragStart(screen.getByRole('button', { name: 'Drag Checkout flow to another suite or reorder' }), {
+      dataTransfer,
+    });
     fireEvent.drop(screen.getByRole('button', { name: /Destination 0/ }), { dataTransfer });
     await waitFor(() => expect(moveSuiteMembership).toHaveBeenCalledWith('suite-1', 'suite-2', ['scenario-1']));
-    expect(screen.getByRole('status', { name: 'Suite membership notification' })).toHaveTextContent('AUTH-1 is already in Destination — removed from Source');
+    expect(screen.getByRole('status', { name: 'Suite membership notification' })).toHaveTextContent(
+      'AUTH-1 is already in Destination — removed from Source',
+    );
     await user.click(screen.getByRole('button', { name: 'Undo' }));
     await waitFor(() => expect(restoreSuiteMove).toHaveBeenCalled());
   });
@@ -1118,14 +1560,33 @@ describe('TestScenarioCatalogView', () => {
   it('prevents duplicate Undo requests while restoration is pending', async () => {
     const user = userEvent.setup();
     let finishRestore: (() => void) | undefined;
-    const restoreSuiteMembership = vi.fn(() => new Promise<void>((resolve) => { finishRestore = resolve; }));
+    const restoreSuiteMembership = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishRestore = resolve;
+        }),
+    );
     renderView({
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
-      suites: [{ id: 'suite-1', name: 'Smoke R2.4', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Smoke R2.4',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 1,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+      ],
       removeSuiteMembership: vi.fn(async () => ({
-        restoreData: { suiteId: 'suite-1', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }] },
+        restoreData: {
+          suiteId: 'suite-1',
+          addedScenarioIds: [],
+          removedMembers: [{ scenarioId: 'scenario-1', position: 0 }],
+        },
         expectedMembershipRevision: 2,
         expectedScenarioIds: [],
       })),
@@ -1149,7 +1610,9 @@ describe('TestScenarioCatalogView', () => {
   });
 
   it('starts one run with the selected scenario IDs and preserves selection after an uncertain response', async () => {
-    const onRunSelected = vi.fn(async () => { throw { status: 'FETCH_ERROR' }; });
+    const onRunSelected = vi.fn(async () => {
+      throw { status: 'FETCH_ERROR' };
+    });
     renderView({ selectedIds: ['scenario-1', 'scenario-2'], onRunSelected });
     await userEvent.setup().click(screen.getByRole('button', { name: 'Run selected' }));
     expect(onRunSelected).toHaveBeenCalledWith(['scenario-1', 'scenario-2']);
@@ -1168,7 +1631,17 @@ describe('TestScenarioCatalogView', () => {
       organizationTab: 'suites',
       scope: { kind: 'suite', id: 'suite-1' },
       selectedIds: ['scenario-1'],
-      suites: [{ id: 'suite-1', name: 'Regression', description: null, purpose: null, release: null, membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+      suites: [
+        {
+          id: 'suite-1',
+          name: 'Regression',
+          description: null,
+          purpose: null,
+          release: null,
+          membershipRevision: 1,
+          members: [{ testScenarioId: 'scenario-1' }],
+        },
+      ],
       onMoveSelected,
     });
     expect(screen.queryByRole('button', { name: 'More bulk actions' })).not.toBeInTheDocument();
@@ -1176,8 +1649,6 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByRole('button', { name: 'Run selected' })).toBeInTheDocument();
     expect(onMoveSelected).not.toHaveBeenCalled();
   });
-
-
 
   it('retains folder menu moves independently from suite membership', async () => {
     const user = userEvent.setup();

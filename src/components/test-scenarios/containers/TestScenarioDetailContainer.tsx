@@ -30,16 +30,24 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
   const navigate = useNavigate();
   const location = useLocation();
   const search = new URLSearchParams(location.search);
-  const originSearch = search.has('originProject') ? scenarioOriginSearch(projectId, getScenarioOrigin(search, projectId)) : '';
-  const onContextMenu = useTestScenarioContextMenu(projectId, undefined, false, (scenario) => {
-    const params = new URLSearchParams({ clone: scenario.id });
-    new URLSearchParams(originSearch).forEach((value, key) => params.set(key, value));
-    navigate(`${PATHS.TEST_SCENARIO_NEW}?${params}`);
-  }, () => {
-    const params = new URLSearchParams({ projectId });
-    if (getScenarioOrigin(search, projectId).kind === 'suite') params.set('tab', 'suites');
-    navigate(`${PATHS.TEST_MANAGEMENT}?${params}`);
-  });
+  const originSearch = search.has('originProject')
+    ? scenarioOriginSearch(projectId, getScenarioOrigin(search, projectId))
+    : '';
+  const onContextMenu = useTestScenarioContextMenu(
+    projectId,
+    undefined,
+    false,
+    (scenario) => {
+      const params = new URLSearchParams({ clone: scenario.id });
+      new URLSearchParams(originSearch).forEach((value, key) => params.set(key, value));
+      navigate(`${PATHS.TEST_SCENARIO_NEW}?${params}`);
+    },
+    () => {
+      const params = new URLSearchParams({ projectId });
+      if (getScenarioOrigin(search, projectId).kind === 'suite') params.set('tab', 'suites');
+      navigate(`${PATHS.TEST_MANAGEMENT}?${params}`);
+    },
+  );
   const detail = useTestScenarioDetail(projectId, scenarioId);
   const foldersQuery = useGetApiV2TestScenarioFoldersQuery({ projectId });
   const suitesQuery = useGetApiV2TestSuitesQuery({ projectId });
@@ -52,7 +60,9 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
   const isCurrentScope = () => mounted.current && scope.current === `${projectId}:${scenarioId}`;
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => {
+      mounted.current = false;
+    };
   }, []);
   useEffect(() => {
     setSuiteError(undefined);
@@ -60,14 +70,14 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
   }, [projectId, scenarioId]);
   const folders = flattenScenarioFolders(foldersQuery.currentData ?? []);
   const origin = getScenarioOrigin(search, projectId);
-  const originSuite = origin.kind === 'suite' ? suitesQuery.currentData?.find((item) => item.id === origin.id) : undefined;
-  const folder = detail.scenario?.folderId
-    ? folders.find(({ id }) => id === detail.scenario?.folderId)
-    : undefined;
-  const folderName = detail.scenario?.folderId ? folder?.name ?? 'Folder unavailable' : 'No folder';
-  const backPath = origin.kind === 'suite' && originSuite
-    ? `${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId, tab: 'suites', suiteId: originSuite.id })}`
-    : getScenarioFolderReturnPath(projectId, detail.scenario?.folderId ?? null, folders);
+  const originSuite =
+    origin.kind === 'suite' ? suitesQuery.currentData?.find((item) => item.id === origin.id) : undefined;
+  const folder = detail.scenario?.folderId ? folders.find(({ id }) => id === detail.scenario?.folderId) : undefined;
+  const folderName = detail.scenario?.folderId ? (folder?.name ?? 'Folder unavailable') : 'No folder';
+  const backPath =
+    origin.kind === 'suite' && originSuite
+      ? `${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId, tab: 'suites', suiteId: originSuite.id })}`
+      : getScenarioFolderReturnPath(projectId, detail.scenario?.folderId ?? null, folders);
 
   const refreshMembership = async () => {
     await Promise.all([detail.refetch(), suitesQuery.refetch()]);
@@ -103,7 +113,8 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
       toaster.create({ title: 'Removed from suite.', type: 'success' });
     } catch (error) {
       if (!isCurrentScope()) return;
-      const status = error && typeof error === 'object' && 'status' in error ? Number((error as { status: unknown }).status) : NaN;
+      const status =
+        error && typeof error === 'object' && 'status' in error ? Number((error as { status: unknown }).status) : NaN;
       const isUncertain = !Number.isInteger(status) || status >= 500;
       if (isUncertain) await refreshMembership();
       if (!isCurrentScope()) return;
@@ -131,7 +142,13 @@ export const TestScenarioDetailContainer = ({ projectId, scenarioId }: TestScena
           scenario={scenario}
           projectId={projectId}
           folderName={folderName}
-          backLabel={origin.kind === 'suite' && originSuite ? originSuite.name : detail.scenario?.folderId && !folder ? 'All scenarios' : folderName}
+          backLabel={
+            origin.kind === 'suite' && originSuite
+              ? originSuite.name
+              : detail.scenario?.folderId && !folder
+                ? 'All scenarios'
+                : folderName
+          }
           originKind={origin.kind === 'suite' && originSuite ? 'suites' : 'scenarios'}
           backPath={backPath}
           onEdit={() => navigate(`${getTestScenarioEditPath(scenario.id)}${originSearch}`)}

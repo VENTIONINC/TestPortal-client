@@ -1,5 +1,6 @@
 module.exports = {
   schemaFile: process.env.RTK_QUERY_SCENARIO_MANAGEMENT_OPENAPI_FILE,
+  prettierConfigFile: './.prettierrc',
   apiFile: './src/redux/apis/generatedApi.ts',
   apiImport: 'generatedApi',
   outputFile: './src/redux/apis/generatedScenarioManagementApi.ts',

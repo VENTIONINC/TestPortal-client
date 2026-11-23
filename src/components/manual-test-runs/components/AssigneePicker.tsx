@@ -97,11 +97,7 @@ export const AssigneePicker = ({ scenario, users, disabled, triggerHeight, onOpe
   };
 
   return (
-    <Popover.Root
-      open={open}
-      onOpenChange={handleOpenChange}
-      positioning={{ placement: 'bottom-start' }}
-    >
+    <Popover.Root open={open} onOpenChange={handleOpenChange} positioning={{ placement: 'bottom-start' }}>
       <Popover.Trigger asChild>
         <Button
           aria-label={`Assignee for ${scenario.title}`}

@@ -32,11 +32,7 @@ export const BulkAssigneePicker = ({
   };
 
   return (
-    <Popover.Root
-      open={open}
-      onOpenChange={handleOpenChange}
-      positioning={{ placement: 'top-end' }}
-    >
+    <Popover.Root open={open} onOpenChange={handleOpenChange} positioning={{ placement: 'top-end' }}>
       <Popover.Trigger asChild>
         <Button
           size="xs"
@@ -58,10 +54,7 @@ export const BulkAssigneePicker = ({
               <Text fontSize="xs" color="text.secondary" px={2} py={2}>
                 Assign {count} selected to
               </Text>
-              <AssigneeOptions
-                users={users}
-                onSelect={handleSelectAssignee}
-              />
+              <AssigneeOptions users={users} onSelect={handleSelectAssignee} />
             </Popover.Body>
           </Popover.Content>
         </Popover.Positioner>

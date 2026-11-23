@@ -86,12 +86,10 @@ describe('buildResultsGroups', () => {
     const release = makeResult('release', 'release-spec', '2026-07-02', ResultStatus.Failed);
     release.execution.type = 'Release';
 
-    const grouped = buildResultsGroups(
-      [nightly, release],
-      [nightly, release],
-      ['2026-07-02'],
-      { ...filters, type: 'all' },
-    );
+    const grouped = buildResultsGroups([nightly, release], [nightly, release], ['2026-07-02'], {
+      ...filters,
+      type: 'all',
+    });
 
     expect([...grouped.results.keys()]).toEqual(['nightly-spec', 'release-spec']);
     expect(grouped.activeDaysResultsIds).toEqual(['nightly', 'release']);
@@ -100,12 +98,7 @@ describe('buildResultsGroups', () => {
 
 describe('mergeAvailableAndActiveTags', () => {
   it('keeps active tags first and appends remaining available tags without duplicates', () => {
-    expect(mergeAvailableAndActiveTags(['L1', 'L2', 'L3'], ['legacy', 'L2'])).toEqual([
-      'legacy',
-      'L2',
-      'L1',
-      'L3',
-    ]);
+    expect(mergeAvailableAndActiveTags(['L1', 'L2', 'L3'], ['legacy', 'L2'])).toEqual(['legacy', 'L2', 'L1', 'L3']);
   });
 });
 

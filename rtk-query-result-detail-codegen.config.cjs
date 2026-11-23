@@ -1,5 +1,6 @@
 module.exports = {
   schemaFile: process.env.RTK_QUERY_RESULT_DETAIL_OPENAPI_URL ?? 'http://localhost:3001/api/openapi.json',
+  prettierConfigFile: './.prettierrc',
   apiFile: './src/redux/apis/generatedApi.ts',
   apiImport: 'generatedApi',
   outputFile: './src/redux/apis/generatedResultDetailApi.ts',

@@ -21,13 +21,11 @@ const MetadataRow = ({ label, value }: { label: string; value: string }) => (
 export const SkillDetailView = memo(() => {
   const openReplaceSkillDialog = useReplaceSkillDialog();
   const openDeleteSkillDialog = useDeleteSkillDialog();
-  const { metadata, content, isFetching, isInitialLoading, error, isNotFound, hasInvalidSkillId } =
-    useSkillDetail();
-  const {
-    archiveError,
-    isDownloadingArchive,
-    handleArchiveDownload,
-  } = useSkillDownloads(metadata?.downloadUrl, metadata?.name);
+  const { metadata, content, isFetching, isInitialLoading, error, isNotFound, hasInvalidSkillId } = useSkillDetail();
+  const { archiveError, isDownloadingArchive, handleArchiveDownload } = useSkillDownloads(
+    metadata?.downloadUrl,
+    metadata?.name,
+  );
   const canManage = metadata?.source === 'custom' && metadata.readOnly === false;
 
   if (hasInvalidSkillId) {
@@ -143,7 +141,9 @@ export const SkillDetailView = memo(() => {
                     <Alert.Indicator />
                     <Alert.Content>
                       <Alert.Title>No preview content</Alert.Title>
-                      <Alert.Description>This skill does not currently include Markdown preview content.</Alert.Description>
+                      <Alert.Description>
+                        This skill does not currently include Markdown preview content.
+                      </Alert.Description>
                     </Alert.Content>
                   </Alert.Root>
                 )}

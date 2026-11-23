@@ -30,7 +30,9 @@ describe('Test Scenario structured payload helpers', () => {
 
   it('executes 237 unique IDs sequentially as 100/100/37 batches', async () => {
     const ids = [...Array.from({ length: 237 }, (_value, index) => `id-${index}`), 'id-0'];
-    const operation = vi.fn(async (_batch: string[]) => { void _batch; });
+    const operation = vi.fn(async (_batch: string[]) => {
+      void _batch;
+    });
     const report = await executeScenarioOperation(ids, operation);
     expect(operation.mock.calls.map(([batch]) => batch.length)).toEqual([100, 100, 37]);
     expect(operation.mock.calls.map(([batch]) => batch[0])).toEqual(['id-0', 'id-100', 'id-200']);
@@ -39,7 +41,9 @@ describe('Test Scenario structured payload helpers', () => {
 
   it('stops after a rejected batch and separates failed, uncertain and unattempted IDs', async () => {
     const ids = Array.from({ length: 237 }, (_value, index) => `id-${index}`);
-    const knownFailure = vi.fn(async (_batch: string[]) => { void _batch; });
+    const knownFailure = vi.fn(async (_batch: string[]) => {
+      void _batch;
+    });
     knownFailure.mockRejectedValueOnce({ status: 409, message: 'Conflict' });
     const failedReport = await executeScenarioOperation(ids, knownFailure);
     expect(failedReport.succeededIds).toEqual([]);
@@ -47,7 +51,9 @@ describe('Test Scenario structured payload helpers', () => {
     expect(failedReport.uncertainIds).toEqual([]);
     expect(failedReport.unattemptedIds).toHaveLength(137);
     expect(failedReport.errorMessage).toBe('Conflict');
-    const uncertain = vi.fn(async (_batch: string[]) => { void _batch; });
+    const uncertain = vi.fn(async (_batch: string[]) => {
+      void _batch;
+    });
     uncertain.mockRejectedValueOnce({ status: 503, message: 'Unavailable' });
     const uncertainReport = await executeScenarioOperation(ids, uncertain);
     expect(uncertainReport.uncertainIds).toHaveLength(100);
@@ -67,8 +73,14 @@ describe('Test Scenario structured payload helpers', () => {
   });
 
   it('excludes immutable keys on create and edit and defaults priority', () => {
-    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', scenarioKey: 'ignored' })).toEqual({ projectId: 'project-1', title: 'Checkout', priority: 'medium' });
-    expect(getTestScenarioPatchPayload({ ...persisted, scenarioKey: 'ignored' }, { ...persisted, scenarioKey: 'TMS-1' })).toBeNull();
+    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', scenarioKey: 'ignored' })).toEqual({
+      projectId: 'project-1',
+      title: 'Checkout',
+      priority: 'medium',
+    });
+    expect(
+      getTestScenarioPatchPayload({ ...persisted, scenarioKey: 'ignored' }, { ...persisted, scenarioKey: 'TMS-1' }),
+    ).toBeNull();
   });
 
   it('treats blank input as a no-op when the saved optional value is already null', () => {
@@ -128,16 +140,35 @@ describe('Test Scenario structured payload helpers', () => {
     ).toBeNull();
   });
   it('creates trimmed metadata, omits empty metadata and never serializes obsolete fields', () => {
-    const values = { title: 'Checkout', priority: 'high' as const, relatedIssueUrl: ' https://example.test/TP-20 ', objective: 'obsolete', notes: 'obsolete', expectedResult: 'obsolete' };
-    expect(getTestScenarioCreatePayload('project-1', values)).toEqual({ projectId: 'project-1', title: 'Checkout', priority: 'high', relatedIssueUrl: 'https://example.test/TP-20' });
-    expect(getTestScenarioCreatePayload('project-1', { title: 'Checkout', priority: '', relatedIssueUrl: ' ' })).toEqual({ projectId: 'project-1', title: 'Checkout', priority: 'medium' });
+    const values = {
+      title: 'Checkout',
+      priority: 'high' as const,
+      relatedIssueUrl: ' https://example.test/TP-20 ',
+      objective: 'obsolete',
+      notes: 'obsolete',
+      expectedResult: 'obsolete',
+    };
+    expect(getTestScenarioCreatePayload('project-1', values)).toEqual({
+      projectId: 'project-1',
+      title: 'Checkout',
+      priority: 'high',
+      relatedIssueUrl: 'https://example.test/TP-20',
+    });
+    expect(
+      getTestScenarioCreatePayload('project-1', { title: 'Checkout', priority: '', relatedIssueUrl: ' ' }),
+    ).toEqual({ projectId: 'project-1', title: 'Checkout', priority: 'medium' });
   });
 
   it('preserves omitted metadata, clears explicitly empty metadata and skips unchanged values', () => {
     const saved = { title: 'Checkout', priority: 'high' as const, relatedIssueUrl: 'https://example.test/TP-20' };
     expect(getTestScenarioPatchPayload({ title: 'Checkout' }, saved)).toBeNull();
-    expect(getTestScenarioPatchPayload({ ...saved, priority: '', relatedIssueUrl: '' }, saved)).toEqual({ priority: 'medium', relatedIssueUrl: null });
-    expect(getTestScenarioPatchPayload({ ...saved, relatedIssueUrl: ' https://example.test/TP-20 ' }, saved)).toBeNull();
+    expect(getTestScenarioPatchPayload({ ...saved, priority: '', relatedIssueUrl: '' }, saved)).toEqual({
+      priority: 'medium',
+      relatedIssueUrl: null,
+    });
+    expect(
+      getTestScenarioPatchPayload({ ...saved, relatedIssueUrl: ' https://example.test/TP-20 ' }, saved),
+    ).toBeNull();
   });
 
   it('rejects invalid metadata before constructing requests', () => {
@@ -164,6 +195,14 @@ describe('folder-aware scenario return path', () => {
     expect(getScenarioFolderReturnPath('p', 'f', [{ id: 'f' }])).toBe('/test-management?projectId=p&folderId=f');
     expect(getScenarioFolderReturnPath('p', null, [])).toBe('/test-management?projectId=p&folderId=unfiled');
     expect(getScenarioFolderReturnPath('p', 'removed', [])).toBe('/test-management?projectId=p');
-    expect(flattenScenarioFolders([{ id: 'a', name: 'Account', children: [{ id: 'b', name: 'Checkout', children: [{ id: 'c', name: 'Payments' }] }] }])[2]).toEqual({ id: 'c', name: 'Payments', depth: 2, path: 'Account / Checkout / Payments' });
+    expect(
+      flattenScenarioFolders([
+        {
+          id: 'a',
+          name: 'Account',
+          children: [{ id: 'b', name: 'Checkout', children: [{ id: 'c', name: 'Payments' }] }],
+        },
+      ])[2],
+    ).toEqual({ id: 'c', name: 'Payments', depth: 2, path: 'Account / Checkout / Payments' });
   });
 });

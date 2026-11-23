@@ -10,7 +10,9 @@ describe('MarkdownPreview', () => {
   it('renders GFM and hardens external links while escaping raw HTML', () => {
     render(
       <ChakraProvider>
-        <MarkdownPreview content={'# Heading\n\n| A | B |\n| - | - |\n| 1 | 2 |\n\n[Docs](https://example.com)\n\n<span>raw</span>'} />
+        <MarkdownPreview
+          content={'# Heading\n\n| A | B |\n| - | - |\n| 1 | 2 |\n\n[Docs](https://example.com)\n\n<span>raw</span>'}
+        />
       </ChakraProvider>,
     );
 

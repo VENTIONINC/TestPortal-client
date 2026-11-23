@@ -54,7 +54,15 @@ export const CompleteManualRunDialog = ({
 
   const title = (
     <HStack align="center" gap={3}>
-      <Box display="grid" placeItems="center" boxSize="40px" flexShrink={0} borderRadius="lg" bg="blue.subtle" color="blue.fg">
+      <Box
+        display="grid"
+        placeItems="center"
+        boxSize="40px"
+        flexShrink={0}
+        borderRadius="lg"
+        bg="blue.subtle"
+        color="blue.fg"
+      >
         <FiFlag aria-hidden="true" />
       </Box>
       <Text>Complete the run with {untestedCount} untested?</Text>

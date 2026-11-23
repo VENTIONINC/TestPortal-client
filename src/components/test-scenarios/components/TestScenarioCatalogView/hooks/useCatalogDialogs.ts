@@ -10,8 +10,10 @@ import { useRemoveScenariosFromSuiteDialog } from '../../catalog/dialogs/hooks/u
 import { useManageSuiteScenariosDialog } from '../../catalog/dialogs/manage-suite-scenarios/hooks/useManageSuiteScenariosDialog';
 import type { TestScenarioCatalogViewProps } from '../../catalog/types';
 
-type UseCatalogDialogsOptions = Pick<TestScenarioCatalogViewProps,
-  'projectId' | 'organizationTab' | 'scope' | 'removeSuiteMembership' | 'refreshSuiteData'>;
+type UseCatalogDialogsOptions = Pick<
+  TestScenarioCatalogViewProps,
+  'projectId' | 'organizationTab' | 'scope' | 'removeSuiteMembership' | 'refreshSuiteData'
+>;
 
 export const useCatalogDialogs = ({
   projectId,

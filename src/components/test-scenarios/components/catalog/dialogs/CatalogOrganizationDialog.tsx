@@ -59,7 +59,7 @@ export const CatalogOrganizationDialog = ({ closeDialog, options }: CatalogOrgan
   const title = isMove
     ? `Move ${options.targetName}`
     : `Delete ${isFolderDeletion ? 'folder' : 'suite'} “${options.targetName}”?`;
-  const [parentId, setParentId] = useState(isMove ? options.parentId ?? '' : '');
+  const [parentId, setParentId] = useState(isMove ? (options.parentId ?? '') : '');
   const { error, isSubmitting, onCancel, onConfirm } = useCatalogConfirmation(
     async () => {
       if (options.kind === 'move-folder') {
@@ -106,17 +106,19 @@ export const CatalogOrganizationDialog = ({ closeDialog, options }: CatalogOrgan
                   </option>
                 ))}
               </NativeSelect>
+            ) : isFolderDeletion ? (
+              <Text>{describeFolderDeletion(options)}</Text>
             ) : (
-              isFolderDeletion ? (
-                <Text>{describeFolderDeletion(options)}</Text>
-              ) : (
-                <Text color="text.secondary">
-                  {options.scenarioCount} scenario{options.scenarioCount === 1 ? '' : 's'} will be unlinked from this
-                  suite. The scenarios themselves stay in the catalog. This can’t be undone.
-                </Text>
-              )
+              <Text color="text.secondary">
+                {options.scenarioCount} scenario{options.scenarioCount === 1 ? '' : 's'} will be unlinked from this
+                suite. The scenarios themselves stay in the catalog. This can’t be undone.
+              </Text>
             )}
-            {error && <Text role="alert" color="fg.error">{error}</Text>}
+            {error && (
+              <Text role="alert" color="fg.error">
+                {error}
+              </Text>
+            )}
           </VStack>
         </DialogBody>
         <DialogFooter>

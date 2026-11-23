@@ -19,9 +19,27 @@ const { refetch, detailState, complete, deleteRun, saveDetails, loadScenarios, b
   saveDetails: vi.fn(),
   loadScenarios: vi.fn(),
   bulk: vi.fn(),
-  run: { id: 'r', projectId: 'p', title: 'Run', status: 'in_progress', scenarios: [] as Array<{ id: string; title: string; sourceScenarioId?: string; sourceScenarioKey: string; result: string; folderPath: string | null; assigneeId: string | null }>, environmentProperties: [] },
+  run: {
+    id: 'r',
+    projectId: 'p',
+    title: 'Run',
+    status: 'in_progress',
+    scenarios: [] as Array<{
+      id: string;
+      title: string;
+      sourceScenarioId?: string;
+      sourceScenarioKey: string;
+      result: string;
+      folderPath: string | null;
+      assigneeId: string | null;
+    }>,
+    environmentProperties: [],
+  },
 }));
-vi.mock('react-router', () => ({ useNavigate: () => vi.fn(), Link: ({ children }: { children: React.ReactNode }) => <span>{children}</span> }));
+vi.mock('react-router', () => ({
+  useNavigate: () => vi.fn(),
+  Link: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+}));
 vi.mock('@/redux/apis/extendedApi', () => ({
   useGetApiV2ManualTestRunsQuery: () => ({ currentData: { runs: [], total: 1 } }),
   useGetApiV2ManualTestRunsByRunIdQuery: () => ({ currentData: run, refetch, error: detailState.error }),
@@ -36,19 +54,24 @@ vi.mock('@/redux/apis/extendedApi', () => ({
 }));
 vi.mock('@/redux/apis/generatedApi', () => ({
   useGetApiV2ManualTestRunsQuery: () => ({ currentData: { runs: [] } }),
-  useGetApiV2TestScenariosQuery: () => ({ currentData: { total: 1, totalPages: 1, scenarios: [
-    { id: 'b', title: 'New scenario', scenarioKey: 'S-2', priority: 'low' },
-  ] } }),
+  useGetApiV2TestScenariosQuery: () => ({
+    currentData: {
+      total: 1,
+      totalPages: 1,
+      scenarios: [{ id: 'b', title: 'New scenario', scenarioKey: 'S-2', priority: 'low' }],
+    },
+  }),
   useLazyGetApiV2TestScenariosQuery: () => [loadScenarios],
   useGetApiV2TestScenarioFoldersQuery: () => ({ currentData: [] }),
   useGetApiV2TestSuitesQuery: () => ({ currentData: [] }),
   usePutApiV2ManualTestRunsByRunIdDetailsMutation: () => [saveDetails],
 }));
 
-const createStore = () => configureStore({
-  reducer: { dialog: dialogReducer },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
-});
+const createStore = () =>
+  configureStore({
+    reducer: { dialog: dialogReducer },
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
+  });
 
 const WorkspaceProvider = ({ children, store }: PropsWithChildren<{ store?: ReturnType<typeof createStore> }>) => {
   const [workspaceStore] = useState(() => store ?? createStore());
@@ -63,10 +86,17 @@ const WorkspaceProvider = ({ children, store }: PropsWithChildren<{ store?: Retu
 };
 
 const setUntestedScenario = () => {
-  run.scenarios = [{
-    id: 'scenario', title: 'Scenario', sourceScenarioId: 'a', sourceScenarioKey: 'S-1',
-    result: 'untested', folderPath: null, assigneeId: null,
-  }];
+  run.scenarios = [
+    {
+      id: 'scenario',
+      title: 'Scenario',
+      sourceScenarioId: 'a',
+      sourceScenarioKey: 'S-1',
+      result: 'untested',
+      folderPath: null,
+      assigneeId: null,
+    },
+  ];
 };
 
 beforeEach(() => {
@@ -85,7 +115,11 @@ describe('manual run recovery', () => {
   it('blocks changes until a failed authoritative refresh is retried successfully', async () => {
     complete.mockReturnValue({ unwrap: () => Promise.reject({ status: 'FETCH_ERROR' }) });
     refetch.mockResolvedValueOnce({ error: { status: 'FETCH_ERROR' } }).mockResolvedValueOnce({ data: run });
-    render(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} /></WorkspaceProvider>);
+    render(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
     fireEvent.click(screen.getByRole('button', { name: /complete run/i }));
     const retry = await screen.findByRole('button', { name: /retry refresh/i });
     expect(screen.getByRole('button', { name: /complete run/i })).toBeDisabled();
@@ -97,7 +131,11 @@ describe('manual run recovery', () => {
     setUntestedScenario();
     complete.mockReturnValue({ unwrap: () => Promise.reject({ status: 409 }) });
     refetch.mockResolvedValueOnce({ data: { ...run, status: 'completed', completedBy: { name: 'Alex' } } });
-    render(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} /></WorkspaceProvider>);
+    render(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
     fireEvent.click(screen.getByRole('button', { name: /complete run/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Complete and skip 1' }));
     expect(await screen.findByText(/not saved.*completed/i)).toBeInTheDocument();
@@ -108,22 +146,33 @@ describe('manual run recovery', () => {
   it('retains the recovery lock after leaving and reopening the run workspace', async () => {
     complete.mockReturnValue({ unwrap: () => Promise.reject({ status: 'FETCH_ERROR' }) });
     refetch.mockResolvedValueOnce({ error: { status: 'FETCH_ERROR' } });
-    const view = render(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} /></WorkspaceProvider>);
+    const view = render(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
     fireEvent.click(screen.getByRole('button', { name: /complete run/i }));
     await screen.findByRole('button', { name: /retry refresh/i });
     view.unmount();
-    render(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} /></WorkspaceProvider>);
+    render(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
     expect(screen.getByRole('button', { name: /complete run/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /retry refresh/i })).toBeInTheDocument();
   });
-
 });
 
 describe('manual run confirmation dialogs', () => {
   it('opens completion through the dialog portal and restores focus after cancel', async () => {
     setUntestedScenario();
     const store = createStore();
-    render(<WorkspaceProvider store={store}><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={vi.fn()} /></WorkspaceProvider>);
+    render(
+      <WorkspaceProvider store={store}>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={vi.fn()} />
+      </WorkspaceProvider>,
+    );
     const trigger = screen.getByRole('button', { name: /complete run/i });
     trigger.focus();
     fireEvent.click(trigger);
@@ -141,7 +190,11 @@ describe('manual run confirmation dialogs', () => {
   it('clears the selected run after a confirmed deletion', async () => {
     const onSelectRun = vi.fn();
     deleteRun.mockReturnValueOnce({ unwrap: () => Promise.resolve() });
-    render(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={onSelectRun} /></WorkspaceProvider>);
+    render(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={onSelectRun} />
+      </WorkspaceProvider>,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Run actions' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete run' }));
@@ -157,7 +210,11 @@ describe('manual run confirmation dialogs', () => {
     const onSelectRun = vi.fn();
     const deletion = Promise.withResolvers<void>();
     deleteRun.mockReturnValueOnce({ unwrap: () => deletion.promise });
-    const view = render(<WorkspaceProvider store={store}><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={onSelectRun} /></WorkspaceProvider>);
+    const view = render(
+      <WorkspaceProvider store={store}>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={onSelectRun} />
+      </WorkspaceProvider>,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Run actions' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete run' }));
@@ -167,11 +224,19 @@ describe('manual run confirmation dialogs', () => {
     fireEvent.click(confirm);
     expect(confirm).toBeDisabled();
     expect(deleteRun).toHaveBeenCalledWith({ projectId: 'p', runId: 'r' });
-    view.rerender(<WorkspaceProvider store={store}><ManualTestRunWorkspace projectId="p" selectedRunId="other" onSelectRun={onSelectRun} /></WorkspaceProvider>);
+    view.rerender(
+      <WorkspaceProvider store={store}>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="other" onSelectRun={onSelectRun} />
+      </WorkspaceProvider>,
+    );
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
 
     if (returnTiming === 'before') {
-      view.rerender(<WorkspaceProvider store={store}><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={onSelectRun} /></WorkspaceProvider>);
+      view.rerender(
+        <WorkspaceProvider store={store}>
+          <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={onSelectRun} />
+        </WorkspaceProvider>,
+      );
       expect(screen.getByRole('button', { name: 'Complete run' })).toBeDisabled();
     }
 
@@ -180,7 +245,11 @@ describe('manual run confirmation dialogs', () => {
       expect(onSelectRun).toHaveBeenCalledWith('');
     } else {
       expect(onSelectRun).not.toHaveBeenCalled();
-      view.rerender(<WorkspaceProvider store={store}><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={onSelectRun} /></WorkspaceProvider>);
+      view.rerender(
+        <WorkspaceProvider store={store}>
+          <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={onSelectRun} />
+        </WorkspaceProvider>,
+      );
     }
     expect(screen.getByRole('alert')).toHaveTextContent('This run is unavailable');
     expect(screen.queryByRole('button', { name: 'Run actions' })).not.toBeInTheDocument();
@@ -190,7 +259,11 @@ describe('manual run confirmation dialogs', () => {
 describe('manual run editing dialogs', () => {
   it('returns the nested picker selection to the edit draft and restores the Change button focus', async () => {
     const store = createStore();
-    const { container } = render(<WorkspaceProvider store={store}><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={vi.fn()} /></WorkspaceProvider>);
+    const { container } = render(
+      <WorkspaceProvider store={store}>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={vi.fn()} />
+      </WorkspaceProvider>,
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Run actions' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit run details' }));
     const detailsDialog = screen.getByRole('dialog', { name: 'Edit run details' });
@@ -215,7 +288,11 @@ describe('manual run editing dialogs', () => {
     setUntestedScenario();
     saveDetails.mockReturnValueOnce({ unwrap: () => Promise.reject({ status: 'FETCH_ERROR' }) });
     refetch.mockResolvedValueOnce({ error: { status: 'FETCH_ERROR' } });
-    render(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={vi.fn()} /></WorkspaceProvider>);
+    render(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={vi.fn()} />
+      </WorkspaceProvider>,
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Run actions' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Edit run details' }));
     const dialog = screen.getByRole('dialog', { name: 'Edit run details' });
@@ -228,7 +305,8 @@ describe('manual run editing dialogs', () => {
     expect(name).toHaveValue('Draft title');
     expect(save).toBeDisabled();
     expect(saveDetails).toHaveBeenCalledWith({
-      projectId: 'p', runId: 'r',
+      projectId: 'p',
+      runId: 'r',
       manualTestRunDetailsRequest: { title: 'Draft title', scenarioIds: ['a'], environmentProperties: [] },
     });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
@@ -240,10 +318,18 @@ describe('manual run bulk selection', () => {
   it('selects all matching scenarios and retains selection across pages', () => {
     unlockRunRecovery('p', 'r');
     run.scenarios = Array.from({ length: 29 }, (_, index) => ({
-      id: String(index), title: `Scenario ${index}`, sourceScenarioKey: `S-${index}`,
-      result: 'untested', folderPath: null, assigneeId: null,
+      id: String(index),
+      title: `Scenario ${index}`,
+      sourceScenarioKey: `S-${index}`,
+      result: 'untested',
+      folderPath: null,
+      assigneeId: null,
     }));
-    const view = render(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} /></WorkspaceProvider>);
+    const view = render(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select visible scenarios' }));
     expect(screen.getByText('25 selected')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Select all 29' }));
@@ -262,19 +348,30 @@ describe('manual run selection behavior', () => {
     unlockRunRecovery('p', 'r');
     run.status = 'in_progress';
     run.scenarios = Array.from({ length: 30 }, (_, index) => ({
-      id: String(index), title: index < 29 ? `Match ${index}` : 'Other',
-      sourceScenarioKey: `S-${index}`, result: index === 0 ? 'failed' : 'passed',
-      folderPath: null, assigneeId: null,
+      id: String(index),
+      title: index < 29 ? `Match ${index}` : 'Other',
+      sourceScenarioKey: `S-${index}`,
+      result: index === 0 ? 'failed' : 'passed',
+      folderPath: null,
+      assigneeId: null,
     }));
     bulk.mockReset();
     bulk.mockReturnValue({ unwrap: () => Promise.resolve(run) });
-    return render(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} /></WorkspaceProvider>);
+    return render(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
   };
 
   it('locks selection in completed runs', () => {
     const view = setup();
     run.status = 'completed';
-    view.rerender(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} /></WorkspaceProvider>);
+    view.rerender(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
     expect(screen.getByRole('checkbox', { name: 'Select visible scenarios' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: /Select all 30/ })).not.toBeInTheDocument();
     view.unmount();
@@ -302,11 +399,23 @@ describe('manual run selection behavior', () => {
     expect(screen.queryByRole('toolbar', { name: 'Bulk scenario actions' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Status: 1' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select visible scenarios' }));
-    view.rerender(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="other" onSelectRun={() => {}} /></WorkspaceProvider>);
+    view.rerender(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="other" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
     expect(screen.queryByRole('toolbar', { name: 'Bulk scenario actions' })).not.toBeInTheDocument();
-    view.rerender(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} /></WorkspaceProvider>);
+    view.rerender(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select visible scenarios' }));
-    view.rerender(<WorkspaceProvider><ManualTestRunWorkspace projectId="p2" selectedRunId="r" onSelectRun={() => {}} /></WorkspaceProvider>);
+    view.rerender(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p2" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
     expect(screen.queryByRole('toolbar', { name: 'Bulk scenario actions' })).not.toBeInTheDocument();
     view.unmount();
   });
@@ -318,31 +427,41 @@ describe('manual run selection behavior', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Select all 29' }));
     fireEvent.click(screen.getByRole('button', { name: 'Mark selected Passed' }));
     const ids = Array.from({ length: 29 }, (_, index) => String(index));
-    expect(bulk).toHaveBeenCalledWith(expect.objectContaining({
-      manualTestRunScenarioBulkRequest: { scenarioIds: ids, result: 'passed' },
-    }));
+    expect(bulk).toHaveBeenCalledWith(
+      expect.objectContaining({
+        manualTestRunScenarioBulkRequest: { scenarioIds: ids, result: 'passed' },
+      }),
+    );
     await waitFor(() => expect(screen.getByRole('button', { name: 'Bulk assign' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Bulk assign' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Unassigned' }));
-    expect(bulk).toHaveBeenLastCalledWith(expect.objectContaining({
-      manualTestRunScenarioBulkRequest: { scenarioIds: ids, assigneeId: null },
-    }));
+    expect(bulk).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        manualTestRunScenarioBulkRequest: { scenarioIds: ids, assigneeId: null },
+      }),
+    );
     view.unmount();
   });
 
   it('resets the selected result only when all selected scenarios already have it', () => {
     const view = setup();
     run.scenarios = run.scenarios.map((scenario) => ({ ...scenario, result: 'passed' }));
-    view.rerender(<WorkspaceProvider><ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} /></WorkspaceProvider>);
+    view.rerender(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select visible scenarios' }));
     fireEvent.click(screen.getByRole('button', { name: 'Select all 30' }));
     fireEvent.click(screen.getByRole('button', { name: 'Reset selected scenarios to Untested' }));
-    expect(bulk).toHaveBeenCalledWith(expect.objectContaining({
-      manualTestRunScenarioBulkRequest: {
-        scenarioIds: Array.from({ length: 30 }, (_, index) => String(index)),
-        result: 'untested',
-      },
-    }));
+    expect(bulk).toHaveBeenCalledWith(
+      expect.objectContaining({
+        manualTestRunScenarioBulkRequest: {
+          scenarioIds: Array.from({ length: 30 }, (_, index) => String(index)),
+          result: 'untested',
+        },
+      }),
+    );
     view.unmount();
   });
 });

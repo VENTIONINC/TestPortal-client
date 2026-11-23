@@ -17,13 +17,7 @@ export const MarkdownPreview = ({ content }: MarkdownPreviewProps) => (
       remarkPlugins={[remarkGfm]}
       components={{
         a: ({ href, children, ...props }) => (
-          <ChakraLink
-            {...props}
-            href={href}
-            color="text.active"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <ChakraLink {...props} href={href} color="text.active" target="_blank" rel="noopener noreferrer">
             {children}
           </ChakraLink>
         ),

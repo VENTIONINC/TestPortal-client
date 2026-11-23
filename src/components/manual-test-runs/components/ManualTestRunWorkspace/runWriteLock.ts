@@ -9,7 +9,9 @@ const key = (projectId: string, runId: string) => JSON.stringify([projectId, run
 
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
-  return () => { listeners.delete(listener); };
+  return () => {
+    listeners.delete(listener);
+  };
 };
 
 export const tryStartRunWrite = (projectId: string, runId: string) => {

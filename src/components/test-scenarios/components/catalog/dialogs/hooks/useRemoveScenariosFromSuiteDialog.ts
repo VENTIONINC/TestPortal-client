@@ -4,7 +4,10 @@
 import { useDialogActions } from '@/redux/slices/dialog';
 import type { DefaultDialogProps } from '@/types';
 
-import { RemoveScenariosFromSuiteDialog, type RemoveScenariosFromSuiteDialogProps } from '../RemoveScenariosFromSuiteDialog';
+import {
+  RemoveScenariosFromSuiteDialog,
+  type RemoveScenariosFromSuiteDialogProps,
+} from '../RemoveScenariosFromSuiteDialog';
 
 export const useRemoveScenariosFromSuiteDialog = (scopeKey: string) => {
   const { openDialog } = useDialogActions(scopeKey);

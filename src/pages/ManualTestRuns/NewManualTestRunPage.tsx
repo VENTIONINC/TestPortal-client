@@ -36,7 +36,9 @@ export function NewManualTestRunPage() {
   const submitting = useRef(false);
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => {
+      mounted.current = false;
+    };
   }, []);
   useEffect(() => {
     if (draftInvalid.current) navigate(PATHS.MANUAL_TEST_RUNS, { replace: true });
@@ -74,25 +76,34 @@ export function NewManualTestRunPage() {
       try {
         const params = { projectId, limit: 100, show: 'all' as const, period: 'any_time' as const };
         const first = await loadRuns({ ...params, page: 1 }, true).unwrap();
-        const pages = await Promise.all(Array.from({ length: Math.max(0, first.totalPages - 1) }, (_, index) =>
-          loadRuns({ ...params, page: index + 2 }, true).unwrap(),
-        ));
+        const pages = await Promise.all(
+          Array.from({ length: Math.max(0, first.totalPages - 1) }, (_, index) =>
+            loadRuns({ ...params, page: index + 2 }, true).unwrap(),
+          ),
+        );
         if (!active || draftInvalid.current || initializedEnvironment.current) return;
-        const latest = [first, ...pages].flatMap((page) => page.runs)
-          .reduce<ManualTestRunSummary | undefined>((newest, run) =>
-            !newest || run.startedAt > newest.startedAt ? run : newest, undefined);
+        const latest = [first, ...pages]
+          .flatMap((page) => page.runs)
+          .reduce<
+            ManualTestRunSummary | undefined
+          >((newest, run) => (!newest || run.startedAt > newest.startedAt ? run : newest), undefined);
         initializedEnvironment.current = true;
         setSourceRun(latest);
-        setEnvironment((latest?.environmentProperties ?? []).map((item) => ({
-          ...item,
-          value: item.name.trim().toLowerCase() === 'build' ? '' : item.value,
-        })));
+        setEnvironment(
+          (latest?.environmentProperties ?? []).map((item) => ({
+            ...item,
+            value: item.name.trim().toLowerCase() === 'build' ? '' : item.value,
+          })),
+        );
       } catch {
-        if (active && !draftInvalid.current) setError('Could not load the latest run environment. You can enter properties manually.');
+        if (active && !draftInvalid.current)
+          setError('Could not load the latest run environment. You can enter properties manually.');
       }
     };
     void load();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [projectId, loadRuns]);
   const close = () => {
     scope.current.generation += 1;
@@ -121,12 +132,18 @@ export function NewManualTestRunPage() {
       });
     } catch (failure) {
       if (!isCurrentScope()) return;
-      const status = typeof failure === 'object' && failure !== null && 'status' in failure ? failure.status : undefined;
-      const uncertain = status === 'FETCH_ERROR' || status === 'TIMEOUT_ERROR' || status === 'PARSING_ERROR' ||
+      const status =
+        typeof failure === 'object' && failure !== null && 'status' in failure ? failure.status : undefined;
+      const uncertain =
+        status === 'FETCH_ERROR' ||
+        status === 'TIMEOUT_ERROR' ||
+        status === 'PARSING_ERROR' ||
         (typeof status === 'number' && status >= 500);
-      setError(uncertain
-        ? 'The server did not confirm run creation. A run may have been created; check Manual runs before trying again. Your draft is preserved.'
-        : 'The run could not be created. Your draft is still here; review the error and try again.');
+      setError(
+        uncertain
+          ? 'The server did not confirm run creation. A run may have been created; check Manual runs before trying again. Your draft is preserved.'
+          : 'The run could not be created. Your draft is still here; review the error and try again.',
+      );
     } finally {
       submitting.current = false;
     }

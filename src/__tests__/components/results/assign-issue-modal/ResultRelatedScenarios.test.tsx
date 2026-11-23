@@ -8,7 +8,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   trigger: vi.fn(),
   catalogRequest: vi.fn(),
-  catalogQueryResult: { currentData: undefined as unknown, error: undefined as unknown, isError: false, isFetching: false, isLoading: false, refetch: vi.fn() },
+  catalogQueryResult: {
+    currentData: undefined as unknown,
+    error: undefined as unknown,
+    isError: false,
+    isFetching: false,
+    isLoading: false,
+    refetch: vi.fn(),
+  },
   linkScenario: vi.fn(),
   unlinkScenario: vi.fn(),
   queryResult: undefined as unknown,
@@ -75,7 +82,13 @@ const renderScenarios = (props: Partial<Parameters<typeof ResultRelatedScenarios
 describe('ResultRelatedScenarios', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.trigger.mockImplementation(() => ({ unwrap: async () => ({ id: 'result-1', spec: { id: 'spec-1' }, relatedTestScenarios: [firstScenario, secondScenario] }) }));
+    mocks.trigger.mockImplementation(() => ({
+      unwrap: async () => ({
+        id: 'result-1',
+        spec: { id: 'spec-1' },
+        relatedTestScenarios: [firstScenario, secondScenario],
+      }),
+    }));
     mocks.linkScenario.mockImplementation(() => ({ unwrap: async () => ({}) }));
     mocks.unlinkScenario.mockImplementation(() => ({ unwrap: async () => ({}) }));
     mocks.catalogRequest.mockImplementation(() => mocks.catalogQueryResult);
@@ -117,7 +130,9 @@ describe('ResultRelatedScenarios', () => {
   });
 
   it('shows a successful no-links state only for an empty array', () => {
-    mocks.queryResult = makeQueryResult({ currentData: { id: 'result-1', spec: { id: 'spec-1' }, relatedTestScenarios: [] } });
+    mocks.queryResult = makeQueryResult({
+      currentData: { id: 'result-1', spec: { id: 'spec-1' }, relatedTestScenarios: [] },
+    });
 
     renderScenarios();
 
@@ -162,7 +177,11 @@ describe('ResultRelatedScenarios', () => {
 
     mocks.queryResult = makeQueryResult({
       originalArgs: { resultId: 'result-2', projectId: 'project-1' },
-      currentData: { id: 'result-2', spec: { id: 'spec-2' }, relatedTestScenarios: [{ ...secondScenario, title: 'Current Result scenario' }] },
+      currentData: {
+        id: 'result-2',
+        spec: { id: 'spec-2' },
+        relatedTestScenarios: [{ ...secondScenario, title: 'Current Result scenario' }],
+      },
       data: oldResponse,
     });
     rerender(
@@ -178,7 +197,11 @@ describe('ResultRelatedScenarios', () => {
 
     mocks.queryResult = makeQueryResult({
       originalArgs: { resultId: 'result-2', projectId: 'project-2' },
-      currentData: { id: 'result-2', spec: { id: 'spec-2' }, relatedTestScenarios: [{ ...secondScenario, title: 'Current Project scenario' }] },
+      currentData: {
+        id: 'result-2',
+        spec: { id: 'spec-2' },
+        relatedTestScenarios: [{ ...secondScenario, title: 'Current Project scenario' }],
+      },
       data: oldResponse,
     });
     rerender(
@@ -253,18 +276,36 @@ describe('ResultRelatedScenarios', () => {
     const user = userEvent.setup();
     const candidate = { id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null };
     mocks.catalogQueryResult = {
-      currentData: { scenarios: [{ id: 'scenario-1', title: 'Checkout flow', scenarioKey: 'AUTH-1', details: null }, candidate], total: 2, page: 1, limit: 10, totalPages: 1 },
+      currentData: {
+        scenarios: [{ id: 'scenario-1', title: 'Checkout flow', scenarioKey: 'AUTH-1', details: null }, candidate],
+        total: 2,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      },
       error: undefined,
       isError: false,
       isFetching: false,
       isLoading: false,
       refetch: vi.fn(() => ({ unwrap: async () => ({}) })),
     };
-    const linkedScenario = { id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null, contentMd: '# Current steps' };
+    const linkedScenario = {
+      id: 'scenario-3',
+      title: 'Payment retry',
+      scenarioKey: 'PAY-2',
+      details: null,
+      contentMd: '# Current steps',
+    };
     mocks.trigger
       .mockImplementationOnce(() => ({ unwrap: async () => ({}) }))
       .mockImplementationOnce(() => {
-        mocks.queryResult = makeQueryResult({ currentData: { id: 'result-1', spec: { id: 'spec-1' }, relatedTestScenarios: [firstScenario, secondScenario, linkedScenario] } });
+        mocks.queryResult = makeQueryResult({
+          currentData: {
+            id: 'result-1',
+            spec: { id: 'spec-1' },
+            relatedTestScenarios: [firstScenario, secondScenario, linkedScenario],
+          },
+        });
         return { unwrap: async () => ({ relatedTestScenarios: [firstScenario, secondScenario, linkedScenario] }) };
       });
     renderScenarios();
@@ -273,11 +314,13 @@ describe('ResultRelatedScenarios', () => {
     await user.click(screen.getByRole('button', { name: /PAY-2 · Payment retry/ }));
     await user.click(screen.getByRole('button', { name: 'Link selected scenario' }));
 
-    await waitFor(() => expect(mocks.linkScenario).toHaveBeenCalledWith({
-      scenarioId: 'scenario-3',
-      projectId: 'project-1',
-      testScenarioSpecLinkBody: { specId: 'spec-1' },
-    }));
+    await waitFor(() =>
+      expect(mocks.linkScenario).toHaveBeenCalledWith({
+        scenarioId: 'scenario-3',
+        projectId: 'project-1',
+        testScenarioSpecLinkBody: { specId: 'spec-1' },
+      }),
+    );
     await waitFor(() => expect(screen.getByRole('button', { name: 'PAY-2 · Payment retry' })).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'PAY-2 · Payment retry' }));
     expect(screen.getByRole('heading', { name: 'Payment retry' })).toBeInTheDocument();
@@ -288,14 +331,25 @@ describe('ResultRelatedScenarios', () => {
     const user = userEvent.setup();
     let resolveLink: (() => void) | undefined;
     mocks.catalogQueryResult = {
-      currentData: { scenarios: [{ id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null }], total: 1, page: 1, limit: 10, totalPages: 1 },
+      currentData: {
+        scenarios: [{ id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null }],
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      },
       error: undefined,
       isError: false,
       isFetching: false,
       isLoading: false,
       refetch: vi.fn(() => ({ unwrap: async () => ({}) })),
     };
-    mocks.linkScenario.mockImplementationOnce(() => ({ unwrap: () => new Promise<void>((resolve) => { resolveLink = resolve; }) }));
+    mocks.linkScenario.mockImplementationOnce(() => ({
+      unwrap: () =>
+        new Promise<void>((resolve) => {
+          resolveLink = resolve;
+        }),
+    }));
     renderScenarios();
     await user.click(screen.getByRole('button', { name: 'Link Test Scenario' }));
     await user.click(screen.getByRole('button', { name: /PAY-2 · Payment retry/ }));
@@ -368,7 +422,11 @@ describe('ResultRelatedScenarios', () => {
       isLoading: false,
       refetch: vi.fn(() => ({ unwrap: async () => ({}) })),
     };
-    rerender(<ChakraProvider><ResultRelatedScenarios resultId="result-1" projectId="project-1" isActive /></ChakraProvider>);
+    rerender(
+      <ChakraProvider>
+        <ResultRelatedScenarios resultId="result-1" projectId="project-1" isActive />
+      </ChakraProvider>,
+    );
     await user.type(screen.getByRole('textbox', { name: 'Search by title or key' }), 'missing');
     await user.click(screen.getByRole('button', { name: 'Search' }));
     expect(screen.getByText('No Test Scenarios match this search.')).toBeInTheDocument();
@@ -381,7 +439,11 @@ describe('ResultRelatedScenarios', () => {
       isLoading: false,
       refetch: vi.fn(() => ({ unwrap: async () => ({}) })),
     };
-    rerender(<ChakraProvider><ResultRelatedScenarios resultId="result-1" projectId="project-1" isActive /></ChakraProvider>);
+    rerender(
+      <ChakraProvider>
+        <ResultRelatedScenarios resultId="result-1" projectId="project-1" isActive />
+      </ChakraProvider>,
+    );
     await waitFor(() => expect(screen.getByText('There are no Test Scenarios on this page.')).toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: 'Return to page 1' }));
     expect(mocks.catalogRequest).toHaveBeenLastCalledWith(
@@ -401,11 +463,21 @@ describe('ResultRelatedScenarios', () => {
       isLoading: false,
       refetch: vi.fn(() => ({ unwrap: async () => ({}) })),
     };
-    mocks.linkScenario.mockImplementationOnce(() => ({ unwrap: async () => { throw { status: 409 }; } }));
+    mocks.linkScenario.mockImplementationOnce(() => ({
+      unwrap: async () => {
+        throw { status: 409 };
+      },
+    }));
     mocks.trigger
       .mockImplementationOnce(() => ({ unwrap: async () => ({}) }))
       .mockImplementationOnce(() => {
-        mocks.queryResult = makeQueryResult({ currentData: { id: 'result-1', spec: { id: 'spec-1' }, relatedTestScenarios: [firstScenario, secondScenario, candidate] } });
+        mocks.queryResult = makeQueryResult({
+          currentData: {
+            id: 'result-1',
+            spec: { id: 'spec-1' },
+            relatedTestScenarios: [firstScenario, secondScenario, candidate],
+          },
+        });
         return { unwrap: async () => ({}) };
       });
     renderScenarios();
@@ -422,14 +494,24 @@ describe('ResultRelatedScenarios', () => {
   it('refreshes after an uncertain write before allowing an explicit retry', async () => {
     const user = userEvent.setup();
     mocks.catalogQueryResult = {
-      currentData: { scenarios: [{ id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null }], total: 1, page: 1, limit: 10, totalPages: 1 },
+      currentData: {
+        scenarios: [{ id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null }],
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      },
       error: undefined,
       isError: false,
       isFetching: false,
       isLoading: false,
       refetch: vi.fn(() => ({ unwrap: async () => ({}) })),
     };
-    mocks.linkScenario.mockImplementationOnce(() => ({ unwrap: async () => { throw { status: 'FETCH_ERROR' }; } }));
+    mocks.linkScenario.mockImplementationOnce(() => ({
+      unwrap: async () => {
+        throw { status: 'FETCH_ERROR' };
+      },
+    }));
     renderScenarios();
     await user.click(screen.getByRole('button', { name: 'Link Test Scenario' }));
     await user.click(screen.getByRole('button', { name: /PAY-2 · Payment retry/ }));
@@ -447,7 +529,13 @@ describe('ResultRelatedScenarios', () => {
   it('reports saved-but-refresh-failed separately and disables resubmission', async () => {
     const user = userEvent.setup();
     mocks.catalogQueryResult = {
-      currentData: { scenarios: [{ id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null }], total: 1, page: 1, limit: 10, totalPages: 1 },
+      currentData: {
+        scenarios: [{ id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null }],
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      },
       error: undefined,
       isError: false,
       isFetching: false,
@@ -456,13 +544,19 @@ describe('ResultRelatedScenarios', () => {
     };
     mocks.trigger
       .mockImplementationOnce(() => ({ unwrap: async () => ({}) }))
-      .mockImplementationOnce(() => ({ unwrap: async () => { throw { status: 503 }; } }));
+      .mockImplementationOnce(() => ({
+        unwrap: async () => {
+          throw { status: 503 };
+        },
+      }));
     renderScenarios();
     await user.click(screen.getByRole('button', { name: 'Link Test Scenario' }));
     await user.click(screen.getByRole('button', { name: /PAY-2 · Payment retry/ }));
     await user.click(screen.getByRole('button', { name: 'Link selected scenario' }));
 
-    expect(await screen.findByRole('status')).toHaveTextContent('The link was saved, but coverage could not be refreshed.');
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'The link was saved, but coverage could not be refreshed.',
+    );
     expect(screen.getByRole('button', { name: 'Link selected scenario' })).toBeDisabled();
     expect(mocks.linkScenario).toHaveBeenCalledTimes(1);
     await user.click(screen.getByRole('button', { name: 'Refresh coverage' }));
@@ -474,14 +568,24 @@ describe('ResultRelatedScenarios', () => {
   it('handles a deleted scenario target without claiming a successful link', async () => {
     const user = userEvent.setup();
     mocks.catalogQueryResult = {
-      currentData: { scenarios: [{ id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null }], total: 1, page: 1, limit: 10, totalPages: 1 },
+      currentData: {
+        scenarios: [{ id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null }],
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      },
       error: undefined,
       isError: false,
       isFetching: false,
       isLoading: false,
       refetch: vi.fn(() => ({ unwrap: async () => ({}) })),
     };
-    mocks.linkScenario.mockImplementationOnce(() => ({ unwrap: async () => { throw { status: 404 }; } }));
+    mocks.linkScenario.mockImplementationOnce(() => ({
+      unwrap: async () => {
+        throw { status: 404 };
+      },
+    }));
     renderScenarios();
     await user.click(screen.getByRole('button', { name: 'Link Test Scenario' }));
     await user.click(screen.getByRole('button', { name: /PAY-2 · Payment retry/ }));
@@ -496,17 +600,29 @@ describe('ResultRelatedScenarios', () => {
     const user = userEvent.setup();
     renderScenarios();
     await user.click(screen.getByRole('button', { name: 'Unlink AUTH-1 · Checkout flow' }));
-    mocks.queryResult = makeQueryResult({ currentData: { id: 'result-1', spec: { id: 'spec-1' }, relatedTestScenarios: [secondScenario] } });
+    mocks.queryResult = makeQueryResult({
+      currentData: { id: 'result-1', spec: { id: 'spec-1' }, relatedTestScenarios: [secondScenario] },
+    });
     await user.click(screen.getByRole('button', { name: 'Unlink' }));
 
-    await waitFor(() => expect(mocks.unlinkScenario).toHaveBeenCalledWith({ scenarioId: 'scenario-1', specId: 'spec-1', projectId: 'project-1' }));
+    await waitFor(() =>
+      expect(mocks.unlinkScenario).toHaveBeenCalledWith({
+        scenarioId: 'scenario-1',
+        specId: 'spec-1',
+        projectId: 'project-1',
+      }),
+    );
     expect(screen.queryByRole('button', { name: 'AUTH-1 · Checkout flow' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'N/A · Refund flow' })).toBeInTheDocument();
   });
 
   it('refreshes coverage after an unlink target returns 404', async () => {
     const user = userEvent.setup();
-    mocks.unlinkScenario.mockImplementationOnce(() => ({ unwrap: async () => { throw { status: 404 }; } }));
+    mocks.unlinkScenario.mockImplementationOnce(() => ({
+      unwrap: async () => {
+        throw { status: 404 };
+      },
+    }));
     renderScenarios();
     await user.click(screen.getByRole('button', { name: 'Unlink AUTH-1 · Checkout flow' }));
     await user.click(screen.getByRole('button', { name: 'Unlink' }));
@@ -519,14 +635,25 @@ describe('ResultRelatedScenarios', () => {
     const user = userEvent.setup();
     let resolveLink: (() => void) | undefined;
     mocks.catalogQueryResult = {
-      currentData: { scenarios: [{ id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null }], total: 1, page: 1, limit: 10, totalPages: 1 },
+      currentData: {
+        scenarios: [{ id: 'scenario-3', title: 'Payment retry', scenarioKey: 'PAY-2', details: null }],
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      },
       error: undefined,
       isError: false,
       isFetching: false,
       isLoading: false,
       refetch: vi.fn(() => ({ unwrap: async () => ({}) })),
     };
-    mocks.linkScenario.mockImplementationOnce(() => ({ unwrap: () => new Promise<void>((resolve) => { resolveLink = resolve; }) }));
+    mocks.linkScenario.mockImplementationOnce(() => ({
+      unwrap: () =>
+        new Promise<void>((resolve) => {
+          resolveLink = resolve;
+        }),
+    }));
     const { rerender } = renderScenarios();
     await user.click(screen.getByRole('button', { name: 'Link Test Scenario' }));
     await user.click(screen.getByRole('button', { name: /PAY-2 · Payment retry/ }));
@@ -534,9 +661,17 @@ describe('ResultRelatedScenarios', () => {
 
     mocks.queryResult = makeQueryResult({
       originalArgs: { resultId: 'result-2', projectId: 'project-1' },
-      currentData: { id: 'result-2', spec: { id: 'spec-2' }, relatedTestScenarios: [{ ...secondScenario, title: 'New Result coverage' }] },
+      currentData: {
+        id: 'result-2',
+        spec: { id: 'spec-2' },
+        relatedTestScenarios: [{ ...secondScenario, title: 'New Result coverage' }],
+      },
     });
-    rerender(<ChakraProvider><ResultRelatedScenarios resultId="result-2" projectId="project-1" isActive /></ChakraProvider>);
+    rerender(
+      <ChakraProvider>
+        <ResultRelatedScenarios resultId="result-2" projectId="project-1" isActive />
+      </ChakraProvider>,
+    );
     resolveLink?.();
 
     expect(await screen.findByRole('button', { name: 'N/A · New Result coverage' })).toBeInTheDocument();

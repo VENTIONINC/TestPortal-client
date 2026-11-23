@@ -6,7 +6,13 @@ import { describe, expect, it } from 'vitest';
 import { matchRoutes } from 'react-router';
 
 import { ProjectGuard, ProtectedRoute } from '@/components';
-import { ManualTestRunHistoryPage, TestScenarioCreatePage, TestScenarioDetailPage, TestScenarioEditPage, TestScenariosPage } from '@/pages';
+import {
+  ManualTestRunHistoryPage,
+  TestScenarioCreatePage,
+  TestScenarioDetailPage,
+  TestScenarioEditPage,
+  TestScenariosPage,
+} from '@/pages';
 import { router } from '@/router';
 import { PATHS } from '@/types/paths';
 
@@ -28,19 +34,18 @@ describe('Test Scenarios route', () => {
     expect(projectGuardElement.props.children.type).toBe(TestScenariosPage);
   });
 
-  it.each([
-    PATHS.MANUAL_TEST_RUNS,
-    '/manual-test-runs/run-1',
-    '/test-scenarios/scenario-1/manual-runs',
-  ])('registers history route %s behind authentication and project guards', (path) => {
-    const route = matchRoutes(router.routes, path)?.at(-1)?.route as { element?: ReactElement } | undefined;
-    expect(route).toBeDefined();
-    const protectedElement = route?.element as ReactElement<{ children: ReactElement }>;
-    expect(protectedElement.type).toBe(ProtectedRoute);
-    const projectGuardElement = protectedElement.props.children as ReactElement<{ children: ReactElement }>;
-    expect(projectGuardElement.type).toBe(ProjectGuard);
-    expect(projectGuardElement.props.children.type).toBe(ManualTestRunHistoryPage);
-  });
+  it.each([PATHS.MANUAL_TEST_RUNS, '/manual-test-runs/run-1', '/test-scenarios/scenario-1/manual-runs'])(
+    'registers history route %s behind authentication and project guards',
+    (path) => {
+      const route = matchRoutes(router.routes, path)?.at(-1)?.route as { element?: ReactElement } | undefined;
+      expect(route).toBeDefined();
+      const protectedElement = route?.element as ReactElement<{ children: ReactElement }>;
+      expect(protectedElement.type).toBe(ProtectedRoute);
+      const projectGuardElement = protectedElement.props.children as ReactElement<{ children: ReactElement }>;
+      expect(projectGuardElement.type).toBe(ProjectGuard);
+      expect(projectGuardElement.props.children.type).toBe(ManualTestRunHistoryPage);
+    },
+  );
 
   it.each([
     [PATHS.TEST_SCENARIO_NEW, TestScenarioCreatePage],

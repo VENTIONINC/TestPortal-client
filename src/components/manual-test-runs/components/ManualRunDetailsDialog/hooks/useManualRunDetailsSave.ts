@@ -54,8 +54,8 @@ export const useManualRunDetailsSave = (
       (scenario) => !selected.has(scenario.sourceScenarioId) && scenario.result !== MANUAL_RUN_RESULT.UNTESTED,
     );
     const needsConfirmation = proposedRemovals.some((scenario) =>
-      removedResults.every((removed) =>
-        removed.sourceScenarioId !== scenario.sourceScenarioId || removed.result !== scenario.result,
+      removedResults.every(
+        (removed) => removed.sourceScenarioId !== scenario.sourceScenarioId || removed.result !== scenario.result,
       ),
     );
     if (needsConfirmation) {
@@ -67,15 +67,19 @@ export const useManualRunDetailsSave = (
     setSaving(true);
     setError(undefined);
     try {
-      const saved = await mutate(() => updateDetails({
-        projectId,
-        runId,
-        manualTestRunDetailsRequest: {
-          title,
-          scenarioIds,
-          environmentProperties: normalizeEnvironment(draft?.environmentProperties ?? latestRun.environmentProperties),
-        },
-      }).unwrap());
+      const saved = await mutate(() =>
+        updateDetails({
+          projectId,
+          runId,
+          manualTestRunDetailsRequest: {
+            title,
+            scenarioIds,
+            environmentProperties: normalizeEnvironment(
+              draft?.environmentProperties ?? latestRun.environmentProperties,
+            ),
+          },
+        }).unwrap(),
+      );
       if (saved) closeDialog();
       else setError('Could not save the run. Your changes are still here.');
     } finally {
