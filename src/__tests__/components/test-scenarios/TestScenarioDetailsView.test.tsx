@@ -8,12 +8,15 @@ import { ChakraProvider } from '@/components/ui';
 import { TestScenarioDetailsView } from '@/components/test-scenarios/components/TestScenarioDetailsView';
 import type { TestScenario } from '@/redux/apis/generatedApi';
 
+vi.mock('@/components/test-scenarios/components/ScenarioCardTags', () => ({
+  SavedScenarioCardTags: ({ tags }: { tags: { name: string }[] }) => <div>Tags {tags.map(tag => tag.name).join(', ')}</div>,
+}));
 vi.mock('@/components/test-scenarios/components/SuitePicker', () => ({
   SuitePicker: () => <button type="button">Add to suite</button>,
 }));
 
 const scenario: TestScenario = {
-  revision: 1, suites: [{ id: 'suite-1', name: 'Smoke R2.4' }], createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' }, updatedBy: null,
+  revision: 1, tags: [], suites: [{ id: 'suite-1', name: 'Smoke R2.4' }], createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' }, updatedBy: null,
   folderId: 'folder-1', id: 'scenario-1', projectId: 'project-1', createdById: 'user-1', title: 'Checkout', scenarioKey: 'TMS-1',
   details: 'Details content', priority: 'high', relatedIssueUrl: 'https://example.test/TP-20',
   preconditions: 'Ready\nUser is logged out', testData: 'Input', contentMd: '# Checkout', contentMdHash: 'hash',

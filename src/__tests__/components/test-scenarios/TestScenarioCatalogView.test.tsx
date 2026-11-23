@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState, type ReactNode } from 'react';
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -13,6 +13,16 @@ import {
 import type { TestScenarioSummary } from '@/redux/apis/generatedApi';
 
 import { renderWithCatalogProviders } from './renderWithCatalogProviders';
+
+vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/redux/apis/generatedApi')>();
+  return {
+    ...actual,
+    useGetApiV2ProjectsByProjectIdScenarioTagsQuery: vi.fn(() => ({ currentData: [{ id: 'm1', name: 'M1', description: '', usageCount: 1 }] })),
+  };
+});
+
+vi.mock('@/components/ui/tooltip', () => ({ Tooltip: ({ children }: { children: ReactNode }) => children }));
 
 vi.mock('@/components/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/components/ui')>();
@@ -49,7 +59,8 @@ const scenarios: TestScenarioSummary[] = [
     priority: 'high',
     createdBy: { id: 'user-1', name: 'Ada Lovelace', email: 'ada@example.com' },
     createdAt: '2026-09-01T10:00:00.000Z',
-    updatedAt: '2026-09-02T11:00:00.000Z',
+    updatedAt: new Date(new Date().getFullYear(), 8, 2, 12).toISOString(),
+    tags: [{ id: 'm1', name: 'M1', description: '' }],
   },
 ];
 
@@ -75,6 +86,10 @@ const defaultProps: Omit<TestScenarioCatalogViewProps, 'scenarios' | 'pagination
   onSortDirectionChange: vi.fn(),
   priority: '',
   onPriorityChange: vi.fn(),
+  tagIds: [],
+  tagCounts: {},
+  onTagChange: vi.fn(),
+  onBulkTagsApplied: vi.fn(async () => {}),
   authorId: '',
   onAuthorChange: vi.fn(),
   authors: [{ id: 'user-1', name: 'Ada Lovelace', email: 'ada@example.com' }],
@@ -131,6 +146,36 @@ const catalogView = (props: Partial<TestScenarioCatalogViewProps>) => (
 const renderView = (props: Partial<TestScenarioCatalogViewProps> = {}) => renderWithCatalogProviders(catalogView(props));
 
 describe('TestScenarioCatalogView', () => {
+  it.each(['scenarios', 'suites'] as const)('places the %s tag controls and displays scoped filter counts', async (tab) => {
+    const user = userEvent.setup();
+    const onTagChange = vi.fn();
+    renderView({
+      organizationTab: tab,
+      selectedIds: ['scenario-1'],
+      tagCounts: { m1: 12 },
+      onTagChange,
+      ...(tab === 'suites' ? {
+        scope: { kind: 'suite', id: 'suite-1' },
+        suites: [{ id: 'suite-1', name: 'Regression', description: null, purpose: null, release: null,
+          membershipRevision: 1, members: [{ testScenarioId: 'scenario-1' }] }],
+      } : {}),
+    });
+    const toolbar = within(screen.getByRole('toolbar', { name: 'Bulk scenario actions' }));
+    expect(toolbar.getAllByRole('button').map((button) => button.textContent?.trim()).filter(Boolean)).toEqual(
+      tab === 'suites' ? ['Run selected', 'Tag', 'Remove from suite'] : ['Run selected', 'Add to suite', 'Tag', 'Delete'],
+    );
+    const tags = screen.getByRole('button', { name: 'Tags' });
+    expect(screen.getByRole('button', { name: 'Author' }).compareDocumentPosition(tags) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    if (tab === 'scenarios') {
+      expect(screen.getByRole('button', { name: 'Manage tags' }).parentElement).toContainElement(screen.getByRole('button', { name: 'Create Test Scenario' }));
+    }
+    await user.click(tags);
+    const option = screen.getByRole('checkbox', { name: 'M1' });
+    expect(option.closest('label')).toHaveTextContent('12');
+    await user.click(option);
+    expect(onTagChange).toHaveBeenCalledWith(['m1']);
+  });
+
   it('includes the selected folder as the scenario origin', () => {
     renderView({ projectId: 'project-1', organizationTab: 'scenarios', scope: { kind: 'folder', id: 'folder-1' } });
     expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1?originProject=project-1&originKind=folder&originId=folder-1');
@@ -429,10 +474,17 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.queryByText('No Test Scenarios are available for this project.')).not.toBeInTheDocument();
   });
 
+  it('includes the year in dates from a previous year', () => {
+    const previousYear = new Date().getFullYear() - 1;
+    renderView({ scenarios: [{ ...scenarios[0], updatedAt: new Date(previousYear, 11, 31, 12).toISOString() }] });
+    expect(screen.getByText(`Dec 31, ${previousYear}`)).toBeInTheDocument();
+  });
+
   it('renders the loading state', () => {
     renderView({ scenarios: [], isLoading: true });
 
     expect(screen.getByRole('status')).toHaveTextContent('Searching scenarios…');
+    expect(screen.getAllByRole('cell')).toHaveLength(screen.getAllByRole('columnheader').length);
   });
 
   it('renders the error state without scenario records', () => {
@@ -454,7 +506,7 @@ describe('TestScenarioCatalogView', () => {
     renderView();
 
     expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getAllByRole('columnheader')).toHaveLength(8);
+    expect(screen.getAllByRole('columnheader')).toHaveLength(9);
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
       'Drag',
       'Select',
@@ -462,8 +514,9 @@ describe('TestScenarioCatalogView', () => {
       'Title',
       'Priority',
       'Folder',
-      'Updated',
+      'Tags',
       'Author',
+      'Updated',
     ]);
     expect(screen.getAllByRole('row')).toHaveLength(2);
     expect(screen.getByRole('row', { name: /Checkout flow/ })).toBeInTheDocument();
@@ -471,7 +524,8 @@ describe('TestScenarioCatalogView', () => {
     expect(screen.getByRole('row', { name: /Checkout flow/ })).toHaveTextContent('High');
     expect(screen.getByText('Ada L.')).toBeInTheDocument();
     expect(screen.queryByText('ada@example.com')).not.toBeInTheDocument();
-    expect(screen.getByText('9/2/2026')).toBeInTheDocument();
+    expect(screen.getByText('Sep 2').closest('[data-tooltip-content]')).toHaveAttribute('data-tooltip-content', `September 2, ${new Date().getFullYear()} · Ada Lovelace`);
+    expect(screen.getByText('M1')).toBeInTheDocument();
     expect(screen.queryByText('9/1/2026')).not.toBeInTheDocument();
     expect(screen.queryByText('# Checkout flow')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Checkout flow' })).toHaveAttribute('href', '/test-scenarios/scenario-1?originProject=project-1&originKind=all');
@@ -500,12 +554,14 @@ describe('TestScenarioCatalogView', () => {
       'Title',
       'Priority',
       'Folder',
-      'Updated',
+      'Tags',
       'Author',
+      'Updated',
     ]);
     expect(screen.getByRole('row', { name: /Checkout flow/ })).toHaveTextContent('High');
     expect(screen.getByText('Ada L.')).toBeInTheDocument();
-    expect(screen.getByText('9/2/2026')).toBeInTheDocument();
+    expect(screen.getByText('Sep 2').closest('[data-tooltip-content]')).toHaveAttribute('data-tooltip-content', `September 2, ${new Date().getFullYear()} · Ada Lovelace`);
+    expect(screen.getByText('M1')).toBeInTheDocument();
     expect(screen.queryByRole('columnheader', { name: /Details|Created by|Created/ })).not.toBeInTheDocument();
   });
 
@@ -762,6 +818,7 @@ describe('TestScenarioCatalogView', () => {
           createdById: 'user-2',
           scenarioKey: 'TMS-1',
           title: 'Refund flow',
+          tags: [],
           details: null,
           priority: null,
           createdBy: { id: 'user-2', name: 'Grace Hopper', email: 'grace@example.com' },

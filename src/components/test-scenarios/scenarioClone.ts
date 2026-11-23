@@ -16,6 +16,7 @@ export const scenarioCloneDraft = (source: TestScenario) => ({
     action: step.action,
     expectedResult: step.expectedResult ?? '',
   })),
+  tags: source.tags ?? [],
   folderId: source.folderId,
   suites: source.suites.map(({ id, name }) => ({ id, name })),
 });

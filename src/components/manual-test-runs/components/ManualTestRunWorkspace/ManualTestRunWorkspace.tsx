@@ -143,6 +143,7 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
               </Box>
             )}
             <ManualRunScenarioFilters
+              projectId={projectId}
               filters={scenarioFilters}
               counts={details.counts}
               users={scenarios.users}

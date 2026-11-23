@@ -19,6 +19,7 @@ const isSameScenario = (left: TestScenario | undefined, right: TestScenario) =>
   left.projectId === right.projectId &&
   left.revision === right.revision &&
   left.folderId === right.folderId &&
+  JSON.stringify(left.tags) === JSON.stringify(right.tags) &&
   JSON.stringify(left.suites) === JSON.stringify(right.suites) &&
   JSON.stringify(left.createdBy) === JSON.stringify(right.createdBy) &&
   JSON.stringify(left.updatedBy) === JSON.stringify(right.updatedBy) &&

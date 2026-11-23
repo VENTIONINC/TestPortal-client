@@ -60,6 +60,9 @@ export const scenarioSpecLinkTag = (projectId: string, scenarioId: string) => ({
   id: `${projectId}:${scenarioId}`,
 } as const);
 
+const scenarioTagChanges = (_result: unknown, error: unknown, { projectId }: { projectId: string }) =>
+  error ? [] : [scenarioCatalogTag(projectId), manualTestRunProjectDetailsTag(projectId)];
+
 const getRunScopeTags = (run: Pick<ManualTestRunRead, 'projectId' | 'id'>) => [
   manualTestRunDetailTag(run.projectId, run.id),
   manualTestRunProjectDetailsTag(run.projectId),
@@ -107,6 +110,20 @@ export const extendedApi = generatedApi
   .enhanceEndpoints({
     addTagTypes: ['Results', 'ResultSpecCoverage', 'ScenarioCatalog', 'ScenarioSpecLink', 'ScenarioFolders', 'ScenarioSuites', 'Manual Run Environment Profiles'],
     endpoints: {
+      getApiV2ProjectsByProjectIdScenarioTags: {
+        providesTags: (_result, _error, arg) => [scenarioCatalogTag(arg.projectId)],
+      },
+      getApiV2TestScenariosByScenarioId: {
+        providesTags: (_result, _error, arg) => [TAGS.TestScenario, scenarioCatalogTag(arg.projectId)],
+      },
+      postApiV2ProjectsByProjectIdScenarioTags: { invalidatesTags: scenarioTagChanges },
+      patchApiV2ProjectsByProjectIdScenarioTagsAndTagId: { invalidatesTags: scenarioTagChanges },
+      postApiV2ProjectsByProjectIdScenarioTagsDeletion: { invalidatesTags: scenarioTagChanges },
+      postApiV2ProjectsByProjectIdScenarioTagsDeletionUndo: { invalidatesTags: scenarioTagChanges },
+      putApiV2ProjectsByProjectIdScenarioTagsAssignment: { invalidatesTags: scenarioTagChanges },
+      postApiV2ProjectsByProjectIdScenarioTagsInline: { invalidatesTags: scenarioTagChanges },
+      postApiV2ProjectsByProjectIdScenarioTagsDeletionPreview: { invalidatesTags: [] },
+      postApiV2ProjectsByProjectIdScenarioTagsSelectionCounts: { invalidatesTags: [] },
       getApiV2TestScenarioFolders: {
         providesTags: (_result, _error, arg) => [{ type: 'ScenarioFolders', id: arg.projectId }],
       },
@@ -246,6 +263,7 @@ export const extendedApi = generatedApi
       },
       deleteApiV2TestScenariosByScenarioId: {
         invalidatesTags: (_result, _error, arg: DeleteApiV2TestScenariosByScenarioIdApiArg) => [
+          manualTestRunProjectDetailsTag(arg.projectId),
           TAGS.TestScenario,
           scenarioCatalogTag(arg.projectId),
           { type: 'ScenarioFolders', id: arg.projectId },

@@ -46,7 +46,12 @@ export const shortAuthorName = (name: string) => {
   return `${parts[0]} ${parts.at(-1)?.[0] ?? ''}.`;
 };
 
-export const compactDate = (value: string) => new Date(value).toLocaleDateString('en-US');
+export const compactDate = (date: Date) =>
+  date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
+  });
 export const authorInitials = (name: string) =>
   name
     .trim()

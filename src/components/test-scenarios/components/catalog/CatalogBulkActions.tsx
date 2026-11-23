@@ -7,12 +7,14 @@ import { FiMinusCircle, FiPlay, FiTrash2, FiX } from 'react-icons/fi';
 
 import { Tooltip } from '@/components/ui';
 
+import { BulkTagPicker } from '../../tags';
 import { SuitePicker } from '../SuitePicker';
 
 type BulkSuitePickerProps = Extract<ComponentProps<typeof SuitePicker>, { projectId: string }>;
 export type SuitePickerCompletion = BulkSuitePickerProps['onComplete'];
 
 interface CatalogBulkActionsProps {
+  onBulkTagsApplied: () => Promise<void>;
   selectedIds: string[];
   total: number;
   allMatchingSelected: boolean;
@@ -33,6 +35,7 @@ interface CatalogBulkActionsProps {
 }
 
 export const CatalogBulkActions = ({
+  onBulkTagsApplied,
   selectedIds,
   total,
   allMatchingSelected,
@@ -130,6 +133,14 @@ export const CatalogBulkActions = ({
           disabled={isExecutingOperation || isAddingToSuite}
           onBusyChange={onSuitePickerBusyChange}
           onComplete={onSuitePickerComplete}
+        />
+      )}
+      {projectId && (isScenariosTab || inSuite) && (
+        <BulkTagPicker
+          projectId={projectId}
+          scenarioIds={selectedIds}
+          disabled={isExecutingOperation || isAddingToSuite || isResolvingSelection}
+          onApplied={onBulkTagsApplied}
         />
       )}
       {isScenariosTab && (

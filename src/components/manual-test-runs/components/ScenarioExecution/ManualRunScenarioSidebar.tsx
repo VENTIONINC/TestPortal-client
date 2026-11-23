@@ -5,6 +5,7 @@ import { Box, HStack, Text, VStack } from '@chakra-ui/react';
 import { LuFolder, LuLink } from 'react-icons/lu';
 import { Link } from 'react-router';
 
+import { TagChips } from '@/components/test-scenarios/tags';
 import type { ActiveUserDirectoryEntry, ManualTestRunScenarioRead } from '@/redux/apis/generatedApi';
 import { PATHS } from '@/types/paths';
 
@@ -94,6 +95,10 @@ export function ManualRunScenarioSidebar({
         >
           {scenario.priority}
         </Text>
+      </Box>
+      <Box>
+        <Text fontSize="xs" color="fg.muted" mb={1}>Tags</Text>
+        <TagChips tags={scenario.tags ?? []} emptyLabel="No tags" />
       </Box>
       <Box>
         <Text fontSize="xs" color="fg.muted" mb={1}>

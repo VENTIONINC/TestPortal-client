@@ -7,10 +7,11 @@ import type { TestScenario } from '@/redux/apis/generatedApi';
 
 describe('scenario clone', () => {
   it('copies editable content without server-owned identifiers and avoids repeated prefixes', () => {
-    const source = { id: 'source', projectId: 'p', scenarioKey: 'P-1', revision: 5, title: 'Copy of Login', details: 'Details', preconditions: 'Ready', testData: 'Data', priority: 'high', relatedIssueUrl: 'https://example.com', folderId: 'f', suites: [{ id: 's', name: 'Suite' }], steps: [{ id: 'step-server', position: 0, action: 'Open', expectedResult: 'Done' }] } as TestScenario;
+    const source = { id: 'source', projectId: 'p', scenarioKey: 'P-1', revision: 5, title: 'Copy of Login', details: 'Details', preconditions: 'Ready', testData: 'Data', priority: 'high', relatedIssueUrl: 'https://example.com', folderId: 'f', tags: [{ id: 'tag', name: 'M1', description: '' }], suites: [{ id: 's', name: 'Suite' }], steps: [{ id: 'step-server', position: 0, action: 'Open', expectedResult: 'Done' }] } as TestScenario;
     const draft = scenarioCloneDraft(source);
     expect(draft.values).toEqual({ title: 'Copy of Login', details: 'Details', preconditions: 'Ready', testData: 'Data', priority: 'high', relatedIssueUrl: 'https://example.com' });
     expect(draft.steps).toEqual([{ key: 'clone-step-0', action: 'Open', expectedResult: 'Done' }]);
+    expect(draft.tags).toEqual([{ id: 'tag', name: 'M1', description: '' }]);
     expect(draft.folderId).toBe('f');
     expect(draft.suites).toEqual([{ id: 's', name: 'Suite' }]);
     expect(source.steps[0].id).toBe('step-server');

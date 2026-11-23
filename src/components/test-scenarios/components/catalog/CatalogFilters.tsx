@@ -7,6 +7,7 @@ import { FiCheck, FiChevronDown, FiSearch, FiX } from 'react-icons/fi';
 
 import { Tooltip } from '@/components/ui';
 
+import { TagFilter } from '../../tags';
 import type { TestScenarioCatalogViewProps } from './types';
 import { priorityColors, shortAuthorName, type PriorityValue } from './utils';
 
@@ -392,7 +393,10 @@ const filterLabels: Record<keyof TestScenarioCatalogViewProps['columnFilters'], 
   createdBy: 'Created by',
 };
 
-interface CatalogFiltersProps {
+interface CatalogFiltersProps extends Pick<
+  TestScenarioCatalogViewProps,
+  'projectId' | 'tagIds' | 'tagCounts' | 'onTagChange'
+> {
   hidden: boolean;
   showFilters: boolean;
   allowRunOrder: boolean;
@@ -415,6 +419,10 @@ interface CatalogFiltersProps {
 }
 
 export const CatalogFilters = ({
+  projectId,
+  tagIds,
+  tagCounts,
+  onTagChange,
   hidden,
   showFilters,
   allowRunOrder,
@@ -495,6 +503,9 @@ export const CatalogFilters = ({
               error={authorsError}
               onChange={onAuthorChange}
             />
+            {projectId && (
+              <TagFilter projectId={projectId} selectedIds={tagIds} counts={tagCounts} onChange={onTagChange} />
+            )}
             <Box flex="1 1 auto" minW={0} />
             <ScenarioSortSelect value={sort} onChange={onSortChange} allowRunOrder={allowRunOrder} />
             <Tooltip content={sortDirection === 'desc' ? 'Descending' : 'Ascending'}>

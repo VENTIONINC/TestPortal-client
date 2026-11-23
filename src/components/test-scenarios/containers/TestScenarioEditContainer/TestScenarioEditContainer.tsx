@@ -3,6 +3,7 @@
 
 import type { TestScenario } from '@/redux/apis/generatedApi';
 
+import { SavedScenarioCardTags } from '../../components/ScenarioCardTags';
 import { TestScenarioDetailStateView, TestScenarioForm } from '../../components';
 import { ScenarioDraftNavigationGuard } from '../../components/ScenarioDraftNavigationGuard';
 import { useTestScenarioEdit } from './hooks/useTestScenarioEdit';
@@ -45,6 +46,10 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
             history={scenario}
             {...breadcrumb}
             initialSteps={toStepDrafts(scenario)}
+            tagField={
+              <SavedScenarioCardTags projectId={projectId} scenarioId={scenarioId}
+                tags={edit.tags} disabled={edit.isSubmitting} onAssigned={edit.onTagsAssigned} />
+            }
             initialSuites={scenario.suites ?? []}
             suites={navigation.suites}
             folders={navigation.folders}

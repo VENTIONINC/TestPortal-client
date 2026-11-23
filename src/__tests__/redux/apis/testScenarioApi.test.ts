@@ -39,6 +39,7 @@ const creator: TestScenarioCreatorSummary = {
 };
 
 const scenario: TestScenario = {
+  tags: [],
   revision: 1,
   suites: [],
   createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' },
@@ -64,6 +65,7 @@ const scenario: TestScenario = {
 };
 
 const summary: TestScenarioSummary = {
+  tags: [],
   id: scenario.id,
   projectId: scenario.projectId,
   folderId: null,
@@ -85,6 +87,7 @@ const listArgs: GetApiV2TestScenariosApiArg = {
 };
 
 const listResponse: TestScenarioListResponse = {
+  tagCounts: {},
   scenarios: [summary],
   total: 31,
   page: 2,

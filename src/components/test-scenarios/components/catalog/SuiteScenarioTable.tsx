@@ -2,15 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRef, useState, type DragEvent } from 'react';
-import { Box, Button, HStack, Link as ChakraLink, Table, Text } from '@chakra-ui/react';
-import { Link as RouterLink } from 'react-router';
+import { Box, Button, Table, Text } from '@chakra-ui/react';
 
-import { Tooltip } from '@/components/ui';
-
-import { getTestScenarioDetailPath } from '../../constants';
 import type { TestScenarioSummary } from '../../types';
-import { CatalogTableEmptyState } from './CatalogTableStates';
-import { authorInitials, compactDate, priorityColors, SCENARIO_DRAG_MIME, shortAuthorName } from './utils';
+import { ScenarioSummaryCells, ScenarioSummaryHeaders } from './ScenarioSummaryCells';
+import { CatalogLoadingRow, CatalogTableEmptyState } from './CatalogTableStates';
+import { SCENARIO_DRAG_MIME } from './utils';
 
 interface SuiteScenarioTableProps {
   originSearch: string;
@@ -88,15 +85,24 @@ export const SuiteScenarioTable = ({
 
   return (
     <Box overflowX="auto">
-      <Table.Root size="sm" variant="outline" w="100%" minW="980px" tableLayout="fixed">
+      <Table.Root
+        size="sm"
+        variant="outline"
+        w="100%"
+        minW="980px"
+        tableLayout="fixed"
+        borderCollapse="separate"
+        borderSpacing="8px 0"
+        css={{ '& th, & td': { paddingInline: 0, paddingBlock: '8px' } }}
+      >
         <Table.Header>
           <Table.Row bg="bg.subtle">
             {enableSuiteDrag && (
-              <Table.ColumnHeader w="30px" py={2}>
+              <Table.ColumnHeader w="24px" py={2}>
                 <Text srOnly>Drag to another suite or reorder</Text>
               </Table.ColumnHeader>
             )}
-            <Table.ColumnHeader px={3} py={2} w="44px">
+            <Table.ColumnHeader px={3} py={2} w="20px">
               <input
                 type="checkbox"
                 aria-label="Select all scenarios on this page"
@@ -112,44 +118,21 @@ export const SuiteScenarioTable = ({
               />
               <Text srOnly>Select</Text>
             </Table.ColumnHeader>
-            <Table.ColumnHeader w="120px" px={2} py={2}>
-              Key
-            </Table.ColumnHeader>
-            <Table.ColumnHeader px={3} py={2}>
-              Title
-            </Table.ColumnHeader>
-            <Table.ColumnHeader w="110px" px={3} py={2}>
-              Priority
-            </Table.ColumnHeader>
-            {showFolder && (
-              <Table.ColumnHeader w="190px" px={3} py={2}>
-                Folder
-              </Table.ColumnHeader>
-            )}
-            <Table.ColumnHeader w="120px" px={3} py={2}>
-              Updated
-            </Table.ColumnHeader>
-            <Table.ColumnHeader w="180px" px={3} py={2}>
-              Author
-            </Table.ColumnHeader>
+            <ScenarioSummaryHeaders showFolder={showFolder} />
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {scenarios.length === 0 ? (
+          {isLoading && !scenarios.length ? (
+            <CatalogLoadingRow columnCount={7 + Number(showFolder) + Number(enableSuiteDrag)} />
+          ) : scenarios.length === 0 ? (
             <Table.Row>
-              <Table.Cell colSpan={6 + Number(showFolder) + Number(enableSuiteDrag)} py={8} textAlign="center">
-                {isLoading ? (
-                  <Text role="status" color="text.muted">
-                    Searching scenarios…
-                  </Text>
-                ) : (
-                  <CatalogTableEmptyState
-                    searchActive={searchActive}
-                    emptySuite={emptySuite}
-                    suiteView={enableSuiteDrag}
-                    onAddScenarios={onAddScenarios}
-                  />
-                )}
+              <Table.Cell colSpan={7 + Number(showFolder) + Number(enableSuiteDrag)} py={8} textAlign="center">
+                <CatalogTableEmptyState
+                  searchActive={searchActive}
+                  emptySuite={emptySuite}
+                  suiteView={enableSuiteDrag}
+                  onAddScenarios={onAddScenarios}
+                />
               </Table.Cell>
             </Table.Row>
           ) : (
@@ -161,11 +144,11 @@ export const SuiteScenarioTable = ({
                   dragOverScenarioId === scenario.id
                     ? 'blue.subtle'
                     : selectedIds.includes(scenario.id)
-                      ? 'blue.50'
+                      ? 'blue.subtle'
                       : undefined
                 }
                 _hover={{
-                  bg: selectedIds.includes(scenario.id) ? 'blue.50' : 'bg.subtle',
+                  bg: selectedIds.includes(scenario.id) ? 'blue.subtle' : 'bg.subtle',
                 }}
                 onDragOver={enableSuiteReorder ? (event) => onSuiteRowDragOver(event, scenario.id) : undefined}
                 onDrop={enableSuiteReorder ? (event) => onSuiteRowDrop(event, scenario.id) : undefined}
@@ -192,6 +175,9 @@ export const SuiteScenarioTable = ({
                     <Button
                       type="button"
                       size="xs"
+                      minW="24px"
+                      w="24px"
+                      p={0}
                       variant="ghost"
                       aria-label={`Drag ${scenario.title} to another suite or reorder`}
                       title="Drag to another suite or reorder"
@@ -211,100 +197,13 @@ export const SuiteScenarioTable = ({
                     onChange={() => handleToggleScenario(scenario.id, index)}
                   />
                 </Table.Cell>
-                <Table.Cell px={2} py={2}>
-                  <Tooltip content={scenario.scenarioKey ?? 'N/A'}>
-                    <Text display="block" maxW="100%" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-                      {scenario.scenarioKey ?? 'N/A'}
-                    </Text>
-                  </Tooltip>
-                </Table.Cell>
-                <Table.Cell px={3} py={2} minW={0} overflow="hidden">
-                  <Tooltip content={scenario.title}>
-                    <ChakraLink
-                      asChild
-                      display="block"
-                      minW={0}
-                      maxW="100%"
-                      overflow="hidden"
-                      textOverflow="ellipsis"
-                      whiteSpace="nowrap"
-                      fontWeight="semibold"
-                      color="text.main"
-                    >
-                      <RouterLink to={`${getTestScenarioDetailPath(scenario.id)}${originSearch}`}>
-                        {scenario.title}
-                      </RouterLink>
-                    </ChakraLink>
-                  </Tooltip>
-                </Table.Cell>
-                <Table.Cell px={3} py={2}>
-                  {scenario.priority ? (
-                    <Text
-                      as="span"
-                      display="inline-flex"
-                      px={2}
-                      py={0.5}
-                      borderRadius="full"
-                      fontSize="xs"
-                      fontWeight="semibold"
-                      bg={priorityColors[scenario.priority].bg}
-                      color={priorityColors[scenario.priority].color}
-                    >
-                      {scenario.priority.charAt(0).toUpperCase() + scenario.priority.slice(1)}
-                    </Text>
-                  ) : (
-                    <Text color="text.muted">—</Text>
-                  )}
-                </Table.Cell>
-                {showFolder &&
-                  (() => {
-                    const folderPath = scenario.folderId
-                      ? (folderPathById.get(scenario.folderId) ?? scenario.folderName ?? 'Unknown folder')
-                      : 'Unfiled';
-                    return (
-                      <Table.Cell px={3} py={2}>
-                        <Tooltip content={folderPath} openDelay={300} closeDelay={100}>
-                          <Text
-                            display="block"
-                            maxW="100%"
-                            overflow="hidden"
-                            textOverflow="ellipsis"
-                            whiteSpace="nowrap"
-                          >
-                            {folderPath}
-                          </Text>
-                        </Tooltip>
-                      </Table.Cell>
-                    );
-                  })()}
-                <Table.Cell px={3} py={2} whiteSpace="nowrap" color="text.secondary">
-                  {compactDate(scenario.updatedAt)}
-                </Table.Cell>
-                <Table.Cell px={3} py={2}>
-                  <Tooltip content={`${scenario.createdBy.name} (${scenario.createdBy.email})`}>
-                    <HStack gap={2} minW={0}>
-                      <Box
-                        aria-hidden="true"
-                        display="inline-flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        w="6"
-                        h="6"
-                        flexShrink={0}
-                        borderRadius="full"
-                        bg="blue.subtle"
-                        color="blue.fg"
-                        fontSize="xs"
-                        fontWeight="semibold"
-                      >
-                        {authorInitials(scenario.createdBy.name)}
-                      </Box>
-                      <Text overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
-                        {shortAuthorName(scenario.createdBy.name)}
-                      </Text>
-                    </HStack>
-                  </Tooltip>
-                </Table.Cell>
+                <ScenarioSummaryCells
+                  scenario={scenario}
+                  originSearch={originSearch}
+                  folderPathById={folderPathById}
+                  showFolder={showFolder}
+                  unfiledLabel="Unfiled"
+                />
               </Table.Row>
             ))
           )}

@@ -5,6 +5,7 @@ import { render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
+import { Provider } from 'react-redux';
 
 import { TestScenarioDetailBoundary } from '@/components/test-scenarios/containers/TestScenarioDetailBoundary';
 import { TestScenarioEditBoundary } from '@/components/test-scenarios/containers/TestScenarioEditBoundary';
@@ -18,6 +19,7 @@ import {
   usePutApiV2TestScenariosByScenarioIdStepsOrderMutation,
 } from '@/redux/apis/generatedApi';
 import { usePatchApiV2TestScenariosByScenarioIdMutation } from '@/redux/apis/extendedApi';
+import { store } from '@/redux/store';
 
 const routeParams = vi.hoisted(() => ({ scenarioId: 'scenario-1' as string | undefined }));
 const selectedProject = vi.hoisted(() => ({ id: 'project-a' }));
@@ -101,6 +103,7 @@ const renderWithRouter = (content: ReactNode) =>
     <ChakraProvider>
       <MemoryRouter>{content}</MemoryRouter>
     </ChakraProvider>,
+    { wrapper: ({ children }) => <Provider store={store}>{children}</Provider> },
   );
 
 describe('Test Scenario route boundaries', () => {

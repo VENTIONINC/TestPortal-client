@@ -9,6 +9,7 @@ import type { TestScenario } from '@/redux/apis/generatedApi';
 
 import type { TestScenarioContextMenuHandler } from '../hooks/useTestScenarioContextMenu';
 import type { ScenarioOperationReport } from '../utils';
+import { SavedScenarioCardTags } from './ScenarioCardTags';
 import { SuitePicker } from './SuitePicker';
 
 export interface TestScenarioDetailsViewProps {
@@ -146,6 +147,7 @@ export const TestScenarioDetailsView = ({
         <VStack data-testid="scenario-detail-sidebar" align="stretch" gap={6} minW={0} borderLeftWidth={{ base: 0, lg: '1px' }} borderColor="border.main" pl={{ base: 0, lg: 6 }}>
           <Box><Text fontSize="14px" mb={2}>Folder</Text><Link href={`/test-management?${new URLSearchParams({ projectId, folderId: scenario.folderId ?? 'unfiled' })}`} display="inline-flex" alignItems="center" gap={1.5} bg="bg.subtle" px={2} py={1} borderRadius="md" maxW="100%" overflowWrap="anywhere"><FiFolder aria-hidden="true" />{folderName || 'No folder'}</Link></Box>
           <Box><Text fontSize="14px" mb={2}>Priority</Text><Text as="span" bg={scenario.priority === 'high' ? 'status.attention.bg' : scenario.priority === 'medium' ? 'status.total.bg' : 'status.neutral.bg'} px={2} py={0.5} borderRadius="full" fontSize="xs">{priorityLabel}</Text></Box>
+          <SavedScenarioCardTags key={scenario.id} projectId={projectId} scenarioId={scenario.id} tags={scenario.tags ?? []} />
           <Box><Text fontSize="14px" mb={2}>Suites</Text>
             <HStack wrap="wrap" gap={2} align="start">
               {(scenario.suites ?? []).map((suite) => <HStack key={suite.id} bg="blue.subtle" color="blue.fg" borderRadius="full" pl={2} pr={1} py={0.5} gap={1}>

@@ -43,6 +43,8 @@ export interface TestScenarioFormProps {
   mode: TestScenarioFormMode;
   initialValues?: Partial<TestScenarioEditableValues> & Pick<TestScenarioEditableValues, 'title'>;
   initialSteps?: TestScenarioInitialStepDraft[];
+  tagField?: React.ReactNode;
+  draftTagsDirty?: boolean;
   initialSuites?: ScenarioSuiteDraft[];
   suites?: Array<{ id: string; name: string; members?: unknown[] }>;
   reconciliation?: TestScenarioFormReconciliation;
@@ -632,6 +634,7 @@ export const TestScenarioForm = (props: TestScenarioFormProps) => {
                 </Portal>
               </Popover.Root>
             </Box>
+            {props.tagField}
             <Box>
               <Heading size="sm" mb={2}>
                 Suites

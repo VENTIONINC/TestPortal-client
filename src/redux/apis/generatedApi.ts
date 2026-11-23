@@ -815,6 +815,103 @@ const injectedRtkApi = api
         }),
         invalidatesTags: ["Reports", "Exports"],
       }),
+      getApiV2ProjectsByProjectIdScenarioTags: build.query<
+        GetApiV2ProjectsByProjectIdScenarioTagsApiResponse,
+        GetApiV2ProjectsByProjectIdScenarioTagsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/scenario-tags`,
+        }),
+        providesTags: ["Test Scenarios"],
+      }),
+      postApiV2ProjectsByProjectIdScenarioTags: build.mutation<
+        PostApiV2ProjectsByProjectIdScenarioTagsApiResponse,
+        PostApiV2ProjectsByProjectIdScenarioTagsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/scenario-tags`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      patchApiV2ProjectsByProjectIdScenarioTagsAndTagId: build.mutation<
+        PatchApiV2ProjectsByProjectIdScenarioTagsAndTagIdApiResponse,
+        PatchApiV2ProjectsByProjectIdScenarioTagsAndTagIdApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/scenario-tags/${queryArg.tagId}`,
+          method: "PATCH",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2ProjectsByProjectIdScenarioTagsDeletionPreview: build.mutation<
+        PostApiV2ProjectsByProjectIdScenarioTagsDeletionPreviewApiResponse,
+        PostApiV2ProjectsByProjectIdScenarioTagsDeletionPreviewApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/scenario-tags/deletion/preview`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2ProjectsByProjectIdScenarioTagsDeletion: build.mutation<
+        PostApiV2ProjectsByProjectIdScenarioTagsDeletionApiResponse,
+        PostApiV2ProjectsByProjectIdScenarioTagsDeletionApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/scenario-tags/deletion`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2ProjectsByProjectIdScenarioTagsDeletionUndo: build.mutation<
+        PostApiV2ProjectsByProjectIdScenarioTagsDeletionUndoApiResponse,
+        PostApiV2ProjectsByProjectIdScenarioTagsDeletionUndoApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/scenario-tags/deletion/undo`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2ProjectsByProjectIdScenarioTagsInline: build.mutation<
+        PostApiV2ProjectsByProjectIdScenarioTagsInlineApiResponse,
+        PostApiV2ProjectsByProjectIdScenarioTagsInlineApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/scenario-tags/inline`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      putApiV2ProjectsByProjectIdScenarioTagsAssignment: build.mutation<
+        PutApiV2ProjectsByProjectIdScenarioTagsAssignmentApiResponse,
+        PutApiV2ProjectsByProjectIdScenarioTagsAssignmentApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/scenario-tags/assignment`,
+          method: "PUT",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
+      postApiV2ProjectsByProjectIdScenarioTagsSelectionCounts: build.mutation<
+        PostApiV2ProjectsByProjectIdScenarioTagsSelectionCountsApiResponse,
+        PostApiV2ProjectsByProjectIdScenarioTagsSelectionCountsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/api/v2/projects/${queryArg.projectId}/scenario-tags/selection-counts`,
+          method: "POST",
+          body: queryArg.body,
+        }),
+        invalidatesTags: ["Test Scenarios"],
+      }),
       postApiV2TestScenariosByScenarioIdSpecLinks: build.mutation<
         PostApiV2TestScenariosByScenarioIdSpecLinksApiResponse,
         PostApiV2TestScenariosByScenarioIdSpecLinksApiArg
@@ -1001,9 +1098,11 @@ const injectedRtkApi = api
             limit: queryArg.limit,
             search: queryArg.search,
             createdById: queryArg.createdById,
+            tagIds: queryArg.tagIds,
             createdByIds: queryArg.createdByIds,
             priority: queryArg.priority,
             sort: queryArg.sort,
+            timeZone: queryArg.timeZone,
             sortField: queryArg.sortField,
             sortDirection: queryArg.sortDirection,
             scenarioKey: queryArg.scenarioKey,
@@ -1027,6 +1126,7 @@ const injectedRtkApi = api
           params: {
             projectId: queryArg.projectId,
             search: queryArg.search,
+            tagIds: queryArg.tagIds,
             priority: queryArg.priority,
             scenarioKey: queryArg.scenarioKey,
             title: queryArg.title,
@@ -1050,6 +1150,7 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
             search: queryArg.search,
             createdById: queryArg.createdById,
+            tagIds: queryArg.tagIds,
             createdByIds: queryArg.createdByIds,
             scenarioKey: queryArg.scenarioKey,
             title: queryArg.title,
@@ -1073,6 +1174,7 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
             search: queryArg.search,
             createdById: queryArg.createdById,
+            tagIds: queryArg.tagIds,
             createdByIds: queryArg.createdByIds,
             priority: queryArg.priority,
             scenarioKey: queryArg.scenarioKey,
@@ -2026,6 +2128,95 @@ export type PostApiV2ReportsPdfExportApiResponse =
 export type PostApiV2ReportsPdfExportApiArg = {
   pdfExportRequest: PdfExportRequest;
 };
+export type GetApiV2ProjectsByProjectIdScenarioTagsApiResponse =
+  /** status 200 Project tags with usage */ ManagedScenarioTag[];
+export type GetApiV2ProjectsByProjectIdScenarioTagsApiArg = {
+  projectId: string;
+};
+export type PostApiV2ProjectsByProjectIdScenarioTagsApiResponse =
+  /** status 201 Created tag */ ManagedScenarioTag;
+export type PostApiV2ProjectsByProjectIdScenarioTagsApiArg = {
+  projectId: string;
+  body: {
+    name: string;
+    description?: string;
+  };
+};
+export type PatchApiV2ProjectsByProjectIdScenarioTagsAndTagIdApiResponse =
+  /** status 200 Updated tag */ ManagedScenarioTag;
+export type PatchApiV2ProjectsByProjectIdScenarioTagsAndTagIdApiArg = {
+  projectId: string;
+  tagId: string;
+  body: {
+    name: string;
+    description?: string;
+  };
+};
+export type PostApiV2ProjectsByProjectIdScenarioTagsDeletionPreviewApiResponse =
+  /** status 200 Tag deletion operation */ {
+    affectedCount: number;
+    revision: string;
+  };
+export type PostApiV2ProjectsByProjectIdScenarioTagsDeletionPreviewApiArg = {
+  projectId: string;
+  body: {
+    tagIds: string[];
+  };
+};
+export type PostApiV2ProjectsByProjectIdScenarioTagsDeletionApiResponse =
+  /** status 200 Tag deletion operation */ {
+    operationId: string;
+  };
+export type PostApiV2ProjectsByProjectIdScenarioTagsDeletionApiArg = {
+  projectId: string;
+  body: {
+    tagIds: string[];
+    revision: string;
+    operationId: string;
+  };
+};
+export type PostApiV2ProjectsByProjectIdScenarioTagsDeletionUndoApiResponse =
+  unknown;
+export type PostApiV2ProjectsByProjectIdScenarioTagsDeletionUndoApiArg = {
+  projectId: string;
+  body: {
+    operationId: string;
+  };
+};
+export type PostApiV2ProjectsByProjectIdScenarioTagsInlineApiResponse =
+  /** status 200 Current tag */ ScenarioTagSummary;
+export type PostApiV2ProjectsByProjectIdScenarioTagsInlineApiArg = {
+  projectId: string;
+  body: {
+    name: string;
+  };
+};
+export type PutApiV2ProjectsByProjectIdScenarioTagsAssignmentApiResponse =
+  /** status 200 Current tag */ ScenarioTagSummary;
+export type PutApiV2ProjectsByProjectIdScenarioTagsAssignmentApiArg = {
+  projectId: string;
+  body:
+    | {
+        scenarioIds: string[];
+        present: boolean;
+        tagId: string;
+      }
+    | {
+        scenarioIds: string[];
+        present: true;
+        name: string;
+      };
+};
+export type PostApiV2ProjectsByProjectIdScenarioTagsSelectionCountsApiResponse =
+  /** status 200 Assigned scenarios per tag */ {
+    [key: string]: number;
+  };
+export type PostApiV2ProjectsByProjectIdScenarioTagsSelectionCountsApiArg = {
+  projectId: string;
+  body: {
+    scenarioIds: string[];
+  };
+};
 export type PostApiV2TestScenariosByScenarioIdSpecLinksApiResponse =
   /** status 201 Test scenario Spec link created */ TestScenarioSpecLinkResponse;
 export type PostApiV2TestScenariosByScenarioIdSpecLinksApiArg = {
@@ -2124,9 +2315,11 @@ export type GetApiV2TestScenariosApiArg = {
   limit?: number;
   search?: string;
   createdById?: string;
+  tagIds?: string;
   createdByIds?: string;
   priority?: string;
   sort?: "recently_created" | "recently_updated" | "title_asc";
+  timeZone?: string;
   sortField?:
     | "scenarioKey"
     | "title"
@@ -2150,6 +2343,7 @@ export type GetApiV2TestScenariosAuthorsApiResponse =
 export type GetApiV2TestScenariosAuthorsApiArg = {
   projectId: string;
   search?: string;
+  tagIds?: string;
   priority?: string;
   scenarioKey?: string;
   title?: string;
@@ -2166,6 +2360,7 @@ export type GetApiV2TestScenariosPriorityCountsApiArg = {
   projectId: string;
   search?: string;
   createdById?: string;
+  tagIds?: string;
   createdByIds?: string;
   scenarioKey?: string;
   title?: string;
@@ -2182,6 +2377,7 @@ export type GetApiV2TestScenariosSelectionApiArg = {
   projectId: string;
   search?: string;
   createdById?: string;
+  tagIds?: string;
   createdByIds?: string;
   priority?: string;
   scenarioKey?: string;
@@ -2673,7 +2869,9 @@ export type PostApiV2ManualTestRunsByRunIdCompleteApiResponse =
 export type PostApiV2ManualTestRunsByRunIdCompleteApiArg = {
   runId: string;
   projectId: string;
-  body: { requireAllMarked?: boolean };
+  body: {
+    requireAllMarked?: boolean;
+  };
 };
 export type PostApiV2ManualTestRunsByRunIdReopenApiResponse =
   /** status 200 Reopened run detail */ ManualTestRunRead;
@@ -3476,6 +3674,14 @@ export type PdfExportRequest = {
   /** When true, the export includes an AI-generated insights section in the PDF. Defaults to false when omitted. */
   includeAiInsights?: boolean;
 };
+export type ScenarioTagSummary = {
+  id: string;
+  name: string;
+  description: string;
+};
+export type ManagedScenarioTag = ScenarioTagSummary & {
+  usageCount: number;
+};
 export type TestScenarioSpecLinkResponse = {
   scenarioId: string;
   specId: string;
@@ -3519,6 +3725,7 @@ export type TestScenario = {
     name: string;
     email: string;
   } | null;
+  tags: ScenarioTagSummary[];
   suites: {
     id: string;
     name: string;
@@ -3629,6 +3836,7 @@ export type CreateTestScenarioRequest = {
   priority?: "low" | "medium" | "high";
   relatedIssueUrl?: string | null;
   steps?: CreateTestScenarioStep[];
+  tagIds?: string[];
   suiteIds?: string[];
   newSuites?: {
     name: string;
@@ -3652,9 +3860,13 @@ export type TestScenarioSummary = {
   updatedAt: string;
   folderId: string | null;
   folderName: string | null;
+  tags: ScenarioTagSummary[];
   matchedSuiteId?: string | null;
 };
 export type TestScenarioListResponse = {
+  tagCounts: {
+    [key: string]: number;
+  };
   scenarios: TestScenarioSummary[];
   total: number;
   page: number;
@@ -3709,6 +3921,7 @@ export type ManualTestRunScenarioResult =
   | "blocked"
   | "skipped";
 export type ManualTestRunScenario = {
+  tags: ScenarioTagSummary[];
   position: number;
   result: ManualTestRunScenarioResult;
   executionComment: string | null;
@@ -3743,6 +3956,7 @@ export type ManualTestRunScenarioStepRead = {
 };
 export type ManualTestRunScenarioRead = {
   id: string;
+  tags: ScenarioTagSummary[];
   sourceScenarioId: string;
   sourceScenarioKey: string;
   title: string;
@@ -3761,7 +3975,13 @@ export type ManualTestRunScenarioRead = {
   resultById: string | null;
   resultBy: ManualTestRunUser;
   resultAt: string | null;
-  resultHistory: { id: number; result: ManualTestRunScenarioResult; resultById: string | null; resultBy: ManualTestRunUser; resultAt: string }[];
+  resultHistory: {
+    id: number;
+    result: ManualTestRunScenarioResult;
+    resultById: string | null;
+    resultBy: ManualTestRunUser;
+    resultAt: string;
+  }[];
   steps: ManualTestRunScenarioStepRead[];
 };
 export type ManualTestRunRead = {
@@ -3790,7 +4010,7 @@ export type ManualTestRunRead = {
 export type ManualTestRunCreateRequest =
   | {
       scenarioIds: string[];
-      title: string;
+      title?: string;
       environmentProperties?: ManualTestRunEnvironmentProperty[];
       browser?: string | null;
       operatingSystem?: string | null;
@@ -3801,7 +4021,7 @@ export type ManualTestRunCreateRequest =
     }
   | {
       suiteId: string;
-      title: string;
+      title?: string;
       environmentProperties?: ManualTestRunEnvironmentProperty[];
       browser?: string | null;
       operatingSystem?: string | null;
@@ -4000,6 +4220,16 @@ export const {
   useGetApiV2AnalysisExportQuery,
   useLazyGetApiV2AnalysisExportQuery,
   usePostApiV2ReportsPdfExportMutation,
+  useGetApiV2ProjectsByProjectIdScenarioTagsQuery,
+  useLazyGetApiV2ProjectsByProjectIdScenarioTagsQuery,
+  usePostApiV2ProjectsByProjectIdScenarioTagsMutation,
+  usePatchApiV2ProjectsByProjectIdScenarioTagsAndTagIdMutation,
+  usePostApiV2ProjectsByProjectIdScenarioTagsDeletionPreviewMutation,
+  usePostApiV2ProjectsByProjectIdScenarioTagsDeletionMutation,
+  usePostApiV2ProjectsByProjectIdScenarioTagsDeletionUndoMutation,
+  usePostApiV2ProjectsByProjectIdScenarioTagsInlineMutation,
+  usePutApiV2ProjectsByProjectIdScenarioTagsAssignmentMutation,
+  usePostApiV2ProjectsByProjectIdScenarioTagsSelectionCountsMutation,
   usePostApiV2TestScenariosByScenarioIdSpecLinksMutation,
   useGetApiV2TestScenariosByScenarioIdSpecLinksQuery,
   useLazyGetApiV2TestScenariosByScenarioIdSpecLinksQuery,

@@ -98,6 +98,38 @@ describe('Results endpoint', () => {
 });
 
 describe('Test Scenario organization cache', () => {
+  it('invalidates only the affected project vocabulary, scenarios and live run detail after tag changes', async () => {
+    const reads = new Map<string, number>();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async input => {
+      const request = input as Request;
+      const url = new URL(request.url);
+      const projectId = url.searchParams.get('projectId') || url.pathname.split('/')[4];
+      if (request.method === 'GET') reads.set(projectId, (reads.get(projectId) ?? 0) + 1);
+      const body = url.pathname.includes('manual-test-runs') ? { projectId, id: 'run' } : [];
+      return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+    });
+    const api = extendedApi.endpoints;
+    const subscriptions = ['first', 'other'].flatMap(projectId => [
+      store.dispatch(api.getApiV2ProjectsByProjectIdScenarioTags.initiate({ projectId })),
+      store.dispatch(api.getApiV2TestScenariosByScenarioId.initiate({ projectId, scenarioId: 'scenario' })),
+      store.dispatch(api.getApiV2TestScenarios.initiate({ projectId, page: 1, limit: 10 })),
+      store.dispatch(api.getApiV2ManualTestRunsByRunId.initiate({ projectId, runId: 'run' })),
+    ]);
+    try {
+      await Promise.all(subscriptions);
+      expect(reads.get('first')).toBe(4);
+      await store.dispatch(api.postApiV2ProjectsByProjectIdScenarioTagsDeletionPreview.initiate({
+        projectId: 'first', body: { tagIds: ['tag'] },
+      })).unwrap();
+      expect(reads.get('first')).toBe(4);
+      await store.dispatch(api.postApiV2ProjectsByProjectIdScenarioTagsDeletionUndo.initiate({
+        projectId: 'first', body: { operationId: 'operation' },
+      })).unwrap();
+      await vi.waitFor(() => expect(reads.get('first')).toBe(8));
+      expect(reads.get('other')).toBe(4);
+    } finally { subscriptions.forEach(sub => sub.unsubscribe()); }
+  });
+
   it('refreshes folder, suite and catalog queries only after a successful bulk folder move', async () => {
     const requestCounts = new Map<string, number>();
     vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {

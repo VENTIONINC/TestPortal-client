@@ -36,6 +36,9 @@ const nestedFolders = [{ id: 'parent', projectId: 'project-1', parentId: null, n
       position: 0, createdAt: '', updatedAt: '', scenarioCount: 0, _count: { scenarios: 0 }, children: [] },
   ] }];
 
+vi.mock('@/components/test-scenarios/components/ScenarioCardTags', () => ({
+  SavedScenarioCardTags: ({ tags }: { tags: { name: string }[] }) => <div>Tags {tags.map(tag => tag.name).join(', ')}</div>,
+}));
 vi.mock('react-router', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router')>();
   return { ...actual, useNavigate: () => navigate };

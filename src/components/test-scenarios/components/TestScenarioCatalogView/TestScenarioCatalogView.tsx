@@ -59,6 +59,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   priority,
   priorityCounts,
   onPriorityChange,
+  tagIds,
+  tagCounts,
+  onTagChange,
+  onBulkTagsApplied,
   authorId,
   authorIds,
   onAuthorChange,
@@ -473,13 +477,18 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
     (selectedSuite.members?.length ?? 0) <= pageSize &&
     !search.trim() &&
     !priority &&
+    tagIds.length === 0 &&
     selectedAuthorIds.length === 0 &&
     activeColumnFilters.length === 0 &&
     !sort,
   );
   const reorderRequirements = [
     sort && 'select Run order',
-    (search.trim() || priority || selectedAuthorIds.length > 0 || activeColumnFilters.length > 0) &&
+    (search.trim() ||
+      priority ||
+      tagIds.length > 0 ||
+      selectedAuthorIds.length > 0 ||
+      activeColumnFilters.length > 0) &&
       'clear search and filters',
     (selectedSuite?.members?.length ?? 0) > pageSize && 'show all suite scenarios on one page',
   ].filter(Boolean);
@@ -844,6 +853,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           <VStack align="stretch" gap={4} minW="0">
             {!isEmptySuitesState && (
               <CatalogHeader
+                projectId={projectId}
                 editor={organizationEditor}
                 inlineEditor={inlineEditor}
                 selectedSuite={selectedSuite}
@@ -892,6 +902,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
               </Box>
             )}
             <CatalogFilters
+              projectId={projectId}
+              tagIds={tagIds}
+              tagCounts={tagCounts}
+              onTagChange={onTagChange}
               hidden={isEmptySuitesState}
               showFilters={isScenariosTab || Boolean(selectedSuite)}
               allowRunOrder={!isScenariosTab}
@@ -944,7 +958,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             )}
             {selectionError && (
               <Text role="alert" color="fg.error" fontSize="sm">
-                Could not select all matching scenarios: {selectionError}
+                {selectionError}
               </Text>
             )}
             {isResolvingSelection && (
@@ -954,6 +968,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             )}
             {selectedIds.length > 0 && !pendingSuiteUndo && (
               <CatalogBulkActions
+                onBulkTagsApplied={onBulkTagsApplied}
                 selectedIds={selectedIds}
                 total={pagination.total}
                 allMatchingSelected={allMatchingSelected}
@@ -1013,6 +1028,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         searchActive={
                           Boolean(search.trim()) ||
                           Boolean(priority) ||
+                          tagIds.length > 0 ||
                           selectedAuthorIds.length > 0 ||
                           activeColumnFilters.length > 0
                         }
@@ -1040,12 +1056,19 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         onToggleSelected={handleToggleSelected}
                         showFolder={showFolderColumn}
                         folderPathById={folderPathById}
-                        searchActive={Boolean(search.trim()) || activeColumnFilters.length > 0}
+                        searchActive={Boolean(
+                          search.trim() ||
+                          priority ||
+                          selectedAuthorIds.length ||
+                          tagIds.length ||
+                          activeColumnFilters.length,
+                        )}
                         emptySuite={Boolean(
                           selectedSuite &&
                           selectedSuite.members?.length === 0 &&
                           !search.trim() &&
                           !priority &&
+                          !tagIds.length &&
                           !selectedAuthorIds.length &&
                           !activeColumnFilters.length,
                         )}
