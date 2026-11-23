@@ -30,7 +30,13 @@ export const ManualTestRunWorkspace = ({ projectId, selectedRunId, onSelectRun }
   const details = useManualRun({ projectId, selectedRunId, listedRuns, onSelectRun });
   const { run, completed, writesBlocked, mutate } = details;
   const editing = useManualRunEditing({
-    projectId, selectedRunId, run, completed, writesBlocked, getRun: details.getRun, mutate,
+    projectId,
+    selectedRunId,
+    run,
+    completed,
+    writesBlocked,
+    getRun: details.getRun,
+    mutate,
   });
   const scenarios = useManualRunScenarios({ projectId, selectedRunId, run, completed, writesBlocked, mutate });
   const { scenarioFilters } = scenarios;

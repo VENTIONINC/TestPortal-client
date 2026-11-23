@@ -5,10 +5,7 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { toaster } from '@/components/ui';
-import {
-  useGetApiV2ProjectsQuery,
-  usePostApiV2UploadJsonReportMutation,
-} from '@/redux/apis/generatedApi';
+import { useGetApiV2ProjectsQuery, usePostApiV2UploadJsonReportMutation } from '@/redux/apis/generatedApi';
 import { usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/extendedApi';
 import {
   getResultsFileUploadLimitMessage,
@@ -80,9 +77,7 @@ describe('useResultsFileUpload', () => {
     await act(async () => result.current.handleUpload());
 
     expect(unwrap).toHaveBeenCalledOnce();
-    expect(uploadCtrfReport).toHaveBeenCalledWith(
-      expect.objectContaining({ body: expect.any(FormData) }),
-    );
+    expect(uploadCtrfReport).toHaveBeenCalledWith(expect.objectContaining({ body: expect.any(FormData) }));
     const formData = uploadCtrfReport.mock.calls[0][0].body as FormData;
     expect(formData.get('projectId')).toBe('project-123');
     expect(toaster.create).toHaveBeenCalledWith({ title: 'Files uploaded', type: 'success' });
@@ -127,22 +122,18 @@ describe('useResultsFileUpload', () => {
       new File(['{}'], 'valid.json', { type: 'application/json' }),
       new File(['{}'], 'invalid.json', { type: 'application/json' }),
     ];
-    uploadCtrfReport
-      .mockReturnValueOnce({ unwrap: vi.fn().mockResolvedValue({ success: true }) })
-      .mockReturnValueOnce({
-        unwrap: vi.fn().mockRejectedValue({
-          status: 400,
-          data: { error: 'Future test execution timestamps were detected' },
-        }),
-      });
+    uploadCtrfReport.mockReturnValueOnce({ unwrap: vi.fn().mockResolvedValue({ success: true }) }).mockReturnValueOnce({
+      unwrap: vi.fn().mockRejectedValue({
+        status: 400,
+        data: { error: 'Future test execution timestamps were detected' },
+      }),
+    });
     const { result } = renderHook(() => useResultsFileUpload(closeDialog, 'ctrf'));
 
     await act(async () => result.current.handleUpload());
 
     expect(uploadCtrfReport).toHaveBeenCalledTimes(2);
-    expect(toaster.create).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'error' }),
-    );
+    expect(toaster.create).toHaveBeenCalledWith(expect.objectContaining({ type: 'error' }));
     expect(closeDialog).not.toHaveBeenCalled();
   });
 
@@ -178,11 +169,7 @@ describe('useResultsFileUpload', () => {
 
 describe('results file upload helpers', () => {
   it('detects TOO_MANY_FILES rejections', () => {
-    expect(
-      hasTooManyFilesRejection([{ file: new File([], 'a.json'), errors: ['FILE_INVALID_TYPE'] }]),
-    ).toBe(false);
-    expect(
-      hasTooManyFilesRejection([{ file: new File([], 'a.json'), errors: ['TOO_MANY_FILES'] }]),
-    ).toBe(true);
+    expect(hasTooManyFilesRejection([{ file: new File([], 'a.json'), errors: ['FILE_INVALID_TYPE'] }])).toBe(false);
+    expect(hasTooManyFilesRejection([{ file: new File([], 'a.json'), errors: ['TOO_MANY_FILES'] }])).toBe(true);
   });
 });

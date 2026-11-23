@@ -1,7 +1,11 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import type { GetApiV2ManualTestRunsApiArg, ManualTestRunScenarioResult, ManualTestRunStatus } from '@/redux/apis/generatedApi';
+import type {
+  GetApiV2ManualTestRunsApiArg,
+  ManualTestRunScenarioResult,
+  ManualTestRunStatus,
+} from '@/redux/apis/generatedApi';
 
 export const MANUAL_RUN_STATUS = {
   IN_PROGRESS: 'in_progress',

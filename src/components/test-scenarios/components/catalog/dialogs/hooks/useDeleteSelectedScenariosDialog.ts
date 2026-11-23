@@ -4,7 +4,10 @@
 import { useDialogActions } from '@/redux/slices/dialog';
 import type { DefaultDialogProps } from '@/types';
 
-import { DeleteSelectedScenariosDialog, type DeleteSelectedScenariosDialogProps } from '../DeleteSelectedScenariosDialog';
+import {
+  DeleteSelectedScenariosDialog,
+  type DeleteSelectedScenariosDialogProps,
+} from '../DeleteSelectedScenariosDialog';
 
 export const useDeleteSelectedScenariosDialog = (scopeKey: string) => {
   const { openDialog } = useDialogActions(scopeKey);

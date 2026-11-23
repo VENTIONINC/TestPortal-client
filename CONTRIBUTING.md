@@ -23,7 +23,17 @@ copyright attribution.
 
 ## Local Development
 
-1. Install dependencies with `yarn install`.
+1. Install dependencies with `yarn install` to generate Chakra typings and
+   activate the pre-commit hook in a developer Git checkout. Set
+   `VITE_API_URL` in `.env` before the first commit. The hook runs `yarn eslint`,
+   `yarn tsc`, and `yarn test` once each, in order. If an existing checkout
+   needs activation, run `yarn postinstall`, then verify:
+
+   ```bash
+   git config --local --get core.hooksPath
+   ```
+
+   The command should print `.husky/_`.
 2. Create a local `.env` file based on `.env.example`.
 3. Start the development server with `yarn dev`.
 4. Run `yarn generate-api` or `yarn generate-mcp-api` when API schema changes

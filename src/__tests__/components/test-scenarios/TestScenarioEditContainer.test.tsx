@@ -14,8 +14,11 @@ const { navigate, updateScenario, refetch, state } = vi.hoisted(() => ({
   state: { scenario: undefined as unknown, search: '' },
 }));
 vi.mock('@/components/test-scenarios/components/ScenarioCardTags', () => ({
-  SavedScenarioCardTags: ({ onAssigned }: { onAssigned: () => void }) =>
-    <button type="button" onClick={onAssigned}>Assign tag</button>,
+  SavedScenarioCardTags: ({ onAssigned }: { onAssigned: () => void }) => (
+    <button type="button" onClick={onAssigned}>
+      Assign tag
+    </button>
+  ),
 }));
 vi.mock('react-router', async (original) => ({
   ...(await original<typeof import('react-router')>()),
@@ -106,7 +109,9 @@ describe('TestScenarioEditContainer', () => {
     state.search = '?originProject=project-1&originKind=suite&originId=suite-1';
     setup();
     await userEvent.setup().click(screen.getByRole('button', { name: 'Cancel' }));
-    expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1');
+    expect(navigate).toHaveBeenCalledWith(
+      '/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1',
+    );
   });
   it('does not save a staged new suite when cancelling', async () => {
     const user = userEvent.setup();
@@ -162,7 +167,11 @@ describe('TestScenarioEditContainer', () => {
     setup();
     change('Title', 'Changed');
     save();
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1'));
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith(
+        '/test-scenarios/scenario-1?originProject=project-1&originKind=suite&originId=suite-1',
+      ),
+    );
   });
   it('returns to view after saving tag-only edits without patching authoring fields', async () => {
     setup();

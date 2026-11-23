@@ -25,7 +25,7 @@ vi.mock('@/components/ui', async (importOriginal) => {
   return {
     ...original,
     toaster: { create: mocks.createToast },
-    useColorModeValue: <T,>(light: T) => light,
+    useColorModeValue: <T>(light: T) => light,
   };
 });
 
@@ -39,7 +39,8 @@ const snippet = {
   failingLine: 47,
 };
 
-const renderSnippet = (value = snippet) => render(createElement(ChakraProvider, null, createElement(SourceSnippet, { snippet: value })));
+const renderSnippet = (value = snippet) =>
+  render(createElement(ChakraProvider, null, createElement(SourceSnippet, { snippet: value })));
 
 describe('source snippet helpers', () => {
   beforeEach(() => {
@@ -47,7 +48,9 @@ describe('source snippet helpers', () => {
   });
 
   it('removes Playwright ANSI formatting without changing source lines', () => {
-    expect(stripAnsi('\u001b[0m \u001b[90m47 |\u001b[39m \u001b[31mthrow new Error()\u001b[0m')).toBe(' 47 | throw new Error()');
+    expect(stripAnsi('\u001b[0m \u001b[90m47 |\u001b[39m \u001b[31mthrow new Error()\u001b[0m')).toBe(
+      ' 47 | throw new Error()',
+    );
   });
 
   it('removes OSC terminal control sequences', () => {
@@ -62,7 +65,10 @@ describe('source snippet helpers', () => {
 
   it('renders cleaned, syntax-highlighted source without an extra line-number gutter', async () => {
     mocks.codeToTokens.mockResolvedValue({
-      tokens: [[{ content: 'throw', color: '#ff0000' }, { content: ' new Error("failed")' }], [{ content: 'return true;' }]],
+      tokens: [
+        [{ content: 'throw', color: '#ff0000' }, { content: ' new Error("failed")' }],
+        [{ content: 'return true;' }],
+      ],
     });
 
     const { container } = renderSnippet();
@@ -74,9 +80,12 @@ describe('source snippet helpers', () => {
     expect(screen.queryByText('47')).not.toBeInTheDocument();
     expect(screen.queryByText('48')).not.toBeInTheDocument();
 
-    await waitFor(() => expect(mocks.codeToTokens).toHaveBeenCalledWith('throw new Error("failed")\nreturn true;', {
-      lang: 'typescript', theme: 'github-light',
-    }));
+    await waitFor(() =>
+      expect(mocks.codeToTokens).toHaveBeenCalledWith('throw new Error("failed")\nreturn true;', {
+        lang: 'typescript',
+        theme: 'github-light',
+      }),
+    );
     expect(container.querySelector('span[style*="rgb(255, 0, 0)"]')).toBeInTheDocument();
     expect(container.querySelector('[dangerouslySetInnerHTML]')).toBeNull();
   });

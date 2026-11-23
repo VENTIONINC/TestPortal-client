@@ -25,11 +25,12 @@ vi.mock('@/redux/apis/extendedApi', () => ({
 type AddUndo = PostApiV2TestSuitesBySuiteIdMembershipChangesApiResponse & { createdSuiteId?: string };
 type Complete = (report: ScenarioOperationReport, selection: string[], undo?: AddUndo) => void;
 
-const mount = (onComplete: Complete) => render(
-  <ChakraProvider>
-    <SuitePicker projectId="project-1" selectedIds={['scenario-1', 'scenario-2']} onComplete={onComplete} />
-  </ChakraProvider>,
-);
+const mount = (onComplete: Complete) =>
+  render(
+    <ChakraProvider>
+      <SuitePicker projectId="project-1" selectedIds={['scenario-1', 'scenario-2']} onComplete={onComplete} />
+    </ChakraProvider>,
+  );
 
 describe('SuitePicker', () => {
   beforeEach(() => {
@@ -41,11 +42,13 @@ describe('SuitePicker', () => {
       isError: false,
     });
     createSuite.mockImplementation(() => ({ unwrap: async () => ({ id: 'suite-new', name: 'Fresh' }) }));
-    changeMembership.mockImplementation(() => ({ unwrap: async () => ({
-      scenarioIds: ['scenario-1', 'scenario-2'],
-      membershipRevision: 5,
-      restoreData: { suiteId: 'suite-1', addedScenarioIds: ['scenario-2'], removedMembers: [] },
-    }) }));
+    changeMembership.mockImplementation(() => ({
+      unwrap: async () => ({
+        scenarioIds: ['scenario-1', 'scenario-2'],
+        membershipRevision: 5,
+        restoreData: { suiteId: 'suite-1', addedScenarioIds: ['scenario-2'], removedMembers: [] },
+      }),
+    }));
   });
 
   it('captures only newly added memberships for Undo in an existing suite', async () => {
@@ -55,13 +58,16 @@ describe('SuitePicker', () => {
     await user.click(screen.getByRole('button', { name: /Add to suite/ }));
     await user.click(await screen.findByRole('button', { name: /Existing/ }));
     await waitFor(() => expect(onComplete).toHaveBeenCalled());
-    expect(changeMembership).toHaveBeenCalledWith({ suiteId: 'suite-1', body: {
-      projectId: 'project-1',
-      expectedMembershipRevision: 4,
-      expectedScenarioIds: ['scenario-1'],
-      addScenarioIds: ['scenario-2'],
-      removeScenarioIds: [],
-    } });
+    expect(changeMembership).toHaveBeenCalledWith({
+      suiteId: 'suite-1',
+      body: {
+        projectId: 'project-1',
+        expectedMembershipRevision: 4,
+        expectedScenarioIds: ['scenario-1'],
+        addScenarioIds: ['scenario-2'],
+        removeScenarioIds: [],
+      },
+    });
     expect(onComplete.mock.calls[0]?.[2]).toMatchObject({
       suiteName: 'Existing',
       membershipRevision: 5,
@@ -79,18 +85,25 @@ describe('SuitePicker', () => {
     await user.click(await screen.findByRole('button', { name: /Create suite “Fresh” and add 2/ }));
     await waitFor(() => expect(onComplete).toHaveBeenCalled());
     expect(createSuite).toHaveBeenCalledWith({ body: { projectId: 'project-1', name: 'Fresh' } });
-    expect(changeMembership).toHaveBeenCalledWith({ suiteId: 'suite-new', body: {
-      projectId: 'project-1',
-      expectedMembershipRevision: 0,
-      expectedScenarioIds: [],
-      addScenarioIds: ['scenario-1', 'scenario-2'],
-      removeScenarioIds: [],
-    } });
+    expect(changeMembership).toHaveBeenCalledWith({
+      suiteId: 'suite-new',
+      body: {
+        projectId: 'project-1',
+        expectedMembershipRevision: 0,
+        expectedScenarioIds: [],
+        addScenarioIds: ['scenario-1', 'scenario-2'],
+        removeScenarioIds: [],
+      },
+    });
     expect(onComplete.mock.calls[0]?.[2]).toMatchObject({ createdSuiteId: 'suite-new', suiteName: 'Fresh' });
   });
   it('shows already selected suites as disabled in the compact picker', async () => {
     const user = userEvent.setup();
-    render(<ChakraProvider><SuitePicker compact projectId="project-1" selectedIds={['scenario-1']} onComplete={vi.fn<Complete>()} /></ChakraProvider>);
+    render(
+      <ChakraProvider>
+        <SuitePicker compact projectId="project-1" selectedIds={['scenario-1']} onComplete={vi.fn<Complete>()} />
+      </ChakraProvider>,
+    );
     await user.click(screen.getByRole('button', { name: 'Add to suite' }));
     expect(screen.getByText('Add 1 selected to a suite')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Existing/ })).toBeDisabled();

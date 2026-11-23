@@ -37,7 +37,13 @@ interface ManualRunScenarioFiltersProps {
   onLoadUsers: () => void;
 }
 
-export const ManualRunScenarioFilters = ({ projectId, filters, counts, users, onLoadUsers }: ManualRunScenarioFiltersProps) => {
+export const ManualRunScenarioFilters = ({
+  projectId,
+  filters,
+  counts,
+  users,
+  onLoadUsers,
+}: ManualRunScenarioFiltersProps) => {
   const {
     scenarioSearch,
     setScenarioSearch,
@@ -114,7 +120,12 @@ export const ManualRunScenarioFilters = ({ projectId, filters, counts, users, on
           options={assigneeOptions}
         />
       </Box>
-      <TagFilter projectId={projectId} selectedIds={filters.tagFilter} onChange={filters.setTagFilter} counts={filters.tagCounts} />
+      <TagFilter
+        projectId={projectId}
+        selectedIds={filters.tagFilter}
+        onChange={filters.setTagFilter}
+        counts={filters.tagCounts}
+      />
     </HStack>
   );
 };

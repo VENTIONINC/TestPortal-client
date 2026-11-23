@@ -17,11 +17,7 @@ interface PriorityFilterProps {
   onChange: (value: string) => void;
 }
 
-const PriorityFilter = ({
-  value,
-  counts,
-  onChange,
-}: PriorityFilterProps) => {
+const PriorityFilter = ({ value, counts, onChange }: PriorityFilterProps) => {
   const [open, setOpen] = useState(false);
   const values: PriorityValue[] = ['high', 'medium', 'low'];
   const selected = value ? (value.split(',') as PriorityValue[]) : [];
@@ -107,11 +103,7 @@ const PriorityFilter = ({
               </VStack>
             </Popover.Body>
             <HStack justify="space-between" pt={2} borderTopWidth="1px" borderColor="border.main">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleClearSearch}
-              >
+              <Button size="sm" variant="ghost" onClick={handleClearSearch}>
                 Clear
               </Button>
               <Button size="sm" variant="primary" onClick={() => setOpen(false)}>
@@ -133,13 +125,7 @@ interface AuthorFilterProps {
   onChange: (value: string[]) => void;
 }
 
-const AuthorFilter = ({
-  value,
-  authors,
-  loading,
-  error,
-  onChange,
-}: AuthorFilterProps) => {
+const AuthorFilter = ({ value, authors, loading, error, onChange }: AuthorFilterProps) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const selectedAuthors = authors.filter((author) => value.includes(author.id));
@@ -169,10 +155,7 @@ const AuthorFilter = ({
   };
 
   return (
-    <Popover.Root
-      open={open}
-      onOpenChange={handleOpenChange}
-    >
+    <Popover.Root open={open} onOpenChange={handleOpenChange}>
       <Popover.Trigger asChild>
         <Button
           variant="outline"
@@ -261,11 +244,7 @@ const AuthorFilter = ({
               </VStack>
             </Popover.Body>
             <HStack justify="space-between" p={2} borderTopWidth="1px" borderColor="border.main">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleClearSelection}
-              >
+              <Button size="sm" variant="ghost" onClick={handleClearSelection}>
                 Clear
               </Button>
               <Button size="sm" variant="primary" onClick={close}>
@@ -285,11 +264,7 @@ interface ScenarioSortSelectProps {
   allowRunOrder: boolean;
 }
 
-const ScenarioSortSelect = ({
-  value,
-  onChange,
-  allowRunOrder,
-}: ScenarioSortSelectProps) => {
+const ScenarioSortSelect = ({ value, onChange, allowRunOrder }: ScenarioSortSelectProps) => {
   const [open, setOpen] = useState(false);
   const options: Array<{ value: typeof value; label: string }> = [
     { value: 'scenarioKey', label: 'Key' },
@@ -552,12 +527,7 @@ export const CatalogFilters = ({
             </Button>
           ))}
           {activeColumnFilters.length + Number(Boolean(search.trim())) > 1 && (
-            <Button
-              size="xs"
-              variant="ghost"
-              color="text.muted"
-              onClick={handleClearFilters}
-            >
+            <Button size="xs" variant="ghost" color="text.muted" onClick={handleClearFilters}>
               Clear all
             </Button>
           )}

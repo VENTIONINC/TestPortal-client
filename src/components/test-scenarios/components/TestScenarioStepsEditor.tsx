@@ -16,10 +16,7 @@ import {
 } from '@/redux/apis/generatedApi';
 import { testScenarioStepSchema } from '@/schemas';
 
-import {
-  getTestScenarioStepAppendPayload,
-  getTestScenarioStepPatchPayload,
-} from '../utils';
+import { getTestScenarioStepAppendPayload, getTestScenarioStepPatchPayload } from '../utils';
 
 type StepDraft = { action: string; expectedResult: string };
 type Operation = 'append' | `edit:${string}` | `delete:${string}` | 'reorder' | null;
@@ -33,7 +30,8 @@ export interface TestScenarioStepsEditorProps {
   onRefresh?: () => Promise<unknown>;
 }
 
-const orderedSteps = (scenario: TestScenario) => [...scenario.steps].sort((left, right) => left.position - right.position);
+const orderedSteps = (scenario: TestScenario) =>
+  [...scenario.steps].sort((left, right) => left.position - right.position);
 
 const getErrorStatus = (error: unknown) => {
   if (error && typeof error === 'object' && 'status' in error) return (error as FetchBaseQueryError).status;
@@ -83,9 +81,10 @@ export const TestScenarioStepsEditor = ({
       for (const step of steps) {
         const previousSaved = previousSavedSteps.current[step.id];
         const currentDraft = current[step.id];
-        next[step.id] = previousSaved && currentDraft && isDraftChanged(currentDraft, previousSaved)
-          ? currentDraft
-          : draftForStep(step);
+        next[step.id] =
+          previousSaved && currentDraft && isDraftChanged(currentDraft, previousSaved)
+            ? currentDraft
+            : draftForStep(step);
       }
       previousSavedSteps.current = Object.fromEntries(steps.map((step) => [step.id, step]));
       return next;
@@ -150,7 +149,8 @@ export const TestScenarioStepsEditor = ({
       setFeedback({ kind: 'success', message: 'Step added successfully.' });
     } catch (error) {
       setFeedback({ kind: 'error', message: errorMessage(error) });
-      if (getErrorStatus(error) === 404) await refreshAfterMissingResource('The scenario or step resource is unavailable.');
+      if (getErrorStatus(error) === 404)
+        await refreshAfterMissingResource('The scenario or step resource is unavailable.');
     } finally {
       finish();
     }
@@ -230,7 +230,15 @@ export const TestScenarioStepsEditor = ({
   const isBusy = operation !== null;
 
   return (
-    <Box maxW="900px" mx={{ base: 4, md: 6 }} my={4} p={{ base: 4, md: 6 }} bg="bg.section" borderRadius="12px" shadow="sm">
+    <Box
+      maxW="900px"
+      mx={{ base: 4, md: 6 }}
+      my={4}
+      p={{ base: 4, md: 6 }}
+      bg="bg.section"
+      borderRadius="12px"
+      shadow="sm"
+    >
       <VStack align="stretch" gap={5}>
         <VStack align="start" gap={1}>
           <Heading size="md">Scenario steps</Heading>
@@ -242,7 +250,9 @@ export const TestScenarioStepsEditor = ({
         {feedback && (
           <Alert.Root status={feedback.kind} role={feedback.kind === 'error' ? 'alert' : 'status'}>
             <Alert.Indicator />
-            <Alert.Content><Alert.Description>{feedback.message}</Alert.Description></Alert.Content>
+            <Alert.Content>
+              <Alert.Description>{feedback.message}</Alert.Description>
+            </Alert.Content>
           </Alert.Root>
         )}
 
@@ -287,7 +297,9 @@ export const TestScenarioStepsEditor = ({
                       name={`saved-step-${step.id}-action`}
                       label={`Step ${index + 1} action`}
                       value={draft.action}
-                      onChange={(event) => setDrafts((current) => ({ ...current, [step.id]: { ...draft, action: event.target.value } }))}
+                      onChange={(event) =>
+                        setDrafts((current) => ({ ...current, [step.id]: { ...draft, action: event.target.value } }))
+                      }
                       error={stepErrors[step.id]}
                       disabled={isBusy}
                     />
@@ -295,15 +307,34 @@ export const TestScenarioStepsEditor = ({
                       name={`saved-step-${step.id}-expected-result`}
                       label={`Step ${index + 1} expected result`}
                       value={draft.expectedResult}
-                      onChange={(event) => setDrafts((current) => ({ ...current, [step.id]: { ...draft, expectedResult: event.target.value } }))}
+                      onChange={(event) =>
+                        setDrafts((current) => ({
+                          ...current,
+                          [step.id]: { ...draft, expectedResult: event.target.value },
+                        }))
+                      }
                       resize="vertical"
                       disabled={isBusy}
                     />
                     <HStack justify="flex-end" gap={2}>
-                      <Button type="button" variant="outline" size="sm" onClick={() => void handleEdit(step)} disabled={isBusy} loading={stepOperation && operation?.startsWith('edit:')}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void handleEdit(step)}
+                        disabled={isBusy}
+                        loading={stepOperation && operation?.startsWith('edit:')}
+                      >
                         Save step {index + 1}
                       </Button>
-                      <Button type="button" variant="outline" size="sm" onClick={() => void handleDelete(step)} disabled={isBusy} loading={operation === `delete:${step.id}`}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void handleDelete(step)}
+                        disabled={isBusy}
+                        loading={operation === `delete:${step.id}`}
+                      >
                         <FiTrash2 aria-hidden="true" />
                         Delete step {index + 1}
                       </Button>
@@ -334,7 +365,14 @@ export const TestScenarioStepsEditor = ({
               resize="vertical"
               disabled={isBusy}
             />
-            <Button type="button" alignSelf="flex-end" variant="primary" onClick={() => void handleAppend()} disabled={isBusy} loading={operation === 'append'}>
+            <Button
+              type="button"
+              alignSelf="flex-end"
+              variant="primary"
+              onClick={() => void handleAppend()}
+              disabled={isBusy}
+              loading={operation === 'append'}
+            >
               Add step
             </Button>
           </VStack>

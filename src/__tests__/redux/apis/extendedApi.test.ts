@@ -28,7 +28,9 @@ describe('Skill download endpoints', () => {
     expect(result.data?.blob).toMatchObject({ size: 11 });
     expect(extendedApi.reducerPath).toBe(baseApi.reducerPath);
     expect(extendedApi.endpoints).toHaveProperty('downloadSkillArchive');
-    expect(Object.keys(extendedApi.endpoints).filter((endpoint) => endpoint.toLowerCase().includes('markdown'))).toEqual([]);
+    expect(
+      Object.keys(extendedApi.endpoints).filter((endpoint) => endpoint.toLowerCase().includes('markdown')),
+    ).toEqual([]);
   });
 });
 
@@ -78,7 +80,15 @@ describe('Results endpoint', () => {
 
       if (path === '/api/v2/results') resultsRequests += 1;
       return new Response(
-        JSON.stringify({ results: [], rawResults: [], availableTags: [], total: 0, rawTotal: 0, page: 1, totalPages: 0 }),
+        JSON.stringify({
+          results: [],
+          rawResults: [],
+          availableTags: [],
+          total: 0,
+          rawTotal: 0,
+          page: 1,
+          totalPages: 0,
+        }),
         { headers: { 'content-type': 'application/json' } },
       );
     });
@@ -100,7 +110,7 @@ describe('Results endpoint', () => {
 describe('Test Scenario organization cache', () => {
   it('invalidates only the affected project vocabulary, scenarios and live run detail after tag changes', async () => {
     const reads = new Map<string, number>();
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async input => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
       const request = input as Request;
       const url = new URL(request.url);
       const projectId = url.searchParams.get('projectId') || url.pathname.split('/')[4];
@@ -109,7 +119,7 @@ describe('Test Scenario organization cache', () => {
       return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
     });
     const api = extendedApi.endpoints;
-    const subscriptions = ['first', 'other'].flatMap(projectId => [
+    const subscriptions = ['first', 'other'].flatMap((projectId) => [
       store.dispatch(api.getApiV2ProjectsByProjectIdScenarioTags.initiate({ projectId })),
       store.dispatch(api.getApiV2TestScenariosByScenarioId.initiate({ projectId, scenarioId: 'scenario' })),
       store.dispatch(api.getApiV2TestScenarios.initiate({ projectId, page: 1, limit: 10 })),
@@ -118,16 +128,28 @@ describe('Test Scenario organization cache', () => {
     try {
       await Promise.all(subscriptions);
       expect(reads.get('first')).toBe(4);
-      await store.dispatch(api.postApiV2ProjectsByProjectIdScenarioTagsDeletionPreview.initiate({
-        projectId: 'first', body: { tagIds: ['tag'] },
-      })).unwrap();
+      await store
+        .dispatch(
+          api.postApiV2ProjectsByProjectIdScenarioTagsDeletionPreview.initiate({
+            projectId: 'first',
+            body: { tagIds: ['tag'] },
+          }),
+        )
+        .unwrap();
       expect(reads.get('first')).toBe(4);
-      await store.dispatch(api.postApiV2ProjectsByProjectIdScenarioTagsDeletionUndo.initiate({
-        projectId: 'first', body: { operationId: 'operation' },
-      })).unwrap();
+      await store
+        .dispatch(
+          api.postApiV2ProjectsByProjectIdScenarioTagsDeletionUndo.initiate({
+            projectId: 'first',
+            body: { operationId: 'operation' },
+          }),
+        )
+        .unwrap();
       await vi.waitFor(() => expect(reads.get('first')).toBe(8));
       expect(reads.get('other')).toBe(4);
-    } finally { subscriptions.forEach(sub => sub.unsubscribe()); }
+    } finally {
+      subscriptions.forEach((sub) => sub.unsubscribe());
+    }
   });
 
   it('refreshes folder, suite and catalog queries only after a successful bulk folder move', async () => {
@@ -136,22 +158,31 @@ describe('Test Scenario organization cache', () => {
       const request = input as Request;
       const path = new URL(request.url).pathname;
       requestCounts.set(path, (requestCounts.get(path) ?? 0) + 1);
-      const body = path === '/api/v2/test-scenarios'
-        ? { scenarios: [], total: 0, page: 1, limit: 10, totalPages: 0 }
-        : path === '/api/v2/test-scenarios/bulk-folder'
-          ? { moved: 1 }
-          : [];
+      const body =
+        path === '/api/v2/test-scenarios'
+          ? { scenarios: [], total: 0, page: 1, limit: 10, totalPages: 0 }
+          : path === '/api/v2/test-scenarios/bulk-folder'
+            ? { moved: 1 }
+            : [];
       return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
     });
 
-    const catalog = store.dispatch(extendedApi.endpoints.getApiV2TestScenarios.initiate({ projectId: 'project-1', page: 1, limit: 10 }));
-    const folders = store.dispatch(extendedApi.endpoints.getApiV2TestScenarioFolders.initiate({ projectId: 'project-1' }));
+    const catalog = store.dispatch(
+      extendedApi.endpoints.getApiV2TestScenarios.initiate({ projectId: 'project-1', page: 1, limit: 10 }),
+    );
+    const folders = store.dispatch(
+      extendedApi.endpoints.getApiV2TestScenarioFolders.initiate({ projectId: 'project-1' }),
+    );
     const suites = store.dispatch(extendedApi.endpoints.getApiV2TestSuites.initiate({ projectId: 'project-1' }));
     await Promise.all([catalog, folders, suites]);
 
-    await store.dispatch(extendedApi.endpoints.patchApiV2TestScenariosBulkFolder.initiate({
-      body: { projectId: 'project-1', scenarioIds: ['scenario-1'], folderId: null },
-    })).unwrap();
+    await store
+      .dispatch(
+        extendedApi.endpoints.patchApiV2TestScenariosBulkFolder.initiate({
+          body: { projectId: 'project-1', scenarioIds: ['scenario-1'], folderId: null },
+        }),
+      )
+      .unwrap();
 
     await vi.waitFor(() => {
       expect(requestCounts.get('/api/v2/test-scenarios')).toBe(2);
@@ -201,7 +232,10 @@ describe('Category source-of-truth API contracts', () => {
     },
   ])('provides the atomic $method result-error issue workflow', async ({ endpointName, method, requestName, body }) => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({}), { status: method === 'POST' ? 201 : 200, headers: { 'content-type': 'application/json' } }),
+      new Response(JSON.stringify({}), {
+        status: method === 'POST' ? 201 : 200,
+        headers: { 'content-type': 'application/json' },
+      }),
     );
     const endpoint = Reflect.get(extendedApi.endpoints, endpointName) as
       | { initiate: (arg: unknown) => ReturnType<typeof store.dispatch> }
@@ -210,9 +244,7 @@ describe('Category source-of-truth API contracts', () => {
     expect(endpoint).toBeDefined();
     if (!endpoint) return;
 
-    await store.dispatch(
-      endpoint.initiate({ resultErrorId: 'error-1', [requestName]: body }) as never,
-    );
+    await store.dispatch(endpoint.initiate({ resultErrorId: 'error-1', [requestName]: body }) as never);
 
     const request = fetchMock.mock.calls[0][0] as Request;
     expect(new URL(request.url).pathname).toBe('/api/v2/result-errors/error-1/issue');
@@ -255,9 +287,12 @@ describe('Category source-of-truth API contracts', () => {
         return new Response(JSON.stringify({ id: 'result-1' }), { headers: { 'content-type': 'application/json' } });
       }
 
-      return new Response(JSON.stringify(path.includes('/issues') ? { issues: [], total: 0, page: 1, totalPages: 0 } : {}), {
-        headers: { 'content-type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify(path.includes('/issues') ? { issues: [], total: 0, page: 1, totalPages: 0 } : {}),
+        {
+          headers: { 'content-type': 'application/json' },
+        },
+      );
     });
 
     const results = store.dispatch(extendedApi.endpoints.getApiV2Results.initiate({ projectId: 'project-1' }));
@@ -307,13 +342,22 @@ describe('Custom skill mutation endpoints', () => {
       endpoint: 'createCustomSkill' as const,
       method: 'POST',
       path: '/api/v2/skills',
-      input: { package: new File(['zip-content'], 'skill.zip', { type: 'application/zip' }), title: '  Title  ', category: '  Category  ' },
+      input: {
+        package: new File(['zip-content'], 'skill.zip', { type: 'application/zip' }),
+        title: '  Title  ',
+        category: '  Category  ',
+      },
     },
     {
       endpoint: 'replaceCustomSkill' as const,
       method: 'PUT',
       path: '/api/v2/skills/persisted-skill-id',
-      input: { id: 'persisted-skill-id', package: new File(['zip-content'], 'skill.zip', { type: 'application/zip' }), title: '  Title  ', category: '  Category  ' },
+      input: {
+        id: 'persisted-skill-id',
+        package: new File(['zip-content'], 'skill.zip', { type: 'application/zip' }),
+        title: '  Title  ',
+        category: '  Category  ',
+      },
     },
   ])('serializes $endpoint as multipart FormData', async ({ endpoint, method, path, input }) => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(

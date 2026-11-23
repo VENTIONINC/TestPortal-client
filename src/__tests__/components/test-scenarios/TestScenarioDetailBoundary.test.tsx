@@ -64,10 +64,21 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     usePostApiV2TestSuitesBySuiteIdMembersMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
     usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
     usePostApiV2TestScenariosByScenarioIdManualRunsMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
-    useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery: vi.fn(() => ({ data: [], isLoading: false, isError: false, refetch: vi.fn() })),
+    useGetApiV2ProjectsByProjectIdManualRunEnvironmentProfilesQuery: vi.fn(() => ({
+      data: [],
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    })),
     usePostApiV2ProjectsByProjectIdManualRunEnvironmentProfilesMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
-    usePatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
-    useDeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [vi.fn(), { isLoading: false }]),
+    usePatchApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [
+      vi.fn(),
+      { isLoading: false },
+    ]),
+    useDeleteApiV2ProjectsByProjectIdManualRunEnvironmentProfilesAndProfileIdMutation: vi.fn(() => [
+      vi.fn(),
+      { isLoading: false },
+    ]),
   };
 });
 
@@ -84,16 +95,16 @@ const scenarioFor = (projectId: string) => ({
   projectId,
   createdById: 'user-1',
   title: `${projectId} scenario`,
-    contentMd: `# ${projectId} scenario`,
-    details: `${projectId} details`,
-    priority: null,
-    relatedIssueUrl: `https://example.test/${projectId}`,
-    preconditions: null,
-    testData: null,
+  contentMd: `# ${projectId} scenario`,
+  details: `${projectId} details`,
+  priority: null,
+  relatedIssueUrl: `https://example.test/${projectId}`,
+  preconditions: null,
+  testData: null,
 
-    steps: [],
-    contentMdHash: `${projectId}-hash`,
-    contentMdFormatVersion: 1,
+  steps: [],
+  contentMdHash: `${projectId}-hash`,
+  contentMdFormatVersion: 1,
   createdAt: '2026-09-01T10:00:00.000Z',
   updatedAt: '2026-09-02T11:00:00.000Z',
 });
@@ -148,13 +159,17 @@ describe('Test Scenario route boundaries', () => {
     renderWithRouter(<TestScenarioEditBoundary />);
 
     expect(mockedDetailQuery).toHaveBeenLastCalledWith({ scenarioId: 'scenario-1', projectId: 'project-a' });
-    expect(screen.getByRole('textbox', { name: 'Requirement or ticket' })).toHaveValue('https://example.test/project-a');
+    expect(screen.getByRole('textbox', { name: 'Requirement or ticket' })).toHaveValue(
+      'https://example.test/project-a',
+    );
   });
 
   it('clears the edit form immediately and requests the new project scope after a project switch', () => {
     const { rerender } = renderWithRouter(<TestScenarioEditBoundary />);
 
-    expect(screen.getByRole('textbox', { name: 'Requirement or ticket' })).toHaveValue('https://example.test/project-a');
+    expect(screen.getByRole('textbox', { name: 'Requirement or ticket' })).toHaveValue(
+      'https://example.test/project-a',
+    );
 
     selectedProject.id = 'project-b';
     mockedDetailQuery.mockReturnValue({

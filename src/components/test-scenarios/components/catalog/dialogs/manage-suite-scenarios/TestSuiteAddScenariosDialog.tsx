@@ -37,22 +37,24 @@ export const TestSuiteAddScenariosDialog = ({
   const { error: queryError, ...selection } = useSuiteScenarioSelection(projectId, originalIds);
   const [saveMembership] = usePostApiV2TestSuitesBySuiteIdMembershipChangesMutation();
   const { error, isSubmitting, onCancel, onConfirm } = useCatalogConfirmation(
-    () => saveMembership({
-      suiteId,
-      body: {
-        projectId,
-        expectedMembershipRevision: membershipRevision,
-        expectedScenarioIds: originalIds,
-        addScenarioIds: selection.selectedIds.filter((id) => !originalIds.includes(id)),
-        removeScenarioIds: originalIds.filter((id) => !selection.selectedIds.includes(id)),
-      },
-    }).unwrap(),
+    () =>
+      saveMembership({
+        suiteId,
+        body: {
+          projectId,
+          expectedMembershipRevision: membershipRevision,
+          expectedScenarioIds: originalIds,
+          addScenarioIds: selection.selectedIds.filter((id) => !originalIds.includes(id)),
+          removeScenarioIds: originalIds.filter((id) => !selection.selectedIds.includes(id)),
+        },
+      }).unwrap(),
     closeDialog,
-    (response) => onSaved({
-      restoreData: response.restoreData,
-      expectedMembershipRevision: response.membershipRevision,
-      expectedScenarioIds: response.scenarioIds,
-    }),
+    (response) =>
+      onSaved({
+        restoreData: response.restoreData,
+        expectedMembershipRevision: response.membershipRevision,
+        expectedScenarioIds: response.scenarioIds,
+      }),
   );
   const handleSave = () => {
     if (selection.hasChanges) void onConfirm();

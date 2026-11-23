@@ -17,7 +17,16 @@ export interface DialogProps extends DialogRootProps {
   closeTriggerProps?: ChakraDialog.CloseTriggerProps;
 }
 
-export const Dialog = ({ title, onClose, headerProps, titleProps, contentProps, closeTriggerProps, children, ...props }: DialogProps) => {
+export const Dialog = ({
+  title,
+  onClose,
+  headerProps,
+  titleProps,
+  contentProps,
+  closeTriggerProps,
+  children,
+  ...props
+}: DialogProps) => {
   return (
     <ChakraDialog.Root
       open

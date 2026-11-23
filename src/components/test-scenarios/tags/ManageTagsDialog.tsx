@@ -31,7 +31,12 @@ type Confirmation = { tags: ManagedScenarioTag[]; operationId: string; impact?: 
 type Undo = { operationId: string; count: number; search: string; checked: string[]; restoreFilters: () => void };
 
 export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
-  const { currentData: tags = [], isLoading, isError, refetch } = useGetApiV2ProjectsByProjectIdScenarioTagsQuery({ projectId });
+  const {
+    currentData: tags = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useGetApiV2ProjectsByProjectIdScenarioTagsQuery({ projectId });
   const [create] = usePostApiV2ProjectsByProjectIdScenarioTagsMutation();
   const [edit] = usePatchApiV2ProjectsByProjectIdScenarioTagsAndTagIdMutation();
   const [preview] = usePostApiV2ProjectsByProjectIdScenarioTagsDeletionPreviewMutation();
@@ -49,11 +54,14 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
   const nameInput = useRef<HTMLInputElement>(null);
   const cancelButton = useRef<HTMLButtonElement>(null);
   const matches = matchingTags(tags, search);
-  const selected = tags.filter(tag => checked.includes(tag.id));
-  const matchingChecked = matches.filter(tag => checked.includes(tag.id)).length;
+  const selected = tags.filter((tag) => checked.includes(tag.id));
+  const matchingChecked = matches.filter((tag) => checked.includes(tag.id)).length;
   const allMatchesChecked = matches.length > 0 && matchingChecked === matches.length;
-  const duplicate = editor && tags.find(tag => tag.id !== editor.tag?.id && tag.name.toLowerCase() === editor.name.trim().toLowerCase());
-  const duplicateMessage = duplicate && `A tag named "${duplicate.name}" already exists. Tag names are not case-sensitive.`;
+  const duplicate =
+    editor &&
+    tags.find((tag) => tag.id !== editor.tag?.id && tag.name.toLowerCase() === editor.name.trim().toLowerCase());
+  const duplicateMessage =
+    duplicate && `A tag named "${duplicate.name}" already exists. Tag names are not case-sensitive.`;
   const screen = editor ? 'editor' : confirmation ? 'confirmation' : 'list';
   useEffect(() => {
     if (screen === 'editor') nameInput.current?.focus();
@@ -70,9 +78,14 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
     lock.current = true;
     setBusy(true);
     setError('');
-    try { await work(); }
-    catch (cause) { setError(tagError(cause)); }
-    finally { lock.current = false; setBusy(false); }
+    try {
+      await work();
+    } catch (cause) {
+      setError(tagError(cause));
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
   }
   function close() {
     if (lock.current) return;
@@ -86,8 +99,10 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
   }
   function selectMatches() {
     act();
-    const matched = matches.map(tag => tag.id);
-    setChecked(allMatchesChecked ? checked.filter(id => !matched.includes(id)) : [...new Set([...checked, ...matched])]);
+    const matched = matches.map((tag) => tag.id);
+    setChecked(
+      allMatchesChecked ? checked.filter((id) => !matched.includes(id)) : [...new Set([...checked, ...matched])],
+    );
   }
   function startEditor(tag?: ManagedScenarioTag) {
     act();
@@ -109,7 +124,7 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
   }
   async function loadPreview(next: Confirmation) {
     setConfirmation({ ...next, impact: undefined });
-    const impact = await preview({ projectId, body: { tagIds: next.tags.map(tag => tag.id) } }).unwrap();
+    const impact = await preview({ projectId, body: { tagIds: next.tags.map((tag) => tag.id) } }).unwrap();
     setConfirmation({ ...next, impact });
   }
   function startDeletion(targets: ManagedScenarioTag[]) {
@@ -119,7 +134,7 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
   async function confirmDeletion() {
     if (!confirmation?.impact) return;
     const { tags: targets, operationId, impact } = confirmation;
-    const tagIds = targets.map(tag => tag.id);
+    const tagIds = targets.map((tag) => tag.id);
     await request(async () => {
       try {
         await remove({ projectId, body: { tagIds, operationId, revision: impact.revision } }).unwrap();
@@ -132,7 +147,7 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
       }
       const restoreFilters = removeDeletedFilters(projectId, tagIds);
       setUndo({ count: targets.length, operationId, checked, search, restoreFilters });
-      setChecked(checked.filter(id => !tagIds.includes(id)));
+      setChecked(checked.filter((id) => !tagIds.includes(id)));
       setConfirmation(undefined);
     });
   }
@@ -147,79 +162,265 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
     });
   }
   const count = confirmation?.tags.length ?? 0;
-  const title = editor ? (editor.tag ? 'Edit tag' : 'New tag') :
-    confirmation ? (count === 1 ? 'Delete tag' : `Delete ${count} tags`) : 'Manage tags';
+  const title = editor
+    ? editor.tag
+      ? 'Edit tag'
+      : 'New tag'
+    : confirmation
+      ? count === 1
+        ? 'Delete tag'
+        : `Delete ${count} tags`
+      : 'Manage tags';
   return (
-    <Dialog title={title} onClose={screen === 'list' ? close : () => { if (!lock.current) cancel(); }}
-      initialFocusEl={() => searchInput.current} size="md" contentProps={{ maxW: 'min(560px, calc(100vw - 24px))' }}>
+    <Dialog
+      title={title}
+      onClose={
+        screen === 'list'
+          ? close
+          : () => {
+              if (!lock.current) cancel();
+            }
+      }
+      initialFocusEl={() => searchInput.current}
+      size="md"
+      contentProps={{ maxW: 'min(560px, calc(100vw - 24px))' }}
+    >
       <DialogBody pb={5}>
-        {screen === 'list' && <fieldset disabled={busy}><Stack gap={3}
-          onClickCapture={event => {
-            if (undo && !(event.target as Element).closest('[data-tag-undo]')) setUndo(undefined);
-          }}>
-          <HStack>
-            <Input ref={searchInput} aria-label="Search tags" placeholder="Search tags" size="sm" value={search}
-              onChange={event => { act(); setSearch(event.target.value); }} />
-            <Button variant="primary" size="sm" onClick={() => startEditor()}><FiPlus />New tag</Button>
-          </HStack>
-          <Flex align="center" gap={2} wrap="wrap">
-            <input type="checkbox" aria-label="Select matching tags" checked={allMatchesChecked}
-              ref={element => { if (element) element.indeterminate = matchingChecked > 0 && !allMatchesChecked; }}
-              disabled={!matches.length} onChange={selectMatches} />
-            <Text fontSize="xs" color="text.secondary">{matches.length} of {tags.length} tags</Text>
-            <Text ml="auto" fontSize="xs" color="text.secondary">Used in</Text>
-            <Box w={16} />
-          </Flex>
-          {selected.length > 0 && <HStack p={2} bg="bg.subtle" borderRadius="md" wrap="wrap">
-            <Text fontSize="sm">{selected.length} selected</Text>
-            {!allMatchesChecked && matches.length > 0 && <Button variant="ghost" size="xs" onClick={selectMatches}>Select all {matches.length}</Button>}
-            <Button variant="ghost" size="xs" onClick={() => startDeletion(selected)}>Delete selected</Button>
-            <IconButton ml="auto" variant="ghost" size="xs" aria-label="Clear tag selection" onClick={() => { act(); setChecked([]); }}><FiX /></IconButton>
-          </HStack>}
-          {isLoading && <Text>Loading tags…</Text>}
-          {isError && <HStack><Text role="alert">Tags could not be loaded.</Text><Button size="xs" onClick={() => { act(); void refetch(); }}>Retry</Button></HStack>}
-          <Stack gap={0} maxH="400px" overflowY="auto" aria-label="Project tags">
-            {matches.map(tag => <HStack key={tag.id} gap={2} py={2} borderBottomWidth="1px" borderColor="border.main">
-              <input type="checkbox" aria-label={`Select ${tag.name}`} checked={checked.includes(tag.id)}
-                onChange={() => { act(); setChecked(toggleTag(checked, tag.id)); }} />
-              <Box flex={1} minW={0} overflowWrap="anywhere">
-                <Text fontSize="sm" fontWeight="medium">{tag.name}</Text>
-                <Text fontSize="xs" color="text.secondary">{tag.description || 'No description'}</Text>
+        {screen === 'list' && (
+          <fieldset disabled={busy}>
+            <Stack
+              gap={3}
+              onClickCapture={(event) => {
+                if (undo && !(event.target as Element).closest('[data-tag-undo]')) setUndo(undefined);
+              }}
+            >
+              <HStack>
+                <Input
+                  ref={searchInput}
+                  aria-label="Search tags"
+                  placeholder="Search tags"
+                  size="sm"
+                  value={search}
+                  onChange={(event) => {
+                    act();
+                    setSearch(event.target.value);
+                  }}
+                />
+                <Button variant="primary" size="sm" onClick={() => startEditor()}>
+                  <FiPlus />
+                  New tag
+                </Button>
+              </HStack>
+              <Flex align="center" gap={2} wrap="wrap">
+                <input
+                  type="checkbox"
+                  aria-label="Select matching tags"
+                  checked={allMatchesChecked}
+                  ref={(element) => {
+                    if (element) element.indeterminate = matchingChecked > 0 && !allMatchesChecked;
+                  }}
+                  disabled={!matches.length}
+                  onChange={selectMatches}
+                />
+                <Text fontSize="xs" color="text.secondary">
+                  {matches.length} of {tags.length} tags
+                </Text>
+                <Text ml="auto" fontSize="xs" color="text.secondary">
+                  Used in
+                </Text>
+                <Box w={16} />
+              </Flex>
+              {selected.length > 0 && (
+                <HStack p={2} bg="bg.subtle" borderRadius="md" wrap="wrap">
+                  <Text fontSize="sm">{selected.length} selected</Text>
+                  {!allMatchesChecked && matches.length > 0 && (
+                    <Button variant="ghost" size="xs" onClick={selectMatches}>
+                      Select all {matches.length}
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="xs" onClick={() => startDeletion(selected)}>
+                    Delete selected
+                  </Button>
+                  <IconButton
+                    ml="auto"
+                    variant="ghost"
+                    size="xs"
+                    aria-label="Clear tag selection"
+                    onClick={() => {
+                      act();
+                      setChecked([]);
+                    }}
+                  >
+                    <FiX />
+                  </IconButton>
+                </HStack>
+              )}
+              {isLoading && <Text>Loading tags…</Text>}
+              {isError && (
+                <HStack>
+                  <Text role="alert">Tags could not be loaded.</Text>
+                  <Button
+                    size="xs"
+                    onClick={() => {
+                      act();
+                      void refetch();
+                    }}
+                  >
+                    Retry
+                  </Button>
+                </HStack>
+              )}
+              <Stack gap={0} maxH="400px" overflowY="auto" aria-label="Project tags">
+                {matches.map((tag) => (
+                  <HStack key={tag.id} gap={2} py={2} borderBottomWidth="1px" borderColor="border.main">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${tag.name}`}
+                      checked={checked.includes(tag.id)}
+                      onChange={() => {
+                        act();
+                        setChecked(toggleTag(checked, tag.id));
+                      }}
+                    />
+                    <Box flex={1} minW={0} overflowWrap="anywhere">
+                      <Text fontSize="sm" fontWeight="medium">
+                        {tag.name}
+                      </Text>
+                      <Text fontSize="xs" color="text.secondary">
+                        {tag.description || 'No description'}
+                      </Text>
+                    </Box>
+                    <Text whiteSpace="nowrap" fontSize="xs" color="text.secondary">
+                      {tag.usageCount} {tag.usageCount === 1 ? 'scenario' : 'scenarios'}
+                    </Text>
+                    <IconButton
+                      aria-label={`Edit ${tag.name}`}
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => startEditor(tag)}
+                    >
+                      <FiEdit2 />
+                    </IconButton>
+                    <IconButton
+                      aria-label={`Delete ${tag.name}`}
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => startDeletion([tag])}
+                    >
+                      <FiTrash2 />
+                    </IconButton>
+                  </HStack>
+                ))}
+                {!isLoading && !isError && !matches.length && (
+                  <Text py={3} color="text.secondary" fontSize="sm">
+                    {search ? 'No matching tags' : 'No tags'}
+                  </Text>
+                )}
+              </Stack>
+              {undo && (
+                <HStack bg="bg.subtle" borderRadius="md" px={3} py={1} justify="space-between">
+                  <Text role="status" fontSize="sm">
+                    {undo.count === 1 ? 'Tag deleted' : `${undo.count} tags deleted`}
+                  </Text>
+                  <Button data-tag-undo size="sm" variant="ghost" disabled={busy} onClick={undoDeletion}>
+                    Undo
+                  </Button>
+                </HStack>
+              )}
+            </Stack>
+          </fieldset>
+        )}
+        {editor && (
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void save();
+            }}
+          >
+            <Stack gap={3}>
+              <Box as="label">
+                <Text fontSize="sm">Name</Text>
+                <Input
+                  ref={nameInput}
+                  required
+                  value={editor.name}
+                  disabled={busy}
+                  aria-invalid={!!duplicate}
+                  onChange={(event) => {
+                    setError('');
+                    setEditor({ ...editor, name: event.target.value });
+                  }}
+                />
               </Box>
-              <Text whiteSpace="nowrap" fontSize="xs" color="text.secondary">{tag.usageCount} {tag.usageCount === 1 ? 'scenario' : 'scenarios'}</Text>
-              <IconButton aria-label={`Edit ${tag.name}`} variant="ghost" size="xs" onClick={() => startEditor(tag)}><FiEdit2 /></IconButton>
-              <IconButton aria-label={`Delete ${tag.name}`} variant="ghost" size="xs" onClick={() => startDeletion([tag])}><FiTrash2 /></IconButton>
-            </HStack>)}
-            {!isLoading && !isError && !matches.length && <Text py={3} color="text.secondary" fontSize="sm">{search ? 'No matching tags' : 'No tags'}</Text>}
-          </Stack>
-          {undo && <HStack bg="bg.subtle" borderRadius="md" px={3} py={1} justify="space-between">
-            <Text role="status" fontSize="sm">{undo.count === 1 ? 'Tag deleted' : `${undo.count} tags deleted`}</Text>
-            <Button data-tag-undo size="sm" variant="ghost" disabled={busy} onClick={undoDeletion}>Undo</Button>
-          </HStack>}
-        </Stack></fieldset>}
-        {editor && <form onSubmit={event => { event.preventDefault(); void save(); }}>
+              {duplicateMessage && (
+                <Text role="alert" color="fg.error" fontSize="sm">
+                  {duplicateMessage}
+                </Text>
+              )}
+              <Box as="label">
+                <Text fontSize="sm">Description (optional)</Text>
+                <Textarea
+                  value={editor.description}
+                  disabled={busy}
+                  onChange={(event) => setEditor({ ...editor, description: event.target.value })}
+                />
+              </Box>
+              <HStack justify="flex-end">
+                <Button size="sm" variant="outline" disabled={busy} onClick={cancel}>
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" variant="primary" disabled={busy || !editor.name.trim() || !!duplicate}>
+                  {editor.tag ? 'Save changes' : 'Create tag'}
+                </Button>
+              </HStack>
+            </Stack>
+          </form>
+        )}
+        {confirmation && (
           <Stack gap={3}>
-            <Box as="label"><Text fontSize="sm">Name</Text>
-              <Input ref={nameInput} required value={editor.name} disabled={busy} aria-invalid={!!duplicate}
-                onChange={event => { setError(''); setEditor({ ...editor, name: event.target.value }); }} /></Box>
-            {duplicateMessage && <Text role="alert" color="fg.error" fontSize="sm">{duplicateMessage}</Text>}
-            <Box as="label"><Text fontSize="sm">Description (optional)</Text>
-              <Textarea value={editor.description} disabled={busy} onChange={event => setEditor({ ...editor, description: event.target.value })} /></Box>
-            <HStack justify="flex-end"><Button size="sm" variant="outline" disabled={busy} onClick={cancel}>Cancel</Button>
-              <Button type="submit" size="sm" variant="primary" disabled={busy || !editor.name.trim() || !!duplicate}>{editor.tag ? 'Save changes' : 'Create tag'}</Button></HStack>
+            <Text overflowWrap="anywhere">
+              Delete{' '}
+              {confirmation.tags
+                .map((tag) => `“${tags.find((current) => current.id === tag.id)?.name ?? tag.name}”`)
+                .join(', ')}
+              ?
+            </Text>
+            {confirmation.impact ? (
+              <Text>
+                {confirmation.impact.affectedCount === 0
+                  ? count === 1
+                    ? 'No scenario uses it.'
+                    : 'No scenarios use these tags.'
+                  : `${confirmation.impact.affectedCount} ${confirmation.impact.affectedCount === 1 ? 'scenario will' : 'scenarios will'} lose ${count === 1 ? 'this tag' : 'one or more of these tags'}.`}{' '}
+                The scenarios themselves will be kept.
+              </Text>
+            ) : busy ? (
+              <Text>Checking affected scenarios…</Text>
+            ) : (
+              <Button size="sm" onClick={() => void request(() => loadPreview(confirmation))}>
+                Retry preview
+              </Button>
+            )}
+            <HStack justify="flex-end">
+              <Button ref={cancelButton} size="sm" variant="outline" disabled={busy} onClick={cancel}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                colorPalette="red"
+                disabled={busy || !confirmation.impact}
+                onClick={() => void confirmDeletion()}
+              >
+                {title}
+              </Button>
+            </HStack>
           </Stack>
-        </form>}
-        {confirmation && <Stack gap={3}>
-          <Text overflowWrap="anywhere">Delete {confirmation.tags.map(tag => `“${tags.find(current => current.id === tag.id)?.name ?? tag.name}”`).join(', ')}?</Text>
-          {confirmation.impact ? <Text>
-            {confirmation.impact.affectedCount === 0 ? (count === 1 ? 'No scenario uses it.' : 'No scenarios use these tags.') :
-              `${confirmation.impact.affectedCount} ${confirmation.impact.affectedCount === 1 ? 'scenario will' : 'scenarios will'} lose ${count === 1 ? 'this tag' : 'one or more of these tags'}.`}
-            {' '}The scenarios themselves will be kept.</Text> :
-            busy ? <Text>Checking affected scenarios…</Text> : <Button size="sm" onClick={() => void request(() => loadPreview(confirmation))}>Retry preview</Button>}
-          <HStack justify="flex-end"><Button ref={cancelButton} size="sm" variant="outline" disabled={busy} onClick={cancel}>Cancel</Button>
-            <Button size="sm" colorPalette="red" disabled={busy || !confirmation.impact} onClick={() => void confirmDeletion()}>{title}</Button></HStack>
-        </Stack>}
-        {error && error !== duplicateMessage && <Text mt={2} role="alert" fontSize="sm" color="fg.error">{error}</Text>}
+        )}
+        {error && error !== duplicateMessage && (
+          <Text mt={2} role="alert" fontSize="sm" color="fg.error">
+            {error}
+          </Text>
+        )}
       </DialogBody>
     </Dialog>
   );
@@ -227,5 +428,10 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
 
 export function ManageTagsButton({ projectId }: { projectId: string }) {
   const { openDialog } = useDialogActions(projectId);
-  return <Button variant="outline" onClick={() => openDialog(ManageTagsDialog, { projectId })}><FiTag />Manage tags</Button>;
+  return (
+    <Button variant="outline" onClick={() => openDialog(ManageTagsDialog, { projectId })}>
+      <FiTag />
+      Manage tags
+    </Button>
+  );
 }

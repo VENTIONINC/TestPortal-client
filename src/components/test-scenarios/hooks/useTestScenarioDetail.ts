@@ -94,7 +94,11 @@ export const useTestScenarioDetail = (projectId: string, scenarioId: string): Us
     setPersistedScenario((previous) => (isSameScenario(previous, scopedData) ? previous : scopedData));
   }, [isNotFound, scopedData, setPersistedScenario]);
 
-  const scenario = isNotFound ? undefined : (persistedEntry.scopeKey === scopeKey ? persistedEntry.scenario ?? scopedData : scopedData);
+  const scenario = isNotFound
+    ? undefined
+    : persistedEntry.scopeKey === scopeKey
+      ? (persistedEntry.scenario ?? scopedData)
+      : scopedData;
   const isLoading = !scenario && Boolean(query.isLoading || query.isFetching);
 
   return {

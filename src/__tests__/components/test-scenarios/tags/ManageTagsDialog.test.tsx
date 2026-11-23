@@ -11,10 +11,15 @@ import { subscribeToTagDeletion } from '@/components/test-scenarios/tags/tagUtil
 import type { ManagedScenarioTag } from '@/redux/apis/generatedApi';
 
 const { list, create, edit, preview, remove, restore } = vi.hoisted(() => ({
-  list: vi.fn(), create: vi.fn(), edit: vi.fn(), preview: vi.fn(), remove: vi.fn(), restore: vi.fn(),
+  list: vi.fn(),
+  create: vi.fn(),
+  edit: vi.fn(),
+  preview: vi.fn(),
+  remove: vi.fn(),
+  restore: vi.fn(),
 }));
-vi.mock('@/redux/apis/generatedApi', async importOriginal => ({
-  ...await importOriginal<typeof import('@/redux/apis/generatedApi')>(),
+vi.mock('@/redux/apis/generatedApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/redux/apis/generatedApi')>()),
   useGetApiV2ProjectsByProjectIdScenarioTagsQuery: list,
   usePostApiV2ProjectsByProjectIdScenarioTagsMutation: () => [create],
   usePatchApiV2ProjectsByProjectIdScenarioTagsAndTagIdMutation: () => [edit],
@@ -30,7 +35,11 @@ const fixtures: ManagedScenarioTag[] = [
 ];
 let tags: ManagedScenarioTag[];
 const mount = () => {
-  render(<ChakraProvider><ManageTagsDialog projectId="p" closeDialog={vi.fn()} /></ChakraProvider>);
+  render(
+    <ChakraProvider>
+      <ManageTagsDialog projectId="p" closeDialog={vi.fn()} />
+    </ChakraProvider>,
+  );
   return userEvent.setup();
 };
 beforeEach(() => {
@@ -38,11 +47,17 @@ beforeEach(() => {
   tags = [...fixtures];
   list.mockImplementation(() => ({ currentData: tags, refetch: vi.fn() }));
   preview.mockReturnValue({ unwrap: async () => ({ affectedCount: 3, revision: 'first' }) });
-  remove.mockImplementation(({ body }) => ({ unwrap: async () => {
-    tags = tags.filter(tag => !body.tagIds.includes(tag.id));
-    return { operationId: body.operationId };
-  } }));
-  restore.mockImplementation(() => ({ unwrap: async () => { tags = [...fixtures]; } }));
+  remove.mockImplementation(({ body }) => ({
+    unwrap: async () => {
+      tags = tags.filter((tag) => !body.tagIds.includes(tag.id));
+      return { operationId: body.operationId };
+    },
+  }));
+  restore.mockImplementation(() => ({
+    unwrap: async () => {
+      tags = [...fixtures];
+    },
+  }));
 });
 
 describe('ManageTagsDialog', () => {
@@ -58,7 +73,9 @@ describe('ManageTagsDialog', () => {
     expect(name).toHaveFocus();
     await user.clear(name);
     await user.type(name, ' bETA ');
-    expect(screen.getByRole('alert')).toHaveTextContent('A tag named "Beta" already exists. Tag names are not case-sensitive.');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'A tag named "Beta" already exists. Tag names are not case-sensitive.',
+    );
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
     await user.click(screen.getByRole('button', { name: 'Delete selected' }));
@@ -77,13 +94,20 @@ describe('ManageTagsDialog', () => {
       expect(restoreFilters).toHaveBeenCalledOnce();
       expect(screen.getByText('2 selected')).toBeInTheDocument();
       expect(screen.getByRole('textbox', { name: 'Search tags' })).toHaveValue('shared');
-    } finally { unsubscribe(); }
+    } finally {
+      unsubscribe();
+    }
   });
 
   it('asks for confirmation of a revised impact and retires Undo on the next list action', async () => {
     const user = mount();
-    remove.mockImplementationOnce(() => ({ unwrap: async () => { throw { status: 409, data: { error: 'Tag deletion preview changed.' } }; } }));
-    preview.mockReturnValueOnce({ unwrap: async () => ({ affectedCount: 0, revision: 'first' }) })
+    remove.mockImplementationOnce(() => ({
+      unwrap: async () => {
+        throw { status: 409, data: { error: 'Tag deletion preview changed.' } };
+      },
+    }));
+    preview
+      .mockReturnValueOnce({ unwrap: async () => ({ affectedCount: 0, revision: 'first' }) })
       .mockReturnValueOnce({ unwrap: async () => ({ affectedCount: 1, revision: 'second' }) });
     await user.click(screen.getByRole('button', { name: 'Delete Gamma' }));
     expect(screen.getByText(/No scenario uses it/)).toBeInTheDocument();

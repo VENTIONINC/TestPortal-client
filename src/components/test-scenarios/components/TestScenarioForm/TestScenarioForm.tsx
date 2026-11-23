@@ -149,12 +149,7 @@ export const TestScenarioForm = (props: TestScenarioFormProps) => {
   };
 
   const handleAppendStepOnEnter = (index: number, e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (
-      e.key === 'Enter' &&
-      !e.shiftKey &&
-      !e.nativeEvent.isComposing &&
-      index === steps.length - 1
-    ) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && index === steps.length - 1) {
       e.preventDefault();
       if (!e.repeat) append();
     }

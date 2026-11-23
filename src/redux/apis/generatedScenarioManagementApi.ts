@@ -1,5 +1,5 @@
-import { generatedApi as api } from "./generatedApi";
-export const addTagTypes = ["Test Scenarios"] as const;
+import { generatedApi as api } from './generatedApi';
+export const addTagTypes = ['Test Scenarios'] as const;
 const injectedRtkApi = api
   .enhanceEndpoints({
     addTagTypes,
@@ -33,7 +33,7 @@ const injectedRtkApi = api
             suiteId: queryArg.suiteId,
           },
         }),
-        providesTags: ["Test Scenarios"],
+        providesTags: ['Test Scenarios'],
       }),
       getApiV2TestScenarioFolders: build.query<
         GetApiV2TestScenarioFoldersApiResponse,
@@ -45,7 +45,7 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ["Test Scenarios"],
+        providesTags: ['Test Scenarios'],
       }),
       postApiV2TestScenarioFolders: build.mutation<
         PostApiV2TestScenarioFoldersApiResponse,
@@ -53,10 +53,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-scenario-folders`,
-          method: "POST",
+          method: 'POST',
           body: queryArg.body,
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
       patchApiV2TestScenarioFoldersByFolderId: build.mutation<
         PatchApiV2TestScenarioFoldersByFolderIdApiResponse,
@@ -64,13 +64,13 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-scenario-folders/${queryArg.folderId}`,
-          method: "PATCH",
+          method: 'PATCH',
           body: queryArg.body,
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
       deleteApiV2TestScenarioFoldersByFolderId: build.mutation<
         DeleteApiV2TestScenarioFoldersByFolderIdApiResponse,
@@ -78,12 +78,12 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-scenario-folders/${queryArg.folderId}`,
-          method: "DELETE",
+          method: 'DELETE',
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
       postApiV2TestScenarioFoldersRestoration: build.mutation<
         PostApiV2TestScenarioFoldersRestorationApiResponse,
@@ -91,10 +91,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-scenario-folders/restoration`,
-          method: "POST",
+          method: 'POST',
           body: queryArg.body,
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
       postApiV2TestScenariosFolderRestoration: build.mutation<
         PostApiV2TestScenariosFolderRestorationApiResponse,
@@ -102,33 +102,27 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-scenarios/folder-restoration`,
-          method: "POST",
+          method: 'POST',
           body: queryArg.body,
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
-      getApiV2TestSuites: build.query<
-        GetApiV2TestSuitesApiResponse,
-        GetApiV2TestSuitesApiArg
-      >({
+      getApiV2TestSuites: build.query<GetApiV2TestSuitesApiResponse, GetApiV2TestSuitesApiArg>({
         query: (queryArg) => ({
           url: `/api/v2/test-suites`,
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ["Test Scenarios"],
+        providesTags: ['Test Scenarios'],
       }),
-      postApiV2TestSuites: build.mutation<
-        PostApiV2TestSuitesApiResponse,
-        PostApiV2TestSuitesApiArg
-      >({
+      postApiV2TestSuites: build.mutation<PostApiV2TestSuitesApiResponse, PostApiV2TestSuitesApiArg>({
         query: (queryArg) => ({
           url: `/api/v2/test-suites`,
-          method: "POST",
+          method: 'POST',
           body: queryArg.body,
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
       getApiV2TestSuitesBySuiteId: build.query<
         GetApiV2TestSuitesBySuiteIdApiResponse,
@@ -140,7 +134,7 @@ const injectedRtkApi = api
             projectId: queryArg.projectId,
           },
         }),
-        providesTags: ["Test Scenarios"],
+        providesTags: ['Test Scenarios'],
       }),
       patchApiV2TestSuitesBySuiteId: build.mutation<
         PatchApiV2TestSuitesBySuiteIdApiResponse,
@@ -148,13 +142,13 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-suites/${queryArg.suiteId}`,
-          method: "PATCH",
+          method: 'PATCH',
           body: queryArg.body,
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
       deleteApiV2TestSuitesBySuiteId: build.mutation<
         DeleteApiV2TestSuitesBySuiteIdApiResponse,
@@ -162,12 +156,12 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-suites/${queryArg.suiteId}`,
-          method: "DELETE",
+          method: 'DELETE',
           params: {
             projectId: queryArg.projectId,
           },
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
       postApiV2TestSuitesBySuiteIdMembers: build.mutation<
         PostApiV2TestSuitesBySuiteIdMembersApiResponse,
@@ -175,10 +169,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-suites/${queryArg.suiteId}/members`,
-          method: "POST",
+          method: 'POST',
           body: queryArg.body,
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
       deleteApiV2TestSuitesBySuiteIdMembers: build.mutation<
         DeleteApiV2TestSuitesBySuiteIdMembersApiResponse,
@@ -186,10 +180,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-suites/${queryArg.suiteId}/members`,
-          method: "DELETE",
+          method: 'DELETE',
           body: queryArg.body,
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
       putApiV2TestSuitesBySuiteIdMembersOrder: build.mutation<
         PutApiV2TestSuitesBySuiteIdMembersOrderApiResponse,
@@ -197,10 +191,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-suites/${queryArg.suiteId}/members/order`,
-          method: "PUT",
+          method: 'PUT',
           body: queryArg.body,
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
       patchApiV2TestScenariosBulkFolder: build.mutation<
         PatchApiV2TestScenariosBulkFolderApiResponse,
@@ -208,10 +202,10 @@ const injectedRtkApi = api
       >({
         query: (queryArg) => ({
           url: `/api/v2/test-scenarios/bulk-folder`,
-          method: "PATCH",
+          method: 'PATCH',
           body: queryArg.body,
         }),
-        invalidatesTags: ["Test Scenarios"],
+        invalidatesTags: ['Test Scenarios'],
       }),
     }),
     overrideExisting: false,
@@ -227,55 +221,46 @@ export type GetApiV2TestScenariosForResultLinkManagementApiArg = {
   createdById?: string;
   createdByIds?: string;
   priority?: string;
-  sort?: "recently_created" | "recently_updated" | "title_asc";
-  sortField?:
-    | "scenarioKey"
-    | "title"
-    | "details"
-    | "folder"
-    | "createdBy"
-    | "createdAt"
-    | "updatedAt";
-  sortDirection?: "asc" | "desc";
+  sort?: 'recently_created' | 'recently_updated' | 'title_asc';
+  sortField?: 'scenarioKey' | 'title' | 'details' | 'folder' | 'createdBy' | 'createdAt' | 'updatedAt';
+  sortDirection?: 'asc' | 'desc';
   scenarioKey?: string;
   title?: string;
   details?: string;
   folder?: string;
   createdBy?: string;
-  folderId?: string | "unfiled";
+  folderId?: string | 'unfiled';
   includeDescendants?: boolean;
   suiteId?: string;
 };
-export type GetApiV2TestScenarioFoldersApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    id: string;
-    projectId: string;
-    parentId: string | null;
-    name: string;
-    description: string | null;
-    position: number;
-    createdAt: string;
-    updatedAt: string;
-    scenarioCount: number;
-    _count: {
-      scenarios: number;
-    };
-    children: TestScenarioFolder[];
-  }[];
+export type GetApiV2TestScenarioFoldersApiResponse = /** status 200 Organization operation succeeded */ {
+  id: string;
+  projectId: string;
+  parentId: string | null;
+  name: string;
+  description: string | null;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+  scenarioCount: number;
+  _count: {
+    scenarios: number;
+  };
+  children: TestScenarioFolder[];
+}[];
 export type GetApiV2TestScenarioFoldersApiArg = {
   projectId: string;
 };
-export type PostApiV2TestScenarioFoldersApiResponse =
-  /** status 201 Organization operation succeeded */ {
-    id: string;
-    projectId: string;
-    parentId: string | null;
-    name: string;
-    description: string | null;
-    position: number;
-    createdAt: string;
-    updatedAt: string;
-  };
+export type PostApiV2TestScenarioFoldersApiResponse = /** status 201 Organization operation succeeded */ {
+  id: string;
+  projectId: string;
+  parentId: string | null;
+  name: string;
+  description: string | null;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+};
 export type PostApiV2TestScenarioFoldersApiArg = {
   body: {
     projectId: string;
@@ -286,17 +271,16 @@ export type PostApiV2TestScenarioFoldersApiArg = {
     position?: number;
   };
 };
-export type PatchApiV2TestScenarioFoldersByFolderIdApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    id: string;
-    projectId: string;
-    parentId: string | null;
-    name: string;
-    description: string | null;
-    position: number;
-    createdAt: string;
-    updatedAt: string;
-  };
+export type PatchApiV2TestScenarioFoldersByFolderIdApiResponse = /** status 200 Organization operation succeeded */ {
+  id: string;
+  projectId: string;
+  parentId: string | null;
+  name: string;
+  description: string | null;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+};
 export type PatchApiV2TestScenarioFoldersByFolderIdApiArg = {
   folderId: string;
   projectId: string;
@@ -308,33 +292,31 @@ export type PatchApiV2TestScenarioFoldersByFolderIdApiArg = {
     position?: number;
   };
 };
-export type DeleteApiV2TestScenarioFoldersByFolderIdApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    deleted: true;
-    restoreData: {
-      folders: {
-        id: string;
-        projectId: string;
-        name: string;
-        description: string | null;
-        parentId: string | null;
-        position: number;
-      }[];
-      scenarios: {
-        scenarioId: string;
-        folderId: string;
-        expectedRevision: number;
-      }[];
-    };
+export type DeleteApiV2TestScenarioFoldersByFolderIdApiResponse = /** status 200 Organization operation succeeded */ {
+  deleted: true;
+  restoreData: {
+    folders: {
+      id: string;
+      projectId: string;
+      name: string;
+      description: string | null;
+      parentId: string | null;
+      position: number;
+    }[];
+    scenarios: {
+      scenarioId: string;
+      folderId: string;
+      expectedRevision: number;
+    }[];
   };
+};
 export type DeleteApiV2TestScenarioFoldersByFolderIdApiArg = {
   folderId: string;
   projectId: string;
 };
-export type PostApiV2TestScenarioFoldersRestorationApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    restored: true;
-  };
+export type PostApiV2TestScenarioFoldersRestorationApiResponse = /** status 200 Organization operation succeeded */ {
+  restored: true;
+};
 export type PostApiV2TestScenarioFoldersRestorationApiArg = {
   body: {
     projectId: string;
@@ -355,12 +337,11 @@ export type PostApiV2TestScenarioFoldersRestorationApiArg = {
     };
   };
 };
-export type PostApiV2TestScenariosFolderRestorationApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    id: string;
-    folderId: string | null;
-    revision: number;
-  }[];
+export type PostApiV2TestScenariosFolderRestorationApiResponse = /** status 200 Organization operation succeeded */ {
+  id: string;
+  folderId: string | null;
+  revision: number;
+}[];
 export type PostApiV2TestScenariosFolderRestorationApiArg = {
   body: {
     projectId: string;
@@ -372,45 +353,43 @@ export type PostApiV2TestScenariosFolderRestorationApiArg = {
     }[];
   };
 };
-export type GetApiV2TestSuitesApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    id: string;
-    projectId: string;
-    name: string;
-    description: string | null;
-    purpose: string | null;
-    release: string | null;
-    membershipRevision: number;
+export type GetApiV2TestSuitesApiResponse = /** status 200 Organization operation succeeded */ {
+  id: string;
+  projectId: string;
+  name: string;
+  description: string | null;
+  purpose: string | null;
+  release: string | null;
+  membershipRevision: number;
+  createdAt: string;
+  updatedAt: string;
+  members?: {
+    suiteId: string;
+    testScenarioId: string;
+    position: number;
     createdAt: string;
-    updatedAt: string;
-    members?: {
-      suiteId: string;
-      testScenarioId: string;
-      position: number;
-      createdAt: string;
-    }[];
   }[];
+}[];
 export type GetApiV2TestSuitesApiArg = {
   projectId: string;
 };
-export type PostApiV2TestSuitesApiResponse =
-  /** status 201 Organization operation succeeded */ {
-    id: string;
-    projectId: string;
-    name: string;
-    description: string | null;
-    purpose: string | null;
-    release: string | null;
-    membershipRevision: number;
+export type PostApiV2TestSuitesApiResponse = /** status 201 Organization operation succeeded */ {
+  id: string;
+  projectId: string;
+  name: string;
+  description: string | null;
+  purpose: string | null;
+  release: string | null;
+  membershipRevision: number;
+  createdAt: string;
+  updatedAt: string;
+  members?: {
+    suiteId: string;
+    testScenarioId: string;
+    position: number;
     createdAt: string;
-    updatedAt: string;
-    members?: {
-      suiteId: string;
-      testScenarioId: string;
-      position: number;
-      createdAt: string;
-    }[];
-  };
+  }[];
+};
 export type PostApiV2TestSuitesApiArg = {
   body: {
     projectId: string;
@@ -421,46 +400,44 @@ export type PostApiV2TestSuitesApiArg = {
     release?: string | null;
   };
 };
-export type GetApiV2TestSuitesBySuiteIdApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    id: string;
-    projectId: string;
-    name: string;
-    description: string | null;
-    purpose: string | null;
-    release: string | null;
-    membershipRevision: number;
+export type GetApiV2TestSuitesBySuiteIdApiResponse = /** status 200 Organization operation succeeded */ {
+  id: string;
+  projectId: string;
+  name: string;
+  description: string | null;
+  purpose: string | null;
+  release: string | null;
+  membershipRevision: number;
+  createdAt: string;
+  updatedAt: string;
+  members?: {
+    suiteId: string;
+    testScenarioId: string;
+    position: number;
     createdAt: string;
-    updatedAt: string;
-    members?: {
-      suiteId: string;
-      testScenarioId: string;
-      position: number;
-      createdAt: string;
-    }[];
-  };
+  }[];
+};
 export type GetApiV2TestSuitesBySuiteIdApiArg = {
   suiteId: string;
   projectId: string;
 };
-export type PatchApiV2TestSuitesBySuiteIdApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    id: string;
-    projectId: string;
-    name: string;
-    description: string | null;
-    purpose: string | null;
-    release: string | null;
-    membershipRevision: number;
+export type PatchApiV2TestSuitesBySuiteIdApiResponse = /** status 200 Organization operation succeeded */ {
+  id: string;
+  projectId: string;
+  name: string;
+  description: string | null;
+  purpose: string | null;
+  release: string | null;
+  membershipRevision: number;
+  createdAt: string;
+  updatedAt: string;
+  members?: {
+    suiteId: string;
+    testScenarioId: string;
+    position: number;
     createdAt: string;
-    updatedAt: string;
-    members?: {
-      suiteId: string;
-      testScenarioId: string;
-      position: number;
-      createdAt: string;
-    }[];
-  };
+  }[];
+};
 export type PatchApiV2TestSuitesBySuiteIdApiArg = {
   suiteId: string;
   projectId: string;
@@ -471,21 +448,19 @@ export type PatchApiV2TestSuitesBySuiteIdApiArg = {
     release?: string | null;
   };
 };
-export type DeleteApiV2TestSuitesBySuiteIdApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    deleted: true;
-  };
+export type DeleteApiV2TestSuitesBySuiteIdApiResponse = /** status 200 Organization operation succeeded */ {
+  deleted: true;
+};
 export type DeleteApiV2TestSuitesBySuiteIdApiArg = {
   suiteId: string;
   projectId: string;
 };
-export type PostApiV2TestSuitesBySuiteIdMembersApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    suiteId: string;
-    testScenarioId: string;
-    position: number;
-    createdAt: string;
-  }[];
+export type PostApiV2TestSuitesBySuiteIdMembersApiResponse = /** status 200 Organization operation succeeded */ {
+  suiteId: string;
+  testScenarioId: string;
+  position: number;
+  createdAt: string;
+}[];
 export type PostApiV2TestSuitesBySuiteIdMembersApiArg = {
   suiteId: string;
   body: {
@@ -493,13 +468,12 @@ export type PostApiV2TestSuitesBySuiteIdMembersApiArg = {
     scenarioIds: string[];
   };
 };
-export type DeleteApiV2TestSuitesBySuiteIdMembersApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    suiteId: string;
-    testScenarioId: string;
-    position: number;
-    createdAt: string;
-  }[];
+export type DeleteApiV2TestSuitesBySuiteIdMembersApiResponse = /** status 200 Organization operation succeeded */ {
+  suiteId: string;
+  testScenarioId: string;
+  position: number;
+  createdAt: string;
+}[];
 export type DeleteApiV2TestSuitesBySuiteIdMembersApiArg = {
   suiteId: string;
   body: {
@@ -507,10 +481,9 @@ export type DeleteApiV2TestSuitesBySuiteIdMembersApiArg = {
     scenarioIds: string[];
   };
 };
-export type PutApiV2TestSuitesBySuiteIdMembersOrderApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    scenarioIds: string[];
-  };
+export type PutApiV2TestSuitesBySuiteIdMembersOrderApiResponse = /** status 200 Organization operation succeeded */ {
+  scenarioIds: string[];
+};
 export type PutApiV2TestSuitesBySuiteIdMembersOrderApiArg = {
   suiteId: string;
   body: {
@@ -520,16 +493,15 @@ export type PutApiV2TestSuitesBySuiteIdMembersOrderApiArg = {
     scenarioIds: string[];
   };
 };
-export type PatchApiV2TestScenariosBulkFolderApiResponse =
-  /** status 200 Organization operation succeeded */ {
-    moved: number;
-    restoreData: {
-      scenarioId: string;
-      folderId: string | null;
-      expectedFolderId: string | null;
-      expectedRevision: number;
-    }[];
-  };
+export type PatchApiV2TestScenariosBulkFolderApiResponse = /** status 200 Organization operation succeeded */ {
+  moved: number;
+  restoreData: {
+    scenarioId: string;
+    folderId: string | null;
+    expectedFolderId: string | null;
+    expectedRevision: number;
+  }[];
+};
 export type PatchApiV2TestScenariosBulkFolderApiArg = {
   body: {
     projectId: string;
@@ -549,7 +521,7 @@ export type TestScenarioSummary = {
   title: string;
   scenarioKey: string;
   details: string | null;
-  priority: ("low" | "medium" | "high") | null;
+  priority: ('low' | 'medium' | 'high') | null;
   createdBy: TestScenarioCreatorSummary;
   createdAt: string;
   updatedAt: string;

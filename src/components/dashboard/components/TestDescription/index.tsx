@@ -14,9 +14,27 @@ import { Stats, DonutChart, QualityChart } from './components';
 export const TestDescription = ({ summary, isGrid }: TestDescriptionProps) => {
   const metrics = aggregateDashboardStatusMetrics(undefined, summary);
   const stats = [
-    { label: 'Test runs', value: metrics.total, status: 'runs' as const, icon: PiDotsNineBold, color: 'dashboard.base' },
-    { label: 'Test passed', value: metrics.passed, status: 'passed' as const, icon: FaCircleCheck, color: 'dashboard.green' },
-    { label: 'Test failed', value: metrics.failed, status: 'failed' as const, icon: FaRegCircleXmark, color: 'dashboard.red' },
+    {
+      label: 'Test runs',
+      value: metrics.total,
+      status: 'runs' as const,
+      icon: PiDotsNineBold,
+      color: 'dashboard.base',
+    },
+    {
+      label: 'Test passed',
+      value: metrics.passed,
+      status: 'passed' as const,
+      icon: FaCircleCheck,
+      color: 'dashboard.green',
+    },
+    {
+      label: 'Test failed',
+      value: metrics.failed,
+      status: 'failed' as const,
+      icon: FaRegCircleXmark,
+      color: 'dashboard.red',
+    },
   ];
 
   const donutData = [
@@ -28,7 +46,9 @@ export const TestDescription = ({ summary, isGrid }: TestDescriptionProps) => {
     series: donutData.map((item) => ({ name: item.name as keyof typeof item, color: item.color })),
   });
   const qualitySegments = 24;
-  const filledSegments = Math.round(((metrics.total ? (metrics.passed / metrics.total) * 100 : 0) / 100) * qualitySegments);
+  const filledSegments = Math.round(
+    ((metrics.total ? (metrics.passed / metrics.total) * 100 : 0) / 100) * qualitySegments,
+  );
   const qualityData = Array.from({ length: qualitySegments }, (_, index) => ({
     name: `segment-${index + 1}`,
     value: 1,

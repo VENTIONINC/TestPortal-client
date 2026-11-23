@@ -67,4 +67,3 @@ describe('ProjectGuard', () => {
     expect(screen.queryByText('Test Scenario catalog')).not.toBeInTheDocument();
   });
 });
-

@@ -45,7 +45,9 @@ export const DeleteSkillDialog = ({ closeDialog, skillId, skillTitle, onDeleted 
           <Text>
             Delete <strong>{skillTitle}</strong>?
           </Text>
-          <Text>This permanently removes the custom skill and its packaged resources. This action cannot be undone.</Text>
+          <Text>
+            This permanently removes the custom skill and its packaged resources. This action cannot be undone.
+          </Text>
           {apiError && (
             <Alert.Root status="error">
               <Alert.Indicator />

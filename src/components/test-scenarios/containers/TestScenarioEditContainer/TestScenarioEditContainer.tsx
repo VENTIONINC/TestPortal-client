@@ -47,8 +47,13 @@ const ScopedScenarioEditContainer = ({ projectId, scenarioId }: TestScenarioEdit
             {...breadcrumb}
             initialSteps={toStepDrafts(scenario)}
             tagField={
-              <SavedScenarioCardTags projectId={projectId} scenarioId={scenarioId}
-                tags={edit.tags} disabled={edit.isSubmitting} onAssigned={edit.onTagsAssigned} />
+              <SavedScenarioCardTags
+                projectId={projectId}
+                scenarioId={scenarioId}
+                tags={edit.tags}
+                disabled={edit.isSubmitting}
+                onAssigned={edit.onTagsAssigned}
+              />
             }
             initialSuites={scenario.suites ?? []}
             suites={navigation.suites}

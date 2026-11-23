@@ -27,13 +27,11 @@ interface IssuesQueryFilterValues extends Record<string, string> {
   statTo: string;
 }
 
-export const buildIssuesQueryParams = (
-  filters: IssuesQueryFilterValues,
-): GetApiV2IssuesWithStatsApiArg => ({
+export const buildIssuesQueryParams = (filters: IssuesQueryFilterValues): GetApiV2IssuesWithStatsApiArg => ({
   projectId: filters.projectId,
   page: Number(filters.page) || 1,
   category: Object.values(ResultCategory).includes(filters.category as ResultCategory)
-    ? filters.category as ResultCategory
+    ? (filters.category as ResultCategory)
     : undefined,
   name: filters.name || undefined,
   type: filters.type && filters.type !== 'all' ? filters.type : undefined,
@@ -61,8 +59,11 @@ export const IssuesList = () => {
     },
     [filterProps],
   );
-  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading, effectiveType } =
-    useExecutionTypeOptions({
+  const {
+    options: executionTypeOptions,
+    isLoading: areExecutionTypesLoading,
+    effectiveType,
+  } = useExecutionTypeOptions({
     projectId: selectedProjectId ?? '',
     selectedType: filterProps.filters.type || 'all',
     onInvalidType: handleInvalidExecutionType,

@@ -6,10 +6,7 @@ import { useFileUpload } from '@chakra-ui/react';
 import type { FileUploadFileChangeDetails } from '@chakra-ui/react';
 
 import { toaster } from '@/components/ui';
-import {
-  useGetApiV2ProjectsQuery,
-  usePostApiV2UploadJsonReportMutation,
-} from '@/redux/apis/generatedApi';
+import { useGetApiV2ProjectsQuery, usePostApiV2UploadJsonReportMutation } from '@/redux/apis/generatedApi';
 import { usePostApiV2UploadCtrfReportMutation } from '@/redux/apis/extendedApi';
 import { useSelectedProjectId } from '@/redux/slices/projects';
 import { useDialogActions } from '@/redux/slices/dialog';
@@ -19,12 +16,10 @@ import { ResultsFileUploadDialog } from './results-file-upload-dialog';
 
 export const MAX_RESULTS_UPLOAD_FILES = 1000;
 
-export const getResultsFileUploadLimitMessage = () =>
-  `Maximum ${MAX_RESULTS_UPLOAD_FILES} files allowed`;
+export const getResultsFileUploadLimitMessage = () => `Maximum ${MAX_RESULTS_UPLOAD_FILES} files allowed`;
 
-export const hasTooManyFilesRejection = (
-  rejectedFiles: FileUploadFileChangeDetails['rejectedFiles'],
-) => rejectedFiles.some((rejection) => rejection.errors.includes('TOO_MANY_FILES'));
+export const hasTooManyFilesRejection = (rejectedFiles: FileUploadFileChangeDetails['rejectedFiles']) =>
+  rejectedFiles.some((rejection) => rejection.errors.includes('TOO_MANY_FILES'));
 
 const chunkArray = <T>(array: T[], size: number): T[][] => {
   const chunks = [];

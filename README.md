@@ -43,6 +43,14 @@ corepack enable
 yarn install
 ```
 
+The install generates Chakra typings when the theme source and development
+dependencies are available. In a developer Git checkout it also activates the
+Husky pre-commit hook. `HUSKY=0` skips hook activation and still generates the
+typings. To reactivate the hook, run `yarn postinstall` and verify that
+`git config --local --get core.hooksPath` returns `.husky/_`.
+
+The hook runs `yarn eslint`, `yarn tsc`, and `yarn test` in that order.
+
 ### 2. Configure the backend connection
 
 ```bash

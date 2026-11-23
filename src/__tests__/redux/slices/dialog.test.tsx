@@ -12,8 +12,10 @@ import dialog, { useDialogActions } from '@/redux/slices/dialog';
 const ExampleDialog = () => null;
 
 it('dismisses only the dialogs that belonged to a previous scope or unmounted owner', () => {
-  const store = configureStore({ reducer: { dialog }, middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({ serializableCheck: false }) });
+  const store = configureStore({
+    reducer: { dialog },
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
+  });
   const wrapper = ({ children }: PropsWithChildren) => <Provider store={store}>{children}</Provider>;
   const owner = renderHook(({ scope }) => useDialogActions(scope), { wrapper, initialProps: { scope: 'run-1' } });
   const other = renderHook(() => useDialogActions(), { wrapper });

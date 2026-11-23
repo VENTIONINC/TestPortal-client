@@ -62,7 +62,7 @@ export const DonutChart = ({ title, metrics, donutChart }: DonutChartProps) => {
                       <Cell key={`cell-${index}`} fill={donutChart.color(item.color)} stroke="none" />
                     ))}
                   </Pie>
-`                  <Tooltip cursor={false} content={<Chart.Tooltip hideLabel />} wrapperStyle={{ zIndex: 10 }} />
+                  ` <Tooltip cursor={false} content={<Chart.Tooltip hideLabel />} wrapperStyle={{ zIndex: 10 }} />
                 </PieChart>
               </Chart.Root>
             </ResponsiveContainer>

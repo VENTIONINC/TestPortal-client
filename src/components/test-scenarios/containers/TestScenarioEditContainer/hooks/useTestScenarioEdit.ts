@@ -139,7 +139,9 @@ export const useTestScenarioEdit = (projectId: string, scenarioId: string, onSav
   return {
     scenario,
     tags: detail.scenario?.tags ?? [],
-    onTagsAssigned: () => { changedTags.current = true; },
+    onTagsAssigned: () => {
+      changedTags.current = true;
+    },
     isLoading: detail.isLoading,
     isUnavailable: detail.isUnavailable,
     isError: detail.isError,

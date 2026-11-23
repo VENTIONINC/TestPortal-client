@@ -33,7 +33,6 @@ const navigate = vi.fn();
 const contextMenu = vi.fn();
 const createRunMutation = vi.fn();
 
-
 vi.mock('@/components/ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/components/ui')>();
   return {
@@ -63,7 +62,11 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
       isLoading: false,
       error: undefined,
     })),
-    useGetApiV2TestScenariosPriorityCountsQuery: vi.fn(() => ({ currentData: undefined, isFetching: false, error: undefined })),
+    useGetApiV2TestScenariosPriorityCountsQuery: vi.fn(() => ({
+      currentData: undefined,
+      isFetching: false,
+      error: undefined,
+    })),
     useLazyGetApiV2TestScenariosSelectionQuery: vi.fn(() => [
       vi.fn(() => ({ unwrap: async () => ({ scenarioIds: [], total: 0 }) })),
       { isLoading: false },
@@ -119,7 +122,11 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     ...actual,
     useGetApiV2TestScenarioFoldersQuery: foldersQuery,
     useGetApiV2TestSuitesQuery: suitesQuery,
-    useGetApiV2TestScenariosPriorityCountsQuery: vi.fn(() => ({ currentData: undefined, isFetching: false, error: undefined })),
+    useGetApiV2TestScenariosPriorityCountsQuery: vi.fn(() => ({
+      currentData: undefined,
+      isFetching: false,
+      error: undefined,
+    })),
     usePatchApiV2TestScenariosBulkFolderMutation: mutation,
     usePostApiV2TestSuitesBySuiteIdMembersMutation: mutation,
     usePutApiV2TestSuitesBySuiteIdMembersOrderMutation: mutation,
@@ -127,7 +134,10 @@ vi.mock('@/redux/apis/extendedApi', async (importOriginal) => {
     usePostApiV2TestSuitesBySuiteIdMembershipRestorationMutation: mutation,
     usePostApiV2TestSuitesMovesMutation: mutation,
     usePostApiV2TestSuitesMoveRestorationMutation: mutation,
-    usePostApiV2TestScenarioFoldersMutation: vi.fn(() => [vi.fn(() => ({ unwrap: () => Promise.resolve({}) })), { isLoading: false }]),
+    usePostApiV2TestScenarioFoldersMutation: vi.fn(() => [
+      vi.fn(() => ({ unwrap: () => Promise.resolve({}) })),
+      { isLoading: false },
+    ]),
     usePatchApiV2TestScenarioFoldersByFolderIdMutation: mutation,
     useDeleteApiV2TestScenarioFoldersByFolderIdMutation: mutation,
     usePostApiV2TestScenarioFoldersRestorationMutation: mutation,
@@ -206,7 +216,11 @@ describe('TestScenarioCatalogContainer', () => {
     const mocked = vi.mocked(useGetApiV2TestSuitesQuery);
     const previous = mocked.getMockImplementation();
     mocked.mockReturnValue({ currentData: [{ id: 'suite-a' }, { id: 'suite-b' }], isFetching: false } as never);
-    const wrapper = ({ children }: { children: ReactNode }) => <MemoryRouter initialEntries={['/test-management?projectId=project-1&tab=suites&suiteId=suite-b']}>{children}</MemoryRouter>;
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <MemoryRouter initialEntries={['/test-management?projectId=project-1&tab=suites&suiteId=suite-b']}>
+        {children}
+      </MemoryRouter>
+    );
     const { result } = renderHook(() => useTestScenarioCatalog('project-1', 'suites'), { wrapper });
     if (previous) mocked.mockImplementation(previous);
     expect(result.current.scope).toEqual({ kind: 'suite', id: 'suite-b' });
@@ -241,9 +255,13 @@ describe('TestScenarioCatalogContainer', () => {
   });
 
   it('preserves the originating folder when starting creation', async () => {
-    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />, ['/test-management?projectId=project-1&folderId=folder-a']);
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />, [
+      '/test-management?projectId=project-1&folderId=folder-a',
+    ]);
     await userEvent.setup().click(screen.getByRole('button', { name: 'Create Test Scenario' }));
-    expect(navigate).toHaveBeenCalledWith('/test-scenarios/new?folderId=folder-a&originProject=project-1&originKind=folder&originId=folder-a');
+    expect(navigate).toHaveBeenCalledWith(
+      '/test-scenarios/new?folderId=folder-a&originProject=project-1&originKind=folder&originId=folder-a',
+    );
   });
 
   it('opens the shared run form with selected scenarios without creating a run yet', async () => {
@@ -275,7 +293,8 @@ describe('TestScenarioCatalogContainer', () => {
       projectId: 'project-1',
       page: 1,
       limit: 25,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sortField: 'updatedAt',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      sortField: 'updatedAt',
       sortDirection: 'desc',
     });
     act(() => {
@@ -287,7 +306,8 @@ describe('TestScenarioCatalogContainer', () => {
       page: 1,
       priority: 'high',
       createdByIds: 'user-1',
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sortField: 'updatedAt',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      sortField: 'updatedAt',
       sortDirection: 'desc',
     });
     act(() => result.current.onPriorityChange(''));
@@ -311,7 +331,9 @@ describe('TestScenarioCatalogContainer', () => {
     expect(result.current.scope).toEqual({ kind: 'folder', id: 'new-folder' });
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({ folderId: 'new-folder' });
     createFolderMutation.mockReset();
-    createFolderMutation.mockImplementation(() => [vi.fn(() => ({ unwrap: async () => ({}) })), { isLoading: false }] as never);
+    createFolderMutation.mockImplementation(
+      () => [vi.fn(() => ({ unwrap: async () => ({}) })), { isLoading: false }] as never,
+    );
   });
 
   it('loads project and No folder totals independently of the visible list filters', () => {
@@ -331,12 +353,17 @@ describe('TestScenarioCatalogContainer', () => {
     const trigger = vi.fn(() => ({ unwrap: async () => ({ scenarioIds: matching, total: matching.length }) }));
     mockedSelectionQuery.mockReturnValue([trigger, {}] as never);
     const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
-    act(() => { result.current.onPageChange(2); result.current.toggleSelected('visible'); });
+    act(() => {
+      result.current.onPageChange(2);
+      result.current.toggleSelected('visible');
+    });
     act(() => result.current.onTagChange(['m1', 'm2']));
     expect(result.current.selectedIds).toEqual([]);
     expect(result.current.tagCounts).toEqual({ m1: 5, m2: 3 });
     expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
-      page: 1, tagIds: 'm1,m2', timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      page: 1,
+      tagIds: 'm1,m2',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     await act(async () => result.current.selectAllMatching());
     expect(trigger).toHaveBeenCalledWith(expect.objectContaining({ tagIds: 'm1,m2' }));
@@ -350,18 +377,31 @@ describe('TestScenarioCatalogContainer', () => {
     const trigger = vi.fn(() => ({ unwrap: async () => ({ scenarioIds: [], total: 0 }) }));
     mockedSelectionQuery.mockReturnValue([trigger, {}] as never);
     const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
-    act(() => { result.current.onTagChange(['m1']); result.current.toggleSelected('old'); });
+    act(() => {
+      result.current.onTagChange(['m1']);
+      result.current.toggleSelected('old');
+    });
     const previous = result.current.onBulkTagsApplied;
-    act(() => { result.current.onTagChange(['m2']); result.current.toggleSelected('new'); });
+    act(() => {
+      result.current.onTagChange(['m2']);
+      result.current.toggleSelected('new');
+    });
     await act(async () => previous());
     expect(result.current.selectedIds).toEqual(['new']);
   });
 
   it('clears the selection and explains when matching rows cannot be refreshed after a tag change', async () => {
-    const trigger = vi.fn(() => ({ unwrap: async () => { throw new Error('unavailable'); } }));
+    const trigger = vi.fn(() => ({
+      unwrap: async () => {
+        throw new Error('unavailable');
+      },
+    }));
     mockedSelectionQuery.mockReturnValue([trigger, {}] as never);
     const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
-    act(() => { result.current.onTagChange(['m1']); result.current.toggleSelected('old'); });
+    act(() => {
+      result.current.onTagChange(['m1']);
+      result.current.toggleSelected('old');
+    });
     await act(async () => result.current.onBulkTagsApplied());
     expect(result.current.selectedIds).toEqual([]);
     expect(result.current.selectionError).toMatch(/tag changes were saved/i);
@@ -536,7 +576,12 @@ describe('TestScenarioCatalogContainer', () => {
     act(() => result.current.toggleSelected('scenario-1'));
     act(() => result.current.startSuiteOperation());
     act(() => result.current.toggleSelected('scenario-2'));
-    act(() => result.current.reconcileSuiteOperation({ succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [] }, ['scenario-1']));
+    act(() =>
+      result.current.reconcileSuiteOperation(
+        { succeededIds: ['scenario-1'], failedIds: [], unattemptedIds: [], uncertainIds: [] },
+        ['scenario-1'],
+      ),
+    );
     expect(result.current.selectedIds).toEqual(['scenario-1', 'scenario-2']);
   });
 
@@ -548,19 +593,30 @@ describe('TestScenarioCatalogContainer', () => {
         scenarioIds: ['scenario-2'],
         membershipRevision: 4,
         restoreData: {
-          suiteId: 'suite-a', addedScenarioIds: [], removedMembers: [{ scenarioId: 'scenario-1', position: 0 }],
+          suiteId: 'suite-a',
+          addedScenarioIds: [],
+          removedMembers: [{ scenarioId: 'scenario-1', position: 0 }],
         },
       }),
     }));
     suites.mockReturnValue({
-      currentData: [{
-        id: 'suite-a', projectId: 'project-1', name: 'Regression', membershipRevision: 3,
-        description: null, purpose: null, release: null, createdAt: '', updatedAt: '',
-        members: [
-          { suiteId: 'suite-a', testScenarioId: 'scenario-1', position: 0, createdAt: '' },
-          { suiteId: 'suite-a', testScenarioId: 'scenario-2', position: 1, createdAt: '' },
-        ],
-      }],
+      currentData: [
+        {
+          id: 'suite-a',
+          projectId: 'project-1',
+          name: 'Regression',
+          membershipRevision: 3,
+          description: null,
+          purpose: null,
+          release: null,
+          createdAt: '',
+          updatedAt: '',
+          members: [
+            { suiteId: 'suite-a', testScenarioId: 'scenario-1', position: 0, createdAt: '' },
+            { suiteId: 'suite-a', testScenarioId: 'scenario-2', position: 1, createdAt: '' },
+          ],
+        },
+      ],
       isFetching: false,
     } as never);
     mockedMembershipChange.mockReturnValue([changeMembership, { isLoading: false }] as never);
@@ -662,7 +718,14 @@ describe('TestScenarioCatalogContainer', () => {
     renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />);
 
     expect(mockedScenarioQuery).toHaveBeenCalledWith(
-      { projectId: 'project-1', page: 1, limit: 25, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sortField: 'updatedAt', sortDirection: 'desc' },
+      {
+        projectId: 'project-1',
+        page: 1,
+        limit: 25,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        sortField: 'updatedAt',
+        sortDirection: 'desc',
+      },
       { skip: false },
     );
     expect(mockedDetailQuery).not.toHaveBeenCalled();
@@ -674,10 +737,20 @@ describe('TestScenarioCatalogContainer', () => {
     ['folder-a', { folderId: 'folder-a', includeDescendants: true }],
     ['removed-folder', {}],
   ])('restores catalog folder scope %s from a direct-entry URL', async (folderId, expected) => {
-    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />, [`/test-scenarios?projectId=project-1&folderId=${folderId}`]);
+    renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />, [
+      `/test-scenarios?projectId=project-1&folderId=${folderId}`,
+    ]);
     await waitFor(() =>
       expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
-        { projectId: 'project-1', page: 1, limit: 25, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sortField: 'updatedAt', sortDirection: 'desc', ...expected },
+        {
+          projectId: 'project-1',
+          page: 1,
+          limit: 25,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          sortField: 'updatedAt',
+          sortDirection: 'desc',
+          ...expected,
+        },
         { skip: false },
       ),
     );
@@ -691,7 +764,14 @@ describe('TestScenarioCatalogContainer', () => {
     await user.click(screen.getByRole('button', { name: 'Next Page' }));
 
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
-      { projectId: 'project-1', page: 2, limit: 25, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sortField: 'updatedAt', sortDirection: 'desc' },
+      {
+        projectId: 'project-1',
+        page: 2,
+        limit: 25,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        sortField: 'updatedAt',
+        sortDirection: 'desc',
+      },
       { skip: false },
     );
     expect(screen.getByText('Scenario page 2')).toBeInTheDocument();
@@ -717,7 +797,8 @@ describe('TestScenarioCatalogContainer', () => {
       projectId: 'project-1',
       page: 1,
       limit: 25,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sortField: 'updatedAt',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      sortField: 'updatedAt',
       sortDirection: 'desc',
       folderId: 'folder-a',
       includeDescendants: true,
@@ -729,7 +810,8 @@ describe('TestScenarioCatalogContainer', () => {
         projectId: 'project-1',
         page: 1,
         limit: 25,
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sortField: 'updatedAt',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        sortField: 'updatedAt',
         sortDirection: 'desc',
         folderId: 'folder-a',
         includeDescendants: true,
@@ -779,7 +861,8 @@ describe('TestScenarioCatalogContainer', () => {
       projectId: 'project-1',
       page: 1,
       limit: 25,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sortField: 'updatedAt',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      sortField: 'updatedAt',
       sortDirection: 'desc',
       folderId: 'unfiled',
     });

@@ -27,7 +27,13 @@ import type {
   SuiteMoveUndo,
   TestScenarioCatalogViewProps,
 } from '../catalog/types';
-import { CATALOG_SCOPE, CATALOG_TAB, flattenFolders, getActionErrorMessage, SCENARIO_DRAG_MIME } from '../catalog/utils';
+import {
+  CATALOG_SCOPE,
+  CATALOG_TAB,
+  flattenFolders,
+  getActionErrorMessage,
+  SCENARIO_DRAG_MIME,
+} from '../catalog/utils';
 import { useCatalogDialogs } from './hooks/useCatalogDialogs';
 
 export type { CatalogFolder, CatalogSuite, TestScenarioCatalogViewProps } from '../catalog/types';
@@ -687,7 +693,9 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       return;
     }
 
-    const nestedFolderNames = flattenFolders([folder]).slice(1).map(({ name }) => name);
+    const nestedFolderNames = flattenFolders([folder])
+      .slice(1)
+      .map(({ name }) => name);
     const descendantCount = nestedFolderNames.length;
     openOrganizationDialog({
       kind,

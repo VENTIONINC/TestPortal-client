@@ -97,7 +97,9 @@ export function ManualRunScenarioSidebar({
         </Text>
       </Box>
       <Box>
-        <Text fontSize="xs" color="fg.muted" mb={1}>Tags</Text>
+        <Text fontSize="xs" color="fg.muted" mb={1}>
+          Tags
+        </Text>
         <TagChips tags={scenario.tags ?? []} emptyLabel="No tags" />
       </Box>
       <Box>

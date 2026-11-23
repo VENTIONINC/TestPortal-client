@@ -10,7 +10,15 @@ import { ChakraProvider } from '@/components/ui';
 import { TestScenariosPage } from '@/pages/TestScenarios';
 import { ScenarioPageTabs } from '@/pages/TestScenarios/TestManagementTabs';
 
-const projectState = vi.hoisted(() => ({ id: 'project-1', missingCounts: false, refreshingCounts: false, failedCounts: false, requestedProjects: [] as string[], runArgs: [] as Array<{ show?: string; period?: string }>, activeRunCount: undefined as number | undefined }));
+const projectState = vi.hoisted(() => ({
+  id: 'project-1',
+  missingCounts: false,
+  refreshingCounts: false,
+  failedCounts: false,
+  requestedProjects: [] as string[],
+  runArgs: [] as Array<{ show?: string; period?: string }>,
+  activeRunCount: undefined as number | undefined,
+}));
 const catalogTab = vi.hoisted(() => vi.fn());
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProject: () => ({ selectedProjectId: projectState.id }) }));
 vi.mock('@/redux/apis/generatedApi', () => ({
@@ -97,11 +105,27 @@ describe('TestScenariosPage', () => {
     expect(screen.getByRole('tab', { name: /Suites/ })).toHaveAttribute('aria-selected', 'true');
   });
   it('keeps Suites active when viewing a scenario opened from a suite', () => {
-    render(<ChakraProvider><MemoryRouter initialEntries={['/test-scenarios/123?originProject=project-1&originKind=suite&originId=suite-1']}><ScenarioPageTabs /></MemoryRouter></ChakraProvider>);
+    render(
+      <ChakraProvider>
+        <MemoryRouter
+          initialEntries={['/test-scenarios/123?originProject=project-1&originKind=suite&originId=suite-1']}
+        >
+          <ScenarioPageTabs />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
     expect(screen.getByRole('tab', { name: /Suites/ })).toHaveAttribute('aria-selected', 'true');
   });
   it('falls back to Scenarios if the originating suite no longer exists', () => {
-    render(<ChakraProvider><MemoryRouter initialEntries={['/test-scenarios/123?originProject=project-1&originKind=suite&originId=removed']}><ScenarioPageTabs /></MemoryRouter></ChakraProvider>);
+    render(
+      <ChakraProvider>
+        <MemoryRouter
+          initialEntries={['/test-scenarios/123?originProject=project-1&originKind=suite&originId=removed']}
+        >
+          <ScenarioPageTabs />
+        </MemoryRouter>
+      </ChakraProvider>,
+    );
     expect(screen.getByRole('tab', { name: /Scenarios/ })).toHaveAttribute('aria-selected', 'true');
   });
 
@@ -141,12 +165,14 @@ describe('TestScenariosPage', () => {
   it('navigates from a scenario page to the selected Test Management section', async () => {
     const user = userEvent.setup();
     render(
-      <ChakraProvider><MemoryRouter initialEntries={['/test-scenarios/123/edit']}>
-        <Routes>
-          <Route path="/test-scenarios/:id/edit" element={<ScenarioPageTabs />} />
-          <Route path="/test-management" element={<TestScenariosPage />} />
-        </Routes>
-      </MemoryRouter></ChakraProvider>,
+      <ChakraProvider>
+        <MemoryRouter initialEntries={['/test-scenarios/123/edit']}>
+          <Routes>
+            <Route path="/test-scenarios/:id/edit" element={<ScenarioPageTabs />} />
+            <Route path="/test-management" element={<TestScenariosPage />} />
+          </Routes>
+        </MemoryRouter>
+      </ChakraProvider>,
     );
     expect(screen.getByRole('tab', { name: /Scenarios 12/ })).toHaveAttribute('aria-selected', 'true');
     await user.click(screen.getByRole('tab', { name: /Suites 2/ }));

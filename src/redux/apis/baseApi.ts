@@ -60,7 +60,8 @@ const baseQueryWithAuth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQuery
   // Aggregate writes may already have committed when a transport response is lost.
   // Never replay them automatically; the editor preserves the draft for explicit recovery.
   const retryOptions =
-    api.endpoint === 'postApiV2TestScenarios' || api.endpoint === 'patchApiV2TestScenariosByScenarioId' ||
+    api.endpoint === 'postApiV2TestScenarios' ||
+    api.endpoint === 'patchApiV2TestScenariosByScenarioId' ||
     (api.type === 'mutation' && typeof args === 'object' && args.url.startsWith('/api/v2/manual-test-runs'))
       ? { ...extraOptions, maxRetries: 0 }
       : extraOptions;

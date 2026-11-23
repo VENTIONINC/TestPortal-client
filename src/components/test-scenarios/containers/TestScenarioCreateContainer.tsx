@@ -138,8 +138,15 @@ const ScopedScenarioCreateContainer = ({
         initialValues={clone?.values}
         initialSteps={clone?.steps}
         draftTagsDirty={draftTags.dirty}
-        tagField={<ScenarioCardTags projectId={projectId} tags={draftTags.tags}
-          disabled={submitting || isLoading || draftTags.isLoading} onToggle={draftTags.toggle} onCreate={draftTags.create} />}
+        tagField={
+          <ScenarioCardTags
+            projectId={projectId}
+            tags={draftTags.tags}
+            disabled={submitting || isLoading || draftTags.isLoading}
+            onToggle={draftTags.toggle}
+            onCreate={draftTags.create}
+          />
+        }
         initialSuites={clone?.suites}
         focusTitle={Boolean(clone)}
         originLabel={originDestination.label}

@@ -2,7 +2,8 @@ node_modules
 dist
 .git
 .github
-.husky
+.husky/*
+!.husky/install.mjs
 .vscode
 .idea
 *.log

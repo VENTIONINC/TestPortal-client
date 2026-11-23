@@ -11,8 +11,8 @@ import { BulkTagPicker, TagFilter, TagPicker } from '@/components/test-scenarios
 import { renderWithCatalogProviders } from '../renderWithCatalogProviders';
 
 const { assign, counts, list } = vi.hoisted(() => ({ assign: vi.fn(), counts: vi.fn(), list: vi.fn() }));
-vi.mock('@/redux/apis/generatedApi', async importOriginal => ({
-  ...await importOriginal<typeof import('@/redux/apis/generatedApi')>(),
+vi.mock('@/redux/apis/generatedApi', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/redux/apis/generatedApi')>()),
   useGetApiV2ProjectsByProjectIdScenarioTagsQuery: list,
   usePostApiV2ProjectsByProjectIdScenarioTagsSelectionCountsMutation: () => [counts],
   usePutApiV2ProjectsByProjectIdScenarioTagsAssignmentMutation: () => [assign],
@@ -81,7 +81,10 @@ describe('TagControls', () => {
     expect(assign).toHaveBeenLastCalledWith({ projectId: 'p', body: { scenarioIds: ids, tagId: 'a', present: false } });
     expect(checkbox).not.toBeChecked();
     await user.type(screen.getByRole('textbox', { name: 'Find or create a tag' }), 'Beta{Enter}');
-    expect(assign).toHaveBeenLastCalledWith({ projectId: 'p', body: { scenarioIds: ids, name: 'Beta', present: true } });
+    expect(assign).toHaveBeenLastCalledWith({
+      projectId: 'p',
+      body: { scenarioIds: ids, name: 'Beta', present: true },
+    });
     expect(onApplied).toHaveBeenCalledTimes(3);
   });
 });

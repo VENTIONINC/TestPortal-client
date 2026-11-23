@@ -42,17 +42,17 @@ export const ResultContainerInner = () => {
     },
     [applyFilters, currentFilterValues],
   );
-  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading, effectiveType } =
-    useExecutionTypeOptions({
+  const {
+    options: executionTypeOptions,
+    isLoading: areExecutionTypesLoading,
+    effectiveType,
+  } = useExecutionTypeOptions({
     projectId: selectedProjectId ?? '',
     selectedType: effectiveFilters.type || 'all',
     onInvalidType: handleInvalidExecutionType,
   });
 
-  const queryFilters = useMemo(
-    () => ({ ...effectiveFilters, type: effectiveType }),
-    [effectiveFilters, effectiveType],
-  );
+  const queryFilters = useMemo(() => ({ ...effectiveFilters, type: effectiveType }), [effectiveFilters, effectiveType]);
   const debouncedQueryFilters = useMemo(
     () => ({ ...debouncedFilters, type: effectiveType }),
     [debouncedFilters, effectiveType],

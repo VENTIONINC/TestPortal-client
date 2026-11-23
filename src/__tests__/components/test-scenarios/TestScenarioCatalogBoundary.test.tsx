@@ -145,7 +145,14 @@ describe('TestScenarioCatalog project boundary', () => {
 
     await user.click(screen.getByRole('button', { name: 'Next Page' }));
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
-      { projectId: 'project-a', page: 2, limit: 25, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sortField: 'updatedAt', sortDirection: 'desc' },
+      {
+        projectId: 'project-a',
+        page: 2,
+        limit: 25,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        sortField: 'updatedAt',
+        sortDirection: 'desc',
+      },
       { skip: false },
     );
     expect(screen.getByText('project-a scenario')).toBeInTheDocument();
@@ -156,7 +163,14 @@ describe('TestScenarioCatalog project boundary', () => {
     rerender(<TestScenarioCatalog organizationTab="scenarios" />);
 
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
-      { projectId: 'project-b', page: 1, limit: 25, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, sortField: 'updatedAt', sortDirection: 'desc' },
+      {
+        projectId: 'project-b',
+        page: 1,
+        limit: 25,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        sortField: 'updatedAt',
+        sortDirection: 'desc',
+      },
       { skip: false },
     );
     expect(screen.queryByText('project-a scenario')).not.toBeInTheDocument();

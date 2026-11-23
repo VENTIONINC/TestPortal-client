@@ -201,12 +201,7 @@ interface CatalogUndoNotificationProps {
   onUndo: () => Promise<void>;
 }
 
-export const CatalogUndoNotification = ({
-  label,
-  message,
-  isUndoing,
-  onUndo,
-}: CatalogUndoNotificationProps) => (
+export const CatalogUndoNotification = ({ label, message, isUndoing, onUndo }: CatalogUndoNotificationProps) => (
   <Portal>
     <HStack
       role="status"

@@ -16,7 +16,9 @@ export const TEST_SCENARIO_EDITABLE_FIELDS = [
 export type TestScenarioEditableField = (typeof TEST_SCENARIO_EDITABLE_FIELDS)[number];
 
 export type TestScenarioEditableValues = Pick<TestScenario, 'title'> &
-  Partial<Record<Exclude<TestScenarioEditableField, 'title' | 'priority'>, string | null>> & { scenarioKey?: string | null } & {
+  Partial<Record<Exclude<TestScenarioEditableField, 'title' | 'priority'>, string | null>> & {
+    scenarioKey?: string | null;
+  } & {
     priority?: TestScenario['priority'] | '' | null;
   };
 

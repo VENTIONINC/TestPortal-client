@@ -20,17 +20,39 @@ export const TestScenarioCatalogContainer = ({ projectId, organizationTab }: Tes
   const catalog = useTestScenarioCatalog(projectId, organizationTab);
   const navigate = useNavigate();
   const scope = catalog.scope;
-  const onRunSelected = useCallback(async (scenarioIds: string[]) => {
-    navigate(PATHS.MANUAL_TEST_RUN_NEW, { state: { scenarioIds } });
-  }, [navigate]);
-  const onRunSuite = useCallback(async (suiteId: string) => {
-    navigate(PATHS.MANUAL_TEST_RUN_NEW, { state: { suiteId } });
-  }, [navigate]);
-  const origin = scope.kind === 'folder' && scope.id ? { kind: 'folder' as const, id: scope.id } : scope.kind === 'unfiled' ? { kind: 'unfiled' as const } : { kind: 'all' as const };
-  const onScenarioActions = useTestScenarioContextMenu(projectId, undefined, true, undefined, catalog.reconcileDeletedScenario, scenarioOriginSearch(projectId, origin));
+  const onRunSelected = useCallback(
+    async (scenarioIds: string[]) => {
+      navigate(PATHS.MANUAL_TEST_RUN_NEW, { state: { scenarioIds } });
+    },
+    [navigate],
+  );
+  const onRunSuite = useCallback(
+    async (suiteId: string) => {
+      navigate(PATHS.MANUAL_TEST_RUN_NEW, { state: { suiteId } });
+    },
+    [navigate],
+  );
+  const origin =
+    scope.kind === 'folder' && scope.id
+      ? { kind: 'folder' as const, id: scope.id }
+      : scope.kind === 'unfiled'
+        ? { kind: 'unfiled' as const }
+        : { kind: 'all' as const };
+  const onScenarioActions = useTestScenarioContextMenu(
+    projectId,
+    undefined,
+    true,
+    undefined,
+    catalog.reconcileDeletedScenario,
+    scenarioOriginSearch(projectId, origin),
+  );
   const onCreateScenario = useCallback(() => {
     const folderId = catalog.scope.kind === 'folder' ? catalog.scope.id : undefined;
-    const origin = folderId ? { kind: 'folder' as const, id: folderId } : catalog.scope.kind === 'unfiled' ? { kind: 'unfiled' as const } : { kind: 'all' as const };
+    const origin = folderId
+      ? { kind: 'folder' as const, id: folderId }
+      : catalog.scope.kind === 'unfiled'
+        ? { kind: 'unfiled' as const }
+        : { kind: 'all' as const };
     const search = new URLSearchParams();
     if (folderId || catalog.scope.kind === 'unfiled') search.set('folderId', folderId ?? 'unfiled');
     new URLSearchParams(scenarioOriginSearch(projectId, origin)).forEach((value, key) => search.set(key, value));

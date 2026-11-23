@@ -3,7 +3,10 @@
 
 import type { DefaultDialogProps } from '@/types';
 
-import { useManualRunDetailsSave, type ManualRunEditScope } from '../ManualRunDetailsDialog/hooks/useManualRunDetailsSave';
+import {
+  useManualRunDetailsSave,
+  type ManualRunEditScope,
+} from '../ManualRunDetailsDialog/hooks/useManualRunDetailsSave';
 import { ScenarioSelectionDialog } from './ScenarioSelectionDialog';
 import type { ExistingRunScenario } from './ScenarioSelectionTable';
 
@@ -21,8 +24,10 @@ export const ManageScenariosDialog = ({
   mutate,
   closeDialog,
 }: ManageScenariosDialogProps & DefaultDialogProps) => {
-  const { saving, saveBlocked, error, removedResults, clearRemovalWarning, save } =
-    useManualRunDetailsSave({ projectId, runId, getRun, mutate }, closeDialog);
+  const { saving, saveBlocked, error, removedResults, clearRemovalWarning, save } = useManualRunDetailsSave(
+    { projectId, runId, getRun, mutate },
+    closeDialog,
+  );
 
   return (
     <ScenarioSelectionDialog

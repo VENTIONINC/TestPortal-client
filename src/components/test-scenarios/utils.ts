@@ -56,7 +56,12 @@ export interface ScenarioOperationReport {
   unattemptedIds: string[];
   uncertainIds: string[];
   errorMessage?: string;
-  folderRestoreData?: Array<{ scenarioId: string; folderId: string | null; expectedFolderId: string | null; expectedRevision: number }>;
+  folderRestoreData?: Array<{
+    scenarioId: string;
+    folderId: string | null;
+    expectedFolderId: string | null;
+    expectedRevision: number;
+  }>;
 }
 
 const getScenarioOperationErrorMessage = (error: unknown) => {
@@ -109,9 +114,11 @@ export const executeScenarioOperation = async (
 };
 
 const metadataSchema = testScenarioAuthoringSchema.pick({ priority: true, relatedIssueUrl: true });
-const validateMetadata = (values: TestScenarioEditableValues) => metadataSchema.parse({
-  priority: values.priority || 'medium', relatedIssueUrl: values.relatedIssueUrl ?? '',
-});
+const validateMetadata = (values: TestScenarioEditableValues) =>
+  metadataSchema.parse({
+    priority: values.priority || 'medium',
+    relatedIssueUrl: values.relatedIssueUrl ?? '',
+  });
 
 export const getTestScenarioCreatePayload = (
   projectId: string,
@@ -168,10 +175,12 @@ export const getTestScenarioPatchPayload = (
 };
 
 export const serializeInitialSteps = (steps: TestScenarioInitialStepDraft[]): CreateTestScenarioStep[] =>
-  steps.filter((step) => step.id || step.action.trim() || step.expectedResult.trim()).map(({ action, expectedResult }) => ({
-    action: normalizeScenarioText(action),
-    ...(normalizeScenarioText(expectedResult) ? { expectedResult: normalizeScenarioText(expectedResult) } : {}),
-  }));
+  steps
+    .filter((step) => step.id || step.action.trim() || step.expectedResult.trim())
+    .map(({ action, expectedResult }) => ({
+      action: normalizeScenarioText(action),
+      ...(normalizeScenarioText(expectedResult) ? { expectedResult: normalizeScenarioText(expectedResult) } : {}),
+    }));
 
 export const getTestScenarioStepPatchPayload = (
   values: Pick<TestScenarioStep, 'action' | 'expectedResult'>,
@@ -203,7 +212,11 @@ export const getTestScenarioEditableValues = (scenario: TestScenario): TestScena
   );
 
 /** A reloadable, project-scoped catalog destination for the current draft folder. */
-export const getScenarioFolderReturnPath = (projectId: string, folderId: string | null, folders: Array<{ id: string }>) => {
+export const getScenarioFolderReturnPath = (
+  projectId: string,
+  folderId: string | null,
+  folders: Array<{ id: string }>,
+) => {
   const search = new URLSearchParams({ projectId });
   if (!folderId) search.set('folderId', 'unfiled');
   else if (folders.some((folder) => folder.id === folderId)) search.set('folderId', folderId);

@@ -27,15 +27,34 @@ export const Header = ({ title, actionButton, compactOnNarrow = false }: HeaderP
     <Box bg="bg.section" borderBottom="1px solid" borderColor="border.main">
       <Container px={compactOnNarrow ? { base: 2, md: 6 } : 6} maxW="full">
         <Flex justify="space-between" align="center" h="65px">
-          <Heading size="xl" color="text.primary" fontSize={compactOnNarrow ? { base: 'sm', md: 'xl' } : undefined} whiteSpace="nowrap">
+          <Heading
+            size="xl"
+            color="text.primary"
+            fontSize={compactOnNarrow ? { base: 'sm', md: 'xl' } : undefined}
+            whiteSpace="nowrap"
+          >
             {title}
           </Heading>
 
-          <Flex align="center" gap={compactOnNarrow ? { base: 1, md: 4 } : 4} ml="auto" mr={compactOnNarrow ? { base: 1, md: '20px' } : '20px'} minW={0}>
+          <Flex
+            align="center"
+            gap={compactOnNarrow ? { base: 1, md: 4 } : 4}
+            ml="auto"
+            mr={compactOnNarrow ? { base: 1, md: '20px' } : '20px'}
+            minW={0}
+          >
             {actionButton && actionButton}
-            <Box maxW={compactOnNarrow ? { base: '100px', md: 'none' } : undefined} minW={0}><ProjectSelect /></Box>
+            <Box maxW={compactOnNarrow ? { base: '100px', md: 'none' } : undefined} minW={0}>
+              <ProjectSelect />
+            </Box>
 
-            <Button variant="outline" size="sm" aria-label="Upload" onClick={openUploadDialog} px={compactOnNarrow ? { base: 2, md: 3 } : undefined}>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label="Upload"
+              onClick={openUploadDialog}
+              px={compactOnNarrow ? { base: 2, md: 3 } : undefined}
+            >
               <LuUpload size={16} />
               <Text display={compactOnNarrow ? { base: 'none', md: 'inline' } : 'inline'}>Upload</Text>
             </Button>
