@@ -89,5 +89,7 @@ export const DialogPortal = () => {
 
   if (!dialogs.length) return null;
 
-  return dialogs.map(({ Component, props, ...rest }, index) => <Component key={index} {...props} {...rest} />);
+  return dialogs.map(({ id, Component, props, closeDialog, closeAllDialogs }) => (
+    <Component key={id} {...props} closeDialog={closeDialog} closeAllDialogs={closeAllDialogs} />
+  ));
 };

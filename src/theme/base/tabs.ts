@@ -13,7 +13,7 @@ export const tabsRecipe = defineSlotRecipe({
       width: '100%',
       color: 'tabs.main',
       fontFamily: 'Aeonik Pro',
-      fontWeight: 500,
+      fontWeight: 400,
       fontStyle: 'Medium',
       fontSize: '18px',
       lineHeight: '26px',

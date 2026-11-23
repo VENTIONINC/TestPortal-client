@@ -136,7 +136,7 @@ describe('AssignIssueModal scenario management', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Test Scenarios' }));
     await user.click(await screen.findByRole('button', { name: 'Link Test Scenario' }));
-    await user.type(screen.getByRole('textbox', { name: 'Search title or scenario key' }), 'PAY-1');
+    await user.type(screen.getByRole('textbox', { name: 'Search by title or key' }), 'PAY-1');
     await user.click(screen.getByRole('button', { name: 'Search' }));
     await user.click(screen.getByRole('button', { name: 'Back to Test Scenarios' }));
     await user.click(screen.getByRole('button', { name: 'Link Test Scenario' }));
