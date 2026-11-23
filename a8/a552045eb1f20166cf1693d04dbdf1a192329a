@@ -1,0 +1,269 @@
+package.json
+  s_4e164d05b02c19::t_c08bb7365d54fc 15,73
+src/__tests__/components/dashboard/ProductQualityWidget.test.ts
+  s_4e164d05b02c19::t_22ce00afe97d1f 25-28,82-93,121,127-133,139-145,151-157
+src/__tests__/components/manual-test-runs/ManageScenariosDialog.test.tsx
+  s_4e164d05b02c19::t_f5d6a82871c0bc 13-20,112-116,123-124,130-134,153-161,177-186,195-199
+src/__tests__/components/manual-test-runs/ManualRunDetailsDialog.test.tsx
+  s_4e164d05b02c19::t_5785b2b9990841 8-18
+src/__tests__/components/manual-test-runs/ManualTestRunWorkspace.test.tsx
+  s_4e164d05b02c19::t_1ee2f19b6eb257 22-41,57-63,70-74,89-99,118-122,134-138,149-153,157-161,171-175,193-197,213-217,227-231,235-239,248-252,262-266,291-295,308-309,321-326,328-332,351-356,360-364,370-374,402-406,408-412,414-418,430-434,438-442,449-453,457-464
+src/__tests__/components/results/assign-issue-modal/AssignIssueModalEvidenceTabs.test.tsx
+  s_4e164d05b02c19::t_efe96639182b96 28-34,76-80,82-86,133-134,136
+src/__tests__/components/results/assign-issue-modal/AssignIssueModalManagement.test.tsx
+  s_4e164d05b02c19::t_19d210ff382f46 11-19,25-29,32-36,48-52,93-107,113-119,136-140,157-163
+src/__tests__/components/results/assign-issue-modal/ResultRelatedScenarios.test.tsx
+  s_4e164d05b02c19::t_e99787f09fca71 11-18,85-91,133-135,180-184,200-204,279-285,292-298,302-308,317-323,334-340,347-352,425-429,442-446,466-470,474-480,497-503,510-514,532-538,547-551,557-559,571-577,584-588,603-605,608-614,621-625,638-644,651-656,664-668,670-674
+src/__tests__/components/results/assign-issue-modal/sourceSnippet.test.ts
+  s_4e164d05b02c19::t_5daf4268faf85d 28,42-43,51-53,68-71,83-88
+src/__tests__/components/results/assign-issue-modal/useAssignIssueModal.test.tsx
+  s_4e164d05b02c19::t_f81176c9102e2b 114-116,224-229
+src/__tests__/components/results/results.utils.test.ts
+  s_4e164d05b02c19::t_2c7c4eee165a02 89-92,101
+src/__tests__/components/results/topIssues.test.ts
+  s_4e164d05b02c19::t_d01fba3d57ea58 18-22
+src/__tests__/components/test-scenarios/SuitePicker.test.tsx
+  s_4e164d05b02c19::t_dbdfea4e087269 28-33,45-51,61-70,88-97,102-106
+src/__tests__/components/test-scenarios/TestScenarioCatalogContainer.test.tsx
+  s_4e164d05b02c19::t_3ea2f5adad10d4 65-69,125-129,137-140,217-221,256-258,260-262,330-332,516-521,533-535,540-556,670-672
+src/__tests__/components/test-scenarios/TestScenarioCatalogView.test.tsx
+  s_4e164d05b02c19::t_543c70552b513e 21-35,43-59,132-136,138-150,175-176,181-184,187-206,212-215,222-232,251-261,278-280,310-319,328-330,333-339,341-346,350-352,354-356,358-360,362-364,369-378,385-390,401-403,407-413,416-421,429-450,452-457,461-471,476-492,494-499,571-587,635-644,700-703,711-721,920-923,937-940,1008-1015,1020-1021,1040-1049,1060-1064,1066-1079,1091-1095,1107-1112,1136-1138,1145-1147,1156-1173,1176-1181,1199-1209,1235-1245,1250-1252,1254-1256,1260-1262,1273-1290,1305-1309,1318-1328,1336-1338,1341-1353,1359-1363,1371-1381,1395-1399,1404-1409,1415-1432,1458-1460,1462-1466,1474-1484,1501-1506,1519-1536,1548-1550,1553-1555,1563-1568,1573-1583,1585-1589,1613-1615,1634-1644
+src/__tests__/components/test-scenarios/TestScenarioDetailBoundary.test.tsx
+  s_4e164d05b02c19::t_25ea317d34c77e 65-70,72-79,96-105,159-161,167-169
+src/__tests__/components/test-scenarios/TestScenarioDetailContainer.test.tsx
+  s_4e164d05b02c19::t_cf50b662d699e4 26-46,48-76,82-84,99-112,121-128,132-136,138-158,166-168,173-180,184-187,194-200,202-205,209-212,216-219,223-226,230-233,240-243,248-255,257-260,266-269,280-286,294-296,299-305,322-324,329-332
+src/__tests__/components/test-scenarios/TestScenarioDetailsView.test.tsx
+  s_4e164d05b02c19::t_238f7e3dbb2fee 16-35,42-60,68-70,78-81,89-96,103-112,124-127
+src/__tests__/components/test-scenarios/TestScenarioEditContainer.test.tsx
+  s_4e164d05b02c19::t_ea4da339837c64 104-106,162-166
+src/__tests__/components/test-scenarios/TestScenarioForm.test.tsx
+  s_4e164d05b02c19::t_dbbce511eacee9 61-62,80-87,123-125,161-166,172-181,200-204,372-376
+src/__tests__/components/test-scenarios/TestScenarioStepsEditor.test.tsx
+  s_4e164d05b02c19::t_502e9ee32998cd 43-46
+src/__tests__/components/test-scenarios/components/catalog/dialogs/manage-suite-scenarios/TestSuiteAddScenariosDialog.test.tsx
+  s_4e164d05b02c19::t_b45a4379b44c34 18-25,63-68
+src/__tests__/components/test-scenarios/scenarioClone.test.ts
+  s_4e164d05b02c19::t_1baf9bd0d196b4 10-24,26-33
+src/__tests__/components/test-scenarios/testScenarioPatch.test.ts
+  s_4e164d05b02c19::t_0f47f641b5f608 33-35,44-46,54-56,76-83,143-159,165-171,198-206
+src/__tests__/components/test-scenarios/useTestScenarioContextMenu.test.tsx
+  s_4e164d05b02c19::t_36868e628c506a 55-65,86,104-105,116-117,121-123
+src/__tests__/components/test-scenarios/useTestScenarioDetail.test.tsx
+  s_4e164d05b02c19::t_3fc2ae08a304ae 19-22
+src/__tests__/components/ui/Dialogs/manage-skill/SkillPackageDialog.test.tsx
+  s_4e164d05b02c19::t_b417e242ee353d 91-93
+src/__tests__/components/ui/MarkdownPreview.test.tsx
+  s_4e164d05b02c19::t_5daed6b20815b4 13-15
+src/__tests__/components/ui/NavigationMenu/NavigationMenu.test.tsx
+  s_4e164d05b02c19::t_0b5b4343d4ee36 53-58
+src/__tests__/components/ui/components/Dialogs/delete-test-scenario/DeleteTestScenarioDialog.test.tsx
+  s_4e164d05b02c19::t_e66b8664ff276a 14-34,37-40,42-50,68-76,81-87,97-100,103-118,122-126,139-144
+src/__tests__/components/ui/components/Dialogs/results-file-upload/hooks.test.tsx
+  s_4e164d05b02c19::t_500f33f85157f6 8,80,125-130,136,172-173
+src/__tests__/hooks/useExecutionTypeOptions.test.tsx
+  s_4e164d05b02c19::t_90e08c0b8d34c6 30,50
+src/__tests__/hooks/useSkillDetail.test.tsx
+  s_4e164d05b02c19::t_69596eb68302ae 25-30,54-59
+src/__tests__/pages/ManualTestRuns/ManualTestRunScenarioPage.test.tsx
+  s_4e164d05b02c19::t_98e77f9eac8f41 10-19,21-24,27-29,47-48,53-83,89-93,95-105,110-114,116-130,138-146,148-152,159-177,183-215,220-224,238-242,249-253,262-282,286-290,297-301,310-317
+src/__tests__/pages/ManualTestRuns/NewManualTestRunPage.test.tsx
+  s_4e164d05b02c19::t_34907c7682ddb1 10-13,24-41,46-51,53-78,92-97,117-122
+src/__tests__/pages/TestScenarios/TestScenariosPage.test.tsx
+  s_4e164d05b02c19::t_c879fe32fe227f 13-21,108-116,120-128,168-175
+src/__tests__/redux/apis/extendedApi.test.ts
+  s_4e164d05b02c19::t_bdf76a8775e809 31-33,83-91,117-122,126-131,135-141,191-194,203,246-251,301-305,311-316
+src/__tests__/redux/apis/resultScenarioLinksApi.test.ts
+  s_4e164d05b02c19::t_24b9bcf093af16 24-33,61-66,72-85,95-142,146-154,185-191,204-210
+src/__tests__/redux/apis/testScenarioApi.test.ts
+  s_4e164d05b02c19::t_f2940c65e3c755 187-189,384-386,389-402,443-458,462-464
+src/__tests__/redux/slices/dialog.test.tsx
+  s_4e164d05b02c19::t_ddc7827ce8cb13 15-18
+src/__tests__/redux/slices/issues.test.ts
+  s_4e164d05b02c19::t_3e806eea7577c1 10
+src/__tests__/router/index.test.tsx
+  s_4e164d05b02c19::t_475c52f658d3ee 9-15,37-48
+src/__tests__/schemas/testScenarioSchemas.test.ts
+  s_4e164d05b02c19::t_2bcd6cf1ba898a 45-47,55-57,63-72,74-83
+src/components/context-menu/context-menu.tsx
+  s_4e164d05b02c19::t_9ee62f037b88ec 140-183,185-198,200-207,209-211
+src/components/dashboard/components/DashboardChart/components/HistoryRegressionRunChart/index.tsx
+  s_4e164d05b02c19::t_c9e41ae01ff7af 22-23,25-35
+src/components/dashboard/components/DashboardChart/components/PassRateChart/index.tsx
+  s_4e164d05b02c19::t_cc21cae7d8ef4f 21-22,24-34
+src/components/dashboard/components/ProductQualityWidget/index.tsx
+  s_4e164d05b02c19::t_a107060c04a58b 155,223-229
+src/components/dashboard/components/TestDescription/components/donutChart.tsx
+  s_4e164d05b02c19::t_3df5a5ec501e4b 65
+src/components/dashboard/components/TestDescription/index.tsx
+  s_4e164d05b02c19::t_cb334db8ce7958 17-37,49-51
+src/components/dashboard/containers/DashboardGrid.tsx
+  s_4e164d05b02c19::t_cea65777176b00 61,68,71,114-120
+src/components/dashboard/containers/index.tsx
+  s_4e164d05b02c19::t_916dcd257f9dc2 132-136
+src/components/drawers/edit-issue/edit-issue-drawer.tsx
+  s_4e164d05b02c19::t_8f50a73454d1a3 91-99
+src/components/issues/card/issue-card.tsx
+  s_4e164d05b02c19::t_2c4d331390edd4 117-120
+src/components/issues/list/issues-list.tsx
+  s_4e164d05b02c19::t_1c4963fb76bc9d 30,34,62-66
+src/components/manual-test-runs/components/AssigneePicker.tsx
+  s_4e164d05b02c19::t_ddb68887bae991 100
+src/components/manual-test-runs/components/BulkAssigneePicker.tsx
+  s_4e164d05b02c19::t_0365ab7892c3b6 35,57
+src/components/manual-test-runs/components/CompleteManualRunDialog/CompleteManualRunDialog.tsx
+  s_4e164d05b02c19::t_2158f97e6a2c4e 57-65
+src/components/manual-test-runs/components/ManageScenariosDialog/ManageScenariosDialog.tsx
+  s_4e164d05b02c19::t_e8ca974c84787c 6-9,27-30
+src/components/manual-test-runs/components/ManageScenariosDialog/ScenarioSelectionDialog.tsx
+  s_4e164d05b02c19::t_2dd36f2bd42ac1 69-73,112,191-195
+src/components/manual-test-runs/components/ManageScenariosDialog/ScenarioSuiteFilter.tsx
+  s_4e164d05b02c19::t_92b61db029858a 45,132,135
+src/components/manual-test-runs/components/ManualRunDetailsDialog/EditManualRunDetailsDialog.tsx
+  s_4e164d05b02c19::t_0dca077117da19 31-34
+src/components/manual-test-runs/components/ManualRunDetailsDialog/hooks/useManualRunDetailsSave.ts
+  s_4e164d05b02c19::t_4a56bfb05e53cc 57-58,70-82
+src/components/manual-test-runs/components/ManualTestRunWorkspace/ManualTestRunWorkspace.tsx
+  s_4e164d05b02c19::t_d9d121d6e62d43 33-39
+src/components/manual-test-runs/components/ManualTestRunWorkspace/hooks/useManualRun.ts
+  s_4e164d05b02c19::t_bcc2f60df82f43 53-55
+src/components/manual-test-runs/components/ManualTestRunWorkspace/runWriteLock.ts
+  s_4e164d05b02c19::t_176a7ed1acb960 12-14
+src/components/manual-test-runs/components/SearchableFilter.tsx
+  s_4e164d05b02c19::t_bef9399163effb 44,117
+src/components/manual-test-runs/constants.ts
+  s_4e164d05b02c19::t_4a7c222d48a02b 4-8
+src/components/manual-test-runs/containers/ManualTestRunHistoryContainer.tsx
+  s_4e164d05b02c19::t_9ed424980c740f 18-29
+src/components/manual-test-runs/recoveryLock.ts
+  s_4e164d05b02c19::t_fc93e66624054b 10-12,26-27
+src/components/results/assign-issue-modal/AssignIssueModal.tsx
+  s_4e164d05b02c19::t_a8e828d27ed178 34,90-94,116-122,143-145,231-233,309-311,330-332,358,391-393,520-521,569-580,621,643-645,665-670,692-697,817-818,837-839,995-997
+src/components/results/assign-issue-modal/ResultRelatedScenarios.tsx
+  s_4e164d05b02c19::t_115f9f2c8f166c 11-15,17-25,28-47,66-71,93-102,114-122,126-136,228,231,258-263,265-267,270-279,281-283,288-297,306-308,341-349,356-358,361-363,373-380,382-386,390-398,400-402
+src/components/results/assign-issue-modal/useAssignIssueModal.ts
+  s_4e164d05b02c19::t_13deea25b7ac78 48-54,65-66,79-91,101-102,122-124,166-176,209-212,220-228,247-255,272-273,275-278
+src/components/results/assign-issue-modal/useResultScenarioManagement.ts
+  s_4e164d05b02c19::t_e2c948e1dbbe58 29-37,57-58,68-70,99-102,107-110,112-124,152-159,176-180,190-196,201-207,210-214,256-260,268-274,277-281,296-300,330-333
+src/components/results/components/ExecutionCard/results-execution-card.tsx
+  s_4e164d05b02c19::t_98b8de77486eac 201-223
+src/components/results/components/FloatingHeader/components/TagList.tsx
+  s_4e164d05b02c19::t_a53fbf33eeb9c3 20
+src/components/results/components/Section/result-spec-section.tsx
+  s_4e164d05b02c19::t_d373875988d75e 93
+src/components/results/components/TopSection/components/List.tsx
+  s_4e164d05b02c19::t_85e8b1ee42b7ff 26-35,39-47,49-56
+src/components/results/containers/ResultContainer.tsx
+  s_4e164d05b02c19::t_2082678339e5dc 45-49,55
+src/components/results/hooks/useResultsData.ts
+  s_4e164d05b02c19::t_2c7492ad1ae5f0 57,78-86
+src/components/skills/containers/SkillDetailView/index.tsx
+  s_4e164d05b02c19::t_2ae6b982d80a60 24-28,144-146
+src/components/test-scenarios/components/SuitePicker.tsx
+  s_4e164d05b02c19::t_afd54484bc8058 21-25,53-56,63-72,74-78,143-152,154-163,218-221,252-266,280-285,312,330-335,337-347,349-410,412-417
+src/components/test-scenarios/components/TestScenarioCatalogView/TestScenarioCatalogView.tsx
+  s_4e164d05b02c19::t_0cfa5f7130d506 30-36,687-689
+src/components/test-scenarios/components/TestScenarioCatalogView/hooks/useCatalogDialogs.ts
+  s_4e164d05b02c19::t_9eb8210ceabc8e 13-16
+src/components/test-scenarios/components/TestScenarioDetailsView.tsx
+  s_4e164d05b02c19::t_5a1cc3110adeef 31-36,48-50,80-82,85,90-108,111-115,120-139,142-145,147-152,159-167,169-177,179,181-194,205-275,280-333,335-376,378-382,384-411,413-422
+src/components/test-scenarios/components/TestScenarioForm/TestScenarioForm.tsx
+  s_4e164d05b02c19::t_d8bfac82a16e1d 150
+src/components/test-scenarios/components/TestScenarioStepsEditor.tsx
+  s_4e164d05b02c19::t_3cfcc2fc363335 19,33-34,84-87,152-153,233-241,253-255,300-302,310-315,320-327,330-337,368-375
+src/components/test-scenarios/components/catalog/CatalogBulkActions.tsx
+  s_4e164d05b02c19::t_fc3cb3b62f32be 193
+src/components/test-scenarios/components/catalog/CatalogFilters.tsx
+  s_4e164d05b02c19::t_657deb600c4a77 19,105,127,157,246,266,519
+src/components/test-scenarios/components/catalog/dialogs/CatalogOrganizationDialog.tsx
+  s_4e164d05b02c19::t_f399ea4ec2a16d 62,109-110,112-120
+src/components/test-scenarios/components/catalog/dialogs/hooks/useDeleteSelectedScenariosDialog.ts
+  s_4e164d05b02c19::t_8032bf9d132d7c 7-10
+src/components/test-scenarios/components/catalog/dialogs/hooks/useRemoveScenariosFromSuiteDialog.ts
+  s_4e164d05b02c19::t_5d88fbeb1c71d5 7-10
+src/components/test-scenarios/components/catalog/dialogs/manage-suite-scenarios/TestSuiteAddScenariosDialog.tsx
+  s_4e164d05b02c19::t_669b3096757c2d 40-50,52-57
+src/components/test-scenarios/components/catalog/dialogs/manage-suite-scenarios/hooks/useSuiteScenarioSelection.ts
+  s_4e164d05b02c19::t_58e837b33d6b45 18-32,39-43,46-57
+src/components/test-scenarios/containers/TestScenarioCatalogContainer.tsx
+  s_4e164d05b02c19::t_e7c61a5e8afaca 23-48,51-55
+src/components/test-scenarios/containers/TestScenarioDetailBoundary.tsx
+  s_4e164d05b02c19::t_63a966068136fb 9
+src/components/test-scenarios/containers/TestScenarioDetailContainer.tsx
+  s_4e164d05b02c19::t_ec69a830679a0a 33-50,63-65,73-80,116-117,145-151
+src/components/test-scenarios/hooks/useTestScenarioCatalog.ts
+  s_4e164d05b02c19::t_db22d20fd35d8f 39-44,51-52,58-60,74-80,117-118,265-274,296-311,366-367,410-424,487-579,633-644,665-667,673-674
+src/components/test-scenarios/hooks/useTestScenarioContextMenu.ts
+  s_4e164d05b02c19::t_2324817b17be46 51-60,62-69,87-99
+src/components/test-scenarios/hooks/useTestScenarioDetail.ts
+  s_4e164d05b02c19::t_edd7ada1e6070d 96-100
+src/components/test-scenarios/scenarioClone.ts
+  s_4e164d05b02c19::t_21b41a555d7fe7 14-20
+src/components/test-scenarios/scenarioOrigin.ts
+  s_4e164d05b02c19::t_69de942ce9df59 34-37,40-44
+src/components/test-scenarios/types.ts
+  s_4e164d05b02c19::t_8f116657d57a08 19-21
+src/components/test-scenarios/utils.ts
+  s_4e164d05b02c19::t_b71bd7adb208ba 59-64,117-121,178-183,215-219
+src/components/ui/components/Charts/MetricsBarChart.tsx
+  s_4e164d05b02c19::t_79780c0cc49644 140-144,157-165,283-284
+src/components/ui/components/Dialogs/delete-project/delete-project-dialog.tsx
+  s_4e164d05b02c19::t_88ba41b65a05d8 25
+src/components/ui/components/Dialogs/delete-test-scenario/delete-test-scenario-dialog.tsx
+  s_4e164d05b02c19::t_693efb853d51da 31-38,70-86,96-97,99-100,102-106
+src/components/ui/components/Dialogs/manage-skill/delete-skill-dialog.tsx
+  s_4e164d05b02c19::t_d5201ef7cfcacd 48-50
+src/components/ui/components/Dialogs/manage-skill/skill-package-dialog.tsx
+  s_4e164d05b02c19::t_3ffa65c905b2ca 51-52,86,108-109,162-167
+src/components/ui/components/Dialogs/results-file-upload/hooks.ts
+  s_4e164d05b02c19::t_6161e75822e0cd 9,19,21-22
+src/components/ui/components/Dialogs/results-file-upload/results-file-upload-dialog.tsx
+  s_4e164d05b02c19::t_7938a454a0f8da 36
+src/components/ui/components/Header/Header.tsx
+  s_4e164d05b02c19::t_56582168b7ddba 30-35,39-45,47-49,51-57
+src/components/ui/components/MarkdownPreview.tsx
+  s_4e164d05b02c19::t_1d8daa85d6e9f4 20
+src/components/ui/components/Templates/MainTemplate.tsx
+  s_4e164d05b02c19::t_e97d3d1d42a321 31-40
+src/components/ui/dialog.tsx
+  s_4e164d05b02c19::t_cad85169658768 20-29
+src/hooks/useExecutionTypeOptions.ts
+  s_4e164d05b02c19::t_a93c605c4e0b2a 21,36,55,66
+src/pages/ManualTestRuns/NewManualTestRunPage.tsx
+  s_4e164d05b02c19::t_fdfe06c8b706d2 39-41,79-83,85-89,92-97,99-100,104-106,135-140,142-146
+src/pages/TestScenarios/TestManagementTabs.tsx
+  s_4e164d05b02c19::t_6c867960e0df6c 25-32,40-43,50-58,60-65,78-81,95-98
+src/pages/TestScenarios/TestScenariosPage.tsx
+  s_4e164d05b02c19::t_dab0d0fbaf3a95 19-25
+src/pages/UserSettings/UsersSettings.tsx
+  s_4e164d05b02c19::t_a7ef1313f68bac 108-110,140-142
+src/redux/apis/baseApi.ts
+  s_4e164d05b02c19::t_c63ad362dfc07b 63-64
+src/redux/apis/extendedApi.ts
+  s_4e164d05b02c19::t_e696508fac60d6 40,45,47,49-53,55-61,92,104-112,130-138,141-150,153,156-157,160-161,164-165,168-169,172,175,178-179,182-183,186-187,190-191,194-195,198-199,202-203,206,209-216,296-300,311,314,317,320-324,328-332,339-343,347-351,355-359,371-375,382-388
+src/redux/apis/generatedResultDetailApi.ts
+  s_4e164d05b02c19::t_7ad15102f5ac5e 1-2,19,25,69,72-73,86-87,110-111
+src/redux/apis/generatedScenarioManagementApi.ts
+  s_4e164d05b02c19::t_3be275741f81fc 1-2,36,48,56,59,67,73,81,86,94,97,105,108,110,117,119,122,125,137,145,151,159,164,172,175,183,186,194,197,205,208,224-226,232,236-250,254-263,274-283,295-310,312,317-319,340-344,356-369,372,376-389,391-392,403-416,418-419,424-437,439-440,451-453,458-463,471-476,484-486,496-504,524
+src/redux/apis/resultDetailApi.ts
+  s_4e164d05b02c19::t_3e36fd0afc5a32 8,20-21
+src/schemas/testScenarioSchemas.ts
+  s_4e164d05b02c19::t_24c43fa3f64c40 17-30
+yarn.lock
+  s_4e164d05b02c19::t_a6c64c8a04ba74 1610-1616,4829-4848,5045-5051,7460-7468,8688-8696,8749
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a8a552045eb1f20166cf1693d04dbdf1a192329a",
+  "prompts": {},
+  "sessions": {
+    "s_4e164d05b02c19": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207bb-67a0-7e80-88d5-41c3c6a4adc5",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
