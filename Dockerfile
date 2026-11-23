@@ -9,9 +9,11 @@ RUN corepack enable
 # Copy package files
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn
+COPY .husky/install.mjs ./.husky/
+COPY scripts/typegen-on-install.mjs ./scripts/
 
 # Install dependencies
-RUN yarn install --immutable
+RUN HUSKY=0 yarn install --immutable
 
 # Copy source code
 COPY . .

@@ -15,7 +15,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
     "new:file": "node scripts/new-file.js",
     "preview": "vite preview",
-    "postinstall": "node -e \"const fs=require('node:fs');const {spawnSync}=require('node:child_process');const omitted=(process.env.npm_config_omit||'').split(',');if(process.env.HUSKY==='0'||process.env.CI||process.env.NODE_ENV==='production'||process.env.YARN_PRODUCTION==='true'||omitted.includes('dev')||!fs.existsSync('.git'))process.exit(0);for(const [command,args] of [['yarn',['typegen']],['husky',[]]]){const result=spawnSync(command,args,{stdio:'inherit'});if(result.error)throw result.error;if(result.status!==0)process.exit(result.status??1)}\"",
+    "postinstall": "node scripts/typegen-on-install.mjs && node .husky/install.mjs",
     "generate-api": "npx @rtk-query/codegen-openapi rtk-query-codegen.config.cjs",
     "generate-scenario-management-api": "node scripts/generate-scenario-management-api.cjs",
     "generate-result-detail-api": "node scripts/generate-result-detail-api.cjs",

@@ -23,8 +23,8 @@ copyright attribution.
 
 ## Local Development
 
-1. Install dependencies with `yarn install`; in a Git checkout the guarded
-   postinstall generates Chakra typings and activates the pre-commit hook. Set
+1. Install dependencies with `yarn install` to generate Chakra typings and
+   activate the pre-commit hook in a developer Git checkout. Set
    `VITE_API_URL` in `.env` before the first commit. The hook runs `yarn eslint`,
    `yarn tsc`, and `yarn test` once each, in order. If an existing checkout
    needs activation, run `yarn postinstall`, then verify:
