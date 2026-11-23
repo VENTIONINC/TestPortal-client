@@ -9,6 +9,7 @@ interface ResultsSelectionContextType {
   toggleSelection: (id: string) => void;
   toggleMultiple: (ids: string[]) => void;
   selectAll: (ids: string[]) => void;
+  pruneSelection: (visibleIds: string[]) => void;
   clearSelection: () => void;
   getSelectedIds: () => string[];
   getSelectedCount: () => number;
@@ -76,6 +77,14 @@ export const ResultsSelectionProvider = ({ children }: PropsWithChildren) => {
     setSelectedIds(new Set());
   }, []);
 
+  const pruneSelection = useCallback((visibleIds: string[]) => {
+    const visibleIdsSet = new Set(visibleIds);
+    setSelectedIds((prev) => {
+      const next = new Set([...prev].filter((id) => visibleIdsSet.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, []);
+
   const getSelectedIds = useCallback(() => Array.from(selectedIds), [selectedIds]);
 
   const getSelectedCount = useCallback(() => selectedIds.size, [selectedIds]);
@@ -86,6 +95,7 @@ export const ResultsSelectionProvider = ({ children }: PropsWithChildren) => {
     toggleSelection,
     toggleMultiple,
     selectAll,
+    pruneSelection,
     clearSelection,
     getSelectedIds,
     getSelectedCount,

@@ -3,7 +3,12 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { buildResultsGroups, mergeAvailableAndActiveTags, toBaseResult } from '@/components/results/utils';
+import {
+  buildResultsGroups,
+  getVisibleResultIds,
+  mergeAvailableAndActiveTags,
+  toBaseResult,
+} from '@/components/results/utils';
 import { Result, ResultStatus, ResultsFilters } from '@/types';
 
 const filters: ResultsFilters = {
@@ -17,6 +22,7 @@ const filters: ResultsFilters = {
   reviewStatus: '',
   errorMessage: '',
   issueName: '',
+  assumption: 'any',
   from: '2026-07-01',
   to: '2026-07-07',
   page: 1,
@@ -100,6 +106,18 @@ describe('mergeAvailableAndActiveTags', () => {
       'L1',
       'L3',
     ]);
+  });
+});
+
+describe('getVisibleResultIds', () => {
+  it('returns results from every visible card day', () => {
+    expect(
+      getVisibleResultIds([
+        { isVisible: true, results: [{ id: 'jul-2' }, { id: 'jul-2-second' }] },
+        { isVisible: false, results: [{ id: 'hidden' }] },
+        { isVisible: true, results: [{ id: 'jul-1' }] },
+      ]),
+    ).toEqual(['jul-2', 'jul-2-second', 'jul-1']);
   });
 });
 

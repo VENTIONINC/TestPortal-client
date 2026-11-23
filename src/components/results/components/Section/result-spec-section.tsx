@@ -9,9 +9,11 @@ import { getDateDisplayName, getDatesBetween } from '@/utils/dateUtils';
 import { BaseResult, ResultExecution, ResultSpec } from '@/types';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useExecutionContextMenu, useResultContextMenu } from '@/hooks';
+import { useResultsSelection } from '@/contexts/results-selection';
 
 import { sanitizeFileName, serializeExecution } from './helpers';
 import { ResultSpecSectionView } from './result-spec-section-view';
+import { getVisibleResultIds } from '../../utils';
 
 interface ResultSpecSectionProps {
   spec: ResultSpec;
@@ -19,16 +21,18 @@ interface ResultSpecSectionProps {
   allExecutions: { execution: ResultExecution; results: BaseResult[] }[];
   activeTags: string[];
   onToggleTag: (tag: string) => void;
+  onVisibleResultIdsChange: (specKey: string, resultIds: string[]) => void;
 }
 
 export const ResultSpecSection = memo(
-  ({ spec, executions, allExecutions, activeTags, onToggleTag }: ResultSpecSectionProps) => {
+  ({ spec, executions, allExecutions, activeTags, onToggleTag, onVisibleResultIdsChange }: ResultSpecSectionProps) => {
     const dateRange = useResultsFilterDateRange();
     const selectedDates = useSelectedDates();
     const user = useCurrentUser();
     const projectId = useSelectedProjectId();
     const handleExecutionContextMenu = useExecutionContextMenu();
     const handleResultContextMenu = useResultContextMenu();
+    const { clearSelection } = useResultsSelection();
 
     // Track per-date local overrides relative to the global date selection.
     const [locallyToggledDates, setLocallyToggledDates] = useState<Set<string>>(new Set());
@@ -76,6 +80,23 @@ export const ResultSpecSection = memo(
     }, [allDates, activeDatesSet, locallyToggledDates, executions, allExecutions, user]);
 
     const handleDateToggle = ({ yyyy_mm_dd }: { yyyy_mm_dd: string }) => {
+      const toggledDay = sectionDays.find(({ yyyy_mm_dd: date }) => date === yyyy_mm_dd);
+
+      if (toggledDay?.isVisible) {
+        clearSelection();
+      }
+
+      if (toggledDay) {
+        onVisibleResultIdsChange(
+          spec.key,
+          getVisibleResultIds(
+            sectionDays.map((day) =>
+              day.yyyy_mm_dd === yyyy_mm_dd ? { ...day, isVisible: !day.isVisible } : day,
+            ),
+          ),
+        );
+      }
+
       setLocallyToggledDates((prev) => {
         const next = new Set(prev);
         // Toggle local state for any date
@@ -136,6 +157,10 @@ export const ResultSpecSection = memo(
         selectedDates,
       };
     }, [selectedDates, activeDatesSet, dateRange.from, dateRange.to]);
+
+    useEffect(() => {
+      onVisibleResultIdsChange(spec.key, getVisibleResultIds(sectionDays));
+    }, [onVisibleResultIdsChange, sectionDays, spec.key]);
 
     // Show spec if there are any executions (filtered or unfiltered)
     if (allExecutions.length === 0) {

@@ -12,7 +12,7 @@ import { useDialogActions } from '@/redux/slices/dialog';
 import { GenerateApiKeyDialog } from './generate-api-key-dialog';
 
 export const useGenerateApiKeyBusinessLogic = (closeDialog: () => void) => {
-  const { data: projects } = useGetApiV2ProjectsQuery({});
+  const { data: projects } = useGetApiV2ProjectsQuery();
 
   const firstActiveProject = projects?.find((project) => project.isActive);
 

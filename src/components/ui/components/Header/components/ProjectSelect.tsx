@@ -6,7 +6,7 @@ import { useGetApiV2ProjectsQuery } from '@/redux/apis/generatedApi';
 import { useProjectsActions, useSelectedProjectId } from '@/redux/slices/projects';
 
 export const ProjectSelect = () => {
-  const { data: projects } = useGetApiV2ProjectsQuery({});
+  const { data: projects } = useGetApiV2ProjectsQuery();
   const selectedProjectId = useSelectedProjectId();
   const { setSelectedProjectId } = useProjectsActions();
 
