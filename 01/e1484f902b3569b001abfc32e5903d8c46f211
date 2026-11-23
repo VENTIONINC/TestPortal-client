@@ -1,0 +1,19 @@
+package.json
+  s_4e164d05b02c19::t_395a0bb44d1412 18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "01e1484f902b3569b001abfc32e5903d8c46f211",
+  "prompts": {},
+  "sessions": {
+    "s_4e164d05b02c19": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a207bb-67a0-7e80-88d5-41c3c6a4adc5",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
