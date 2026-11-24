@@ -1,0 +1,37 @@
+src/__tests__/components/prompts/ParameterForm.test.tsx
+  s_fb454cbe0d327e::t_14f935887c77b5 12-22,25-29,32-36,43-55
+src/__tests__/components/prompts/PromptBuilderView.test.tsx
+  s_fb454cbe0d327e::t_d5587bb4acff70 13-29,31-39
+src/__tests__/components/prompts/PromptGalleryView.test.tsx
+  s_fb454cbe0d327e::t_034c572c8c8727 13-33,37-46
+src/__tests__/components/prompts/PromptPreview.test.tsx
+  s_fb454cbe0d327e::t_71dbbea246867b 12,15-19,22-26
+src/__tests__/components/prompts/usePromptBuilder.test.tsx
+  s_fb454cbe0d327e::t_eb3f5d6ca3a255 9-27,30-39,45-50,54-72,76-82,84-94,96-106,110,112-125,127-129,134,136-141,143-148,150-151,154-161,163-165,168-170,182-184,191-193,201-203,205-211,219-225
+src/components/prompts/components/ParameterForm.tsx
+  s_fb454cbe0d327e::t_f7860f52c17316 107-109
+src/components/prompts/components/PromptProjectSelect.tsx
+  s_fb454cbe0d327e::t_5a5f52d3e9599a 56,69-71,73-75
+src/components/prompts/containers/PromptBuilderView/index.tsx
+  s_fb454cbe0d327e::t_df7f13059646d7 108
+src/components/prompts/hooks/usePromptBuilder.ts
+  s_fb454cbe0d327e::t_0bc392b70b2171 7-12,18-25,32-45,49-52,60-64,84-106,120-121,132-137,141-143,147-166
+src/components/prompts/utils/parsePromptError.ts
+  s_fb454cbe0d327e::t_f348ba6e6c34c5 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "17d8c44c063dd5a106439fad33ec1881c4599f2c",
+  "prompts": {},
+  "sessions": {
+    "s_fb454cbe0d327e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20d8d-35a0-7780-917c-047574bab5c5",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
