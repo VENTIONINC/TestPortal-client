@@ -1,0 +1,19 @@
+src/components/prompts/hooks/usePromptBuilder.ts
+  s_fb454cbe0d327e::t_0d733749a0a399 23,29,35,38,47,52,55,65,72,87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "02c961b71d3aa32eb57ecf07860660f7934c9031",
+  "prompts": {},
+  "sessions": {
+    "s_fb454cbe0d327e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a20d8d-35a0-7780-917c-047574bab5c5",
+        "model": "gpt-6.2-sol"
+      },
+      "human_author": "Ihar Mikailau <ihar.mikailau@ventionteams.com>"
+    }
+  }
+}
