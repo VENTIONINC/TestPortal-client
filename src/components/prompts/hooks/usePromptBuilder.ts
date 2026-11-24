@@ -20,18 +20,22 @@ export const usePromptBuilder = (name: string) => {
   const { data: projects, isLoading: projectsLoading, error: projectsError, refetch: refetchProjects } = useGetApiV2ProjectsQuery(undefined, { skip: !isTms });
   const activeProjects = useMemo(() => projects?.filter(project => project.isActive) ?? [], [projects]);
   const project = !projectsError && !projectsLoading ? activeProjects.find(item => item.id === selectedProjectId) : undefined;
+
   const [parameterState, setParameterState] = useState<{ name: string; values: Record<string, string> }>({ name, values: {} });
   if (parameterState.name !== name) {
     setParameterState({ name, values: {} });
   }
   const parameterValues = useMemo(() => parameterState.name === name ? parameterState.values : {}, [parameterState, name]);
+
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [output, setOutput] = useState<{ key: string; text: string }>();
   const [failure, setFailure] = useState<{ key: string; message: string }>();
   const [isGenerating, setIsGenerating] = useState(false);
   const sequence = useRef(0);
+
   const { currentData: prompt, isFetching, error } = useGetApiV2PromptsByNameQuery(isPromptName(name) ? { name } : skipToken);
   const [generatePrompt] = usePostApiV2PromptsByNameGenerateMutation();
+
   const payload = useMemo(() => {
     if (!isTms) return parameterValues;
     const result: Record<string, string> = {};
@@ -40,12 +44,15 @@ export const usePromptBuilder = (name: string) => {
     if (parameterValues.execution_mode) result.execution_mode = parameterValues.execution_mode;
     return result;
   }, [isTms, project, parameterValues]);
+
   const key = JSON.stringify([name, isTms ? project?.id : null, payload]);
   const currentKey = useRef(key);
   if (currentKey.current !== key) sequence.current += 1;
   currentKey.current = key;
+
   const generatedPrompt = output?.key === key ? output.text : '';
   const generateError = failure?.key === key ? failure.message : undefined;
+
   const requiredFieldsEmpty = Boolean(isTms && !project) || Boolean(prompt && Object.entries(prompt.parameters).some(([paramName, param]) => param.required && !parameterValues[paramName]?.trim()));
 
   const handleParameterChange = useCallback((paramName: string, value: string) => {
@@ -55,12 +62,14 @@ export const usePromptBuilder = (name: string) => {
 
   const handleGenerate = useCallback(async () => {
     if (!prompt || !isPromptName(name) || requiredFieldsEmpty) return;
+
     const request = ++sequence.current;
     const requestKey = key;
     setIsGenerating(true);
     setOutput(undefined);
     setFailure(undefined);
     setValidationErrors({});
+
     try {
       const result = await generatePrompt({ name, generatePromptRequest: payload }).unwrap();
       if (request === sequence.current && currentKey.current === requestKey) setOutput({ key: requestKey, text: result.generated_prompt });
@@ -75,6 +84,7 @@ export const usePromptBuilder = (name: string) => {
   }, [prompt, name, requiredFieldsEmpty, key, payload, generatePrompt]);
 
   useEffect(() => { setValidationErrors({}); setOutput(undefined); setFailure(undefined); setIsGenerating(false); }, [key]);
+
   useEffect(() => {
     if (!prompt || requiredFieldsEmpty || (!isTms && Object.keys(parameterValues).length === 0)) return;
     const timer = setTimeout(() => { void handleGenerate(); }, 1000);
