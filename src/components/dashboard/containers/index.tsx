@@ -129,8 +129,11 @@ const DashboardContent = () => {
     },
     [filterProps],
   );
-  const { options: executionTypeOptions, isLoading: areExecutionTypesLoading, effectiveType } =
-    useExecutionTypeOptions({
+  const {
+    options: executionTypeOptions,
+    isLoading: areExecutionTypesLoading,
+    effectiveType,
+  } = useExecutionTypeOptions({
     projectId: selectedProjectId ?? '',
     selectedType: executionType,
     onInvalidType: handleInvalidExecutionType,

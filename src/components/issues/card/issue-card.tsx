@@ -114,7 +114,10 @@ export const IssueCard = memo(({ issue }: IssueCardProps) => {
                 </VStack>
               }
             >
-              <HStack gap={1} aria-label={`Category summary: ${categoryLabel}${categorySummary.showMixed ? ', Mixed' : ''}`}>
+              <HStack
+                gap={1}
+                aria-label={`Category summary: ${categoryLabel}${categorySummary.showMixed ? ', Mixed' : ''}`}
+              >
                 <Tag.Root
                   color={color}
                   bg="transparent"

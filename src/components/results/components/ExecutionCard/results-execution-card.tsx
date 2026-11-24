@@ -198,29 +198,29 @@ export const ResultsExecutionCard = memo(
                 pl={{ base: 10, md: 0 }}
               >
                 {errors.length > 0 && hasAnalysis && (
-                    <HStack
-                      color={isConfirmedByUser ? 'white' : color}
-                      onClick={() => openResultAnalysisDialog(result)}
-                      px={2}
-                      py={0.5}
-                      borderRadius="md"
-                      cursor="pointer"
-                      border={isConfirmedByUser ? '1px solid' : '1px dashed'}
-                      borderColor={isConfirmedByUser ? color : 'border.muted'}
-                      bg={isConfirmedByUser ? color : 'transparent'}
-                      _hover={
-                        isConfirmedByUser
-                          ? { opacity: 0.85 }
-                          : { bg: hoverBgColor ?? 'bg.hover', color: hoverColor ?? color }
-                      }
-                      flexShrink={0}
-                    >
-                      <Icon size={16} color="currentColor" style={{ flexShrink: 0 }} />
-                      <Text fontWeight="bold" fontSize="xs" whiteSpace="nowrap">
-                        {isConfirmedByUser ? 'Confirmed' : 'AI Suggested'}: {getConfidenceLabel(analysisConfidence)}
-                      </Text>
-                    </HStack>
-                  )}
+                  <HStack
+                    color={isConfirmedByUser ? 'white' : color}
+                    onClick={() => openResultAnalysisDialog(result)}
+                    px={2}
+                    py={0.5}
+                    borderRadius="md"
+                    cursor="pointer"
+                    border={isConfirmedByUser ? '1px solid' : '1px dashed'}
+                    borderColor={isConfirmedByUser ? color : 'border.muted'}
+                    bg={isConfirmedByUser ? color : 'transparent'}
+                    _hover={
+                      isConfirmedByUser
+                        ? { opacity: 0.85 }
+                        : { bg: hoverBgColor ?? 'bg.hover', color: hoverColor ?? color }
+                    }
+                    flexShrink={0}
+                  >
+                    <Icon size={16} color="currentColor" style={{ flexShrink: 0 }} />
+                    <Text fontWeight="bold" fontSize="xs" whiteSpace="nowrap">
+                      {isConfirmedByUser ? 'Confirmed' : 'AI Suggested'}: {getConfidenceLabel(analysisConfidence)}
+                    </Text>
+                  </HStack>
+                )}
 
                 {errors[0] && <InlineIssue resultError={errors[0]} projectId={projectId} />}
 

@@ -25,7 +25,13 @@ vi.mock('@/redux/apis/resultDetailApi', () => ({
 }));
 
 vi.mock('@/redux/apis/scenarioManagementApi', () => ({
-  useGetApiV2TestScenariosForResultLinkManagementQuery: () => ({ currentData: { scenarios: [], total: 0, totalPages: 0, page: 1 }, isLoading: false, isFetching: false, isError: false, refetch: vi.fn() }),
+  useGetApiV2TestScenariosForResultLinkManagementQuery: () => ({
+    currentData: { scenarios: [], total: 0, totalPages: 0, page: 1 },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
 }));
 
 vi.mock('@/redux/apis/extendedApi', () => ({
@@ -67,13 +73,17 @@ const ModalEvidenceHarness = () => {
 
   return (
     <ChakraProvider>
-      <input
-        aria-label="Unsaved issue name"
-        value={issueName}
-        onChange={(event) => setIssueName(event.target.value)}
+      <input aria-label="Unsaved issue name" value={issueName} onChange={(event) => setIssueName(event.target.value)} />
+      <textarea
+        aria-label="Unsaved issue description"
+        value={description}
+        onChange={(event) => setDescription(event.target.value)}
       />
-      <textarea aria-label="Unsaved issue description" value={description} onChange={(event) => setDescription(event.target.value)} />
-      <select aria-label="Unsaved issue category" value={category} onChange={(event) => setCategory(event.target.value)}>
+      <select
+        aria-label="Unsaved issue category"
+        value={category}
+        onChange={(event) => setCategory(event.target.value)}
+      >
         <option value="bug">Bug</option>
         <option value="infra">Environment</option>
       </select>
@@ -103,7 +113,7 @@ describe('AssignIssueModal evidence tabs', () => {
     expect(mocks.trigger).toHaveBeenLastCalledWith({ resultId: 'result-1', projectId: 'project-1' });
 
     await user.click(screen.getByRole('button', { name: 'Link Test Scenario' }));
-    await user.type(screen.getByRole('textbox', { name: 'Search title or scenario key' }), 'checkout');
+    await user.type(screen.getByRole('textbox', { name: 'Search by title or key' }), 'checkout');
     await user.click(screen.getByRole('button', { name: 'Search' }));
     await user.click(screen.getByRole('button', { name: 'Back to Test Scenarios' }));
 
@@ -120,10 +130,10 @@ describe('AssignIssueModal evidence tabs', () => {
   it('places Test Scenarios immediately below Logs in the evidence rail', () => {
     const contextWithEvidence = {
       ...context,
-    error: {
-      ...context.error,
+      error: {
+        ...context.error,
         logs: ['log line'],
-    },
+      },
     };
 
     render(

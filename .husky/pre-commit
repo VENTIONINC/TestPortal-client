@@ -1,1 +1,17 @@
-yarn lint
+#!/usr/bin/env sh
+set -eu
+
+run_check() {
+  name="$1"
+  shift
+  printf '\n==> %s\n' "$name"
+  "$@" || {
+    status=$?
+    printf 'FAILED: %s (exit %s)\n' "$name" "$status" >&2
+    return "$status"
+  }
+}
+
+run_check "ESLint" yarn eslint
+run_check "TypeScript check" yarn tsc
+run_check "Unit tests" yarn test

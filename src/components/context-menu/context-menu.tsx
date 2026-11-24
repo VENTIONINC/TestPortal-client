@@ -137,71 +137,78 @@ export const ContextMenu = () => {
           p={1}
           data-testid="context-menu"
         >
-          {options.map(({ title, subTitle, onClick, disabled, icon: Icon, divider }, index) => {
-            const isClickable = !!onClick && !disabled;
+          {options.map(
+            ({ title, subTitle, onClick, disabled, icon: Icon, divider, iconAtStart, destructive }, index) => {
+              const isClickable = !!onClick && !disabled;
 
-            return (
-              <Box key={`${title}-${index}`}>
-                <Box
-                  as="button"
-                  w="full"
-                  textAlign="left"
-                  px={3}
-                  py={2}
-                  borderRadius="sm"
-                  transition="background-color 0.2s"
-                  cursor={isClickable ? 'pointer' : 'default'}
-                  opacity={disabled ? 0.5 : 1}
-                  _hover={isClickable ? { bg: hoverBgColor } : undefined}
-                  _focus={
-                    isClickable
-                      ? {
-                          bg: hoverBgColor,
-                          outline: '2px solid',
-                          outlineColor: 'blue.500',
-                          outlineOffset: '-2px',
-                        }
-                      : undefined
-                  }
-                  onClick={
-                    isClickable
-                      ? () => {
-                          closeContextMenu();
-                          onClick?.();
-                        }
-                      : undefined
-                  }
-                  _disabled={{ opacity: 0.5 }}
-                  aria-label={title}
-                  tabIndex={disabled ? -1 : 0}
-                >
-                  <HStack justify="space-between" w="full" gap={3}>
-                    <Box flex={1} textAlign="left">
-                      <Text
-                        fontSize="sm"
-                        fontWeight="medium"
-                        color={disabled ? disabledTextColor : textColor}
-                        lineHeight="tight"
-                      >
-                        {title}
-                      </Text>
-                      {subTitle && (
-                        <Text fontSize="xs" color={secondaryTextColor} lineHeight="tight" mt={0.5}>
-                          {subTitle}
-                        </Text>
+              return (
+                <Box key={`${title}-${index}`}>
+                  <Box
+                    as="button"
+                    w="full"
+                    textAlign="left"
+                    px={3}
+                    py={2}
+                    borderRadius="sm"
+                    transition="background-color 0.2s"
+                    cursor={isClickable ? 'pointer' : 'default'}
+                    opacity={disabled ? 0.5 : 1}
+                    _hover={isClickable ? { bg: hoverBgColor } : undefined}
+                    _focus={
+                      isClickable
+                        ? {
+                            bg: hoverBgColor,
+                            outline: '2px solid',
+                            outlineColor: 'blue.500',
+                            outlineOffset: '-2px',
+                          }
+                        : undefined
+                    }
+                    onClick={
+                      isClickable
+                        ? () => {
+                            closeContextMenu();
+                            onClick?.();
+                          }
+                        : undefined
+                    }
+                    _disabled={{ opacity: 0.5 }}
+                    aria-label={title}
+                    tabIndex={disabled ? -1 : 0}
+                  >
+                    <HStack justify="space-between" w="full" gap={3}>
+                      {Icon && iconAtStart && (
+                        <Box flexShrink={0} color={disabled ? disabledTextColor : destructive ? 'fg.error' : textColor}>
+                          <Icon size={16} />
+                        </Box>
                       )}
-                    </Box>
-                    {Icon && (
-                      <Box flexShrink={0} color={disabled ? disabledTextColor : secondaryTextColor}>
-                        <Icon size={16} />
+                      <Box flex={1} textAlign="left">
+                        <Text
+                          fontSize="sm"
+                          fontWeight="medium"
+                          color={disabled ? disabledTextColor : destructive ? 'fg.error' : textColor}
+                          lineHeight="tight"
+                        >
+                          {title}
+                        </Text>
+                        {subTitle && (
+                          <Text fontSize="xs" color={secondaryTextColor} lineHeight="tight" mt={0.5}>
+                            {subTitle}
+                          </Text>
+                        )}
                       </Box>
-                    )}
-                  </HStack>
+                      {Icon && !iconAtStart && (
+                        <Box flexShrink={0} color={disabled ? disabledTextColor : secondaryTextColor}>
+                          <Icon size={16} />
+                        </Box>
+                      )}
+                    </HStack>
+                  </Box>
+                  {divider && index < options.length - 1 && <Box h="1px" bg={borderColor} mx={2} my={1} />}
                 </Box>
-                {divider && index < options.length - 1 && <Box h="1px" bg={borderColor} mx={2} my={1} />}
-              </Box>
-            );
-          })}
+              );
+            },
+          )}
         </Card.Root>
       </Box>
     </Portal>

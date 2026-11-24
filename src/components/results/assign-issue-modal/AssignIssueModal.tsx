@@ -31,16 +31,7 @@ import {
   LuWandSparkles,
 } from 'react-icons/lu';
 
-import {
-  Badge,
-  Dialog,
-  DialogBody,
-  DialogFooter,
-  Input,
-  Textarea,
-  Tooltip,
-  toaster,
-} from '@/components/ui';
+import { Badge, Dialog, DialogBody, DialogFooter, Input, Textarea, Tooltip, toaster } from '@/components/ui';
 import { ResultCategory } from '@/types';
 import type { DefaultDialogProps } from '@/types';
 import { copyToClipboard } from '@/utils';
@@ -96,7 +87,11 @@ type ResultDialogTitleData = {
   duration: number;
 };
 
-export function getResultDialogTitle(result: ResultDialogTitleData | undefined, isContextOnly: boolean, isConfirmed: boolean) {
+export function getResultDialogTitle(
+  result: ResultDialogTitleData | undefined,
+  isContextOnly: boolean,
+  isConfirmed: boolean,
+) {
   const existingTitle = isConfirmed ? 'Edit Issue' : 'Assign Issue';
   const mainTitle = isContextOnly ? 'Result details' : existingTitle;
   if (!result) return 'Result';
@@ -118,7 +113,13 @@ export function getResultDialogTitle(result: ResultDialogTitleData | undefined, 
   );
 }
 
-export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssumptionId, closeDialog }: AssignIssueModalProps) {
+export function AssignIssueModal({
+  resultErrorId,
+  projectId,
+  mode,
+  selectedAssumptionId,
+  closeDialog,
+}: AssignIssueModalProps) {
   const modal = useAssignIssueModal({ resultErrorId, projectId, mode, selectedAssumptionId, onClose: closeDialog });
   const { state, context, actions } = modal;
   const isContextOnly = mode === 'context';
@@ -139,7 +140,9 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssum
       initialFocusEl={() => (isContextOnly || isReadOnly ? null : nameInputRef.current)}
       contentProps={{
         h: 'min(750px, calc(100dvh - 8rem))',
-        minW: { lg: isContextOnly ? 'clamp(800px, calc(100vw - 8rem), 900px)' : 'clamp(1000px, calc(100vw - 8rem), 1200px)' },
+        minW: {
+          lg: isContextOnly ? 'clamp(800px, calc(100vw - 8rem), 900px)' : 'clamp(1000px, calc(100vw - 8rem), 1200px)',
+        },
         overflow: 'hidden',
       }}
       closeTriggerProps={{ top: 4 }}
@@ -225,7 +228,9 @@ export function AssignIssueModal({ resultErrorId, projectId, mode, selectedAssum
                     value={state.form.name}
                     disabled={isReadOnly}
                     labelAction={
-                      !isReadOnly && state.form.name ? <PolishActions field="name" state={modal.polish.name} actions={actions} /> : undefined
+                      !isReadOnly && state.form.name ? (
+                        <PolishActions field="name" state={modal.polish.name} actions={actions} />
+                      ) : undefined
                     }
                     onChange={(name) => actions.updateForm({ name })}
                     onSelect={actions.selectExistingIssue}
@@ -301,7 +306,9 @@ const CategorySelector = ({
     disabled={disabled}
     onValueChange={(details) => onChange(details.value as AssignIssueModalState['form']['category'])}
   >
-    <RadioGroup.Label mb={1} fontSize="12px">Category</RadioGroup.Label>
+    <RadioGroup.Label mb={1} fontSize="12px">
+      Category
+    </RadioGroup.Label>
     <HStack gap={2} flexWrap="wrap">
       {categoryItems.map((item) => (
         <RadioGroup.Item
@@ -320,7 +327,9 @@ const CategorySelector = ({
           _disabled={{ cursor: 'not-allowed', opacity: 0.5 }}
         >
           <RadioGroup.ItemHiddenInput />
-          <RadioGroup.ItemText fontSize="12px" lineHeight="1">{item.label}</RadioGroup.ItemText>
+          <RadioGroup.ItemText fontSize="12px" lineHeight="1">
+            {item.label}
+          </RadioGroup.ItemText>
         </RadioGroup.Item>
       ))}
     </HStack>
@@ -346,10 +355,7 @@ const IssueNameSearch = ({
 }) => {
   const [debouncedName] = useDebounce(value.trim(), 300);
   const canSearch = !disabled && debouncedName.length >= 2;
-  const search = useGetApiV2IssuesQuery(
-    { projectId, name: debouncedName, limit: 10 },
-    { skip: !canSearch },
-  );
+  const search = useGetApiV2IssuesQuery({ projectId, name: debouncedName, limit: 10 }, { skip: !canSearch });
   const issues = canSearch ? (search.data?.issues ?? []) : [];
 
   return (
@@ -382,7 +388,9 @@ const IssueNameSearch = ({
           boxShadow="md"
         >
           {search.isLoading ? (
-            <Flex justify="center" py={3}><Spinner size="sm" /></Flex>
+            <Flex justify="center" py={3}>
+              <Spinner size="sm" />
+            </Flex>
           ) : (
             issues.map((issue) => (
               <Button
@@ -509,15 +517,8 @@ const ErrorContext = ({ context }: { context: NonNullable<ReturnType<typeof useA
 );
 
 const ContextTab = ({ value, icon, label }: { value: string; icon: React.ReactNode; label: string }) => (
-  <Tooltip content={label} >
-    <Tabs.Trigger
-      value={value}
-      aria-label={label}
-      justifyContent="center"
-      w="40px"
-      h="40px"
-      p={0}
-    >
+  <Tooltip content={label}>
+    <Tabs.Trigger value={value} aria-label={label} justifyContent="center" w="40px" h="40px" p={0}>
       {icon}
     </Tabs.Trigger>
   </Tooltip>
@@ -565,8 +566,18 @@ const CodeSection = ({
       overflow="hidden"
       bg="bg.input"
     >
-      <Flex align="center" justify="space-between" px={3} py={2} bg="bg.panel" borderBottomWidth="1px" borderColor="border.main">
-        <Text fontSize="xs" fontWeight="semibold" color="text.secondary">{title}</Text>
+      <Flex
+        align="center"
+        justify="space-between"
+        px={3}
+        py={2}
+        bg="bg.panel"
+        borderBottomWidth="1px"
+        borderColor="border.main"
+      >
+        <Text fontSize="xs" fontWeight="semibold" color="text.secondary">
+          {title}
+        </Text>
         <Tooltip content={copied ? 'Copied' : `Copy ${title.toLowerCase()}`}>
           <IconButton aria-label={`Copy ${title.toLowerCase()}`} size="xs" variant="ghost" onClick={() => void copy()}>
             {copied ? <LuCheck /> : <LuClipboard />}
@@ -607,12 +618,7 @@ const StateNotice = ({
     return <Notice loading title="Looking for issues that match this error…" />;
   }
   if (state.status === assignIssueModalStatus.aiCategorising) {
-    return (
-      <Notice
-        loading
-        title="Drafting a category, name and description from this error…"
-      />
-    );
+    return <Notice loading title="Drafting a category, name and description from this error…" />;
   }
   if (state.status === assignIssueModalStatus.noMatch) {
     return (
@@ -634,7 +640,9 @@ const StateNotice = ({
           bg="orange.50"
           _dark={{ bg: 'orange.950' }}
         >
-          <Badge flexShrink={0} bg="dashboard.purple" color="white" isCapitalize={false}>{state.score}% match</Badge>
+          <Badge flexShrink={0} bg="dashboard.purple" color="white" isCapitalize={false}>
+            {state.score}% match
+          </Badge>
           <Tooltip
             content={<SimilarityTooltipContent score={state.score ?? 0} />}
             contentProps={{ maxW: '440px', p: 3 }}
@@ -654,8 +662,12 @@ const StateNotice = ({
           </Text>
         </HStack>
         <HStack gap={2}>
-          <Button flex="1" variant="outline" disabled={isMutating} onClick={() => void actions.rejectSuggestion()}>Reject</Button>
-          <Button flex="1" loading={isMutating} onClick={() => void actions.confirmSuggestion()}>Confirm</Button>
+          <Button flex="1" variant="outline" disabled={isMutating} onClick={() => void actions.rejectSuggestion()}>
+            Reject
+          </Button>
+          <Button flex="1" loading={isMutating} onClick={() => void actions.confirmSuggestion()}>
+            Confirm
+          </Button>
         </HStack>
       </Stack>
     );
@@ -677,8 +689,12 @@ const StateNotice = ({
           </Text>
         </HStack>
         <HStack gap={2}>
-          <Button flex="1" variant="outline" disabled={isMutating} onClick={() => void actions.rejectSuggestion()}>Reject</Button>
-          <Button flex="1" loading={isMutating} onClick={() => void actions.confirmSuggestion()}>Confirm</Button>
+          <Button flex="1" variant="outline" disabled={isMutating} onClick={() => void actions.rejectSuggestion()}>
+            Reject
+          </Button>
+          <Button flex="1" loading={isMutating} onClick={() => void actions.confirmSuggestion()}>
+            Confirm
+          </Button>
         </HStack>
       </Stack>
     );
@@ -798,7 +814,8 @@ const FormActions = ({
     state.status === assignIssueModalStatus.algorithmSuggestion ||
     state.status === assignIssueModalStatus.manualSuggestion ||
     isConfirmedIssueStatus(state.status)
-  ) return null;
+  )
+    return null;
 
   const isRequesting =
     state.status === assignIssueModalStatus.openingSearch || state.status === assignIssueModalStatus.aiCategorising;
@@ -817,7 +834,9 @@ const FormActions = ({
       <Button
         flex="1"
         variant="outline"
-        disabled={!canFindMatchingIssues || state.status === assignIssueModalStatus.noMatch || isRequesting || isMutating}
+        disabled={
+          !canFindMatchingIssues || state.status === assignIssueModalStatus.noMatch || isRequesting || isMutating
+        }
         loading={isSearching || state.status === assignIssueModalStatus.openingSearch}
         onClick={() => void actions.retrySimilarity()}
       >
@@ -973,7 +992,9 @@ const ModalFooter = ({
     flexWrap="wrap"
   >
     <HStack gap={2} ms="auto">
-      <Button variant="ghost" loading={isMutating} disabled={isMutating} onClick={actions.close}>Cancel</Button>
+      <Button variant="ghost" loading={isMutating} disabled={isMutating} onClick={actions.close}>
+        Cancel
+      </Button>
       {(state.status === assignIssueModalStatus.noMatch ||
         state.status === assignIssueModalStatus.unassigned ||
         state.status === assignIssueModalStatus.aiSuggestion ||

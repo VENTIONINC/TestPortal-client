@@ -22,7 +22,12 @@ const HookProbe = () => {
 describe('useSkillDetail', () => {
   it('loads a direct, trimmed opaque ID independently of catalog state', () => {
     routeParams.id = ' skill-custom-renamed ';
-    mockedSkillQuery.mockReturnValue({ data: undefined, isLoading: false, isFetching: false, error: undefined } as never);
+    mockedSkillQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    } as never);
 
     render(<HookProbe />);
 
@@ -46,7 +51,12 @@ describe('useSkillDetail', () => {
 
   it('skips the query when the route ID is empty', () => {
     routeParams.id = '   ';
-    mockedSkillQuery.mockReturnValue({ data: undefined, isLoading: false, isFetching: false, error: undefined } as never);
+    mockedSkillQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isFetching: false,
+      error: undefined,
+    } as never);
 
     render(<HookProbe />);
 

@@ -22,7 +22,10 @@ vi.mock('@/hooks', () => ({
 }));
 
 vi.mock('@chakra-ui/react', () => {
-  const element = () => ({ children }: { children?: ReactNode }) => createElement('div', null, children);
+  const element =
+    () =>
+    ({ children }: { children?: ReactNode }) =>
+      createElement('div', null, children);
 
   return {
     Box: element(),
@@ -35,6 +38,7 @@ vi.mock('@chakra-ui/react', () => {
 
 vi.mock('@/components/ui', () => ({
   Badge: ({ children }: { children?: ReactNode }) => createElement('span', null, children),
+  Tooltip: ({ children }: { children?: ReactNode }) => createElement('span', null, children),
 }));
 vi.mock('@/components/ui/progress', () => ({
   ProgressBar: ({ children }: { children?: ReactNode }) => createElement('div', null, children),
@@ -75,12 +79,18 @@ describe('ProductQualityWidget', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-08-07T12:00:00Z'));
 
-    mockedIssuesQuery
-      .mockReturnValueOnce({ data: { issues: [] }, isLoading: false } as never)
-      .mockReturnValueOnce({
-        data: { issues: [issue({ bug: 1, infra: 0, performance: 0, script: 0, other: 0 }, 0, 1, 1)] },
-        isLoading: false,
-      } as never);
+    mockedIssuesQuery.mockImplementation(
+      (args) =>
+        ({
+          data: {
+            issues:
+              typeof args !== 'symbol' && args.statFrom === '2026-08-04'
+                ? [issue({ bug: 1, infra: 0, performance: 0, script: 0, other: 0 }, 0, 1, 1)]
+                : [],
+          },
+          isLoading: false,
+        }) as never,
+    );
     mockedDashboardQuery.mockReturnValue({
       data: {
         history: [
@@ -107,39 +117,45 @@ describe('ProductQualityWidget', () => {
 });
 
 describe('calculateIWQS', () => {
-  it('weights a mixed category distribution instead of its display category', () => {
-    const result = calculateIWQS(
-      [issue({ bug: 1, infra: 1, performance: 0, script: 0, other: 0 }, 0)],
-      undefined,
-    );
+  it('uses the issue display category weight for mixed category metadata', () => {
+    const result = calculateIWQS([issue({ bug: 1, infra: 1, performance: 0, script: 0, other: 0 }, 0)], undefined);
 
-    expect(result).toEqual({ weightedSum: 9, totalLinkedFailures: 10, score: 10 });
+    expect(result).toEqual({ weightedSum: 10, totalLinkedFailures: 10, score: 0 });
   });
 
   it('uses the configured infra weight', () => {
-    const result = calculateIWQS(
-      [issue({ bug: 0, infra: 2, performance: 0, script: 0, other: 0 }, 0)],
-      { bug: 150, infra: 40, performance: 100, script: 20, other: 10 },
-    );
+    const result = calculateIWQS([issue({ bug: 0, infra: 2, performance: 0, script: 0, other: 0 }, 0)], {
+      bug: 150,
+      infra: 40,
+      performance: 100,
+      script: 20,
+      other: 10,
+    });
 
-    expect(result.weightedSum).toBe(4);
+    expect(result.weightedSum).toBe(15);
   });
 
   it('does not assign the other weight to uncategorized results', () => {
-    const result = calculateIWQS(
-      [issue({ bug: 1, infra: 0, performance: 0, script: 0, other: 0 }, 1)],
-      { bug: 100, infra: 30, performance: 100, script: 20, other: 100 },
-    );
+    const result = calculateIWQS([issue({ bug: 1, infra: 0, performance: 0, script: 0, other: 0 }, 1)], {
+      bug: 100,
+      infra: 30,
+      performance: 100,
+      script: 20,
+      other: 100,
+    });
 
-    expect(result.weightedSum).toBe(5);
+    expect(result.weightedSum).toBe(10);
   });
 
   it('keeps explicit other categorized results weighted', () => {
-    const result = calculateIWQS(
-      [issue({ bug: 0, infra: 0, performance: 0, script: 0, other: 2 }, 0)],
-      { bug: 150, infra: 30, performance: 100, script: 20, other: 25 },
-    );
+    const result = calculateIWQS([issue({ bug: 0, infra: 0, performance: 0, script: 0, other: 2 }, 0)], {
+      bug: 150,
+      infra: 30,
+      performance: 100,
+      script: 20,
+      other: 25,
+    });
 
-    expect(result.weightedSum).toBe(2.5);
+    expect(result.weightedSum).toBe(15);
   });
 });

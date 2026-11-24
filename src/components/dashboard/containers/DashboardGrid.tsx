@@ -58,27 +58,17 @@ interface DashboardGridProps {
 }
 
 export const WIDGET_DESCRIPTIONS = {
-  statistics:
-    'Summary counts for the selected period and execution: total test runs, passed tests, and failed tests.',
+  statistics: 'Summary counts for the selected period and execution: total test runs, passed tests, and failed tests.',
   productQuality:
     'Product quality score derived from issue distribution across categories, weighted by category importance. The score is calculated only when at least 80% of issues are categorized. Category weights are configured in the project settings.',
   testRuns: 'Passed vs failed test results in the selected period, shown as a proportional donut chart.',
   passRate: 'Trend of passed and failed tests over time. Switch between absolute counts and percentage view.',
   issuesCategories:
     'Failed tests grouped by issue category (bug, environment, script, performance, other) across the selected period.',
-  historyRegressionRuns:
-    'Regression run outcomes over time: passed, failed, and skipped tests per time bucket.',
+  historyRegressionRuns: 'Regression run outcomes over time: passed, failed, and skipped tests per time bucket.',
 } as const;
 
-const GridCard = ({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children: ReactNode;
-}) => (
+const GridCard = ({ title, description, children }: { title: string; description: string; children: ReactNode }) => (
   <Box
     h="100%"
     borderRadius="xl"
@@ -121,7 +111,13 @@ const GridCard = ({
   </Box>
 );
 
-const StatsWidget = ({ summary, history }: { summary?: TestDescriptionSummary; history?: DashboardResponse['history'] }) => {
+const StatsWidget = ({
+  summary,
+  history,
+}: {
+  summary?: TestDescriptionSummary;
+  history?: DashboardResponse['history'];
+}) => {
   const metrics = aggregateDashboardStatusMetrics(history, summary);
 
   const stats: TestStat[] = [

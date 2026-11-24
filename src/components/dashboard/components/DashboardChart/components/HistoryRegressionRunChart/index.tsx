@@ -19,23 +19,20 @@ export const HistoryRegressionRunChart = ({ data }: { data?: DashboardResponse['
     { name: 'timedOut', label: 'timed out', color: 'dashboard.yellow' },
   ];
 
-  const { chartData: mapToDataToChart, maxValue } = useMemo(
-    () => {
-      const mapped = mapDashboardStatusChartData(data);
+  const { chartData: mapToDataToChart, maxValue } = useMemo(() => {
+    const mapped = mapDashboardStatusChartData(data);
 
-      return {
-        chartData: mapped.chartData.map(({ date, passed, failed, skipped, timedOut }) => ({
-          date: formatChartLabel(date),
-          passed,
-          failed,
-          skipped,
-          timedOut,
-        })) as CategoriesChartDatum[],
-        maxValue: mapped.maxValue,
-      };
-    },
-    [data],
-  );
+    return {
+      chartData: mapped.chartData.map(({ date, passed, failed, skipped, timedOut }) => ({
+        date: formatChartLabel(date),
+        passed,
+        failed,
+        skipped,
+        timedOut,
+      })) as CategoriesChartDatum[],
+      maxValue: mapped.maxValue,
+    };
+  }, [data]);
 
   return (
     <MetricsBarChart

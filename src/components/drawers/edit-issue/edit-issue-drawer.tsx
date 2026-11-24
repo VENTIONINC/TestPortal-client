@@ -88,9 +88,15 @@ export function EditIssueDrawer({ issue, closeDrawer }: EditIssueDrawerProps) {
             onChange={(event) => setDescription(event.target.value)}
             minH="140px"
           />
-          <Button variant="outline" loading={formatState.isLoading} onClick={() => void polish()}>Polish with AI</Button>
-          <Button loading={updateState.isLoading} disabled={!name.trim()} onClick={() => void update()}>Update</Button>
-          <Button variant="secondaryError" loading={deleteState.isLoading} onClick={confirmDelete}>Delete</Button>
+          <Button variant="outline" loading={formatState.isLoading} onClick={() => void polish()}>
+            Polish with AI
+          </Button>
+          <Button loading={updateState.isLoading} disabled={!name.trim()} onClick={() => void update()}>
+            Update
+          </Button>
+          <Button variant="secondaryError" loading={deleteState.isLoading} onClick={confirmDelete}>
+            Delete
+          </Button>
         </Stack>
       </DrawerBody>
     </Drawer>

@@ -6,8 +6,6 @@ import { TestScenarioRouteBoundary } from './TestScenarioRouteBoundary';
 
 export const TestScenarioDetailBoundary = () => (
   <TestScenarioRouteBoundary>
-    {({ projectId, scenarioId }) => (
-      <TestScenarioDetailContainer projectId={projectId} scenarioId={scenarioId} />
-    )}
+    {({ projectId, scenarioId }) => <TestScenarioDetailContainer projectId={projectId} scenarioId={scenarioId} />}
   </TestScenarioRouteBoundary>
 );

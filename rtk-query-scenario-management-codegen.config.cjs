@@ -1,5 +1,6 @@
 module.exports = {
   schemaFile: process.env.RTK_QUERY_SCENARIO_MANAGEMENT_OPENAPI_FILE,
+  prettierConfigFile: './.prettierrc',
   apiFile: './src/redux/apis/generatedApi.ts',
   apiImport: 'generatedApi',
   outputFile: './src/redux/apis/generatedScenarioManagementApi.ts',
@@ -10,6 +11,7 @@ module.exports = {
     'postApiV2TestScenarioFolders',
     'patchApiV2TestScenarioFoldersByFolderId',
     'deleteApiV2TestScenarioFoldersByFolderId',
+    'postApiV2TestScenarioFoldersRestoration',
     'getApiV2TestSuites',
     'postApiV2TestSuites',
     'getApiV2TestSuitesBySuiteId',
@@ -19,6 +21,7 @@ module.exports = {
     'deleteApiV2TestSuitesBySuiteIdMembers',
     'putApiV2TestSuitesBySuiteIdMembersOrder',
     'patchApiV2TestScenariosBulkFolder',
+    'postApiV2TestScenariosFolderRestoration',
   ],
   tag: true,
   hooks: { queries: true, lazyQueries: true, mutations: true },

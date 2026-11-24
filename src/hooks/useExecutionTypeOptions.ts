@@ -18,9 +18,7 @@ interface UseExecutionTypeOptionsResult {
   effectiveType: string;
 }
 
-export const normalizeExecutionTypeFilters = (
-  filters: Record<string, string>,
-): Record<string, string> => ({
+export const normalizeExecutionTypeFilters = (filters: Record<string, string>): Record<string, string> => ({
   ...filters,
   type: filters.type || 'all',
 });
@@ -35,8 +33,7 @@ export const useExecutionTypeOptions = ({
     { skip: !projectId },
   );
 
-  const isTypePending =
-    !!projectId && selectedType !== 'all' && !isError && (isFetching || data === undefined);
+  const isTypePending = !!projectId && selectedType !== 'all' && !isError && (isFetching || data === undefined);
 
   const effectiveType = useMemo(() => {
     if (!selectedType || selectedType === 'all') {
@@ -55,10 +52,7 @@ export const useExecutionTypeOptions = ({
   }, [selectedType, projectId, isError, isTypePending, data]);
 
   const options = useMemo(
-    () => [
-      { label: 'All', value: 'all' },
-      ...(data ?? []).map((type) => ({ label: type, value: type })),
-    ],
+    () => [{ label: 'All', value: 'all' }, ...(data ?? []).map((type) => ({ label: type, value: type }))],
     [data],
   );
 
@@ -69,12 +63,7 @@ export const useExecutionTypeOptions = ({
   }, [isError, onInvalidType, selectedType]);
 
   useEffect(() => {
-    if (
-      data !== undefined &&
-      selectedType &&
-      selectedType !== 'all' &&
-      !data.includes(selectedType)
-    ) {
+    if (data !== undefined && selectedType && selectedType !== 'all' && !data.includes(selectedType)) {
       onInvalidType?.('all');
     }
   }, [data, onInvalidType, selectedType]);

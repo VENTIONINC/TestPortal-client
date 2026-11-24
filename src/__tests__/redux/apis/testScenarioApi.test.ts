@@ -13,7 +13,6 @@ import {
   type GetApiV2TestScenariosApiArg,
   type GetApiV2TestScenarioFoldersApiArg,
   type PatchApiV2TestScenariosBulkFolderApiArg,
-  type TestScenarioFolder,
   type GetApiV2TestSuitesApiArg,
   type PatchApiV2TestScenariosByScenarioIdApiArg,
   type PatchApiV2TestScenariosByScenarioIdApiResponse,
@@ -25,6 +24,7 @@ import {
   type TestScenarioSummary,
   type UpdateTestScenarioRequest,
 } from '@/redux/apis/generatedApi';
+import { extendedApi } from '@/redux/apis/extendedApi';
 import { store } from '@/redux/store';
 
 afterEach(() => {
@@ -39,11 +39,15 @@ const creator: TestScenarioCreatorSummary = {
 };
 
 const scenario: TestScenario = {
+  revision: 1,
+  suites: [],
+  createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' },
+  updatedBy: null,
   folderId: null,
   id: 'scenario-1',
   projectId: 'project-1',
   createdById: 'user-1',
-  scenarioKey: null,
+  scenarioKey: 'TMS-1',
   title: 'Checkout flow',
   contentMd: '# Checkout flow',
   details: 'Scenario details',
@@ -68,6 +72,7 @@ const summary: TestScenarioSummary = {
   title: scenario.title,
   scenarioKey: scenario.scenarioKey,
   details: scenario.details,
+  priority: scenario.priority,
   createdBy: creator,
   createdAt: scenario.createdAt,
   updatedAt: scenario.updatedAt,
@@ -122,8 +127,12 @@ describe('generated Test Scenario list contract', () => {
 
   it('exposes typed organization and combined list contracts', () => {
     const scopedList: GetApiV2TestScenariosApiArg = {
-      projectId: 'project-1', page: 1, limit: 10, search: 'login',
-      folderId: 'unfiled', includeDescendants: false,
+      projectId: 'project-1',
+      page: 1,
+      limit: 10,
+      search: 'login',
+      folderId: 'unfiled',
+      includeDescendants: false,
     };
     const folderQuery: GetApiV2TestScenarioFoldersApiArg = { projectId: 'project-1' };
     const suiteQuery: GetApiV2TestSuitesApiArg = { projectId: 'project-1' };
@@ -135,7 +144,6 @@ describe('generated Test Scenario list contract', () => {
     expectTypeOf(folderQuery.projectId).toEqualTypeOf<string>();
     expectTypeOf(suiteQuery.projectId).toEqualTypeOf<string>();
     expectTypeOf(bulkFolder.body.scenarioIds).toEqualTypeOf<string[]>();
-    expectTypeOf<TestScenarioFolder['children']>().toEqualTypeOf<TestScenarioFolder[] | undefined>();
   });
 });
 
@@ -173,6 +181,15 @@ describe('generated Test Scenario CRUD contract', () => {
 });
 
 describe('generated Test Scenario cache behavior', () => {
+  it('invalidates scoped author counts when the project catalog changes', async () => {
+    const args = { projectId: 'project-1', folderId: 'folder-1' };
+    await store.dispatch(generatedApi.util.upsertQueryData('getApiV2TestScenariosAuthors', args, { authors: [] }));
+    const affected = extendedApi.util.selectInvalidatedBy(store.getState(), [
+      { type: 'ScenarioCatalog', id: 'project-1' },
+    ]);
+    expect(affected.some((entry) => entry.endpointName === 'getApiV2TestScenariosAuthors')).toBe(true);
+  });
+
   it('refetches the project-scoped catalog after create, update, clear, and delete', async () => {
     let catalogRequests = 0;
     let deleted = false;
@@ -292,7 +309,10 @@ describe('generated Test Scenario cache behavior', () => {
         generatedApi.endpoints.patchApiV2TestScenariosByScenarioId.initiate({
           scenarioId: 'scenario-1',
           projectId: 'project-1',
-          updateTestScenarioRequest: { title: 'Updated checkout flow', relatedIssueUrl: 'https://example.test/updated' },
+          updateTestScenarioRequest: {
+            title: 'Updated checkout flow',
+            relatedIssueUrl: 'https://example.test/updated',
+          },
         }),
       )
       .unwrap();
@@ -347,5 +367,100 @@ describe('generated Test Scenario cache behavior', () => {
     });
     expect(fetchMock).toHaveBeenCalled();
     subscription.unsubscribe();
+  });
+});
+
+describe('scenario aggregate transport safety', () => {
+  it('refreshes folder and suite data after deleting a scenario', async () => {
+    let folderRequests = 0;
+    let suiteRequests = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const request = input as Request;
+      if (request.method === 'DELETE') return new Response(null, { status: 204 });
+      if (request.url.includes('test-scenario-folders')) folderRequests += 1;
+      if (request.url.includes('test-suites')) suiteRequests += 1;
+      return new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    });
+    const folders = store.dispatch(
+      extendedApi.endpoints.getApiV2TestScenarioFolders.initiate({ projectId: 'project-1' }),
+    );
+    const suites = store.dispatch(extendedApi.endpoints.getApiV2TestSuites.initiate({ projectId: 'project-1' }));
+    await Promise.all([folders.unwrap(), suites.unwrap()]);
+    await store
+      .dispatch(
+        extendedApi.endpoints.deleteApiV2TestScenariosByScenarioId.initiate({
+          projectId: 'project-1',
+          scenarioId: 'scenario-1',
+        }),
+      )
+      .unwrap();
+    await vi.waitFor(() => {
+      expect(folderRequests).toBe(2);
+      expect(suiteRequests).toBe(2);
+    });
+    folders.unsubscribe();
+    suites.unsubscribe();
+  });
+  it.each(['create', 'edit'])('does not automatically retry an uncertain %s', async (operation) => {
+    vi.useFakeTimers();
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Network response lost'));
+    try {
+      const pending =
+        operation === 'create'
+          ? store.dispatch(
+              generatedApi.endpoints.postApiV2TestScenarios.initiate({
+                createTestScenarioRequest: {
+                  projectId: 'project-1',
+                  title: 'Draft',
+                  steps: [],
+                  suiteIds: [],
+                  newSuites: [],
+                },
+              }),
+            )
+          : store.dispatch(
+              generatedApi.endpoints.patchApiV2TestScenariosByScenarioId.initiate({
+                projectId: 'project-1',
+                scenarioId: 'scenario-1',
+                updateTestScenarioRequest: { expectedRevision: 1, steps: [], suiteIds: [], newSuites: [] },
+              }),
+            );
+      await vi.runAllTimersAsync();
+      const result = await pending;
+      expect(result).toHaveProperty('error');
+      expect(fetchMock).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('manual run transport safety', () => {
+  it.each(['create', 'evidence'])('does not replay an uncertain %s write', async (operation) => {
+    vi.useFakeTimers();
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Network response lost'));
+    try {
+      const pending =
+        operation === 'create'
+          ? store.dispatch(
+              generatedApi.endpoints.postApiV2ManualTestRuns.initiate({
+                projectId: 'project-1',
+                manualTestRunCreateRequest: { title: 'Run', scenarioIds: ['scenario-1'] },
+              }),
+            )
+          : store.dispatch(
+              generatedApi.endpoints.patchApiV2ManualTestRunsByRunIdScenariosAndScenarioIdEvidence.initiate({
+                projectId: 'project-1',
+                runId: 'run-1',
+                scenarioId: 'scenario-1',
+                manualTestRunScenarioEvidenceRequest: { executionComment: 'note' },
+              }),
+            );
+      await vi.runAllTimersAsync();
+      expect(await pending).toHaveProperty('error');
+      expect(fetchMock).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

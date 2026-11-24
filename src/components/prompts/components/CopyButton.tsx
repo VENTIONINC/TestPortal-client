@@ -16,7 +16,7 @@ interface CopyButtonProps {
 
 export const CopyButton = memo(function CopyButton({ text, variant = 'button', disabled }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return () => {

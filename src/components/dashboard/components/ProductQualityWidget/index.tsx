@@ -152,10 +152,7 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
   );
 
   // Calculate previous period IWQS
-  const { score: prevIWQS } = calculateIWQS(
-    prevIssuesData?.issues,
-    project?.categoryWeights,
-  );
+  const { score: prevIWQS } = calculateIWQS(prevIssuesData?.issues, project?.categoryWeights);
 
   // State 4: No runs in period
   if (totalRuns === 0) {
@@ -223,7 +220,13 @@ export const ProductQualityWidget = ({ period = DEFAULT_PERIOD }: ProductQuality
           </Text>
         </Flex>
         <Box w="full" px={4}>
-          <ProgressRoot value={linkedRate} max={100} size="sm" w="full" colorPalette={ linkedRate > 50 ? 'orange' : 'red' }>
+          <ProgressRoot
+            value={linkedRate}
+            max={100}
+            size="sm"
+            w="full"
+            colorPalette={linkedRate > 50 ? 'orange' : 'red'}
+          >
             <ProgressBar bg="bg.subtle" h="6px" borderRadius="full" />
           </ProgressRoot>
           <Flex justify="space-between" mt={1.5} px={1}>

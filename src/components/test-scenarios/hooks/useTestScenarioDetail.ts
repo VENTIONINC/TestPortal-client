@@ -17,6 +17,11 @@ const getErrorStatus = (error: unknown) => {
 const isSameScenario = (left: TestScenario | undefined, right: TestScenario) =>
   left?.id === right.id &&
   left.projectId === right.projectId &&
+  left.revision === right.revision &&
+  left.folderId === right.folderId &&
+  JSON.stringify(left.suites) === JSON.stringify(right.suites) &&
+  JSON.stringify(left.createdBy) === JSON.stringify(right.createdBy) &&
+  JSON.stringify(left.updatedBy) === JSON.stringify(right.updatedBy) &&
   left.createdById === right.createdById &&
   left.scenarioKey === right.scenarioKey &&
   left.title === right.title &&
@@ -88,7 +93,11 @@ export const useTestScenarioDetail = (projectId: string, scenarioId: string): Us
     setPersistedScenario((previous) => (isSameScenario(previous, scopedData) ? previous : scopedData));
   }, [isNotFound, scopedData, setPersistedScenario]);
 
-  const scenario = isNotFound ? undefined : (persistedEntry.scopeKey === scopeKey ? persistedEntry.scenario ?? scopedData : scopedData);
+  const scenario = isNotFound
+    ? undefined
+    : persistedEntry.scopeKey === scopeKey
+      ? (persistedEntry.scenario ?? scopedData)
+      : scopedData;
   const isLoading = !scenario && Boolean(query.isLoading || query.isFetching);
 
   return {

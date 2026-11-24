@@ -5,7 +5,6 @@ import type { TestScenario, TestScenarioListResponse } from '@/redux/apis/genera
 export type { TestScenarioSummary } from '@/redux/apis/generatedApi';
 
 export const TEST_SCENARIO_EDITABLE_FIELDS = [
-  'scenarioKey',
   'title',
   'details',
   'priority',
@@ -18,11 +17,14 @@ export type TestScenarioEditableField = (typeof TEST_SCENARIO_EDITABLE_FIELDS)[n
 
 export type TestScenarioEditableValues = Pick<TestScenario, 'title'> &
   Partial<Record<Exclude<TestScenarioEditableField, 'title' | 'priority'>, string | null>> & {
+    scenarioKey?: string | null;
+  } & {
     priority?: TestScenario['priority'] | '' | null;
   };
 
 export interface TestScenarioInitialStepDraft {
   key: string;
+  id?: string;
   action: string;
   expectedResult: string;
 }
