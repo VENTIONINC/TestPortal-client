@@ -449,15 +449,13 @@ export function TagPicker({ projectId, selectedIds, onToggle, onCreate, disabled
   );
 }
 
-function SelectedTagLabel({
-  projectId,
-  selectedIds,
-  onChange,
-  restoredAt,
-}: Omit<FilterProps, 'counts'> & { restoredAt: number }) {
-  const { currentData, isError, isFetching, startedTimeStamp } = useGetApiV2ProjectsByProjectIdScenarioTagsQuery({
-    projectId,
-  });
+export function TagFilter({ projectId, selectedIds, onChange, counts }: FilterProps) {
+  const [restoredAt, setRestoredAt] = useState(0);
+  const hasSelection = selectedIds.length > 0;
+  const { currentData, isError, isFetching, startedTimeStamp } = useGetApiV2ProjectsByProjectIdScenarioTagsQuery(
+    { projectId },
+    { skip: !hasSelection },
+  );
   useEffect(() => {
     // Undo restores IDs immediately. The cached directory may still describe the deletion.
     if (!currentData || isError || isFetching || (startedTimeStamp ?? 0) < restoredAt) return;
@@ -465,18 +463,6 @@ function SelectedTagLabel({
     const remaining = selectedIds.filter((id) => available.has(id));
     if (remaining.length !== selectedIds.length) onChange(remaining);
   }, [currentData, isError, isFetching, startedTimeStamp, restoredAt, selectedIds, onChange]);
-  return (
-    <>
-      Tags:{' '}
-      {selectedIds.length === 1
-        ? (currentData?.find(({ id }) => id === selectedIds[0])?.name ?? '1')
-        : selectedIds.length}
-    </>
-  );
-}
-
-export function TagFilter({ projectId, selectedIds, onChange, counts }: FilterProps) {
-  const [restoredAt, setRestoredAt] = useState(0);
   const current = useRef({ selectedIds, onChange });
   useEffect(() => {
     current.current = { selectedIds, onChange };
@@ -500,22 +486,15 @@ export function TagFilter({ projectId, selectedIds, onChange, counts }: FilterPr
       unsubscribe();
     };
   }, [projectId]);
+  const selectionLabel =
+    selectedIds.length === 1 ? (currentData?.find(({ id }) => id === selectedIds[0])?.name ?? '1') : selectedIds.length;
   return (
     <TagDisclosure
       projectId={projectId}
       mode="filter"
       trigger={(ref) => (
-        <Button ref={ref} variant="outline" bg="bg.card" borderColor={selectedIds.length ? 'border.active' : undefined}>
-          {selectedIds.length ? (
-            <SelectedTagLabel
-              projectId={projectId}
-              selectedIds={selectedIds}
-              onChange={onChange}
-              restoredAt={restoredAt}
-            />
-          ) : (
-            'Tags'
-          )}
+        <Button ref={ref} variant="outline" bg="bg.card" borderColor={hasSelection ? 'border.active' : undefined}>
+          {hasSelection ? `Tags: ${selectionLabel}` : 'Tags'}
           <FiChevronDown />
         </Button>
       )}

@@ -377,7 +377,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       if (bulkSelectionRevision !== selectionRevision.current) return;
       const matching = new Set(response.scenarioIds);
       const retained = selectedIds.filter((id) => matching.has(id));
-      setSelectedIds(retained);
+      if (retained.length !== selectedIds.length) setSelectedIds(retained);
       setAllMatchingSelected(retained.length > 0 && retained.length === response.total);
     } catch {
       if (bulkSelectionRevision !== selectionRevision.current) return;

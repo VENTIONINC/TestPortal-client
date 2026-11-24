@@ -20,17 +20,17 @@ export function useScenarioDraftTags(projectId: string, initial: ScenarioTagSumm
   }>();
   // The inline response can precede the tag directory refresh. Keep the returned tag
   // selectable during that interval, then defer to the directory for edits and deletions.
-  const currentTag = (tag: ScenarioTagSummary) =>
-    directory.currentData
-      ? (directory.currentData.find(({ id }) => id === tag.id) ??
-        (created?.previousDirectory === directory.currentData
-          ? created?.tags.find(({ id }) => id === tag.id)
-          : undefined))
-      : tag;
-  const tags = selection.map(currentTag).filter((tag): tag is ScenarioTagSummary => Boolean(tag));
-  const visibleBaseline = baseline.map(currentTag).filter((tag) => tag !== undefined);
-  const dirty =
-    tags.length !== visibleBaseline.length || tags.some((tag) => !visibleBaseline.some(({ id }) => id === tag.id));
+  const directoryTags = directory.currentData;
+  const tagsById = new Map<string, ScenarioTagSummary>();
+  if (created && created.previousDirectory === directoryTags) {
+    for (const tag of created.tags) tagsById.set(tag.id, tag);
+  }
+  for (const tag of directoryTags ?? []) tagsById.set(tag.id, tag);
+  const tags = directoryTags
+    ? selection.map(({ id }) => tagsById.get(id)).filter((tag) => tag !== undefined)
+    : selection;
+  const baselineIds = new Set(baseline.filter(({ id }) => !directoryTags || tagsById.has(id)).map(({ id }) => id));
+  const dirty = tags.length !== baselineIds.size || tags.some(({ id }) => !baselineIds.has(id));
   const toggle = (tag: ScenarioTagSummary, present: boolean) => {
     setSelection((current) =>
       present

@@ -56,6 +56,7 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
   return {
     ...actual,
     useGetApiV2TestScenariosByScenarioIdQuery: vi.fn(),
+    useGetApiV2ProjectsByProjectIdScenarioTagsQuery: () => ({}),
     useGetApiV2TestScenariosQuery: vi.fn(),
     useGetApiV2TestScenariosAuthorsQuery: vi.fn(() => ({
       currentData: { authors: [] },
@@ -367,6 +368,9 @@ describe('TestScenarioCatalogContainer', () => {
     });
     await act(async () => result.current.selectAllMatching());
     expect(trigger).toHaveBeenCalledWith(expect.objectContaining({ tagIds: 'm1,m2' }));
+    const originalSelection = result.current.selectedIds;
+    await act(async () => result.current.onBulkTagsApplied());
+    expect(result.current.selectedIds).toBe(originalSelection);
     matching = ['outside-selection', 'other-page', 'visible'];
     await act(async () => result.current.onBulkTagsApplied());
     expect(result.current.selectedIds).toEqual(['visible', 'other-page']);

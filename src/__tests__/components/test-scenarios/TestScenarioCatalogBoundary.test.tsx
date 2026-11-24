@@ -35,6 +35,7 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
 
   return {
     ...actual,
+    useGetApiV2ProjectsByProjectIdScenarioTagsQuery: () => ({}),
     useGetApiV2TestScenariosQuery: vi.fn(),
     useGetApiV2TestScenariosAuthorsQuery: vi.fn(() => ({
       currentData: { authors: [] },

@@ -61,8 +61,9 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
   const nameInput = useRef<HTMLInputElement>(null);
   const cancelButton = useRef<HTMLButtonElement>(null);
   const matches = matchingTags(tags, search);
-  const selected = tags.filter((tag) => checked.includes(tag.id));
-  const matchingChecked = matches.filter((tag) => checked.includes(tag.id)).length;
+  const checkedIds = new Set(checked);
+  const selected = tags.filter((tag) => checkedIds.has(tag.id));
+  const matchingChecked = matches.filter((tag) => checkedIds.has(tag.id)).length;
   const allMatchesChecked = matches.length > 0 && matchingChecked === matches.length;
   const duplicate =
     editor &&
@@ -110,10 +111,8 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
   }
   function selectMatches() {
     act();
-    const matched = matches.map((tag) => tag.id);
-    setChecked(
-      allMatchesChecked ? checked.filter((id) => !matched.includes(id)) : [...new Set([...checked, ...matched])],
-    );
+    const matched = new Set(matches.map((tag) => tag.id));
+    setChecked(allMatchesChecked ? checked.filter((id) => !matched.has(id)) : [...new Set([...checked, ...matched])]);
   }
   function startEditor(tag?: ManagedScenarioTag) {
     act();
@@ -286,7 +285,7 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
                     <input
                       type="checkbox"
                       aria-label={`Select ${tag.name}`}
-                      checked={checked.includes(tag.id)}
+                      checked={checkedIds.has(tag.id)}
                       onChange={() => handleToggleTag(tag.id)}
                     />
                     <Box flex={1} minW={0} overflowWrap="anywhere">

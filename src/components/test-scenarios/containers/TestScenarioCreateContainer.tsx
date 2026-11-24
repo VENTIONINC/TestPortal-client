@@ -10,10 +10,10 @@ import { usePostApiV2TestScenariosMutation, type TestScenario } from '@/redux/ap
 import { useGetApiV2TestScenarioFoldersQuery, useGetApiV2TestSuitesQuery } from '@/redux/apis/extendedApi';
 import { extractApiError } from '@/utils/apiErrors';
 import { PATHS } from '@/types/paths';
+import { TestScenarioForm } from '@/components/test-scenarios';
 
 import { ScenarioCardTags } from '../components/ScenarioCardTags';
 import { useScenarioDraftTags } from '../hooks/useScenarioDraftTags';
-import { TestScenarioForm } from '../components/TestScenarioForm';
 import { ScenarioDraftNavigationGuard } from '../components/ScenarioDraftNavigationGuard';
 import { getTestScenarioDetailPath } from '../constants';
 import { flattenScenarioFolders, getTestScenarioCreatePayload } from '../utils';

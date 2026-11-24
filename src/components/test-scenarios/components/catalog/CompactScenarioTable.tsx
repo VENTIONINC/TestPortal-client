@@ -5,8 +5,8 @@ import { useRef, useState } from 'react';
 import { Box, Button, Table, Text } from '@chakra-ui/react';
 
 import { ContextMenuButton } from '@/components/ui';
+import type { TestScenarioContextMenuHandler } from '@/components/test-scenarios';
 
-import type { TestScenarioContextMenuHandler } from '../../hooks/useTestScenarioContextMenu';
 import type { TestScenarioSummary } from '../../types';
 import { ScenarioSummaryCells, ScenarioSummaryHeaders } from './ScenarioSummaryCells';
 import { CatalogLoadingRow, CatalogTableEmptyState } from './CatalogTableStates';
