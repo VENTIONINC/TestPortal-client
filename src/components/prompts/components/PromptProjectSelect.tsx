@@ -53,7 +53,7 @@ export function PromptProjectSelect({
 
   const items = [
     { value: '', label: 'Select a project' },
-    ...projects.map(project => ({ value: project.id, label: project.name })),
+    ...projects.map((project) => ({ value: project.id, label: project.name })),
   ];
 
   return (
@@ -66,9 +66,13 @@ export function PromptProjectSelect({
         items={items}
       />
       {selectedProject ? (
-        <Text fontSize="sm">{selectedProject.name} — {selectedProject.id}</Text>
+        <Text fontSize="sm">
+          {selectedProject.name} — {selectedProject.id}
+        </Text>
       ) : (
-        <Text fontSize="sm" color="status.error.text">Select an active project to generate a prompt.</Text>
+        <Text fontSize="sm" color="status.error.text">
+          Select an active project to generate a prompt.
+        </Text>
       )}
     </VStack>
   );

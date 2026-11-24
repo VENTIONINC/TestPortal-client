@@ -105,11 +105,7 @@ export const PromptBuilderView = memo(() => {
         <Skeleton loading={isFetching && !prompt} minH="400px" borderRadius="xl">
           <Wrap>
             <VStack align="stretch" gap={4} w="100%">
-              <PromptPreview
-                prompt={generatedPrompt}
-                isGenerating={isGenerating}
-                error={generateError}
-              />
+              <PromptPreview prompt={generatedPrompt} isGenerating={isGenerating} error={generateError} />
             </VStack>
           </Wrap>
         </Skeleton>

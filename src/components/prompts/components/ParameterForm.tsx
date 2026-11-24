@@ -104,7 +104,9 @@ export const ParameterForm = memo(function ParameterForm({
       </Text>
 
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-        {Object.entries(prompt.parameters).filter(([name]) => prompt.name !== 'tms-workflow-assistant' || name !== 'project_id').map(([name, parameter]) => renderField(name, parameter))}
+        {Object.entries(prompt.parameters)
+          .filter(([name]) => prompt.name !== 'tms-workflow-assistant' || name !== 'project_id')
+          .map(([name, parameter]) => renderField(name, parameter))}
       </SimpleGrid>
       {requiredFieldsEmpty && (
         <Text fontSize="sm" color="status.error.text" textAlign="center">
