@@ -18,8 +18,8 @@ export const ScenarioSummaryHeaders = ({ showFolder = true }: { showFolder?: boo
     <Table.ColumnHeader w="78px">Priority</Table.ColumnHeader>
     {showFolder && <Table.ColumnHeader w="116px">Folder</Table.ColumnHeader>}
     <Table.ColumnHeader w="140px">Tags</Table.ColumnHeader>
-    <Table.ColumnHeader w="84px">Author</Table.ColumnHeader>
-    <Table.ColumnHeader w="92px">Updated</Table.ColumnHeader>
+    <Table.ColumnHeader w="130px">Author</Table.ColumnHeader>
+    <Table.ColumnHeader w="80px">Updated</Table.ColumnHeader>
   </>
 );
 

@@ -94,7 +94,7 @@ export const CompactScenarioTable = ({
             </Table.ColumnHeader>
             <ScenarioSummaryHeaders />
             {onScenarioActions && (
-              <Table.ColumnHeader w="48px">
+              <Table.ColumnHeader w="40px" px={0}>
                 <Text srOnly>Actions</Text>
               </Table.ColumnHeader>
             )}
@@ -169,8 +169,11 @@ export const CompactScenarioTable = ({
                     unfiledLabel="No folder"
                   />
                   {onScenarioActions && (
-                    <Table.Cell px={1}>
+                    <Table.Cell px={0}>
                       <ContextMenuButton
+                        w="full"
+                        minW={0}
+                        px={0}
                         aria-label={`Actions for ${scenario.title}`}
                         onClick={(event) => onScenarioActions(event, scenario)}
                       />

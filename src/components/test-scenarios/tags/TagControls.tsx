@@ -493,7 +493,13 @@ export function TagFilter({ projectId, selectedIds, onChange, counts }: FilterPr
       projectId={projectId}
       mode="filter"
       trigger={(ref) => (
-        <Button ref={ref} variant="outline" bg="bg.card" borderColor={hasSelection ? 'border.active' : undefined}>
+        <Button
+          ref={ref}
+          variant="outline"
+          fontSize="sm"
+          bg="bg.card"
+          borderColor={hasSelection ? 'border.active' : undefined}
+        >
           {hasSelection ? `Tags: ${selectionLabel}` : 'Tags'}
           <FiChevronDown />
         </Button>
