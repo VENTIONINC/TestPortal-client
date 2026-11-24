@@ -8,7 +8,7 @@ import { LuRefreshCcw } from 'react-icons/lu';
 
 import { Wrap, Skeleton } from '@/components/ui';
 
-import { ParameterForm, PromptPreview } from '../../components';
+import { ParameterForm, PromptPreview, PromptProjectSelect } from '../../components';
 import { usePromptBuilder } from '../../hooks';
 
 export const PromptBuilderView = memo(() => {
@@ -26,7 +26,14 @@ export const PromptBuilderView = memo(() => {
     requiredFieldsEmpty,
     handleParameterChange,
     handleGenerate,
-  } = usePromptBuilder(name as string);
+    isTms,
+    project,
+    activeProjects,
+    projectsLoading,
+    projectsError,
+    refetchProjects,
+    setSelectedProjectId,
+  } = usePromptBuilder(name ?? '');
 
   if (error) {
     return (
@@ -72,12 +79,23 @@ export const PromptBuilderView = memo(() => {
                   </Button>
                 </Flex>
               </Heading>
+              {isTms && (
+                <PromptProjectSelect
+                  projects={activeProjects}
+                  selectedProject={project}
+                  isLoading={projectsLoading}
+                  hasError={Boolean(projectsError)}
+                  validationError={validationErrors.project_id}
+                  onSelect={setSelectedProjectId}
+                  onRetry={refetchProjects}
+                />
+              )}
               {prompt && (
                 <ParameterForm
                   prompt={prompt}
                   values={parameterValues}
                   onChange={handleParameterChange}
-                  requiredFieldsEmpty={requiredFieldsEmpty}
+                  requiredFieldsEmpty={requiredFieldsEmpty && !isTms}
                   errors={validationErrors}
                 />
               )}
@@ -87,11 +105,7 @@ export const PromptBuilderView = memo(() => {
         <Skeleton loading={isFetching && !prompt} minH="400px" borderRadius="xl">
           <Wrap>
             <VStack align="stretch" gap={4} w="100%">
-              <PromptPreview
-                prompt={generatedPrompt}
-                isGenerating={isGenerating}
-                error={generateError ? 'Failed to generate prompt. Please try again.' : undefined}
-              />
+              <PromptPreview prompt={generatedPrompt} isGenerating={isGenerating} error={generateError} />
             </VStack>
           </Wrap>
         </Skeleton>

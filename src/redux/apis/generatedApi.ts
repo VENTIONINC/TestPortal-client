@@ -1894,7 +1894,8 @@ export type GetApiV2PromptsByNameApiArg = {
     | "test-portal-assistant"
     | "issue-analysis-assistant"
     | "environment-performance-assistant"
-    | "software-documentation-assistant";
+    | "software-documentation-assistant"
+    | "tms-workflow-assistant";
 };
 export type PostApiV2PromptsByNameGenerateApiResponse =
   /** status 200 Generated prompt */ GeneratePromptResponse;
@@ -1904,7 +1905,8 @@ export type PostApiV2PromptsByNameGenerateApiArg = {
     | "test-portal-assistant"
     | "issue-analysis-assistant"
     | "environment-performance-assistant"
-    | "software-documentation-assistant";
+    | "software-documentation-assistant"
+    | "tms-workflow-assistant";
   generatePromptRequest: GeneratePromptRequest;
 };
 export type PostApiV2SkillsApiResponse =
@@ -3243,6 +3245,7 @@ export type PromptParameter = {
   required: boolean;
   description: string;
   example?: string;
+  enum?: string[];
 };
 export type PromptConfig = {
   name: string;
@@ -3268,7 +3271,17 @@ export type GeneratePromptResponse = {
   };
   generated_prompt: string;
 };
+export type PromptValidationError = {
+  error: string;
+  fields?: {
+    field: string;
+    message: string;
+  }[];
+};
 export type GeneratePromptRequest = {
+  project_id?: string;
+  task?: string;
+  execution_mode?: "human_guided" | "client_executed";
   [key: string]: any;
 };
 export type SkillMetadata = {

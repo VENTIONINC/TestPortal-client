@@ -6,5 +6,6 @@ export const configHeaderPageTitles: Record<string, string> = {
   'test-portal-assistant': 'Test Portal Report Generator',
   'environment-performance-assistant': 'Environment & Performance Analysis Assistant',
   'software-documentation-assistant': 'Software Documentation Assistant',
+  'tms-workflow-assistant': 'TMS Workflow Assistant',
   'issue-analysis-assistant': 'Issue Analysis & Root Cause Assistant',
 };
