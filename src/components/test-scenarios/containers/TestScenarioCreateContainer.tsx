@@ -129,6 +129,8 @@ const ScopedScenarioCreateContainer = ({
   };
   if (!sourceScenario && origin.kind === 'folder' && !foldersQuery.currentData && !foldersQuery.isError)
     return <div role="status">Loading folders…</div>;
+  const isFormBusy = submitting || isLoading || draftTags.isLoading;
+
   return (
     <>
       <ScenarioDraftNavigationGuard dirty={dirty && !saved} allowNavigation={allowNavigation} />
@@ -142,7 +144,7 @@ const ScopedScenarioCreateContainer = ({
           <ScenarioCardTags
             projectId={projectId}
             tags={draftTags.tags}
-            disabled={submitting || isLoading || draftTags.isLoading}
+            disabled={isFormBusy}
             onToggle={draftTags.toggle}
             onCreate={draftTags.create}
           />
@@ -161,7 +163,7 @@ const ScopedScenarioCreateContainer = ({
         initialFolderId={clone ? clone.folderId : validInitialFolder}
         createAnotherReset={createAnotherReset}
         suites={suites}
-        isSubmitting={submitting || isLoading || draftTags.isLoading}
+        isSubmitting={isFormBusy}
         apiError={apiError}
         errorCatalogPath={`${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId }).toString()}`}
         onDirtyChange={setDirty}

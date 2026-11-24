@@ -1,9 +1,17 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef, useState, type ReactElement, type RefObject } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactElement,
+  type RefObject,
+} from 'react';
 import { Box, Button, HStack, IconButton, Input, Popover, Portal, Stack, Text } from '@chakra-ui/react';
-import { FiChevronDown, FiPlus, FiTag } from 'react-icons/fi';
+import { FiChevronDown, FiPlus, FiSearch, FiTag } from 'react-icons/fi';
 
 import {
   useGetApiV2ProjectsByProjectIdScenarioTagsQuery,
@@ -11,6 +19,7 @@ import {
   usePutApiV2ProjectsByProjectIdScenarioTagsAssignmentMutation,
   type ScenarioTagSummary,
 } from '@/redux/apis/generatedApi';
+import { toaster } from '@/components/ui/toaster';
 import { useDialogActions } from '@/redux/slices/dialog';
 
 import { ManageTagsDialog } from './ManageTagsDialog';
@@ -35,6 +44,7 @@ interface FilterProps {
 interface BulkProps {
   projectId: string;
   scenarioIds: string[];
+  openManager?: (onReturn: () => void) => void;
   onApplied: () => void | Promise<void>;
   disabled?: boolean;
 }
@@ -49,7 +59,6 @@ interface PanelProps {
   onClear?: () => void;
   onClose: () => void;
   onManage: () => void;
-  onReturn: () => void;
   input: RefObject<HTMLInputElement | null>;
   blocked?: boolean;
 }
@@ -64,11 +73,16 @@ function TagPanel({
   onClear,
   onClose,
   onManage,
-  onReturn,
   input,
   blocked,
 }: PanelProps) {
-  const { openDialog } = useDialogActions();
+  const mounted = useRef(false);
+  useLayoutEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const {
     currentData: tags = [],
     isLoading,
@@ -95,7 +109,9 @@ function TagPanel({
         setSearch('');
       }
     } catch (cause) {
-      setError(tagError(cause));
+      const message = tagError(cause);
+      if (mounted.current) setError(message);
+      else toaster.create({ type: 'error', title: 'Could not update tags', description: message });
     } finally {
       lock.current = false;
       setPending(false);
@@ -104,36 +120,54 @@ function TagPanel({
   useEffect(() => {
     input.current?.focus();
   }, [input]);
+
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
+      event.preventDefault();
+      void choose(options[0]);
+    }
+  }
+
+  function handlePanelKeyDown(event: KeyboardEvent) {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    onClose();
+  }
   return (
-    <Stack
-      gap={2}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') {
-          event.preventDefault();
-          event.stopPropagation();
-          onClose();
-        }
-      }}
-    >
+    <Stack gap={2} onKeyDown={handlePanelKeyDown}>
       {selectionSize !== undefined && (
         <Text fontSize="sm" fontWeight="medium">
           Tag {selectionSize} selected {selectionSize === 1 ? 'scenario' : 'scenarios'}
         </Text>
       )}
-      <Input
-        ref={input}
-        size="sm"
-        placeholder={placeholder}
-        aria-label={onCreate ? placeholder : 'Search tags'}
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
-            event.preventDefault();
-            void choose(options[0]);
-          }
-        }}
-      />
+      <Box position="relative" borderBottomWidth={onClear ? '1px' : undefined} borderColor="border.main">
+        {onClear && (
+          <Box
+            position="absolute"
+            insetStart={0}
+            top="50%"
+            transform="translateY(-50%)"
+            zIndex={1}
+            color="text.muted"
+            pointerEvents="none"
+          >
+            <FiSearch aria-hidden="true" size={13} />
+          </Box>
+        )}
+        <Input
+          ps={onClear ? 7 : undefined}
+          border={onClear ? 0 : undefined}
+          focusRing={onClear ? 'none' : undefined}
+          ref={input}
+          size="sm"
+          placeholder={placeholder}
+          aria-label={onCreate ? placeholder : 'Search tags'}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          onKeyDown={handleSearchKeyDown}
+        />
+      </Box>
       {isLoading && <Text fontSize="sm">Loading tags…</Text>}
       {isError && (
         <HStack>
@@ -146,36 +180,41 @@ function TagPanel({
         </HStack>
       )}
       <Stack maxH="250px" overflowY="auto" gap={0}>
-        {options.map((tag) => (
-          <HStack as="label" key={tag.id} px={1} py={1} cursor="pointer" gap={2} _hover={{ bg: 'bg.subtle' }}>
-            <input
-              type="checkbox"
-              aria-label={tag.name}
-              aria-checked={state(tag.id) === 'indeterminate' ? 'mixed' : state(tag.id) === true}
-              ref={(element) => {
-                if (element) element.indeterminate = state(tag.id) === 'indeterminate';
-              }}
-              checked={state(tag.id) === true}
-              disabled={pending || blocked}
-              onChange={() => void choose(tag)}
-            />
-            <Box flex={1} minW={0} overflowWrap="anywhere">
-              <Text fontSize="sm" fontWeight="medium">
-                {tag.name}
-              </Text>
-              {tag.description && (
+        {options.map((tag) => {
+          const tagState = state(tag.id);
+          const isChecked = tagState === true;
+          const isIndeterminate = tagState === 'indeterminate';
+          return (
+            <HStack as="label" key={tag.id} px={1} py={1} cursor="pointer" gap={2} _hover={{ bg: 'bg.subtle' }}>
+              <input
+                type="checkbox"
+                aria-label={tag.name}
+                aria-checked={isIndeterminate ? 'mixed' : isChecked}
+                ref={(element) => {
+                  if (element) element.indeterminate = isIndeterminate;
+                }}
+                checked={isChecked}
+                disabled={pending || blocked}
+                onChange={() => void choose(tag)}
+              />
+              <Box flex={1} minW={0} overflowWrap="anywhere">
+                <Text fontSize="sm" fontWeight="medium">
+                  {tag.name}
+                </Text>
+                {tag.description && (
+                  <Text fontSize="xs" color="text.secondary">
+                    {tag.description}
+                  </Text>
+                )}
+              </Box>
+              {counts && (
                 <Text fontSize="xs" color="text.secondary">
-                  {tag.description}
+                  {counts[tag.id] ?? 0}
                 </Text>
               )}
-            </Box>
-            {counts && (
-              <Text fontSize="xs" color="text.secondary">
-                {counts[tag.id] ?? 0}
-              </Text>
-            )}
-          </HStack>
-        ))}
+            </HStack>
+          );
+        })}
         {canCreate && (
           <Button
             size="sm"
@@ -203,22 +242,14 @@ function TagPanel({
       )}
       <HStack borderTopWidth="1px" borderColor="border.main" pt={2} gap={1}>
         {onClear && (
-          <Button variant="ghost" size="xs" onClick={onClear}>
+          <Button variant="ghost" size="xs" fontSize="sm" onClick={onClear}>
             Clear
           </Button>
         )}
-        <Button
-          variant="ghost"
-          size="xs"
-          disabled={pending}
-          onClick={() => {
-            onManage();
-            openDialog(ManageTagsDialog, { projectId, onReturn });
-          }}
-        >
+        <Button variant="ghost" size="xs" fontSize="sm" disabled={pending} onClick={onManage}>
           Manage tags
         </Button>
-        <Button ml="auto" variant="primary" size="xs" onClick={onClose}>
+        <Button ml="auto" variant="primary" size="sm" fontSize="sm" onClick={onClose}>
           Done
         </Button>
       </HStack>
@@ -231,7 +262,7 @@ function BulkPanel({
   scenarioIds,
   onApplied,
   ...panel
-}: BulkProps & Pick<PanelProps, 'input' | 'onClose' | 'onManage' | 'onReturn'>) {
+}: BulkProps & Pick<PanelProps, 'input' | 'onClose' | 'onManage'>) {
   const [fetchCounts] = usePostApiV2ProjectsByProjectIdScenarioTagsSelectionCountsMutation();
   const [assign] = usePutApiV2ProjectsByProjectIdScenarioTagsAssignmentMutation();
   const [selection, setSelection] = useState<{ ids: string[]; counts: Counts }>();
@@ -264,6 +295,12 @@ function BulkPanel({
     );
     await onApplied();
   }
+  function getTagState(id: string) {
+    const count = counts?.[id] ?? 0;
+    if (!count) return false;
+    return count === scenarioIds.length ? true : 'indeterminate';
+  }
+
   return (
     <>
       {error && (
@@ -286,7 +323,7 @@ function BulkPanel({
         projectId={projectId}
         selectionSize={scenarioIds.length}
         blocked={!counts}
-        state={(id) => (!counts?.[id] ? false : counts[id] === scenarioIds.length || 'indeterminate')}
+        state={getTagState}
         onToggle={(tag, present) => apply({ tagId: tag.id, present })}
         onCreate={(name) => apply({ name, present: true })}
       />
@@ -294,20 +331,20 @@ function BulkPanel({
   );
 }
 
-function SelectedLabel({ projectId, id }: { projectId: string; id: string }) {
-  const { currentData } = useGetApiV2ProjectsByProjectIdScenarioTagsQuery({ projectId });
-  return <>Tags: {currentData?.find((tag) => tag.id === id)?.name ?? '1'}</>;
-}
-
 function TagDisclosure({
+  projectId,
+  openManager,
   trigger,
   mode,
   panel,
 }: {
+  projectId: string;
+  openManager?: BulkProps['openManager'];
   trigger: (ref: RefObject<HTMLButtonElement | null>, open: boolean, toggle: () => void) => ReactElement;
   mode: 'inline' | 'filter' | 'bulk';
-  panel: (props: Pick<PanelProps, 'input' | 'onClose' | 'onManage' | 'onReturn'>) => ReactElement;
+  panel: (props: Pick<PanelProps, 'input' | 'onClose' | 'onManage'>) => ReactElement;
 }) {
+  const { openDialog } = useDialogActions(projectId);
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -315,15 +352,20 @@ function TagDisclosure({
     setOpen(false);
     triggerRef.current?.focus();
   }
+  function handleManageTags() {
+    setOpen(false);
+    const onReturn = () => {
+      if (triggerRef.current?.isConnected) setOpen(true);
+    };
+    if (openManager) openManager(onReturn);
+    else openDialog(ManageTagsDialog, { projectId, onReturn });
+  }
   const content =
     open &&
     panel({
       input,
       onClose: close,
-      onManage: () => setOpen(false),
-      onReturn: () => {
-        if (triggerRef.current?.isConnected) setOpen(true);
-      },
+      onManage: handleManageTags,
     });
   if (mode === 'inline')
     return (
@@ -355,7 +397,14 @@ function TagDisclosure({
       {open && (
         <Portal>
           <Popover.Positioner>
-            <Popover.Content w="300px" maxW="calc(100vw - 24px)" p={3} bg="bg.card" color="text.primary">
+            <Popover.Content
+              w="300px"
+              maxW="calc(100vw - 24px)"
+              p={3}
+              pt={mode === 'filter' ? 0 : 3}
+              bg="bg.card"
+              color="text.primary"
+            >
               {content}
             </Popover.Content>
           </Popover.Positioner>
@@ -368,6 +417,7 @@ function TagDisclosure({
 export function TagPicker({ projectId, selectedIds, onToggle, onCreate, disabled }: PickerProps) {
   return (
     <TagDisclosure
+      projectId={projectId}
       mode="inline"
       trigger={(ref, open, toggle) => (
         <IconButton
@@ -399,7 +449,34 @@ export function TagPicker({ projectId, selectedIds, onToggle, onCreate, disabled
   );
 }
 
+function SelectedTagLabel({
+  projectId,
+  selectedIds,
+  onChange,
+  restoredAt,
+}: Omit<FilterProps, 'counts'> & { restoredAt: number }) {
+  const { currentData, isError, isFetching, startedTimeStamp } = useGetApiV2ProjectsByProjectIdScenarioTagsQuery({
+    projectId,
+  });
+  useEffect(() => {
+    // Undo restores IDs immediately. The cached directory may still describe the deletion.
+    if (!currentData || isError || isFetching || (startedTimeStamp ?? 0) < restoredAt) return;
+    const available = new Set(currentData.map(({ id }) => id));
+    const remaining = selectedIds.filter((id) => available.has(id));
+    if (remaining.length !== selectedIds.length) onChange(remaining);
+  }, [currentData, isError, isFetching, startedTimeStamp, restoredAt, selectedIds, onChange]);
+  return (
+    <>
+      Tags:{' '}
+      {selectedIds.length === 1
+        ? (currentData?.find(({ id }) => id === selectedIds[0])?.name ?? '1')
+        : selectedIds.length}
+    </>
+  );
+}
+
 export function TagFilter({ projectId, selectedIds, onChange, counts }: FilterProps) {
+  const [restoredAt, setRestoredAt] = useState(0);
   const current = useRef({ selectedIds, onChange });
   useEffect(() => {
     current.current = { selectedIds, onChange };
@@ -412,7 +489,10 @@ export function TagFilter({ projectId, selectedIds, onChange, counts }: FilterPr
       if (!before.some((id) => deleted.includes(id))) return;
       update(before.filter((id) => !deleted.includes(id)));
       return () => {
-        if (mounted) current.current.onChange(before);
+        if (mounted) {
+          setRestoredAt(Date.now());
+          current.current.onChange(before);
+        }
       };
     });
     return () => {
@@ -422,13 +502,17 @@ export function TagFilter({ projectId, selectedIds, onChange, counts }: FilterPr
   }, [projectId]);
   return (
     <TagDisclosure
+      projectId={projectId}
       mode="filter"
       trigger={(ref) => (
         <Button ref={ref} variant="outline" bg="bg.card" borderColor={selectedIds.length ? 'border.active' : undefined}>
-          {selectedIds.length === 1 ? (
-            <SelectedLabel projectId={projectId} id={selectedIds[0]} />
-          ) : selectedIds.length ? (
-            `Tags: ${selectedIds.length}`
+          {selectedIds.length ? (
+            <SelectedTagLabel
+              projectId={projectId}
+              selectedIds={selectedIds}
+              onChange={onChange}
+              restoredAt={restoredAt}
+            />
           ) : (
             'Tags'
           )}
@@ -449,12 +533,22 @@ export function TagFilter({ projectId, selectedIds, onChange, counts }: FilterPr
   );
 }
 
-export function BulkTagPicker({ projectId, scenarioIds, onApplied, disabled }: BulkProps) {
+export function BulkTagPicker({ projectId, scenarioIds, onApplied, disabled, openManager }: BulkProps) {
   return (
     <TagDisclosure
+      projectId={projectId}
+      openManager={openManager}
       mode="bulk"
       trigger={(ref) => (
-        <Button ref={ref} variant="ghost" size="sm" color="inherit" disabled={disabled || !scenarioIds.length}>
+        <Button
+          ref={ref}
+          variant="ghost"
+          size="sm"
+          color="inherit"
+          disabled={disabled || !scenarioIds.length}
+          _hover={{ bg: 'whiteAlpha.200', _dark: { bg: 'blackAlpha.200' } }}
+          _expanded={{ bg: 'whiteAlpha.200', _dark: { bg: 'blackAlpha.200' } }}
+        >
           <FiTag />
           Tag
         </Button>

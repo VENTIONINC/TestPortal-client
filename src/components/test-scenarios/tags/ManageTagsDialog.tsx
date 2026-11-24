@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { Box, Button, Flex, HStack, IconButton, Input, Stack, Text, Textarea } from '@chakra-ui/react';
 import { FiEdit2, FiPlus, FiTag, FiTrash2, FiX } from 'react-icons/fi';
 
@@ -29,6 +29,13 @@ interface Props {
 type Editor = { tag?: ManagedScenarioTag; name: string; description: string };
 type Confirmation = { tags: ManagedScenarioTag[]; operationId: string; impact?: Impact };
 type Undo = { operationId: string; count: number; search: string; checked: string[]; restoreFilters: () => void };
+
+function getDeletionImpactMessage(affectedCount: number, tagCount: number) {
+  if (affectedCount === 0) return tagCount === 1 ? 'No scenario uses it.' : 'No scenarios use these tags.';
+  const subject = affectedCount === 1 ? 'scenario' : 'scenarios';
+  const target = tagCount === 1 ? 'this tag' : 'one or more of these tags';
+  return `${affectedCount} ${subject} will lose ${target}.`;
+}
 
 export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
   const {
@@ -87,8 +94,12 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
       setBusy(false);
     }
   }
-  function close() {
+  function handleDialogClose() {
     if (lock.current) return;
+    if (screen !== 'list') {
+      cancel();
+      return;
+    }
     closeDialog();
     onReturn?.();
   }
@@ -161,6 +172,16 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
       setUndo(undefined);
     });
   }
+  function handleListClickCapture(event: MouseEvent) {
+    if (undo && !(event.target as Element).closest('[data-tag-undo]')) setUndo(undefined);
+  }
+  function handleToggleTag(id: string) {
+    act();
+    setChecked((current) => toggleTag(current, id));
+  }
+  const tagNamesLabel = confirmation?.tags
+    .map((tag) => `“${tags.find((current) => current.id === tag.id)?.name ?? tag.name}”`)
+    .join(', ');
   const count = confirmation?.tags.length ?? 0;
   const title = editor
     ? editor.tag
@@ -174,13 +195,7 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
   return (
     <Dialog
       title={title}
-      onClose={
-        screen === 'list'
-          ? close
-          : () => {
-              if (!lock.current) cancel();
-            }
-      }
+      onClose={handleDialogClose}
       initialFocusEl={() => searchInput.current}
       size="md"
       contentProps={{ maxW: 'min(560px, calc(100vw - 24px))' }}
@@ -188,12 +203,7 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
       <DialogBody pb={5}>
         {screen === 'list' && (
           <fieldset disabled={busy}>
-            <Stack
-              gap={3}
-              onClickCapture={(event) => {
-                if (undo && !(event.target as Element).closest('[data-tag-undo]')) setUndo(undefined);
-              }}
-            >
+            <Stack gap={3} onClickCapture={handleListClickCapture}>
               <HStack>
                 <Input
                   ref={searchInput}
@@ -277,10 +287,7 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
                       type="checkbox"
                       aria-label={`Select ${tag.name}`}
                       checked={checked.includes(tag.id)}
-                      onChange={() => {
-                        act();
-                        setChecked(toggleTag(checked, tag.id));
-                      }}
+                      onChange={() => handleToggleTag(tag.id)}
                     />
                     <Box flex={1} minW={0} overflowWrap="anywhere">
                       <Text fontSize="sm" fontWeight="medium">
@@ -378,21 +385,11 @@ export function ManageTagsDialog({ projectId, closeDialog, onReturn }: Props) {
         )}
         {confirmation && (
           <Stack gap={3}>
-            <Text overflowWrap="anywhere">
-              Delete{' '}
-              {confirmation.tags
-                .map((tag) => `“${tags.find((current) => current.id === tag.id)?.name ?? tag.name}”`)
-                .join(', ')}
-              ?
-            </Text>
+            <Text overflowWrap="anywhere">Delete {tagNamesLabel}?</Text>
             {confirmation.impact ? (
               <Text>
-                {confirmation.impact.affectedCount === 0
-                  ? count === 1
-                    ? 'No scenario uses it.'
-                    : 'No scenarios use these tags.'
-                  : `${confirmation.impact.affectedCount} ${confirmation.impact.affectedCount === 1 ? 'scenario will' : 'scenarios will'} lose ${count === 1 ? 'this tag' : 'one or more of these tags'}.`}{' '}
-                The scenarios themselves will be kept.
+                {getDeletionImpactMessage(confirmation.impact.affectedCount, count)} The scenarios themselves will be
+                kept.
               </Text>
             ) : busy ? (
               <Text>Checking affected scenarios…</Text>

@@ -14,6 +14,7 @@ type BulkSuitePickerProps = Extract<ComponentProps<typeof SuitePicker>, { projec
 export type SuitePickerCompletion = BulkSuitePickerProps['onComplete'];
 
 interface CatalogBulkActionsProps {
+  openTagManager: (onReturn: () => void) => void;
   onBulkTagsApplied: () => Promise<void>;
   selectedIds: string[];
   total: number;
@@ -35,6 +36,7 @@ interface CatalogBulkActionsProps {
 }
 
 export const CatalogBulkActions = ({
+  openTagManager,
   onBulkTagsApplied,
   selectedIds,
   total,
@@ -137,6 +139,7 @@ export const CatalogBulkActions = ({
       )}
       {projectId && (isScenariosTab || inSuite) && (
         <BulkTagPicker
+          openManager={openTagManager}
           projectId={projectId}
           scenarioIds={selectedIds}
           disabled={isExecutingOperation || isAddingToSuite || isResolvingSelection}

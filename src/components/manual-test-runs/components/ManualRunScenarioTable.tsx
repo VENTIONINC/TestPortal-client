@@ -117,203 +117,199 @@ export const ManualRunScenarioTable = ({
                 }
               />
             </Table.ColumnHeader>
-            <Table.ColumnHeader color="fg.muted" fontSize="xs">
-              Status
-            </Table.ColumnHeader>
-            <Table.ColumnHeader color="fg.muted" fontSize="xs">
-              Key
-            </Table.ColumnHeader>
-            <Table.ColumnHeader color="fg.muted" fontSize="xs">
-              Title
-            </Table.ColumnHeader>
-            <Table.ColumnHeader color="fg.muted" fontSize="xs">
-              Folder
-            </Table.ColumnHeader>
-            <Table.ColumnHeader color="fg.muted" fontSize="xs">
-              Assignee
-            </Table.ColumnHeader>
+            <Table.ColumnHeader>Status</Table.ColumnHeader>
+            <Table.ColumnHeader>Key</Table.ColumnHeader>
+            <Table.ColumnHeader>Title</Table.ColumnHeader>
+            <Table.ColumnHeader>Folder</Table.ColumnHeader>
+            <Table.ColumnHeader>Assignee</Table.ColumnHeader>
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {visibleScenarios.map((scenario) => (
-            <Table.Row
-              id={`manual-run-scenario-${scenario.id}`}
-              key={scenario.id}
-              tabIndex={0}
-              draggable={!completed && !writesBlocked}
-              onDragStart={(event) => handleDragStart(scenario.id, event)}
-              onDragOver={handleDragOver}
-              onDrop={(event) => handleDrop(scenario.id, event)}
-              onDragEnd={handleDragEnd}
-              onKeyDown={(event) => onScenarioKeyDown(scenario, event)}
-              bg={
-                selectedScenarioIds.includes(scenario.id)
-                  ? 'blue.50'
-                  : scenario.result === MANUAL_RUN_RESULT.PASSED
-                    ? green_100
-                    : scenario.result === MANUAL_RUN_RESULT.FAILED
-                      ? red_100
-                      : scenario.result === MANUAL_RUN_RESULT.BLOCKED
-                        ? yellow_100
-                        : scenario.result === MANUAL_RUN_RESULT.SKIPPED
-                          ? grey_skipped
-                          : undefined
-              }
-            >
-              <Table.Cell
-                color="fg.muted"
-                cursor={completed ? 'default' : 'grab'}
-                aria-label={`Drag ${scenario.title} to reorder`}
-                title="Drag to reorder"
+          {visibleScenarios.map((scenario) => {
+            const isRowSelected = selectedScenarioIds.includes(scenario.id);
+            return (
+              <Table.Row
+                id={`manual-run-scenario-${scenario.id}`}
+                key={scenario.id}
+                tabIndex={0}
+                draggable={!completed && !writesBlocked}
+                onDragStart={(event) => handleDragStart(scenario.id, event)}
+                onDragOver={handleDragOver}
+                onDrop={(event) => handleDrop(scenario.id, event)}
+                onDragEnd={handleDragEnd}
+                onKeyDown={(event) => onScenarioKeyDown(scenario, event)}
+                _hover={
+                  scenario.result === MANUAL_RUN_RESULT.UNTESTED && !isRowSelected ? { bg: 'bg.subtle' } : undefined
+                }
+                bg={
+                  isRowSelected
+                    ? 'blue.subtle'
+                    : scenario.result === MANUAL_RUN_RESULT.PASSED
+                      ? green_100
+                      : scenario.result === MANUAL_RUN_RESULT.FAILED
+                        ? red_100
+                        : scenario.result === MANUAL_RUN_RESULT.BLOCKED
+                          ? yellow_100
+                          : scenario.result === MANUAL_RUN_RESULT.SKIPPED
+                            ? grey_skipped
+                            : undefined
+                }
               >
-                ⠿
-              </Table.Cell>
-              <Table.Cell textAlign="center" verticalAlign="middle">
-                <input
-                  aria-label={`Select ${scenario.title}`}
-                  type="checkbox"
-                  style={{ width: '16px', height: '16px', display: 'block', margin: 'auto' }}
-                  disabled={completed}
-                  checked={selectedScenarioIds.includes(scenario.id)}
-                  onChange={(event) =>
-                    setSelectedScenarioIds((current) =>
-                      event.target.checked ? [...current, scenario.id] : current.filter((id) => id !== scenario.id),
-                    )
-                  }
-                />
-              </Table.Cell>
-              <Table.Cell>
-                <HStack gap={1}>
-                  {RESULTS.map((result) => {
-                    const palettes = {
-                      passed: 'green',
-                      failed: 'red',
-                      blocked: 'orange',
-                      skipped: 'gray',
-                    } as const;
-                    const icons = {
-                      passed: FiCheck,
-                      failed: FiX,
-                      blocked: FiSlash,
-                      skipped: FiSkipForward,
-                    } as const;
-                    const ResultIcon = icons[result];
-                    const isSelected = scenario.result === result;
-                    const selectedColor = selectedResultColors[result];
-                    const background = isSelected ? selectedColor : 'bg.panel';
-                    const borderColor = isSelected ? selectedColor : 'border.main';
-                    const hoverStyle = isSelected && selectedColor ? { bg: selectedColor } : undefined;
+                <Table.Cell
+                  color="fg.muted"
+                  cursor={completed ? 'default' : 'grab'}
+                  aria-label={`Drag ${scenario.title} to reorder`}
+                  title="Drag to reorder"
+                >
+                  ⠿
+                </Table.Cell>
+                <Table.Cell textAlign="center" verticalAlign="middle">
+                  <input
+                    aria-label={`Select ${scenario.title}`}
+                    type="checkbox"
+                    style={{ width: '16px', height: '16px', display: 'block', margin: 'auto' }}
+                    disabled={completed}
+                    checked={isRowSelected}
+                    onChange={(event) =>
+                      setSelectedScenarioIds((current) =>
+                        event.target.checked ? [...current, scenario.id] : current.filter((id) => id !== scenario.id),
+                      )
+                    }
+                  />
+                </Table.Cell>
+                <Table.Cell>
+                  <HStack gap={1}>
+                    {RESULTS.map((result) => {
+                      const palettes = {
+                        passed: 'green',
+                        failed: 'red',
+                        blocked: 'orange',
+                        skipped: 'gray',
+                      } as const;
+                      const icons = {
+                        passed: FiCheck,
+                        failed: FiX,
+                        blocked: FiSlash,
+                        skipped: FiSkipForward,
+                      } as const;
+                      const ResultIcon = icons[result];
+                      const isSelected = scenario.result === result;
+                      const selectedColor = selectedResultColors[result];
+                      const background = isSelected ? selectedColor : 'bg.panel';
+                      const borderColor = isSelected ? selectedColor : 'border.main';
+                      const hoverStyle = isSelected && selectedColor ? { bg: selectedColor } : undefined;
 
-                    return (
-                      <Button
-                        key={result}
-                        size="xs"
-                        minW="30px"
-                        w="30px"
-                        h="30px"
-                        p={0}
-                        display="inline-flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        fontSize="18px"
-                        lineHeight="1"
-                        colorPalette={palettes[result]}
-                        variant={isSelected ? 'solid' : 'outline'}
-                        bg={background}
-                        borderColor={borderColor}
-                        _hover={hoverStyle}
-                        aria-label={`${scenario.title}: mark ${resultLabels[result]}`}
-                        aria-pressed={isSelected}
-                        title={`${resultLabels[result]} (${result[0].toUpperCase()}). ${resultExplanations[result]} ${isSelected ? 'Select again to reset this scenario to Untested.' : `Select to mark this scenario ${resultLabels[result]}.`}`}
-                        disabled={completed || writesBlocked}
-                        onClick={() => onUpdateResult(scenario, result)}
-                      >
-                        <ResultIcon size={18} strokeWidth={2.5} aria-hidden="true" />
-                      </Button>
-                    );
-                  })}
-                </HStack>
-              </Table.Cell>
-              <Table.Cell>{scenario.sourceScenarioKey}</Table.Cell>
-              <Table.Cell>
-                <VStack align="start" gap={0} minW={0}>
-                  <HStack gap={1} align="center" maxW="full" minW={0}>
-                    <Box
-                      asChild
-                      fontWeight="medium"
-                      minW={0}
-                      overflow="hidden"
-                      textOverflow="ellipsis"
-                      whiteSpace="nowrap"
-                      title={scenario.title}
-                    >
-                      <Link
-                        to={`/manual-test-runs/${encodeURIComponent(runId)}/scenarios/${encodeURIComponent(scenario.id)}`}
-                        aria-label={`Open ${scenario.title}`}
-                      >
-                        {scenario.title}
-                      </Link>
-                    </Box>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      minW="5"
-                      h="5"
-                      p={0}
-                      flexShrink={0}
-                      aria-label={`Instructions for ${scenario.title}`}
-                      aria-expanded={expandedScenarioId === scenario.id}
-                      onClick={() => handleToggleInstructions(scenario.id)}
-                    >
-                      ⓘ
-                    </Button>
+                      return (
+                        <Button
+                          key={result}
+                          size="xs"
+                          minW="30px"
+                          w="30px"
+                          h="30px"
+                          p={0}
+                          display="inline-flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          fontSize="18px"
+                          lineHeight="1"
+                          colorPalette={palettes[result]}
+                          variant={isSelected ? 'solid' : 'outline'}
+                          bg={background}
+                          borderColor={borderColor}
+                          _hover={hoverStyle}
+                          aria-label={`${scenario.title}: mark ${resultLabels[result]}`}
+                          aria-pressed={isSelected}
+                          title={`${resultLabels[result]} (${result[0].toUpperCase()}). ${resultExplanations[result]} ${isSelected ? 'Select again to reset this scenario to Untested.' : `Select to mark this scenario ${resultLabels[result]}.`}`}
+                          disabled={completed || writesBlocked}
+                          onClick={() => onUpdateResult(scenario, result)}
+                        >
+                          <ResultIcon size={18} strokeWidth={2.5} aria-hidden="true" />
+                        </Button>
+                      );
+                    })}
                   </HStack>
-                  {expandedScenarioId === scenario.id && (
-                    <Box py={2} whiteSpace="pre-wrap">
-                      {INSTRUCTION_FIELDS.map(([label, field]) => {
-                        const value = scenario[field];
-                        return (
-                          value && (
-                            <Box key={field} mb={2}>
-                              <Text fontWeight="semibold">{label}</Text>
-                              <Text>{value}</Text>
-                            </Box>
-                          )
-                        );
-                      })}
-                      <Text fontWeight="semibold">Steps</Text>
-                      {scenario.steps.length ? (
-                        [...scenario.steps]
-                          .sort((a, b) => a.position - b.position)
-                          .map((step, index) => (
-                            <Box key={step.id} mt={2}>
-                              <Text>
-                                {index + 1}. {step.action}
-                              </Text>
-                              <Text color="fg.muted">Expected: {step.expectedResult || 'Not specified'}</Text>
-                            </Box>
-                          ))
-                      ) : (
-                        <Text color="fg.muted">No steps captured.</Text>
-                      )}
-                    </Box>
-                  )}
-                </VStack>
-              </Table.Cell>
-              <Table.Cell fontSize="13px" overflowWrap="anywhere">
-                {scenario.folderPath ?? 'Unfiled'}
-              </Table.Cell>
-              <Table.Cell>
-                <AssigneePicker
-                  scenario={scenario}
-                  users={users}
-                  disabled={completed || writesBlocked}
-                  onOpen={onLoadUsers}
-                  onChange={(assigneeId) => onUpdateAssignee(scenario.id, assigneeId)}
-                />
-              </Table.Cell>
-            </Table.Row>
-          ))}
+                </Table.Cell>
+                <Table.Cell>{scenario.sourceScenarioKey}</Table.Cell>
+                <Table.Cell>
+                  <VStack align="start" gap={0} minW={0}>
+                    <HStack gap={1} align="center" maxW="full" minW={0}>
+                      <Box
+                        asChild
+                        fontWeight="medium"
+                        minW={0}
+                        overflow="hidden"
+                        textOverflow="ellipsis"
+                        whiteSpace="nowrap"
+                        title={scenario.title}
+                      >
+                        <Link
+                          to={`/manual-test-runs/${encodeURIComponent(runId)}/scenarios/${encodeURIComponent(scenario.id)}`}
+                          aria-label={`Open ${scenario.title}`}
+                        >
+                          {scenario.title}
+                        </Link>
+                      </Box>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        minW="5"
+                        h="5"
+                        p={0}
+                        flexShrink={0}
+                        aria-label={`Instructions for ${scenario.title}`}
+                        aria-expanded={expandedScenarioId === scenario.id}
+                        onClick={() => handleToggleInstructions(scenario.id)}
+                      >
+                        ⓘ
+                      </Button>
+                    </HStack>
+                    {expandedScenarioId === scenario.id && (
+                      <Box py={2} whiteSpace="pre-wrap">
+                        {INSTRUCTION_FIELDS.map(([label, field]) => {
+                          const value = scenario[field];
+                          return (
+                            value && (
+                              <Box key={field} mb={2}>
+                                <Text fontWeight="semibold">{label}</Text>
+                                <Text>{value}</Text>
+                              </Box>
+                            )
+                          );
+                        })}
+                        <Text fontWeight="semibold">Steps</Text>
+                        {scenario.steps.length ? (
+                          [...scenario.steps]
+                            .sort((a, b) => a.position - b.position)
+                            .map((step, index) => (
+                              <Box key={step.id} mt={2}>
+                                <Text>
+                                  {index + 1}. {step.action}
+                                </Text>
+                                <Text color="fg.muted">Expected: {step.expectedResult || 'Not specified'}</Text>
+                              </Box>
+                            ))
+                        ) : (
+                          <Text color="fg.muted">No steps captured.</Text>
+                        )}
+                      </Box>
+                    )}
+                  </VStack>
+                </Table.Cell>
+                <Table.Cell fontSize="13px" overflowWrap="anywhere">
+                  {scenario.folderPath ?? 'Unfiled'}
+                </Table.Cell>
+                <Table.Cell>
+                  <AssigneePicker
+                    scenario={scenario}
+                    users={users}
+                    disabled={completed || writesBlocked}
+                    onOpen={onLoadUsers}
+                    onChange={(assigneeId) => onUpdateAssignee(scenario.id, assigneeId)}
+                  />
+                </Table.Cell>
+              </Table.Row>
+            );
+          })}
         </Table.Body>
       </Table.Root>
     </Box>

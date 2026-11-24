@@ -66,24 +66,17 @@ export const CompactScenarioTable = ({
       .forEach((scenario) => onToggleSelected(scenario.id));
   };
 
+  const columnCount = 9 + Number(Boolean(onScenarioActions));
+
   return (
     <Box overflowX="auto" w="100%">
-      <Table.Root
-        size="sm"
-        variant="outline"
-        minW="980px"
-        w="100%"
-        tableLayout="fixed"
-        borderCollapse="separate"
-        borderSpacing="8px 0"
-        css={{ '& th, & td': { paddingInline: 0, paddingBlock: '8px' } }}
-      >
+      <Table.Root size="sm" variant="outline" minW="980px" w="100%" tableLayout="fixed">
         <Table.Header>
           <Table.Row bg="bg.subtle">
-            <Table.ColumnHeader w="24px" px={1} py={2}>
+            <Table.ColumnHeader w="30px" px={1} py={2}>
               <Text srOnly>Drag</Text>
             </Table.ColumnHeader>
-            <Table.ColumnHeader w="20px" px={3} py={2}>
+            <Table.ColumnHeader w="44px" px={3} py={2}>
               <input
                 type="checkbox"
                 aria-label="Select all scenarios on this page"
@@ -109,10 +102,10 @@ export const CompactScenarioTable = ({
         </Table.Header>
         <Table.Body>
           {isLoading && !scenarios.length ? (
-            <CatalogLoadingRow columnCount={9 + Number(Boolean(onScenarioActions))} />
+            <CatalogLoadingRow columnCount={columnCount} />
           ) : scenarios.length === 0 ? (
             <Table.Row>
-              <Table.Cell colSpan={9 + Number(Boolean(onScenarioActions))} py={8} textAlign="center">
+              <Table.Cell colSpan={columnCount} py={8} textAlign="center">
                 <CatalogTableEmptyState
                   searchActive={searchActive}
                   emptyFolder={emptyFolder && !searchActive}
