@@ -17,6 +17,7 @@ const mockedDetailQuery = vi.mocked(useGetApiV2TestScenariosByScenarioIdQuery);
 
 const scenario: TestScenario = {
   revision: 1,
+  tags: [],
   suites: [],
   createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' },
   updatedBy: null,
@@ -92,5 +93,9 @@ describe('useTestScenarioDetail', () => {
     await waitFor(() => expect(result.current.scenario?.scenarioKey).toBe('R1'));
     expect(result.current.scenario?.details).toBe('Original details');
     expect(result.current.scenario?.title).toBe('Checkout flow');
+
+    response = { ...response, tags: [{ id: 'tag', name: 'M1', description: 'First release' }] };
+    rerender();
+    await waitFor(() => expect(result.current.scenario?.tags).toEqual(response.tags));
   });
 });

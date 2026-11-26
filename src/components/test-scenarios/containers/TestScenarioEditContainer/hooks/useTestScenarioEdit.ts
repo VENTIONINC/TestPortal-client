@@ -25,6 +25,7 @@ export const useTestScenarioEdit = (projectId: string, scenarioId: string, onSav
   const [token, setToken] = useState(0);
   const inFlight = useRef(false);
   const allowNavigation = useRef(false);
+  const changedTags = useRef(false);
   const mounted = useRef(true);
   const scope = useRef(`${projectId}:${scenarioId}`);
   scope.current = `${projectId}:${scenarioId}`;
@@ -67,6 +68,11 @@ export const useTestScenarioEdit = (projectId: string, scenarioId: string, onSav
       JSON.stringify([...suiteIds].sort()) === JSON.stringify((baseline.suites ?? []).map((s) => s.id).sort()) &&
       !newSuites.length
     ) {
+      if (changedTags.current) {
+        allowNavigation.current = true;
+        onSaved();
+        return;
+      }
       setSuccessMessage('No changes to save.');
       return;
     }
@@ -132,6 +138,10 @@ export const useTestScenarioEdit = (projectId: string, scenarioId: string, onSav
 
   return {
     scenario,
+    tags: detail.scenario?.tags ?? [],
+    onTagsAssigned: () => {
+      changedTags.current = true;
+    },
     isLoading: detail.isLoading,
     isUnavailable: detail.isUnavailable,
     isError: detail.isError,

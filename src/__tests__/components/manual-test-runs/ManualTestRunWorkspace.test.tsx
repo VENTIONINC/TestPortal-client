@@ -32,6 +32,7 @@ const { refetch, detailState, complete, deleteRun, saveDetails, loadScenarios, b
       result: string;
       folderPath: string | null;
       assigneeId: string | null;
+      tags?: { id: string; name: string; description: string }[];
     }>,
     environmentProperties: [],
   },
@@ -54,6 +55,12 @@ vi.mock('@/redux/apis/extendedApi', () => ({
 }));
 vi.mock('@/redux/apis/generatedApi', () => ({
   useGetApiV2ManualTestRunsQuery: () => ({ currentData: { runs: [] } }),
+  useGetApiV2ProjectsByProjectIdScenarioTagsQuery: () => ({
+    currentData: [
+      { id: 'tag', name: 'M1', description: 'Release' },
+      { id: 'other-tag', name: 'Smoke', description: '' },
+    ],
+  }),
   useGetApiV2TestScenariosQuery: () => ({
     currentData: {
       total: 1,
@@ -363,6 +370,74 @@ describe('manual run selection behavior', () => {
       </WorkspaceProvider>,
     );
   };
+
+  it('counts and selects tag matches across pages without altering whole-run progress', async () => {
+    const view = setup();
+    run.scenarios = run.scenarios.map((scenario, index) => ({
+      ...scenario,
+      tags: index < 27 ? [{ id: 'tag', name: 'M1', description: 'Release' }] : [],
+    }));
+    view.rerender(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select visible scenarios' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tags' }));
+    const option = await screen.findByRole('checkbox', { name: 'M1' });
+    expect(option.closest('label')).toHaveTextContent('27');
+    fireEvent.click(option);
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    expect(screen.queryByRole('toolbar', { name: 'Bulk scenario actions' })).not.toBeInTheDocument();
+    expect(screen.getByText('1–25 of 27')).toBeInTheDocument();
+    expect(screen.getByLabelText('Run progress: 30 of 30 marked')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select visible scenarios' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Select all 27' }));
+    expect(screen.getByText('27 selected')).toBeInTheDocument();
+    view.rerender(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="other" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
+    view.rerender(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
+    expect(screen.getByText('1–25 of 30')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tags' })).toBeInTheDocument();
+  });
+
+  it('combines any selected tag with other filters and uses their matches for tag counts', async () => {
+    const view = setup();
+    const m1 = { id: 'tag', name: 'M1', description: 'Release' };
+    const smoke = { id: 'other-tag', name: 'Smoke', description: '' };
+    run.scenarios = run.scenarios.map((scenario, index) => ({
+      ...scenario,
+      tags: index === 1 ? [m1] : index === 2 ? [m1, smoke] : index === 3 ? [] : [smoke],
+    }));
+    view.rerender(
+      <WorkspaceProvider>
+        <ManualTestRunWorkspace projectId="p" selectedRunId="r" onSelectRun={() => {}} />
+      </WorkspaceProvider>,
+    );
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search scenarios' }), { target: { value: 'Match' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Status' }));
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Passed' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Status: 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Tags' }));
+    const m1Row = await screen.findByRole('checkbox', { name: 'M1' });
+    const smokeRow = screen.getByRole('checkbox', { name: 'Smoke' });
+    expect(m1Row.closest('label')).toHaveTextContent('2');
+    expect(smokeRow.closest('label')).toHaveTextContent('26');
+    fireEvent.click(m1Row);
+    expect(screen.getByText('1–2 of 2')).toBeInTheDocument();
+    expect(smokeRow.closest('label')).toHaveTextContent('26');
+    await waitFor(() => expect(smokeRow).toBeEnabled());
+    fireEvent.click(smokeRow);
+    expect(screen.getByText('1–25 of 27')).toBeInTheDocument();
+  });
 
   it('locks selection in completed runs', () => {
     const view = setup();

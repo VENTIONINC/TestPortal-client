@@ -13,6 +13,13 @@ const { navigate, updateScenario, refetch, state } = vi.hoisted(() => ({
   refetch: vi.fn(),
   state: { scenario: undefined as unknown, search: '' },
 }));
+vi.mock('@/components/test-scenarios/components/ScenarioCardTags', () => ({
+  SavedScenarioCardTags: ({ onAssigned }: { onAssigned: () => void }) => (
+    <button type="button" onClick={onAssigned}>
+      Assign tag
+    </button>
+  ),
+}));
 vi.mock('react-router', async (original) => ({
   ...(await original<typeof import('react-router')>()),
   useNavigate: () => navigate,
@@ -40,6 +47,7 @@ const scenario = (): TestScenario => ({
   folderId: null,
   createdById: 'user-1',
   revision: 3,
+  tags: [],
   createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' },
   updatedBy: null,
   suites: [{ id: 'suite-1', name: 'Regression' }],
@@ -165,6 +173,14 @@ describe('TestScenarioEditContainer', () => {
       ),
     );
   });
+  it('returns to view after saving tag-only edits without patching authoring fields', async () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Assign tag' }));
+    save();
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/test-scenarios/scenario-1'));
+    expect(updateScenario).not.toHaveBeenCalled();
+  });
+
   it('does not write when unchanged', async () => {
     setup();
     expect(screen.getByText('TMS-1')).toBeInTheDocument();

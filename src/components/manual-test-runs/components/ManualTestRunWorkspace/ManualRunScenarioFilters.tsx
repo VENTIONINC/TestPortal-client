@@ -5,6 +5,7 @@ import type { ChangeEvent } from 'react';
 import { Box, HStack, IconButton, Input } from '@chakra-ui/react';
 import { FiSearch, FiX } from 'react-icons/fi';
 
+import { TagFilter } from '@/components/test-scenarios/tags';
 import type { ManualTestRunScenarioResult } from '@/redux/apis/generatedApi';
 
 import { MANUAL_RUN_RESULT, UNASSIGNED_FILTER_VALUE } from '../../constants';
@@ -15,6 +16,7 @@ import type { useManualRunScenarioFilters } from './hooks/useManualRunScenarioFi
 const statusResults = [MANUAL_RUN_RESULT.UNTESTED, ...RESULTS];
 
 interface ManualRunScenarioFiltersProps {
+  projectId: string;
   filters: Pick<
     ReturnType<typeof useManualRunScenarioFilters>,
     | 'scenarioSearch'
@@ -25,6 +27,9 @@ interface ManualRunScenarioFiltersProps {
     | 'setFolderFilter'
     | 'assigneeFilter'
     | 'setAssigneeFilter'
+    | 'tagFilter'
+    | 'setTagFilter'
+    | 'tagCounts'
     | 'folders'
   >;
   counts: Record<ManualTestRunScenarioResult, number>;
@@ -32,7 +37,13 @@ interface ManualRunScenarioFiltersProps {
   onLoadUsers: () => void;
 }
 
-export const ManualRunScenarioFilters = ({ filters, counts, users, onLoadUsers }: ManualRunScenarioFiltersProps) => {
+export const ManualRunScenarioFilters = ({
+  projectId,
+  filters,
+  counts,
+  users,
+  onLoadUsers,
+}: ManualRunScenarioFiltersProps) => {
   const {
     scenarioSearch,
     setScenarioSearch,
@@ -109,6 +120,12 @@ export const ManualRunScenarioFilters = ({ filters, counts, users, onLoadUsers }
           options={assigneeOptions}
         />
       </Box>
+      <TagFilter
+        projectId={projectId}
+        selectedIds={filters.tagFilter}
+        onChange={filters.setTagFilter}
+        counts={filters.tagCounts}
+      />
     </HStack>
   );
 };

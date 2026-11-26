@@ -43,6 +43,40 @@ beforeEach(() => {
   saveEvidence.mockReset().mockReturnValue({ unwrap: () => Promise.resolve() });
 });
 
+it.each([
+  ['in_progress', false],
+  ['completed', false],
+  ['in_progress', true],
+])('shows current read-only scenario tags in %s (reopened %s)', (status, hasBeenReopened) => {
+  state.run = {
+    id: 'r',
+    projectId: 'p',
+    title: 'Run',
+    status,
+    hasBeenReopened,
+    scenarios: [
+      {
+        id: 's',
+        sourceScenarioId: 'source',
+        sourceScenarioKey: 'S-1',
+        title: 'Scenario',
+        tags: [{ id: 'tag', name: 'M1', description: 'First release' }],
+        result: 'passed',
+        requirementContext: [],
+        resultHistory: [],
+        steps: [],
+      },
+    ],
+  };
+  render(
+    <ChakraProvider>
+      <ManualTestRunScenarioPage />
+    </ChakraProvider>,
+  );
+  expect(screen.getByText('M1').closest('[tabindex="0"]')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /remove M1|add tags/i })).not.toBeInTheDocument();
+});
+
 describe.each(['failed', 'blocked'] as const)('%s step flags without notes', (result) => {
   const flagName =
     result === 'failed' ? /mark this step as the one that failed/i : /mark this step as the one that got blocked/i;

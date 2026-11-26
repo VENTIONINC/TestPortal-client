@@ -34,6 +34,7 @@ export const useTestScenarioForm = ({
   initialValues,
   initialSteps = EMPTY_STEPS,
   initialSuites = EMPTY_SUITES,
+  draftTagsDirty = false,
   reconciliation,
   createAnotherReset,
   focusTitle = false,
@@ -49,6 +50,7 @@ export const useTestScenarioForm = ({
   | 'initialValues'
   | 'initialSteps'
   | 'initialSuites'
+  | 'draftTagsDirty'
   | 'reconciliation'
   | 'createAnotherReset'
   | 'focusTitle'
@@ -102,6 +104,7 @@ export const useTestScenarioForm = ({
   const meaningfulSteps = steps.filter((s) => s.id || s.action.trim() || s.expectedResult.trim());
   const dirty =
     isDirty ||
+    draftTagsDirty ||
     folderId !== baseline.current.folderId ||
     JSON.stringify(meaningfulSteps) !== JSON.stringify(baseline.current.steps) ||
     JSON.stringify(selectedSuites) !== JSON.stringify(baseline.current.suites);

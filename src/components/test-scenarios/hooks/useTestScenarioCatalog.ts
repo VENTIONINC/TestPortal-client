@@ -69,6 +69,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   });
   const [debouncedColumnFilters, setDebouncedColumnFilters] = useState(columnFilters);
   const [priority, setPriority] = useState<NonNullable<GetApiV2TestScenariosApiArg['priority']> | ''>('');
+  const [tagIds, setTagIds] = useState<string[]>([]);
   const [authorIds, setAuthorIds] = useState<string[]>([]);
   const [scope, setScope] = useState<{ kind: 'all' | 'unfiled' | 'folder' | 'suite'; id?: string }>(() =>
     organizationTab === 'suites'
@@ -127,6 +128,8 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const queryArgs = useMemo(
     () => ({
       projectId,
+      ...(tagIds.length ? { tagIds: tagIds.join(',') } : {}),
+      ...(sortField === 'updatedAt' ? { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone } : {}),
       page,
       limit: pageSize,
       ...(scope.kind === 'suite' && !sortField ? {} : { sortField: sortField ?? 'updatedAt', sortDirection }),
@@ -143,6 +146,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
     }),
     [
+      tagIds,
       authorIds,
       debouncedColumnFilters,
       debouncedSearch,
@@ -158,6 +162,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const authorCountArgs = useMemo<GetApiV2TestScenariosAuthorsApiArg>(
     () => ({
       projectId,
+      ...(tagIds.length ? { tagIds: tagIds.join(',') } : {}),
       ...(priority ? { priority } : {}),
       ...(debouncedColumnFilters.scenarioKey.trim() ? { scenarioKey: debouncedColumnFilters.scenarioKey.trim() } : {}),
       ...(debouncedColumnFilters.title.trim() ? { title: debouncedColumnFilters.title.trim() } : {}),
@@ -169,7 +174,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants: true } : {}),
       ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
     }),
-    [debouncedColumnFilters, debouncedSearch, priority, projectId, scope],
+    [tagIds, debouncedColumnFilters, debouncedSearch, priority, projectId, scope],
   );
   const authorsQuery = useGetApiV2TestScenariosAuthorsQuery(authorCountArgs);
   const authorIdentityCache = useRef<{
@@ -187,6 +192,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const selectionArgs = useMemo<GetApiV2TestScenariosSelectionApiArg>(
     () => ({
       projectId,
+      ...(tagIds.length ? { tagIds: tagIds.join(',') } : {}),
       ...(priority ? { priority } : {}),
       ...(authorIds.length ? { createdByIds: authorIds.join(',') } : {}),
       ...(columnFilters.scenarioKey.trim() ? { scenarioKey: columnFilters.scenarioKey.trim() } : {}),
@@ -199,7 +205,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants: true } : {}),
       ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
     }),
-    [authorIds, columnFilters, priority, projectId, scope, search],
+    [tagIds, authorIds, columnFilters, priority, projectId, scope, search],
   );
   const invalidateSelection = useCallback(() => {
     selectionRevision.current += 1;
@@ -234,6 +240,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
   const priorityCountArgs = useMemo<GetApiV2TestScenariosPriorityCountsApiArg>(
     () => ({
       projectId,
+      ...(tagIds.length ? { tagIds: tagIds.join(',') } : {}),
       ...(authorIds.length ? { createdByIds: authorIds.join(',') } : {}),
       ...(debouncedColumnFilters.scenarioKey.trim() ? { scenarioKey: debouncedColumnFilters.scenarioKey.trim() } : {}),
       ...(debouncedColumnFilters.title.trim() ? { title: debouncedColumnFilters.title.trim() } : {}),
@@ -245,7 +252,7 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       ...(scope.kind === 'folder' && scope.id ? { folderId: scope.id, includeDescendants: true } : {}),
       ...(scope.kind === 'suite' && scope.id ? { suiteId: scope.id } : {}),
     }),
-    [authorIds, debouncedColumnFilters, debouncedSearch, projectId, scope],
+    [tagIds, authorIds, debouncedColumnFilters, debouncedSearch, projectId, scope],
   );
   const priorityCountQuery = useGetApiV2TestScenariosPriorityCountsQuery(priorityCountArgs, {
     skip: isAwaitingSuiteSelection,
@@ -352,6 +359,34 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     },
     [invalidateSelection],
   );
+  const onTagChange = useCallback(
+    (ids: string[]) => {
+      invalidateSelection();
+      setTagIds(ids);
+      setPage(1);
+    },
+    [invalidateSelection],
+  );
+
+  // The picker can finish a write after the user has switched filters or selected different rows.
+  const bulkSelectionRevision = selectionRevision.current;
+  const onBulkTagsApplied = useCallback(async () => {
+    if (!tagIds.length || bulkSelectionRevision !== selectionRevision.current) return;
+    try {
+      const response = await resolveSelectionRequest(selectionArgs).unwrap();
+      if (bulkSelectionRevision !== selectionRevision.current) return;
+      const matching = new Set(response.scenarioIds);
+      const retained = selectedIds.filter((id) => matching.has(id));
+      if (retained.length !== selectedIds.length) setSelectedIds(retained);
+      setAllMatchingSelected(retained.length > 0 && retained.length === response.total);
+    } catch {
+      if (bulkSelectionRevision !== selectionRevision.current) return;
+      invalidateSelection();
+      setSelectionError(
+        'Tag changes were saved. The selection was cleared because matching scenarios could not be refreshed.',
+      );
+    }
+  }, [bulkSelectionRevision, invalidateSelection, resolveSelectionRequest, selectedIds, selectionArgs, tagIds]);
   const onAuthorChange = useCallback(
     (value: string[] | string) => {
       invalidateSelection();
@@ -402,7 +437,9 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
       setAllMatchingSelected(true);
     } catch (error) {
       if (revision === selectionRevision.current)
-        setSelectionError(error instanceof Error ? error.message : String(error));
+        setSelectionError(
+          `Could not select all matching scenarios: ${error instanceof Error ? error.message : String(error)}`,
+        );
     } finally {
       if (revision === selectionRevision.current) setIsResolvingSelection(false);
     }
@@ -701,6 +738,10 @@ export const useTestScenarioCatalog = (projectId: string, organizationTab?: 'sce
     onPriorityChange,
     authorIds,
     onAuthorChange,
+    tagIds,
+    tagCounts: currentData?.tagCounts ?? {},
+    onTagChange,
+    onBulkTagsApplied,
     authors: authorsForFilter,
     authorsLoading: authorsQuery.isFetching,
     authorsError: authorsQuery.error,

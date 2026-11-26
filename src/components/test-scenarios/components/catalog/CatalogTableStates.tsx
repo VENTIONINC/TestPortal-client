@@ -1,7 +1,7 @@
 // Copyright 2026 VENSOLUTIONSGROUP LTD
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Text, VStack } from '@chakra-ui/react';
+import { Button, Skeleton, Table, Text, VStack } from '@chakra-ui/react';
 
 import { Alert } from '@/components/ui';
 
@@ -49,4 +49,19 @@ export const CatalogTableEmptyState = ({
       </Button>
     )}
   </VStack>
+);
+
+export const CatalogLoadingRow = ({ columnCount }: { columnCount: number }) => (
+  <Table.Row>
+    {Array.from({ length: columnCount }, (_, index) => (
+      <Table.Cell key={index}>
+        {index === 0 && (
+          <Text srOnly role="status">
+            Searching scenarios…
+          </Text>
+        )}
+        <Skeleton height="14px" width="100%" />
+      </Table.Cell>
+    ))}
+  </Table.Row>
 );

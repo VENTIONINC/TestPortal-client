@@ -10,8 +10,10 @@ import { usePostApiV2TestScenariosMutation, type TestScenario } from '@/redux/ap
 import { useGetApiV2TestScenarioFoldersQuery, useGetApiV2TestSuitesQuery } from '@/redux/apis/extendedApi';
 import { extractApiError } from '@/utils/apiErrors';
 import { PATHS } from '@/types/paths';
+import { TestScenarioForm } from '@/components/test-scenarios';
 
-import { TestScenarioForm } from '../components/TestScenarioForm';
+import { ScenarioCardTags } from '../components/ScenarioCardTags';
+import { useScenarioDraftTags } from '../hooks/useScenarioDraftTags';
 import { ScenarioDraftNavigationGuard } from '../components/ScenarioDraftNavigationGuard';
 import { getTestScenarioDetailPath } from '../constants';
 import { flattenScenarioFolders, getTestScenarioCreatePayload } from '../utils';
@@ -63,6 +65,7 @@ const ScopedScenarioCreateContainer = ({
   const current = () => mounted.current && scope.current === projectId;
   const flatFolders = flattenScenarioFolders(folders);
   const clone = sourceScenario ? scenarioCloneDraft(sourceScenario) : undefined;
+  const draftTags = useScenarioDraftTags(projectId, clone?.tags ?? []);
   const originDestination = scenarioOriginDestination(projectId, origin, flatFolders, suites);
   const validInitialFolder =
     origin.kind === 'folder' && origin.id === initialFolderId && flatFolders.some(({ id }) => id === origin.id)
@@ -87,11 +90,13 @@ const ScopedScenarioCreateContainer = ({
           ...(expectedResult.trim() ? { expectedResult: expectedResult.trim() } : {}),
         })),
         suiteIds: collections?.suiteIds ?? [],
+        tagIds: draftTags.tags.map(({ id }) => id),
         newSuites: collections?.newSuites ?? [],
       };
       const scenario = await createScenario({ createTestScenarioRequest: request }).unwrap();
       if (!current()) return;
       if (createAnother) {
+        draftTags.retain(scenario.tags ?? draftTags.tags);
         setCreateAnotherReset((previous) => ({ token: (previous?.token ?? 0) + 1, suites: scenario.suites }));
         return;
       }
@@ -124,6 +129,8 @@ const ScopedScenarioCreateContainer = ({
   };
   if (!sourceScenario && origin.kind === 'folder' && !foldersQuery.currentData && !foldersQuery.isError)
     return <div role="status">Loading folders…</div>;
+  const isFormBusy = submitting || isLoading || draftTags.isLoading;
+
   return (
     <>
       <ScenarioDraftNavigationGuard dirty={dirty && !saved} allowNavigation={allowNavigation} />
@@ -132,6 +139,16 @@ const ScopedScenarioCreateContainer = ({
         mode="create"
         initialValues={clone?.values}
         initialSteps={clone?.steps}
+        draftTagsDirty={draftTags.dirty}
+        tagField={
+          <ScenarioCardTags
+            projectId={projectId}
+            tags={draftTags.tags}
+            disabled={isFormBusy}
+            onToggle={draftTags.toggle}
+            onCreate={draftTags.create}
+          />
+        }
         initialSuites={clone?.suites}
         focusTitle={Boolean(clone)}
         originLabel={originDestination.label}
@@ -146,7 +163,7 @@ const ScopedScenarioCreateContainer = ({
         initialFolderId={clone ? clone.folderId : validInitialFolder}
         createAnotherReset={createAnotherReset}
         suites={suites}
-        isSubmitting={submitting || isLoading}
+        isSubmitting={isFormBusy}
         apiError={apiError}
         errorCatalogPath={`${PATHS.TEST_MANAGEMENT}?${new URLSearchParams({ projectId }).toString()}`}
         onDirtyChange={setDirty}

@@ -80,6 +80,7 @@ const manageProps = (existing: ExistingRunScenario[]) => {
       testData: null,
       folderPath: null,
       priority: 'low',
+      tags: [],
       requirementContext: [],
       executionComment: null,
       defectReference: null,

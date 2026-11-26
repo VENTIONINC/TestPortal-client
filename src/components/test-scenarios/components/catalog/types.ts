@@ -71,6 +71,10 @@ export interface TestScenarioCatalogViewProps {
   priority: string;
   priorityCounts?: Partial<Record<'high' | 'medium' | 'low', number | undefined>>;
   onPriorityChange: (value: string) => void;
+  tagIds: string[];
+  tagCounts: Record<string, number>;
+  onTagChange: (ids: string[]) => void;
+  onBulkTagsApplied: () => Promise<void>;
   authorIds?: string[];
   /** @deprecated Use `authorIds` for multi-author filtering. */
   authorId?: string;

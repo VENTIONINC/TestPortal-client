@@ -8,12 +8,18 @@ import { ChakraProvider } from '@/components/ui';
 import { TestScenarioDetailsView } from '@/components/test-scenarios/components/TestScenarioDetailsView';
 import type { TestScenario } from '@/redux/apis/generatedApi';
 
+vi.mock('@/components/test-scenarios/components/ScenarioCardTags', () => ({
+  SavedScenarioCardTags: ({ tags }: { tags: { name: string }[] }) => (
+    <div>Tags {tags.map((tag) => tag.name).join(', ')}</div>
+  ),
+}));
 vi.mock('@/components/test-scenarios/components/SuitePicker', () => ({
   SuitePicker: () => <button type="button">Add to suite</button>,
 }));
 
 const scenario: TestScenario = {
   revision: 1,
+  tags: [],
   suites: [{ id: 'suite-1', name: 'Smoke R2.4' }],
   createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' },
   updatedBy: null,

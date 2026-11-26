@@ -9,6 +9,7 @@ import type { TestScenario } from '@/redux/apis/generatedApi';
 
 import type { TestScenarioContextMenuHandler } from '../hooks/useTestScenarioContextMenu';
 import type { ScenarioOperationReport } from '../utils';
+import { SavedScenarioCardTags } from './ScenarioCardTags';
 import { SuitePicker } from './SuitePicker';
 
 export interface TestScenarioDetailsViewProps {
@@ -327,6 +328,12 @@ export const TestScenarioDetailsView = ({
               {priorityLabel}
             </Text>
           </Box>
+          <SavedScenarioCardTags
+            key={scenario.id}
+            projectId={projectId}
+            scenarioId={scenario.id}
+            tags={scenario.tags ?? []}
+          />
           <Box>
             <Text fontSize="14px" mb={2}>
               Suites

@@ -26,8 +26,10 @@ import type {
   TestScenarioCatalogViewProps,
 } from './types';
 import { CATALOG_SCOPE } from './utils';
+import { ManageTagsButton } from '../../tags';
 
 interface CatalogHeaderProps {
+  projectId?: string;
   inlineEditor: CatalogInlineEditor | null;
   selectedSuite?: CatalogSuite;
   selectedFolder?: CatalogFolderRow;
@@ -51,6 +53,7 @@ interface CatalogHeaderProps {
 }
 
 export const CatalogHeader = ({
+  projectId,
   inlineEditor,
   selectedSuite,
   selectedFolder,
@@ -200,6 +203,7 @@ export const CatalogHeader = ({
         </HStack>
       )}
       <HStack gap={2}>
+        {isScenariosTab && projectId && inlineEditor !== 'rename-folder' && <ManageTagsButton projectId={projectId} />}
         {isScenariosTab && inlineEditor !== 'rename-folder' && (
           <Button aria-label="Create Test Scenario" variant="primary" onClick={onCreateScenario}>
             <FiPlus />

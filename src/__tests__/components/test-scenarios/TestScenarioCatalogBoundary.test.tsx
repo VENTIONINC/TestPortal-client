@@ -35,6 +35,7 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
 
   return {
     ...actual,
+    useGetApiV2ProjectsByProjectIdScenarioTagsQuery: () => ({}),
     useGetApiV2TestScenariosQuery: vi.fn(),
     useGetApiV2TestScenariosAuthorsQuery: vi.fn(() => ({
       currentData: { authors: [] },
@@ -89,6 +90,7 @@ let selectedProjectId = 'project-a';
 const createResponse = (projectId: string, page: number) => ({
   scenarios: [
     {
+      tags: [],
       id: `${projectId}-scenario`,
       projectId,
       folderId: null,
@@ -103,6 +105,7 @@ const createResponse = (projectId: string, page: number) => ({
       updatedAt: '2026-09-02T11:00:00.000Z',
     } satisfies TestScenarioSummary,
   ],
+  tagCounts: {},
   total: 11,
   page,
   limit: 25,
@@ -143,7 +146,14 @@ describe('TestScenarioCatalog project boundary', () => {
 
     await user.click(screen.getByRole('button', { name: 'Next Page' }));
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
-      { projectId: 'project-a', page: 2, limit: 25, sortField: 'updatedAt', sortDirection: 'desc' },
+      {
+        projectId: 'project-a',
+        page: 2,
+        limit: 25,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        sortField: 'updatedAt',
+        sortDirection: 'desc',
+      },
       { skip: false },
     );
     expect(screen.getByText('project-a scenario')).toBeInTheDocument();
@@ -154,7 +164,14 @@ describe('TestScenarioCatalog project boundary', () => {
     rerender(<TestScenarioCatalog organizationTab="scenarios" />);
 
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
-      { projectId: 'project-b', page: 1, limit: 25, sortField: 'updatedAt', sortDirection: 'desc' },
+      {
+        projectId: 'project-b',
+        page: 1,
+        limit: 25,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        sortField: 'updatedAt',
+        sortDirection: 'desc',
+      },
       { skip: false },
     );
     expect(screen.queryByText('project-a scenario')).not.toBeInTheDocument();

@@ -41,6 +41,7 @@ const mockedReorder = vi.mocked(usePutApiV2TestScenariosByScenarioIdStepsOrderMu
 
 const scenario: TestScenario = {
   revision: 1,
+  tags: [],
   suites: [],
   createdBy: { id: 'user-1', name: 'Creator', email: 'creator@example.test' },
   updatedBy: null,

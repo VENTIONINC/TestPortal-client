@@ -16,16 +16,21 @@ export const useManualRunScenarioFilters = (
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [folderFilter, setFolderFilter] = useState<string[]>([]);
   const [assigneeFilter, setAssigneeFilter] = useState<string[]>([]);
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
   const [scenarioPage, setScenarioPage] = useState(1);
   const [scenarioPageSize, setScenarioPageSize] = useState(25);
   const [selectedScenarioIds, setSelectedScenarioIds] = useState<string[]>([]);
 
   useEffect(() => {
+    setTagFilter([]);
+  }, [projectId, selectedRunId]);
+
+  useEffect(() => {
     setScenarioPage(1);
     setSelectedScenarioIds([]);
-  }, [scenarioSearch, statusFilter, folderFilter, assigneeFilter, projectId, selectedRunId]);
+  }, [scenarioSearch, statusFilter, folderFilter, assigneeFilter, tagFilter, projectId, selectedRunId]);
 
-  const filteredScenarios = useMemo(
+  const matchingOtherFilters = useMemo(
     () =>
       (scenarios ?? []).filter((scenario) => {
         const needle = scenarioSearch.trim().toLocaleLowerCase();
@@ -37,7 +42,28 @@ export const useManualRunScenarioFilters = (
       }),
     [assigneeFilter, folderFilter, scenarios, scenarioSearch, statusFilter],
   );
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const scenario of matchingOtherFilters) {
+      for (const tag of scenario.tags ?? []) counts[tag.id] = (counts[tag.id] ?? 0) + 1;
+    }
+    return counts;
+  }, [matchingOtherFilters]);
+  const filteredScenarios = useMemo(
+    () =>
+      tagFilter.length
+        ? matchingOtherFilters.filter((scenario) => scenario.tags?.some((tag) => tagFilter.includes(tag.id)))
+        : matchingOtherFilters,
+    [matchingOtherFilters, tagFilter],
+  );
   const scenarioPageCount = Math.max(1, Math.ceil(filteredScenarios.length / scenarioPageSize));
+  useEffect(() => {
+    setScenarioPage((page) => Math.min(page, scenarioPageCount));
+    const matchingIds = new Set(filteredScenarios.map(({ id }) => id));
+    setSelectedScenarioIds((ids) =>
+      ids.every((id) => matchingIds.has(id)) ? ids : ids.filter((id) => matchingIds.has(id)),
+    );
+  }, [filteredScenarios, scenarioPageCount]);
   const visibleScenarios = filteredScenarios.slice(
     (scenarioPage - 1) * scenarioPageSize,
     scenarioPage * scenarioPageSize,
@@ -53,6 +79,9 @@ export const useManualRunScenarioFilters = (
     setFolderFilter,
     assigneeFilter,
     setAssigneeFilter,
+    tagFilter,
+    setTagFilter,
+    tagCounts,
     scenarioPage,
     setScenarioPage,
     scenarioPageSize,

@@ -7,9 +7,11 @@ import { FiPlus, FiX } from 'react-icons/fi';
 
 import { Wrap } from '@/components/ui';
 import type { DeleteApiV2TestScenarioFoldersByFolderIdApiResponse } from '@/redux/apis/generatedApi';
+import { useDialogActions } from '@/redux/slices/dialog';
 
 import { scenarioOriginSearch } from '../../scenarioOrigin';
 import type { ScenarioOperationReport } from '../../utils';
+import { ManageTagsDialog } from '../../tags/ManageTagsDialog';
 import { CatalogBulkActions, CatalogUndoNotification, type SuitePickerCompletion } from '../catalog/CatalogBulkActions';
 import { CatalogFilters } from '../catalog/CatalogFilters';
 import { CatalogHeader } from '../catalog/CatalogHeader';
@@ -65,6 +67,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
   priority,
   priorityCounts,
   onPriorityChange,
+  tagIds,
+  tagCounts,
+  onTagChange,
+  onBulkTagsApplied,
   authorId,
   authorIds,
   onAuthorChange,
@@ -113,6 +119,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
 }: TestScenarioCatalogViewProps) {
   const isScenariosTab = organizationTab === CATALOG_TAB.scenarios;
   const isSuitesTab = organizationTab === CATALOG_TAB.suites;
+  const { openDialog } = useDialogActions(projectId);
   const currentProjectId = useRef(projectId);
   currentProjectId.current = projectId;
   const selectedAuthorIds = authorIds ?? (authorId ? [authorId] : []);
@@ -473,20 +480,19 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
       return;
     }
   };
+  const hasActiveFilters = Boolean(
+    search.trim() || priority || tagIds.length || selectedAuthorIds.length || activeColumnFilters.length,
+  );
   const canReorderSuite = Boolean(
     selectedSuite &&
     scope.kind === CATALOG_SCOPE.suite &&
     (selectedSuite.members?.length ?? 0) <= pageSize &&
-    !search.trim() &&
-    !priority &&
-    selectedAuthorIds.length === 0 &&
-    activeColumnFilters.length === 0 &&
+    !hasActiveFilters &&
     !sort,
   );
   const reorderRequirements = [
     sort && 'select Run order',
-    (search.trim() || priority || selectedAuthorIds.length > 0 || activeColumnFilters.length > 0) &&
-      'clear search and filters',
+    hasActiveFilters && 'clear search and filters',
     (selectedSuite?.members?.length ?? 0) > pageSize && 'show all suite scenarios on one page',
   ].filter(Boolean);
   const handleSuiteRowDrop = (event: DragEvent<HTMLElement>, targetScenarioId: string) => {
@@ -852,6 +858,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
           <VStack align="stretch" gap={4} minW="0">
             {!isEmptySuitesState && (
               <CatalogHeader
+                projectId={projectId}
                 editor={organizationEditor}
                 inlineEditor={inlineEditor}
                 selectedSuite={selectedSuite}
@@ -900,6 +907,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
               </Box>
             )}
             <CatalogFilters
+              projectId={projectId}
+              tagIds={tagIds}
+              tagCounts={tagCounts}
+              onTagChange={onTagChange}
               hidden={isEmptySuitesState}
               showFilters={isScenariosTab || Boolean(selectedSuite)}
               allowRunOrder={!isScenariosTab}
@@ -952,7 +963,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             )}
             {selectionError && (
               <Text role="alert" color="fg.error" fontSize="sm">
-                Could not select all matching scenarios: {selectionError}
+                {selectionError}
               </Text>
             )}
             {isResolvingSelection && (
@@ -962,6 +973,10 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
             )}
             {selectedIds.length > 0 && !pendingSuiteUndo && (
               <CatalogBulkActions
+                openTagManager={(onReturn) => {
+                  if (projectId) openDialog(ManageTagsDialog, { projectId, onReturn });
+                }}
+                onBulkTagsApplied={onBulkTagsApplied}
                 selectedIds={selectedIds}
                 total={pagination.total}
                 allMatchingSelected={allMatchingSelected}
@@ -1018,12 +1033,7 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         onDragPayload={handleDragPayload}
                         onDragEnd={handleDragEnd}
                         folderPathById={folderPathById}
-                        searchActive={
-                          Boolean(search.trim()) ||
-                          Boolean(priority) ||
-                          selectedAuthorIds.length > 0 ||
-                          activeColumnFilters.length > 0
-                        }
+                        searchActive={hasActiveFilters}
                         emptyFolder={scope.kind === 'folder'}
                         onCreateScenario={onCreateScenario ?? (() => {})}
                       />
@@ -1048,15 +1058,8 @@ export const TestScenarioCatalogView = memo(function TestScenarioCatalogView({
                         onToggleSelected={handleToggleSelected}
                         showFolder={showFolderColumn}
                         folderPathById={folderPathById}
-                        searchActive={Boolean(search.trim()) || activeColumnFilters.length > 0}
-                        emptySuite={Boolean(
-                          selectedSuite &&
-                          selectedSuite.members?.length === 0 &&
-                          !search.trim() &&
-                          !priority &&
-                          !selectedAuthorIds.length &&
-                          !activeColumnFilters.length,
-                        )}
+                        searchActive={hasActiveFilters}
+                        emptySuite={Boolean(selectedSuite && selectedSuite.members?.length === 0 && !hasActiveFilters)}
                         onAddScenarios={handleManageSuiteScenarios}
                       />
                     )}

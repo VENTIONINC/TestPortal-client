@@ -56,6 +56,7 @@ vi.mock('@/redux/apis/generatedApi', async (importOriginal) => {
   return {
     ...actual,
     useGetApiV2TestScenariosByScenarioIdQuery: vi.fn(),
+    useGetApiV2ProjectsByProjectIdScenarioTagsQuery: () => ({}),
     useGetApiV2TestScenariosQuery: vi.fn(),
     useGetApiV2TestScenariosAuthorsQuery: vi.fn(() => ({
       currentData: { authors: [] },
@@ -160,6 +161,7 @@ const mockedContextMenu = vi.mocked(useTestScenarioContextMenu);
 const createResponse = (page: number) => ({
   scenarios: [
     {
+      tags: [],
       id: `scenario-${page}`,
       projectId: 'project-1',
       folderId: null,
@@ -174,6 +176,7 @@ const createResponse = (page: number) => ({
       updatedAt: '2026-09-02T11:00:00.000Z',
     } satisfies TestScenarioSummary,
   ],
+  tagCounts: { m1: 5, m2: 3 },
   total: 11,
   page,
   limit: 25,
@@ -291,6 +294,7 @@ describe('TestScenarioCatalogContainer', () => {
       projectId: 'project-1',
       page: 1,
       limit: 25,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       sortField: 'updatedAt',
       sortDirection: 'desc',
     });
@@ -303,6 +307,7 @@ describe('TestScenarioCatalogContainer', () => {
       page: 1,
       priority: 'high',
       createdByIds: 'user-1',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       sortField: 'updatedAt',
       sortDirection: 'desc',
     });
@@ -342,6 +347,68 @@ describe('TestScenarioCatalogContainer', () => {
       limit: 1,
       folderId: 'unfiled',
     });
+  });
+
+  it('resets page and selection on tag changes and retains matching cross-page rows after a bulk change', async () => {
+    let matching = ['visible', 'other-page', 'removed'];
+    const trigger = vi.fn(() => ({ unwrap: async () => ({ scenarioIds: matching, total: matching.length }) }));
+    mockedSelectionQuery.mockReturnValue([trigger, {}] as never);
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
+    act(() => {
+      result.current.onPageChange(2);
+      result.current.toggleSelected('visible');
+    });
+    act(() => result.current.onTagChange(['m1', 'm2']));
+    expect(result.current.selectedIds).toEqual([]);
+    expect(result.current.tagCounts).toEqual({ m1: 5, m2: 3 });
+    expect(mockedScenarioQuery.mock.calls.at(-1)?.[0]).toMatchObject({
+      page: 1,
+      tagIds: 'm1,m2',
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
+    await act(async () => result.current.selectAllMatching());
+    expect(trigger).toHaveBeenCalledWith(expect.objectContaining({ tagIds: 'm1,m2' }));
+    const originalSelection = result.current.selectedIds;
+    await act(async () => result.current.onBulkTagsApplied());
+    expect(result.current.selectedIds).toBe(originalSelection);
+    matching = ['outside-selection', 'other-page', 'visible'];
+    await act(async () => result.current.onBulkTagsApplied());
+    expect(result.current.selectedIds).toEqual(['visible', 'other-page']);
+    expect(result.current.allMatchingSelected).toBe(false);
+  });
+
+  it('discards a late bulk callback after a new selection starts', async () => {
+    const trigger = vi.fn(() => ({ unwrap: async () => ({ scenarioIds: [], total: 0 }) }));
+    mockedSelectionQuery.mockReturnValue([trigger, {}] as never);
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
+    act(() => {
+      result.current.onTagChange(['m1']);
+      result.current.toggleSelected('old');
+    });
+    const previous = result.current.onBulkTagsApplied;
+    act(() => {
+      result.current.onTagChange(['m2']);
+      result.current.toggleSelected('new');
+    });
+    await act(async () => previous());
+    expect(result.current.selectedIds).toEqual(['new']);
+  });
+
+  it('clears the selection and explains when matching rows cannot be refreshed after a tag change', async () => {
+    const trigger = vi.fn(() => ({
+      unwrap: async () => {
+        throw new Error('unavailable');
+      },
+    }));
+    mockedSelectionQuery.mockReturnValue([trigger, {}] as never);
+    const { result } = renderHook(() => useTestScenarioCatalog('project-1'), { wrapper: MemoryRouter });
+    act(() => {
+      result.current.onTagChange(['m1']);
+      result.current.toggleSelected('old');
+    });
+    await act(async () => result.current.onBulkTagsApplied());
+    expect(result.current.selectedIds).toEqual([]);
+    expect(result.current.selectionError).toMatch(/tag changes were saved/i);
   });
 
   it('clears selection on page changes, then resolves every current matching UUID', async () => {
@@ -422,7 +489,7 @@ describe('TestScenarioCatalogContainer', () => {
       await result.current.selectAllMatching();
     });
     expect(result.current.selectedIds).toEqual([]);
-    expect(result.current.selectionError).toBe('selection unavailable');
+    expect(result.current.selectionError).toBe('Could not select all matching scenarios: selection unavailable');
     expect(result.current.isResolvingSelection).toBe(false);
   });
 
@@ -655,7 +722,14 @@ describe('TestScenarioCatalogContainer', () => {
     renderWithCatalogProviders(<TestScenarioCatalogContainer projectId="project-1" organizationTab="scenarios" />);
 
     expect(mockedScenarioQuery).toHaveBeenCalledWith(
-      { projectId: 'project-1', page: 1, limit: 25, sortField: 'updatedAt', sortDirection: 'desc' },
+      {
+        projectId: 'project-1',
+        page: 1,
+        limit: 25,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        sortField: 'updatedAt',
+        sortDirection: 'desc',
+      },
       { skip: false },
     );
     expect(mockedDetailQuery).not.toHaveBeenCalled();
@@ -672,7 +746,15 @@ describe('TestScenarioCatalogContainer', () => {
     ]);
     await waitFor(() =>
       expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
-        { projectId: 'project-1', page: 1, limit: 25, sortField: 'updatedAt', sortDirection: 'desc', ...expected },
+        {
+          projectId: 'project-1',
+          page: 1,
+          limit: 25,
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          sortField: 'updatedAt',
+          sortDirection: 'desc',
+          ...expected,
+        },
         { skip: false },
       ),
     );
@@ -686,7 +768,14 @@ describe('TestScenarioCatalogContainer', () => {
     await user.click(screen.getByRole('button', { name: 'Next Page' }));
 
     expect(mockedScenarioQuery).toHaveBeenLastCalledWith(
-      { projectId: 'project-1', page: 2, limit: 25, sortField: 'updatedAt', sortDirection: 'desc' },
+      {
+        projectId: 'project-1',
+        page: 2,
+        limit: 25,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        sortField: 'updatedAt',
+        sortDirection: 'desc',
+      },
       { skip: false },
     );
     expect(screen.getByText('Scenario page 2')).toBeInTheDocument();
@@ -712,6 +801,7 @@ describe('TestScenarioCatalogContainer', () => {
       projectId: 'project-1',
       page: 1,
       limit: 25,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       sortField: 'updatedAt',
       sortDirection: 'desc',
       folderId: 'folder-a',
@@ -724,6 +814,7 @@ describe('TestScenarioCatalogContainer', () => {
         projectId: 'project-1',
         page: 1,
         limit: 25,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         sortField: 'updatedAt',
         sortDirection: 'desc',
         folderId: 'folder-a',
@@ -774,6 +865,7 @@ describe('TestScenarioCatalogContainer', () => {
       projectId: 'project-1',
       page: 1,
       limit: 25,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       sortField: 'updatedAt',
       sortDirection: 'desc',
       folderId: 'unfiled',
